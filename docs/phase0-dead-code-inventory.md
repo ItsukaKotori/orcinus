@@ -68,7 +68,7 @@
 |---|---|
 | 每批后 `pnpm typecheck` | exit 0（全部批次；末次 21:5x） |
 | 每批后 `pnpm build:web` | exit 0（末次 `✓ built in 3.20s`） |
-| `pnpm test src/shared/child-process/child-process-import-boundary.test.ts` | 2 failed / 2 passed：**预先存在**（旧 fork 遗留 146 条 stale allowlist；本 Task 删除其中 2 条后为 144 条；offender 9→7，pin 155 未动）。非本 Task 引入，未加避让 |
+| `pnpm test src/shared/child-process/child-process-import-boundary.test.ts` | 2 failed / 2 passed：**预先存在**（旧 fork 遗留 stale allowlist 146 条；本 Task 仅移除 2 条对应已删文件的条目，移除的是 offender 而非 stale，stale 计数不变仍为 146；offender 9→7，pin 155 未动）。非本 Task 引入，未加避让 |
 | `pnpm test src/shared/agent-cli-install-dir-fallback.test.ts` 等 4 个邻近/保留链路测试 | 通过（58 passed） |
 | `pnpm test src/renderer/src/i18n/ko-ui-semantic-mistranslations.test.ts` | 1 failed：**预先存在**（`config/scripts/locale-ko-key-overrides.json` 缺失，Task 4 minor 已记录） |
 
@@ -77,7 +77,7 @@
 1. **rpc-contract 死树**：`src/shared/rpc-contract/` 全目录生产不可达；删除后可连带清理 `mobile-push-contract.ts`、`mobile-relay-credential-contract.ts`、`agent-skill-sharing-contract.ts`、`skill-upload-session-contract.ts`。
 2. **remote-runtime/relay 死树**：多数 `remote-runtime-*`/`relay-*` 已生产不可达，但被 `remote-runtime-shared-control-test-server.ts`（live 测试的测试支持）与 live 终端/web 代码牵住；先重构测试支持与调用点，再整簇删除。
 3. **CLI 死链**：`node-cli-command-resolution.ts` → `system-cli-install-dirs.ts`/`posix-version-manager-bin-dirs.ts` → `local-agent-install-dir-detection.ts` 整簇删除（含 `nvm-default-alias.test.ts` 等孤立测试）。
-4. **ratchet 重基线**：`child-process-import-allowlist.txt` 现有 144 条 stale 条目；删除 stale 行并把 `DIRECT_IMPORTER_PIN` 降到 7（当前 offender 数）。
+4. **ratchet 重基线**：`child-process-import-allowlist.txt` 现有 146 条 stale 条目（条目总数 153 − 现存且导入 child_process 的 7 条 = 146）；删除 stale 行并把 `DIRECT_IMPORTER_PIN` 降到 7（当前 offender 数）。
 5. **i18n 清键**：`SkillsPage`/`MobilePage`/`SshPassphraseDialog`/`RemoteServerUpdateDialog` 四组键（6 locale + en-runtime-required），同步更新 i18n 回归测试。
 6. **store 切片**：`remote-server-updates`、`orca-profiles(-auth-actions)` 的用户面已移除；确认启动链路不需要后删除并清 store 注册。
 7. **composer 运行目标**：`EphemeralVm` 运行目标仍可达（RunTargetCombobox 等）；按 spec §6.5 决定是否随 VM 能力一并移除，其独占的 renderer `ephemeral-vm-*` 库与 shared `ephemeral-vm-recipes/runtimes` 方可删除。
