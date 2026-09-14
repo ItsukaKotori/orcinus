@@ -1,0 +1,13 @@
+# Mirrors orca's install policy: the renderer/shared trees import transitive packages
+# (e.g. @tiptap/core, @testing-library/dom, tinyglobby) that the fork does not declare
+# directly, so flattened hoisting is required for typecheck/build to resolve them.
+shamefullyHoist: true
+
+allowBuilds:
+  '@swc/core': true
+  esbuild: true
+  # Phase 0 needs node-pty's types only; native build is deferred with the PTY work.
+  node-pty: false
+
+overrides:
+  monaco-editor>dompurify: 3.4.14

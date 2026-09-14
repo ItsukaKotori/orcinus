@@ -1,0 +1,89 @@
+// @vitest-environment happy-dom
+/**
+ * The Resource Manager tooltip was built from bare English literals inside
+ * helper functions, so it stayed English while every label around it
+ * translated. The coverage audit cannot see values returned from helpers, so
+ * only a runtime assertion against the real catalog keeps them honest — same
+ * reasoning as `src/renderer/src/i18n/settings-status-label-localization.test.ts`.
+ */
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { i18n } from '@/i18n/i18n'
+import {
+  formatTerminalSessionCount,
+  getResourceManagerAriaLabel,
+  getResourceManagerTooltipLines
+} from './resource-manager-terminal-copy'
+
+describe('status-bar copy under a non-English UI language', () => {
+  beforeAll(async () => {
+    await i18n.changeLanguage('ja')
+  })
+
+  afterAll(async () => {
+    await i18n.changeLanguage('en')
+  })
+
+  it('translates both plural forms of the terminal session count', () => {
+    expect(formatTerminalSessionCount(1)).toBe('1 件のターミナルセッション')
+    expect(formatTerminalSessionCount(5)).toBe('5 件のターミナルセッション')
+  })
+
+  it('translates every Resource Manager tooltip line', () => {
+    expect(
+      getResourceManagerTooltipLines({
+        memoryLabel: '512 MB',
+        sessionCount: 2,
+        spaceScanReady: true
+      })
+    ).toEqual([
+      {
+        id: 'summary',
+        text: 'リソースマネージャー - 512 MB - 2 件のターミナルセッション',
+        emphasized: false
+      },
+      { id: 'space-scan', text: '容量スキャンの準備完了', emphasized: true },
+      {
+        id: 'sessions-hint',
+        text: 'ターミナルセッションはワークスペースごとにグループ化されます。',
+        emphasized: false
+      }
+    ])
+  })
+
+  // Why: the tint used to be selected by `line === 'Space scan ready'`, so it
+  // silently vanished for every non-English locale once the copy translated.
+  it('keeps the space-scan row flagged when its copy is no longer English', () => {
+    const lines = getResourceManagerTooltipLines({
+      memoryLabel: '512 MB',
+      sessionCount: 2,
+      spaceScanReady: true
+    })
+
+    const emphasized = lines.filter((line) => line.emphasized)
+    expect(emphasized).toHaveLength(1)
+    expect(emphasized[0]?.text).toBe('容量スキャンの準備完了')
+    expect(emphasized[0]?.text).not.toBe('Space scan ready')
+  })
+
+  it('translates the memory-unavailable and empty-session tooltip lines', () => {
+    expect(
+      getResourceManagerTooltipLines({ memoryLabel: '—', sessionCount: 0, spaceScanReady: false })
+    ).toEqual([
+      {
+        id: 'summary',
+        text: 'リソースマネージャー - メモリ情報を取得できません - 0 件のターミナルセッション',
+        emphasized: false
+      },
+      { id: 'sessions-hint', text: 'ターミナルセッションはまだありません。', emphasized: false }
+    ])
+  })
+
+  it('translates the Resource Manager trigger label read by screen readers', () => {
+    expect(getResourceManagerAriaLabel({ sessionCount: 1, spaceScanReady: true })).toBe(
+      'リソースマネージャー、1 件のターミナルセッション、容量スキャンの準備完了'
+    )
+    expect(getResourceManagerAriaLabel({ sessionCount: 3, spaceScanReady: false })).toBe(
+      'リソースマネージャー、3 件のターミナルセッション'
+    )
+  })
+})
