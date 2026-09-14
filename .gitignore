@@ -2,6 +2,7 @@ node_modules/
 dist/
 src-tauri/target/
 src-tauri/gen/
+spikes/*/target/
 *.local
 *.tsbuildinfo
 .DS_Store
