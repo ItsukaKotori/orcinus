@@ -89,4 +89,21 @@ describe('right sidebar visibility helpers', () => {
       )
     ).toBe(true)
   })
+
+  it('tolerates partial store state without activeView', () => {
+    // Why: github slice tests build partial stores that omit activeView; the fork's original
+    // implementation used only Set.has(activeView) and never dereferenced it.
+    // SAFETY: mirrors those partial stores, whose activeView is undefined at runtime.
+    const partialState = {
+      activeWorktreeId: 'wt-1',
+      repos: [],
+      rightSidebarOpen: true,
+      rightSidebarTab: 'checks',
+      worktreesByRepo: {}
+    } as unknown as Parameters<typeof rightSidebarShowsPullRequestData>[0]
+
+    expect(rightSidebarShowsPullRequestData(partialState)).toBe(false)
+    // SAFETY: same partial-store condition for the view-only helper.
+    expect(canShowRightSidebarForView(undefined as unknown as AppState['activeView'])).toBe(true)
+  })
 })

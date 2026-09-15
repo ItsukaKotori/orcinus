@@ -17,7 +17,9 @@ const RIGHT_SIDEBAR_SUPPRESSED_VIEWS = new Set<ActiveView>([
 const PLUGIN_HOSTED_VIEW_PREFIX = 'plugin:'
 
 function isPluginHostedView(activeView: ActiveView): boolean {
-  return activeView.startsWith(PLUGIN_HOSTED_VIEW_PREFIX)
+  // Why optional: partial-store tests (github refresh sweeps) drive this with state
+  // that omits activeView; the fork's original check was a plain Set.has.
+  return activeView?.startsWith(PLUGIN_HOSTED_VIEW_PREFIX) ?? false
 }
 
 export function canShowRightSidebarForView(activeView: ActiveView): boolean {
