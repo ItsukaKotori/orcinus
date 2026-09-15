@@ -5,7 +5,7 @@
 - 规格：`docs/superpowers/specs/2026-09-14-ade-design.md`
 - Phase 0 计划：`docs/superpowers/plans/2026-09-14-ade-phase0-skeleton-ui.md`
 - Phase 0 验收记录：`docs/phase0-acceptance.md`
-- 参照仓库（只读）：fork 自 stablyai/orca；原参照检出为 `../orca-main/orca-main`（迁移后本机不存在，如需对照请用原机检出）。
+- 参照仓库（只读）：fork 自 stablyai/orca；本机只读检出为 `../orca`（若存在，优先使用）；原参照检出 `../orca-main/orca-main` 迁移后本机不存在，如需对照请用原机检出。
 
 ## 开发
 

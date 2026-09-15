@@ -6,6 +6,8 @@
 - 规格验收条款：`docs/superpowers/specs/2026-09-14-ade-design.md` §8 Phase 0
 - 证据目录：`.superpowers/sdd/2026-09-14-ade-phase0-skeleton-ui/task-11-evidence/`（未入库）与 `/tmp/ade-*.log`（本机临时）
 
+> **状态更新（补救复验后）**：以下 §结论摘要–§11 为验收当时（as-found）的历史记录；其中 P0/P1 阻断判定已被文末《修复后复验（2026-09-14，补救提交 6623c92..c1429f8）》取代，GUI 交互类人工项仍在顺延。判定请以补遗为准。
+
 ## 结论摘要
 
 | Spec §8 验收项 | 判定 | 说明 |
@@ -203,3 +205,65 @@ Unhandled errors：3 次 `TypeError: Cannot read properties of undefined (readin
 - 逻辑证据测试：`/tmp/ade-evidence-tests.log`（6 passed / 59 tests）、`/tmp/ade-settings-tests.log`（4 passed）
 - 构建：`/tmp/ade-build-web.log`、`/tmp/ade-cargo-check.log`、`/tmp/ade-tauri-debug-build.log`
 - GUI：`/tmp/ade-dev-try1.png`（dev 错误边界）、`/tmp/ade-prod-window2.png`（prod 白屏）、`/tmp/ade-devtools.png`（Web Inspector）；Chromium CDP 探针原始输出 `/tmp/ade-cdp-probe.json`（127MB，含 148,893 次 rejection 事件）
+
+## 修复后复验（2026-09-14，补救提交 6623c92..c1429f8）
+
+本节为验收后补救复验记录：上文 as-found 记录（含 §9 失败清单）保持历史原样，但其中 P0/P1 阻断判定以本节为准。
+
+补救提交：
+
+| 提交 | 内容 |
+|---|---|
+| `6623c92` | P1：`right-sidebar-visibility.ts` 的 `activeView` 缺失防护（`activeView?.startsWith(...) ?? false`） |
+| `6664500` | P0-1：移植 orca 的 `@xterm/addon-ligatures` 补丁，修复 Tauri/WebKit 渲染失败 |
+| `87664d9` | P0-2：补全 Phase 0 mock bridge 启动契约，消除 rejection 循环与订阅崩溃 |
+| `c1429f8` | 用户报告：实现 mock `onboarding.update`，恢复入门引导 Continue |
+
+复验证据目录：`.superpowers/sdd/2026-09-14-ade-phase0-skeleton-ui/task-12-evidence/`（未入库，同 Task 11 惯例）。
+
+### P0-1 GUI 渲染失败：已修复
+
+- 根因（一句话）：`@xterm/addon-ligatures@0.11.0-beta.300` 的 `module` 入口 `lib/addon-ligatures.mjs` 在顶层 import `node:diagnostics_channel`，Vite 的 browser-external stub 求值为 undefined 即抛 `TypeError`，导致 `OnboardingFlow` 懒加载 chunk 一级求值失败，WebKit 将未完成求值的命名空间交给 React → 入门引导错误边界 / 生产包白屏。
+- 修复：`6664500` 新增 `config/patches/@xterm__addon-ligatures@0.11.0-beta.300.patch`（与 orca 原补丁 `diff` 无差异）并接入 `pnpm-workspace.yaml` 的 `patchedDependencies`，把 `module`/`exports` 指向浏览器安全的 `lib/addon-ligatures.js`。
+- 证据：
+  - dev 窗口（WKWebView）渲染 shell：`task-12-evidence/ade-p01-dev-fixed.png`；
+  - 生产 debug 二进制 `target/debug/ade-app` 窗口：`task-12-evidence/ade-p01-prod-fixed-clean.png`；
+  - 应用状态复核：`node_modules/@xterm/addon-ligatures/package.json` 的 `module`/`exports` 均指向 `lib/addon-ligatures.js`；
+  - 修复前旁证：`task-11-evidence/ade-tauri-debug-build.log:26` 记录了 Vite 对 `lib/addon-ligatures.mjs` 中 `node:diagnostics_channel` 的 externalize 警告。
+
+### P0-2 rejection 自放大循环：已修复
+
+- `87664d9` 补全启动路径 mock bridge 契约：fire-and-forget 返回 `void`、订阅返回同步 unsubscribe、查询返回良性值；未实现成员仍显式拒绝并 warn（不静默吞错）。
+- 复验（headless Chromium + CDP 15 s，探针 `/tmp/ade-cdp-probe.mjs`）：unhandled rejections **0**（基线 148,893 / 15 s）、bridge 警告 0、console.error 0；唯一 `logErrors: 1` 为本地静态服务器缺 `favicon.ico` 的 404，与应用无关。
+- 证据：`task-12-remediation-report.md` §2.2（探针输出为报告内联 JSON，原始输出未单独落盘）。
+
+### P1 activeView 守卫回归：已修复
+
+- `6623c92` 修复 `right-sidebar-visibility.ts:20` 的 undefined 防护并新增 partial-store 回归测试。
+- 原 §9.2 的 19 项失败用例（`github-refresh-sweep.test.ts` 14 + `github-worktree-refresh-if-stale.test.ts` 4 + `github-pr-refresh-states-leak.test.ts` 1）全绿；本次复验重跑 3 文件：`3 passed / 44 passed`。
+- 证据：`task-12-remediation-report.md` §3；本补遗撰写时重跑上述 3 文件确认全过。
+
+### 入门引导 Continue 无反应（用户报告）：已修复
+
+- `c1429f8` 实现 mock `onboarding.update`（顶层字段 spread 合并，`checklist` 逐字段合并），`persistStep` 不再抛 `TypeError: onboarding.update is not a function`。
+- CDP 用户流复现（生产构建，探针 `/tmp/ade-onboarding-continue-probe.mjs`）：点击 Continue 后标题由「选择默认智能体」推进为「让这里有家的感觉」，`unhandled: 0`、`bridgeWarnings: 0`（无 `onboarding.update` 未实现警告）。
+- 证据：`task-13-onboarding-continue-report.md` §5。
+
+### 规格 §8 验收项状态（复验后）
+
+| Spec §8 验收项 | 复验判定 | 说明 |
+|---|---|---|
+| `pnpm dev` 启动 Tauri 窗口 | **修复后通过（截图证据）** | dev 与生产 debug 二进制均渲染 shell；截图见 P0-1 证据 |
+| 三视图可切换且状态可持久化 | 逻辑证据通过；**仍待人工** | 组件/store 测试不变；三视图切换/重启持久化未点击验证 |
+| 插件中心可浏览（scope 徽标/启停） | 逻辑证据通过；**仍待人工** | 启停开关点击未验证 |
+| 右侧栏只出现项目级插件 | 通过（逻辑） | 不变 |
+| 设置页为简化分组 | 逻辑证据通过；**仍待人工** | 设置页分组导航未验证 |
+| 构建无 Electron 依赖 | **部分通过** | 不变：仍有 1 处 type-only 测试导入（§7） |
+| 两个 spike 有书面结论 | 通过 | 不变；CEF no-go 仍需用户确认 |
+
+### 仍未人工验证（顺延）
+
+- 交互项：三视图切换与重启持久化、插件中心启停、设置页分组导航（本轮仅验证渲染正确性与点击 Continue 单项）。
+- Windows 平台：全部复验在 macOS；补丁本身跨平台（入口重定向），Windows 未实测。
+- CEF no-go 结论需用户确认后回写 spec §10.1（§8、§10 未变）。
+- 另：`ts.worker-*.js`（Monaco TS worker，懒加载）仍引用 `diagnostics_channel`，不在启动路径、15 s 观测内无异常，Phase 1 接入编辑器时需复核（`task-12-remediation-report.md` §6）。
