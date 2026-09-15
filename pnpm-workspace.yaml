@@ -11,3 +11,8 @@ allowBuilds:
 
 overrides:
   monaco-editor>dompurify: 3.4.14
+
+patchedDependencies:
+  # Why: the addon's "module" entry is a Node-targeted bundle that imports
+  # node:diagnostics_channel at module scope, which breaks the WebKit renderer.
+  '@xterm/addon-ligatures@0.11.0-beta.300': config/patches/@xterm__addon-ligatures@0.11.0-beta.300.patch

@@ -7,6 +7,9 @@ settings:
 overrides:
   monaco-editor>dompurify: 3.4.14
 
+patchedDependencies:
+  '@xterm/addon-ligatures@0.11.0-beta.300': 47405b9994b5acf1b4e90b49250358c1ca03649854d59560e7732b72fe336920
+
 importers:
 
   .:
@@ -164,7 +167,7 @@ importers:
         version: 0.12.0-beta.300(@xterm/xterm@6.1.0-beta.303)
       '@xterm/addon-ligatures':
         specifier: 0.11.0-beta.300
-        version: 0.11.0-beta.300(@xterm/xterm@6.1.0-beta.303)
+        version: 0.11.0-beta.300(patch_hash=47405b9994b5acf1b4e90b49250358c1ca03649854d59560e7732b72fe336920)(@xterm/xterm@6.1.0-beta.303)
       '@xterm/addon-search':
         specifier: 0.17.0-beta.300
         version: 0.17.0-beta.300(@xterm/xterm@6.1.0-beta.303)
@@ -8310,7 +8313,7 @@ snapshots:
     dependencies:
       '@xterm/xterm': 6.1.0-beta.303
 
-  '@xterm/addon-ligatures@0.11.0-beta.300(@xterm/xterm@6.1.0-beta.303)':
+  '@xterm/addon-ligatures@0.11.0-beta.300(patch_hash=47405b9994b5acf1b4e90b49250358c1ca03649854d59560e7732b72fe336920)(@xterm/xterm@6.1.0-beta.303)':
     dependencies:
       '@xterm/xterm': 6.1.0-beta.303
       lru-cache: 11.5.2
