@@ -7,6 +7,13 @@ export class UnimplementedBridgeError extends Error {
   }
 }
 
+function createRejectingMethod(prefix: string, method: string): () => Promise<never> {
+  return async (..._args: unknown[]) => {
+    console.warn(`[ade:bridge] unimplemented call ${prefix}.${method}`)
+    throw new UnimplementedBridgeError(`${prefix}.${method}`)
+  }
+}
+
 function createNamespace(prefix: string): Record<string, unknown> {
   const methods = new Map<string, (...args: unknown[]) => Promise<never>>()
   return new Proxy(
@@ -14,15 +21,29 @@ function createNamespace(prefix: string): Record<string, unknown> {
     {
       get(_target, property: string): unknown {
         if (!methods.has(property)) {
-          methods.set(property, async (..._args: unknown[]) => {
-            console.warn(`[ade:bridge] unimplemented call ${prefix}.${property}`)
-            throw new UnimplementedBridgeError(`${prefix}.${property}`)
-          })
+          methods.set(property, createRejectingMethod(prefix, property))
         }
         return methods.get(property)
       }
     }
   )
+}
+
+/** Same rejection contract as the namespace fallback, for a namespace that implements a few methods. */
+export function withMethodFallback<T extends object>(prefix: string, partial: Partial<T>): T {
+  const methods = new Map<string, (...args: unknown[]) => Promise<never>>()
+  // SAFETY: implemented members pass through; every other property fabricates a rejecting async
+  // method, so a method-level partial still behaves as a full namespace at call sites.
+  return new Proxy(partial as T, {
+    get(target, property: string): unknown {
+      const existing = (target as Record<string, unknown>)[property]
+      if (existing !== undefined) return existing
+      if (!methods.has(property)) {
+        methods.set(property, createRejectingMethod(prefix, property))
+      }
+      return methods.get(property)
+    }
+  })
 }
 
 export function withUnimplementedFallback<T extends object>(partial: Partial<T>): T {
