@@ -73,6 +73,7 @@ export function TitlebarLeftControls({ layout }: { layout: AppChromeLayout }): R
                 className="titlebar-app-name"
                 aria-label={translate('auto.App.5096cbbc86', 'Orca')}
               >
+                <img src={logo} alt="" aria-hidden className="titlebar-app-name-logo" />
                 <span className="titlebar-app-name-main">
                   {translate('auto.App.5096cbbc86', 'Orca')}
                 </span>

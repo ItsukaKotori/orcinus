@@ -854,6 +854,15 @@ html.native-shell .app-layout {
   opacity: 0.75;
 }
 
+/* Why: the app-name cluster renders the mark before the name on macOS/web, where
+   the Windows-only .titlebar-logo above does not appear. */
+.titlebar-app-name-logo {
+  height: 16px;
+  width: 16px;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
 /* Why: desktop custom title bar buttons replace hidden native OS chrome.
    Anchored to the top-right corner of the viewport so they overlay any layout
    mode (full titlebar, workspace split, etc.) and stay accessible at all times. */
