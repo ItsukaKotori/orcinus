@@ -39,8 +39,12 @@
 复现命令（工作目录 `ade/`）：
 
 ```bash
-# 冷构建（空 target；含 CEF 下载/解包 + libcef_dll_wrapper 编译 + 全部依赖）
+# 冷构建计时（一次性空 target；含 CEF 下载/解包 + libcef_dll_wrapper 编译 + 全部依赖）
+# 注意：该命令写入 /tmp/cef-cold-target，不产出下面打包/运行所需的默认 target 产物
 CARGO_TARGET_DIR=/tmp/cef-cold-target cargo build --release --manifest-path spikes/cef-embed/Cargo.toml
+
+# 默认 target 的 release 构建（打包/运行前必须先执行；bundle_release 由该构建产出）
+cargo build --release --manifest-path spikes/cef-embed/Cargo.toml
 
 # 打 .app（release 产物）
 spikes/cef-embed/target/release/bundle_release
@@ -74,6 +78,8 @@ ps -axo pid,ppid,rss,comm,args | grep -i "cef-embed"
 冷构建两次产物字节数一致（`cef-embed` 542,928 B；`cef_embed_helper` 468,640 B），可复现。
 
 ### 安装体积（必须分发的 `.app`）
+
+> 单位注记（Task 9 复核）：`du`/`ls` 输出的 MB/KB 实为二进制单位（MiB/KiB）；下表未换算的行按二进制读，合计行另给十进制换算。
 
 | 组成 | 大小 | 说明 |
 | --- | --- | --- |

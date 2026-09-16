@@ -25,8 +25,7 @@ type AutoRenameFailedDialogProps = {
  * Modal that surfaces the auto-rename generation failure. It shows the full
  * CLI output when main still holds it (in-memory, lost on restart), falling
  * back to the persisted excerpt — either can run many lines, so it gets a
- * dedicated scrollable surface rather than a tooltip — see the sibling
- * AddRemoteHostDialog pattern.
+ * dedicated scrollable surface rather than a tooltip.
  */
 export function AutoRenameFailedDialog({
   open,

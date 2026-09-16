@@ -38,7 +38,7 @@
 | D1 | 15 | `skill-ssh-relay-contract`、`ssh-ai-vault-relay`、`relay-retry-after-header`、`relay-host-close-reason`、`skill-install-providers`、`skill-discovery-depth`、`wsl-browser-network-relay-contract`、`relay-frame-decoder(-contract)`、`relay-frame-buffer`(+test)、`relay-version-marker`(+test)、`pairing-address-auto-selection`(+test) |
 | D2 | 16 | `ssh-relay-pty-ownership-proof`(+test)、`skill-deletion-eligibility`(+test)、`skill-bundle-name`(+test)、`skill-path-containment`(+test)、`skill-metadata`(+test)、`agent-skill-sharing-gate`(+test)、`cli-workspace-provenance`(+test)、`cli-argument-boundary`(+test) |
 
-- 完整删除清单：`git show --stat <Task 10 提交>`（本文档与代码同一次提交）。
+- 完整删除清单：`git show --stat 753537e`（清扫提交，80 文件）与 `d982d62`（ratchet 计数修复）。
 
 ## 保留项（有引用，未删）与原因
 
@@ -83,3 +83,16 @@
 7. **composer 运行目标**：`EphemeralVm` 运行目标仍可达（RunTargetCombobox 等）；按 spec §6.5 决定是否随 VM 能力一并移除，其独占的 renderer `ephemeral-vm-*` 库与 shared `ephemeral-vm-recipes/runtimes` 方可删除。
 8. **保留文件内死代码**：`setUsagePercentageDisplay`、`settings.showMobileButton`、stale copy、`MobileEmulatorSettingsPane` 的移动端语义复核。
 9. **Task 2 excluded test**：`workspace-view-cross-client-sync.test.tsx` 重指向或删除，去掉 vitest exclude。
+
+## Phase 1 backlog（最终审查分流，2026-09-14）
+
+来源：最终整分支审查给出的有序分流（依赖顺序：靠前者先行）；本清单独立存于本文档，避免随 SDD 草稿工作区丢失。第 7 项即上文「Phase 1 建议」。
+
+1. **xterm `patchedDependencies` 补完**：`node-pty`、`addon-webgl` 尚未移植（ligatures 已完成）——终端开发前完成。
+2. **测试套件重基线**：child-process ratchet（146 条 stale，pin 155）、windows-console-visibility（58 条 stale）、cli-runtime-pairing stale 条目、feature-interactions（缺 5 个 writer）、useIpcEvents 96/97、缺失 `config/scripts/locale-ko-key-overrides.json`、excluded test 重指向——在此之前 `pnpm test` 以 1 退出。
+3. **Mock 加固**：共享可变常量按引用返回（agent-awake / preflight / runtime-events / memory / onboarding）；5 个 mock 误用命名空间级 `withUnimplementedFallback`（onboarding / cli / repos / runtime-environments / workspace-session；应改用方法级 `withMethodFallback`），缺方法时产生同步 TypeError 而非响亮的 rejection；`doc-preview-api.ts` 注释与行为不一致（`src/bridge/mock/`）。
+4. **Fork 清理**：`src/preload` 类型抽取 + `src/main` 残留（88 个 preload、4 个 main 文件仍 `import ... from 'electron'`；R39 裁定 spec §8 三目录范围为准，抽取安排在此处）。
+5. **Monaco `ts.worker`**：编辑器开发前检查 `diagnostics_channel`。
+6. **PTY spike minor**：宿主设计前处理 CPR 扫描尾部、约 9% 字节盲区、detached reader thread（见 `docs/spikes/2026-09-14-pty-throughput.md`）。
+7. **清单剩余项**：rpc-contract / CLI / relay 死树、i18n 键、store 切片、composer 运行目标决策（见上文「Phase 1 建议」1–9）。
+8. **披露的未验证残留**：GUI 交互检查、Windows 补丁/构建验证、CEF no-go 用户确认 + spec §10.1 回写。
