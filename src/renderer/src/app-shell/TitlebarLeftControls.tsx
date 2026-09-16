@@ -31,6 +31,10 @@ export function TitlebarLeftControls({ layout }: { layout: AppChromeLayout }): R
   const leftSidebarShortcutLabel = useShortcutLabel('sidebar.left.toggle')
   const historyBackShortcutLabel = useShortcutLabel('worktree.history.back')
   const historyForwardShortcutLabel = useShortcutLabel('worktree.history.forward')
+  // Why: with the app name in the sidebar header the cluster sits in the content row below
+  // the native macOS title bar, so the traffic-light spacer would push it off the left edge.
+  const showsSidebarAppName =
+    layout.showSidebar && !hasCustomTitleBar && layout.showTitlebarAppName
 
   return (
     // Why: measure the ENTIRE row so TabGroupPanel's collapse spacer reserves enough width; measuring only the inner cluster left back/forward over the first tab.
@@ -42,7 +46,7 @@ export function TitlebarLeftControls({ layout }: { layout: AppChromeLayout }): R
       }`}
     >
       <div className="flex h-full items-center">
-        {isMac && !layout.isFullScreen ? (
+        {showsSidebarAppName ? null : isMac && !layout.isFullScreen ? (
           <div className="titlebar-traffic-light-pad" />
         ) : hasCustomTitleBar ? (
           /* Why: Windows/Linux remove the native title bar, so render the logo plus a ··· button that pops the application menu (as Alt does). */
@@ -66,7 +70,7 @@ export function TitlebarLeftControls({ layout }: { layout: AppChromeLayout }): R
         ) : (
           <div className="pl-2" />
         )}
-        {layout.showSidebar && !hasCustomTitleBar && layout.showTitlebarAppName && (
+        {showsSidebarAppName && (
           <ContextMenu>
             <ContextMenuTrigger asChild>
               <div
