@@ -1,6 +1,6 @@
-# ade
+# Orcinus
 
-基于 stablyai/orca 二次开发的 AI 编排 IDE（Tauri v2 + Rust，Windows/macOS）。
+基于 stablyai/orca 二次开发的 AI 编排 IDE（Tauri v2 + Rust，Windows/macOS）。项目原名 ade，Phase 0 收口后更名为 Orcinus。
 
 - 规格：`docs/superpowers/specs/2026-09-14-ade-design.md`
 - Phase 0 计划：`docs/superpowers/plans/2026-09-14-ade-phase0-skeleton-ui.md`
@@ -15,5 +15,5 @@ pnpm dev          # Tauri 开发窗口
 pnpm typecheck    # TS 类型检查
 pnpm test         # Vitest（全量，等价 vitest run）
 pnpm build:web    # 仅构建渲染层
-cargo test -p ade-pty
+cargo test -p orcinus-pty
 ```

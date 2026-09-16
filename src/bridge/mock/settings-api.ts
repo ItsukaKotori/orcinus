@@ -3,7 +3,7 @@ import type { SettingsApi } from '../../preload/api/settings-api'
 import { getDefaultSettings } from '../../shared/constants'
 import type { GlobalSettings } from '../../shared/global-settings-types'
 
-const MOCK_HOME = 'C:\\Users\\ade'
+const MOCK_HOME = 'C:\\Users\\orcinus'
 
 export function createSettingsApi(): SettingsApi {
   let state: GlobalSettings = {

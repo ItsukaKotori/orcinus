@@ -1,4 +1,4 @@
-use ade_pty::measure_pty_throughput;
+use orcinus_pty::measure_pty_throughput;
 use std::path::Path;
 
 #[test]

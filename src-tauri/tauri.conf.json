@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "ade",
+  "productName": "Orcinus",
   "version": "0.0.1",
-  "identifier": "dev.itsuka.ade",
+  "identifier": "dev.itsuka.orcinus",
   "build": {
     "beforeDevCommand": "pnpm vite",
     "devUrl": "http://127.0.0.1:1420",
@@ -10,7 +10,7 @@
     "frontendDist": "../dist"
   },
   "app": {
-    "windows": [{ "title": "ade", "width": 1440, "height": 900 }],
+    "windows": [{ "title": "Orcinus", "width": 1440, "height": 900 }],
     "security": { "csp": null }
   },
   "bundle": {

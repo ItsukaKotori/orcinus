@@ -1,5 +1,5 @@
 [package]
-name = "ade-app"
+name = "orcinus-app"
 version = "0.0.1"
 edition = "2021"
 
@@ -7,7 +7,7 @@ edition = "2021"
 members = ["crates/*"]
 
 [lib]
-name = "ade_app"
+name = "orcinus_app"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

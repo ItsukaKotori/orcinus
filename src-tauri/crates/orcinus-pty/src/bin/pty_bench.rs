@@ -10,7 +10,7 @@ fn main() {
         eprintln!(
             "pty_bench: sink binary not found at {}\n\
              `cargo run --bin pty_bench` does not build sibling bins; build them first with:\n\
-             cargo build -p ade-pty --bins{}",
+             cargo build -p orcinus-pty --bins{}",
             sink.display(),
             if cfg!(debug_assertions) {
                 ""
@@ -20,7 +20,7 @@ fn main() {
         );
         std::process::exit(1);
     }
-    let report = ade_pty::measure_pty_throughput(&sink, total_bytes).expect("pty run");
+    let report = orcinus_pty::measure_pty_throughput(&sink, total_bytes).expect("pty run");
     println!(
         "pty throughput: {:.1} MB/s (received {} bytes in {:?}, sink={})",
         report.mb_per_second,
