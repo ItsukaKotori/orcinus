@@ -528,7 +528,7 @@ describe('web UI preload API', () => {
     }
   )
 
-  it('union-merges local contextual tour seen ids when ui.get returns stale host state', async () => {
+  it('merges local feature interactions when ui.get returns stale host state', async () => {
     vi.doMock('./web-runtime-client', () => ({
       WebRuntimeClient: class {
         call(method: string): Promise<RuntimeRpcResponse<unknown>> {
@@ -537,7 +537,9 @@ describe('web UI preload API', () => {
             ok: true,
             result: {
               ui: {
-                contextualToursSeenIds: ['browser', 'unknown']
+                featureInteractions: {
+                  browser: { firstInteractedAt: 2, interactionCount: 1 }
+                }
               }
             },
             _meta: { runtimeId: 'runtime-1' }
@@ -553,7 +555,9 @@ describe('web UI preload API', () => {
     globals.storage.setItem(
       'orca.web.ui.v1',
       JSON.stringify({
-        contextualToursSeenIds: ['tasks', 'browser']
+        featureInteractions: {
+          tasks: { firstInteractedAt: 1, interactionCount: 1 }
+        }
       })
     )
     const { installWebPreloadApi } = await import('./web-preload-api')
@@ -561,11 +565,17 @@ describe('web UI preload API', () => {
 
     const ui = await globals.window.api.ui.get()
     const stored = JSON.parse(globals.storage.getItem('orca.web.ui.v1') ?? '{}') as {
-      contextualToursSeenIds?: string[]
+      featureInteractions?: Record<string, { firstInteractedAt: number }>
     }
 
-    expect(ui.contextualToursSeenIds).toEqual(['tasks', 'browser'])
-    expect(stored.contextualToursSeenIds).toEqual(['tasks', 'browser'])
+    expect(ui.featureInteractions).toEqual({
+      tasks: { firstInteractedAt: 1, interactionCount: 1 },
+      browser: { firstInteractedAt: 2, interactionCount: 1 }
+    })
+    expect(stored.featureInteractions).toEqual({
+      tasks: { firstInteractedAt: 1, interactionCount: 1 },
+      browser: { firstInteractedAt: 2, interactionCount: 1 }
+    })
   })
 
   it('keeps the local OSC 52 notice armed when ui.get returns an unmigrated host', async () => {
@@ -672,7 +682,7 @@ describe('web UI preload API', () => {
     expect(stored.featureInteractionTelemetryBuckets).toBeUndefined()
   })
 
-  it('union-merges local contextual tour seen ids when recordFeatureInteraction returns stale host state', async () => {
+  it('merges local feature interactions when recordFeatureInteraction returns stale host state', async () => {
     vi.doMock('./web-runtime-client', () => ({
       WebRuntimeClient: class {
         call(method: string): Promise<RuntimeRpcResponse<unknown>> {
@@ -681,7 +691,9 @@ describe('web UI preload API', () => {
             ok: true,
             result: {
               ui: {
-                contextualToursSeenIds: ['browser']
+                featureInteractions: {
+                  browser: { firstInteractedAt: 2, interactionCount: 1 }
+                }
               }
             },
             _meta: { runtimeId: 'runtime-1' }
@@ -697,7 +709,9 @@ describe('web UI preload API', () => {
     globals.storage.setItem(
       'orca.web.ui.v1',
       JSON.stringify({
-        contextualToursSeenIds: ['tasks']
+        featureInteractions: {
+          tasks: { firstInteractedAt: 1, interactionCount: 1 }
+        }
       })
     )
     const { installWebPreloadApi } = await import('./web-preload-api')
@@ -705,11 +719,17 @@ describe('web UI preload API', () => {
 
     const ui = await globals.window.api.ui.recordFeatureInteraction('tasks')
     const stored = JSON.parse(globals.storage.getItem('orca.web.ui.v1') ?? '{}') as {
-      contextualToursSeenIds?: string[]
+      featureInteractions?: Record<string, { firstInteractedAt: number }>
     }
 
-    expect(ui.contextualToursSeenIds).toEqual(['tasks', 'browser'])
-    expect(stored.contextualToursSeenIds).toEqual(['tasks', 'browser'])
+    expect(ui.featureInteractions).toEqual({
+      tasks: { firstInteractedAt: 1, interactionCount: 2 },
+      browser: { firstInteractedAt: 2, interactionCount: 1 }
+    })
+    expect(stored.featureInteractions).toEqual({
+      tasks: { firstInteractedAt: 1, interactionCount: 2 },
+      browser: { firstInteractedAt: 2, interactionCount: 1 }
+    })
   })
 
   it('proxies host skill discovery and computer-use permission APIs for paired web clients', async () => {

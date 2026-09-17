@@ -4,19 +4,13 @@ import { useTeamMembers, useTeamLabels, useTeamStates } from '@/hooks/useIssueMe
 import { useTaskCreationDraftRetention } from '@/components/use-task-creation-draft-retention'
 import type { LinearProjectSummary } from '../../../shared/linear/project-types'
 import { linearListProjects } from '@/runtime/runtime-linear-project-client'
-import { useContextualTour } from '@/components/contextual-tours/use-contextual-tour'
 import { writeNewLinearIssueDraft, writeNewLinearProjectDraft } from './task-page-draft-storage'
 export function useTaskPageLinearCreationState(model: TaskPageJiraListProjectionModel) {
   const {
     settings,
-    activeModal,
     linearConnected,
     selectedLinearWorkspaceId,
     linearTaskSourceContext,
-    gitlabDialogItem,
-    dialogWorkItem,
-    newIssueOpen,
-    selectedLinearIssue,
     selectedLinearProject,
     availableTeams
   } = model
@@ -163,19 +157,6 @@ export function useTaskPageLinearCreationState(model: TaskPageJiraListProjection
   }, [newLinearStates.data, newLinearIssueStateId])
   const [linearConnectOpen, setLinearConnectOpen] = useState(false)
   const [jiraConnectOpen, setJiraConnectOpen] = useState(false)
-  useContextualTour(
-    'tasks',
-    !dialogWorkItem &&
-      !gitlabDialogItem &&
-      !selectedLinearIssue &&
-      !newIssueOpen &&
-      !newLinearProjectOpen &&
-      !newLinearIssueOpen &&
-      !linearConnectOpen &&
-      !jiraConnectOpen &&
-      activeModal === 'none',
-    'tasks_open'
-  )
   const nextModel = model as typeof model & {
     newLinearProjectOpen: typeof newLinearProjectOpen
     setNewLinearProjectOpen: typeof setNewLinearProjectOpen

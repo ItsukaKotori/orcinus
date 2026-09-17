@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { isFeatureTipId } from '../feature-tips'
 import {
   WORKTREE_CARD_PROPERTIES,
   normalizeWorktreeCardProperties
@@ -20,10 +19,6 @@ import { omitUndefinedValues, tolerateUnknownValues } from './ui-update-value-to
 export const NullableString = z.string().nullable()
 
 export const StringArray = z.array(z.string())
-
-export const FeatureTipIds = z.array(
-  z.custom(isFeatureTipId, { message: 'Unknown feature tip id' })
-)
 
 export const UnknownRecord = z.record(z.string(), z.unknown())
 
@@ -221,9 +216,6 @@ export const UiUpdateFields = z
     setupScriptPromptDismissedRepoIds: StringArray.optional(),
     // Why: one-shot dismissals the renderer writes through ui.set; each was a
     // whole-payload rejection for paired clients while unlisted.
-    setupGuideSidebarDismissed: z.boolean().optional(),
-    setupGuideBrowserMilestoneMigrated: z.boolean().optional(),
-    setupGuideBrowserMilestoneLegacyComplete: z.boolean().optional(),
     browserImportHintHidden: z.boolean().optional(),
     mobileEmulatorTabIntroDismissed: z.boolean().optional(),
     mobileEmulatorAgentSetupDismissed: z.boolean().optional(),
@@ -231,10 +223,7 @@ export const UiUpdateFields = z
     usageEmptyStateDismissed: z.boolean().optional(),
     taskResumeState: TaskResumeState.optional(),
     workspaceCleanup: WorkspaceCleanup.optional(),
-    featureTipsSeenIds: FeatureTipIds.optional(),
-    featureInteractions: FeatureInteractions.optional(),
-    contextualToursSeenIds: StringArray.optional(),
-    contextualToursAutoEligible: z.boolean().optional()
+    featureInteractions: FeatureInteractions.optional()
   })
   .strict()
 

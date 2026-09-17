@@ -55,11 +55,6 @@ type _CohortExtendedRoster =
   | 'agent_started'
   | 'agent_prompt_sent'
   | 'agent_error'
-  | 'orca_cli_feature_tip_shown'
-  | 'orca_cli_feature_tip_setup_clicked'
-  | 'orca_cli_feature_tip_setup_result'
-  | 'cmd_j_palette_feature_tip_shown'
-  | 'cmd_j_palette_feature_tip_acknowledged'
 // Why: strict empty payloads infer a string index signature; ignore index-only keys so they aren't pulled into keyed rosters.
 type _KnownPayloadKeys<T> = string extends keyof T ? never : keyof T
 type _DerivedCohortExtendedEvents = {

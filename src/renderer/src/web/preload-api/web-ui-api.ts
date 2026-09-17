@@ -12,7 +12,6 @@ import {
   writeWebClipboardText
 } from './web-clipboard-api'
 import {
-  mergeContextualTourSeenIds,
   mergeFeatureInteractionState,
   mergeHostWebUIState,
   mergeOsc52ClipboardNoticePending,
@@ -36,10 +35,6 @@ export function createWebUiApi(): NonNullable<Partial<PreloadApi>['ui']> {
           featureInteractions: mergeFeatureInteractionState(
             local.featureInteractions,
             result.ui.featureInteractions
-          ),
-          contextualToursSeenIds: mergeContextualTourSeenIds(
-            local.contextualToursSeenIds,
-            result.ui.contextualToursSeenIds
           )
         }
         writeJson(UI_STORAGE_KEY, next)
@@ -99,10 +94,6 @@ export function createWebUiApi(): NonNullable<Partial<PreloadApi>['ui']> {
           featureInteractions: mergeFeatureInteractionState(
             local.featureInteractions,
             result.ui.featureInteractions
-          ),
-          contextualToursSeenIds: mergeContextualTourSeenIds(
-            local.contextualToursSeenIds,
-            result.ui.contextualToursSeenIds
           )
         }
         writeJson(UI_STORAGE_KEY, next)
@@ -162,8 +153,7 @@ export function createWebUiApi(): NonNullable<Partial<PreloadApi>['ui']> {
     // Why: the web client has no OS shell handing it files, so there is never a queued open.
     onOpenMarkdownFiles: () => noopUnsubscribe,
     consumePendingMarkdownFileOpens: () => Promise.resolve([]),
-    onOpenSetupGuide: () => noopUnsubscribe,
-    onOpenFeatureTour: () => noopUnsubscribe,
+
     onOpenCrashReport: () => noopUnsubscribe,
     // No desktop main process to push state changes; the web client re-reads via ui.get on interaction.
     onStateChanged: () => noopUnsubscribe,

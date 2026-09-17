@@ -26,7 +26,7 @@ import { useAppStartupHydration } from './app-shell/use-app-startup-hydration'
 import { useDocumentAppearance } from './app-shell/use-document-appearance'
 import { useFloatingWorkspacePanel } from './app-shell/use-floating-workspace-panel'
 import { useGlobalKeybindings } from './app-shell/use-global-keybindings'
-import { useOnboardingAndFeatureTips } from './app-shell/use-onboarding-and-feature-tips'
+import { useOnboarding } from './app-shell/use-onboarding'
 import { usePersistedUIWriter } from './app-shell/use-persisted-ui-writer'
 import { useRuntimeGraphSync } from './app-shell/use-runtime-graph-sync'
 import { useWindowVisibilityEffects } from './app-shell/use-window-visibility-effects'
@@ -34,7 +34,7 @@ import { useWindowVisibilityEffects } from './app-shell/use-window-visibility-ef
 function App(): React.JSX.Element {
   const layout = useAppChromeLayout()
   const floatingWorkspace = useFloatingWorkspacePanel()
-  const onboardingGate = useOnboardingAndFeatureTips()
+  const onboardingGate = useOnboarding()
   const clearUnreadDockBadge = useUnreadDockBadge()
 
   // Why enabled && open: the overlay only renders while the feature is on, and its panel is

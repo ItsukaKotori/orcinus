@@ -6,9 +6,6 @@ const windowsTestWorkerOptions = process.platform === 'win32' ? { maxWorkers: 4 
 const electronTestShim = resolve('src/types/electron-vitest-stub.ts')
 
 export default defineConfig({
-  define: {
-    ORCA_FEATURE_WALL_ENABLED: 'true'
-  },
   resolve: {
     alias: [
       // Phase 0: renderer tests can reach Electron-backed src/main modules; fail loudly through

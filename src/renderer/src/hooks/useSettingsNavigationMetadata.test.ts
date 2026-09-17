@@ -38,9 +38,9 @@ describe('settings navigation metadata', () => {
       'orchestration',
       'computer-use',
       'voice',
-      'setup-guide',
       'general',
-      'integrations'
+      'integrations',
+      'automations'
     ])
   })
 
@@ -108,9 +108,9 @@ describe('settings navigation metadata', () => {
     expect(ids({ isWebClient: true }).slice(0, 5)).toEqual([
       'agents',
       'orchestration',
-      'setup-guide',
       'general',
-      'integrations'
+      'integrations',
+      'automations'
     ])
   })
 

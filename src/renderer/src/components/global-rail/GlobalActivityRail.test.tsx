@@ -33,15 +33,11 @@ describe('GlobalActivityRail', () => {
     expect(useAppStore.getState().activeView).toBe('settings')
   })
 
-  it('routes the bottom help entry to the existing setup-guide settings target', async () => {
+  it('opens the settings surface from the bottom help entry', async () => {
     render(<GlobalActivityRail />)
 
     await userEvent.click(screen.getByRole('button', { name: '帮助' }))
 
     expect(useAppStore.getState().activeView).toBe('settings')
-    expect(useAppStore.getState().settingsNavigationTarget).toEqual({
-      pane: 'setup-guide',
-      repoId: null
-    })
   })
 })

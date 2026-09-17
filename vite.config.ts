@@ -7,9 +7,6 @@ export default defineConfig({
   root: resolve('src/renderer'),
   base: './',
   plugins: [react(), tailwindcss()],
-  define: {
-    ORCA_FEATURE_WALL_ENABLED: 'true'
-  },
   resolve: {
     alias: {
       '@renderer': resolve('src/renderer/src'),

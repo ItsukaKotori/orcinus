@@ -25,35 +25,18 @@ import {
   settingsChangedSchema
 } from './telemetry-daemon-event-schemas'
 import {
-  contextualTourOutcomeSchema,
-  contextualTourShownSchema,
   directSshReconnectOperationSchema,
   editorExternalChangeConflictActionSchema,
   editorExternalChangeConflictShownSchema,
-  setupGuideClosedSchema,
-  setupGuideOpenedSchema,
-  setupGuideStepCompletedSchema,
   terminalPaneSplitSchema
 } from './telemetry-feature-education-event-schemas'
 import {
-  cmdJPaletteFeatureTipAcknowledgedSchema,
-  cmdJPaletteFeatureTipShownSchema,
-  featureWallClosedSchema,
-  featureWallDocsClickedSchema,
-  featureWallFeatureSelectedSchema,
-  featureWallGroupSelectedSchema,
-  featureWallOpenedSchema,
-  featureWallTileClickedSchema,
-  featureWallTileFocusedSchema,
   nativeChatMessageSentSchema,
   nativeChatPickerItemAcceptedSchema,
   nativeChatPickerOpenedSchema,
   nativeChatSendClassifiedSchema,
   nativeChatSkillDiscoverySchema,
   nativeChatToggledSchema,
-  orcaCliFeatureTipSetupClickedSchema,
-  orcaCliFeatureTipSetupResultSchema,
-  orcaCliFeatureTipShownSchema,
   telemetryOptedInSchema,
   telemetryOptedOutSchema
 } from './telemetry-native-feature-event-schemas'
@@ -144,20 +127,6 @@ export const eventSchemas = {
   telemetry_opted_in: telemetryOptedInSchema,
   telemetry_opted_out: telemetryOptedOutSchema,
 
-  orca_cli_feature_tip_shown: orcaCliFeatureTipShownSchema,
-  orca_cli_feature_tip_setup_clicked: orcaCliFeatureTipSetupClickedSchema,
-  orca_cli_feature_tip_setup_result: orcaCliFeatureTipSetupResultSchema,
-  cmd_j_palette_feature_tip_shown: cmdJPaletteFeatureTipShownSchema,
-  cmd_j_palette_feature_tip_acknowledged: cmdJPaletteFeatureTipAcknowledgedSchema,
-
-  feature_wall_opened: featureWallOpenedSchema,
-  feature_wall_closed: featureWallClosedSchema,
-  feature_wall_tile_focused: featureWallTileFocusedSchema,
-  feature_wall_tile_clicked: featureWallTileClickedSchema,
-  feature_wall_group_selected: featureWallGroupSelectedSchema,
-  feature_wall_feature_selected: featureWallFeatureSelectedSchema,
-  feature_wall_docs_clicked: featureWallDocsClickedSchema,
-
   onboarding_started: onboardingStartedSchema,
   onboarding_step_viewed: onboardingStepViewedSchema,
   onboarding_step_completed: onboardingStepCompletedSchema,
@@ -179,11 +148,6 @@ export const eventSchemas = {
   onboarding_feature_setup_terminal_interacted: onboardingFeatureSetupTerminalInteractedSchema,
   activation_checklist_item_completed: activationChecklistItemCompletedSchema,
 
-  contextual_tour_shown: contextualTourShownSchema,
-  contextual_tour_outcome: contextualTourOutcomeSchema,
-  setup_guide_opened: setupGuideOpenedSchema,
-  setup_guide_closed: setupGuideClosedSchema,
-  setup_guide_step_completed: setupGuideStepCompletedSchema,
   terminal_pane_split: terminalPaneSplitSchema,
 
   editor_external_change_conflict_shown: editorExternalChangeConflictShownSchema,

@@ -7,7 +7,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SidebarSettingsHelpMenu } from './SidebarSettingsHelpMenu'
 
 const mocks = vi.hoisted(() => ({
-  openModal: vi.fn(),
   openSettingsPage: vi.fn(),
   openSettingsTarget: vi.fn(),
   appRestart: vi.fn(),
@@ -15,13 +14,7 @@ const mocks = vi.hoisted(() => ({
   shellOpenUrl: vi.fn(),
   useShortcutKeyDetails: vi.fn(),
   /** Counts evaluations of the feedback chunk; a dynamic import evaluates it exactly once. */
-  feedbackChunkLoads: 0,
-  setupProgress: {
-    ready: true,
-    coreDoneCount: 2,
-    coreTotal: 5,
-    stepDone: {}
-  }
+  feedbackChunkLoads: 0
 }))
 
 let updateStatus = { state: 'idle' } as const
@@ -30,7 +23,6 @@ const roots: Root[] = []
 vi.mock('@/store', () => ({
   useAppStore: (selector: (state: unknown) => unknown) =>
     selector({
-      openModal: mocks.openModal,
       openSettingsPage: mocks.openSettingsPage,
       openSettingsTarget: mocks.openSettingsTarget,
       updateStatus
@@ -47,14 +39,6 @@ vi.mock('@/hooks/useMountedRef', () => ({
 
 vi.mock('../onboarding/show-onboarding-event', () => ({
   showOnboardingFromRenderer: vi.fn()
-}))
-
-vi.mock('../setup-guide/use-setup-guide-progress', () => ({
-  useSetupGuideProgress: () => mocks.setupProgress
-}))
-
-vi.mock('../setup-guide/SetupGuideProgressRing', () => ({
-  SetupGuideProgressRing: () => <span data-testid="setup-guide-progress-ring" />
 }))
 
 vi.mock('@/components/ui/dropdown-menu', () => ({
@@ -176,12 +160,6 @@ describe('SidebarSettingsHelpMenu', () => {
     installWindowApi()
     mocks.useShortcutKeyDetails.mockReturnValue({ keys: ['⌘', ','], doubleTap: false })
     updateStatus = { state: 'idle' }
-    mocks.setupProgress = {
-      ready: true,
-      coreDoneCount: 2,
-      coreTotal: 5,
-      stepDone: {}
-    }
   })
 
   afterEach(() => {
@@ -217,23 +195,6 @@ describe('SidebarSettingsHelpMenu', () => {
   it('renders Keyboard Shortcuts menu item', () => {
     const html = renderToStaticMarkup(<SidebarSettingsHelpMenu />)
     expect(html).toContain('Keyboard Shortcuts')
-  })
-
-  it('renders Milestones with progress when setup is incomplete', () => {
-    const html = renderToStaticMarkup(<SidebarSettingsHelpMenu />)
-    expect(html).toContain('Milestones')
-    expect(html).toContain('data-testid="setup-guide-progress-ring"')
-  })
-
-  it('hides Milestones when setup is complete', () => {
-    mocks.setupProgress = {
-      ready: true,
-      coreDoneCount: 5,
-      coreTotal: 5,
-      stepDone: {}
-    }
-    const html = renderToStaticMarkup(<SidebarSettingsHelpMenu />)
-    expect(html).not.toContain('Milestones')
   })
 
   it('renders the Onboarding menu item by default', () => {

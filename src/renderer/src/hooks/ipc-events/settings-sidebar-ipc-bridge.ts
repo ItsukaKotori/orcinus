@@ -30,18 +30,6 @@ export function registerSettingsAndSidebarIpcBridge(unsubs: (() => void)[]): voi
     })
     .catch(() => {})
 
-  unsubs.push(
-    window.api.ui.onOpenSetupGuide?.(() => {
-      useAppStore.getState().openModal('setup-guide', { telemetrySource: 'help_menu' })
-    }) ?? (() => {})
-  )
-
-  unsubs.push(
-    window.api.ui.onOpenFeatureTour(() => {
-      useAppStore.getState().openModal('feature-wall', { source: 'help_menu' })
-    })
-  )
-
   // Why: View > Appearance toggles settings in main and broadcasts; merge into the store for an immediate re-render.
   unsubs.push(
     window.api.settings.onChanged((updates) => {

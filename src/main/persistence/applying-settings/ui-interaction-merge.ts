@@ -2,7 +2,6 @@ import type { WorkspaceKey } from '../../../shared/folder-workspace-types'
 import type { PersistedState } from '../../../shared/persisted-state-types'
 import type { WorkspaceLineage } from '../../../shared/worktree/lineage-types'
 import { normalizeFeatureInteractions } from '../../../shared/feature-interactions'
-import { normalizeContextualTourIds } from '../../../shared/contextual-tours'
 import { isWorkspaceKey } from '../../../shared/workspace-scope'
 
 export function mergeFeatureInteractions(
@@ -28,17 +27,6 @@ export function mergeFeatureInteractions(
       : incomingRecord
   }
   return merged
-}
-
-export function mergeContextualTourSeenIds(
-  current: PersistedState['ui']['contextualToursSeenIds'],
-  incoming: PersistedState['ui']['contextualToursSeenIds']
-): PersistedState['ui']['contextualToursSeenIds'] {
-  const merged = new Set(normalizeContextualTourIds(current))
-  for (const id of normalizeContextualTourIds(incoming)) {
-    merged.add(id)
-  }
-  return [...merged]
 }
 
 export function stripMainOwnedTelemetryMarkerFromUI(

@@ -44,7 +44,7 @@ export function resolveTerminalKeyboardShortcutAction(
 
 export function recordKeyboardCreatedTerminalPaneSplit(
   createdPane: unknown,
-  args: { source: 'contextual_tour' | 'keyboard'; direction: 'vertical' | 'horizontal' }
+  args: { source: 'keyboard'; direction: 'vertical' | 'horizontal' }
 ): boolean {
   return recordCreatedTerminalPaneSplit(createdPane, args)
 }

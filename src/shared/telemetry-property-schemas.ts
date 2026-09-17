@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { FEATURE_WALL_EXIT_ACTIONS, FEATURE_WALL_TOUR_DEPTH_STEPS } from './feature-wall-tour-depth'
 import { SETUP_SCRIPT_IMPORT_PROVIDERS } from './setup-script-import-providers'
 import { WORKSPACE_SOURCE_VALUES, type WorkspaceSource } from './workspace-source'
 import type { GlobalSettings } from './global-settings-types'
@@ -140,36 +139,6 @@ export type LaunchSource = z.infer<typeof launchSourceSchema>
 
 export const requestKindSchema = z.enum(['new', 'resume', 'followup'])
 export type RequestKind = z.infer<typeof requestKindSchema>
-
-export const featureWallTileIdSchema = z.enum([
-  'tile-01',
-  'tile-02',
-  'tile-03',
-  'tile-04',
-  'tile-05',
-  'tile-06',
-  'tile-07',
-  'tile-08',
-  'tile-09',
-  'tile-10',
-  'tile-11',
-  'tile-12'
-])
-
-export const featureWallOpenSourceSchema = z.enum(['help_menu', 'popup', 'onboarding', 'unknown'])
-export type FeatureWallOpenSourceTelemetry = z.infer<typeof featureWallOpenSourceSchema>
-
-export const featureWallWorkflowIdSchema = z.enum([
-  'tasks',
-  'workspaces',
-  'agents-orchestration',
-  'workbench',
-  'review'
-])
-
-export const featureWallTourDepthStepSchema = z.enum(FEATURE_WALL_TOUR_DEPTH_STEPS)
-
-export const featureWallExitActionSchema = z.enum(FEATURE_WALL_EXIT_ACTIONS)
 
 // `env_var` absent — env-var/CI paths override consent at runtime only, never firing an opt-in/out event.
 // `first_launch_notice` absent — the new-user cohort has no first-launch surface; those opt-outs come via `'settings'`.

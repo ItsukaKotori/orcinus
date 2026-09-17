@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatOptionalPrimaryShortcutLabel } from '@/hooks/useShortcutLabel'
 import { translate } from '@/i18n/i18n'
-import { openWorkspaceCreationComposerWithTourHandoff } from '../contextual-tours/workspace-creation-tour-handoff'
 import SidebarWorkspaceOptionsMenu from './SidebarWorkspaceOptionsMenu'
 
 function AddProjectButton({
@@ -44,16 +43,15 @@ function NewWorkspaceButton({
   preserveWorkspaceBoardOpen: boolean
 }): React.JSX.Element {
   const keybindings = useAppStore((s) => s.keybindings)
+  const openModal = useAppStore((s) => s.openModal)
   // Why primary: workspace.create binds both Mod+N and Mod+Shift+N, and listing
   // every alias in a one-line tooltip reads as noise rather than help.
   const shortcutLabel = formatOptionalPrimaryShortcutLabel('workspace.create', keybindings)
   const label = translate('auto.components.sidebar.SidebarHeader.92154beb7e', 'New workspace')
 
-  // Why the tour handoff here: the tour highlights this button, and it is now
-  // the control that performs the action rather than one that opens a menu.
   const handleCreateWorkspace = useCallback(() => {
-    openWorkspaceCreationComposerWithTourHandoff()
-  }, [])
+    openModal('new-workspace-composer', { telemetrySource: 'sidebar' })
+  }, [openModal])
 
   return (
     <Tooltip>

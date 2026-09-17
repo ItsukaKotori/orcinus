@@ -108,16 +108,11 @@ export async function flushAsyncWork(): Promise<void> {
 
 export async function renderPanel(
   open: boolean,
-  onOpenChange: (open: boolean) => void = vi.fn(),
-  tourInteractionSnapshot?: {
-    wasPreviouslyInteracted: boolean
-    persisted?: Promise<void>
-    recordFeatureInteractionForTour: boolean
-  } | null
+  onOpenChange: (open: boolean) => void = vi.fn()
 ): Promise<unknown> {
   hookRuntime.index = 0
   const { FloatingTerminalPanel } = await import('./FloatingTerminalPanel')
-  return FloatingTerminalPanel({ open, onOpenChange, tourInteractionSnapshot })
+  return FloatingTerminalPanel({ open, onOpenChange })
 }
 
 export function getPanelStyleBounds(element: unknown): FloatingTerminalPanelBounds {

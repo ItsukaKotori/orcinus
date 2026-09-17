@@ -1,8 +1,7 @@
 import { z } from 'zod'
-import { FEATURE_WALL_MAX_DWELL_MS } from './feature-wall-telemetry'
 import type { DiscoveryStatusEmitted } from './onboarding-state-types'
 import type { PathSource, ShellHydrationFailureReason } from './shell-path-hydration-types'
-import { agentKindSchema, featureWallTourDepthStepSchema } from './telemetry-property-schemas'
+import { agentKindSchema } from './telemetry-property-schemas'
 import {
   cohortSchema,
   hasMatchingOnboardingFeatureSetupSelectedCount,
@@ -22,6 +21,23 @@ import {
   onboardingWindowsTerminalRightClickSchema,
   onboardingWindowsTerminalShellSchema
 } from './telemetry-onboarding-foundation-schemas'
+
+// Why: the onboarding tour walks the same feature surfaces as the removed
+// feature wall; keep its depth step ids local instead of importing that module.
+const ONBOARDING_TOUR_MAX_DWELL_MS = 86_400_000
+export const onboardingTourDepthStepSchema = z.enum([
+  'workspaces',
+  'tasks',
+  'agents_statuses',
+  'agents_usage',
+  'agents_orchestration',
+  'workbench_terminal',
+  'workbench_editor',
+  'workbench_browser',
+  'review_notes',
+  'review_pr_view',
+  'review_ship'
+])
 
 // Uniform button/keyboard shape lets keyboard skip/dismiss paths arrive without a schema migration.
 export const advancedViaSchema = z.enum(['button', 'keyboard']).optional()
@@ -57,7 +73,7 @@ export const onboardingStepSkippedSchema = z
 export type OnboardingTourOutcomeTelemetry = {
   outcome: z.infer<typeof onboardingTourOutcomeSchema>
   tour_dwell_ms?: number
-  furthest_step?: z.infer<typeof featureWallTourDepthStepSchema>
+  furthest_step?: z.infer<typeof onboardingTourDepthStepSchema>
   visited_workflow_count?: number
   visited_substep_count?: number
   completed_workflow_count?: number
@@ -92,9 +108,9 @@ export function validateOnboardingTourOutcome(
 export const onboardingTourOutcomeEventSchema = z
   .object({
     outcome: onboardingTourOutcomeSchema,
-    intro_duration_ms: z.number().int().min(0).max(FEATURE_WALL_MAX_DWELL_MS).optional(),
-    tour_dwell_ms: z.number().int().min(0).max(FEATURE_WALL_MAX_DWELL_MS).optional(),
-    furthest_step: featureWallTourDepthStepSchema.optional(),
+    intro_duration_ms: z.number().int().min(0).max(ONBOARDING_TOUR_MAX_DWELL_MS).optional(),
+    tour_dwell_ms: z.number().int().min(0).max(ONBOARDING_TOUR_MAX_DWELL_MS).optional(),
+    furthest_step: onboardingTourDepthStepSchema.optional(),
     visited_workflow_count: z.number().int().min(0).max(5).optional(),
     visited_substep_count: z.number().int().min(0).max(9).optional(),
     completed_workflow_count: z.number().int().min(0).max(5).optional(),

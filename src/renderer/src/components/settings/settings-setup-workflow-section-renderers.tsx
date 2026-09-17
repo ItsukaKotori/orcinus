@@ -2,28 +2,9 @@ import { ArtifactsSettingsPane } from './ArtifactsSettingsPane'
 import { AutomationsSettingsPane } from './AutomationsSettingsPane'
 import { GeneralPane } from './GeneralPane'
 import { IntegrationsPane } from './IntegrationsPane'
-import { SettingsSetupGuidePane } from './SettingsSetupGuidePane'
 import { SettingsSection } from './SettingsSection'
 import { translate } from '@/i18n/i18n'
 import type { SettingsRenderContext } from './settings-render-context'
-
-export function renderSetupGuideSettingsSection(context: SettingsRenderContext): React.JSX.Element {
-  const { navigation, view } = context
-  return (
-    <SettingsSection
-      id="setup-guide"
-      title={translate('auto.components.settings.Settings.6d119427ef', 'Onboarding checklist')}
-      description={translate(
-        'auto.components.settings.Settings.6855b0f77d',
-        'Finish the core workflows that make Orca useful for parallel agent work.'
-      )}
-      searchEntries={navigation.getSectionSearchEntries('setup-guide')}
-      bodyClassName="overflow-hidden rounded-none border-0 bg-transparent p-0 shadow-none"
-    >
-      {view.isSectionMounted('setup-guide') ? <SettingsSetupGuidePane /> : null}
-    </SettingsSection>
-  )
-}
 
 export function renderGeneralSettingsSection(context: SettingsRenderContext): React.JSX.Element {
   const { model, interactions, navigation, terminal, view } = context

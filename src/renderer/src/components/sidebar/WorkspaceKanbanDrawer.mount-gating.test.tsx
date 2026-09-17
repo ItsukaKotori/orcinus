@@ -5,19 +5,17 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAppStore } from '@/store'
 import { readStoreListenerCount } from '@/store/store-listener-census'
-import type * as ContextualTour from '@/components/contextual-tours/use-contextual-tour'
 import type * as VisibleWorkspaceKanban from './use-visible-workspace-kanban-worktree-ids'
 import WorkspaceKanbanDrawer from './WorkspaceKanbanDrawer'
 
-const { contentProbe, contextualTourMock } = vi.hoisted(() => ({
+const { contentProbe } = vi.hoisted(() => ({
   contentProbe: {
     mounts: vi.fn(),
     projections: vi.fn(),
     renders: vi.fn(),
     storeNotifications: vi.fn(),
     unmounts: vi.fn()
-  },
-  contextualTourMock: vi.fn()
+  }
 }))
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), warning: vi.fn() } }))
@@ -108,16 +106,6 @@ vi.mock('./use-workspace-kanban-outside-dismiss', () => ({
   useWorkspaceKanbanOutsideDismiss: vi.fn()
 }))
 vi.mock('./use-workspace-status-drop', () => ({ useWorkspaceStatusDocumentDrop: vi.fn() }))
-vi.mock('@/components/contextual-tours/use-contextual-tour', async (importOriginal) => {
-  const actual = await importOriginal<typeof ContextualTour>()
-  return {
-    ...actual,
-    useContextualTour: (...args: Parameters<typeof actual.useContextualTour>) => {
-      contextualTourMock(...args)
-      actual.useContextualTour(...args)
-    }
-  }
-})
 
 const initialAppState = useAppStore.getInitialState()
 const onOpenChange = vi.fn()
@@ -177,7 +165,6 @@ describe('WorkspaceKanbanDrawer mount gating', () => {
     globalThis.IS_REACT_ACT_ENVIRONMENT = true
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
     Object.values(contentProbe).forEach((probe) => probe.mockClear())
-    contextualTourMock.mockClear()
     onOpenChange.mockClear()
     onMenuOpenChange.mockClear()
     useAppStore.setState(initialAppState, true)
@@ -249,20 +236,10 @@ describe('WorkspaceKanbanDrawer mount gating', () => {
     await renderDrawer(true, true)
 
     expect(testContainer.querySelector('[data-workspace-board-drag-preview="true"]')).not.toBeNull()
-    expect(contextualTourMock).toHaveBeenLastCalledWith(
-      'workspace-board',
-      false,
-      'workspace_board_visible'
-    )
 
     await renderDrawer(true, false)
 
     expect(testContainer.querySelector('[data-workspace-board-drag-preview]')).toBeNull()
-    expect(contextualTourMock).toHaveBeenLastCalledWith(
-      'workspace-board',
-      true,
-      'workspace_board_visible'
-    )
     expect(contentProbe.mounts).toHaveBeenCalledTimes(1)
     expect(activeContentSubscriptions()).toBe(1)
   })

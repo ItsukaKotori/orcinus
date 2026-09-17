@@ -20,7 +20,7 @@ import {
   selectAppRootSurfaceVoiceEnabled
 } from './app-root-surface-settings'
 import type { FloatingWorkspacePanelState } from './use-floating-workspace-panel'
-import type { OnboardingGate } from './use-onboarding-and-feature-tips'
+import type { OnboardingGate } from './use-onboarding'
 
 const QuickOpen = lazy(() => import('../components/QuickOpen'))
 const WorktreeJumpPalette = lazy(() => import('../components/WorktreeJumpPalette'))
@@ -30,9 +30,6 @@ const WorkspaceCleanupDialog = lazy(
 const StatusBar = lazy(() =>
   import('../components/status-bar/StatusBar').then((module) => ({ default: module.StatusBar }))
 )
-const SetupGuideModal = lazy(() => import('../components/setup-guide/SetupGuideModal'))
-const FeatureWallModal = lazy(() => import('../components/feature-wall/FeatureWallModal'))
-const FeatureTipsModal = lazy(() => import('../components/feature-tips/FeatureTipsModal'))
 const AddRepoDialog = lazy(() => import('../components/sidebar/AddRepoDialog'))
 const NonGitFolderDialog = lazy(() => import('../components/sidebar/NonGitFolderDialog'))
 const AddProjectFromFolderDialog = lazy(
@@ -54,16 +51,6 @@ const UpdateCard = lazy(() =>
 const UnexpectedSignoutCard = lazy(() =>
   import('../components/UnexpectedSignoutCard').then((module) => ({
     default: module.UnexpectedSignoutCard
-  }))
-)
-const ContextualTourOverlay = lazy(() =>
-  import('../components/contextual-tours/ContextualTourOverlay').then((module) => ({
-    default: module.ContextualTourOverlay
-  }))
-)
-const SetupGuideTelemetryObserver = lazy(() =>
-  import('../components/setup-guide/SetupGuideTelemetryObserver').then((module) => ({
-    default: module.SetupGuideTelemetryObserver
   }))
 )
 const FloatingTerminalPanel = lazy(() =>
@@ -125,12 +112,9 @@ export function AppRootSurfaces(props: {
   const voiceEnabled = useAppStore(selectAppRootSurfaceVoiceEnabled)
   const telemetryOptedIn = useAppStore(selectAppRootSurfaceTelemetryOptedIn)
   const statusBarVisible = useAppStore((s) => s.statusBarVisible)
-  const persistedUIReady = useAppStore((s) => s.persistedUIReady)
   const dictationState = useAppStore((s) => s.dictationState)
   const updateStatus = useAppStore((s) => s.updateStatus)
-  const activeContextualTourId = useAppStore((s) => s.activeContextualTourId)
 
-  const shouldMountSetupGuideTelemetryObserver = persistedUIReady
   const shouldMountUpdateCard = shouldMountUpdateCardForStatus(updateStatus)
   const shouldMountDictationController = voiceEnabled || dictationState !== 'idle'
 
@@ -150,7 +134,6 @@ export function AppRootSurfaces(props: {
             <FloatingTerminalPanel
               open={floatingWorkspace.open}
               onOpenChange={floatingWorkspace.setOpenWithFocus}
-              tourInteractionSnapshot={floatingWorkspace.tourInteractionSnapshotRef.current}
             />
           </OverlayBoundary>
         </Suspense>
@@ -228,32 +211,7 @@ export function AppRootSurfaces(props: {
             <WorktreeJumpPalette />
           </ModalBoundary>
         ) : null}
-        {mountedLazyModalIds.has('setup-guide') ? (
-          <ModalBoundary boundaryId="modal.setup-guide" resetKey={activeModal === 'setup-guide'}>
-            <SetupGuideModal />
-          </ModalBoundary>
-        ) : null}
-        {mountedLazyModalIds.has('feature-wall') ? (
-          <ModalBoundary boundaryId="modal.feature-wall" resetKey={activeModal === 'feature-wall'}>
-            <FeatureWallModal />
-          </ModalBoundary>
-        ) : null}
-        {mountedLazyModalIds.has('feature-tips') ? (
-          <ModalBoundary boundaryId="modal.feature-tips" resetKey={activeModal === 'feature-tips'}>
-            <FeatureTipsModal />
-          </ModalBoundary>
-        ) : null}
       </Suspense>
-      {shouldMountSetupGuideTelemetryObserver ? (
-        <Suspense fallback={null}>
-          <SetupGuideTelemetryObserver />
-        </Suspense>
-      ) : null}
-      {activeContextualTourId !== null ? (
-        <Suspense fallback={null}>
-          <ContextualTourOverlay />
-        </Suspense>
-      ) : null}
       <NotificationCardStack>
         {shouldMountUpdateCard ? (
           <Suspense fallback={null}>

@@ -642,26 +642,6 @@ describe.each([
     expect(addressBar()).toBe(bar)
   })
 
-  // Why the tour is gated on a real placement: recording the interaction is a one-way write that
-  // burns the one-time tour, and a staged pane has no controls that work yet to point at.
-  it('does not burn the intro tour on a pane that is still connecting', () => {
-    const recordFeatureInteraction = vi.fn(async () => {})
-    useAppStore.setState({
-      persistedUIReady: true,
-      contextualToursSeenIds: ['client-hosted-browser'],
-      recordFeatureInteraction
-    } as unknown as Parameters<typeof useAppStore.setState>[0])
-    stageClientHostedHandle()
-    renderWorkspacePane()
-
-    expect(recordFeatureInteraction).not.toHaveBeenCalled()
-
-    act(() => adoptOntoClient())
-    act(() => flushFrames())
-
-    expect(recordFeatureInteraction).toHaveBeenCalledWith('client-hosted-browser')
-  })
-
   // Why this path still matters: the staged pane is chosen from a cached runtime status, and a
   // live one that disagrees sends the page to the server after all. That swap is the remount the
   // client-hosted path no longer takes, so the edit-session registry has to still carry the edit.

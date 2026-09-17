@@ -25,8 +25,6 @@ export function createUiApi(): PreloadApi['ui'] {
     consumePendingSkillShare: async () => null,
     onOpenMarkdownFiles: noopUnsubscribe,
     consumePendingMarkdownFileOpens: async () => [],
-    onOpenSetupGuide: noopUnsubscribe,
-    onOpenFeatureTour: noopUnsubscribe,
     onOpenCrashReport: noopUnsubscribe,
     onToggleLeftSidebar: noopUnsubscribe,
     onToggleRightSidebar: noopUnsubscribe,

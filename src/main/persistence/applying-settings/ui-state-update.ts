@@ -19,8 +19,6 @@ import {
 } from '../../../shared/execution-host'
 import { normalizeManualRepoOrder } from '../../../shared/manual-repo-order'
 import { normalizeBrowserPageZoomLevel } from '../../../shared/browser-page-zoom'
-import { normalizeFeatureTipIds } from '../../../shared/feature-tips'
-import { normalizeContextualTourIds } from '../../../shared/contextual-tours'
 import { normalizeFeatureInteractions } from '../../../shared/feature-interactions'
 import { mergeWorkspaceCleanupUIState } from '../../../shared/workspace-cleanup-ui-state'
 import { persistedUIValuesEqual } from '../../../shared/persisted-ui-equality'
@@ -37,7 +35,6 @@ import {
   normalizeSortBy
 } from './ui-selection-normalization'
 import {
-  mergeContextualTourSeenIds,
   mergeFeatureInteractions,
   stripMainOwnedTelemetryMarkerFromUI
 } from './ui-interaction-merge'
@@ -171,18 +168,6 @@ export function updatePersistedUI(
       sanitizedUpdates.showDotfilesByWorktree !== undefined
         ? normalizeShowDotfilesByWorktree(sanitizedUpdates.showDotfilesByWorktree)
         : normalizeShowDotfilesByWorktree(operations.state.ui?.showDotfilesByWorktree),
-    featureTipsSeenIds:
-      sanitizedUpdates.featureTipsSeenIds !== undefined
-        ? normalizeFeatureTipIds(sanitizedUpdates.featureTipsSeenIds)
-        : normalizeFeatureTipIds(operations.state.ui?.featureTipsSeenIds),
-    // Why: renderer and paired clients can mark different tours seen from stale snapshots; union so completed tours stay suppressed.
-    contextualToursSeenIds:
-      sanitizedUpdates.contextualToursSeenIds !== undefined
-        ? mergeContextualTourSeenIds(
-            operations.state.ui?.contextualToursSeenIds,
-            sanitizedUpdates.contextualToursSeenIds
-          )
-        : normalizeContextualTourIds(operations.state.ui?.contextualToursSeenIds),
     // Why: runtime RPCs and the renderer both record education state; merge so a stale renderer snapshot can't erase runtime-only interactions.
     featureInteractions:
       sanitizedUpdates.featureInteractions !== undefined

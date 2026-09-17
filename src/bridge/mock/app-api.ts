@@ -14,7 +14,6 @@ export function createAppApi(): AppApi {
       devRepoRoot: null,
       dockBadgeLabel: null
     }),
-    getFeatureWallAssetBaseUrl: async () => '',
     relaunch: async () => {},
     restart: async () => {},
     reload: async () => {},

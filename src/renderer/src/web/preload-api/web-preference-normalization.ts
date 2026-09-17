@@ -4,8 +4,6 @@ import {
   normalizeAgentActivityDisplayMode,
   normalizeWorktreeCardProperties
 } from '../../../../shared/constants'
-import { normalizeContextualTourIds } from '../../../../shared/contextual-tours'
-import type { ContextualTourId } from '../../../../shared/contextual-tours'
 import { normalizeFeatureInteractions } from '../../../../shared/feature-interactions'
 import type {
   FeatureInteractionId,
@@ -106,17 +104,6 @@ export function mergeFeatureInteractionState(
       : incomingRecord
   }
   return merged
-}
-
-export function mergeContextualTourSeenIds(
-  current: PersistedUIState['contextualToursSeenIds'],
-  incoming: PersistedUIState['contextualToursSeenIds']
-): ContextualTourId[] {
-  const merged = new Set<ContextualTourId>(normalizeContextualTourIds(current))
-  for (const id of normalizeContextualTourIds(incoming)) {
-    merged.add(id)
-  }
-  return [...merged]
 }
 
 export function mergeOsc52ClipboardNoticePending(

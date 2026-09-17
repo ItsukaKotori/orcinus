@@ -53,8 +53,6 @@ export type UiCommandEventApi = {
   onOpenMarkdownFiles: (callback: (documents: MarkdownDocument[]) => void) => () => void
   /** Drains the "Open With" paths queued before this renderer's listener attached. */
   consumePendingMarkdownFileOpens: () => Promise<MarkdownDocument[]>
-  onOpenSetupGuide: (callback: () => void) => () => void
-  onOpenFeatureTour: (callback: () => void) => () => void
   onOpenCrashReport: (callback: () => void) => () => void
   onToggleLeftSidebar: (callback: () => void) => () => void
   onToggleRightSidebar: (callback: () => void) => () => void

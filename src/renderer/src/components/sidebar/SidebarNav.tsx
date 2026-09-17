@@ -6,14 +6,11 @@ import { cn } from '@/lib/utils'
 import { useShortcutKeyComboDetails } from '@/hooks/useShortcutLabel'
 import { ShortcutKeyCombo } from '@/components/ShortcutKeyCombo'
 import { ContextMenu, ContextMenuTrigger } from '@/components/ui/context-menu'
-import { SetupGuideSidebarEntry } from './SetupGuideSidebarEntry'
 import { SidebarTaskNavButton } from './SidebarTaskNavButton'
 import { HideSidebarMenu } from './sidebar-nav-controls'
 import { translate } from '@/i18n/i18n'
 import { lazyWithRetry } from '@/lib/lazy-with-retry'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
-
-export { getSetupGuideSidebarEntryReady, shouldShowSetupGuideEntry } from './SetupGuideSidebarEntry'
 
 export function shouldShowAutomationsButton(
   settings: Partial<Pick<GlobalSettings, 'showAutomationsButton'>> | null | undefined
@@ -91,7 +88,6 @@ const SidebarNav = React.memo(function SidebarNav() {
           ))}
         </span>
       </button>
-      <SetupGuideSidebarEntry />
       <SidebarTaskNavButton />
       {showArtifactsButton ? (
         <ContextMenu>

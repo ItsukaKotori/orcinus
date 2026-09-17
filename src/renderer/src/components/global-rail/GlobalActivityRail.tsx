@@ -51,9 +51,7 @@ export function GlobalActivityRail(): React.JSX.Element {
 
   const openHelp = (): void => {
     // Why: the sidebar help menu is a sidebar-sized Settings+Help button pair and cannot be
-    // reused as a rail button; until a dedicated help surface exists, route to the app's
-    // existing guided-help pane (the same setup-guide surface the help menu's Milestones opens).
-    useAppStore.getState().openSettingsTarget({ pane: 'setup-guide', repoId: null })
+    // reused as a rail button; Settings is the stable surface for help and support actions.
     useAppStore.getState().openSettingsPage()
   }
 

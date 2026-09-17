@@ -32,7 +32,7 @@ type EventContext = KeyboardHandlersDeps & {
   reconcileHeldImeEnterModifiers: Runtime['reconcileHeldImeEnterModifiers']
   getImeEnterModifier: Runtime['getImeEnterModifier']
   getModifiedEnterChord: Runtime['getModifiedEnterChord']
-  getKeyboardSplitTelemetrySource: () => 'contextual_tour' | 'keyboard'
+  getKeyboardSplitTelemetrySource: () => 'keyboard'
   nativeOnlyShortcutTracker: Runtime['nativeOnlyShortcutTracker']
   optionKeyLocations: Runtime['optionKeyLocations']
   optionKittyReleases: Runtime['optionKittyReleases']

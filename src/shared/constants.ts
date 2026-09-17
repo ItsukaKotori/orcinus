@@ -303,9 +303,6 @@ export function getDefaultUIState(): PersistedUIState {
     acknowledgedAgentsByPaneKey: {},
     activityClearedAtByPaneKey: {},
     manuallyUnreadTurnsByPaneKey: {},
-    setupGuideSidebarDismissed: false,
-    setupGuideBrowserMilestoneMigrated: true,
-    setupGuideBrowserMilestoneLegacyComplete: false,
     browserImportHintHidden: false,
     trayMinimizeNoticeShown: false,
     // Why: fresh profiles start on the new default, so nothing was overridden to report.
@@ -315,9 +312,7 @@ export function getDefaultUIState(): PersistedUIState {
     // Why: only upgraded profiles saw the old ordering, so only they get the one-time notice.
     projectOrderManualDefaultNoticeDismissed: true,
     workspaceCleanup: { dismissals: {} },
-    featureTipsSeenIds: [],
     featureInteractions: {},
-    contextualToursSeenIds: [],
     browserDefaultZoomLevel: DEFAULT_BROWSER_PAGE_ZOOM_LEVEL
   }
 }

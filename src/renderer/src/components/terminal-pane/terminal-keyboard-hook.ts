@@ -4,7 +4,6 @@ import type { KeyboardHandlersDeps } from './terminal-keyboard-dependencies'
 import { createTerminalKeyboardRuntime } from './terminal-keyboard-runtime'
 import { createTerminalKeyboardEventHandlers } from './terminal-keyboard-event-handlers'
 import { prefetchLayoutCharacters } from '@/lib/keyboard-layout/layout-base-character'
-import { useAppStore } from '@/store'
 
 export type { KeyboardHandlersDeps } from './terminal-keyboard-dependencies'
 
@@ -118,10 +117,7 @@ export function useTerminalKeyboardShortcuts({
       isMac,
       isWindows,
       shortcutPlatform,
-      getKeyboardSplitTelemetrySource: () =>
-        useAppStore.getState().activeContextualTourId === 'workspace-agent-sessions'
-          ? 'contextual_tour'
-          : 'keyboard'
+      getKeyboardSplitTelemetrySource: () => 'keyboard'
     })
     const {
       onKeyDown,

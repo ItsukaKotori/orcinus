@@ -1,7 +1,5 @@
 import type { ReleaseChannel } from './release-channel'
 import type { WorkspaceCleanupUIState } from './workspace-cleanup'
-import type { FeatureTipId } from './feature-tips'
-import type { ContextualTourId } from './contextual-tours'
 import type { FeatureInteractionState } from './feature-interactions'
 import type { UsagePercentageDisplay } from './usage-percentage-display'
 import type { StatusBarUsageMode } from './status-bar-usage-mode'
@@ -141,12 +139,6 @@ export type PersistedUIState = {
   activityClearedAtByPaneKey?: Record<string, number>
   /** Per-paneKey turn stamps the user explicitly marked unread; persisted so a manual unread survives restart the way acks and cutoffs do. Renderer-owned via ui:set. */
   manuallyUnreadTurnsByPaneKey?: Record<string, number>
-  /** User-hidden setup-guide sidebar entry; a reversible declutter pref (Help menu stays available), not completion. */
-  setupGuideSidebarDismissed?: boolean
-  /** One-shot marker for the browser setup-guide milestone; profiles missing it are evaluated once in the renderer (completion needs runtime probes). */
-  setupGuideBrowserMilestoneMigrated?: boolean
-  /** Existing users who completed/dismissed the pre-browser checklist stay complete after the browser milestone is added. */
-  setupGuideBrowserMilestoneLegacyComplete?: boolean
   /** User-dismissed browser import toolbar hint; import stays available from Settings > Browser and the overflow menu. */
   browserImportHintHidden?: boolean
   /** Why: Windows-only. Set once on first hide to tray so the "Orca is still running" notice shows only once. */
@@ -202,12 +194,6 @@ export type PersistedUIState = {
   /** Page-position state for Tasks: only transient tabs/searches (source/repo/team/project selections use their own settings paths). */
   taskResumeState?: TaskResumeState
   workspaceCleanup?: WorkspaceCleanupUIState
-  /** Feature tips already surfaced; startup opens the tips modal only when a current tip id is missing here. */
-  featureTipsSeenIds?: FeatureTipId[]
   /** Feature ids the user has actually used; education surfaces skip teaching already-discovered features. */
   featureInteractions?: FeatureInteractionState
-  /** Contextual tours already surfaced; unknown ids ignored on hydration for downgrade/upgrade forward-compat. */
-  contextualToursSeenIds?: ContextualTourId[]
-  /** Whether this profile may receive automatic contextual tours; missing = renderer hasn't classified the profile yet. */
-  contextualToursAutoEligible?: boolean
 }

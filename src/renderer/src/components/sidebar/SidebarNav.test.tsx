@@ -22,8 +22,7 @@ const mocks = vi.hoisted(() => ({
   refreshPreflightStatus: vi.fn(),
   checkLinearConnection: vi.fn(),
   agentBucketCounts: { attention: 0, working: 0, done: 0, idle: 0 },
-  getAgentBucketCounts: vi.fn(),
-  setSetupGuideSidebarDismissed: vi.fn()
+  getAgentBucketCounts: vi.fn()
 }))
 
 vi.mock('@/store', () => ({
@@ -52,15 +51,6 @@ vi.mock('@/hooks/useShortcutLabel', () => ({
   useShortcutKeyComboDetails: () => [{ keys: ['⌘', 'J'], doubleTap: false }]
 }))
 
-vi.mock('../setup-guide/use-setup-guide-progress', () => ({
-  useSetupGuideProgress: () => ({
-    ready: true,
-    coreDoneCount: 0,
-    coreTotal: 1,
-    stepDone: {}
-  })
-}))
-
 vi.mock('@/components/ui/context-menu', () => ({
   ContextMenu: ({ children }: { children: ReactNode }) => (
     <div data-testid="context-menu">{children}</div>
@@ -77,10 +67,8 @@ vi.mock('@/components/ui/context-menu', () => ({
 }))
 
 import SidebarNav, {
-  getSetupGuideSidebarEntryReady,
   shouldShowAutomationsButton,
-  shouldShowArtifactsButton,
-  shouldShowSetupGuideEntry
+  shouldShowArtifactsButton
 } from './SidebarNav'
 
 function gitRepo(): Repo {
@@ -131,9 +119,7 @@ function setSidebarState({
     prefetchWorkItems: vi.fn(),
     activeRepoId: null,
     persistedUIReady: true,
-    activeModal: null,
-    setupGuideSidebarDismissed: true,
-    setSetupGuideSidebarDismissed: mocks.setSetupGuideSidebarDismissed
+    activeModal: null
   }
 }
 
@@ -425,24 +411,4 @@ describe('SidebarNav', () => {
     expect(mocks.updateSettings).toHaveBeenCalledWith({ showTasksButton: false })
   })
 
-  it('shows the setup guide entry only after readiness, before completion, and before explicit hide', () => {
-    expect(
-      shouldShowSetupGuideEntry({ ready: false, setupComplete: false, dismissed: false })
-    ).toBe(false)
-    expect(shouldShowSetupGuideEntry({ ready: true, setupComplete: false, dismissed: false })).toBe(
-      true
-    )
-    expect(shouldShowSetupGuideEntry({ ready: true, setupComplete: true, dismissed: false })).toBe(
-      false
-    )
-    expect(shouldShowSetupGuideEntry({ ready: true, setupComplete: false, dismissed: true })).toBe(
-      false
-    )
-  })
-
-  it('requires both persisted UI and setup progress readiness before showing setup guide entry', () => {
-    expect(getSetupGuideSidebarEntryReady(false, true)).toBe(false)
-    expect(getSetupGuideSidebarEntryReady(true, false)).toBe(false)
-    expect(getSetupGuideSidebarEntryReady(true, true)).toBe(true)
-  })
 })
