@@ -6,3 +6,4 @@ spikes/*/target/
 *.local
 *.tsbuildinfo
 .DS_Store
+.superpowers/
