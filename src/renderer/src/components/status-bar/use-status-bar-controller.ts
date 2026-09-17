@@ -16,8 +16,6 @@ export function useStatusBarController(floatingTerminalOpen: boolean) {
   const floatingTerminalEnabled = settings?.floatingTerminalEnabled === true
   const floatingTerminalTriggerLocation =
     settings?.floatingTerminalTriggerLocation ?? 'floating-button'
-  // Why: pet segment is driven purely by experimentalPet, not statusBarItems, to avoid double-toggling the surface (see design doc).
-  const petEnabled = useAppStore((s) => s.settings?.experimentalPet === true)
   const toggleStatusBarItem = useAppStore((s) => s.toggleStatusBarItem)
   const containerRef = useRef<HTMLDivElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -68,7 +66,6 @@ export function useStatusBarController(floatingTerminalOpen: boolean) {
     iconOnly,
     menuOpen,
     menuPoint,
-    petEnabled,
     recordFeatureInteraction,
     setMenuOpen,
     setMenuPoint,

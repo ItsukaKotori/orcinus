@@ -13,9 +13,6 @@ import { useStatusBarController } from './use-status-bar-controller'
 import { StatusBarVisibilityMenu } from './StatusBarVisibilityMenu'
 import { isPairedWebClientWindow } from '@/lib/desktop-window-chrome'
 
-const PetStatusSegment = lazyWithRetry(() =>
-  import('./PetStatusSegment').then((module) => ({ default: module.PetStatusSegment }))
-)
 const ResourceUsageStatusSegment = lazyWithRetry(() =>
   import('./ResourceUsageStatusSegment').then((module) => ({
     default: module.ResourceUsageStatusSegment
@@ -42,7 +39,6 @@ export function StatusBarSurface({
     floatingTerminalActionLabel,
     floatingTerminalShortcut,
     iconOnly,
-    petEnabled,
     setMenuOpen,
     setMenuPoint,
     showFloatingTerminalToggle,
@@ -73,7 +69,6 @@ export function StatusBarSurface({
         {!isPairedWebClientWindow() ? <CaffeinateStatusSegment iconOnly={iconOnly} /> : null}
         <UpdateStatusSegment compact={compact} iconOnly={iconOnly} />
         <React.Suspense fallback={null}>
-          {petEnabled ? <PetStatusSegment /> : null}
           {showResourceUsage ? (
             <ResourceUsageStatusSegment compact={compact} iconOnly={iconOnly} />
           ) : null}

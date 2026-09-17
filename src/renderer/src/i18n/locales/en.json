@@ -3550,24 +3550,7 @@
       },
       "status": {
         "bar": {
-          "PetStatusSegment": {
-            "3668339495": "Remove {{value0}}",
-            "cd8c6c654c": "Pet settings…",
-            "ed176ad68f": "Import .codex-pet bundle…",
-            "59b5955621": "Upload your own…",
-            "0608ad02a2": "Choose pet",
-            "b75484a01a": "Pet size",
-            "c6aa805b1b": "px",
-            "2f7bbaa457": "Size",
-            "34c25dfe9c": "Pet",
-            "aec479308a": "Pet menu",
-            "cef0ab4636": "Failed to import pet bundle",
-            "2021d4f6db": "Pet bundle import needs a full app restart (not just reload).",
-            "f395c9a685": "Failed to import file",
-            "e6234bcc17": "Custom pet upload needs a full app restart (not just reload).",
-            "6d0a8cd179": "Show pet",
-            "1fbc51cc77": "Hide pet"
-          },
+          "PetStatusSegment": {},
           "PortsStatusSegment": {
             "4ebf90c12e": "No external ports detected",
             "7dac3ecc9d": "External Ports",
@@ -7017,9 +7000,6 @@
             "title": "New card style",
             "toggleLabel": "Toggle new card style"
           },
-          "ca2219fe5e": "Shows a small animated pet pinned to the bottom-right corner. Pick a character (Claudino, OpenCode, Gremlin) or upload your own PNG, APNG, GIF, WebP, JPG, or SVG from the status-bar pet menu. Hide it any time from the same menu without disabling this setting.",
-          "dd6f0a1d45": "Pet",
-          "0e89a574ae": "Floating animated pet in the bottom-right corner.",
           "nativeChat": {
             "title": "Chat UI",
             "description": "Preview the desktop chat surface for supported agent terminal sessions.",
@@ -9434,15 +9414,6 @@
             "fa72e71f05": "agents",
             "4d63251595": "Threaded left-sidebar feed for agent completions and blocking states.",
             "ccc5548ac5": "Agents View",
-            "9af7a518db": "character",
-            "791fefc0b0": "corner",
-            "65df471ab2": "animated",
-            "9f5609bfb8": "overlay",
-            "2a33975d72": "mascot",
-            "b54cea709b": "sidekick",
-            "051203d37c": "pet",
-            "6b5a56ac35": "Floating animated pet in the bottom-right corner.",
-            "87d99e634b": "Pet",
             "nativeChat": {
               "title": "Chat UI",
               "description": "Preview the desktop chat surface for supported agent terminal sessions.",
@@ -13397,11 +13368,7 @@
       },
       "pet": {
         "pet": {
-          "models": {
-            "7433516faf": "Gremlin",
-            "a84d5677ff": "OpenCode",
-            "2528586aa7": "Claudino"
-          }
+          "models": {}
         }
       },
       "onboarding": {

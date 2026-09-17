@@ -12,12 +12,10 @@ import { StarNagAgentValueMomentObserver } from '../components/star-nag/StarNagA
 import { StarNagToastHost } from '../components/star-nag/StarNagToastHost'
 import { TelemetryFirstLaunchSurface } from '../components/TelemetryFirstLaunchSurface'
 import { ZoomOverlay } from '../components/ZoomOverlay'
-import { shouldRenderPetOverlay } from '../components/pet/pet-overlay-visibility'
 import { useAppStore } from '../store'
 import type { UpdateStatus } from '../../../shared/update-status-types'
 import { useLazyModalMounts } from './use-lazy-modal-mounts'
 import {
-  selectAppRootSurfacePetEnabled,
   selectAppRootSurfaceTelemetryOptedIn,
   selectAppRootSurfaceVoiceEnabled
 } from './app-root-surface-settings'
@@ -73,8 +71,6 @@ const FloatingTerminalPanel = lazy(() =>
     default: module.FloatingTerminalPanel
   }))
 )
-// Why: lazy so the WebP asset + overlay module aren't fetched unless the experimental flag is on.
-const PetOverlay = lazy(() => import('../components/pet/PetOverlay'))
 // Why: lazy so onboarding's step modules + assets aren't fetched for users past first-launch.
 const OnboardingFlow = lazy(() => import('../components/onboarding/OnboardingFlow'))
 
@@ -127,11 +123,9 @@ export function AppRootSurfaces(props: {
   // Keep this always-mounted surface subscribed only to the settings fields it reads. A
   // settings object replacement for an unrelated preference should not rerender every overlay.
   const voiceEnabled = useAppStore(selectAppRootSurfaceVoiceEnabled)
-  const petEnabled = useAppStore(selectAppRootSurfacePetEnabled)
   const telemetryOptedIn = useAppStore(selectAppRootSurfaceTelemetryOptedIn)
   const statusBarVisible = useAppStore((s) => s.statusBarVisible)
   const persistedUIReady = useAppStore((s) => s.persistedUIReady)
-  const petVisible = useAppStore((s) => s.petVisible)
   const dictationState = useAppStore((s) => s.dictationState)
   const updateStatus = useAppStore((s) => s.updateStatus)
   const activeContextualTourId = useAppStore((s) => s.activeContextualTourId)
@@ -139,7 +133,6 @@ export function AppRootSurfaces(props: {
   const shouldMountSetupGuideTelemetryObserver = persistedUIReady
   const shouldMountUpdateCard = shouldMountUpdateCardForStatus(updateStatus)
   const shouldMountDictationController = voiceEnabled || dictationState !== 'idle'
-  const renderPetOverlay = shouldRenderPetOverlay({ persistedUIReady, petEnabled, petVisible })
 
   return (
     <>
@@ -259,14 +252,6 @@ export function AppRootSurfaces(props: {
       {activeContextualTourId !== null ? (
         <Suspense fallback={null}>
           <ContextualTourOverlay />
-        </Suspense>
-      ) : null}
-      {/* Why: mount only after UI hydration, else a hidden pet flashes while the store still holds default visibility. */}
-      {renderPetOverlay ? (
-        <Suspense fallback={null}>
-          <OverlayBoundary boundaryId="overlay.pet" resetKey={petVisible}>
-            <PetOverlay />
-          </OverlayBoundary>
         </Suspense>
       ) : null}
       <NotificationCardStack>

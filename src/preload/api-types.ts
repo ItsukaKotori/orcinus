@@ -43,7 +43,6 @@ import type {
   MacosTccPromptsApi,
   NotificationsApi
 } from './api/os-permission-api'
-import type { PetApi } from './api/pet-api'
 import type { PluginsApi } from './api/plugin-host-api'
 import type { PreflightApi } from './api/preflight-api'
 import type { PtyApi } from './api/pty-api'
@@ -114,7 +113,6 @@ export type PreloadApi = {
   computerUsePermissions: ComputerUsePermissionsApi
   shell: ShellApi
   skills: SkillsApi
-  pet: PetApi
   browser: BrowserApi
   emulator: EmulatorApi
   hooks: HooksApi

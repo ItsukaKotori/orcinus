@@ -3333,24 +3333,7 @@
       },
       "status": {
         "bar": {
-          "PetStatusSegment": {
-            "3668339495": "Supprimer {{value0}}",
-            "cd8c6c654c": "Paramètres du compagnon…",
-            "ed176ad68f": "Importer un bundle .codex-pet…",
-            "59b5955621": "Téléverser le vôtre…",
-            "0608ad02a2": "Choisir un compagnon",
-            "b75484a01a": "Taille du compagnon",
-            "c6aa805b1b": "px",
-            "2f7bbaa457": "Taille",
-            "34c25dfe9c": "Compagnon",
-            "aec479308a": "Menu du compagnon",
-            "cef0ab4636": "Échec de l'importation du bundle de compagnon",
-            "2021d4f6db": "L'importation d'un bundle de compagnon nécessite un redémarrage complet de l'app (pas seulement un rechargement).",
-            "f395c9a685": "Échec de l'importation du fichier",
-            "e6234bcc17": "L'ajout d'un compagnon personnalisé nécessite un redémarrage complet de l'app (pas seulement un rechargement).",
-            "6d0a8cd179": "Afficher le compagnon",
-            "1fbc51cc77": "Masquer le compagnon"
-          },
+          "PetStatusSegment": {},
           "PortsStatusSegment": {
             "4ebf90c12e": "Aucun port externe détecté",
             "7dac3ecc9d": "Ports externes",
@@ -6725,9 +6708,6 @@
             "title": "Nouveau style de carte",
             "toggleLabel": "Activer le nouveau style de carte"
           },
-          "ca2219fe5e": "Affiche un petit compagnon animé épinglé dans le coin inférieur droit. Choisissez un personnage (Claudino, OpenCode, Gremlin) ou importez votre propre PNG, APNG, GIF, WebP, JPG ou SVG depuis le menu compagnon de la barre d'état. Masquez-le à tout moment depuis le même menu sans désactiver ce réglage.",
-          "dd6f0a1d45": "Compagnon",
-          "0e89a574ae": "Compagnon animé flottant dans le coin inférieur droit.",
           "nativeChat": {
             "title": "Chat UI",
             "description": "Prévisualisez la surface de chat de bureau pour les sessions de terminal d'agents prises en charge.",
@@ -9065,15 +9045,6 @@
             "fa72e71f05": "agents",
             "4d63251595": "Flux groupé dans la barre latérale gauche pour les achèvements d'agents et les états bloquants.",
             "ccc5548ac5": "Vue Agents",
-            "9af7a518db": "personnage",
-            "791fefc0b0": "coin",
-            "65df471ab2": "animé",
-            "9f5609bfb8": "superposition",
-            "2a33975d72": "mascotte",
-            "b54cea709b": "compagnon",
-            "051203d37c": "animal",
-            "6b5a56ac35": "Compagnon animé flottant dans le coin inférieur droit.",
-            "87d99e634b": "Compagnon",
             "nativeChat": {
               "title": "Chat UI",
               "description": "Prévisualisez la surface de chat de bureau pour les sessions de terminal d'agents prises en charge.",
@@ -12865,11 +12836,7 @@
       },
       "pet": {
         "pet": {
-          "models": {
-            "7433516faf": "Gremlin",
-            "a84d5677ff": "OpenCode",
-            "2528586aa7": "Claudino"
-          }
+          "models": {}
         }
       },
       "onboarding": {
