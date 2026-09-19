@@ -104,7 +104,6 @@ export function BrowserPageToolbar({
 }): React.JSX.Element {
   return (
     <BrowserChromeToolbar
-      showTourAnchors
       controls={{
         canGoBack: canGoBack || Boolean(convertedFrom),
         canGoForward: canGoForward || Boolean(convertedTo),

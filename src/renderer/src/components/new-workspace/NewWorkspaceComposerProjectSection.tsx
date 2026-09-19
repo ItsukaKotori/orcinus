@@ -106,7 +106,7 @@ export function NewWorkspaceComposerProjectSection({
             </Tooltip>
           ) : null}
         </div>
-        <div className="space-y-1" data-contextual-tour-target="workspace-creation-project">
+        <div className="space-y-1">
           <ProjectCombobox
             options={projectOptions}
             value={selectedProjectId}

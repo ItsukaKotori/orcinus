@@ -63,7 +63,6 @@ function NewWorkspaceButton({
           className="text-muted-foreground"
           aria-label={label}
           data-workspace-board-preserve-open={preserveWorkspaceBoardOpen ? '' : undefined}
-          data-contextual-tour-target="workspace-create-control"
           onClick={handleCreateWorkspace}
         >
           <Plus className="size-3.5" strokeWidth={2.25} />

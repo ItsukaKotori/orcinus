@@ -13,7 +13,6 @@ export function SidebarWorktreeListEmptyState({
   return (
     <div
       data-worktree-sidebar-container
-      data-contextual-tour-target="workspace-list"
       className="relative min-h-0 flex-1"
     >
       <div className="worktree-sidebar-scrollbar flex h-full flex-col overflow-y-auto overflow-x-hidden pl-1 scrollbar-sleek pt-px">

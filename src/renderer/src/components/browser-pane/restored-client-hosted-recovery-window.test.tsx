@@ -111,11 +111,9 @@ function renderPane(): ReturnType<typeof render> {
 // Scoped to the navigation row: the unavailable notice's reopen button keeps its own pending
 // spinner in the DOM at all times, hidden by class, so an unscoped query is always true.
 function spinnerShown(): boolean {
-  return (
-    document.querySelector(
-      '[data-contextual-tour-target="client-hosted-browser-controls"] .animate-spin'
-    ) !== null
-  )
+  const navigationRow = document.querySelector('[data-browser-chrome-address-slot="true"]')
+    ?.parentElement
+  return navigationRow ? navigationRow.querySelector('.animate-spin') !== null : false
 }
 
 function noticeShown(): boolean {

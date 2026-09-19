@@ -56,7 +56,6 @@ export function TaskPageGitHubFilters({
     // table shell below (rounded-t-none border-t-0) as one surface.
     <div
       className="flex min-w-0 flex-col gap-2.5 rounded-md rounded-b-none border border-border/50 bg-muted/35 px-3 py-2.5"
-      data-contextual-tour-target="tasks-search-presets"
     >
       <div className="flex flex-wrap gap-1.5">
         {getGitHubTaskKindPresets(activeGithubTaskKind).map((option) => {
@@ -129,7 +128,6 @@ export function TaskPageGitHubFilters({
         </div>
         <div
           className="flex shrink-0 items-center gap-2"
-          data-contextual-tour-target="tasks-actions"
         >
           <Tooltip>
             <TooltipTrigger asChild>

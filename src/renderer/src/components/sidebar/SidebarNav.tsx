@@ -57,7 +57,6 @@ const SidebarNav = React.memo(function SidebarNav() {
   return (
     <div
       className="flex flex-col gap-0.5 px-2 pt-2 pb-1"
-      data-contextual-tour-target="sidebar-navigation"
     >
       <button
         type="button"

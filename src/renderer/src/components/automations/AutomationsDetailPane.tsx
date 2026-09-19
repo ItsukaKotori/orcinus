@@ -213,7 +213,6 @@ export function AutomationsDetailPane({
         >
           <div
             className="flex shrink-0 items-center gap-2 border-b border-border/50 px-5 py-2"
-            data-contextual-tour-target="automations-runs"
           >
             <Button
               type="button"

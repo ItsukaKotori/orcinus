@@ -8,12 +8,10 @@ import {
 } from './floating-terminal-panel-test-fixtures'
 import { mocks, setupFloatingTerminalPanelTest } from './floating-terminal-panel-test-harness'
 import {
-  collectPropValues,
   findByTypeName,
   flushAsyncWork,
   renderPanel,
-  runEffects,
-  type ReactElementLike
+  runEffects
 } from './floating-terminal-panel-render-probe'
 
 vi.mock('react', async () => {
@@ -178,38 +176,13 @@ describe('FloatingTerminalPanel close behavior', () => {
     expect(mocks.createTab).not.toHaveBeenCalled()
   })
 
-  it('targets the empty-state actions without co-mounting the surface fallback', async () => {
-    const element = await renderPanel(true)
-    const emptyState = findByTypeName(element, 'FloatingTerminalEmptyState')
-    const renderedEmptyState = (
-      emptyState.type as (props: Record<string, unknown>) => ReactElementLike
-    )(emptyState.props)
-
-    expect(collectPropValues(element, 'data-contextual-tour-target')).not.toContain(
-      'floating-workspace-surface'
-    )
-    expect(collectPropValues(renderedEmptyState, 'data-contextual-tour-target')).toEqual([
-      'floating-workspace-new-terminal',
-      'floating-workspace-new-markdown'
-    ])
-  })
-
-  it('targets the non-empty panel surface when the empty-state actions are absent', async () => {
+  it('does not mount the empty state when the panel already owns tabs', async () => {
     setFloatingTabs([makeTab({ id: 'tab-1' })])
 
     const element = await renderPanel(true)
 
     expect(() => findByTypeName(element, 'FloatingTerminalEmptyState')).toThrow(
       'FloatingTerminalEmptyState not found'
-    )
-    expect(collectPropValues(element, 'data-contextual-tour-target')).toContain(
-      'floating-workspace-surface'
-    )
-    expect(collectPropValues(element, 'data-contextual-tour-target')).not.toContain(
-      'floating-workspace-new-terminal'
-    )
-    expect(collectPropValues(element, 'data-contextual-tour-target')).not.toContain(
-      'floating-workspace-new-markdown'
     )
   })
 

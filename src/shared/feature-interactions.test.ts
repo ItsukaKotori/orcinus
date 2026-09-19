@@ -207,13 +207,8 @@ describe('feature interactions', () => {
       const directRecord = new RegExp(
         `recordFeatureInteraction(?:\\?\\.)?\\(\\s*['"]${escaped}['"]`
       )
-      const contextualTourRecord = new RegExp(`useContextualTour\\(\\s*['"]${escaped}['"]`)
       const runtimeMappingReturn = new RegExp(`return[^\\n]*['"]${escaped}['"]`)
-      return (
-        !directRecord.test(productionText) &&
-        !contextualTourRecord.test(productionText) &&
-        !runtimeMappingReturn.test(productionText)
-      )
+      return !directRecord.test(productionText) && !runtimeMappingReturn.test(productionText)
     })
 
     expect(missingWriters).toEqual([])

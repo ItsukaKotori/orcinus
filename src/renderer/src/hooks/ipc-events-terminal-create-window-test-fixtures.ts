@@ -66,12 +66,7 @@ export function buildTerminalCreateWindow(args: {
             leafId?: string
             splitFromLeafId?: string
             splitDirection?: 'horizontal' | 'vertical'
-            splitTelemetrySource?:
-              | 'contextual_tour'
-              | 'keyboard'
-              | 'context_menu'
-              | 'command'
-              | 'unknown'
+            splitTelemetrySource?: 'keyboard' | 'context_menu' | 'command' | 'unknown'
           }) => void
         ) => {
           createTerminalListenerRef.current = listener

@@ -344,7 +344,6 @@ export default function TabGroupPanel({
         {isFocused ? (
           <div
             className="pointer-events-none absolute inset-x-0 top-1/4 h-px"
-            data-contextual-tour-target="workspace-agent-terminal-tip"
           />
         ) : null}
         {activeTab &&

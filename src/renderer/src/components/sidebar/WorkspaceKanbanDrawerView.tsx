@@ -51,7 +51,6 @@ export default function WorkspaceKanbanDrawerView(
         <WorkspaceKanbanAreaSelectionOverlay ref={props.areaSelectionOverlayRef} />
         <div
           className="pointer-events-none absolute left-1/2 top-1/2 size-6 -translate-x-1/2 -translate-y-1/2"
-          data-contextual-tour-target="workspace-board-center"
         />
         <WorkspaceKanbanPinDropTarget
           isDragOver={props.pinDragOver}

@@ -65,9 +65,7 @@ export function useBranchStartPointActions(input: BranchStartPointActionsInput) 
     setProjectError('Choose or add a project before creating a workspace.')
     requestAnimationFrame(() => {
       document
-        .querySelector<HTMLElement>(
-          '[data-contextual-tour-target="workspace-creation-project"] [data-project-combobox-root="true"][role="combobox"]'
-        )
+        .querySelector<HTMLElement>('[data-project-combobox-root="true"][role="combobox"]')
         ?.focus()
     })
   }, [setProjectError])

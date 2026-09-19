@@ -96,7 +96,6 @@ export function AutomationListToolbar({
           variant="outline"
           size="sm"
           onClick={onOpenRuns}
-          data-contextual-tour-target="automations-runs"
         >
           <History className="size-4" />
           {translate('auto.components.automations.AutomationListToolbar.runs', 'Runs')}
@@ -107,7 +106,6 @@ export function AutomationListToolbar({
           className="shrink-0"
           onClick={() => openCreateDialog()}
           disabled={!canCreateAutomation}
-          data-contextual-tour-target="automations-create"
         >
           <Plus className="size-4" />
           {translate('auto.components.automations.AutomationsPage.newAutomation', 'New Automation')}

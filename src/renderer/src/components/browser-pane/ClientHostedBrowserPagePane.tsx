@@ -344,7 +344,7 @@ export function ClientHostedBrowserPagePane({
         webviewRef={webviewRef}
         onReload={() => reload.reloadWebviewOrRecoverGuest(false)}
       />
-      <div data-contextual-tour-target="client-hosted-browser-controls">
+      <div>
         <BrowserNavigationControlRow
           controls={{
             canGoBack: browserTab.canGoBack,
