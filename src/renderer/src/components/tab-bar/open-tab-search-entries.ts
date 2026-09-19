@@ -1,14 +1,10 @@
-// Builds one worktree's tabs, browser pages and simulator tabs into the shapes
-// the three Cmd+J engines search.
+// Builds one worktree's tabs and browser pages into the shapes the two Cmd+J
+// engines search.
 
 import type { Repo } from '../../../../shared/repo-types'
 import type { Worktree } from '../../../../shared/worktree/types'
 import { buildSearchableBrowserPages } from '@/lib/browser-palette-page-entries'
 import type { SearchableBrowserPage } from '@/lib/browser-palette-search'
-import {
-  buildSearchableSimulatorTabs,
-  type SearchableSimulatorTab
-} from '@/lib/simulator-palette-search'
 import {
   buildSearchableWorkspaceTabs,
   type SearchableWorkspaceTab
@@ -24,7 +20,6 @@ import { getPaletteOwnershipWorktreeIds } from '@/lib/unified-tab-host-ownership
 export type OpenTabSearchEntries = {
   workspaceTabs: readonly SearchableWorkspaceTab[]
   browserPages: readonly SearchableBrowserPage[]
-  simulatorTabs: readonly SearchableSimulatorTab[]
 }
 
 export type OpenTabSearchEntryState = Pick<
@@ -168,14 +163,6 @@ export function buildOpenTabSearchEntries(
       browserPagesByWorkspace: state.browserPagesByWorkspace,
       unifiedTabsByWorktree: state.unifiedTabsByWorktree,
       activeBrowserTabId: state.activeBrowserTabId,
-      activeWorktreeId: state.activeWorktreeId,
-      activeTabType: state.activeTabType
-    }),
-    simulatorTabs: buildSearchableSimulatorTabs({
-      ...scope,
-      unifiedTabsByWorktree: state.unifiedTabsByWorktree,
-      activeGroupIdByWorktree: state.activeGroupIdByWorktree,
-      groupsByWorktree: state.groupsByWorktree,
       activeWorktreeId: state.activeWorktreeId,
       activeTabType: state.activeTabType
     })

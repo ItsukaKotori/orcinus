@@ -7,7 +7,6 @@ export type SettingsNavigationBuildOptions = {
   isWindowsTerminalHost: boolean
   isWebClient: boolean
   managedBrowserCreationEnabled: boolean
-  mobileEmulatorCreationEnabled: boolean
   isDev: boolean
   isLinearConnected: boolean
   repos: readonly Repo[]

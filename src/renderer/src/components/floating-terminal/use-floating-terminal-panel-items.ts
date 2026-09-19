@@ -48,17 +48,11 @@ export function useFloatingTerminalPanelItems({
   const activeTerminalId = activeTab?.contentType === 'terminal' ? activeTab.entityId : null
   const activeBrowserId = activeTab?.contentType === 'browser' ? activeTab.entityId : null
   const activeEditorUnifiedId =
-    activeTab &&
-    activeTab.contentType !== 'terminal' &&
-    activeTab.contentType !== 'browser' &&
-    activeTab.contentType !== 'simulator'
+    activeTab && activeTab.contentType !== 'terminal' && activeTab.contentType !== 'browser'
       ? activeTab.id
       : null
   const activeEditorFileId =
-    activeTab &&
-    activeTab.contentType !== 'terminal' &&
-    activeTab.contentType !== 'browser' &&
-    activeTab.contentType !== 'simulator'
+    activeTab && activeTab.contentType !== 'terminal' && activeTab.contentType !== 'browser'
       ? activeTab.entityId
       : null
   const terminalTabById = useMemo(() => new Map(tabs.map((tab) => [tab.id, tab])), [tabs])
@@ -129,12 +123,7 @@ export function useFloatingTerminalPanelItems({
   const editorItems = useMemo(
     () =>
       groupTabs
-        .filter(
-          (tab) =>
-            tab.contentType !== 'terminal' &&
-            tab.contentType !== 'browser' &&
-            tab.contentType !== 'simulator'
-        )
+        .filter((tab) => tab.contentType !== 'terminal' && tab.contentType !== 'browser')
         .map((tab) => {
           const file = floatingFiles.find((candidate) => candidate.id === tab.entityId)
           return file ? { ...file, tabId: tab.id } : null
@@ -142,17 +131,10 @@ export function useFloatingTerminalPanelItems({
         .filter((file): file is OpenFile & { tabId: string } => file !== null),
     [floatingFiles, groupTabs]
   )
-  const simulatorItems = useMemo(
-    () => groupTabs.filter((tab) => tab.contentType === 'simulator'),
-    [groupTabs]
-  )
   const hasVisibleFloatingTabs =
-    terminalItems.length > 0 ||
-    browserItems.length > 0 ||
-    editorItems.length > 0 ||
-    simulatorItems.length > 0
+    terminalItems.length > 0 || browserItems.length > 0 || editorItems.length > 0
   const visibleFloatingItemCount =
-    terminalItems.length + browserItems.length + editorItems.length + simulatorItems.length
+    terminalItems.length + browserItems.length + editorItems.length
   const activeClosableTab = hasVisibleFloatingTabs ? activeTab : null
   const tabBarOrder = useMemo(
     () =>
@@ -177,12 +159,9 @@ export function useFloatingTerminalPanelItems({
         if (tab.contentType === 'browser') {
           return browserItems.some((item) => item.tabId === tab.id)
         }
-        if (tab.contentType === 'simulator') {
-          return simulatorItems.some((item) => item.id === tab.id)
-        }
         return editorItems.some((item) => item.tabId === tab.id)
       }),
-    [browserItems, editorItems, groupTabs, simulatorItems, tabBarOrder, terminalItems]
+    [browserItems, editorItems, groupTabs, tabBarOrder, terminalItems]
   )
   const activeBrowserTab = activeBrowserId
     ? (browserTabs.find((tab) => tab.id === activeBrowserId) ?? null)
@@ -190,14 +169,12 @@ export function useFloatingTerminalPanelItems({
   const activeEditorFile = activeEditorFileId
     ? (floatingFiles.find((file) => file.id === activeEditorFileId) ?? null)
     : null
-  const activeTabType: 'browser' | 'terminal' | 'simulator' | 'editor' =
+  const activeTabType: 'browser' | 'terminal' | 'editor' =
     activeTab?.contentType === 'browser'
       ? 'browser'
       : activeTab?.contentType === 'terminal'
         ? 'terminal'
-        : activeTab?.contentType === 'simulator'
-          ? 'simulator'
-          : 'editor'
+        : 'editor'
 
   return {
     activeGroup,
@@ -210,7 +187,6 @@ export function useFloatingTerminalPanelItems({
     terminalItems,
     browserItems,
     editorItems,
-    simulatorItems,
     hasVisibleFloatingTabs,
     visibleFloatingItemCount,
     activeClosableTab,

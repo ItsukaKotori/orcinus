@@ -254,8 +254,7 @@ describe('openWorkspaceBrowserTab', () => {
     const policySpy = vi
       .spyOn(clientCreationActionPolicy, 'getClientCreationActionPolicy')
       .mockReturnValue({
-        'managed-browser': { state: 'enabled', provider: 'local-client' },
-        'mobile-emulator': { state: 'enabled', provider: 'local-client' }
+        'managed-browser': { state: 'enabled', provider: 'local-client' }
       })
 
     try {

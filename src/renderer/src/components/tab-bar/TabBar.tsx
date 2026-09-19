@@ -17,7 +17,6 @@ function TabBarInner(props: TabBarProps): React.JSX.Element {
     onNewTerminalTab,
     onNewTerminalWithShell,
     onNewBrowserTab,
-    onNewSimulatorTab,
     onNewFileTab,
     onOpenFileTab,
     onPinFile
@@ -27,10 +26,7 @@ function TabBarInner(props: TabBarProps): React.JSX.Element {
     worktreeId,
     resolvedGroupId: runtime.resolvedGroupId,
     terminalOnly,
-    mobileEmulatorEnabled: runtime.mobileEmulatorEnabled,
     managedBrowserCreationEnabled: runtime.managedBrowserCreationEnabled,
-    mobileEmulatorCreationEnabled: runtime.mobileEmulatorCreationEnabled,
-    workspaceHasSimulatorTab: runtime.workspaceHasSimulatorTab,
     showWindowsShellMenu: runtime.showWindowsShellMenu,
     projectRuntimeShellMenuMode: runtime.projectRuntimeShellMenuMode,
     defaultWindowsShell: runtime.defaultWindowsShell,
@@ -40,14 +36,12 @@ function TabBarInner(props: TabBarProps): React.JSX.Element {
     onNewTerminalTab,
     onNewTerminalWithShell,
     onNewBrowserTab,
-    onNewSimulatorTab,
     onNewFileTab,
     onOpenFileTab
   })
   const itemProjection = useTabBarItemProjection({
     props,
     resolvedGroupId: runtime.resolvedGroupId,
-    unifiedTabs: runtime.unifiedTabs,
     unifiedTabByVisibleId: runtime.unifiedTabByVisibleId,
     generatedTabTitlesEnabled: runtime.generatedTabTitlesEnabled,
     statusByRelativePath: runtime.statusByRelativePath

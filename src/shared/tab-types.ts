@@ -25,14 +25,8 @@ export type TabContentType =
   | 'check-details'
   | 'agent-session'
   | 'browser'
-  | 'simulator'
 
-export type WorkspaceVisibleTabType =
-  | 'terminal'
-  | 'editor'
-  | 'agent-session'
-  | 'browser'
-  | 'simulator'
+export type WorkspaceVisibleTabType = 'terminal' | 'editor' | 'agent-session' | 'browser'
 export type CtrlTabOrderMode = 'mru' | 'sequential'
 
 // Why: many-to-one — every editor-family kind collapses to 'editor'. Never invert it by equality;
@@ -41,8 +35,7 @@ export function toVisibleTabType(contentType: TabContentType): WorkspaceVisibleT
   if (
     contentType === 'agent-session' ||
     contentType === 'browser' ||
-    contentType === 'terminal' ||
-    contentType === 'simulator'
+    contentType === 'terminal'
   ) {
     return contentType
   }

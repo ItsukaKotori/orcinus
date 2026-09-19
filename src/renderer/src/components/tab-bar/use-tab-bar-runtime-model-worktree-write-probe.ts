@@ -9,7 +9,6 @@ import type { WindowsTerminalCapabilities } from '@/lib/windows-terminal-capabil
 export type TabBarProbeState = {
   settings: Record<string, unknown> | null
   persistedUIReady: boolean
-  mobileEmulatorTabIntroDismissed: boolean
   gitStatusByWorktree: Record<string, never[]>
   unifiedTabsByWorktree: Record<string, never[]>
   activeGroupIdByWorktree: Record<string, string>
@@ -41,7 +40,6 @@ export async function createTabBarProbeStore(): Promise<TabBarProbeStore> {
     globals[globalKey] = create<TabBarProbeState>(() => ({
       settings: null,
       persistedUIReady: true,
-      mobileEmulatorTabIntroDismissed: true,
       gitStatusByWorktree: {},
       unifiedTabsByWorktree: {},
       activeGroupIdByWorktree: {},
@@ -77,8 +75,7 @@ const AGENT_PROJECTIONS = Object.freeze({
   nativeChatTabWideFallbackUnsafeTabsById: Object.freeze({})
 })
 const CREATION_POLICY = Object.freeze({
-  'managed-browser': { state: 'enabled' },
-  'mobile-emulator': { state: 'enabled' }
+  'managed-browser': { state: 'enabled' }
 })
 const DETECTED_AGENTS = Object.freeze({ detectedIds: Object.freeze([]) })
 const RUNTIME_TARGET = Object.freeze({ kind: 'local' })

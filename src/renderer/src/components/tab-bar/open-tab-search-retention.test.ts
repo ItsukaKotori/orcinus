@@ -158,7 +158,7 @@ function makeBrowserPage({
 }
 
 function makeEntries(overrides: Partial<OpenTabSearchEntries> = {}): OpenTabSearchEntries {
-  return { workspaceTabs: [], browserPages: [], simulatorTabs: [], ...overrides }
+  return { workspaceTabs: [], browserPages: [], ...overrides }
 }
 
 // Mirrors the hook: the deferred query builds the rows, the live query re-checks them.

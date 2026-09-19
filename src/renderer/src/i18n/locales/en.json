@@ -615,9 +615,7 @@
       },
       "ensure": {
         "simulator": {
-          "tab": {
-            "372d21d428": "Mobile Emulator"
-          }
+          "tab": {}
         }
       },
       "fix": {
@@ -703,9 +701,7 @@
         },
         "mobile": {
           "emulator": {
-            "tab": {
-              "bf4f2a8a72": "Could not start the emulator. Check iOS or Android emulator setup and try another device."
-            }
+            "tab": {}
           }
         }
       },
@@ -1060,8 +1056,6 @@
         "93d88d20bf": "Appearance",
         "2d0659f6f0": "Global terminal, browser, and markdown tabs.",
         "65b19f5bde": "Floating Workspace",
-        "3d65d3f1b9": "Configure mobile emulator support for Orcinus and coding agents.",
-        "1e761cff2b": "Mobile Emulator",
         "e815fd01bd": "Home page, link routing, and session cookies.",
         "8c197f74a1": "Browser",
         "42ae40842f": "Saved terminal commands, scoped globally or per project.",
@@ -2349,7 +2343,6 @@
         "c4afa68159": "Try a worktree, setting, action, tab title, agent prompt, URL, PR, or port.",
         "dbd9d87eec": "No results match your search",
         "2c38630a01": "Workspace no longer exists",
-        "7726ce9970": "Mobile emulator tab no longer exists",
         "d7d496a451": "Browser page no longer exists",
         "50a1d11d5b": "Open Tabs",
         "088d66d980": "Actions & Settings",
@@ -3313,7 +3306,6 @@
             "4df2a06d36": "Split Down",
             "ab1e2bff04": "Split Right",
             "9acaf92093": "Pane Actions",
-            "1bce81dba6": "simulator",
             "1ff1c77616": "browser",
             "586d2ac445": "terminal",
             "addSplitPane": "Add split pane",
@@ -3413,9 +3405,6 @@
             "b1a132357f": "New tab",
             "4f327c8b3d": "Open Markdown...",
             "3d5d6c960d": "New Markdown",
-            "fd2b42aaa3": "New Mobile Emulator",
-            "aea43b5748": "Open the existing emulator tab.",
-            "b426bb2615": "Go to Mobile Emulator",
             "4833fb2cbe": "New Browser Tab",
             "d364f3c8d4": "New Terminal",
             "7c1313d237": "New Terminal:",
@@ -3436,7 +3425,6 @@
             "2c38630a01": "Workspace no longer exists",
             "4f0d9a71c2": "Tab no longer exists",
             "d7d496a451": "Browser page no longer exists",
-            "7726ce9970": "Mobile emulator tab no longer exists",
             "chooseAction": "Choose an action.",
             "searchProvider": "Search {{value0}}",
             "openPage": "Open page",
@@ -3501,14 +3489,7 @@
                   "6d8b6b4117": "new file",
                   "b330f72434": "mark",
                   "37ff3ddca1": "open markdown",
-                  "164c394bab": "open file",
-                  "bbaf4f85a4": "mobile emulator",
-                  "3784b83bd4": "emulator",
-                  "a63847a742": "simulator",
-                  "1baeb07c17": "ios simulator",
-                  "8a580f88cf": "iphone",
-                  "7ecdc5ef08": "ipad",
-                  "14965cc123": "mobile"
+                  "164c394bab": "open file"
                 }
               }
             }
@@ -7408,52 +7389,9 @@
           "82436439eb": "Add MCP config",
           "0a5c1ead54": "Create empty config"
         },
-        "MobileEmulatorAgentControlRow": {
-          "1861982430": "Failed to load CLI status.",
-          "8af7a8bc38": "Commands target the active emulator for the current worktree. Coordinates are normalized from 0..1.",
-          "c7f3fe0a6e": "Common emulator commands",
-          "d94ca6a623": "Enables agents to use Orcinus CLI commands, including mobile emulator control.",
-          "67e19ee03c": "Orcinus CLI skill",
-          "aaf62a3dd2": "Installed at",
-          "2fef055608": "Registers the Orcinus CLI command so agents can control the active emulator from their shell.",
-          "4f2205f3b6": "Enable Orcinus CLI",
-          "ff4b7e65d6": "Let coding agents control the active mobile emulator with Orcinus CLI commands.",
-          "2a674aa810": "Agent Mobile Emulator Control",
-          "cdeaed9e37": "Registered the Orcinus CLI in PATH.",
-          "3d34423e88": "Registering the Orcinus CLI",
-          "3be27641c9": "so emulator commands can run from agent shells.",
-          "3941719a56": "Checking Orcinus CLI before opening skill setup."
-        },
-        "MobileEmulatorExamples": {
-          "edf13dd03b": "Copy",
-          "c12b253997": "Copy example prompt",
-          "d151e25078": "\"",
-          "b525ff2b12": "\"",
-          "4daa95f25a": "Paste any of these into Claude Code, Codex, or another agent in a project where the Orcinus CLI skill is installed.",
-          "0820b3f84f": "Try it — example prompts",
-          "1f608e7d60": "Failed to copy prompt.",
-          "2b077b5544": "Copied prompt."
-        },
-        "MobileEmulatorSettingsPane": {
-          "19d39113b6": "Let coding agents control the active mobile emulator with Orcinus CLI commands.",
-          "f2f8d97bb6": "Agent Mobile Emulator Control",
-          "143961d031": "Default Device",
-          "8aec2f99a0": "Refresh emulator availability",
-          "ae1612c58c": "Availability",
-          "f9af91ea26": "Shows the New Mobile Emulator action and allows agents to attach to the active emulator.",
-          "700ddbf9b1": "Enable Mobile Emulator",
-          "bc39d0f115": "Configure mobile emulator support for Orcinus and coding agents.",
-          "6593c9ddd3": "Mobile Emulator",
-          "a4f1c82d90": "Disabled",
-          "b5e2d93e01": "Checking...",
-          "c6f3ea4f12": "Ready",
-          "d704fb5023": "Needs setup",
-          "06b06429c6": "Checking Android SDK and iOS Simulator support.",
-          "6d1483d4a0": "1 emulator device detected.",
-          "0a452d4d3b": "{{value0}} emulator devices detected.",
-          "f62a1bb759": "Orcinus will auto-select an emulator device after devices are detected.",
-          "b2fd62ea75": "Default device for new emulator tabs and agent attach commands. Auto-select prefers an already running device."
-        },
+        "MobileEmulatorAgentControlRow": {},
+        "MobileEmulatorExamples": {},
+        "MobileEmulatorSettingsPane": {},
         "MobileNetworkInterfaceSection": {
           "63d5e4ae1e": "Regenerate the QR code and scan it from the Orcinus mobile app.",
           "87985ba6f5": "In this Network Interface menu, choose the Tailscale address, usually a 100.x.y.z IP.",
@@ -8107,8 +8045,6 @@
           "2b4474780a": "Appearance",
           "3d9adfe6a5": "Global terminal, browser, and markdown tabs.",
           "3eb22a3ada": "Floating Workspace",
-          "01f9d36292": "Configure mobile emulator support for Orcinus and coding agents.",
-          "f75daf1002": "Mobile Emulator",
           "ad9788036f": "Home page, link routing, and session cookies.",
           "c46215ea03": "Browser",
           "6742c7932c": "Saved terminal commands, scoped globally or per project.",
@@ -9703,44 +9639,7 @@
         },
         "mobile": {
           "emulator": {
-            "search": {
-              "2348045036": "Choose which emulator device Orcinus opens by default.",
-              "2bb2e09225": "mobile skill",
-              "bbe4267416": "emulator type",
-              "64494f03c3": "emulator attach",
-              "6f728f1456": "emulator tap",
-              "f8b871d655": "agent cli",
-              "2e0b45b2ba": "Use Orcinus CLI commands to list, attach, tap, and type into a mobile emulator.",
-              "ea3eac39bb": "Agent CLI Control",
-              "8ef0f08d36": "runtime",
-              "27397fe8e9": "xcode command line tools",
-              "7650063d17": "simctl",
-              "3211e7acf9": "xcrun",
-              "42bfab45d8": "availability",
-              "ea1f51b980": "Check whether Xcode, simctl, serve-sim, and emulator devices are ready.",
-              "0b95dfd5b3": "Emulator Availability",
-              "04c5f5d901": "device",
-              "25d7bfbcd4": "udid",
-              "ec3c4043fd": "default ipad",
-              "1dc8c52ffa": "default iphone",
-              "ab4814f3c5": "default simulator",
-              "54184cb9c5": "Default Emulator Device",
-              "b8ddd13195": "agent emulator",
-              "1ad6fb6230": "default device",
-              "ac0a985873": "emulator skill",
-              "9353854ff3": "orca emulator",
-              "d4b7833894": "orca cli",
-              "84e5706975": "serve-sim",
-              "7c5a8a2bee": "xcode",
-              "bec7231663": "ipad",
-              "49727355a3": "iphone",
-              "6b6407dc1f": "emulator",
-              "2d67f708ce": "simulator",
-              "c5eca29310": "ios simulator",
-              "25159de808": "mobile emulator",
-              "9595354cff": "Configure mobile emulator support for Orcinus and coding agents.",
-              "cdd3c31918": "Mobile Emulator"
-            }
+            "search": {}
           },
           "pane": {
             "search": {
@@ -10757,21 +10656,7 @@
           "distroRequired": "Choose a WSL distro before projects can inherit WSL.",
           "wslDescription": "Detect and launch agents in {{value0}} via WSL for projects that do not override their runtime."
         },
-        "MobileEmulatorSdkStatus": {
-          "536026130e": "Emulator SDKs",
-          "dde0ec1cd8": "Toolchains Orcinus uses to run emulators. Android works on any OS via the Android SDK; iOS Simulators need Xcode on macOS.",
-          "027cbf668a": "Android SDK",
-          "f6d080d128": "Using configured path",
-          "7fe4bd5907": "Detected at",
-          "2784f0b22d": "Not found. Install Android Studio, then create a Virtual Device.",
-          "b94ff260e6": "Download Android Studio",
-          "18925b082d": "Locate SDK folder",
-          "8c52684db8": "Clear",
-          "76eb88b88e": "iOS Simulator (Xcode)",
-          "c6f3ea4f12": "Ready",
-          "e4f14b50d7": "Install Xcode and add an iOS Simulator runtime.",
-          "63fe73a1ea": "Could not update Android SDK folder."
-        },
+        "MobileEmulatorSdkStatus": {},
         "AppearanceAdvancedDisclosure": {
           "advanced": "Advanced"
         },
@@ -13963,125 +13848,55 @@
       },
       "emulator": {
         "pane": {
-          "EmulatorPane": {
-            "59b08fa031": "No emulator connected"
-          },
+          "EmulatorPane": {},
           "emulator": {
             "device": {
-              "frame": {
-                "9406c15775": "Emulator screen",
-                "8f25ffaf8a": "Emulator screen, keyboard captured. Press Escape to release.",
-                "0022420df0": "phone"
-              }
+              "frame": {}
             },
             "pane": {
-              "toolbar": {
-                "06e10d7356": "Shut down emulator",
-                "e7a0d1897e": "Home",
-                "6bd8dff42a": "Rotate",
-                "3d836b879c": "Choose emulator",
-                "81b3571a07": "Connect",
-                "868c0f2938": "Working…"
-              }
+              "toolbar": {}
             },
             "screen": {
               "stream": {
-                "content": {
-                  "8b1a0d8694": "Emulator preview",
-                  "36841af608": "Stream disconnected",
-                  "5f818f12ab": "Connecting emulator…",
-                  "5ee64cd44e": "Emulator screen"
-                }
+                "content": {}
               }
             },
             "unavailable": {
-              "pane": {
-                "f630b9ca9f": "Mobile Emulator requires a Mac with Xcode and the iOS Simulator runtime. On Linux or Windows, use a physical device or a remote Mac build host.",
-                "b2c268a0b9": "Mobile Emulator is macOS only"
-              }
+              "pane": {}
             }
           },
           "use": {
             "emulator": {
               "frame": {
-                "stream": {
-                  "f1c0179002": "Stream is not producing frames."
-                }
+                "stream": {}
               }
             },
             "mobile": {
               "emulator": {
                 "agent": {
                   "setup": {
-                    "state": {
-                      "fdcca1ec75": "Registering...",
-                      "69fb2c2289": "Enabled",
-                      "c6705092ba": "Fix PATH",
-                      "7c1b6bdb1e": "Enable",
-                      "51074ccb05": "Failed to load CLI status.",
-                      "35dea1ae12": "Agent control is ready.",
-                      "9dff3a6338": "Skill is installed. Enable the Orcinus CLI to finish setup.",
-                      "15986a1080": "Orcinus CLI is ready. Install the skill to finish setup.",
-                      "4c26913def": "Still not set up. Complete both steps to enable agent control.",
-                      "c94ff11e91": "Could not re-check setup status.",
-                      "2b519eed94": "Registered the Orcinus CLI in PATH."
-                    }
+                    "state": {}
                   }
                 },
                 "tab": {
                   "intro": {
-                    "actions": {
-                      "68a5dc6604": "Could not hide Mobile Emulator."
-                    }
+                    "actions": {}
                   }
                 }
               }
             }
           },
-          "MobileEmulatorAgentSetupGuide": {
-            "2fda9ff015": "Set up agent control",
-            "0ac0fef514": "Agent control is ready.",
-            "2bdfff8763": "Agent control (optional).",
-            "72736b051f": "Set up Orcinus CLI + skill when you want agents to drive this simulator.",
-            "d10ae98046": "Done",
-            "3756cbeca7": "Not now",
-            "6d950431d2": "Hide",
-            "ebceac65a4": "Set up",
-            "3f003507f4": "Open full setup in Settings"
-          },
-          "MobileEmulatorAgentSetupGuideSteps": {
-            "9b49d892e3": "Enable Orcinus CLI",
-            "3d8dc52c93": "Registers the orca command for emulator control in agent shells.",
-            "21f5687c07": "Orcinus CLI skill",
-            "64fb057667": "Teaches agents the orca emulator commands for this worktree.",
-            "5c59ea96ca": "Mobile emulator Orcinus CLI skill setup",
-            "bff5341ac3": "Mobile emulator Orcinus CLI skill install terminal",
-            "3d34423e88": "Registering the Orcinus CLI",
-            "3be27641c9": "so emulator commands can run from agent shells.",
-            "3941719a56": "Checking Orcinus CLI before opening skill setup."
-          },
-          "MobileEmulatorTabIntroCallout": {
-            "1924982130": "Dismiss",
-            "5789936d9a": "Preview iOS simulators while agents drive the screen.",
-            "8014b4b80b": "Keep",
-            "6e051a40b7": "Hide"
-          },
+          "MobileEmulatorAgentSetupGuide": {},
+          "MobileEmulatorAgentSetupGuideSteps": {},
+          "MobileEmulatorTabIntroCallout": {},
           "mobile": {
             "emulator": {
               "hidden": {
-                "toast": {
-                  "e8f098a870": "Mobile Emulator hidden",
-                  "c46c979c1d": "Re-enable Mobile Emulator anytime in",
-                  "600f9a745a": "Settings › Mobile Emulator"
-                }
+                "toast": {}
               }
             }
           },
-          "useEmulatorScreenKeyboard": {
-            "pasteTooLarge": "Paste is too large for emulator keyboard input.",
-            "unsupportedPasteText": "Emulator keyboard paste supports US keyboard text only.",
-            "pasteTargetUnavailable": "Emulator keyboard paste failed because the device is not ready."
-          }
+          "useEmulatorScreenKeyboard": {}
         }
       },
       "editor": {

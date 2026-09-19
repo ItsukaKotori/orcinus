@@ -64,13 +64,10 @@ export function ShortcutsPane(): React.JSX.Element {
   const resetKeybindingOverride = useAppStore((state) => state.resetKeybindingOverride)
   const disableKeybindingAction = useAppStore((state) => state.disableKeybindingAction)
   const pluginCommands = useEditablePluginCommands()
-  const [managedBrowserCreationEnabled, mobileEmulatorCreationEnabled] = useAppStore(
+  const [managedBrowserCreationEnabled] = useAppStore(
     useShallow((state) => {
       const policy = getClientCreationActionPolicy(state, state.activeWorktreeId)
-      return [
-        policy['managed-browser'].state === 'enabled',
-        policy['mobile-emulator'].state === 'enabled'
-      ] as const
+      return [policy['managed-browser'].state === 'enabled'] as const
     })
   )
   const agentDashboardEnabled = useAppStore(
@@ -136,7 +133,6 @@ export function ShortcutsPane(): React.JSX.Element {
         terminalShortcutPolicy,
         platform,
         managedBrowserCreationEnabled,
-        mobileEmulatorCreationEnabled,
         agentDashboardEnabled,
         settingsSearchQuery: searchQuery,
         shortcutQuery,
@@ -148,7 +144,6 @@ export function ShortcutsPane(): React.JSX.Element {
       groups,
       keybindings,
       managedBrowserCreationEnabled,
-      mobileEmulatorCreationEnabled,
       searchQuery,
       shortcutFilter,
       shortcutQuery,

@@ -389,9 +389,7 @@
       },
       "ensure": {
         "simulator": {
-          "tab": {
-            "372d21d428": "手机模拟器"
-          }
+          "tab": {}
         }
       },
       "fix": {
@@ -477,9 +475,7 @@
         },
         "mobile": {
           "emulator": {
-            "tab": {
-              "bf4f2a8a72": "无法启动模拟器。请检查 iOS 或 Android 模拟器设置，然后尝试其他设备。"
-            }
+            "tab": {}
           }
         }
       },
@@ -784,8 +780,6 @@
         "93d88d20bf": "外观",
         "2d0659f6f0": "全局终端、浏览器和 Markdown 选项卡。",
         "65b19f5bde": "浮动工作区",
-        "3d65d3f1b9": "配置对 Orcinus 和编码智能体的手机模拟器支持。",
-        "1e761cff2b": "手机模拟器",
         "e815fd01bd": "主页、链接路由和会话 cookie。",
         "8c197f74a1": "浏览器",
         "42ae40842f": "保存的终端命令，范围全局或每个项目。",
@@ -2010,7 +2004,6 @@
         "c4afa68159": "尝试工作树、设置、操作、标签页标题、智能体提示、URL、PR 或端口。",
         "dbd9d87eec": "没有结果符合您的搜索",
         "2c38630a01": "工作区不再存在",
-        "7726ce9970": "手机模拟器选项卡不再存在",
         "d7d496a451": "浏览器页面不再存在",
         "50a1d11d5b": "打开标签页",
         "088d66d980": "操作与设置",
@@ -2905,7 +2898,6 @@
             "4df2a06d36": "向下拆分",
             "ab1e2bff04": "向右拆分",
             "9acaf92093": "窗格操作",
-            "1bce81dba6": "模拟器",
             "1ff1c77616": "浏览器",
             "586d2ac445": "终端",
             "addSplitPane": "添加拆分窗格",
@@ -3002,9 +2994,6 @@
             "b1a132357f": "新标签页",
             "4f327c8b3d": "打开 Markdown...",
             "3d5d6c960d": "新 Markdown",
-            "fd2b42aaa3": "新的手机模拟器",
-            "aea43b5748": "打开现有的模拟器选项卡。",
-            "b426bb2615": "转到手机模拟器",
             "4833fb2cbe": "新浏览器选项卡",
             "d364f3c8d4": "新终端",
             "7c1313d237": "新终端：",
@@ -3027,7 +3016,6 @@
             "2c38630a01": "工作区已不存在",
             "4f0d9a71c2": "标签页已不存在",
             "d7d496a451": "浏览器页面已不存在",
-            "7726ce9970": "移动模拟器标签页已不存在",
             "chooseAction": "请选择一项操作。",
             "searchProvider": "使用 {{value0}} 搜索"
           },
@@ -3090,14 +3078,7 @@
                   "6d8b6b4117": "新文件",
                   "b330f72434": "markdown",
                   "37ff3ddca1": "打开 markdown",
-                  "164c394bab": "打开文件",
-                  "bbaf4f85a4": "移动端模拟器",
-                  "3784b83bd4": "模拟器",
-                  "a63847a742": "模拟器",
-                  "1baeb07c17": "iOS 模拟器",
-                  "8a580f88cf": "iPhone",
-                  "7ecdc5ef08": "iPad",
-                  "14965cc123": "移动端"
+                  "164c394bab": "打开文件"
                 }
               }
             }
@@ -6344,52 +6325,9 @@
           "82436439eb": "添加 MCP 配置",
           "0a5c1ead54": "创建空配置"
         },
-        "MobileEmulatorAgentControlRow": {
-          "1861982430": "无法加载 CLI 状态。",
-          "8af7a8bc38": "命令针对当前工作树的活动模拟器。坐标从 0..1 标准化。",
-          "c7f3fe0a6e": "常用模拟器命令",
-          "d94ca6a623": "使智能体能够使用 Orcinus CLI 命令，包括手机模拟器控制。",
-          "67e19ee03c": "Orcinus CLI 技能",
-          "aaf62a3dd2": "安装于",
-          "2fef055608": "注册 Orcinus CLI 命令，以便智能体可以从其 shell 控制活动模拟器。",
-          "4f2205f3b6": "启用 Orcinus CLI",
-          "ff4b7e65d6": "让编码智能体使用 Orcinus CLI 命令控制活动手机模拟器。",
-          "2a674aa810": "智能体手机模拟器控制",
-          "cdeaed9e37": "在 PATH 中注册 Orcinus CLI。",
-          "3d34423e88": "正在注册 Orcinus CLI",
-          "3be27641c9": "以便智能体 shell 可以运行模拟器命令。",
-          "3941719a56": "打开技能设置前正在检查 Orcinus CLI。"
-        },
-        "MobileEmulatorExamples": {
-          "edf13dd03b": "复制",
-          "c12b253997": "复制示例提示",
-          "d151e25078": "”",
-          "b525ff2b12": "”",
-          "4daa95f25a": "将其中任何内容粘贴到安装了 Orcinus CLI 技能的项目中的 Claude Code、Codex 或其他智能体中。",
-          "0820b3f84f": "尝试一下 - 示例提示",
-          "1f608e7d60": "复制提示失败。",
-          "2b077b5544": "已复制提示。"
-        },
-        "MobileEmulatorSettingsPane": {
-          "19d39113b6": "让编码智能体使用 Orcinus CLI 命令控制活动手机模拟器。",
-          "f2f8d97bb6": "智能体手机模拟器控制",
-          "143961d031": "默认设备",
-          "8aec2f99a0": "刷新模拟器可用性",
-          "ae1612c58c": "可用性",
-          "f9af91ea26": "显示“新建手机模拟器”操作并允许智能体连接到活动模拟器。",
-          "700ddbf9b1": "启用手机模拟器",
-          "bc39d0f115": "配置对 Orcinus 和编码智能体的手机模拟器支持。",
-          "6593c9ddd3": "手机模拟器",
-          "a4f1c82d90": "已禁用",
-          "b5e2d93e01": "检查中...",
-          "c6f3ea4f12": "就绪",
-          "d704fb5023": "需要设置",
-          "06b06429c6": "正在检查 Android SDK 和 iOS 模拟器支持。",
-          "6d1483d4a0": "检测到 1 个模拟器设备。",
-          "0a452d4d3b": "检测到 {{value0}} 个模拟器设备。",
-          "f62a1bb759": "检测到设备后，Orcinus 会自动选择一个模拟器设备。",
-          "b2fd62ea75": "新模拟器标签页和智能体附加命令使用的默认设备。自动选择会优先使用已在运行的设备。"
-        },
+        "MobileEmulatorAgentControlRow": {},
+        "MobileEmulatorExamples": {},
+        "MobileEmulatorSettingsPane": {},
         "MobileNetworkInterfaceSection": {
           "63d5e4ae1e": "重新生成二维码并从 Orcinus 手机应用程序扫描。",
           "87985ba6f5": "在此网络接口菜单中，选择 Tailscale 地址，通常是 100.x.y.z IP。",
@@ -7013,8 +6951,6 @@
           "2b4474780a": "外观",
           "3d9adfe6a5": "全局终端、浏览器和 Markdown 选项卡。",
           "3eb22a3ada": "浮动工作区",
-          "01f9d36292": "配置对 Orcinus 和编码智能体的手机模拟器支持。",
-          "f75daf1002": "手机模拟器",
           "ad9788036f": "主页、链接路由和会话 cookie。",
           "c46215ea03": "浏览器",
           "6742c7932c": "保存的终端命令，范围全局或每个项目。",
@@ -8506,44 +8442,7 @@
         },
         "mobile": {
           "emulator": {
-            "search": {
-              "2348045036": "选择 Orcinus 默认打开的模拟器设备。",
-              "2bb2e09225": "手机技能",
-              "bbe4267416": "模拟器类型",
-              "64494f03c3": "模拟器附加",
-              "6f728f1456": "模拟器抽头",
-              "f8b871d655": "智能体客户端",
-              "2e0b45b2ba": "使用 Orcinus CLI 命令列出、附加、点击和输入手机模拟器。",
-              "ea3eac39bb": "智能体 CLI 控制",
-              "8ef0f08d36": "运行时",
-              "27397fe8e9": "xcode 命令行工具",
-              "7650063d17": "模拟控制",
-              "3211e7acf9": "xcrun",
-              "42bfab45d8": "可用性",
-              "ea1f51b980": "检查Xcode、simctl、serve-sim和模拟器设备是否准备就绪。",
-              "0b95dfd5b3": "模拟器可用性",
-              "04c5f5d901": "设备",
-              "25d7bfbcd4": "乌迪德",
-              "ec3c4043fd": "默认ipad",
-              "1dc8c52ffa": "默认 iPhone",
-              "ab4814f3c5": "默认模拟器",
-              "54184cb9c5": "默认模拟器设备",
-              "b8ddd13195": "智能体模拟器",
-              "1ad6fb6230": "默认设备",
-              "ac0a985873": "模拟器技能",
-              "9353854ff3": "Orcinus 模拟器",
-              "d4b7833894": "Orcinus CLI",
-              "84e5706975": "serve-sim",
-              "7c5a8a2bee": "Xcode",
-              "bec7231663": "平板电脑",
-              "49727355a3": "iPhone",
-              "6b6407dc1f": "模拟器",
-              "2d67f708ce": "模拟器",
-              "c5eca29310": "ios模拟器",
-              "25159de808": "手机模拟器",
-              "9595354cff": "配置对 Orcinus 和编码智能体的手机模拟器支持。",
-              "cdd3c31918": "手机模拟器"
-            }
+            "search": {}
           },
           "pane": {
             "search": {
@@ -9549,21 +9448,7 @@
           "distroRequired": "项目继承 WSL 前，请先选择一个 WSL 发行版。",
           "wslDescription": "对于未覆盖运行时的项目，通过 WSL 在 {{value0}} 中检测并启动智能体。"
         },
-        "MobileEmulatorSdkStatus": {
-          "536026130e": "模拟器 SDK",
-          "dde0ec1cd8": "Orcinus 用于运行模拟器的工具链。Android 可通过 Android SDK 在任何系统上运行；iOS 模拟器需要 macOS 上的 Xcode。",
-          "027cbf668a": "Android SDK",
-          "f6d080d128": "正在使用配置的路径",
-          "7fe4bd5907": "检测位置",
-          "2784f0b22d": "未找到。请安装 Android Studio，然后创建虚拟设备。",
-          "b94ff260e6": "下载 Android Studio",
-          "18925b082d": "定位 SDK 文件夹",
-          "8c52684db8": "清除",
-          "76eb88b88e": "iOS 模拟器 (Xcode)",
-          "c6f3ea4f12": "已就绪",
-          "e4f14b50d7": "请安装 Xcode 并添加 iOS 模拟器运行时。",
-          "63fe73a1ea": "无法更新 Android SDK 文件夹。"
-        },
+        "MobileEmulatorSdkStatus": {},
         "AppearanceAdvancedDisclosure": {
           "advanced": "高级"
         },
@@ -12257,125 +12142,55 @@
       },
       "emulator": {
         "pane": {
-          "EmulatorPane": {
-            "59b08fa031": "没有连接模拟器"
-          },
+          "EmulatorPane": {},
           "emulator": {
             "device": {
-              "frame": {
-                "9406c15775": "模拟器屏幕",
-                "8f25ffaf8a": "模拟器屏幕，键盘捕获。按 Esc 键释放。",
-                "0022420df0": "手机"
-              }
+              "frame": {}
             },
             "pane": {
-              "toolbar": {
-                "06e10d7356": "关闭模拟器",
-                "e7a0d1897e": "家",
-                "6bd8dff42a": "旋转",
-                "3d836b879c": "选择模拟器",
-                "81b3571a07": "连接",
-                "868c0f2938": "处理中…"
-              }
+              "toolbar": {}
             },
             "screen": {
               "stream": {
-                "content": {
-                  "8b1a0d8694": "模拟器预览",
-                  "36841af608": "流已断开连接",
-                  "5f818f12ab": "正在连接模拟器...",
-                  "5ee64cd44e": "模拟器屏幕"
-                }
+                "content": {}
               }
             },
             "unavailable": {
-              "pane": {
-                "f630b9ca9f": "手机模拟器需要配备 Xcode 和 iOS Simulator 运行时的 Mac。在 Linux 或 Windows 上，使用物理设备或远程 Mac 构建主机。",
-                "b2c268a0b9": "手机模拟器仅适用于 macOS"
-              }
+              "pane": {}
             }
           },
           "use": {
             "emulator": {
               "frame": {
-                "stream": {
-                  "f1c0179002": "流不生成帧。"
-                }
+                "stream": {}
               }
             },
             "mobile": {
               "emulator": {
                 "agent": {
                   "setup": {
-                    "state": {
-                      "fdcca1ec75": "正在注册...",
-                      "69fb2c2289": "已启用",
-                      "c6705092ba": "修复 PATH",
-                      "7c1b6bdb1e": "启用",
-                      "51074ccb05": "无法加载 CLI 状态。",
-                      "35dea1ae12": "智能体控制已就绪。",
-                      "9dff3a6338": "技能已安装。启用 Orcinus CLI 以完成设置。",
-                      "15986a1080": "Orcinus CLI 已就绪。安装技能以完成设置。",
-                      "4c26913def": "尚未设置完成。请完成两个步骤以启用智能体控制。",
-                      "c94ff11e91": "无法重新检查设置状态。",
-                      "2b519eed94": "已在 PATH 中注册 Orcinus CLI。"
-                    }
+                    "state": {}
                   }
                 },
                 "tab": {
                   "intro": {
-                    "actions": {
-                      "68a5dc6604": "无法隐藏移动模拟器。"
-                    }
+                    "actions": {}
                   }
                 }
               }
             }
           },
-          "MobileEmulatorAgentSetupGuide": {
-            "2fda9ff015": "设置智能体控制",
-            "0ac0fef514": "智能体控制已就绪。",
-            "2bdfff8763": "智能体控制（可选）。",
-            "72736b051f": "当您希望智能体控制此模拟器时，设置 Orcinus CLI + 技能。",
-            "d10ae98046": "完成",
-            "3756cbeca7": "暂不",
-            "6d950431d2": "隐藏",
-            "ebceac65a4": "设置",
-            "3f003507f4": "在设置中打开完整设置"
-          },
-          "MobileEmulatorAgentSetupGuideSteps": {
-            "9b49d892e3": "启用 Orcinus CLI",
-            "3d8dc52c93": "在智能体 shell 中注册用于模拟器控制的 orca 命令。",
-            "21f5687c07": "Orcinus CLI 技能",
-            "64fb057667": "教授智能体此工作区的 orca 模拟器命令。",
-            "5c59ea96ca": "移动端模拟器 Orcinus CLI 技能设置",
-            "bff5341ac3": "移动端模拟器 Orcinus CLI 技能安装终端",
-            "3d34423e88": "正在注册 Orcinus CLI",
-            "3be27641c9": "以便智能体 shell 可以运行模拟器命令。",
-            "3941719a56": "打开技能设置前正在检查 Orcinus CLI。"
-          },
-          "MobileEmulatorTabIntroCallout": {
-            "1924982130": "关闭",
-            "5789936d9a": "在智能体控制屏幕时预览 iOS 模拟器。",
-            "8014b4b80b": "保留",
-            "6e051a40b7": "隐藏"
-          },
+          "MobileEmulatorAgentSetupGuide": {},
+          "MobileEmulatorAgentSetupGuideSteps": {},
+          "MobileEmulatorTabIntroCallout": {},
           "mobile": {
             "emulator": {
               "hidden": {
-                "toast": {
-                  "e8f098a870": "移动模拟器已隐藏",
-                  "c46c979c1d": "随时重新启用移动模拟器",
-                  "600f9a745a": "设置 › 移动模拟器"
-                }
+                "toast": {}
               }
             }
           },
-          "useEmulatorScreenKeyboard": {
-            "pasteTooLarge": "模拟器键盘输入的粘贴内容过大。",
-            "unsupportedPasteText": "模拟器键盘粘贴仅支持美式键盘文本。",
-            "pasteTargetUnavailable": "模拟器键盘粘贴失败，因为设备尚未就绪。"
-          }
+          "useEmulatorScreenKeyboard": {}
         }
       },
       "editor": {

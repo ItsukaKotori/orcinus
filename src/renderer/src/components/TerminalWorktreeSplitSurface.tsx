@@ -12,7 +12,6 @@ import {
 import TabGroupSplitLayout from './tab-group/TabGroupSplitLayout'
 import TerminalPaneOverlayLayer from './terminal-pane/TerminalPaneOverlayLayer'
 import { RetainedBrowserPaneOverlayLayer } from './browser-pane/assemble-chrome/BrowserPaneOverlayLayer'
-import EmulatorPaneOverlayLayer from './emulator-pane/EmulatorPaneOverlayLayer'
 import StructuredAgentSessionPaneOverlayLayer from './native-chat/StructuredAgentSessionPaneOverlayLayer'
 import AiVaultSessionDropLayer from './tab-group/AiVaultSessionDropLayer'
 
@@ -86,9 +85,6 @@ export const WorktreeSplitSurface = React.memo(function WorktreeSplitSurface({
           needsBrowserGuestPaint
         })}
       />
-      {isVisible || backgroundMountTabIds === null ? (
-        <EmulatorPaneOverlayLayer worktreeId={worktreeId} isWorktreeActive={isVisible} />
-      ) : null}
       <StructuredAgentSessionPaneOverlayLayer
         worktreeId={worktreeId}
         isWorktreeActive={isVisible}

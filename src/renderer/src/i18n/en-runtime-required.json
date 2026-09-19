@@ -415,15 +415,10 @@
         "pane": {
           "emulator": {
             "device": {
-              "frame": {
-                "0022420df0": "phone"
-              }
+              "frame": {}
             },
             "unavailable": {
-              "pane": {
-                "b2c268a0b9": "Mobile Emulator is macOS only",
-                "f630b9ca9f": "Mobile Emulator requires a Mac with Xcode and the iOS Simulator runtime. On Linux or Windows, use a physical device or a remote Mac build host."
-              }
+              "pane": {}
             }
           }
         }
@@ -1293,14 +1288,8 @@
         "McpConfigFileRow": {
           "845ae248e8": "valid"
         },
-        "MobileEmulatorAgentControlRow": {
-          "1861982430": "Failed to load CLI status.",
-          "cdeaed9e37": "Registered the Orcinus CLI in PATH."
-        },
-        "MobileEmulatorSdkStatus": {
-          "536026130e": "Emulator SDKs",
-          "dde0ec1cd8": "Toolchains Orcinus uses to run emulators. Android works on any OS via the Android SDK; iOS Simulators need Xcode on macOS."
-        },
+        "MobileEmulatorAgentControlRow": {},
+        "MobileEmulatorSdkStatus": {},
         "MobileNetworkInterfaceSection": {
           "1dc87a7fbc": "Tailscale",
           "1e64659126": "Regenerate",
@@ -2310,7 +2299,6 @@
           },
           "TabGroupPanel": {
             "0db2081805": "Split Up",
-            "1bce81dba6": "simulator",
             "1ff1c77616": "browser",
             "30137df7d0": "Split Left",
             "4df2a06d36": "Split Down",

@@ -51,17 +51,11 @@ const getShortcutDefinitionSearchEntries = createLocalizedCatalog(() =>
 
 export function getShortcutsPaneSearchEntries(options?: {
   includeManagedBrowser?: boolean
-  includeMobileEmulator?: boolean
 }): SettingsSearchEntry[] {
   const includeManagedBrowser = options?.includeManagedBrowser !== false
-  const includeMobileEmulator = options?.includeMobileEmulator !== false
   return [
     ...getShortcutDefinitionSearchEntries()
-      .filter(
-        ({ actionId }) =>
-          (includeManagedBrowser || actionId !== 'tab.newBrowser') &&
-          (includeMobileEmulator || actionId !== 'tab.newSimulator')
-      )
+      .filter(({ actionId }) => includeManagedBrowser || actionId !== 'tab.newBrowser')
       .map(({ searchEntry }) => searchEntry),
     getTerminalShortcutPolicySearchEntry()
   ]

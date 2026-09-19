@@ -1,12 +1,12 @@
 /**
- * Determine which zoom domain (terminal, editor, simulator, or UI) should be adjusted
+ * Determine which zoom domain (terminal, editor, or UI) should be adjusted
  * based on current view, tab type, and focused element.
  */
 export function resolveZoomTarget(args: {
   activeView: TopLevelView
   activeTabType: WorkspaceVisibleTabType
   activeElement: unknown
-}): 'terminal' | 'editor' | 'simulator' | 'ui' {
+}): 'terminal' | 'editor' | 'ui' {
   const { activeView, activeTabType, activeElement } = args
   const terminalInputFocused =
     typeof activeElement === 'object' &&
@@ -34,9 +34,6 @@ export function resolveZoomTarget(args: {
 
   if (activeView !== 'terminal') {
     return 'ui'
-  }
-  if (activeTabType === 'simulator') {
-    return 'simulator'
   }
   // Why: keyboard/menu zoom in an active browser tab belongs to Orca chrome.
   // Browser page zoom has a dedicated route for wheel and page-specific IPC.

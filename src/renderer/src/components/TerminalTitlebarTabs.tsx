@@ -39,16 +39,13 @@ export function TerminalTitlebarTabs({
     handleDuplicateBrowserTab,
     handleNewBrowserTab,
     handleNewFile,
-    handleNewSimulatorTab,
     handleNewTab,
     handleOpenEntry,
     handleTogglePaneExpand,
     makePreviewFilePermanent,
-    mobileEmulatorEnabled,
     pinFile,
     renderedActiveWorktreeId,
     setActiveFile,
-    setActiveTab,
     setActiveTabType,
     setTabColor,
     setTabCustomTitle,
@@ -73,7 +70,6 @@ export function TerminalTitlebarTabs({
       onNewTerminalTab={() => handleNewTab()}
       onNewTerminalWithShell={handleNewTab}
       onNewBrowserTab={handleNewBrowserTab}
-      onNewSimulatorTab={mobileEmulatorEnabled ? handleNewSimulatorTab : undefined}
       onOpenEntry={handleOpenEntry}
       onNewFileTab={handleNewFile}
       onSetCustomTitle={setTabCustomTitle}
@@ -85,21 +81,8 @@ export function TerminalTitlebarTabs({
       clientHostedBrowserRows={worktreeClientHostedBrowserRows}
       activeFileId={activeFileId}
       activeBrowserTabId={activeBrowserTabId}
-      activeSimulatorTabId={
-        activeTabType === 'simulator' && renderedActiveWorktreeId
-          ? (useAppStore.getState().getActiveTab(renderedActiveWorktreeId)?.id ?? null)
-          : null
-      }
       activeTabType={activeTabType}
       onActivateFile={(fileId) => {
-        const unifiedTabs =
-          useAppStore.getState().unifiedTabsByWorktree[renderedActiveWorktreeId ?? ''] ?? []
-        const unifiedTab = unifiedTabs.find((tab) => tab.id === fileId)
-        if (unifiedTab?.contentType === 'simulator') {
-          setActiveTab(fileId)
-          setActiveTabType('simulator')
-          return
-        }
         setActiveFile(fileId)
         setActiveTabType('editor')
       }}

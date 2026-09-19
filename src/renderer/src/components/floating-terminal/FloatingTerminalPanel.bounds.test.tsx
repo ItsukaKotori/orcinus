@@ -73,10 +73,6 @@ vi.mock('@/components/browser-pane/BrowserPane', async () => {
   return (await import('./floating-terminal-panel-component-stubs')).createBrowserPaneModule()
 })
 
-vi.mock('@/components/emulator-pane/EmulatorPane', async () => {
-  return (await import('./floating-terminal-panel-component-stubs')).createEmulatorPaneModule()
-})
-
 vi.mock('@/components/editor/EditorPanel', async () => {
   return (await import('./floating-terminal-panel-component-stubs')).createEditorPanelModule()
 })

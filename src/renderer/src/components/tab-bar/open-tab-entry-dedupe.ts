@@ -24,7 +24,7 @@ export function dropFileEntriesCoveredByTabResults(
   const openPaths = new Set<string>()
   for (const result of tabResults) {
     // Only an open editor is the same destination as the file row; terminal,
-    // diff, review, browser and simulator rows must never suppress it.
+    // diff, review and browser rows must never suppress it.
     if (result.source === 'workspace' && result.contentType === 'editor' && result.relativePath) {
       openPaths.add(comparisonKey(result.relativePath, foldCase))
     }

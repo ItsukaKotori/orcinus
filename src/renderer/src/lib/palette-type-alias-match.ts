@@ -3,9 +3,9 @@ import type { MatchRange } from './worktree-palette-search'
 export type PaletteTypeAliasMatch = { text: string; range: MatchRange }
 
 /**
- * Earliest match start wins, not declaration order: "emulator" has to score as a
- * prefix hit on 'emulator' rather than a mid-string hit inside 'mobile emulator
- * tab'. Ties keep the first alias so the longest phrasing stays the label.
+ * Earliest match start wins, not declaration order: a short query has to score as
+ * a prefix hit on its own alias rather than a mid-string hit inside a longer
+ * phrasing. Ties keep the first alias so the longest phrasing stays the label.
  */
 export function selectPaletteTypeAliasMatch(
   aliases: readonly string[],

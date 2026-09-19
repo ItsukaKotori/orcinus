@@ -24,7 +24,7 @@ import {
   handleSwitchTerminalTab
 } from './ipc-tab-switch'
 
-type ActiveTabType = 'terminal' | 'editor' | 'browser' | 'simulator'
+type ActiveTabType = 'terminal' | 'editor' | 'browser'
 
 type MockGroup = {
   id: string
@@ -48,7 +48,7 @@ type MockStore = {
       id: string
       entityId: string
       groupId: string
-      contentType: 'terminal' | 'editor' | 'browser' | 'simulator' | 'agent-session'
+      contentType: 'terminal' | 'editor' | 'browser' | 'agent-session'
     }[]
   >
   setActiveTab: ReturnType<typeof vi.fn>

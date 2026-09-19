@@ -53,7 +53,6 @@ const tabSearchMock = vi.hoisted(() => {
       const rows = Object.values(tabSearchMock.resultsByQuery).flat()
       return {
         browserPages: [],
-        simulatorTabs: [],
         workspaceTabs: rows
           .filter(
             (row): row is Extract<OpenTabSearchResult, { source: 'workspace' }> =>
@@ -109,7 +108,6 @@ vi.mock('./use-open-tab-search', () => ({
 const activationMocks = vi.hoisted(() => ({
   workspace: vi.fn(),
   browser: vi.fn(),
-  simulator: vi.fn(),
   focusTerminalTabSurface: vi.fn(),
   requestBrowserFocus: vi.fn()
 }))
@@ -118,9 +116,6 @@ vi.mock('@/lib/workspace-tab-palette-activation', () => ({
 }))
 vi.mock('@/lib/browser-page-palette-activation', () => ({
   activateBrowserPagePaletteResult: activationMocks.browser
-}))
-vi.mock('@/lib/simulator-tab-palette-activation', () => ({
-  activateSimulatorTabPaletteResult: activationMocks.simulator
 }))
 vi.mock('@/lib/focus-terminal-tab-surface', () => ({
   focusTerminalTabSurface: activationMocks.focusTerminalTabSurface
@@ -240,7 +235,6 @@ beforeEach(() => {
     pageId: 'page-1',
     focusTarget: 'webview'
   })
-  activationMocks.simulator.mockReturnValue({ status: 'activated', tabId: 'tab-9' })
   container = document.createElement('div')
   document.body.appendChild(container)
   root = createRoot(container)

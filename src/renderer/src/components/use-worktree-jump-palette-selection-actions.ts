@@ -1,12 +1,10 @@
 import { useCallback } from 'react'
 import { toast } from 'sonner'
 import { activateBrowserPagePaletteResult } from '@/lib/browser-page-palette-activation'
-import { activateSimulatorTabPaletteResult } from '@/lib/simulator-tab-palette-activation'
 import { activateWorkspaceTabPaletteResult } from '@/lib/workspace-tab-palette-activation'
 import { activateAndRevealWorktree } from '@/lib/worktree-activation'
 import { queueWorkspaceActivationTerminalFocus } from '@/lib/workspace-activation-terminal-focus'
 import type { BrowserPaletteSearchResult } from '@/lib/browser-palette-search'
-import type { SimulatorPaletteSearchResult } from '@/lib/simulator-palette-search'
 import type { WorkspaceTabPaletteSearchResult } from '@/lib/workspace-tab-palette-search'
 import type { CmdJActionResult, CmdJSettingsResult } from '@/components/cmd-j/palette-results'
 import type { CmdJProjectSearchResult } from '@/components/cmd-j/palette-project-results'
@@ -105,30 +103,6 @@ export function useWorktreeJumpPaletteSelectionActions({
     },
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- controller refs and setters preserve their original stable identities.
     [closeModal, recordFeatureInteraction, requestBrowserFocus]
-  )
-  const handleSelectSimulatorTab = useCallback(
-    (result: SimulatorPaletteSearchResult) => {
-      const activation = activateSimulatorTabPaletteResult(result)
-      if (activation.status === 'failed') {
-        toast.error(
-          activation.reason === 'missing-tab'
-            ? translate(
-                'auto.components.WorktreeJumpPalette.7726ce9970',
-                'Mobile emulator tab no longer exists'
-              )
-            : translate(
-                'auto.components.WorktreeJumpPalette.2c38630a01',
-                'Workspace no longer exists'
-              )
-        )
-        return
-      }
-      skipRestoreFocusRef.current = true
-      closeModal()
-      setSelectedItemId('')
-    },
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- controller refs and setters preserve their original stable identities.
-    [closeModal]
   )
   const handleSelectWorkspaceTab = useCallback(
     (result: WorkspaceTabPaletteSearchResult) => {
@@ -239,8 +213,6 @@ export function useWorktreeJumpPaletteSelectionActions({
         handleSelectProjectTarget(item.result)
       } else if (item.type === 'browser-page') {
         handleSelectBrowserPage(item.result)
-      } else if (item.type === 'simulator-tab') {
-        handleSelectSimulatorTab(item.result)
       } else if (item.type === 'workspace-tab') {
         handleSelectWorkspaceTab(item.result)
       } else if (item.type === 'settings') {
@@ -254,7 +226,6 @@ export function useWorktreeJumpPaletteSelectionActions({
       handleSelectProjectTarget,
       handleSelectQuickAction,
       handleSelectSettings,
-      handleSelectSimulatorTab,
       handleSelectWorkspaceTab,
       handleSelectWorktree
     ]

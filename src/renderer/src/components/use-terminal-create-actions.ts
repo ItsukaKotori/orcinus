@@ -8,7 +8,6 @@ import {
   createWebRuntimeSessionTerminal,
   isWebRuntimeSessionActive
 } from '@/runtime/web-runtime-session'
-import { openMobileEmulatorTab } from '@/lib/open-mobile-emulator-tab'
 import { launchAgentInNewTab } from '@/lib/launch-agent-in-new-tab'
 import { buildDuplicatedBrowserTabOptions } from '@/lib/duplicate-browser-tab-options'
 import { browserWorkspaceHasRemoteOwner } from '@/runtime/remote-browser-tab-ownership'
@@ -114,19 +113,6 @@ export function useTerminalCreateActions(controller: TerminalColdActivationContr
     [activeWorktreeId]
   )
 
-  const handleNewSimulatorTab = useCallback(() => {
-    if (!activeWorktreeId) {
-      return
-    }
-    const targetGroupId =
-      useAppStore.getState().activeGroupIdByWorktree[activeWorktreeId] ??
-      useAppStore.getState().groupsByWorktree[activeWorktreeId]?.[0]?.id
-    void openMobileEmulatorTab(activeWorktreeId, {
-      placement: 'rightSplit',
-      targetGroupId: targetGroupId ?? undefined
-    }).catch(showClientCreationActionError)
-  }, [activeWorktreeId])
-
   const handleNewBrowserTab = useCallback(() => {
     if (!activeWorktreeId) {
       return
@@ -227,7 +213,6 @@ export function useTerminalCreateActions(controller: TerminalColdActivationContr
   return {
     handleNewTab,
     handleNewAgentTab,
-    handleNewSimulatorTab,
     handleNewBrowserTab,
     handleOpenEntry,
     handleDuplicateBrowserTab,

@@ -9,10 +9,8 @@ export function useTerminalKeyboardShortcuts(controller: TerminalActivationContr
     handleNewAgentTab,
     handleNewBrowserTab,
     handleNewFile,
-    handleNewSimulatorTab,
     handleNewTab,
     keybindings,
-    mobileEmulatorEnabled,
     terminalShortcutPolicy
   } = controller
   useEffect(() => {
@@ -34,13 +32,11 @@ export function useTerminalKeyboardShortcuts(controller: TerminalActivationContr
   }, [
     activeWorktreeId,
     handleNewBrowserTab,
-    handleNewSimulatorTab,
     handleNewFile,
     handleNewTab,
     handleNewAgentTab,
     handleCloseAllFiles,
     keybindings,
-    mobileEmulatorEnabled,
     terminalShortcutPolicy
   ])
 }

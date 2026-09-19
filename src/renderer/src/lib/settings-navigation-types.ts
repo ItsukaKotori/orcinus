@@ -37,7 +37,6 @@ const SETTINGS_NAV_TARGETS = [
   'artifacts',
   'automations',
   'linear',
-  'mobile-emulator',
   'repo'
 ] as const
 

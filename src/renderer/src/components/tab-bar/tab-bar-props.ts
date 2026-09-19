@@ -21,7 +21,6 @@ export type TabBarProps = {
   /** On Windows, opens a new terminal with a specific shell instead of the default. */
   onNewTerminalWithShell?: (shell: string) => void
   onNewBrowserTab: () => void
-  onNewSimulatorTab?: () => void
   onOpenEntry?: (args: TabCreateEntryArgs) => Promise<void>
   terminalOnly?: boolean
   showAgentLaunchItems?: boolean
@@ -40,7 +39,6 @@ export type TabBarProps = {
   agentSessionTabs?: (Tab & { contentType: 'agent-session' })[]
   activeFileId?: string | null
   activeBrowserTabId?: string | null
-  activeSimulatorTabId?: string | null
   activeTabType?: WorkspaceVisibleTabType
   onActivateFile?: (fileId: string) => void
   onCloseFile?: (fileId: string) => void

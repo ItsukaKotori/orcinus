@@ -56,32 +56,10 @@ const updateCapableCallers = new Map<string, readonly string[]>([
   [
     'src/renderer/src/components/sidebar/LinearAgentSkillSetupDialog.tsx',
     ['installedCommand={installedCommand}']
-  ],
-  [
-    'src/renderer/src/components/settings/MobileEmulatorAgentControlRow.tsx',
-    [
-      'ORCA_CLI_SKILL_UPDATE_COMMAND',
-      'installedCommand={cliSkillUpdateCommand}',
-      'terminalShellOverride={activeSkillRuntime.terminalShellOverride}',
-      // Detection here scans the local host only, so the command must stay host-built.
-      'buildSkillCommandForRuntime(ORCA_CLI_SKILL_INSTALL_COMMAND)',
-      'buildSkillCommandForRuntime(ORCA_CLI_SKILL_UPDATE_COMMAND)'
-    ]
   ]
 ])
 
-const installOnlyCallers = new Map<string, readonly string[]>([
-  [
-    'src/renderer/src/components/emulator-pane/MobileEmulatorAgentSetupGuideSteps.tsx',
-    [
-      // Detection here scans the local host only, so the command must stay host-built.
-      'buildSkillCommandForRuntime(ORCA_CLI_SKILL_INSTALL_COMMAND)',
-      'command={skillInstallCommand}',
-      'terminalShellOverride={activeSkillRuntime.terminalShellOverride}',
-      'showInstallWhenInstalled={!setup.cliSkillInstalled}'
-    ]
-  ]
-])
+const installOnlyCallers = new Map<string, readonly string[]>([])
 
 const directPanelCallers = new Set([
   // BrowserUsePane and LinearAgentSkillSetupPrompt delegate through child setup
@@ -147,10 +125,6 @@ describe('AgentSkillSetupPanel installed-command call sites', () => {
       [
         'src/renderer/src/components/settings/use-local-cli-skill-freshness-name.ts',
         "agentRuntime.runtime === 'host' && activeSkillRuntime.canUseLocalSkillFreshness"
-      ],
-      [
-        'src/renderer/src/components/settings/MobileEmulatorAgentControlRow.tsx',
-        'activeSkillRuntime.canUseLocalSkillFreshness ? ORCA_CLI_SKILL_NAME : undefined'
       ],
       [
         'src/renderer/src/components/settings/use-settings-store-model.ts',

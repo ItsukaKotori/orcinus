@@ -34,8 +34,7 @@ export function useTabGroupWorkspaceModel({
       browserTabs: state.browserTabsByWorktree[worktreeId] ?? EMPTY_BROWSER_TABS,
       expandedPaneByTabId: state.expandedPaneByTabId,
       terminalLayoutsByTabId: state.terminalLayoutsByTabId ?? EMPTY_TERMINAL_LAYOUTS_BY_TAB_ID,
-      generatedTabTitlesEnabled: state.settings?.tabAutoGenerateTitle === true,
-      mobileEmulatorEnabled: state.settings?.mobileEmulatorEnabled !== false
+      generatedTabTitlesEnabled: state.settings?.tabAutoGenerateTitle === true
     }))
   )
 
@@ -80,7 +79,7 @@ export function useTabGroupWorkspaceModel({
     activateAgentSession
   } = useTabGroupActivationCommands({ groupId, worktreeId, groupTabs, worktreeState })
 
-  const creationCommands = useTabGroupCreationCommands({ groupId, worktreeId, worktreeState })
+  const creationCommands = useTabGroupCreationCommands({ groupId, worktreeId })
 
   return {
     group,

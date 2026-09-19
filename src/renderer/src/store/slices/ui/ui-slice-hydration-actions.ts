@@ -217,8 +217,6 @@ export function createUiHydrationActions(set: UISliceSet, _get: UISliceGet): Par
                   validRepoHostIdentities
                 ),
           browserImportHintHidden: ui.browserImportHintHidden === true,
-          mobileEmulatorTabIntroDismissed: ui.mobileEmulatorTabIntroDismissed === true,
-          mobileEmulatorAgentSetupDismissed: ui.mobileEmulatorAgentSetupDismissed === true,
           projectOrderManualDefaultNoticeDismissed:
             ui.projectOrderManualDefaultNoticeDismissed === true,
           // Why: default false so existing users still see the CTA; only explicit dismissal persists true.

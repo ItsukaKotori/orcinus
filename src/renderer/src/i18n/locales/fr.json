@@ -488,9 +488,7 @@
       },
       "ensure": {
         "simulator": {
-          "tab": {
-            "372d21d428": "Émulateur mobile"
-          }
+          "tab": {}
         }
       },
       "fix": {
@@ -576,9 +574,7 @@
         },
         "mobile": {
           "emulator": {
-            "tab": {
-              "bf4f2a8a72": "Impossible de démarrer l'émulateur. Vérifiez la configuration de l'émulateur iOS ou Android et essayez un autre appareil."
-            }
+            "tab": {}
           }
         }
       },
@@ -903,8 +899,6 @@
         "93d88d20bf": "Apparence",
         "2d0659f6f0": "Onglets globaux de terminal, de navigateur et de markdown.",
         "65b19f5bde": "Espace de travail flottant",
-        "3d65d3f1b9": "Configurez la prise en charge des émulateurs mobiles pour Orcinus et les agents de codage.",
-        "1e761cff2b": "Émulateur mobile",
         "e815fd01bd": "Page d'accueil, routage des liens et cookies de session.",
         "8c197f74a1": "Navigateur",
         "42ae40842f": "Commandes de terminal enregistrées, globales ou par projet.",
@@ -2170,7 +2164,6 @@
         "c4afa68159": "Essayez un worktree, un paramètre, une action, un titre d'onglet, un prompt d'agent, une URL, une PR ou un port.",
         "dbd9d87eec": "Aucun résultat ne correspond à votre recherche",
         "2c38630a01": "L'espace de travail n'existe plus",
-        "7726ce9970": "L'onglet émulateur mobile n'existe plus",
         "d7d496a451": "La page du navigateur n'existe plus",
         "50a1d11d5b": "Onglets ouverts",
         "088d66d980": "Actions et paramètres",
@@ -3101,7 +3094,6 @@
             "4df2a06d36": "Scinder vers le bas",
             "ab1e2bff04": "Scinder vers la droite",
             "9acaf92093": "Actions du volet",
-            "1bce81dba6": "simulateur",
             "1ff1c77616": "navigateur",
             "586d2ac445": "terminal",
             "addSplitPane": "Ajouter un volet scindé",
@@ -3198,9 +3190,6 @@
             "b1a132357f": "Nouvel onglet",
             "4f327c8b3d": "Ouvrir un Markdown...",
             "3d5d6c960d": "Nouveau Markdown",
-            "fd2b42aaa3": "Nouvel émulateur mobile",
-            "aea43b5748": "Ouvrir l'onglet émulateur existant.",
-            "b426bb2615": "Aller à l'émulateur mobile",
             "4833fb2cbe": "Nouvel onglet de navigateur",
             "d364f3c8d4": "Nouveau terminal",
             "7c1313d237": "Nouveau terminal :",
@@ -3221,7 +3210,6 @@
             "2c38630a01": "L'espace de travail n'existe plus",
             "4f0d9a71c2": "L'onglet n'existe plus",
             "d7d496a451": "La page du navigateur n'existe plus",
-            "7726ce9970": "L'onglet émulateur mobile n'existe plus",
             "chooseAction": "Choisissez une action.",
             "searchProvider": "Rechercher {{value0}}"
           },
@@ -3284,14 +3272,7 @@
                   "6d8b6b4117": "nouveau fichier",
                   "b330f72434": "mark",
                   "37ff3ddca1": "ouvrir un markdown",
-                  "164c394bab": "ouvrir un fichier",
-                  "bbaf4f85a4": "émulateur mobile",
-                  "3784b83bd4": "émulateur",
-                  "a63847a742": "simulateur",
-                  "1baeb07c17": "simulateur iOS",
-                  "8a580f88cf": "iPhone",
-                  "7ecdc5ef08": "iPad",
-                  "14965cc123": "mobile"
+                  "164c394bab": "ouvrir un fichier"
                 }
               }
             }
@@ -7104,52 +7085,9 @@
           "82436439eb": "Ajouter une configuration MCP",
           "0a5c1ead54": "Créer une configuration vide"
         },
-        "MobileEmulatorAgentControlRow": {
-          "1861982430": "Échec du chargement de l'état de la CLI.",
-          "8af7a8bc38": "Les commandes ciblent l'émulateur actif du worktree courant. Les coordonnées sont normalisées entre 0 et 1.",
-          "c7f3fe0a6e": "Commandes d'émulateur courantes",
-          "d94ca6a623": "Permet aux agents d'utiliser les commandes CLI d'Orcinus, y compris le contrôle de l'émulateur mobile.",
-          "67e19ee03c": "Compétence CLI Orcinus",
-          "aaf62a3dd2": "Installé dans",
-          "2fef055608": "Enregistre la commande CLI Orcinus pour que les agents puissent contrôler l'émulateur actif depuis leur shell.",
-          "4f2205f3b6": "Activer Orcinus CLI",
-          "ff4b7e65d6": "Laisser les agents de codage contrôler l'émulateur mobile actif avec des commandes CLI Orcinus.",
-          "2a674aa810": "Contrôle de l'émulateur mobile par les agents",
-          "cdeaed9e37": "Orcinus CLI enregistré dans PATH.",
-          "3d34423e88": "Enregistrement de la CLI Orcinus",
-          "3be27641c9": "afin que les commandes d'émulateur puissent s'exécuter depuis les shells des agents.",
-          "3941719a56": "Vérification de la CLI Orcinus avant d'ouvrir la configuration du skill."
-        },
-        "MobileEmulatorExamples": {
-          "edf13dd03b": "Copier",
-          "c12b253997": "Copier l'exemple de prompt",
-          "d151e25078": "\"",
-          "b525ff2b12": "\"",
-          "4daa95f25a": "Collez l'un de ces prompts dans Claude Code, Codex ou un autre agent, dans un projet où le skill CLI Orcinus est installé.",
-          "0820b3f84f": "Essayez — exemples de prompts",
-          "1f608e7d60": "Échec de la copie du prompt.",
-          "2b077b5544": "Prompt copié."
-        },
-        "MobileEmulatorSettingsPane": {
-          "19d39113b6": "Laisser les agents de codage contrôler l'émulateur mobile actif avec des commandes CLI Orcinus.",
-          "f2f8d97bb6": "Contrôle de l'émulateur mobile par les agents",
-          "143961d031": "Appareil par défaut",
-          "8aec2f99a0": "Actualiser la disponibilité des émulateurs",
-          "ae1612c58c": "Disponibilité",
-          "f9af91ea26": "Affiche l'action Nouvel émulateur mobile et permet aux agents de se rattacher à l'émulateur actif.",
-          "700ddbf9b1": "Activer l'émulateur mobile",
-          "bc39d0f115": "Configurez la prise en charge des émulateurs mobiles pour Orcinus et les agents de codage.",
-          "6593c9ddd3": "Émulateur mobile",
-          "a4f1c82d90": "Désactivé",
-          "b5e2d93e01": "Vérification...",
-          "c6f3ea4f12": "Prêt",
-          "d704fb5023": "Configuration requise",
-          "06b06429c6": "Vérification de la prise en charge du SDK Android et du simulateur iOS.",
-          "6d1483d4a0": "1 appareil émulateur détecté.",
-          "0a452d4d3b": "{{value0}} appareils émulateur détectés.",
-          "f62a1bb759": "Orcinus sélectionnera automatiquement un appareil émulateur une fois les appareils détectés.",
-          "b2fd62ea75": "Appareil par défaut pour les nouveaux onglets d'émulateur et les commandes d'attachement des agents. La sélection automatique privilégie un appareil déjà démarré."
-        },
+        "MobileEmulatorAgentControlRow": {},
+        "MobileEmulatorExamples": {},
+        "MobileEmulatorSettingsPane": {},
         "MobileNetworkInterfaceSection": {
           "63d5e4ae1e": "Régénérez le QR code et scannez-le depuis l'app mobile Orcinus.",
           "87985ba6f5": "Dans ce menu Interface réseau, choisissez l'adresse Tailscale, généralement une IP en 100.x.y.z.",
@@ -7797,8 +7735,6 @@
           "2b4474780a": "Apparence",
           "3d9adfe6a5": "Onglets globaux de terminal, de navigateur et de markdown.",
           "3eb22a3ada": "Espace de travail flottant",
-          "01f9d36292": "Configurez la prise en charge des émulateurs mobiles pour Orcinus et les agents de codage.",
-          "f75daf1002": "Émulateur mobile",
           "ad9788036f": "Page d'accueil, routage des liens et cookies de session.",
           "c46215ea03": "Navigateur",
           "6742c7932c": "Commandes de terminal enregistrées, globales ou par projet.",
@@ -9301,44 +9237,7 @@
         },
         "mobile": {
           "emulator": {
-            "search": {
-              "2348045036": "Choisissez l'appareil émulateur qu'Orcinus ouvre par défaut.",
-              "2bb2e09225": "skill mobile",
-              "bbe4267416": "type d'émulateur",
-              "64494f03c3": "attach de l'émulateur",
-              "6f728f1456": "tap de l'émulateur",
-              "f8b871d655": "CLI de l'agent",
-              "2e0b45b2ba": "Utilisez les commandes CLI d'Orcinus pour lister, attacher, taper et saisir du texte dans un émulateur mobile.",
-              "ea3eac39bb": "Contrôle par CLI d'agent",
-              "8ef0f08d36": "runtime",
-              "27397fe8e9": "outils de ligne de commande Xcode",
-              "7650063d17": "simctl",
-              "3211e7acf9": "xcrun",
-              "42bfab45d8": "disponibilité",
-              "ea1f51b980": "Vérifiez que Xcode, simctl, serve-sim et les appareils émulateurs sont prêts.",
-              "0b95dfd5b3": "Disponibilité de l'émulateur",
-              "04c5f5d901": "appareil",
-              "25d7bfbcd4": "udid",
-              "ec3c4043fd": "iPad par défaut",
-              "1dc8c52ffa": "iPhone par défaut",
-              "ab4814f3c5": "simulateur par défaut",
-              "54184cb9c5": "Appareil émulateur par défaut",
-              "b8ddd13195": "émulateur de l'agent",
-              "1ad6fb6230": "appareil par défaut",
-              "ac0a985873": "skill émulateur",
-              "9353854ff3": "émulateur Orcinus",
-              "d4b7833894": "CLI Orcinus",
-              "84e5706975": "serve-sim",
-              "7c5a8a2bee": "xcode",
-              "bec7231663": "iPad",
-              "49727355a3": "iPhone",
-              "6b6407dc1f": "émulateur",
-              "2d67f708ce": "simulateur",
-              "c5eca29310": "simulateur iOS",
-              "25159de808": "émulateur mobile",
-              "9595354cff": "Configurez la prise en charge des émulateurs mobiles pour Orcinus et les agents de codage.",
-              "cdd3c31918": "Émulateur mobile"
-            }
+            "search": {}
           },
           "pane": {
             "search": {
@@ -10301,21 +10200,7 @@
           "distroRequired": "Choisissez une distro WSL avant que les projets puissent hériter de WSL.",
           "wslDescription": "Détecte et lance les agents dans {{value0}} via WSL pour les projets qui ne remplacent pas leur runtime."
         },
-        "MobileEmulatorSdkStatus": {
-          "536026130e": "SDK d'émulateurs",
-          "dde0ec1cd8": "Chaînes d'outils qu'Orcinus utilise pour exécuter des émulateurs. Android fonctionne sur tout OS via le SDK Android ; les simulateurs iOS nécessitent Xcode sur macOS.",
-          "027cbf668a": "Android SDK",
-          "f6d080d128": "Utilise le chemin configuré",
-          "7fe4bd5907": "Détecté à",
-          "2784f0b22d": "Introuvable. Installez Android Studio, puis créez un Virtual Device.",
-          "b94ff260e6": "Télécharger Android Studio",
-          "18925b082d": "Localiser le dossier du SDK",
-          "8c52684db8": "Effacer",
-          "76eb88b88e": "Simulateur iOS (Xcode)",
-          "c6f3ea4f12": "Prêt",
-          "e4f14b50d7": "Installez Xcode et ajoutez un runtime de simulateur iOS.",
-          "63fe73a1ea": "Impossible de mettre à jour le dossier du SDK Android."
-        },
+        "MobileEmulatorSdkStatus": {},
         "AppearanceAdvancedDisclosure": {
           "advanced": "Avancé"
         },
@@ -13422,125 +13307,55 @@
       },
       "emulator": {
         "pane": {
-          "EmulatorPane": {
-            "59b08fa031": "Aucun émulateur connecté"
-          },
+          "EmulatorPane": {},
           "emulator": {
             "device": {
-              "frame": {
-                "9406c15775": "Écran de l'émulateur",
-                "8f25ffaf8a": "Écran de l'émulateur, clavier capturé. Appuyez sur Échap pour le libérer.",
-                "0022420df0": "téléphone"
-              }
+              "frame": {}
             },
             "pane": {
-              "toolbar": {
-                "06e10d7356": "Éteindre l'émulateur",
-                "e7a0d1897e": "Home",
-                "6bd8dff42a": "Pivoter",
-                "3d836b879c": "Choisir un émulateur",
-                "81b3571a07": "Se connecter",
-                "868c0f2938": "Traitement…"
-              }
+              "toolbar": {}
             },
             "screen": {
               "stream": {
-                "content": {
-                  "8b1a0d8694": "Aperçu de l'émulateur",
-                  "36841af608": "Flux déconnecté",
-                  "5f818f12ab": "Connexion à l'émulateur…",
-                  "5ee64cd44e": "Écran de l'émulateur"
-                }
+                "content": {}
               }
             },
             "unavailable": {
-              "pane": {
-                "f630b9ca9f": "L'émulateur mobile nécessite un Mac avec Xcode et le runtime iOS Simulator. Sous Linux ou Windows, utilisez un appareil physique ou un hôte de build Mac distant.",
-                "b2c268a0b9": "L'émulateur mobile est disponible uniquement sur macOS"
-              }
+              "pane": {}
             }
           },
           "use": {
             "emulator": {
               "frame": {
-                "stream": {
-                  "f1c0179002": "Le flux ne produit aucune image."
-                }
+                "stream": {}
               }
             },
             "mobile": {
               "emulator": {
                 "agent": {
                   "setup": {
-                    "state": {
-                      "fdcca1ec75": "Enregistrement...",
-                      "69fb2c2289": "Activé",
-                      "c6705092ba": "Corriger PATH",
-                      "7c1b6bdb1e": "Activer",
-                      "51074ccb05": "Échec du chargement de l'état de la CLI.",
-                      "35dea1ae12": "Le contrôle des agents est prêt.",
-                      "9dff3a6338": "La skill est installée. Activez l'Orcinus CLI pour terminer la configuration.",
-                      "15986a1080": "L'Orcinus CLI est prêt. Installez la skill pour terminer la configuration.",
-                      "4c26913def": "Toujours pas configuré. Terminez les deux étapes pour activer le contrôle des agents.",
-                      "c94ff11e91": "Impossible de revérifier l'état de la configuration.",
-                      "2b519eed94": "Orcinus CLI enregistré dans PATH."
-                    }
+                    "state": {}
                   }
                 },
                 "tab": {
                   "intro": {
-                    "actions": {
-                      "68a5dc6604": "Impossible de masquer l'émulateur mobile."
-                    }
+                    "actions": {}
                   }
                 }
               }
             }
           },
-          "MobileEmulatorAgentSetupGuide": {
-            "2fda9ff015": "Configurer le contrôle des agents",
-            "0ac0fef514": "Le contrôle des agents est prêt.",
-            "2bdfff8763": "Contrôle des agents (facultatif).",
-            "72736b051f": "Configurez Orcinus CLI + skill quand vous voulez que des agents pilotent ce simulateur.",
-            "d10ae98046": "Terminé",
-            "3756cbeca7": "Pas maintenant",
-            "6d950431d2": "Masquer",
-            "ebceac65a4": "Configurer",
-            "3f003507f4": "Ouvrir la configuration complète dans les paramètres"
-          },
-          "MobileEmulatorAgentSetupGuideSteps": {
-            "9b49d892e3": "Activer Orcinus CLI",
-            "3d8dc52c93": "Enregistre la commande orca de contrôle de l'émulateur dans les shells des agents.",
-            "21f5687c07": "Compétence CLI Orcinus",
-            "64fb057667": "Apprend aux agents les commandes orca de l'émulateur pour ce worktree.",
-            "5c59ea96ca": "Configuration de la skill Orcinus CLI de l'émulateur mobile",
-            "bff5341ac3": "Terminal d'installation de la skill Orcinus CLI de l'émulateur mobile",
-            "3d34423e88": "Enregistrement de la CLI Orcinus",
-            "3be27641c9": "afin que les commandes d'émulateur puissent s'exécuter depuis les shells des agents.",
-            "3941719a56": "Vérification de la CLI Orcinus avant d'ouvrir la configuration du skill."
-          },
-          "MobileEmulatorTabIntroCallout": {
-            "1924982130": "Ignorer",
-            "5789936d9a": "Prévisualisez les simulateurs iOS pendant que des agents pilotent l'écran.",
-            "8014b4b80b": "Conserver",
-            "6e051a40b7": "Masquer"
-          },
+          "MobileEmulatorAgentSetupGuide": {},
+          "MobileEmulatorAgentSetupGuideSteps": {},
+          "MobileEmulatorTabIntroCallout": {},
           "mobile": {
             "emulator": {
               "hidden": {
-                "toast": {
-                  "e8f098a870": "Émulateur mobile masqué",
-                  "c46c979c1d": "Réactivez l'émulateur mobile à tout moment dans",
-                  "600f9a745a": "Paramètres › Émulateur mobile"
-                }
+                "toast": {}
               }
             }
           },
-          "useEmulatorScreenKeyboard": {
-            "pasteTooLarge": "Le collage est trop volumineux pour la saisie clavier de l'émulateur.",
-            "unsupportedPasteText": "Le collage via le clavier de l'émulateur prend uniquement en charge le texte de clavier US.",
-            "pasteTargetUnavailable": "Le collage via le clavier de l'émulateur a échoué car l'appareil n'est pas prêt."
-          }
+          "useEmulatorScreenKeyboard": {}
         }
       },
       "editor": {

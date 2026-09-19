@@ -262,7 +262,7 @@ export function closeTerminalTab(
   const terminalCountBeforeClose =
     precomputedCloseState?.terminalCountBeforeClose ?? currentTerminalTabIds!.length
   // Why: a terminal with a unified row must leave successor choice to closeUnifiedTab's
-  // MRU/neighbor repair — a terminal-only pre-pick skips agent-session/simulator neighbors
+  // MRU/neighbor repair — a terminal-only pre-pick skips agent-session neighbors
   // and re-stamps the group active before the canonical repair can run.
   const hasUnifiedRow = (state.unifiedTabsByWorktree?.[owningWorktreeId] ?? []).some(
     (tab) =>
@@ -298,8 +298,8 @@ export function closeTerminalTab(
     // repaired the surface, and the pre-close snapshot must not clobber that outcome.
     const current = useAppStore.getState()
     if (current.activeWorktreeId === owningWorktreeId) {
-      // Why: agent-session and simulator tabs render without a terminal/editor/browser
-      // entity, so only the unified renderable count can prove the worktree is empty
+      // Why: agent-session tabs render without a terminal/editor/browser entity, so
+      // only the unified renderable count can prove the worktree is empty
       // (mirrors leaveWorktreeIfEmpty in useTabGroupTabCloseCommands).
       const { renderableTabCount } = current.reconcileWorktreeTabModel(owningWorktreeId)
       if (renderableTabCount === 0) {

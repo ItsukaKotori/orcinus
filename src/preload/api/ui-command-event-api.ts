@@ -73,7 +73,6 @@ export type UiCommandEventApi = {
   onWorktreeHistoryNavigate: (callback: (direction: 'back' | 'forward') => void) => () => void
   onNewBrowserTab: (callback: () => void) => () => void
   onNewMarkdownTab: (callback: () => void) => () => void
-  onNewSimulatorTab: (callback: () => void) => () => void
   onRequestTabCreate: (
     callback: (data: {
       requestId: string

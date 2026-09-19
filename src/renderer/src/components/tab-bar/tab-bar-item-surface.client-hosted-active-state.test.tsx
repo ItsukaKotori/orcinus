@@ -88,7 +88,6 @@ function makeProps(activeTabType: WorkspaceVisibleTabType): TabBarProps {
     activeTabId: 'terminal-1',
     activeFileId: 'file-1',
     activeBrowserTabId: 'browser-1',
-    activeSimulatorTabId: null,
     activeTabType,
     groupActiveTabId: 'unified-terminal-1',
     expandedPaneByTabId: {}

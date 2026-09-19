@@ -86,8 +86,7 @@ describe('tab group "+" menu shell launch on a locally-owned workspace', () => {
     const { useTabGroupCreationCommands } = await import('./useTabGroupCreationCommands')
     const commands = useTabGroupCreationCommands({
       groupId: GROUP_ID,
-      worktreeId: WORKTREE_ID,
-      worktreeState: { mobileEmulatorEnabled: false } as never
+      worktreeId: WORKTREE_ID
     })
 
     commands.newTerminalWithShell('powershell.exe')
@@ -102,8 +101,7 @@ describe('tab group "+" menu shell launch on a locally-owned workspace', () => {
     const { useTabGroupCreationCommands } = await import('./useTabGroupCreationCommands')
     const commands = useTabGroupCreationCommands({
       groupId: GROUP_ID,
-      worktreeId: WORKTREE_ID,
-      worktreeState: { mobileEmulatorEnabled: false } as never
+      worktreeId: WORKTREE_ID
     })
 
     commands.newTerminalWithShell('powershell.exe')

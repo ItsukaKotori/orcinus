@@ -28,7 +28,7 @@ describe('useIpcEvents session tab close requests', () => {
         openFiles: [],
         unifiedTabsByWorktree: {
           'wt-1': [
-            { id: 'sim-tab-1', entityId: 'sim-1', contentType: 'simulator', isPinned: false }
+            { id: 'session-tab-1', entityId: 'session-1', contentType: 'agent-session', isPinned: false }
           ]
         }
       })
@@ -36,11 +36,11 @@ describe('useIpcEvents session tab close requests', () => {
 
     listenerRef.current?.({
       requestId: 'close-session-tab',
-      tabId: 'sim-tab-1',
+      tabId: 'session-tab-1',
       worktreeId: 'wt-1'
     })
 
-    expect(closeUnifiedTab).toHaveBeenCalledWith('sim-tab-1')
+    expect(closeUnifiedTab).toHaveBeenCalledWith('session-tab-1')
     expect(respondSessionTabClose).toHaveBeenCalledWith({ requestId: 'close-session-tab' })
   })
 

@@ -65,7 +65,6 @@ const SELECTABLE_ENTRY_TYPES = [
   'quick-action',
   'browser-page',
   'workspace-tab',
-  'simulator-tab',
   'project-target',
   'hint'
 ] as const

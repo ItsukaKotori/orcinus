@@ -23,7 +23,6 @@ export function buildShortcutRowVisibility(options: {
   terminalShortcutPolicy: TerminalShortcutPolicy
   platform: NodeJS.Platform
   managedBrowserCreationEnabled: boolean
-  mobileEmulatorCreationEnabled: boolean
   agentDashboardEnabled: boolean
   settingsSearchQuery: string
   shortcutQuery: string
@@ -40,7 +39,6 @@ export function buildShortcutRowVisibility(options: {
       .filter(
         (item) =>
           (options.managedBrowserCreationEnabled || item.id !== 'tab.newBrowser') &&
-          (options.mobileEmulatorCreationEnabled || item.id !== 'tab.newSimulator') &&
           // Why: the toggle is inert while the experiment is off, so binding it here would silently do nothing.
           (options.agentDashboardEnabled || item.id !== 'dashboard.toggle')
       )

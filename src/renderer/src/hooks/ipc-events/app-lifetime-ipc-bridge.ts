@@ -119,7 +119,7 @@ export function installAppLifetimeIpcEvents(
   registerMobileAndTerminalCloseIpcBridge(unsubs, backgroundWakeDispatcher.request)
   registerUpdaterStatusIpcBridge(unsubs)
   registerBrowserStateIpcBridge(unsubs, isRuntimeEnvironmentActive)
-  registerContentCreationIpcBridge(unsubs, isRuntimeEnvironmentActive)
+  registerContentCreationIpcBridge(unsubs)
   registerBrowserRequestIpcBridge(unsubs, isRuntimeEnvironmentActive)
   registerTabLifecycleIpcBridge(unsubs)
   registerRateLimitIpcBridge(unsubs)

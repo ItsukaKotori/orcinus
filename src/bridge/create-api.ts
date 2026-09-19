@@ -8,7 +8,6 @@ import { createCacheApi } from './mock/cache-api'
 import { createCliApi } from './mock/cli-api'
 import { createCrashReportsApi } from './mock/crash-reports-api'
 import { createDocPreviewApi } from './mock/doc-preview-api'
-import { createEmulatorApi } from './mock/emulator-api'
 import { createFolderWorkspacesApi } from './mock/folder-workspaces-api'
 import { createFsApi } from './mock/fs-api'
 import { createGhApi } from './mock/gh-api'
@@ -54,7 +53,6 @@ export function createAdeApi(): PreloadApi {
     cli: createCliApi(),
     crashReports: createCrashReportsApi(),
     docPreview: createDocPreviewApi(),
-    emulator: createEmulatorApi(),
     folderWorkspaces: createFolderWorkspacesApi(),
     fs: createFsApi(),
     gh: createGhApi(),

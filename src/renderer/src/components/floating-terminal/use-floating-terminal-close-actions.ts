@@ -55,8 +55,6 @@ export function useFloatingTerminalCloseActions({
         } else if (item.contentType === 'browser') {
           destroyWorkspaceWebviews(state.browserPagesByWorkspace, item.entityId)
           closeBrowserTab(item.entityId)
-        } else if (item.contentType === 'simulator') {
-          closeUnifiedTab(item.id)
         } else {
           const file = state.openFiles.find((candidate) => candidate.id === item.entityId)
           if (file?.isDirty) {
@@ -103,8 +101,6 @@ export function useFloatingTerminalCloseActions({
           if (item.contentType === 'browser') {
             destroyWorkspaceWebviews(latest.browserPagesByWorkspace, item.entityId)
             closeBrowserTab(item.entityId)
-          } else if (item.contentType === 'simulator') {
-            closeUnifiedTab(item.id)
           } else {
             const file = latest.openFiles.find((candidate) => candidate.id === item.entityId)
             if (file?.isDirty) {
@@ -203,10 +199,7 @@ export function useFloatingTerminalCloseActions({
       currentGroupTabs
         .filter(
           (tab) =>
-            tab.contentType !== 'terminal' &&
-            tab.contentType !== 'browser' &&
-            tab.contentType !== 'simulator' &&
-            !tab.isPinned
+            tab.contentType !== 'terminal' && tab.contentType !== 'browser' && !tab.isPinned
         )
         .map((tab) => tab.id)
     )

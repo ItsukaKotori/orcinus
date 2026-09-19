@@ -8,11 +8,6 @@ import {
   buildSearchableBrowserPageDocument,
   type SearchableBrowserPage
 } from '@/lib/browser-palette-search'
-import {
-  SIMULATOR_TYPE_SEARCH_ALIASES,
-  simulatorPaletteTabTitle,
-  type SearchableSimulatorTab
-} from '@/lib/simulator-palette-search'
 import type { SearchableWorkspaceTab } from '@/lib/workspace-tab-palette-search'
 import {
   OPEN_TAB_SEARCH_QUERY_MAX_BYTES,
@@ -185,40 +180,10 @@ function makeBrowserPage({
   }
 }
 
-function makeSimulatorTab({
-  id,
-  label,
-  isCurrentTab = false
-}: {
-  id: string
-  label: string
-  isCurrentTab?: boolean
-}): SearchableSimulatorTab {
-  const tab = { ...makeTab(id, 'simulator'), label }
-  return {
-    tab,
-    worktree,
-    repoName: REPO_NAME,
-    worktreeSortIndex: 0,
-    isCurrentTab,
-    isCurrentWorktree: true,
-    document: buildPaletteTabDocument({
-      id: tab.id,
-      title: simulatorPaletteTabTitle(tab),
-      secondaryTexts: [],
-      worktreeName: WORKTREE_NAME,
-      branch: BRANCH_NAME,
-      repoName: REPO_NAME,
-      typeAliases: SIMULATOR_TYPE_SEARCH_ALIASES
-    })
-  }
-}
-
 function search(input: Partial<OpenTabSearchInput> & { query: string }): OpenTabSearchResult[] {
   return searchOpenTabs({
     workspaceTabs: [],
     browserPages: [],
-    simulatorTabs: [],
     ...input
   })
 }
@@ -300,11 +265,11 @@ describe('searchOpenTabs ranking', () => {
           secondaryText: 'src/zebra.ts'
         })
       ],
-      simulatorTabs: [makeSimulatorTab({ id: 'sim-1', label: 'Trailing zebra' })]
+      browserPages: [makeBrowserPage({ id: 'page-1', title: 'Trailing zebra' })]
     })
 
     expect(results.map(readableId)).toEqual([
-      'open-tab:simulator:sim-1',
+      'open-tab:browser:page-1',
       'open-tab:workspace:tab-secondary'
     ])
   })
@@ -344,15 +309,13 @@ describe('searchOpenTabs ranking', () => {
         makeWorkspaceTab({ id: 'tab-late', title: 'Zebra two', tabSortIndex: 5 }),
         makeWorkspaceTab({ id: 'tab-early', title: 'Zebra one', tabSortIndex: 0 })
       ],
-      browserPages: [makeBrowserPage({ id: 'page-1', title: 'Zebra page' })],
-      simulatorTabs: [makeSimulatorTab({ id: 'sim-1', label: 'Zebra emulator' })]
+      browserPages: [makeBrowserPage({ id: 'page-1', title: 'Zebra page' })]
     })
 
     expect(results.map(readableId)).toEqual([
       'open-tab:workspace:tab-early',
       'open-tab:workspace:tab-late',
-      'open-tab:browser:page-1',
-      'open-tab:simulator:sim-1'
+      'open-tab:browser:page-1'
     ])
   })
 
@@ -386,13 +349,11 @@ describe('searchOpenTabs ranking', () => {
     }
     const uncappedSelection = searchOpenTabs({
       browserPages: [],
-      simulatorTabs: [],
       ...input
     })[3]
     input.workspaceTabs[4].tab.createdAt = Date.now()
     const retained = searchOpenTabs({
       browserPages: [],
-      simulatorTabs: [],
       ...input,
       retainedResultId: uncappedSelection.id
     })
@@ -418,20 +379,16 @@ describe('searchOpenTabs ranking', () => {
 describe('searchOpenTabs filtering', () => {
   // The focused tab is only unreachable from its own column; hiding it here would
   // make it unreachable from every other column's "+" too.
-  it('still returns the focused tab, page and emulator', () => {
+  it('still returns the focused tab and page', () => {
     const results = search({
       query: 'zebra',
       workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Zebra tab', isCurrentTab: true })],
-      browserPages: [makeBrowserPage({ id: 'page-1', title: 'Zebra page', isCurrentPage: true })],
-      simulatorTabs: [
-        makeSimulatorTab({ id: 'sim-1', label: 'Zebra emulator', isCurrentTab: true })
-      ]
+      browserPages: [makeBrowserPage({ id: 'page-1', title: 'Zebra page', isCurrentPage: true })]
     })
 
     expect(results.map(readableId)).toEqual([
       'open-tab:workspace:tab-1',
-      'open-tab:browser:page-1',
-      'open-tab:simulator:sim-1'
+      'open-tab:browser:page-1'
     ])
   })
 
@@ -440,8 +397,7 @@ describe('searchOpenTabs filtering', () => {
       search({
         query: 'aurora',
         workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Notes' })],
-        browserPages: [makeBrowserPage({ id: 'page-1', title: 'Release notes' })],
-        simulatorTabs: [makeSimulatorTab({ id: 'sim-1', label: 'Pixel 8' })]
+        browserPages: [makeBrowserPage({ id: 'page-1', title: 'Release notes' })]
       })
     ).toEqual([])
   })
@@ -451,8 +407,7 @@ describe('searchOpenTabs filtering', () => {
       search({
         query: 'rocket',
         workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Notes' })],
-        browserPages: [makeBrowserPage({ id: 'page-1', title: 'Release notes' })],
-        simulatorTabs: [makeSimulatorTab({ id: 'sim-1', label: 'Pixel 8' })]
+        browserPages: [makeBrowserPage({ id: 'page-1', title: 'Release notes' })]
       })
     ).toEqual([])
   })
@@ -509,16 +464,6 @@ describe('searchOpenTabs filtering', () => {
     ).toEqual([])
   })
 
-  // Both tokens land on the "ios simulator" alias, so the row fills no title or
-  // secondary range — the inverse test would drop it.
-  it('keeps a simulator alias match that spans two keywords', () => {
-    const results = search({
-      query: 'ios sim',
-      simulatorTabs: [makeSimulatorTab({ id: 'sim-1', label: 'Pixel 8' })]
-    })
-
-    expect(results.map(readableId)).toEqual(['open-tab:simulator:sim-1'])
-  })
 })
 
 describe('searchOpenTabs result fields', () => {
@@ -627,8 +572,7 @@ describe('searchOpenTabs result fields', () => {
     const results = search({
       query: 'zebra',
       workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Zebra tab' })],
-      browserPages: [makeBrowserPage({ id: 'page-1', title: 'Zebra page', faviconUrl })],
-      simulatorTabs: [makeSimulatorTab({ id: 'sim-1', label: 'Zebra emulator' })]
+      browserPages: [makeBrowserPage({ id: 'page-1', title: 'Zebra page', faviconUrl })]
     })
 
     expect(results).toMatchObject([
@@ -648,13 +592,6 @@ describe('searchOpenTabs result fields', () => {
         workspaceId: 'page-1-ws',
         worktreeId: 'wt-1',
         faviconUrl
-      },
-      {
-        source: 'simulator',
-        contentType: 'simulator',
-        tabId: 'sim-1',
-        groupId: 'group-1',
-        worktreeId: 'wt-1'
       }
     ])
   })
@@ -675,8 +612,7 @@ describe('searchOpenTabs query guards', () => {
       search({
         query,
         workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Zebra tab' })],
-        browserPages: [makeBrowserPage({ id: 'page-1', title: 'Zebra page' })],
-        simulatorTabs: [makeSimulatorTab({ id: 'sim-1', label: 'Zebra emulator' })]
+        browserPages: [makeBrowserPage({ id: 'page-1', title: 'Zebra page' })]
       })
     ).toEqual([])
   })

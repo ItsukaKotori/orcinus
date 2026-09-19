@@ -9,13 +9,10 @@ import {
   isWebRuntimeSessionActive
 } from '../../runtime/web-runtime-session'
 import { openTabBarEntry, type TabCreateEntryArgs } from '../tab-bar/tab-create-entry-action'
-import { openMobileEmulatorTab } from '@/lib/open-mobile-emulator-tab'
-import { ensureSimulatorTab, getSimulatorTabForWorktree } from '@/lib/ensure-simulator-tab'
 import { buildDuplicatedBrowserTabOptions } from '@/lib/duplicate-browser-tab-options'
 import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
 import { browserWorkspaceHasRemoteOwner } from '@/runtime/remote-browser-tab-ownership'
 import { getClientCreationActionPolicy } from '@/lib/client-creation-action-policy'
-import type { TabGroupWorktreeSnapshot } from './useTabGroupItemProjections'
 
 export function recordTerminalTabGroupSplit(createdTerminal: TerminalTab | null | undefined): void {
   if (!createdTerminal) {
@@ -26,12 +23,10 @@ export function recordTerminalTabGroupSplit(createdTerminal: TerminalTab | null 
 
 export function useTabGroupCreationCommands({
   groupId,
-  worktreeId,
-  worktreeState
+  worktreeId
 }: {
   groupId: string
   worktreeId: string
-  worktreeState: TabGroupWorktreeSnapshot
 }) {
   const focusGroup = useAppStore((state) => state.focusGroup)
   const createTab = useAppStore((state) => state.createTab)
@@ -81,21 +76,6 @@ export function useTabGroupCreationCommands({
         toast.error(error instanceof Error ? error.message : String(error))
       })
     },
-    newSimulatorTab: worktreeState.mobileEmulatorEnabled
-      ? () => {
-          if (getSimulatorTabForWorktree(worktreeId)) {
-            void ensureSimulatorTab(worktreeId, { surfacePane: true })
-            return
-          }
-          // Why: mobile simulators are most useful beside the current tab group.
-          void openMobileEmulatorTab(worktreeId, {
-            placement: 'rightSplit',
-            targetGroupId: groupId
-          }).catch((error) => {
-            toast.error(error instanceof Error ? error.message : String(error))
-          })
-        }
-      : undefined,
     openEntry: async (args: TabCreateEntryArgs) => {
       await openTabBarEntry(args)
     },

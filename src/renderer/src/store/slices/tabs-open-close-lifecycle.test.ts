@@ -63,7 +63,7 @@ describe('TabsSlice', () => {
         activeWorkspaceExecutionHostId: 'runtime:host-b'
       })
 
-      expect(store.getState().createUnifiedTab(WT, 'simulator').executionHostId).toBe(
+      expect(store.getState().createUnifiedTab(WT, 'agent-session').executionHostId).toBe(
         'runtime:host-b'
       )
     })

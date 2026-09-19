@@ -5,7 +5,6 @@ import { requestBrowserFocus } from '@/components/browser-pane/host-guest/browse
 import { translate } from '@/i18n/i18n'
 import { activateBrowserPagePaletteResult } from '@/lib/browser-page-palette-activation'
 import { focusTerminalTabSurface } from '@/lib/focus-terminal-tab-surface'
-import { activateSimulatorTabPaletteResult } from '@/lib/simulator-tab-palette-activation'
 import { activateWorkspaceTabPaletteResult } from '@/lib/workspace-tab-palette-activation'
 import type { OpenTabSearchResult } from './open-tab-search'
 
@@ -50,24 +49,6 @@ export function activateOpenTabSearchResult(result: OpenTabSearchResult): OpenTa
       focus: () =>
         requestBrowserFocus({ pageId: activation.pageId, target: activation.focusTarget })
     }
-  }
-
-  if (result.source === 'simulator') {
-    const activation = activateSimulatorTabPaletteResult({
-      executionHostId: result.executionHostId,
-      tabId: result.tabId,
-      worktreeId: result.worktreeId
-    })
-    if (activation.status === 'failed') {
-      return failed(
-        activation.reason,
-        translate(
-          'auto.components.tab.bar.TabBarCreateEntry.7726ce9970',
-          'Mobile emulator tab no longer exists'
-        )
-      )
-    }
-    return { status: 'activated', focus: null }
   }
 
   const activation = activateWorkspaceTabPaletteResult({

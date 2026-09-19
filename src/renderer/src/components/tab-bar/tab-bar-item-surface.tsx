@@ -3,7 +3,6 @@ import { resolveTerminalTabTitle } from '../../../../shared/tab-title-resolution
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import { isAgentSessionHandleProvider } from '../../../../shared/agent-session-provider-handle'
-import type { OpenFile } from '../../store/slices/editor'
 import { canSwitchNativeChatView } from '../native-chat/native-chat-availability'
 import { resolveNativeChatTabAgentEvidence } from './native-chat-tab-agent-evidence'
 import SortableTab from './SortableTab'
@@ -38,7 +37,6 @@ export function renderTabBarItems({
     activeTabId,
     activeFileId,
     activeBrowserTabId,
-    activeSimulatorTabId,
     activeTabType,
     expandedPaneByTabId,
     onActivate,
@@ -135,7 +133,7 @@ export function renderTabBarItems({
           hasTabsToLeft={index > 0}
           isActive={
             !clientHostedRowOwnsActiveState &&
-            (activeTabType === 'terminal' || activeTabType === 'simulator') &&
+            activeTabType === 'terminal' &&
             item.id === activeTabId
           }
           isPinned={item.isPinned}
@@ -179,47 +177,6 @@ export function renderTabBarItems({
               ? () => onDuplicateBrowserTab?.(item.id)
               : undefined
           }
-          onTogglePin={() => togglePinned(item)}
-          dragData={dragData}
-          dropIndicator={dropIndicatorByVisibleId.get(item.id) ?? null}
-          includeTopTabBorder={includeTopTabBorder}
-        />
-      )
-    }
-    if (item.type === 'simulator') {
-      const simulatorLabel = item.data.label || 'Mobile Emulator'
-      const simulatorFile: OpenFile & { tabId: string } = {
-        id: item.id,
-        tabId: item.id,
-        filePath: simulatorLabel,
-        relativePath: simulatorLabel,
-        worktreeId,
-        language: 'simulator',
-        isPreview: false,
-        isDirty: false,
-        mode: 'edit'
-      }
-      return (
-        <EditorFileTab
-          key={item.id}
-          file={simulatorFile}
-          isActive={
-            !clientHostedRowOwnsActiveState &&
-            activeTabType === 'simulator' &&
-            item.id === activeSimulatorTabId
-          }
-          isPinned={item.isPinned}
-          hasTabsToRight={index < items.length - 1}
-          hasTabsToLeft={index > 0}
-          tabCount={items.length}
-          statusByRelativePath={statusByRelativePath}
-          onActivate={() => activateRealTab(onActivateFile)(item.id)}
-          onClose={() => onCloseFile?.(item.id)}
-          onCloseOthers={() => onCloseOthers(item.id)}
-          onCloseToRight={() => onCloseToRight(item.id)}
-          onCloseToLeft={() => onCloseToLeft(item.id)}
-          onCloseAll={() => onCloseAllFiles?.()}
-          onMakePermanent={() => {}}
           onTogglePin={() => togglePinned(item)}
           dragData={dragData}
           dropIndicator={dropIndicatorByVisibleId.get(item.id) ?? null}
@@ -278,9 +235,7 @@ export function renderTabBarItems({
         key={item.id}
         file={item.data}
         isActive={
-          !clientHostedRowOwnsActiveState &&
-          (activeTabType === 'editor' || activeTabType === 'simulator') &&
-          activeFileId === item.id
+          !clientHostedRowOwnsActiveState && activeTabType === 'editor' && activeFileId === item.id
         }
         isPinned={item.isPinned}
         hasTabsToRight={index < items.length - 1}

@@ -104,7 +104,6 @@ describe('tab selection and hydration ownership', () => {
     ['conflict-review', 'editor'],
     ['check-details', 'editor'],
     ['browser', 'browser'],
-    ['simulator', 'simulator'],
     ['agent-session', 'agent-session']
   ] as const)(
     'projects %s selection while retaining other remembered surfaces',
@@ -156,14 +155,14 @@ describe('tab selection and hydration ownership', () => {
   })
 
   it('resolves stale active-group IDs to the first group consistently', () => {
-    const state = selectionState(selectedTab('simulator'))
+    const state = selectionState(selectedTab('agent-session'))
     state.activeGroupIdByWorktree[workspace] = 'removed'
-    expect(activate(state).activeTabType).toBe('simulator')
-    expect(deriveActiveSurfaceForWorktree(state, workspace).activeTabType).toBe('simulator')
+    expect(activate(state).activeTabType).toBe('agent-session')
+    expect(deriveActiveSurfaceForWorktree(state, workspace).activeTabType).toBe('agent-session')
   })
 
   it('requires group ownership even for an explicit preferred tab during hydration', () => {
-    const state = selectionState(selectedTab('simulator'))
+    const state = selectionState(selectedTab('agent-session'))
     state.groupsByWorktree = {}
     state.activeTabTypeByWorktree[workspace] = 'terminal'
     expect(resolveActivatedWorktreeSurface(state, workspace, 'selected', null).activeTabType).toBe(
@@ -173,12 +172,12 @@ describe('tab selection and hydration ownership', () => {
 
   it('honors a preferred tab in the selected group without mutating selection', () => {
     const state = selectionState(selectedTab('browser'))
-    const preferred = { ...selectedTab('simulator'), id: 'preferred' }
+    const preferred = { ...selectedTab('agent-session'), id: 'preferred' }
     state.unifiedTabsByWorktree[workspace].push(preferred)
     state.groupsByWorktree[workspace][0].tabOrder.push(preferred.id)
     expect(
       resolveActivatedWorktreeSurface(state, workspace, preferred.id, null).activeTabType
-    ).toBe('simulator')
+    ).toBe('agent-session')
     expect(state.groupsByWorktree[workspace][0].activeTabId).toBe('selected')
   })
 
@@ -186,10 +185,9 @@ describe('tab selection and hydration ownership', () => {
     ['terminal', 'terminal', 'remembered-file'],
     ['editor', 'editor', 'remembered-file'],
     ['browser', 'browser', 'remembered-file'],
-    // Why: nothing renders a remembered agent-session/simulator once its tab is gone, so the browser
+    // Why: nothing renders a remembered agent-session once its tab is gone, so the browser
     // surface takes over and must not leave the remembered file selected underneath it.
-    ['agent-session', 'browser', null],
-    ['simulator', 'browser', null]
+    ['agent-session', 'browser', null]
   ] as const)(
     'projects legacy %s memory as %s when unified groups are absent',
     (activeTabType, visible, activeFileId) => {
@@ -206,7 +204,7 @@ describe('tab selection and hydration ownership', () => {
   )
 
   it('hydrates unified selection without allowing conflicting legacy memories to choose it', () => {
-    const tab = selectedTab('simulator')
+    const tab = selectedTab('agent-session')
     const state = selectionState(tab)
     const session = {
       activeRepoId: null,
@@ -222,7 +220,7 @@ describe('tab selection and hydration ownership', () => {
     }
     const before = structuredClone(session)
     const hydrated = buildHydratedTabState(session, new Set([workspace]))
-    expect(activate({ ...state, ...hydrated }).activeTabType).toBe('simulator')
+    expect(activate({ ...state, ...hydrated }).activeTabType).toBe('agent-session')
     expect(session).toEqual(before)
   })
 })

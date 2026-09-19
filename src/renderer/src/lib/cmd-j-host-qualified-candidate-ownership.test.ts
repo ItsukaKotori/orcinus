@@ -5,7 +5,6 @@ import type { TerminalTab } from '../../../shared/terminal-tab-types'
 import type { Worktree } from '../../../shared/worktree/types'
 import { buildSearchableBrowserPages } from './browser-palette-page-entries'
 import { searchBrowserPages } from './browser-palette-search'
-import { buildSearchableSimulatorTabs, searchSimulatorTabs } from './simulator-palette-search'
 import { buildSearchableWorkspaceTabs, searchWorkspaceTabs } from './workspace-tab-palette-search'
 import { buildOpenTabSearchEntries } from '../components/tab-bar/open-tab-search-entries'
 
@@ -149,70 +148,6 @@ describe('Cmd-J host-qualified candidate ownership', () => {
     ])
   })
 
-  it('keeps simulator rows owned by a paired runtime over SSH', () => {
-    const entries = buildSearchableSimulatorTabs({
-      worktrees: pairedWorktrees(),
-      repoMap: new Map(),
-      worktreeOrder: new Map(),
-      unifiedTabsByWorktree: {
-        [SHARED_WORKTREE_ID]: [
-          makeTab({
-            id: 'local-simulator',
-            entityId: 'local-simulator',
-            groupId: 'group-local',
-            contentType: 'simulator',
-            executionHostId: 'local',
-            label: 'Local emulator'
-          }),
-          makeTab({
-            id: 'remote-simulator',
-            entityId: 'remote-simulator',
-            groupId: 'group-remote',
-            contentType: 'simulator',
-            executionHostId: RUNTIME_HOST_ID,
-            label: 'Remote emulator'
-          })
-        ]
-      },
-      activeGroupIdByWorktree: { [SHARED_WORKTREE_ID]: 'group-remote' },
-      groupsByWorktree: {
-        [SHARED_WORKTREE_ID]: [
-          {
-            id: 'group-local',
-            worktreeId: SHARED_WORKTREE_ID,
-            activeTabId: 'local-simulator',
-            tabOrder: ['local-simulator']
-          },
-          {
-            id: 'group-remote',
-            worktreeId: SHARED_WORKTREE_ID,
-            activeTabId: 'remote-simulator',
-            tabOrder: ['remote-simulator']
-          }
-        ]
-      },
-      activeWorktreeId: SHARED_WORKTREE_ID,
-      activeWorkspaceExecutionHostId: RUNTIME_HOST_ID,
-      activeTabType: 'simulator'
-    })
-
-    expect(
-      searchSimulatorTabs(entries, 'emulator').map((result) => [
-        result.tabId,
-        result.executionHostId
-      ])
-    ).toEqual([
-      ['remote-simulator', RUNTIME_HOST_ID],
-      ['local-simulator', 'local']
-    ])
-    expect(
-      entries.map((entry) => [entry.tab.id, entry.isCurrentWorktree, entry.isCurrentTab])
-    ).toEqual([
-      ['local-simulator', false, false],
-      ['remote-simulator', true, true]
-    ])
-  })
-
   it('keeps generic workspace rows isolated by execution host', () => {
     const terminalTabs: TerminalTab[] = [
       {
@@ -345,26 +280,6 @@ describe('Cmd-J host-qualified candidate ownership', () => {
     expect(searchWorkspaceTabs(entries, 'remote-atlas')).toEqual([])
   })
 
-  it('retains one unambiguous legacy tab without guessing between sibling hosts', () => {
-    const legacyWorktree = makeWorktree({ hostId: undefined })
-    const entries = buildSearchableSimulatorTabs({
-      worktrees: [legacyWorktree],
-      repoMap: new Map(),
-      worktreeOrder: new Map(),
-      unifiedTabsByWorktree: {
-        [SHARED_WORKTREE_ID]: [
-          makeTab({ id: 'legacy-simulator', contentType: 'simulator', executionHostId: undefined })
-        ]
-      },
-      activeGroupIdByWorktree: {},
-      groupsByWorktree: {},
-      activeWorktreeId: null,
-      activeTabType: 'terminal'
-    })
-
-    expect(entries.map((entry) => entry.tab.id)).toEqual(['legacy-simulator'])
-  })
-
   it('keeps hidden same-id hosts in the legacy ownership ambiguity set', () => {
     const ownershipWorktrees = pairedWorktrees()
     const browserWorkspace = makeBrowserWorkspace('legacy-browser')
@@ -376,7 +291,6 @@ describe('Cmd-J host-qualified candidate ownership', () => {
           contentType: 'browser',
           executionHostId: undefined
         }),
-        makeTab({ id: 'legacy-simulator', contentType: 'simulator', executionHostId: undefined }),
         makeTab({ id: 'legacy-terminal', entityId: 'legacy-terminal', executionHostId: undefined })
       ]
     }
@@ -430,31 +344,7 @@ describe('Cmd-J host-qualified candidate ownership', () => {
 
     expect(entries).toEqual({
       browserPages: [],
-      simulatorTabs: [],
       workspaceTabs: []
     })
-  })
-
-  it('rejects an explicit owner that a hostless legacy worktree cannot verify', () => {
-    const entries = buildSearchableSimulatorTabs({
-      worktrees: [makeWorktree({ hostId: undefined })],
-      repoMap: new Map(),
-      worktreeOrder: new Map(),
-      unifiedTabsByWorktree: {
-        [SHARED_WORKTREE_ID]: [
-          makeTab({
-            id: 'unverifiable-simulator',
-            contentType: 'simulator',
-            executionHostId: RUNTIME_HOST_ID
-          })
-        ]
-      },
-      activeGroupIdByWorktree: {},
-      groupsByWorktree: {},
-      activeWorktreeId: null,
-      activeTabType: 'terminal'
-    })
-
-    expect(entries).toEqual([])
   })
 })

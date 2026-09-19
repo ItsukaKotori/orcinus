@@ -43,7 +43,6 @@ export function createUiApi(): PreloadApi['ui'] {
     onWorktreeHistoryNavigate: noopUnsubscribe,
     onNewBrowserTab: noopUnsubscribe,
     onNewMarkdownTab: noopUnsubscribe,
-    onNewSimulatorTab: noopUnsubscribe,
     onRequestTabCreate: noopUnsubscribe,
     replyTabCreate: noop,
     onRequestTabSetProfile: noopUnsubscribe,

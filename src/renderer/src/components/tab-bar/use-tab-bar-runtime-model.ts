@@ -20,7 +20,6 @@ import {
   useWindowsTerminalCapabilities,
   type WindowsTerminalCapabilities
 } from '@/lib/windows-terminal-capabilities'
-import { shouldShowMobileEmulatorTabIntro } from '../emulator-pane/mobile-emulator-tab-intro-visibility'
 import {
   selectTabBarAgentProjections,
   type TabBarAgentProjections
@@ -62,12 +61,9 @@ export function resolveWindowsPowerShellImplementationSetting(settings: GlobalSe
 export type TabBarRuntimeModel = {
   newTerminalShortcut: string
   newBrowserShortcut: string
-  newSimulatorShortcut: string
   newFileShortcut: string
   openMarkdownShortcut: string | null
   generatedTabTitlesEnabled: boolean
-  mobileEmulatorEnabled: boolean
-  showMobileEmulatorIntroCallout: boolean
   unifiedTabs: readonly Tab[]
   pinTab: (tabId: string) => void
   unpinTab: (tabId: string) => void
@@ -82,11 +78,9 @@ export type TabBarRuntimeModel = {
   resolvedGroupId: string
   statusByRelativePath: Map<string, GitFileStatus>
   unifiedTabByVisibleId: Map<string, Tab>
-  workspaceHasSimulatorTab: boolean
   toggleTabViewMode: (tabId: string) => void
   nativeChatTranscriptIsLocalReadable: boolean
   managedBrowserCreationEnabled: boolean
-  mobileEmulatorCreationEnabled: boolean
 } & TabBarAgentProjections
 
 export function useTabBarRuntimeModel({
@@ -98,19 +92,9 @@ export function useTabBarRuntimeModel({
 }): TabBarRuntimeModel {
   const newTerminalShortcut = useShortcutLabel('tab.newTerminal')
   const newBrowserShortcut = useShortcutLabel('tab.newBrowser')
-  const newSimulatorShortcut = useShortcutLabel('tab.newSimulator')
   const newFileShortcut = useShortcutLabel('tab.newMarkdown')
   const openMarkdownShortcut = useOptionalShortcutLabel('tab.openMarkdown')
   const generatedTabTitlesEnabled = useAppStore((s) => s.settings?.tabAutoGenerateTitle === true)
-  const mobileEmulatorEnabled = useAppStore((s) => s.settings?.mobileEmulatorEnabled !== false)
-  const persistedUIReady = useAppStore((s) => s.persistedUIReady)
-  const mobileEmulatorTabIntroDismissed = useAppStore((s) => s.mobileEmulatorTabIntroDismissed)
-  const showMobileEmulatorIntroCallout = shouldShowMobileEmulatorTabIntro({
-    persistedUIReady,
-    mobileEmulatorTabIntroDismissed,
-    mobileEmulatorEnabled,
-    isMacOs
-  })
   const gitStatusEntries = useAppStore(
     (s) => s.gitStatusByWorktree[worktreeId] ?? EMPTY_GIT_STATUS_ENTRIES
   )
@@ -234,17 +218,10 @@ export function useTabBarRuntimeModel({
     () => createUnifiedTabLookup(unifiedTabs, resolvedGroupId),
     [resolvedGroupId, unifiedTabs]
   )
-  const workspaceHasSimulatorTab = useMemo(
-    () => unifiedTabs.some((tab) => tab.contentType === 'simulator'),
-    [unifiedTabs]
-  )
-  const [managedBrowserCreationEnabled, mobileEmulatorCreationEnabled] = useAppStore(
+  const [managedBrowserCreationEnabled] = useAppStore(
     useShallow((state) => {
       const policy = getClientCreationActionPolicy(state, worktreeId)
-      return [
-        policy['managed-browser'].state === 'enabled',
-        policy['mobile-emulator'].state === 'enabled'
-      ] as const
+      return [policy['managed-browser'].state === 'enabled'] as const
     })
   )
   // Why: tab-wide launch/title hints are safe only before split; gate the view-mode toggle to the active leaf's agent.
@@ -259,12 +236,9 @@ export function useTabBarRuntimeModel({
   return {
     newTerminalShortcut,
     newBrowserShortcut,
-    newSimulatorShortcut,
     newFileShortcut,
     openMarkdownShortcut,
     generatedTabTitlesEnabled,
-    mobileEmulatorEnabled,
-    showMobileEmulatorIntroCallout,
     unifiedTabs,
     pinTab,
     unpinTab,
@@ -277,13 +251,11 @@ export function useTabBarRuntimeModel({
     resolvedGroupId,
     statusByRelativePath,
     unifiedTabByVisibleId,
-    workspaceHasSimulatorTab,
     toggleTabViewMode,
     nativeChatEnabled,
     tabAgentTypesByTabId,
     nativeChatTabWideFallbackUnsafeTabsById,
     nativeChatTranscriptIsLocalReadable,
-    managedBrowserCreationEnabled,
-    mobileEmulatorCreationEnabled
+    managedBrowserCreationEnabled
   }
 }

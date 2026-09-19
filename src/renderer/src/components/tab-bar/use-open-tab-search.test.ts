@@ -154,13 +154,6 @@ function seedStore(
             groupId: 'group-2',
             contentType: 'browser',
             label: 'zebra page'
-          }),
-          makeUnifiedTab({
-            id: 'tab-sim',
-            entityId: 'sim-1',
-            groupId: 'group-2',
-            contentType: 'simulator',
-            label: 'zebra sim'
           })
         ].map((tab) => (executionHostId ? { ...tab, executionHostId } : tab)),
         'wt-2': [
@@ -183,7 +176,7 @@ function seedStore(
       groupsByWorktree: {
         'wt-1': [
           makeGroup('group-1', 'tab-a', ['tab-a', 'tab-b']),
-          makeGroup('group-2', 'tab-c', ['tab-c', 'tab-browser', 'tab-sim'])
+          makeGroup('group-2', 'tab-c', ['tab-c', 'tab-browser'])
         ],
         'wt-2': [{ id: 'group-3', worktreeId: 'wt-2', activeTabId: 'tab-d', tabOrder: ['tab-d'] }]
       },
@@ -380,7 +373,7 @@ describe('useOpenTabSearch', () => {
           ...state.groupsByWorktree,
           'wt-1': [
             makeGroup('group-1', 'tab-a', ['tab-a', 'tab-b', 'tab-e']),
-            makeGroup('group-2', 'tab-c', ['tab-c', 'tab-browser', 'tab-sim'])
+            makeGroup('group-2', 'tab-c', ['tab-c', 'tab-browser'])
           ]
         }
       })

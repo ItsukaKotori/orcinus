@@ -13,10 +13,8 @@ export const FLOATING_BROWSER_UNAVAILABLE_MESSAGE =
   'Managed browser tabs are unavailable in the web client floating workspace.'
 export const LOCAL_BROWSER_UNAVAILABLE_MESSAGE =
   'Managed browser tabs in the web client must be created by a capable paired runtime.'
-export const MOBILE_EMULATOR_UNAVAILABLE_MESSAGE =
-  'Mobile Emulator is unavailable in the web client.'
 
-export type ClientCreationAction = 'managed-browser' | 'mobile-emulator'
+export type ClientCreationAction = 'managed-browser'
 export type ClientCreationActionProvider = 'local-client' | 'paired-runtime'
 
 export type ClientCreationActionAvailability =
@@ -42,8 +40,7 @@ export function resolveClientCreationActionPolicy(args: {
       'managed-browser': {
         state: 'enabled',
         provider: browserStreamingAvailable ? 'paired-runtime' : 'local-client'
-      },
-      'mobile-emulator': { state: 'enabled', provider: 'local-client' }
+      }
     }
   }
 
@@ -52,9 +49,7 @@ export function resolveClientCreationActionPolicy(args: {
       ? { state: 'hidden', reason: FLOATING_BROWSER_UNAVAILABLE_MESSAGE }
       : browserStreamingAvailable
         ? { state: 'enabled', provider: 'paired-runtime' }
-        : { state: 'hidden', reason: MANAGED_BROWSER_UNAVAILABLE_MESSAGE },
-    // The web preload cannot stream emulator frames, even when the host can run emulator tasks.
-    'mobile-emulator': { state: 'hidden', reason: MOBILE_EMULATOR_UNAVAILABLE_MESSAGE }
+        : { state: 'hidden', reason: MANAGED_BROWSER_UNAVAILABLE_MESSAGE }
   }
 }
 

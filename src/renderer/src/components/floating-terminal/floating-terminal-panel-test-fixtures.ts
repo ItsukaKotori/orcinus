@@ -163,34 +163,4 @@ export function setFloatingEditorTabs(files: OpenFile[]): void {
   state.activeGroupIdByWorktree = { [FLOATING_TERMINAL_WORKTREE_ID]: groupId }
 }
 
-export function setFloatingSimulatorTab(): Tab {
-  const state = storeBox.state as FloatingPanelStoreState
-  const groupId = 'floating-group'
-  const tab: Tab = {
-    id: 'simulator-tab',
-    entityId: 'simulator-tab',
-    groupId,
-    worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
-    contentType: 'simulator',
-    label: 'Mobile Emulator',
-    customLabel: null,
-    color: null,
-    sortOrder: 0,
-    createdAt: 0
-  }
-  state.unifiedTabsByWorktree = { [FLOATING_TERMINAL_WORKTREE_ID]: [tab] }
-  state.groupsByWorktree = {
-    [FLOATING_TERMINAL_WORKTREE_ID]: [
-      {
-        id: groupId,
-        worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
-        activeTabId: tab.id,
-        tabOrder: [tab.id],
-        recentTabIds: [tab.id]
-      }
-    ]
-  }
-  state.activeGroupIdByWorktree = { [FLOATING_TERMINAL_WORKTREE_ID]: groupId }
-  state.tabBarOrderByWorktree = { [FLOATING_TERMINAL_WORKTREE_ID]: [tab.id] }
-  return tab
-}
+

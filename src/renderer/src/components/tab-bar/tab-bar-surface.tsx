@@ -57,17 +57,12 @@ export function renderTabBarSurface({
   } = props
   const {
     resolvedGroupId,
-    mobileEmulatorEnabled,
     managedBrowserCreationEnabled,
-    mobileEmulatorCreationEnabled,
-    workspaceHasSimulatorTab,
-    showMobileEmulatorIntroCallout,
     windowsTerminalCapabilities,
     defaultWindowsPowerShellImplementation,
     agentLaunchOptions,
     newTerminalShortcut,
     newBrowserShortcut,
-    newSimulatorShortcut,
     newFileShortcut,
     openMarkdownShortcut
   } = runtime
@@ -199,7 +194,6 @@ export function renderTabBarSurface({
       <DropdownMenu
         open={newTabMenuOpen}
         onOpenChange={setNewTabMenuOpen}
-        // Why: modal would disable body pointer events, making the Mobile Emulator "Hide" re-enable toast unclickable.
         modal={false}
       >
         <DropdownMenuTrigger asChild>
@@ -249,17 +243,12 @@ export function renderTabBarSurface({
             <TabBarStaticCreateMenu
               props={props}
               terminalOnly={terminalOnly}
-              mobileEmulatorEnabled={mobileEmulatorEnabled}
               managedBrowserCreationEnabled={managedBrowserCreationEnabled}
-              mobileEmulatorCreationEnabled={mobileEmulatorCreationEnabled}
-              workspaceHasSimulatorTab={workspaceHasSimulatorTab}
-              showMobileEmulatorIntroCallout={showMobileEmulatorIntroCallout}
               windowsShellEntries={windowsShellEntries}
               defaultWindowsPowerShellImplementation={defaultWindowsPowerShellImplementation}
               pwshAvailable={windowsTerminalCapabilities.pwshAvailable}
               newTerminalShortcut={newTerminalShortcut}
               newBrowserShortcut={newBrowserShortcut}
-              newSimulatorShortcut={newSimulatorShortcut}
               newFileShortcut={newFileShortcut}
               openMarkdownShortcut={openMarkdownShortcut}
               queueNewActiveTerminalFocusAfterNewTabMenuClose={

@@ -6,7 +6,6 @@ import {
   Globe,
   Loader2,
   Search,
-  Smartphone,
   TerminalSquare
 } from 'lucide-react'
 import { AgentIcon } from '@/lib/agent-catalog'
@@ -143,9 +142,6 @@ function getOpenTabIcon(option: Extract<ActiveOption, { kind: 'tab' }>['option']
   if (contentType === 'browser') {
     return <BrowserFavicon faviconUrl={option.faviconUrl} className="size-3.5" />
   }
-  if (contentType === 'simulator') {
-    return <Smartphone className="size-3.5 shrink-0" aria-hidden="true" />
-  }
   if (contentType === 'editor') {
     return <FileText className="size-3.5 shrink-0" aria-hidden="true" />
   }
@@ -170,8 +166,6 @@ function getActionPresentation(
         <FilePlus className="size-3.5 shrink-0" aria-hidden="true" />
       ) : option.option.kind === 'open-markdown' ? (
         <FileText className="size-3.5 shrink-0" aria-hidden="true" />
-      ) : option.option.kind === 'new-simulator' || option.option.kind === 'go-to-simulator' ? (
-        <Smartphone className="size-3.5 shrink-0" aria-hidden="true" />
       ) : (
         <TerminalSquare className="size-3.5 shrink-0" aria-hidden="true" />
       )

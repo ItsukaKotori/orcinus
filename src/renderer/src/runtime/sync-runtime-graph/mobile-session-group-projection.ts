@@ -179,7 +179,6 @@ export function buildMobileSessionGroupProjection(
       terminalIds,
       editorIds,
       browserIds,
-      new Set(),
       true
     )
     if (visibleOrder.length === 0) {

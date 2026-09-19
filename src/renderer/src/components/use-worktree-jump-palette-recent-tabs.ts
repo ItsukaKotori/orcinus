@@ -51,7 +51,6 @@ export function useWorktreeJumpPaletteRecentTabs({
   terminalLayoutsByTabId,
   openTabItems,
   workspaceTabEntries,
-  simulatorTabEntries,
   browserPageEntries,
   resolveWorktree,
   unreadTerminalTabs,
@@ -65,7 +64,7 @@ export function useWorktreeJumpPaletteRecentTabs({
 }: WorktreeJumpPaletteRecentTabsInput) {
   const tabFocusTimes = useMemo(() => {
     const times = new Map<string, number | undefined>()
-    for (const entry of [...workspaceTabEntries, ...simulatorTabEntries]) {
+    for (const entry of workspaceTabEntries) {
       times.set(
         encodePaletteIdentity(['tab', getPaletteWorktreeIdentity(entry.worktree), entry.tab.id]),
         entry.tab.lastFocusedAt
@@ -78,7 +77,7 @@ export function useWorktreeJumpPaletteRecentTabs({
       )
     }
     return times
-  }, [workspaceTabEntries, simulatorTabEntries, browserPageEntries])
+  }, [workspaceTabEntries, browserPageEntries])
   const occurrenceIds = useMemo(() => {
     const counts = new Map<string, number>()
     return openTabItems.map((item) => {

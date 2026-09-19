@@ -146,7 +146,6 @@ export default function TabGroupPanel({
       onNewTerminalTab={commands.newTerminalTab}
       onNewTerminalWithShell={commands.newTerminalWithShell}
       onNewBrowserTab={commands.newBrowserTab}
-      onNewSimulatorTab={commands.newSimulatorTab}
       onOpenEntry={commands.openEntry}
       onNewFileTab={commands.newFileTab}
       onSetCustomTitle={commands.setTabCustomTitle}
@@ -160,13 +159,11 @@ export default function TabGroupPanel({
       activeFileId={
         activeTab?.contentType === 'terminal' ||
         activeTab?.contentType === 'agent-session' ||
-        activeTab?.contentType === 'browser' ||
-        activeTab?.contentType === 'simulator'
+        activeTab?.contentType === 'browser'
           ? null
           : activeTab?.id
       }
       activeBrowserTabId={activeTab?.contentType === 'browser' ? activeTab.entityId : null}
-      activeSimulatorTabId={activeTab?.contentType === 'simulator' ? activeTab.id : null}
       activeTabType={
         activeTab?.contentType === 'terminal'
           ? 'terminal'
@@ -174,9 +171,7 @@ export default function TabGroupPanel({
             ? 'agent-session'
             : activeTab?.contentType === 'browser'
               ? 'browser'
-              : activeTab?.contentType === 'simulator'
-                ? 'simulator'
-                : 'editor'
+              : 'editor'
       }
       onActivateFile={commands.activateEditor}
       onCloseFile={commands.closeItem}
@@ -349,8 +344,7 @@ export default function TabGroupPanel({
         {activeTab &&
           activeTab.contentType !== 'terminal' &&
           activeTab.contentType !== 'agent-session' &&
-          activeTab.contentType !== 'browser' &&
-          activeTab.contentType !== 'simulator' && (
+          activeTab.contentType !== 'browser' && (
             <div className="absolute inset-0 flex min-h-0 min-w-0">
               {/* Why: split groups render editor content in a plain relative pane body, not the legacy Terminal.tsx flex column. */}
               <Suspense
@@ -373,7 +367,7 @@ export default function TabGroupPanel({
             </div>
           )}
 
-        {/* Why: terminal/browser/simulator/structured-chat panes render at the worktree level; tab activation only changes overlay visibility and never remounts a live surface. */}
+        {/* Why: terminal/browser/structured-chat panes render at the worktree level; tab activation only changes overlay visibility and never remounts a live surface. */}
       </div>
     </div>
   )

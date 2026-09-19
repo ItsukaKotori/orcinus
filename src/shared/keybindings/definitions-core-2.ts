@@ -97,19 +97,6 @@ export const KEYBINDING_DEFINITION_CORE_2: readonly KeybindingDefinition[] = [
     defaultBindings: platformBindings(['Mod+Shift+B'])
   },
   {
-    id: 'tab.newSimulator',
-    title: 'New mobile emulator tab',
-    group: 'Tabs',
-    scope: 'tabs',
-    searchKeywords: ['shortcut', 'tab', 'simulator', 'emulator', 'mobile', 'ios', 'new'],
-    // Why: keep explorer on Mod+Shift+E (VS Code muscle memory); emulator is macOS-only and less common, so it yields to a free chord (#8533).
-    defaultBindings: {
-      darwin: ['Mod+Alt+Shift+E'],
-      linux: [],
-      win32: []
-    }
-  },
-  {
     id: 'tab.newMarkdown',
     title: 'New markdown tab',
     group: 'Tabs',

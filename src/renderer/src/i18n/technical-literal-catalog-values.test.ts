@@ -37,7 +37,6 @@ const repairedEntries = [
   ['zh', 'auto.components.settings.RepositoryHooksSection.32f417fe17'],
   ['zh', 'auto.components.settings.SparsePresetSettingsSection.fde7ff2cc3'],
   ['zh', 'auto.components.settings.git.search.upstream'],
-  ['zh', 'auto.components.settings.mobile.emulator.search.84e5706975'],
   ['zh', 'auto.components.settings.repository.search.603c68b68c'],
   ['zh', 'auto.components.right.sidebar.index.6306b48afd'],
   ['zh', 'auto.components.editor.CombinedDiffViewer.8368d256ec'],
@@ -58,7 +57,7 @@ function readValue(catalog: object, key: string): unknown {
 
 describe('technical literal catalog repairs (#13121)', () => {
   it('keeps every repaired value identical to English', () => {
-    expect(repairedEntries).toHaveLength(37)
+    expect(repairedEntries).toHaveLength(36)
 
     for (const [locale, key] of repairedEntries) {
       expect(readValue(catalogs[locale], key), `${locale}:${key}`).toBe(readValue(en, key))

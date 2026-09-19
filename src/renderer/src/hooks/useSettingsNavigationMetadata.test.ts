@@ -136,9 +136,6 @@ describe('settings navigation metadata', () => {
     )
     const shortcuts = webSections.find((section) => section.id === 'shortcuts')
     expect(shortcuts?.searchEntries.map((entry) => entry.title)).not.toContain('New browser tab')
-    expect(shortcuts?.searchEntries.map((entry) => entry.title)).not.toContain(
-      'New mobile emulator tab'
-    )
     const agents = webSections.find((section) => section.id === 'agents')
     expect(agents?.searchEntries.map((entry) => entry.title)).not.toContain('Nested worker depth')
     const orchestration = webSections.find((section) => section.id === 'orchestration')
@@ -153,7 +150,6 @@ describe('settings navigation metadata', () => {
       isWindows: false,
       isWebClient: true,
       managedBrowserCreationEnabled: true,
-      mobileEmulatorCreationEnabled: false,
       repos: [repo]
     })
     const shortcutTitles = sections
@@ -161,7 +157,6 @@ describe('settings navigation metadata', () => {
       ?.searchEntries.map((entry) => entry.title)
 
     expect(shortcutTitles).toContain('New browser tab')
-    expect(shortcutTitles).not.toContain('New mobile emulator tab')
   })
 
   it('does not mark installable AI capabilities as beta in the sidebar metadata', () => {

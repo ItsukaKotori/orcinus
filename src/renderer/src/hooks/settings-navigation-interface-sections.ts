@@ -11,8 +11,7 @@ export function buildInterfaceSettingsSections({
   isMac,
   isWindows,
   isWebClient,
-  managedBrowserCreationEnabled,
-  mobileEmulatorCreationEnabled
+  managedBrowserCreationEnabled
 }: SettingsNavigationBuildOptions): SettingsNavSection[] {
   const showDesktopOnlySettings = !isWebClient
   return [
@@ -69,8 +68,7 @@ export function buildInterfaceSettingsSections({
       ),
       icon: Keyboard,
       searchEntries: getShortcutsPaneSearchEntries({
-        includeManagedBrowser: managedBrowserCreationEnabled,
-        includeMobileEmulator: mobileEmulatorCreationEnabled
+        includeManagedBrowser: managedBrowserCreationEnabled
       }),
       group: 'interface'
     }

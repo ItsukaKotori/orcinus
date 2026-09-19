@@ -62,7 +62,6 @@ describe('feature interactions', () => {
       'ephemeral-vm-setup',
       'agent-orchestration-setup',
       'agent-orchestration',
-      'mobile-emulator-agent-setup',
       'ai-commit-generation',
       'ai-pr-generation',
       'claude-account-switching',

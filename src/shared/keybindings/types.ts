@@ -59,7 +59,6 @@ export type KeybindingActionId =
   | 'tab.newAgent'
   | AgentTabActionId
   | 'tab.newBrowser'
-  | 'tab.newSimulator'
   | 'tab.newMarkdown'
   | 'tab.openMarkdown'
   | 'tab.close'

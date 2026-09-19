@@ -75,10 +75,8 @@ const controller = {
   handleNewAgentTab: vi.fn(),
   handleNewBrowserTab: vi.fn(),
   handleNewFile: vi.fn(),
-  handleNewSimulatorTab: vi.fn(),
   handleNewTab: vi.fn(),
   keybindings: undefined,
-  mobileEmulatorEnabled: false,
   terminalShortcutPolicy: 'orca-first'
 } as unknown as TerminalActivationController
 
@@ -211,7 +209,7 @@ describe('tab.close uses the unified active tab', () => {
     }
   )
 
-  it.each(['editor', 'diff', 'conflict-review', 'check-details', 'browser', 'simulator'] as const)(
+  it.each(['editor', 'diff', 'conflict-review', 'check-details', 'browser'] as const)(
     'closes the focused %s tab through the same command',
     (contentType) => {
       tab.contentType = contentType

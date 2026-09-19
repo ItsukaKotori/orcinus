@@ -77,10 +77,6 @@ vi.mock('@/components/browser-pane/BrowserPane', async () => {
   return (await import('./floating-terminal-panel-component-stubs')).createBrowserPaneModule()
 })
 
-vi.mock('@/components/emulator-pane/EmulatorPane', async () => {
-  return (await import('./floating-terminal-panel-component-stubs')).createEmulatorPaneModule()
-})
-
 vi.mock('@/components/editor/EditorPanel', async () => {
   return (await import('./floating-terminal-panel-component-stubs')).createEditorPanelModule()
 })
@@ -479,18 +475,6 @@ describe('FloatingTerminalPanel close behavior', () => {
     const state = storeBox.state as FloatingPanelStoreState
     const groupId = 'floating-group'
     const terminalTab = makeTab({ id: 'terminal-tab' })
-    const simulatorTab: Tab = {
-      id: 'simulator-tab',
-      entityId: 'simulator-tab',
-      groupId,
-      worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
-      contentType: 'simulator',
-      label: 'Mobile Emulator',
-      customLabel: null,
-      color: null,
-      sortOrder: 1,
-      createdAt: 1
-    }
     const browserTab: BrowserTab = {
       id: 'browser-tab',
       worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
@@ -530,7 +514,7 @@ describe('FloatingTerminalPanel close behavior', () => {
     state.tabsByWorktree = { [FLOATING_TERMINAL_WORKTREE_ID]: [terminalTab] }
     state.browserTabsByWorktree = { [FLOATING_TERMINAL_WORKTREE_ID]: [browserTab] }
     state.unifiedTabsByWorktree = {
-      [FLOATING_TERMINAL_WORKTREE_ID]: [terminalUnifiedTab, simulatorTab, browserUnifiedTab]
+      [FLOATING_TERMINAL_WORKTREE_ID]: [terminalUnifiedTab, browserUnifiedTab]
     }
     state.groupsByWorktree = {
       [FLOATING_TERMINAL_WORKTREE_ID]: [
@@ -538,19 +522,15 @@ describe('FloatingTerminalPanel close behavior', () => {
           id: groupId,
           worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
           activeTabId: terminalUnifiedTab.id,
-          tabOrder: [terminalUnifiedTab.id, simulatorTab.id, browserUnifiedTab.id],
-          recentTabIds: [terminalUnifiedTab.id, simulatorTab.id, browserUnifiedTab.id]
+          tabOrder: [terminalUnifiedTab.id, browserUnifiedTab.id],
+          recentTabIds: [terminalUnifiedTab.id, browserUnifiedTab.id]
         }
       ]
     }
     state.activeGroupIdByWorktree = { [FLOATING_TERMINAL_WORKTREE_ID]: groupId }
     state.activeTabIdByWorktree = { [FLOATING_TERMINAL_WORKTREE_ID]: terminalTab.id }
     state.tabBarOrderByWorktree = {
-      [FLOATING_TERMINAL_WORKTREE_ID]: [
-        terminalUnifiedTab.id,
-        simulatorTab.id,
-        browserUnifiedTab.id
-      ]
+      [FLOATING_TERMINAL_WORKTREE_ID]: [terminalUnifiedTab.id, browserUnifiedTab.id]
     }
     const element = await renderPanel(true)
     const { keydownListener, panelElement } = bindFocusedFloatingPanelKeydown(element)
@@ -567,7 +547,7 @@ describe('FloatingTerminalPanel close behavior', () => {
     )
 
     expect(preventDefault).toHaveBeenCalledWith()
-    expect(mocks.activateTab).toHaveBeenCalledWith('simulator-tab')
+    expect(mocks.activateTab).toHaveBeenCalledWith('browser-unified-tab')
   })
 
   // F4: an out-of-range index chord in app context must still be CONSUMED (never leak a raw key to

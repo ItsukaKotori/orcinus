@@ -16,12 +16,12 @@ describe('projectWorktreeTabModelReconciliation identity', () => {
       unifiedTabsByWorktree: {
         [WORKTREE]: [
           {
-            id: 'sim-1',
-            entityId: 'sim-1',
+            id: 'session-1',
+            entityId: 'session-1',
             groupId,
             worktreeId: WORKTREE,
-            contentType: 'simulator',
-            label: 'Simulator',
+            contentType: 'agent-session',
+            label: 'Codex Session',
             customLabel: null,
             color: null,
             sortOrder: 0,
@@ -34,8 +34,8 @@ describe('projectWorktreeTabModelReconciliation identity', () => {
           {
             id: groupId,
             worktreeId: WORKTREE,
-            activeTabId: 'sim-1',
-            tabOrder: ['sim-1']
+            activeTabId: 'session-1',
+            tabOrder: ['session-1']
           }
         ]
       },

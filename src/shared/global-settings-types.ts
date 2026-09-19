@@ -409,10 +409,6 @@ export type GlobalSettings = {
   /** Whether macOS terminal input maps the physical JIS Yen (¥) key to backslash, per common terminal expectation. */
   terminalJISYenToBackslash: boolean
   experimentalMobile: boolean
-  /** Why: iOS Simulator is default-on for capable macOS hosts; this is the durable off switch (hides UI, blocks CLI attach). */
-  mobileEmulatorEnabled?: boolean
-  /** Preferred iOS Simulator UDID for UI auto-attach and agent CLI attach. */
-  mobileEmulatorDefaultDeviceUdid?: string | null
   /** Explicit Android SDK root for when auto-discovery (ANDROID_HOME / default path) fails; null (default) auto-discovers. */
   androidSdkPath?: string | null
   /** Auto-restore window (ms) for a phone-fit PTY after the last mobile subscriber leaves.

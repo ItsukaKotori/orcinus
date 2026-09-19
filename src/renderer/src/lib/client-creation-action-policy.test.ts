@@ -7,7 +7,6 @@ import {
   FLOATING_BROWSER_UNAVAILABLE_MESSAGE,
   LOCAL_BROWSER_UNAVAILABLE_MESSAGE,
   MANAGED_BROWSER_UNAVAILABLE_MESSAGE,
-  MOBILE_EMULATOR_UNAVAILABLE_MESSAGE,
   assertClientCreationActionAvailable,
   assertManagedBrowserMaterializationAllowed,
   getClientCreationActionPolicy,
@@ -33,8 +32,7 @@ describe('resolveClientCreationActionPolicy', () => {
   it('preserves Electron creation behavior without negotiated runtime signals', () => {
     expect(resolveClientCreationActionPolicy({ surface: 'electron', runtimeStatus: null })).toEqual(
       {
-        'managed-browser': { state: 'enabled', provider: 'local-client' },
-        'mobile-emulator': { state: 'enabled', provider: 'local-client' }
+        'managed-browser': { state: 'enabled', provider: 'local-client' }
       }
     )
   })
@@ -50,8 +48,7 @@ describe('resolveClientCreationActionPolicy', () => {
     expect(
       resolveClientCreationActionPolicy({ surface: 'electron', runtimeStatus: desktopHost })
     ).toEqual({
-      'managed-browser': { state: 'enabled', provider: 'paired-runtime' },
-      'mobile-emulator': { state: 'enabled', provider: 'local-client' }
+      'managed-browser': { state: 'enabled', provider: 'paired-runtime' }
     })
     expect(
       resolveClientCreationActionPolicy({
@@ -59,14 +56,12 @@ describe('resolveClientCreationActionPolicy', () => {
         runtimeStatus: npmHostWithoutDisplay
       })
     ).toEqual({
-      'managed-browser': { state: 'enabled', provider: 'local-client' },
-      'mobile-emulator': { state: 'enabled', provider: 'local-client' }
+      'managed-browser': { state: 'enabled', provider: 'local-client' }
     })
     expect(
       resolveClientCreationActionPolicy({ surface: 'paired-web', runtimeStatus: desktopHost })
     ).toEqual({
-      'managed-browser': { state: 'enabled', provider: 'paired-runtime' },
-      'mobile-emulator': { state: 'hidden', reason: MOBILE_EMULATOR_UNAVAILABLE_MESSAGE }
+      'managed-browser': { state: 'enabled', provider: 'paired-runtime' }
     })
     expect(
       resolveClientCreationActionPolicy({
@@ -74,8 +69,7 @@ describe('resolveClientCreationActionPolicy', () => {
         runtimeStatus: npmHostWithoutDisplay
       })
     ).toEqual({
-      'managed-browser': { state: 'hidden', reason: MANAGED_BROWSER_UNAVAILABLE_MESSAGE },
-      'mobile-emulator': { state: 'hidden', reason: MOBILE_EMULATOR_UNAVAILABLE_MESSAGE }
+      'managed-browser': { state: 'hidden', reason: MANAGED_BROWSER_UNAVAILABLE_MESSAGE }
     })
     expect(
       resolveClientCreationActionPolicy({
@@ -101,7 +95,7 @@ describe('resolveClientCreationActionPolicy', () => {
     ).toEqual({ state: 'hidden', reason: MANAGED_BROWSER_UNAVAILABLE_MESSAGE })
   })
 
-  it('hides web-client floating browsers and mobile emulators as impossible surfaces', () => {
+  it('hides web-client floating browsers as impossible surfaces', () => {
     const policy = resolveClientCreationActionPolicy({
       surface: 'paired-web',
       runtimeStatus: runtimeStatus(['browser.screencast.v1', 'mobile.tasks.v1']),
@@ -111,10 +105,6 @@ describe('resolveClientCreationActionPolicy', () => {
     expect(policy['managed-browser']).toEqual({
       state: 'hidden',
       reason: FLOATING_BROWSER_UNAVAILABLE_MESSAGE
-    })
-    expect(policy['mobile-emulator']).toEqual({
-      state: 'hidden',
-      reason: MOBILE_EMULATOR_UNAVAILABLE_MESSAGE
     })
   })
 })

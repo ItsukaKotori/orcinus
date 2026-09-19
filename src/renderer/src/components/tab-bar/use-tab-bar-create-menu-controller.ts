@@ -44,10 +44,7 @@ export function useTabBarCreateMenuController({
   worktreeId,
   resolvedGroupId,
   terminalOnly,
-  mobileEmulatorEnabled,
   managedBrowserCreationEnabled,
-  mobileEmulatorCreationEnabled,
-  workspaceHasSimulatorTab,
   showWindowsShellMenu,
   projectRuntimeShellMenuMode,
   defaultWindowsShell,
@@ -57,17 +54,13 @@ export function useTabBarCreateMenuController({
   onNewTerminalTab,
   onNewTerminalWithShell,
   onNewBrowserTab,
-  onNewSimulatorTab,
   onNewFileTab,
   onOpenFileTab
 }: {
   worktreeId: string
   resolvedGroupId: string
   terminalOnly: boolean
-  mobileEmulatorEnabled: boolean
   managedBrowserCreationEnabled: boolean
-  mobileEmulatorCreationEnabled: boolean
-  workspaceHasSimulatorTab: boolean
   showWindowsShellMenu: boolean
   projectRuntimeShellMenuMode: ReturnType<typeof getProjectRuntimeShellMenuMode>
   defaultWindowsShell: string
@@ -79,7 +72,6 @@ export function useTabBarCreateMenuController({
   onNewTerminalTab: () => void
   onNewTerminalWithShell?: (shell: string) => void
   onNewBrowserTab: () => void
-  onNewSimulatorTab?: () => void
   onNewFileTab?: () => void
   onOpenFileTab?: () => void
 }): TabBarCreateMenuController {
@@ -109,9 +101,7 @@ export function useTabBarCreateMenuController({
     now: number
   ): void => {
     const state = useAppStore.getState()
-    if (
-      (state.activeTabType === 'terminal' || state.activeTabType === 'simulator') &&
-      state.activeTabId &&
+    if (state.activeTabType === 'terminal' && state.activeTabId &&
       state.activeTabId !== previousActiveTabId
     ) {
       focusTerminalTabSurface(state.activeTabId)
@@ -166,24 +156,14 @@ export function useTabBarCreateMenuController({
         windowsShellEntries,
         hasNewBrowser: !terminalOnly && managedBrowserCreationEnabled,
         hasNewMarkdown: !terminalOnly && Boolean(onNewFileTab),
-        hasOpenMarkdown: !terminalOnly && Boolean(onOpenFileTab),
-        hasSimulator:
-          !terminalOnly &&
-          mobileEmulatorEnabled &&
-          mobileEmulatorCreationEnabled &&
-          Boolean(onNewSimulatorTab),
-        simulatorIsGoTo: workspaceHasSimulatorTab
+        hasOpenMarkdown: !terminalOnly && Boolean(onOpenFileTab)
       }),
     [
-      mobileEmulatorEnabled,
       managedBrowserCreationEnabled,
-      mobileEmulatorCreationEnabled,
       onNewFileTab,
-      onNewSimulatorTab,
       onOpenFileTab,
       terminalOnly,
-      windowsShellEntries,
-      workspaceHasSimulatorTab
+      windowsShellEntries
     ]
   )
   const handleSelectCreateMenuOption = (option: TabCreateMenuOption): void => {
@@ -213,10 +193,6 @@ export function useTabBarCreateMenuController({
         break
       case 'open-markdown':
         onOpenFileTab?.()
-        break
-      case 'new-simulator':
-      case 'go-to-simulator':
-        onNewSimulatorTab?.()
         break
     }
   }

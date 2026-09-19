@@ -35,10 +35,8 @@ export function handleTerminalWorkspaceKeyDown(
     handleNewAgentTab,
     handleNewBrowserTab,
     handleNewFile,
-    handleNewSimulatorTab,
     handleNewTab,
     keybindings,
-    mobileEmulatorEnabled,
     terminalShortcutPolicy
   } = controller
   if (!activeWorktreeId) {
@@ -121,17 +119,6 @@ export function handleTerminalWorkspaceKeyDown(
       return
     }
     handleNewBrowserTab()
-    return
-  }
-  if (!event.repeat && mobileEmulatorEnabled && matchShortcut('tab.newSimulator')) {
-    event.preventDefault()
-    notifyTerminalCapture('tab.newSimulator')
-    if (!ensureClientCreationActionAllowed(activeWorktreeId, 'mobile-emulator')) {
-      return
-    }
-    if (!floatingWorkspaceFocused) {
-      handleNewSimulatorTab()
-    }
     return
   }
   if (

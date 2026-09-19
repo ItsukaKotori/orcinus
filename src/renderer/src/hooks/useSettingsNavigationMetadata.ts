@@ -36,7 +36,6 @@ export function buildSettingsNavigationMetadata({
   isWindowsTerminalHost = isWindows,
   isWebClient,
   managedBrowserCreationEnabled = !isWebClient,
-  mobileEmulatorCreationEnabled = !isWebClient,
   isDev = import.meta.env.DEV,
   isLinearConnected = false,
   repos
@@ -47,7 +46,6 @@ export function buildSettingsNavigationMetadata({
   isWindowsTerminalHost?: boolean
   isWebClient: boolean
   managedBrowserCreationEnabled?: boolean
-  mobileEmulatorCreationEnabled?: boolean
   isDev?: boolean
   isLinearConnected?: boolean
   repos: readonly Repo[]
@@ -70,7 +68,6 @@ export function buildSettingsNavigationMetadata({
     isWindowsTerminalHost,
     isWebClient,
     managedBrowserCreationEnabled,
-    mobileEmulatorCreationEnabled,
     isDev,
     isLinearConnected,
     repos
@@ -97,13 +94,10 @@ export function useSettingsNavigationMetadata(): SettingsNavSection[] {
   const activeLocale = i18n.language
   const repos = useAppStore((state) => state.repos)
   const settings = useAppStore((state) => state.settings)
-  const [managedBrowserCreationEnabled, mobileEmulatorCreationEnabled] = useAppStore(
+  const [managedBrowserCreationEnabled] = useAppStore(
     useShallow((state) => {
       const policy = getClientCreationActionPolicy(state, state.activeWorktreeId)
-      return [
-        policy['managed-browser'].state === 'enabled',
-        policy['mobile-emulator'].state === 'enabled'
-      ] as const
+      return [policy['managed-browser'].state === 'enabled'] as const
     })
   )
   const isMac = isMacUserAgent()
@@ -149,7 +143,6 @@ export function useSettingsNavigationMetadata(): SettingsNavSection[] {
         isWindowsTerminalHost,
         isWebClient,
         managedBrowserCreationEnabled,
-        mobileEmulatorCreationEnabled,
         isDev: import.meta.env.DEV,
         isLinearConnected,
         repos
@@ -162,7 +155,6 @@ export function useSettingsNavigationMetadata(): SettingsNavSection[] {
       isWindowsTerminalHost,
       isWebClient,
       managedBrowserCreationEnabled,
-      mobileEmulatorCreationEnabled,
       isLinearConnected,
       repos,
       activeLocale

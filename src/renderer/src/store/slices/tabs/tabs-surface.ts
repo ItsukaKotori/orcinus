@@ -61,7 +61,7 @@ export function deriveActiveSurfaceForWorktree(
     ? (state.activeTabTypeByWorktree[worktreeId] ?? 'terminal')
     : null
   // Why: only a remembered browser type — or group focus, which remembers no type at all — may keep
-  // the remembered file selected under the browser surface; a stale agent-session/simulator clears it.
+  // the remembered file selected under the browser surface; a stale agent-session clears it.
   const keepRememberedFileUnderBrowser = restoredTabType === null || restoredTabType === 'browser'
 
   let activeFileId: string | null

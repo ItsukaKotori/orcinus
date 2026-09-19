@@ -25,14 +25,6 @@ export function createBrowserPaneModule() {
   }
 }
 
-export function createEmulatorPaneModule() {
-  return {
-    default: function EmulatorPane() {
-      return null
-    }
-  }
-}
-
 export function createEditorPanelModule() {
   return {
     default: function EditorPanel() {

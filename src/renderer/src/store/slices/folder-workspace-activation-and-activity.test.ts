@@ -145,9 +145,7 @@ describe('folder workspace generic activation and activity', () => {
   })
 
   it.each([
-    ['simulator', 'local'],
     ['agent-session', 'local'],
-    ['simulator', 'ssh:test-host'],
     ['agent-session', 'ssh:test-host']
   ] as const)(
     'restores a folder %s tab on %s using its concrete visible type',

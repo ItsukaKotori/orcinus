@@ -124,8 +124,6 @@ export function createWorkspaceTabCloseCommands({
       if (!plan.closesLocally || plan.localCloseReason === 'cleanup') {
         return
       }
-    } else if (item.contentType === 'simulator') {
-      closeUnifiedTab(item.id)
     } else {
       const canCloseTab = closeEditorIfUnreferenced(item.entityId, item.id)
       if (!canCloseTab) {

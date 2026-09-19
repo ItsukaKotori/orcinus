@@ -11,15 +11,11 @@ const mocks = vi.hoisted(() => ({
     state: 'enabled',
     provider: 'local-client'
   } as ClientCreationActionAvailability,
-  simulatorAvailability: {
-    state: 'enabled',
-    provider: 'local-client'
-  } as ClientCreationActionAvailability,
   state: {} as Record<string, unknown>,
   toastError: vi.fn(),
   createBrowserTab: vi.fn(),
   openNewBrowserTabInActiveWorkspace: vi.fn(),
-  openMobileEmulatorTab: vi.fn()
+
 }))
 
 vi.mock('../store', () => ({ useAppStore: { getState: () => mocks.state } }))
@@ -28,8 +24,7 @@ vi.mock('sonner', () => ({
 }))
 vi.mock('@/lib/client-creation-action-policy', () => ({
   getClientCreationActionPolicy: () => ({
-    'managed-browser': mocks.browserAvailability,
-    'mobile-emulator': mocks.simulatorAvailability
+    'managed-browser': mocks.browserAvailability
   })
 }))
 vi.mock('@/lib/focus-terminal-tab-surface', () => ({ focusTerminalTabSurface: vi.fn() }))
@@ -37,9 +32,6 @@ vi.mock('@/runtime/web-runtime-session', () => ({
   createWebRuntimeSessionBrowserTab: vi.fn(),
   createWebRuntimeSessionTerminal: vi.fn(),
   isWebRuntimeSessionActive: () => false
-}))
-vi.mock('@/lib/open-mobile-emulator-tab', () => ({
-  openMobileEmulatorTab: (...args: unknown[]) => mocks.openMobileEmulatorTab(...args)
 }))
 vi.mock('@/lib/launch-agent-in-new-tab', () => ({ launchAgentInNewTab: vi.fn() }))
 vi.mock('@/lib/duplicate-browser-tab-options', () => ({
@@ -75,7 +67,6 @@ describe('useTerminalCreateActions creation gates', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.browserAvailability = { state: 'enabled', provider: 'local-client' }
-    mocks.simulatorAvailability = { state: 'enabled', provider: 'local-client' }
     mocks.state = {
       activeGroupIdByWorktree: {},
       groupsByWorktree: {},
@@ -110,10 +101,4 @@ describe('useTerminalCreateActions creation gates', () => {
     expect(unhandled).not.toHaveBeenCalled()
   })
 
-  it('reports a rejected simulator open instead of leaving it unhandled', async () => {
-    mocks.openMobileEmulatorTab.mockRejectedValue(new Error('emulator says no'))
-    renderActions().handleNewSimulatorTab()
-    await new Promise((resolve) => setTimeout(resolve, 0))
-    expect(mocks.toastError).toHaveBeenCalledWith('emulator says no')
-  })
 })

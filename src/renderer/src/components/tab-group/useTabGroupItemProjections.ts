@@ -17,7 +17,6 @@ export type TabGroupWorktreeSnapshot = {
   expandedPaneByTabId: TabGroupAppState['expandedPaneByTabId']
   terminalLayoutsByTabId: NonNullable<TabGroupAppState['terminalLayoutsByTabId']>
   generatedTabTitlesEnabled: boolean
-  mobileEmulatorEnabled: boolean
 }
 
 export type GroupEditorItem = OpenFile & { tabId: string }

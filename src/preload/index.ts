@@ -52,7 +52,6 @@ import { computerUsePermissionsApi } from './api/computer-use-permissions-bridge
 import { shellApi } from './api/shell-bridge'
 import { skillsApi } from './api/skills-bridge'
 import { browserApi } from './api/browser-bridge'
-import { emulatorApi } from './api/emulator-bridge'
 import { hooksApi } from './api/hooks-bridge'
 import { ephemeralVmApi } from './api/ephemeral-vm-bridge'
 import { cacheApi } from './api/cache-bridge'
@@ -148,7 +147,6 @@ const api = {
   shell: shellApi,
   skills: skillsApi,
   browser: browserApi,
-  emulator: emulatorApi,
   hooks: hooksApi,
   ephemeralVm: ephemeralVmApi,
   cache: cacheApi,

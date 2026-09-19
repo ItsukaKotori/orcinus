@@ -44,19 +44,15 @@ function entriesBehindResults(
 ): OpenTabSearchEntries {
   const workspaceTabIds = new Set<string>()
   const browserPageIds = new Set<string>()
-  const simulatorTabIds = new Set<string>()
   for (const result of results) {
     if (result.source === 'workspace') {
       workspaceTabIds.add(result.tabId)
-    } else if (result.source === 'browser') {
-      browserPageIds.add(result.pageId)
     } else {
-      simulatorTabIds.add(result.tabId)
+      browserPageIds.add(result.pageId)
     }
   }
   return {
     workspaceTabs: entries.workspaceTabs.filter((entry) => workspaceTabIds.has(entry.tab.id)),
-    browserPages: entries.browserPages.filter((entry) => browserPageIds.has(entry.page.id)),
-    simulatorTabs: entries.simulatorTabs.filter((entry) => simulatorTabIds.has(entry.tab.id))
+    browserPages: entries.browserPages.filter((entry) => browserPageIds.has(entry.page.id))
   }
 }

@@ -75,7 +75,7 @@ describe('dropFileEntriesCoveredByTabResults', () => {
     ).toHaveLength(3)
   })
 
-  it('never lets a terminal, browser or simulator result suppress a file entry', () => {
+  it('never lets a terminal or browser result suppress a file entry', () => {
     const results: OpenTabSearchResult[] = [
       // Non-null path on purpose: the fold must turn on contentType, not on a
       // path the engine happens to leave empty for non-editor tabs.
@@ -92,17 +92,6 @@ describe('dropFileEntriesCoveredByTabResults', () => {
         url: 'https://example.com/zebra',
         workspaceId: 'ws-1',
         faviconUrl: null
-      },
-      {
-        executionHostId: 'local',
-        source: 'simulator',
-        id: 'open-tab:simulator:tab-2',
-        title: 'zebra',
-        matchedText: null,
-        worktreeId: 'wt-1',
-        contentType: 'simulator',
-        tabId: 'tab-2',
-        groupId: 'group-1'
       }
     ]
 

@@ -34,13 +34,6 @@ export type TabBarItem =
       data: BrowserTabState & { tabId?: string }
     }
   | {
-      type: 'simulator'
-      id: string
-      unifiedTabId: string
-      isPinned: boolean
-      data: Tab
-    }
-  | {
       type: 'agent-session'
       id: string
       unifiedTabId: string
@@ -55,8 +48,8 @@ export function getTabDragLabel(item: TabBarItem, generatedTitlesEnabled: boolea
   if (item.type === 'browser') {
     return getBrowserTabLabel(item.data)
   }
-  if (item.type === 'simulator' || item.type === 'agent-session') {
-    return item.data.label || 'Mobile Emulator'
+  if (item.type === 'agent-session') {
+    return item.data.label
   }
   return getEditorDisplayLabel(item.data)
 }
@@ -105,7 +98,6 @@ export function buildOrderedTabItems({
   terminalIds,
   editorFileIds,
   browserTabIds,
-  simulatorTabIds,
   agentSessionTabIds,
   terminalMap,
   editorMap,
@@ -117,7 +109,6 @@ export function buildOrderedTabItems({
   terminalIds: string[]
   editorFileIds: string[]
   browserTabIds: string[]
-  simulatorTabIds: string[]
   agentSessionTabIds: string[]
   terminalMap: Map<string, TerminalTab & { unifiedTabId?: string }>
   editorMap: Map<string, OpenFile & { tabId?: string }>
@@ -130,7 +121,6 @@ export function buildOrderedTabItems({
     terminalIds,
     editorFileIds,
     browserTabIds,
-    simulatorTabIds,
     agentSessionTabIds
   )
   const items: TabBarItem[] = []
@@ -171,17 +161,6 @@ export function buildOrderedTabItems({
       })
       continue
     }
-    const simulatorTab = unifiedTabByVisibleId.get(id)
-    if (simulatorTab?.contentType === 'simulator') {
-      items.push({
-        type: 'simulator',
-        id,
-        unifiedTabId: simulatorTab.id,
-        isPinned: simulatorTab.isPinned === true,
-        data: simulatorTab
-      })
-      continue
-    }
     const agentSession = agentSessionMap.get(id)
     if (agentSession) {
       items.push({
@@ -216,33 +195,22 @@ export function findActiveVisibleTabId(
     activeTabId: string | null
     activeFileId?: string | null
     activeBrowserTabId?: string | null
-    activeSimulatorTabId?: string | null
     activeTabType?: WorkspaceVisibleTabType
   }
 ): string | null {
   const activeItem = items.find((item) => {
     if (item.type === 'terminal') {
-      return (
-        (active.activeTabType === 'terminal' || active.activeTabType === 'simulator') &&
-        item.id === active.activeTabId
-      )
+      return active.activeTabType === 'terminal' && item.id === active.activeTabId
     }
     if (item.type === 'browser') {
       return active.activeTabType === 'browser' && item.id === active.activeBrowserTabId
     }
-    if (item.type === 'simulator') {
-      return active.activeTabType === 'simulator' && item.id === active.activeSimulatorTabId
-    }
     if (item.type === 'agent-session') {
       // Reachable only from TabGroupPanel, which passes the structured tab's own id; the store's
-      // `activeTabId` names a background terminal here (cf. TerminalTitlebarTabs, which resolves
-      // `getActiveTab(...)?.id` for 'simulator' and never renders agent-session items).
+      // `activeTabId` names a background terminal here.
       return active.activeTabType === 'agent-session' && item.id === active.activeTabId
     }
-    return (
-      (active.activeTabType === 'editor' || active.activeTabType === 'simulator') &&
-      active.activeFileId === item.id
-    )
+    return active.activeTabType === 'editor' && active.activeFileId === item.id
   })
   return activeItem?.id ?? null
 }

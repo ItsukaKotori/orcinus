@@ -1,4 +1,4 @@
-import { File, FileCog, FileLock, FileTerminal, Smartphone, type LucideIcon } from 'lucide-react'
+import { File, FileCog, FileLock, FileTerminal, type LucideIcon } from 'lucide-react'
 import { COMPOUND_EXTENSIONS, FILE_ICON_BY_EXTENSION } from './file-type-icon-extension-table'
 import { FILE_ICON_BY_NAME } from './file-type-icon-name-table'
 
@@ -34,11 +34,6 @@ export function getFileTypeIcon(filePath: string | undefined | null): LucideIcon
   const exactMatch = FILE_ICON_BY_NAME[lowerName]
   if (exactMatch) {
     return exactMatch
-  }
-
-  // Why: simulator tabs reuse EditorFileTab chrome with a synthetic label path.
-  if (lowerName === 'mobile emulator' || lowerName === 'simulator') {
-    return Smartphone
   }
 
   if (lowerName === '.env' || lowerName.startsWith('.env.')) {

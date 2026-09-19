@@ -28,7 +28,7 @@ export type RecentWorkspaceTabRow = {
   worktreeHostId?: ExecutionHostId
   /** Unified tab id — the key `TabGroup.recentTabIds` uses. Null for rows outside a tab group. */
   unifiedTabId: string | null
-  /** Terminal tab whose panes carry agent state. Null for editor, browser and simulator rows. */
+  /** Terminal tab whose panes carry agent state. Null for editor and browser rows. */
   terminalTab: Pick<TerminalTab, 'id' | 'title'> | null
   worktreeLastActivityAt: number
   lastFocusedAt?: number | null

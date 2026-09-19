@@ -56,10 +56,6 @@ export type UISliceContextual = {
   dismissSetupScriptPrompt: (repoHostIdentity: string) => void
   browserImportHintHidden: boolean
   setBrowserImportHintHidden: (hidden: boolean) => void
-  mobileEmulatorTabIntroDismissed: boolean
-  dismissMobileEmulatorTabIntro: () => void
-  mobileEmulatorAgentSetupDismissed: boolean
-  dismissMobileEmulatorAgentSetup: () => void
   projectOrderManualDefaultNoticeDismissed: boolean
   dismissProjectOrderManualDefaultNotice: () => void
   usageEmptyStateDismissed: boolean

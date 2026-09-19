@@ -217,8 +217,6 @@ export const UiUpdateFields = z
     // Why: one-shot dismissals the renderer writes through ui.set; each was a
     // whole-payload rejection for paired clients while unlisted.
     browserImportHintHidden: z.boolean().optional(),
-    mobileEmulatorTabIntroDismissed: z.boolean().optional(),
-    mobileEmulatorAgentSetupDismissed: z.boolean().optional(),
     projectOrderManualDefaultNoticeDismissed: z.boolean().optional(),
     usageEmptyStateDismissed: z.boolean().optional(),
     taskResumeState: TaskResumeState.optional(),

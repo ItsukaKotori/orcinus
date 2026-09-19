@@ -145,10 +145,6 @@ export type PersistedUIState = {
   trayMinimizeNoticeShown?: boolean
   /** Set by the OSC 52 default-on migration when it overrode a persisted `false`; the renderer shows one notice and clears it. */
   osc52ClipboardDefaultOnNoticePending?: boolean
-  /** User dismissed the first-run Mobile Emulator intro; reversible only by re-enabling the feature in Settings. */
-  mobileEmulatorTabIntroDismissed?: boolean
-  /** User deferred the in-pane Mobile Emulator CLI + skill setup guide. */
-  mobileEmulatorAgentSetupDismissed?: boolean
   /** One-shot rollout notice for manual project ordering default; absent or true keeps the sidebar callout hidden. */
   projectOrderManualDefaultNoticeDismissed?: boolean
   /** User-hidden empty-state usage CTA; permanently hides the "Connect AI accounts" prompt even if providers are later disconnected. */

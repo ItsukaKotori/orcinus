@@ -22,14 +22,12 @@ export type TabBarItemProjection = {
 export function useTabBarItemProjection({
   props,
   resolvedGroupId,
-  unifiedTabs,
   unifiedTabByVisibleId,
   generatedTabTitlesEnabled,
   statusByRelativePath
 }: {
   props: TabBarProps
   resolvedGroupId: string
-  unifiedTabs: readonly Tab[]
   unifiedTabByVisibleId: Map<string, Tab>
   generatedTabTitlesEnabled: boolean
   statusByRelativePath: Map<string, GitFileStatus>
@@ -44,7 +42,6 @@ export function useTabBarItemProjection({
     activeTabId,
     activeFileId,
     activeBrowserTabId,
-    activeSimulatorTabId,
     activeTabType,
     expandedPaneByTabId
   } = props
@@ -67,13 +64,6 @@ export function useTabBarItemProjection({
     [editorFiles]
   )
   const browserTabIds = useMemo(() => browserTabs?.map((tab) => tab.id) ?? [], [browserTabs])
-  const simulatorTabIds = useMemo(
-    () =>
-      unifiedTabs
-        .filter((tab) => tab.groupId === resolvedGroupId && tab.contentType === 'simulator')
-        .map((tab) => tab.id),
-    [unifiedTabs, resolvedGroupId]
-  )
   const agentSessionTabIds = useMemo(
     () => agentSessionTabs?.map((tab) => tab.id) ?? [],
     [agentSessionTabs]
@@ -85,7 +75,6 @@ export function useTabBarItemProjection({
         terminalIds,
         editorFileIds,
         browserTabIds,
-        simulatorTabIds,
         agentSessionTabIds,
         terminalMap,
         editorMap,
@@ -98,7 +87,6 @@ export function useTabBarItemProjection({
       terminalIds,
       editorFileIds,
       browserTabIds,
-      simulatorTabIds,
       agentSessionTabIds,
       terminalMap,
       editorMap,
@@ -120,17 +108,9 @@ export function useTabBarItemProjection({
         activeTabId,
         activeFileId,
         activeBrowserTabId,
-        activeSimulatorTabId,
         activeTabType
       }),
-    [
-      activeBrowserTabId,
-      activeFileId,
-      activeSimulatorTabId,
-      activeTabId,
-      activeTabType,
-      orderedItems
-    ]
+    [activeBrowserTabId, activeFileId, activeTabId, activeTabType, orderedItems]
   )
   const tabStripLayoutKey = useMemo(
     () =>

@@ -31,8 +31,7 @@ export function TerminalLegacyTerminalPanes({
     <div
       className={`relative flex-1 min-h-0 overflow-hidden ${
         (activeTabType === 'editor' && worktreeFiles.length > 0) ||
-        (activeTabType === 'browser' && worktreeBrowserTabs.length > 0) ||
-        activeTabType === 'simulator'
+        (activeTabType === 'browser' && worktreeBrowserTabs.length > 0)
           ? 'hidden'
           : ''
       }`}
