@@ -10,13 +10,6 @@ describe('pairing-local UI fields', () => {
       'hideWorkspacesFromOtherDevices',
       'manualRepoOrder',
       'workspaceHostOrder',
-      'agentsVisibleHostIds',
-      'agentsFilterRepoIds',
-      'agentsShowChildAgents',
-      'agentsCompactMode',
-      'agentsShowSearch',
-      'agentsReadFilter',
-      'agentsGroupBy',
       'activityClearedAtByPaneKey',
       'manuallyUnreadTurnsByPaneKey'
     ])

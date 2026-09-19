@@ -61,7 +61,6 @@ const INVENTORY: readonly InventoryGroup[] = [
       ['src/renderer/src/components/automations/automation-list-search-rows.ts', 2],
       ['src/renderer/src/components/dashboard-popout/AgentMapSnapshotWorkspaceMenu.tsx', 2],
       ['src/renderer/src/components/dashboard-popout/AgentMapWorktreeRingNode.tsx', 2],
-      ['src/renderer/src/components/settings/NativeChatSupportedAgents.tsx', 2],
       ['src/renderer/src/components/settings/QuickCommandsList.tsx', 2],
       ['src/renderer/src/components/tab-bar/TabBarQuickCommandItem.tsx', 2],
       ['src/renderer/src/components/tab-bar/TabBarQuickCommandsMenu.tsx', 2],
@@ -168,7 +167,6 @@ const INVENTORY: readonly InventoryGroup[] = [
     helper: 'resolveCommittedTitleAgentType',
     classification: 'action-consumer',
     paths: [
-      ['src/renderer/src/components/tab-bar/native-chat-tab-agent-evidence.ts', 3],
       ['src/renderer/src/components/terminal-pane/pty-connection/connect-pane-pty.ts', 2],
       ['src/renderer/src/components/terminal-pane/terminal-ctrl-enter.ts', 2],
       ['src/renderer/src/components/terminal-pane/terminal-windows-shift-enter.ts', 2],
@@ -179,7 +177,7 @@ const INVENTORY: readonly InventoryGroup[] = [
     helper: 'resolveCommittedTitleAgentType',
     classification: 'identity-consumer',
     paths: [
-      ['src/renderer/src/components/terminal-pane/native-chat-leaf-title-agent.ts', 4],
+      ['src/renderer/src/components/terminal-pane/terminal-pane-title-agent.ts', 4],
       ['src/renderer/src/components/terminal-pane/pty-connection/pane-agent-identity.ts', 2]
     ]
   },
@@ -421,11 +419,6 @@ const DIRECT_SINGLE_SOURCE_SURFACES: readonly {
     path: 'src/renderer/src/lib/active-agent-note-send.ts',
     classification: 'action-consumer',
     marker: 'sendNotesToActiveAgentSession'
-  },
-  {
-    path: 'src/renderer/src/components/native-chat/native-chat-runtime-send.ts',
-    classification: 'action-consumer',
-    marker: 'sendNativeChatMessage'
   },
   {
     path: 'mobile/src/session/mobile-native-chat-send.ts',

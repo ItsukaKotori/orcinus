@@ -1,7 +1,6 @@
 import type { AgentHookSource } from '../agent-hook-relay'
-import { isKnownHarnessInjectedUserTurnText } from '../harness-injected-user-turns'
+import { isKnownHarnessInjectedUserTurnText, type ExtractedPromptText } from './prompt-fields'
 import type { ToolSnapshot } from './listener-event'
-import type { ExtractedPromptText } from './prompt-fields'
 import { extractClaudeToolFields } from './providers/claude-tool-fields'
 import { extractCodexToolFields } from './providers/codex-tool-fields'
 import { extractGeminiToolFields } from './providers/gemini-tool-fields'

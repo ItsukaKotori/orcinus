@@ -262,6 +262,45 @@ describe('useTabGroupWorkspaceModel terminal activation focus', () => {
     ])
   })
 
+  it('activates an agent-session tab through the generic unified-tab path', async () => {
+    const agentTab = {
+      id: 'structured-agent-session-codex-session-1',
+      entityId: 'codex-session-1',
+      groupId: 'group-1',
+      worktreeId: 'wt-1',
+      contentType: 'agent-session',
+      agentSessionAgent: 'codex',
+      label: 'Codex Chat',
+      customLabel: null,
+      color: null,
+      sortOrder: 0,
+      createdAt: 1
+    }
+    storeBox.state = {
+      ...storeBox.state,
+      tabsByWorktree: { 'wt-1': [] },
+      unifiedTabsByWorktree: { 'wt-1': [agentTab] },
+      groupsByWorktree: {
+        'wt-1': [
+          {
+            id: 'group-1',
+            worktreeId: 'wt-1',
+            activeTabId: agentTab.id,
+            tabOrder: [agentTab.id]
+          }
+        ]
+      }
+    }
+    const { useTabGroupWorkspaceModel } = await import('./useTabGroupWorkspaceModel')
+    const model = useTabGroupWorkspaceModel({ groupId: 'group-1', worktreeId: 'wt-1' })
+
+    model.commands.activateAgentSession(agentTab.id)
+
+    expect(mocks.focusGroup).toHaveBeenCalledWith('wt-1', 'group-1')
+    expect(mocks.activateTab).toHaveBeenCalledWith(agentTab.id, { worktreeId: 'wt-1' })
+    expect(mocks.setActiveTabType).toHaveBeenCalledWith('agent-session', 'wt-1')
+  })
+
   it('falls back to a local shell when the typed remote-create outcome is unavailable', async () => {
     mocks.createTab.mockReturnValue({ id: 'terminal-new' })
     const { useTabGroupWorkspaceModel } = await import('./useTabGroupWorkspaceModel')

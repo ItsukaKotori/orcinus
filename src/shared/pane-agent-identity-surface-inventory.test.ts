@@ -24,13 +24,8 @@ type SurfaceRow = {
 const SURFACE_ROWS: readonly SurfaceRow[] = [
   {
     row: 32,
-    path: 'src/renderer/src/components/terminal-pane/native-chat-leaf-title-agent.ts',
-    marker: 'resolveNativeChatLeafTitleAgent'
-  },
-  {
-    row: 32,
-    path: 'src/renderer/src/components/terminal-pane/use-terminal-pane-chat-state.ts',
-    marker: 'resolveNativeChatLeafTitleAgent'
+    path: 'src/renderer/src/components/terminal-pane/terminal-pane-title-agent.ts',
+    marker: 'resolvePaneTitleAgent'
   },
   {
     row: 33,
@@ -75,16 +70,6 @@ const SURFACE_ROWS: readonly SurfaceRow[] = [
     marker: 'isCodexForegroundProcess'
   },
   {
-    row: 42,
-    path: 'src/renderer/src/components/native-chat/native-chat-availability.ts',
-    marker: 'canToggleNativeChat'
-  },
-  {
-    row: 43,
-    path: 'src/renderer/src/components/native-chat/native-chat-pane-resolution.ts',
-    marker: 'resolveNativeChatSession'
-  },
-  {
     row: 44,
     path: 'src/renderer/src/components/terminal-pane/terminal-agent-session-continuation.ts',
     marker: 'canContinueAgentSessionInNewSession'
@@ -113,11 +98,6 @@ const SURFACE_ROWS: readonly SurfaceRow[] = [
     row: 47,
     path: 'src/renderer/src/components/terminal-pane/terminal-pane-manager-options.ts',
     marker: 'resolvePaneKeyboardProtocolAgent'
-  },
-  {
-    row: 48,
-    path: 'src/renderer/src/components/tab-bar/tab-agent-types-by-tab-id.ts',
-    marker: 'selectTabAgentTypesByTabId'
   },
   {
     row: 49,

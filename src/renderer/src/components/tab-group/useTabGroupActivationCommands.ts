@@ -133,9 +133,22 @@ export function useTabGroupActivationCommands({
     [activateTab, focusGroup, groupId, groupTabs, setActiveBrowserTab, setActiveTabType, worktreeId]
   )
 
-  const activateAgentSession = useCallback((): void => {
-    // Native chat removal retires agent-session tab activation.
-  }, [])
+  const activateAgentSession = useCallback(
+    (tabId: string) => {
+      // Why: agent-session rows are otherwise host-owned; local activation still has to
+      // move focus and the visible-tab type so the row reads as the active tab.
+      const tab = (useAppStore.getState().unifiedTabsByWorktree[worktreeId] ?? []).find(
+        (candidate) => candidate.id === tabId && candidate.contentType === 'agent-session'
+      )
+      if (!tab) {
+        return
+      }
+      focusGroup(worktreeId, tab.groupId)
+      activateTab(tab.id, { worktreeId })
+      setActiveTabType('agent-session', worktreeId)
+    },
+    [activateTab, focusGroup, setActiveTabType, worktreeId]
+  )
 
   return {
     activateTerminal,

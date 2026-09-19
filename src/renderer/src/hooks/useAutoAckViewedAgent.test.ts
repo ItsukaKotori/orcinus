@@ -431,7 +431,7 @@ describe('resolveAutoAckTabTargets', () => {
   it('scans the floating tab outside the terminal view because the panel overlays every view', () => {
     expect(
       resolveAutoAckTabTargets(
-        { ...baseState, activeView: 'activity' },
+        { ...baseState, activeView: 'settings' },
         { floatingPanelVisible: true }
       )
     ).toEqual([{ tabId: FLOATING_TAB_ID, worktreeId: FLOATING_TERMINAL_WORKTREE_ID }])
@@ -440,7 +440,7 @@ describe('resolveAutoAckTabTargets', () => {
   it('scans nothing outside the terminal view with the panel closed', () => {
     expect(
       resolveAutoAckTabTargets(
-        { ...baseState, activeView: 'activity' },
+        { ...baseState, activeView: 'settings' },
         { floatingPanelVisible: false }
       )
     ).toEqual([])
