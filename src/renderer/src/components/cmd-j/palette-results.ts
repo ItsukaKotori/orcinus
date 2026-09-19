@@ -80,8 +80,7 @@ const SETTINGS_ALIASES: Record<string, string[]> = {
   notifications: ['notification settings'],
   mobile: ['phone'],
   'computer-use': ['computer use'],
-  stats: ['usage'],
-  privacy: ['telemetry']
+  stats: ['usage']
 }
 
 export const CMD_J_PALETTE_QUERY_MAX_BYTES = 2 * 1024

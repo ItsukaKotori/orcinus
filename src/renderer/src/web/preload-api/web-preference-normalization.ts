@@ -27,6 +27,8 @@ export function mergeWebUIState(
   base: PersistedUIState,
   updates: Partial<PersistedUIState>
 ): PersistedUIState {
+  // Legacy-profile compat: pre-telemetry web blobs may still carry this
+  // main-owned marker; strip it so an old key never round-trips into state.
   const { featureInteractionTelemetryBuckets: _reserved, ...safeUpdates } =
     updates as Partial<PersistedUIState> & {
       featureInteractionTelemetryBuckets?: unknown

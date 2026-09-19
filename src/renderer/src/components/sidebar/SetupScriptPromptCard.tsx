@@ -142,30 +142,14 @@ function SetupScriptPromptCard(): React.JSX.Element | null {
     if (!activeRepo) {
       return
     }
-    if (
-      promptState?.repoId === activeRepo.id &&
-      promptState.repoHostIdentity === activeRepoHostIdentity &&
-      promptState.status === 'ok' &&
-      !promptState.hasEffectiveSetup
-    ) {
-
-    }
     openLocalCommandSettings(activeRepo.id, getRepoExecutionHostId(activeRepo))
-  }, [activeRepo, activeRepoHostIdentity, openLocalCommandSettings, promptState])
+  }, [activeRepo, openLocalCommandSettings])
 
   const handleDismiss = useCallback(() => {
     if (activeRepo && activeRepoHostIdentity) {
-      if (
-        promptState?.repoId === activeRepo.id &&
-        promptState.repoHostIdentity === activeRepoHostIdentity &&
-        promptState.status === 'ok' &&
-        !promptState.hasEffectiveSetup
-      ) {
-
-      }
       dismissSetupScriptPrompt(activeRepoHostIdentity)
     }
-  }, [activeRepo, activeRepoHostIdentity, dismissSetupScriptPrompt, promptState])
+  }, [activeRepo, activeRepoHostIdentity, dismissSetupScriptPrompt])
 
   const saveSetupCandidate = useCallback(
     async (input: {
@@ -189,7 +173,6 @@ function SetupScriptPromptCard(): React.JSX.Element | null {
           { hostId: importedHostId }
         )
         if (!didUpdate) {
-
           if (mountedRef.current) {
             toast.error(
               translate(

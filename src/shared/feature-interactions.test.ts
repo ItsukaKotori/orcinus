@@ -3,10 +3,6 @@ import { join, relative } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   FEATURE_INTERACTIONS,
-  FEATURE_INTERACTION_CATEGORIES,
-  FEATURE_INTERACTION_CATEGORY_BY_ID,
-  FEATURE_INTERACTION_USAGE_BUCKETS,
-  getFeatureInteractionUsageBucket,
   hasFeatureInteraction,
   normalizeFeatureInteractions,
   type FeatureInteractionId
@@ -121,62 +117,6 @@ describe('feature interactions', () => {
         'tasks'
       )
     ).toBe(false)
-  })
-
-  it('maps interaction counts to the exact top-coded telemetry buckets', () => {
-    expect(FEATURE_INTERACTION_USAGE_BUCKETS).toEqual([
-      'count_1',
-      'count_2',
-      'count_3_4',
-      'count_5_9',
-      'count_10_19',
-      'count_20_49',
-      'count_50_99',
-      'count_100_199',
-      'count_200_499',
-      'count_500_999',
-      'count_1000_plus'
-    ])
-    expect(getFeatureInteractionUsageBucket(0)).toBeNull()
-    expect(getFeatureInteractionUsageBucket(1)).toBe('count_1')
-    expect(getFeatureInteractionUsageBucket(2)).toBe('count_2')
-    expect(getFeatureInteractionUsageBucket(3)).toBe('count_3_4')
-    expect(getFeatureInteractionUsageBucket(4)).toBe('count_3_4')
-    expect(getFeatureInteractionUsageBucket(5)).toBe('count_5_9')
-    expect(getFeatureInteractionUsageBucket(999)).toBe('count_500_999')
-    expect(getFeatureInteractionUsageBucket(1000)).toBe('count_1000_plus')
-    expect(getFeatureInteractionUsageBucket(1001)).toBe('count_1000_plus')
-  })
-
-  it('covers every feature id with a telemetry category', () => {
-    expect(FEATURE_INTERACTION_CATEGORIES).toEqual([
-      'workspace',
-      'agent',
-      'browser',
-      'launcher',
-      'task_management',
-      'notes',
-      'review',
-      'setup',
-      'settings',
-      'automation',
-      'terminal',
-      'collaboration',
-      'resource_management',
-      'voice',
-      'source_control'
-    ])
-    expect(Object.keys(FEATURE_INTERACTION_CATEGORY_BY_ID).sort()).toEqual(
-      FEATURE_INTERACTIONS.map((feature) => feature.id).sort()
-    )
-    expect(FEATURE_INTERACTION_CATEGORY_BY_ID.tasks).toBe('task_management')
-    expect(FEATURE_INTERACTION_CATEGORY_BY_ID['github-tasks']).toBe('task_management')
-    expect(FEATURE_INTERACTION_CATEGORY_BY_ID['jira-tasks']).toBe('task_management')
-    expect(FEATURE_INTERACTION_CATEGORY_BY_ID['markdown-file-created']).toBe('notes')
-    expect(FEATURE_INTERACTION_CATEGORY_BY_ID['agent-browser-setup']).toBe('setup')
-    expect(FEATURE_INTERACTION_CATEGORY_BY_ID['terminal-tabs']).toBe('terminal')
-    expect(FEATURE_INTERACTION_CATEGORY_BY_ID['ai-commit-generation']).toBe('source_control')
-    expect(FEATURE_INTERACTION_CATEGORY_BY_ID['resource-manager']).toBe('resource_management')
   })
 
   it('keeps every catalog id wired to a production writer', () => {

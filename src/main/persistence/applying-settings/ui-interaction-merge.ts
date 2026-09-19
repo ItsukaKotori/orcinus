@@ -29,21 +29,6 @@ export function mergeFeatureInteractions(
   return merged
 }
 
-export function stripMainOwnedTelemetryMarkerFromUI(
-  value: Partial<PersistedState['ui']> | undefined
-): Partial<PersistedState['ui']> {
-  if (!value || typeof value !== 'object') {
-    return {}
-  }
-  const { featureInteractionTelemetryBuckets: _reserved, ...ui } = value as Partial<
-    PersistedState['ui']
-  > & {
-    featureInteractionTelemetryBuckets?: unknown
-  }
-  void _reserved
-  return ui
-}
-
 export function normalizeWorkspaceLineageByChildKey(
   value: unknown
 ): Record<WorkspaceKey, WorkspaceLineage> {

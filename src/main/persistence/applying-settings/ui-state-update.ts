@@ -30,10 +30,7 @@ import {
   normalizeShowDotfilesByWorktree,
   normalizeSortBy
 } from './ui-selection-normalization'
-import {
-  mergeFeatureInteractions,
-  stripMainOwnedTelemetryMarkerFromUI
-} from './ui-interaction-merge'
+import { mergeFeatureInteractions } from './ui-interaction-merge'
 
 export type UIUpdateOperations = {
   state: PersistedState
@@ -53,8 +50,7 @@ export function updatePersistedUI(
   if ('browserKagiSessionLink' in updates && !updates.browserKagiSessionLink) {
     operations.removeRetainedBlob(PROTECTED_SECRET_SLOT.browserKagiSessionLink)
   }
-  const sanitizedUpdates = stripMainOwnedTelemetryMarkerFromUI(updates)
-  const { activeView, ...durableUpdates } = sanitizedUpdates
+  const { activeView, ...durableUpdates } = updates
   const activeViewChanged = operations.setActiveView(activeView)
   if (Object.keys(durableUpdates).length === 0) {
     if (activeViewChanged) {
@@ -64,7 +60,7 @@ export function updatePersistedUI(
   }
   const currentUI = {
     ...getDefaultUIState(),
-    ...stripMainOwnedTelemetryMarkerFromUI(operations.state.ui)
+    ...operations.state.ui
   }
   const previousUI = {
     ...operations.getUI(),
@@ -73,16 +69,16 @@ export function updatePersistedUI(
     activeView: currentUI.activeView
   }
   const nextRightSidebarTab =
-    sanitizedUpdates.rightSidebarTab !== undefined
-      ? normalizeRightSidebarTab(sanitizedUpdates.rightSidebarTab)
+    updates.rightSidebarTab !== undefined
+      ? normalizeRightSidebarTab(updates.rightSidebarTab)
       : normalizeRightSidebarTab(operations.state.ui?.rightSidebarTab)
   const nextRightSidebarExplorerView =
-    sanitizedUpdates.rightSidebarExplorerView !== undefined
+    updates.rightSidebarExplorerView !== undefined
       ? normalizeRightSidebarExplorerView(
-          sanitizedUpdates.rightSidebarExplorerView,
+          updates.rightSidebarExplorerView,
           nextRightSidebarTab
         )
-      : sanitizedUpdates.rightSidebarTab === 'search'
+      : updates.rightSidebarTab === 'search'
         ? 'search'
         : normalizeRightSidebarExplorerView(
             operations.state.ui?.rightSidebarExplorerView,
@@ -101,61 +97,61 @@ export function updatePersistedUI(
     sortBy: durableUpdates.sortBy
       ? normalizeSortBy(durableUpdates.sortBy)
       : normalizeSortBy(operations.state.ui?.sortBy),
-    projectOrderBy: sanitizedUpdates.projectOrderBy
-      ? normalizeProjectOrderBy(sanitizedUpdates.projectOrderBy)
+    projectOrderBy: updates.projectOrderBy
+      ? normalizeProjectOrderBy(updates.projectOrderBy)
       : normalizeProjectOrderBy(operations.state.ui?.projectOrderBy),
     activeView: currentUI.activeView,
     rightSidebarTab: nextRightSidebarTab,
     rightSidebarExplorerView: nextRightSidebarExplorerView,
     worktreeCardProperties:
-      sanitizedUpdates.worktreeCardProperties !== undefined
-        ? normalizeWorktreeCardProperties(sanitizedUpdates.worktreeCardProperties)
+      updates.worktreeCardProperties !== undefined
+        ? normalizeWorktreeCardProperties(updates.worktreeCardProperties)
         : normalizeWorktreeCardProperties(operations.state.ui?.worktreeCardProperties),
     agentActivityDisplayMode:
-      sanitizedUpdates.agentActivityDisplayMode !== undefined
-        ? normalizeAgentActivityDisplayMode(sanitizedUpdates.agentActivityDisplayMode)
+      updates.agentActivityDisplayMode !== undefined
+        ? normalizeAgentActivityDisplayMode(updates.agentActivityDisplayMode)
         : normalizeAgentActivityDisplayMode(operations.state.ui?.agentActivityDisplayMode),
     workspaceStatuses:
-      sanitizedUpdates.workspaceStatuses !== undefined
-        ? normalizeWorkspaceStatuses(sanitizedUpdates.workspaceStatuses)
+      updates.workspaceStatuses !== undefined
+        ? normalizeWorkspaceStatuses(updates.workspaceStatuses)
         : normalizeWorkspaceStatuses(operations.state.ui?.workspaceStatuses),
     usagePercentageDisplay: normalizeUsagePercentageDisplay(
-      sanitizedUpdates.usagePercentageDisplay ?? operations.state.ui?.usagePercentageDisplay
+      updates.usagePercentageDisplay ?? operations.state.ui?.usagePercentageDisplay
     ),
     statusBarUsageMode: normalizeStatusBarUsageMode(
-      sanitizedUpdates.statusBarUsageMode ?? operations.state.ui?.statusBarUsageMode
+      updates.statusBarUsageMode ?? operations.state.ui?.statusBarUsageMode
     ),
     markdownTocPanelWidth: clampMarkdownTocPanelWidth(
-      sanitizedUpdates.markdownTocPanelWidth ?? operations.state.ui?.markdownTocPanelWidth
+      updates.markdownTocPanelWidth ?? operations.state.ui?.markdownTocPanelWidth
     ),
     combinedDiffFileTreeWidth: clampCombinedDiffFileTreeWidth(
-      sanitizedUpdates.combinedDiffFileTreeWidth ?? operations.state.ui?.combinedDiffFileTreeWidth
+      updates.combinedDiffFileTreeWidth ?? operations.state.ui?.combinedDiffFileTreeWidth
     ),
     visibleWorkspaceHostIds:
-      sanitizedUpdates.visibleWorkspaceHostIds !== undefined
-        ? normalizeVisibleExecutionHostIds(sanitizedUpdates.visibleWorkspaceHostIds)
+      updates.visibleWorkspaceHostIds !== undefined
+        ? normalizeVisibleExecutionHostIds(updates.visibleWorkspaceHostIds)
         : normalizeVisibleExecutionHostIds(operations.state.ui?.visibleWorkspaceHostIds),
     workspaceHostOrder:
-      sanitizedUpdates.workspaceHostOrder !== undefined
-        ? normalizeExecutionHostOrder(sanitizedUpdates.workspaceHostOrder)
+      updates.workspaceHostOrder !== undefined
+        ? normalizeExecutionHostOrder(updates.workspaceHostOrder)
         : normalizeExecutionHostOrder(operations.state.ui?.workspaceHostOrder),
     manualRepoOrder:
-      sanitizedUpdates.manualRepoOrder !== undefined
-        ? normalizeManualRepoOrder(sanitizedUpdates.manualRepoOrder)
+      updates.manualRepoOrder !== undefined
+        ? normalizeManualRepoOrder(updates.manualRepoOrder)
         : normalizeManualRepoOrder(operations.state.ui?.manualRepoOrder),
     browserDefaultZoomLevel: normalizeBrowserPageZoomLevel(
-      sanitizedUpdates.browserDefaultZoomLevel ?? operations.state.ui?.browserDefaultZoomLevel
+      updates.browserDefaultZoomLevel ?? operations.state.ui?.browserDefaultZoomLevel
     ),
     showDotfilesByWorktree:
-      sanitizedUpdates.showDotfilesByWorktree !== undefined
-        ? normalizeShowDotfilesByWorktree(sanitizedUpdates.showDotfilesByWorktree)
+      updates.showDotfilesByWorktree !== undefined
+        ? normalizeShowDotfilesByWorktree(updates.showDotfilesByWorktree)
         : normalizeShowDotfilesByWorktree(operations.state.ui?.showDotfilesByWorktree),
     // Why: runtime RPCs and the renderer both record education state; merge so a stale renderer snapshot can't erase runtime-only interactions.
     featureInteractions:
-      sanitizedUpdates.featureInteractions !== undefined
+      updates.featureInteractions !== undefined
         ? mergeFeatureInteractions(
             operations.state.ui?.featureInteractions,
-            sanitizedUpdates.featureInteractions
+            updates.featureInteractions
           )
         : normalizeFeatureInteractions(operations.state.ui?.featureInteractions)
   }
