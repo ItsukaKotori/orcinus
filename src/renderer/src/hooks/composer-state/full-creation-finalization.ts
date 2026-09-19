@@ -5,7 +5,6 @@ export function finalizeFullCreation(args: {
   persistDraft: boolean
   clearNewWorkspaceDraft: () => void
   onCreated?: () => void
-  structuredLaunchAccepted: boolean
   worktreeId: string
   activation: ActivateAndRevealResult | false
   queueWorkspaceActivationTerminalFocus: (
@@ -18,7 +17,5 @@ export function finalizeFullCreation(args: {
     args.clearNewWorkspaceDraft()
   }
   args.onCreated?.()
-  if (!args.structuredLaunchAccepted) {
-    args.queueWorkspaceActivationTerminalFocus(args.worktreeId, args.activation)
-  }
+  args.queueWorkspaceActivationTerminalFocus(args.worktreeId, args.activation)
 }

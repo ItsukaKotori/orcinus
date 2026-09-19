@@ -5,7 +5,6 @@ import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../shared/constants'
 const mockCreateTab = vi.fn()
 const mockQueueTabStartupCommand = vi.fn()
 const mockSetActiveTabType = vi.fn()
-const mockSetTabViewMode = vi.fn()
 const mockSetTabBarOrder = vi.fn()
 const mockSetAgentStatus = vi.fn()
 const mockPasteDraftWhenAgentReady = vi.fn()
@@ -29,13 +28,6 @@ const store = {
     agentDefaultEnv: Record<string, Record<string, string>>
     activeRuntimeEnvironmentId: string | null
     terminalWindowsShell?: string
-    experimentalNativeChat?: boolean
-    experimentalStructuredNativeChat?: boolean
-    openAgentTabsInChatByDefault?: boolean
-    nativeChatSessionOptions?: Record<
-      string,
-      { model?: string; valuesByModel?: Record<string, Record<string, string | boolean>> }
-    >
   },
   projects: [
     {
@@ -79,7 +71,6 @@ const store = {
   closeTab: vi.fn(),
   queueTabStartupCommand: mockQueueTabStartupCommand,
   setActiveTabType: mockSetActiveTabType,
-  setTabViewMode: mockSetTabViewMode,
   setTabBarOrder: mockSetTabBarOrder,
   setAgentStatus: mockSetAgentStatus,
 }
@@ -220,9 +211,6 @@ describe('launchAgentInNewTab', () => {
       agentDefaultArgs: {},
       agentDefaultEnv: {},
       activeRuntimeEnvironmentId: null,
-      experimentalNativeChat: true,
-      experimentalStructuredNativeChat: true,
-      openAgentTabsInChatByDefault: true
     }
     store.repos = [{ id: 'repo-1', connectionId: 'ssh-target-1', path: '/repo' }]
     const { launchAgentInNewTab } = await import('./launch-agent-in-new-tab')
@@ -255,16 +243,7 @@ describe('launchAgentInNewTab', () => {
       agentCmdOverrides: {},
       agentDefaultArgs: { codex: '--profile team' },
       agentDefaultEnv: {},
-      activeRuntimeEnvironmentId: null,
-      experimentalNativeChat: true,
-      experimentalStructuredNativeChat: true,
-      openAgentTabsInChatByDefault: false,
-      nativeChatSessionOptions: {
-        codex: {
-          model: 'gpt-5.2-codex',
-          valuesByModel: { 'gpt-5.2-codex': { effort: 'medium' } }
-        }
-      }
+      activeRuntimeEnvironmentId: null
     }
     const { launchAgentInNewTab } = await import('./launch-agent-in-new-tab')
 
@@ -290,9 +269,6 @@ describe('launchAgentInNewTab', () => {
       agentDefaultArgs: {},
       agentDefaultEnv: {},
       activeRuntimeEnvironmentId: 'web-runtime',
-      experimentalNativeChat: true,
-      experimentalStructuredNativeChat: true,
-      openAgentTabsInChatByDefault: false
     }
     const { launchAgentInNewTab } = await import('./launch-agent-in-new-tab')
 

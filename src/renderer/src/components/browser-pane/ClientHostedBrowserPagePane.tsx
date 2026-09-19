@@ -211,7 +211,7 @@ export function ClientHostedBrowserPagePane({
     // Main can destroy the guest while its tag still holds the stale id.
     const attachedMetadata = readBrowserClientPageGuestMetadataIfLive(webview)
     if (!attachedMetadata) {
-      guestLoss.lose('unreadable')
+      guestLoss.lose()
       return guestLoss.dispose()
     }
     const publisher = startBrowserClientPageMetadataPublisher({
@@ -236,7 +236,7 @@ export function ClientHostedBrowserPagePane({
       const eventUrl = (event as (Event & { url?: string }) | undefined)?.url
       const metadata = readBrowserClientPageGuestMetadataIfLive(webview, eventUrl)
       if (!metadata) {
-        guestLoss.lose('unreadable')
+        guestLoss.lose()
         return
       }
       // did-stop-loading must preserve the preceding did-fail-load overlay.
@@ -264,14 +264,14 @@ export function ClientHostedBrowserPagePane({
       updatePageStateFromGuest(browserTab.id, { loading: true, loadError: null })
       const startMetadata = readBrowserClientPageGuestMetadataIfLive(webview, undefined, true)
       if (!startMetadata) {
-        guestLoss.lose('unreadable')
+        guestLoss.lose()
         return
       }
       publisher.publish(startMetadata)
     }
     const onFailLoad = createBrowserClientPageLoadFailureHandler(
       webview,
-      () => guestLoss.lose('unreadable'),
+      () => guestLoss.lose(),
       (loadError) => {
         activeLoadFailureRef.current = loadError
         updatePageStateFromGuest(browserTab.id, { loading: false, loadError })

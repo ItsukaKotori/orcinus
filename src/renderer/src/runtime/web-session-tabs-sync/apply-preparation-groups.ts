@@ -31,7 +31,6 @@ export function prepareWebSessionTabsSnapshotGroups(
     retainedUnifiedTabs,
     targetGroupId,
     hostToLocalTabId,
-    provisionalHandoffHostTabIds,
     existingTabIndex,
     honorSnapshotActiveFocus,
     intentUnifiedTabId,
@@ -54,15 +53,9 @@ export function prepareWebSessionTabsSnapshotGroups(
     if (!nextUnifiedTabs || (currentGroups.length === 0 && !options?.preserveLocalLayout)) {
       return null
     }
-    // Why: an entity-identical replacement (provisional terminal → mirrored surface, local
-    // editor → host editor tab) is a rename — its position and focus must carry over.
+    // Why: an entity-identical replacement (local editor → host editor tab) is a rename —
+    // its position and focus must carry over.
     const rekeyedTabIds = new Map<string, string>()
-    for (const [provisionalTabId, hostTabId] of provisionalHandoffHostTabIds) {
-      const mirroredId = toWebTerminalSurfaceTabId(hostTabId)
-      if (mirroredId !== provisionalTabId) {
-        rekeyedTabIds.set(provisionalTabId, mirroredId)
-      }
-    }
     for (const entry of mirroredEditorTabs) {
       const existing = existingTabIndex.getEditorUnifiedTab(entry.file.id, entry.hostTabId)
       if (existing && existing.id !== entry.unifiedTab.id) {

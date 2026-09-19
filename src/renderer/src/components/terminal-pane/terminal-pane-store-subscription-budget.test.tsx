@@ -108,8 +108,10 @@ describe('TerminalPane store subscription budget', () => {
 
     expect(perPane).toBe(TERMINAL_PANE_LISTENER_BUDGET)
     expect(perPane).toBeLessThan(PRE_FOLD_LISTENERS_PER_PANE)
-    // 28 stable actions, plus six readings the chat-state fold moved onto the pane.
-    expect(PRE_FOLD_LISTENERS_PER_PANE - perPane).toBe(TERMINAL_PANE_STORE_ACTION_KEYS.length + 6)
+    // The fold removed 28 action listeners and added six readings. Two of those
+    // actions (the native-chat view-mode toggles) were deleted later, so the live
+    // key count is lower than the listener reduction they contributed to.
+    expect(PRE_FOLD_LISTENERS_PER_PANE - perPane).toBe(34)
 
     unmount()
     expect(listenerCount()).toBe(baseline)

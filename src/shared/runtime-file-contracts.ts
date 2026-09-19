@@ -46,11 +46,6 @@ export type RuntimeTerminalPathOpenTarget =
     }
   | { kind: 'unsupported'; reason: string }
 
-export type RuntimeNativeChatFileContext = {
-  tabId: string
-  sessionId: string
-}
-
 export type RuntimeTerminalPathResolution = {
   worktree: string
   relativePath: string | null

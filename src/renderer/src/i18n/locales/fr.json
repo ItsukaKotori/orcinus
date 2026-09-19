@@ -481,11 +481,6 @@
         "public": "Adresse publique",
         "custom": "Nom d'hôte personnalisé"
       },
-      "ensure": {
-        "simulator": {
-          "tab": {}
-        }
-      },
       "fix": {
         "checks": {
           "agent": {
@@ -565,11 +560,6 @@
               "d62b12e98a": "Cursor",
               "173553f73a": "VS Code"
             }
-          }
-        },
-        "mobile": {
-          "emulator": {
-            "tab": {}
           }
         }
       },
@@ -798,11 +788,6 @@
       "pluginCommandKeybindings": {
         "group": "Plugins"
       },
-      "feedback": {
-        "image": {
-          "attachments": {}
-        }
-      },
       "ephemeralVmWorktreeCreation": {
         "sparseCheckoutUnsupported": "Les recettes à racine provisionnée ne prennent pas en charge le sparse checkout."
       }
@@ -969,7 +954,6 @@
         "e6b7139d2a": "Redémarrez cette session pour charger votre configuration Codex actuelle.",
         "7b1d20f4c8": "Conserver la session actuelle"
       },
-      "FirstLaunchBanner": {},
       "GitHubItemDialog": {
         "3ab6ac0fc8": "Prévisualisez et modifiez l'issue ou la pull request GitHub sélectionnée.",
         "3cd5ae5b7b": "Aucun fichier modifié.",
@@ -3282,7 +3266,6 @@
       },
       "status": {
         "bar": {
-          "PetStatusSegment": {},
           "PortsStatusSegment": {
             "4ebf90c12e": "Aucun port externe détecté",
             "7dac3ecc9d": "Ports externes",
@@ -4893,7 +4876,6 @@
         "ScrollToCurrentWorkspaceToolbarButton": {
           "23989bb663": "Révéler l'espace de travail actif"
         },
-        "SetupGuideSidebarEntry": {},
         "SetupScriptPromptCard": {
           "ff1e819a11": "Ajouter un script de setup",
           "70715947fb": "Le script de setup ne peut pas être vide",
@@ -4924,8 +4906,6 @@
           "822ff300ad": "Ignorer",
           "5bfd5c8779": "Ignorer les scripts de setup"
         },
-        "SidebarFeedbackDialog": {},
-        "SidebarFilter": {},
         "SidebarHeader": {
           "92154beb7e": "Nouvel espace de travail",
           "49f62c5665": "Tableau des espaces de travail",
@@ -5064,11 +5044,6 @@
           "4677394048": "Connexion…",
           "75ad429b5d": "Se connecter"
         },
-        "WorkspaceKanbanCard": {},
-        "WorkspaceKanbanDrawerHeader": {},
-        "WorkspaceKanbanPinDropTarget": {},
-        "WorkspaceKanbanSettingsMenu": {},
-        "WorkspaceKanbanStatusLane": {},
         "WorkspaceStatusAppearancePopover": {
           "514be2f569": "Définir la couleur de {{value0}} sur {{value1}}",
           "8be427206b": "Icône",
@@ -5612,7 +5587,6 @@
           "b7e3a91c4f": "Faites glisser les en-têtes de projets pour les réordonner, ou passez à",
           "e8c1f4a2b9": "dans les options de l'espace de travail."
         },
-        "WorkspaceKanbanDrawer": {},
         "WorktreeParentPickerPopover": {
           "failedSetParent": "Échec de la définition du worktree parent",
           "current": "Actuel",
@@ -5743,8 +5717,6 @@
           "developer": "Développeur",
           "parkTerminal": "Parquer le terminal"
         },
-        "SidebarFeedbackImageAttachments": {},
-        "WorkspaceKanbanSearchField": {},
         "WorktreeIssueLinkField": {
           "25852bfc59": "Linear",
           "5b440069e6": "GitHub",
@@ -5876,12 +5848,6 @@
           "d9657ac204": "Arrêt de la session de terminal demandé.",
           "e8f25bd903": "Impossible de terminer le nettoyage des terminaux.",
           "a702d4196e": "Ceci ferme tous les onglets de terminal de tous les espaces de travail et demande l'arrêt des sessions de terminal en cours. Tout travail non enregistré dans un terminal est perdu. Le daemon continue de tourner et de nouveaux terminaux peuvent être ouverts immédiatement. Cette action est irréversible."
-        }
-      },
-      "setup": {
-        "guide": {
-          "SetupGuideModal": {},
-          "SetupGuideProgressRing": {}
         }
       },
       "settings": {
@@ -6554,9 +6520,7 @@
             "description": "Prévisualise la nouvelle mise en page des cartes de worktree, l'emplacement des métadonnées, les options du menu d'affichage des cartes et la présentation des statuts.",
             "title": "Nouveau style de carte",
             "toggleLabel": "Activer le nouveau style de carte"
-          },
-          "nativeChat": {},
-          "agentDashboard": {}
+          }
         },
         "FloatingWorkspacePane": {
           "aeaf76fda9": "Barre d'état",
@@ -6950,9 +6914,6 @@
           "82436439eb": "Ajouter une configuration MCP",
           "0a5c1ead54": "Créer une configuration vide"
         },
-        "MobileEmulatorAgentControlRow": {},
-        "MobileEmulatorExamples": {},
-        "MobileEmulatorSettingsPane": {},
         "MobileNetworkInterfaceSection": {
           "63d5e4ae1e": "Régénérez le QR code et scannez-le depuis l'app mobile Orcinus.",
           "87985ba6f5": "Dans ce menu Interface réseau, choisissez l'adresse Tailscale, généralement une IP en 100.x.y.z.",
@@ -7043,8 +7004,6 @@
           "76e02467b8": "Changer de fichier personnalisé",
           "d3756cf5bc": "désactivé"
         },
-        "OpenAiTranscriptionKeyDialog": {},
-        "OpenAiTranscriptionSettingsRow": {},
         "OpenInMenuSetting": {
           "03b00b1f64": "App personnalisée",
           "c1d817e027": "Ajoutée",
@@ -7072,7 +7031,6 @@
           "2aacdb0517": "Coordonnez les agents de codage entre passations, transferts de worktree et travaux d'agents enfants.",
           "191ac34567": "Orchestration d'agents"
         },
-        "OrchestrationSetupCard": {},
         "OrchestrationSkillAgentCoverage": {
           "6dec5ce2d2": "Couverture des agents",
           "ffe13e36fb": "Manquant",
@@ -7093,8 +7051,6 @@
           "d3dc559225": "Échec de la copie de la commande d'installation.",
           "239bf9132b": "Commande d'installation copiée."
         },
-        "PrivacyDiagnosticBundleControls": {},
-        "PrivacyDiagnosticsSection": {},
         "PrivacyPane": {
           "afec8b03be": "ci"
         },
@@ -8128,10 +8084,6 @@
         "UIZoomControl": {
           "c2c64b24d0": "Réinitialiser"
         },
-        "VoicePane": {
-          "b6536a1d12": "extraction",
-          "901985625d": "bascule"
-        },
         "WorktreeSymlinksSection": {
           "1c1e35b219": "Supprimer {{value0}}",
           "b814c618e2": "Chemins liés",
@@ -8742,9 +8694,7 @@
             "92a9357d1f": "vue des agents",
             "fa72e71f05": "agents",
             "4d63251595": "Flux groupé dans la barre latérale gauche pour les achèvements d'agents et les états bloquants.",
-            "ccc5548ac5": "Vue Agents",
-            "nativeChat": {},
-            "agentDashboard": {}
+            "ccc5548ac5": "Vue Agents"
           }
         },
         "floating": {
@@ -9064,9 +9014,6 @@
           }
         },
         "mobile": {
-          "emulator": {
-            "search": {}
-          },
           "pane": {
             "search": {
               "dbccde3a60": "clôturer",
@@ -9196,9 +9143,6 @@
             "e05ff36753": "Coordonnez plusieurs agents de codage via messagerie, DAG de tâches, dispatch et points de décision.",
             "c34045764e": "Orchestration d'agents"
           }
-        },
-        "privacy": {
-          "search": {}
         },
         "quick": {
           "commands": {
@@ -9683,11 +9627,6 @@
             }
           }
         },
-        "voice": {
-          "pane": {
-            "search": {}
-          }
-        },
         "source": {
           "control": {
             "action": {
@@ -9948,7 +9887,6 @@
           "cancel": "Annuler",
           "applyRuntimeChange": "Appliquer le changement de runtime"
         },
-        "PrivacyDiagnosticsRows": {},
         "ShortcutCommandBlock": {
           "eb72c52c28": "Appuyez sur un raccourci, ou appuyez deux fois sur une touche modificatrice (ex. {{value0}}). Échap annule.",
           "70b5d25583": "Raccourci {{value0}}",
@@ -9993,7 +9931,6 @@
           "distroRequired": "Choisissez une distro WSL avant que les projets puissent hériter de WSL.",
           "wslDescription": "Détecte et lance les agents dans {{value0}} via WSL pour les projets qui ne remplacent pas leur runtime."
         },
-        "MobileEmulatorSdkStatus": {},
         "AppearanceAdvancedDisclosure": {
           "advanced": "Avancé"
         },
@@ -10685,7 +10622,6 @@
           "downloadInstaller": "Télécharger l'installateur",
           "manualInstallHint": "Les builds {{value0}} ne sont pas signés sous Windows ; la mise à jour intégrée ne peut donc pas installer l'un d'eux par-dessus un build signé. Exécutez une fois l'installateur téléchargé — Windows avertira d'un éditeur inconnu — puis tous les changements ultérieurs, y compris le retour à Stable, fonctionnent depuis ici."
         },
-        "VoiceMicrophoneSetting": {},
         "TerminalTccAttributionNotice": {
           "body": "Le daemon du terminal a été démarré par une installation d'Orcinus qui n'existe plus, donc macOS ne peut pas attribuer ses commandes à Orcinus — les autorisations Accessibilité et Automatisation sont ignorées silencieusement (osascript échoue avec l'erreur -25211). Redémarrer le daemon corrige le problème ; les sessions de terminal en cours seront fermées.",
           "openManageSessions": "Ouvrir Gérer les sessions",
@@ -12401,11 +12337,6 @@
           }
         }
       },
-      "pet": {
-        "pet": {
-          "models": {}
-        }
-      },
       "onboarding": {
         "AgentStep": {
           "e6a369bd04": "Agents populaires",
@@ -12960,134 +12891,6 @@
           }
         }
       },
-      "feature": {
-        "wall": {
-          "AgentCapabilitiesSetupAction": {},
-          "AiCommitPrSettingsCard": {},
-          "BrowserAnimatedVisual": {},
-          "BrowserUseSkillSetupCard": {},
-          "ComputerUseAnimatedVisual": {
-            "d8401975b1": "approuvée",
-            "f27676a92c": "statut :",
-            "6804cb356f": "clic envoyé",
-            "1719b28a81": "trouvé « Approve »",
-            "79445f7512": "approuver la note dans mon app",
-            "99a8624bcb": ">",
-            "2adb561b44": "Session Claude Code démarrée",
-            "94787f01f8": "Claude Code",
-            "9cddfe96b2": "Application locale",
-            "9634d870d1": "Approuver",
-            "3cc2df3671": "Terminé",
-            "bdd5312213": "En attente",
-            "c11dda000b": "Approuvé"
-          },
-          "EditorAnimatedVisual": {},
-          "FeatureWallBody": {},
-          "FeatureWallModal": {},
-          "FeatureWallPreview": {},
-          "FeatureWallRail": {},
-          "FeatureWallSetupChecklist": {
-            "b1f1981c5e": "Voir les tâches"
-          },
-          "FeatureWallSetupWorkflowActions": {},
-          "FeatureWallTourPanel": {},
-          "KeepAwakeCard": {},
-          "ReviewNotesAnimatedVisual": {},
-          "ReviewPRViewAnimatedVisual": {},
-          "ReviewShipAnimatedVisual": {},
-          "TasksAnimatedVisual": {
-            "72f9e516a3": "en appuyant sur"
-          },
-          "WorkbenchAnimatedVisual": {},
-          "agent": {
-            "capability": {
-              "setup": {
-                "status": {}
-              }
-            }
-          },
-          "feature": {
-            "wall": {
-              "usage": {
-                "tracking": {}
-              }
-            }
-          },
-          "review": {
-            "animated": {
-              "visual": {
-                "shared": {},
-                "notes": {
-                  "styles": {}
-                },
-                "pr": {
-                  "view": {
-                    "styles": {}
-                  }
-                },
-                "ship": {
-                  "styles": {}
-                }
-              }
-            },
-            "notes": {
-              "diff": {
-                "rows": {}
-              }
-            }
-          },
-          "agents": {
-            "orchestration": {
-              "OrchestrationPage": {},
-              "types": {
-                "coordinatorInitial": "Fractionnement de la refonte de l'authentification en 2 PR…",
-                "codexInitial": "Écriture de la migration de la table users…",
-                "claudeInitial": "Ébauche du middleware withSession…",
-                "codexBeat1": "Ajout de la colonne email_verified…",
-                "claudeBeat1": "Branchement du middleware withSession…",
-                "coordinatorBeat1": "PR 1/2 prête",
-                "coordinatorBeat2": "PR 2/2 prête"
-              },
-              "steps": {
-                "name": "Orchestration",
-                "subtitle": "Orchestration",
-                "description": "Permettez aux agents de gérer et de coordonner les espaces de travail Orcinus pour exécuter des tâches plus importantes."
-              },
-              "StatusesPage": {},
-              "UsageAccountsCard": {},
-              "UsagePage": {},
-              "orchestration": {
-                "cards": {
-                  "da6f1f97c9": "travaille"
-                }
-              }
-            }
-          },
-          "ReviewAnimatedVisual": {
-            "8ab622e4d6": "notes"
-          },
-          "FeatureWallBrowserAction": {},
-          "ConnectIntegrationsList": {},
-          "connect": {
-            "integration": {
-              "step": {}
-            }
-          },
-          "FullDiskAccessSetupPrompt": {}
-        },
-        "tips": {
-          "CliFeatureTipVisual": {},
-          "CliSkillSetupTerminal": {},
-          "CmdJPaletteTipDialog": {},
-          "FeatureTipActions": {},
-          "FeatureTipsModal": {},
-          "CmdJPaletteFeatureTipVisual": {
-            "d20ccf1e61": "terminé",
-            "379d776971": "saisie",
-            "0418f9becc": "ouvrir"
-          }
-        }
-      },
       "error": {
         "boundaries": {
           "RecoverableRenderErrorBoundary": {
@@ -13095,59 +12898,6 @@
             "34a189ae0f": "Le reste de l'application fonctionne toujours. Réessayez ici, ou changez de vue puis revenez.",
             "ab855c11f4": "Cette partie d'Orcinus a rencontré une erreur."
           }
-        }
-      },
-      "emulator": {
-        "pane": {
-          "EmulatorPane": {},
-          "emulator": {
-            "device": {
-              "frame": {}
-            },
-            "pane": {
-              "toolbar": {}
-            },
-            "screen": {
-              "stream": {
-                "content": {}
-              }
-            },
-            "unavailable": {
-              "pane": {}
-            }
-          },
-          "use": {
-            "emulator": {
-              "frame": {
-                "stream": {}
-              }
-            },
-            "mobile": {
-              "emulator": {
-                "agent": {
-                  "setup": {
-                    "state": {}
-                  }
-                },
-                "tab": {
-                  "intro": {
-                    "actions": {}
-                  }
-                }
-              }
-            }
-          },
-          "MobileEmulatorAgentSetupGuide": {},
-          "MobileEmulatorAgentSetupGuideSteps": {},
-          "MobileEmulatorTabIntroCallout": {},
-          "mobile": {
-            "emulator": {
-              "hidden": {
-                "toast": {}
-              }
-            }
-          },
-          "useEmulatorScreenKeyboard": {}
         }
       },
       "editor": {
@@ -13806,10 +13556,6 @@
           }
         }
       },
-      "dictation": {
-        "DictationController": {},
-        "DictationIndicator": {}
-      },
       "dashboard": {
         "DashboardAgentChildDisclosure": {
           "1b57ce9fa4": "{{value0}} {{value1}} enfant {{value2}}"
@@ -13825,42 +13571,6 @@
         "DashboardAgentRowMessage": {
           "0a01046763": "interrompu",
           "1ec01cef03": "Interrompu par l'utilisateur"
-        }
-      },
-      "crash": {
-        "report": {
-          "CrashReportDialog": {
-            "56a3dfa283": "Échec de l'envoi du rapport de plantage.",
-            "b175e90213": "Aucun rapport de plantage disponible.",
-            "b2e36f53a1": "Échec de l'envoi du rapport de plantage. Le ticket de diagnostic {{value0}} a été téléversé, mais pas associé."
-          },
-          "submit": {
-            "notice": {}
-          },
-          "copy": {}
-        }
-      },
-      "contextual": {
-        "tours": {
-          "ContextualTourControl": {
-            "02e8373219": "Génère automatiquement un nouveau nom lorsque vous laissez cette zone de texte vide."
-          },
-          "ContextualTourOverlaySurface": {
-            "ffa4412b66": "suivant"
-          },
-          "ContextualTourProgressDots": {},
-          "contextual": {
-            "tour": {
-              "overlay": {
-                "measurement": {
-                  "automations": {
-                    "intro": {},
-                    "results": {}
-                  }
-                }
-              }
-            }
-          }
         }
       },
       "cmd": {
@@ -14547,12 +14257,6 @@
           "fc0268e4ed": "Agents"
         }
       },
-      "activity": {
-        "ActivityPrototypePage": {},
-        "ActivityScopeFilterControls": {},
-        "ActivityThreadRow": {},
-        "ActivityTitlebarControls": {}
-      },
       "confirmation": {
         "dialog": {
           "8490e5d36a": "Confirmer",
@@ -14756,9 +14460,6 @@
             "later": "Plus tard"
           }
         }
-      },
-      "nativeChat": {
-        "contextMenu": {}
       },
       "orca": {
         "profiles": {
@@ -15055,27 +14756,6 @@
     }
   },
   "components": {
-    "native-chat": {
-      "composer": {
-        "optionValue": {}
-      },
-      "tool": {
-        "running": "En cours…"
-      },
-      "status": {},
-      "toggle": {},
-      "state": {
-        "loading": {},
-        "error": {},
-        "notAgent": {},
-        "empty": {}
-      },
-      "copyMessage": {},
-      "question": {
-        "other": "Autre…"
-      },
-      "approval": {}
-    },
     "tab": {
       "bar": {
         "SortableTabContextMenu": {
@@ -15370,32 +15050,6 @@
       }
     }
   },
-  "dashboardPopout": {
-    "view": {},
-    "map": {
-      "host": {},
-      "filters": {},
-      "status": {},
-      "quickView": {}
-    },
-    "placeholder": {},
-    "recoverableError": {},
-    "bucket": {},
-    "settings": {},
-    "card": {
-      "time": {},
-      "review": {}
-    },
-    "terminal": {},
-    "filters": {
-      "review": {}
-    },
-    "search": {},
-    "host": {}
-  },
-  "dashboard": {
-    "sidebar": {}
-  },
   "runtimeRpc": {
     "startupFailure": {
       "unknownCause": "Aucun détail supplémentaire sur l'erreur n'était disponible.",
@@ -15411,9 +15065,6 @@
         "unknown": "Redémarrez Orcinus pour réessayer."
       }
     }
-  },
-  "featureTips": {
-    "voice": {}
   },
   "quickOpen": {
     "moreMatchesAvailable": "D'autres correspondances sont peut-être disponibles. Affinez votre recherche pour réduire les résultats."

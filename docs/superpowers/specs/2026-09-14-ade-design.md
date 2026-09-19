@@ -34,16 +34,17 @@ Orca 是 Electron 43 + React 19 + Tailwind 4 + shadcn/Radix + Zustand 的 AI 编
 
 - **A 终端与进程**：多标签/分屏 PTY、WebGL 渲染、scrollback 持久化与重启恢复、agent TUI 状态识别、hook server
 - **B 工作区**：仓库目录、项目分组、git worktree 创建/切换/删除、文件夹工作区、磁盘占用清理
-- **C Agent 编排**：Claude Code/Codex/OpenCode 等 CLI 启动与 resume、原生聊天界面、agent 状态/通知/未读、automations、AI Vault
+- **C Agent 编排**：Claude Code/Codex/OpenCode 等 CLI 启动与 resume、agent 状态/通知/未读、automations、AI Vault
 - **D Git 与评审**：source control 面板、GitHub/GitLab/Bitbucket/Gitea/Azure DevOps/Linear/Jira、diff 注释、PR 创建
 - **E 编辑器与预览**：Monaco、文件树、Markdown/图片/PDF 预览、文件拖入 prompt
 - **F 内嵌浏览器**：Chromium 浏览器标签、Design Mode、cookie 导入、网络隧道
-- **H 桌面壳**：多窗口、托盘、自动更新、崩溃上报/遥测、全局快捷键、computer-use、语音、通知
+- **H 桌面壳**：多窗口、托盘、自动更新、全局快捷键、computer-use、通知
 
 ### 2.2 删除
 
 - **G 远程与多端**：SSH 执行、远程 runtime/relay、移动端配对、Web 客户端模式（暂不做）
 - **I**：Orca CLI、skills 共享、ephemeral VM、多账号切换与用量统计
+- **J Phase 1 功能删减（10 域）**：Pet、Contextual Tours、Feature Tips、Feature Wall、Setup Guide、Dictation、Emulator Pane、Activity/Dashboard（含 Kanban/Agent Map/Popout）、Native Chat、Telemetry（含崩溃上报与 Feedback）——含生产代码、测试、mock bridge 域、preload 契约、store 注册、设置项与 i18n 键；明细与证据见 `docs/phase1-feature-trim-record.md`
 
 ### 2.3 改造 / 新增
 
@@ -146,6 +147,8 @@ ade/
 
 SSH 连接/端口转发、移动端配对、远端主机添加、账号切换/用量页、CLI/skills/VM 页面，及对应 `window.api` 方法与 `top-level-view` 枚举项。
 
+Phase 1 追加删除：Pet、Contextual Tours、Feature Tips、Feature Wall、Setup Guide、Dictation、Emulator Pane、Activity/Dashboard（含 Kanban/Agent Map/Popout）、Native Chat、Telemetry（含崩溃上报与 Feedback）的入口，及对应 `window.api` 契约、设置项与 `top-level-view` 枚举项。
+
 ## 7. 插件系统设计
 
 ### 7.1 作用域与存储
@@ -209,7 +212,7 @@ SSH 连接/端口转发、移动端配对、远端主机添加、账号切换/�
 
 ### Phase 2 — 体验补全
 
-SQLite 持久化、scrollback 快照与重启恢复、agent 状态/hook server、通知/未读、quick open/搜索、diff 注释与评审、GitHub 等 Provider、native chat、automations、AI Vault、computer-use/语音（按依赖排序）。
+SQLite 持久化、scrollback 快照与重启恢复、agent 状态/hook server、通知/未读、quick open/搜索、diff 注释与评审、GitHub 等 Provider、automations、AI Vault、computer-use/语音（按依赖排序）。
 
 验收：日常可替代原版使用（除浏览器/插件外）。
 
@@ -221,7 +224,7 @@ CEF 内嵌浏览器（Design Mode/cookie 导入/网络隧道）；`ade-plugins` 
 
 ### Phase 4 — 桌面壳收尾
 
-托盘/多窗口/签名自动更新/崩溃上报/遥测开关、macOS 公证、CI 打包；清理 mock 残渣与契约测试全绿。
+托盘/多窗口/签名自动更新、macOS 公证、CI 打包；清理 mock 残渣与契约测试全绿。
 
 ## 9. 测试策略
 
@@ -238,7 +241,7 @@ CEF 内嵌浏览器（Design Mode/cookie 导入/网络隧道）；`ade-plugins` 
 3. **渲染层 fork 构建体量**（~10k 文件）→ 保留 orca 懒加载设计，Phase 0 优化
 4. **987 方法迁移期的半 mock 体验** → 显式“未实现”标记 + 按视图接入
 5. **隐式行为翻译**（agent 状态识别、终端语义）→ 复用 transcript fixtures 固化为行为测试
-6. **computer-use / 语音平台 API 的 Rust 可用性** → 放最后阶段，必要时降级
+6. **computer-use 平台 API 的 Rust 可用性** → 放最后阶段，必要时降级
 
 ## 11. 后续
 

@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@floating-ui/dom": "1.7.6",
-    "@streamparser/json": "0.0.26",
     "@tauri-apps/api": "^2",
     "@xterm/addon-serialize": "0.15.0-beta.300",
     "@xterm/headless": "6.1.0-beta.302",
@@ -79,7 +78,6 @@
     "emojibase-data": "17.0.0",
     "esbuild": "^0.25.12",
     "happy-dom": "^20.11.8",
-    "html-to-image": "^1.11.13",
     "i18next-cli": "1.65.0",
     "katex": "^0.16.45",
     "lowlight": "^3.3.0",

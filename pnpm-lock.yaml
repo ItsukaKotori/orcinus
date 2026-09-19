@@ -17,9 +17,6 @@ importers:
       '@floating-ui/dom':
         specifier: 1.7.6
         version: 1.7.6
-      '@streamparser/json':
-        specifier: 0.0.26
-        version: 0.0.26
       '@tauri-apps/api':
         specifier: ^2
         version: 2.11.1
@@ -207,9 +204,6 @@ importers:
       happy-dom:
         specifier: ^20.11.8
         version: 20.14.5
-      html-to-image:
-        specifier: ^1.11.13
-        version: 1.11.13
       i18next-cli:
         specifier: 1.65.0
         version: 1.65.0(@types/node@25.9.6)(react-dom@19.3.0(react@19.3.0))(typescript@7.0.2)
@@ -2211,9 +2205,6 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  '@streamparser/json@0.0.26':
-    resolution: {integrity: sha512-46597LNFI+MFdUnzX2QJWwmdTRdq0XVD+vVNJTtGVzIrnCuhG9pFo1OAzbNBqci8UJgk/X5KJZ6LcV+y7PTuDQ==}
-
   '@swc/core-darwin-arm64@1.16.2':
     resolution: {integrity: sha512-i/j0HNbnn79qnTVPicvay92Nark8fW8NQqn1e2mGERjUXNpBV0+SwQxlRpk2zBhn6laJ8PDI6Kn1nHZhnz3LCA==}
     engines: {node: '>=10'}
@@ -4044,9 +4035,6 @@ packages:
 
   html-parse-stringify@4.0.1:
     resolution: {integrity: sha512-0zHsZJrK7S3K2aucXWL6ycoYJ/iNtIcFHC/nYQgFklPtrv5LpJctIiSCroWZWeuoXvuyFdzp6KzjJQ+OT5MfFw==}
-
-  html-to-image@1.11.13:
-    resolution: {integrity: sha512-cuOPoI7WApyhBElTTb9oqsawRvZ0rHhaHwghRLlTuffoD1B2aDemlCruLeZrUIIdvG7gs9xeELEPm6PhuASqrg==}
 
   html-url-attributes@3.0.1:
     resolution: {integrity: sha512-ol6UPyBWqsrO6EJySPz2O7ZSr856WDrEzM5zMqp+FJJLGMW35cLYmmZnl0vztAZxRUoNZJFTCohfjuIJ8I4QBQ==}
@@ -7508,8 +7496,6 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  '@streamparser/json@0.0.26': {}
-
   '@swc/core-darwin-arm64@1.16.2':
     optional: true
 
@@ -9322,8 +9308,6 @@ snapshots:
   hono@4.13.7: {}
 
   html-parse-stringify@4.0.1: {}
-
-  html-to-image@1.11.13: {}
 
   html-url-attributes@3.0.1: {}
 

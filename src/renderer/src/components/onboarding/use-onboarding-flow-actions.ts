@@ -3,24 +3,19 @@ import { toast } from 'sonner'
 import { applyDocumentTheme } from '@/lib/document-theme'
 
 import { translate } from '@/i18n/i18n'
-import { ONBOARDING_FINAL_STEP } from '../../../../shared/constants'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { OnboardingState } from '../../../../shared/onboarding-state-types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 
 import { persistStep, type PersistCurrentStepResult } from './use-onboarding-flow-persistence'
-import { STEPS, type StepNumber } from './use-onboarding-flow-types'
+import { STEPS } from './use-onboarding-flow-types'
 import {
   prepareSkippedOnboardingPreferences,
   resolveStepIndex,
   type OnboardingStepSkipOptions
 } from './onboarding-flow-state'
 
-type CloseWith = (
-  outcome: 'completed' | 'dismissed',
-  lastStepReached: StepNumber,
-  completedPath?: 'add_project_modal'
-) => Promise<boolean>
+type CloseWith = (outcome: 'completed' | 'dismissed') => Promise<boolean>
 
 type OnboardingFlowActionsArgs = {
   busyLabel: string | null
@@ -64,7 +59,7 @@ export function useOnboardingFlowActions({
   // Why: sync latch; busyLabel state commits too late to stop a ~30ms Cmd+Enter auto-repeat from re-entering next() and skipping a step.
   const nextInFlightRef = useRef(false)
   const next = useCallback(
-    async (_advancedVia: 'button' | 'keyboard' = 'button') => {
+    async () => {
       if (nextInFlightRef.current || busyLabel) {
         return
       }
@@ -79,7 +74,7 @@ export function useOnboardingFlowActions({
                 'Opening Add Project...'
               )
             )
-            const closed = await closeWith('completed', ONBOARDING_FINAL_STEP, 'add_project_modal')
+            const closed = await closeWith('completed')
             if (closed) {
               openModal('add-repo')
             }
@@ -150,7 +145,7 @@ export function useOnboardingFlowActions({
       translate('components.onboarding.flow.actions.openingAddProject', 'Opening Add Project...')
     )
     try {
-      const closed = await closeWith('completed', ONBOARDING_FINAL_STEP, 'add_project_modal')
+      const closed = await closeWith('completed')
       if (!closed) {
         return
       }
@@ -173,16 +168,13 @@ export function useOnboardingFlowActions({
     themeStepEntryThemeRef
   ])
 
-  const dismissOnboarding = useCallback(
-    async (_advancedVia: 'button' | 'keyboard' = 'button'): Promise<boolean> => {
-      if (busyLabel) {
-        return false
-      }
-      setError(null)
-      return closeWith('dismissed', currentStep.stepNumber)
-    },
-    [busyLabel, closeWith, currentStep.stepNumber, setError]
-  )
+  const dismissOnboarding = useCallback(async (): Promise<boolean> => {
+    if (busyLabel) {
+      return false
+    }
+    setError(null)
+    return closeWith('dismissed')
+  }, [busyLabel, closeWith, currentStep.stepNumber, setError])
 
   const back = useCallback(() => {
     setStepIndex((index) => resolveStepIndex(index - 1, skipOptions, 'backward'))

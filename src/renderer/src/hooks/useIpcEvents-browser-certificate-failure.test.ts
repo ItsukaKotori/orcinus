@@ -84,8 +84,6 @@ function storeStateWithRuntime(
     remoteBrowserPageHandlesByPageId,
     settings: {
       terminalFontSize: 13,
-      experimentalNativeChat: false,
-      openAgentTabsInChatByDefault: false,
       activeRuntimeEnvironmentId: 'env-a'
     }
   })

@@ -382,11 +382,6 @@
         "public": "공용 주소",
         "custom": "사용자 지정 호스트 이름"
       },
-      "ensure": {
-        "simulator": {
-          "tab": {}
-        }
-      },
       "fix": {
         "checks": {
           "agent": {
@@ -466,11 +461,6 @@
               "d62b12e98a": "Cursor",
               "173553f73a": "VS Code"
             }
-          }
-        },
-        "mobile": {
-          "emulator": {
-            "tab": {}
           }
         }
       },
@@ -681,11 +671,6 @@
       },
       "pluginCommandKeybindings": {
         "group": "Plugins"
-      },
-      "feedback": {
-        "image": {
-          "attachments": {}
-        }
       }
     },
     "hooks": {
@@ -828,7 +813,6 @@
         "9375620cc3": "{{value0}}을(를) 사용하려면 이 세션을 다시 시작하세요. 다시 시작하기 전까지는 이전 계정이 유지됩니다.",
         "6133594b12": "이전 계정 유지"
       },
-      "FirstLaunchBanner": {},
       "GitHubItemDialog": {
         "3ab6ac0fc8": "선택한 GitHub 이슈 또는 PR을 미리보기하고 편집합니다.",
         "3cd5ae5b7b": "변경된 파일이 없습니다.",
@@ -3070,7 +3054,6 @@
       },
       "status": {
         "bar": {
-          "PetStatusSegment": {},
           "PortsStatusSegment": {
             "4ebf90c12e": "외부 포트가 감지되지 않았습니다.",
             "7dac3ecc9d": "외부 포트",
@@ -4246,7 +4229,6 @@
         "ScrollToCurrentWorkspaceToolbarButton": {
           "23989bb663": "활성 워크스페이스로 이동"
         },
-        "SetupGuideSidebarEntry": {},
         "SetupScriptPromptCard": {
           "ff1e819a11": "설정 스크립트 추가",
           "70715947fb": "설정 스크립트는 비워둘 수 없습니다.",
@@ -4277,8 +4259,6 @@
           "822ff300ad": "닫기",
           "5bfd5c8779": "설정 스크립트 닫기"
         },
-        "SidebarFeedbackDialog": {},
-        "SidebarFilter": {},
         "SidebarHeader": {
           "projects": "프로젝트",
           "92154beb7e": "새로운 워크스페이스",
@@ -4408,11 +4388,6 @@
           "4677394048": "연결 중…",
           "75ad429b5d": "연결"
         },
-        "WorkspaceKanbanCard": {},
-        "WorkspaceKanbanDrawerHeader": {},
-        "WorkspaceKanbanPinDropTarget": {},
-        "WorkspaceKanbanSettingsMenu": {},
-        "WorkspaceKanbanStatusLane": {},
         "WorkspaceStatusAppearancePopover": {
           "514be2f569": "{{value0}} 색상을 {{value1}}로 설정",
           "8be427206b": "아이콘",
@@ -5015,7 +4990,6 @@
           "3c4d5e6f7a": "호스트 관리…",
           "6e7f8a9b0c": "호스트 제거…"
         },
-        "WorkspaceKanbanDrawer": {},
         "WorktreeParentPickerPopover": {
           "failedSetParent": "상위 워크트리를 설정하지 못했습니다",
           "current": "현재",
@@ -5113,9 +5087,7 @@
         "WorktreeDeveloperMenu": {
           "developer": "Developer",
           "parkTerminal": "Park terminal"
-        },
-        "SidebarFeedbackImageAttachments": {},
-        "WorkspaceKanbanSearchField": {}
+        }
       },
       "shared": {
         "useDaemonActions": {
@@ -5146,12 +5118,6 @@
           "d9657ac204": "터미널 세션 종료 요청이 전송되었습니다.",
           "e8f25bd903": "터미널 정리를 완료할 수 없습니다.",
           "a702d4196e": "이 작업은 모든 워크트리의 모든 터미널 탭을 닫고 현재 터미널 세션의 종료를 요청합니다. 저장되지 않은 터미널 작업은 손실됩니다. 데몬 자체는 계속 실행되며 새 터미널은 즉시 열 수 있습니다. 이 작업은 되돌릴 수 없습니다."
-        }
-      },
-      "setup": {
-        "guide": {
-          "SetupGuideModal": {},
-          "SetupGuideProgressRing": {}
         }
       },
       "settings": {
@@ -5768,9 +5734,7 @@
             "description": "업데이트된 워크트리 카드 레이아웃, 메타데이터 배치, 카드 표시 메뉴 옵션 및 상태 표시를 미리 봅니다.",
             "title": "새 카드 스타일",
             "toggleLabel": "새 카드 스타일 전환"
-          },
-          "nativeChat": {},
-          "agentDashboard": {}
+          }
         },
         "FloatingWorkspacePane": {
           "aeaf76fda9": "상태 표시줄",
@@ -6129,9 +6093,6 @@
           "82436439eb": "MCP 구성 추가",
           "0a5c1ead54": "빈 구성 만들기"
         },
-        "MobileEmulatorAgentControlRow": {},
-        "MobileEmulatorExamples": {},
-        "MobileEmulatorSettingsPane": {},
         "MobileNetworkInterfaceSection": {
           "63d5e4ae1e": "QR 코드를 재생성하고 Orcinus 모바일 앱에서 스캔하세요.",
           "87985ba6f5": "이 네트워크 인터페이스 메뉴에서 Tailscale 주소(일반적으로 100.x.y.z IP)를 선택합니다.",
@@ -6218,8 +6179,6 @@
           "76e02467b8": "사용자 정의 파일 변경",
           "d3756cf5bc": "비활성"
         },
-        "OpenAiTranscriptionKeyDialog": {},
-        "OpenAiTranscriptionSettingsRow": {},
         "OpenInMenuSetting": {
           "03b00b1f64": "맞춤형 앱",
           "c1d817e027": "추가됨",
@@ -6247,7 +6206,6 @@
           "2aacdb0517": "핸드오프, 작업 트리 핸드오버, 하위 agents 작업 전반에 걸쳐 코딩 agents를 조정합니다.",
           "191ac34567": "Agent 오케스트레이션"
         },
-        "OrchestrationSetupCard": {},
         "OrchestrationSkillAgentCoverage": {
           "6dec5ce2d2": "Agent 적용 범위",
           "ffe13e36fb": "누락",
@@ -6262,8 +6220,6 @@
           "d3dc559225": "설치 명령을 복사하지 못했습니다.",
           "239bf9132b": "설치 명령을 복사했습니다."
         },
-        "PrivacyDiagnosticBundleControls": {},
-        "PrivacyDiagnosticsSection": {},
         "PrivacyPane": {
           "afec8b03be": "ci"
         },
@@ -7279,10 +7235,6 @@
         "UIZoomControl": {
           "c2c64b24d0": "재설정"
         },
-        "VoicePane": {
-          "b6536a1d12": "추출 중",
-          "901985625d": "토글"
-        },
         "WorktreeSymlinksSection": {
           "1c1e35b219": "{{value0}} 제거",
           "b814c618e2": "연결된 경로",
@@ -7885,9 +7837,7 @@
               "title": "새 카드 스타일",
               "worktree": "worktree",
               "worktrees": "worktrees"
-            },
-            "nativeChat": {},
-            "agentDashboard": {}
+            }
           }
         },
         "floating": {
@@ -8203,9 +8153,6 @@
           }
         },
         "mobile": {
-          "emulator": {
-            "search": {}
-          },
           "pane": {
             "search": {
               "dbccde3a60": "닫기",
@@ -8335,9 +8282,6 @@
             "e05ff36753": "메시징, 작업 DAG, 디스패치 및 결정 게이트를 통해 여러 코딩 agents를 조정합니다.",
             "c34045764e": "Agent 오케스트레이션"
           }
-        },
-        "privacy": {
-          "search": {}
         },
         "quick": {
           "commands": {
@@ -8824,11 +8768,6 @@
             }
           }
         },
-        "voice": {
-          "pane": {
-            "search": {}
-          }
-        },
         "source": {
           "control": {
             "action": {
@@ -9130,7 +9069,6 @@
           "cancel": "취소",
           "applyRuntimeChange": "런타임 변경 적용"
         },
-        "PrivacyDiagnosticsRows": {},
         "ShortcutCommandBlock": {
           "eb72c52c28": "단축키를 누르거나 수정자 키를 두 번 탭하세요(예: {{value0}}). Esc 키로 취소합니다.",
           "70b5d25583": "{{value0}} shortcut",
@@ -9175,7 +9113,6 @@
           "distroRequired": "프로젝트가 WSL을 상속하려면 먼저 WSL 배포판을 선택하세요.",
           "wslDescription": "런타임을 재정의하지 않는 프로젝트에 대해 WSL을 통해 {{value0}}에서 agents를 감지하고 시작합니다."
         },
-        "MobileEmulatorSdkStatus": {},
         "AppearanceAdvancedDisclosure": {
           "advanced": "고급"
         },
@@ -11246,11 +11183,6 @@
           }
         }
       },
-      "pet": {
-        "pet": {
-          "models": {}
-        }
-      },
       "onboarding": {
         "AgentStep": {
           "e6a369bd04": "인기 agents",
@@ -11766,141 +11698,6 @@
           }
         }
       },
-      "feature": {
-        "wall": {
-          "AgentCapabilitiesSetupAction": {},
-          "AiCommitPrSettingsCard": {},
-          "BrowserAnimatedVisual": {},
-          "BrowserUseSkillSetupCard": {},
-          "ComputerUseAnimatedVisual": {
-            "d8401975b1": "승인됨",
-            "f27676a92c": "상태:",
-            "6804cb356f": "클릭 전송됨",
-            "1719b28a81": "'승인'을 찾았습니다.",
-            "79445f7512": "내 앱에서 메모 승인",
-            "99a8624bcb": ">",
-            "2adb561b44": "Claude Code 세션이 시작되었습니다.",
-            "94787f01f8": "Claude Code",
-            "9cddfe96b2": "로컬 앱",
-            "9634d870d1": "승인",
-            "3cc2df3671": "완료",
-            "bdd5312213": "보류 중",
-            "c11dda000b": "승인됨"
-          },
-          "EditorAnimatedVisual": {},
-          "FeatureWallBody": {},
-          "FeatureWallModal": {},
-          "FeatureWallPreview": {},
-          "FeatureWallRail": {},
-          "FeatureWallSetupChecklist": {
-            "b1f1981c5e": "작업 보기"
-          },
-          "FeatureWallSetupWorkflowActions": {},
-          "FeatureWallTourPanel": {},
-          "KeepAwakeCard": {},
-          "ReviewNotesAnimatedVisual": {},
-          "ReviewPRViewAnimatedVisual": {},
-          "ReviewShipAnimatedVisual": {},
-          "TasksAnimatedVisual": {
-            "72f9e516a3": "누르는 것"
-          },
-          "WorkbenchAnimatedVisual": {},
-          "agent": {
-            "capability": {
-              "setup": {
-                "status": {}
-              }
-            }
-          },
-          "feature": {
-            "wall": {
-              "setup": {
-                "checklist": {
-                  "localized": {
-                    "copy": {}
-                  }
-                }
-              },
-              "usage": {
-                "tracking": {}
-              }
-            }
-          },
-          "review": {
-            "animated": {
-              "visual": {
-                "shared": {},
-                "notes": {
-                  "styles": {}
-                },
-                "pr": {
-                  "view": {
-                    "styles": {}
-                  }
-                },
-                "ship": {
-                  "styles": {}
-                }
-              }
-            },
-            "notes": {
-              "diff": {
-                "rows": {}
-              }
-            }
-          },
-          "agents": {
-            "orchestration": {
-              "OrchestrationPage": {},
-              "types": {
-                "coordinatorInitial": "인증 재작성을 2개의 PR로 분할 중…",
-                "codexInitial": "users 테이블 마이그레이션 작성 중…",
-                "claudeInitial": "withSession 미들웨어 스케치 중…",
-                "codexBeat1": "email_verified 컬럼 추가 중…",
-                "claudeBeat1": "withSession 미들웨어 연결 중…",
-                "coordinatorBeat1": "PR 1/2 준비 완료",
-                "coordinatorBeat2": "PR 2/2 준비 완료"
-              },
-              "steps": {
-                "name": "오케스트레이션",
-                "subtitle": "오케스트레이션",
-                "description": "에이전트가 Orcinus 워크스페이스를 관리하고 조정하여 더 큰 작업을 수행할 수 있도록 합니다."
-              },
-              "StatusesPage": {},
-              "UsageAccountsCard": {},
-              "UsagePage": {},
-              "orchestration": {
-                "cards": {
-                  "da6f1f97c9": "작업 중"
-                }
-              }
-            }
-          },
-          "ReviewAnimatedVisual": {
-            "8ab622e4d6": "메모"
-          },
-          "FeatureWallBrowserAction": {},
-          "ConnectIntegrationsList": {},
-          "connect": {
-            "integration": {
-              "step": {}
-            }
-          },
-          "FullDiskAccessSetupPrompt": {}
-        },
-        "tips": {
-          "CliFeatureTipVisual": {},
-          "CliSkillSetupTerminal": {},
-          "CmdJPaletteTipDialog": {},
-          "FeatureTipActions": {},
-          "FeatureTipsModal": {},
-          "CmdJPaletteFeatureTipVisual": {
-            "d20ccf1e61": "완료",
-            "379d776971": "입력 중",
-            "0418f9becc": "열림"
-          }
-        }
-      },
       "error": {
         "boundaries": {
           "RecoverableRenderErrorBoundary": {
@@ -11908,59 +11705,6 @@
             "34a189ae0f": "앱의 나머지 부분은 아직 실행 중입니다. 이 표면을 다시 시도하거나 다른 곳으로 전환했다가 다시 돌아오세요.",
             "ab855c11f4": "Orcinus의 이 부분에 오류가 발생했습니다."
           }
-        }
-      },
-      "emulator": {
-        "pane": {
-          "EmulatorPane": {},
-          "emulator": {
-            "device": {
-              "frame": {}
-            },
-            "pane": {
-              "toolbar": {}
-            },
-            "screen": {
-              "stream": {
-                "content": {}
-              }
-            },
-            "unavailable": {
-              "pane": {}
-            }
-          },
-          "use": {
-            "emulator": {
-              "frame": {
-                "stream": {}
-              }
-            },
-            "mobile": {
-              "emulator": {
-                "agent": {
-                  "setup": {
-                    "state": {}
-                  }
-                },
-                "tab": {
-                  "intro": {
-                    "actions": {}
-                  }
-                }
-              }
-            }
-          },
-          "MobileEmulatorAgentSetupGuide": {},
-          "MobileEmulatorAgentSetupGuideSteps": {},
-          "MobileEmulatorTabIntroCallout": {},
-          "mobile": {
-            "emulator": {
-              "hidden": {
-                "toast": {}
-              }
-            }
-          },
-          "useEmulatorScreenKeyboard": {}
         }
       },
       "editor": {
@@ -12622,10 +12366,6 @@
           }
         }
       },
-      "dictation": {
-        "DictationController": {},
-        "DictationIndicator": {}
-      },
       "dashboard": {
         "DashboardAgentChildDisclosure": {
           "1b57ce9fa4": "{{value0}} {{value1}} 하위 {{value2}}"
@@ -12641,42 +12381,6 @@
         "DashboardAgentRowMessage": {
           "0a01046763": "중단됨",
           "1ec01cef03": "사용자에 의해 중단됨"
-        }
-      },
-      "crash": {
-        "report": {
-          "CrashReportDialog": {
-            "56a3dfa283": "크래시 보고서를 보내지 못했습니다.",
-            "b175e90213": "크래시 보고서가 없습니다.",
-            "b2e36f53a1": "크래시 보고서를 보내지 못했습니다. 진단 티켓 {{value0}}이 업로드되었지만 연결되지 않았습니다."
-          },
-          "submit": {
-            "notice": {}
-          },
-          "copy": {}
-        }
-      },
-      "contextual": {
-        "tours": {
-          "ContextualTourControl": {
-            "02e8373219": "이 텍스트 상자를 비워두면 새 이름이 자동 생성됩니다."
-          },
-          "ContextualTourOverlaySurface": {
-            "ffa4412b66": "다음"
-          },
-          "ContextualTourProgressDots": {},
-          "contextual": {
-            "tour": {
-              "overlay": {
-                "measurement": {
-                  "automations": {
-                    "intro": {},
-                    "results": {}
-                  }
-                }
-              }
-            }
-          }
         }
       },
       "cmd": {
@@ -13342,14 +13046,6 @@
           "fc0268e4ed": "에이전트"
         }
       },
-      "activity": {
-        "ActivityPrototypePage": {
-          "state": {}
-        },
-        "ActivityScopeFilterControls": {},
-        "ActivityThreadRow": {},
-        "ActivityTitlebarControls": {}
-      },
       "confirmation": {
         "dialog": {
           "8490e5d36a": "확인",
@@ -13544,9 +13240,6 @@
             "later": "Later"
           }
         }
-      },
-      "nativeChat": {
-        "contextMenu": {}
       },
       "orca": {
         "profiles": {
@@ -13751,27 +13444,6 @@
         }
       }
     },
-    "native-chat": {
-      "composer": {
-        "optionValue": {}
-      },
-      "tool": {
-        "running": "실행 중…"
-      },
-      "status": {},
-      "toggle": {},
-      "state": {
-        "loading": {},
-        "error": {},
-        "notAgent": {},
-        "empty": {}
-      },
-      "copyMessage": {},
-      "question": {
-        "other": "다른…"
-      },
-      "approval": {}
-    },
     "tab": {
       "bar": {
         "SortableTabContextMenu": {
@@ -13892,25 +13564,6 @@
         "copySessionIdError": "세션 ID를 복사하지 못했습니다"
       }
     }
-  },
-  "dashboardPopout": {
-    "view": {},
-    "map": {
-      "host": {}
-    },
-    "placeholder": {},
-    "recoverableError": {},
-    "bucket": {},
-    "card": {
-      "time": {},
-      "review": {}
-    },
-    "terminal": {},
-    "filters": {
-      "review": {}
-    },
-    "search": {},
-    "settings": {}
   },
   "dashboard": {
     "sidebar": {

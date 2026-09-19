@@ -36,7 +36,6 @@ vi.mock('@/lib/worktree-runtime-owner', () => ({
 
 vi.mock('@/lib/agent-launch-prompt-delivery', () => ({
   deliverLaunchPromptToAgentTab: vi.fn(),
-  seedNativeChatLaunchDraftForAgentTab: vi.fn()
 }))
 
 describe('paired browser capability cleanup', () => {

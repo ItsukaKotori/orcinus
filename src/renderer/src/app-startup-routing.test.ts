@@ -327,7 +327,6 @@ describe('renderer startup runtime routing', () => {
     expect(probeIndex).toBeLessThan(chainStart)
     expect(probeIndex).toBeLessThan(source.indexOf('await ', effectStart))
     expect(source.slice(effectStart, probeIndex)).not.toContain('if (')
-    expect(source.slice(effectStart, probeIndex)).not.toContain('experimentalStructuredNativeChat')
   })
 
   it('orders packaged restoration before adoption and default creation', () => {

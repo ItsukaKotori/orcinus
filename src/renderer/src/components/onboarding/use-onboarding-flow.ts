@@ -110,7 +110,6 @@ export function useOnboardingFlow(
     themeInteractedRef.current = true
     setTheme(value)
   }, [])
-  // `fromCollapsedSection`: whether the picked agent lived under AgentStep's `<details>` disclosure — only that call site knows.
   const detectedAgentIdsRef = useRef<readonly TuiAgent[]>(detectedAgentIds ?? [])
   const isDetectingRef = useRef<boolean>(isDetectingAgents)
   const selectedAgentRef = useRef(selectedAgent)

@@ -6,7 +6,7 @@ import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { OnboardingState } from '../../../../shared/onboarding-state-types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import { applyAgentPermissionMode } from '../../../../shared/tui-agent-permissions'
-import type { StepId, StepNumber } from './use-onboarding-flow-types'
+import type { StepId } from './use-onboarding-flow-types'
 
 export async function persistStep(
   stepNumber: number,
@@ -47,11 +47,7 @@ export function useCloseWith({ onOnboardingChange, setError }: CloseWithDeps) {
   // idempotent so the first close wins — no double onboarding.update write.
   const closedRef = useRef(false)
   return useCallback(
-    async (
-      outcome: 'completed' | 'dismissed',
-      _lastStepReached: StepNumber,
-      _completedPath?: 'add_project_modal'
-    ): Promise<boolean> => {
+    async (outcome: 'completed' | 'dismissed'): Promise<boolean> => {
       if (closedRef.current) {
         return false
       }

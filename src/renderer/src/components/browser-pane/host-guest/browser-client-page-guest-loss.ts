@@ -1,7 +1,5 @@
 import type { MutableRefObject } from 'react'
 
-export type BrowserClientPageGuestLossReason = 'unreadable' | 'destroyed' | 'render-process-gone'
-
 /**
  * Tells a client-hosted pane, once, that its guest is gone. The retained registry fences the tag on
  * `destroyed` / `render-process-gone` without telling the pane, which would otherwise sit mute or
@@ -14,7 +12,7 @@ export function watchBrowserClientPageGuestLoss(options: {
   browserPageId: string
   pageHostGeneration: number
   onLost: () => void
-}): { lose(reason: BrowserClientPageGuestLossReason): void; dispose(): void } {
+}): { lose(): void; dispose(): void } {
   const { webview } = options
   const releaseWebviewRef = (): void => {
     if (options.webviewRef.current === webview) {
@@ -22,7 +20,7 @@ export function watchBrowserClientPageGuestLoss(options: {
     }
   }
   let lost = false
-  const lose = (_reason: BrowserClientPageGuestLossReason): void => {
+  const lose = (): void => {
     if (lost) {
       return
     }
@@ -31,8 +29,8 @@ export function watchBrowserClientPageGuestLoss(options: {
     releaseWebviewRef()
     options.onLost()
   }
-  const onDestroyed = (): void => lose('destroyed')
-  const onRendererGone = (): void => lose('render-process-gone')
+  const onDestroyed = (): void => lose()
+  const onRendererGone = (): void => lose()
   webview.addEventListener('destroyed', onDestroyed)
   webview.addEventListener('render-process-gone', onRendererGone)
   return {

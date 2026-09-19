@@ -13,8 +13,6 @@ type TestActiveView = 'terminal' | 'tasks'
 const store = {
   settings: {
     activeRuntimeEnvironmentId: null as string | null,
-    experimentalNativeChat: undefined as boolean | undefined,
-    openAgentTabsInChatByDefault: undefined as boolean | undefined
   },
   activeView: 'terminal' as TestActiveView,
   activePendingCreationId: 'creation-1' as string | null,
@@ -42,8 +40,6 @@ const store = {
   createWorktree: vi.fn(() => new Promise(() => {})),
   setupProjectExistingFolder: vi.fn(),
   refreshRuntimeEnvironmentStatus: vi.fn(),
-  seedNativeChatLaunchDraft: vi.fn(),
-  setTabViewMode: vi.fn(),
   tabsByWorktree: {} as Record<string, { id: string; launchAgent?: string }[]>,
   unifiedTabsByWorktree: {}
 }
@@ -98,8 +94,6 @@ import {
 beforeEach(() => {
   vi.clearAllMocks()
   store.settings.activeRuntimeEnvironmentId = null
-  store.settings.experimentalNativeChat = undefined
-  store.settings.openAgentTabsInChatByDefault = undefined
   store.activeView = 'terminal'
   store.activePendingCreationId = 'creation-1'
   store.repos = []
@@ -730,7 +724,6 @@ describe('staged background worktree creation', () => {
     )
 
     await vi.waitFor(() => expect(activateAndRevealWorktree).toHaveBeenCalled())
-    expect(store.seedNativeChatLaunchDraft).not.toHaveBeenCalled()
   })
 
   // Why: activation no longer rebuilds a startup from `createdWithAgent`, so this

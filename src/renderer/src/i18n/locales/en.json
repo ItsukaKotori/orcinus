@@ -608,11 +608,6 @@
         "public": "Public address",
         "custom": "Custom hostname"
       },
-      "ensure": {
-        "simulator": {
-          "tab": {}
-        }
-      },
       "fix": {
         "checks": {
           "agent": {
@@ -692,11 +687,6 @@
               "d62b12e98a": "Cursor",
               "173553f73a": "VS Code"
             }
-          }
-        },
-        "mobile": {
-          "emulator": {
-            "tab": {}
           }
         }
       },
@@ -814,13 +804,6 @@
         },
         "activation": {
           "cannotOpenFolderWorkspace": "Cannot open folder workspace"
-        },
-        "creation": {
-          "flow": {
-            "structured": {
-              "launch": {}
-            }
-          }
         }
       },
       "folderWorkspacePathStatus": {
@@ -937,12 +920,6 @@
       "pluginCommandKeybindings": {
         "group": "Plugins"
       },
-      "feedback": {
-        "image": {
-          "attachments": {}
-        }
-      },
-      "activateAiVaultStructuredSession": {},
       "ephemeralVmWorktreeCreation": {
         "sparseCheckoutUnsupported": "Provisioned-root recipes do not support sparse checkout."
       },
@@ -1138,7 +1115,6 @@
         "e6b7139d2a": "Restart this session to load your current Codex configuration.",
         "7b1d20f4c8": "Keep current session"
       },
-      "FirstLaunchBanner": {},
       "GitHubItemDialog": {
         "3ab6ac0fc8": "Preview and edit the selected GitHub issue or pull request.",
         "3cd5ae5b7b": "No files changed.",
@@ -3493,7 +3469,6 @@
       },
       "status": {
         "bar": {
-          "PetStatusSegment": {},
           "PortsStatusSegment": {
             "4ebf90c12e": "No external ports detected",
             "7dac3ecc9d": "External Ports",
@@ -5143,7 +5118,6 @@
         "ScrollToCurrentWorkspaceToolbarButton": {
           "23989bb663": "Reveal active workspace"
         },
-        "SetupGuideSidebarEntry": {},
         "SetupScriptPromptCard": {
           "ff1e819a11": "Add a setup script",
           "70715947fb": "Setup script cannot be empty",
@@ -5174,8 +5148,6 @@
           "822ff300ad": "Dismiss",
           "5bfd5c8779": "Dismiss setup scripts"
         },
-        "SidebarFeedbackDialog": {},
-        "SidebarFilter": {},
         "SidebarHeader": {
           "projects": "Projects",
           "spaces": "Spaces",
@@ -5318,11 +5290,6 @@
           "4677394048": "Connecting…",
           "75ad429b5d": "Connect"
         },
-        "WorkspaceKanbanCard": {},
-        "WorkspaceKanbanDrawerHeader": {},
-        "WorkspaceKanbanPinDropTarget": {},
-        "WorkspaceKanbanSettingsMenu": {},
-        "WorkspaceKanbanStatusLane": {},
         "WorkspaceStatusAppearancePopover": {
           "514be2f569": "Set {{value0}} color to {{value1}}",
           "8be427206b": "Icon",
@@ -5873,7 +5840,6 @@
           "b7e3a91c4f": "Drag project headers to reorder, or switch to",
           "e8c1f4a2b9": "in workspace options."
         },
-        "WorkspaceKanbanDrawer": {},
         "WorktreeParentPickerPopover": {
           "failedSetParent": "Failed to set parent worktree",
           "current": "Current",
@@ -6004,8 +5970,6 @@
           "developer": "Developer",
           "parkTerminal": "Park terminal"
         },
-        "SidebarFeedbackImageAttachments": {},
-        "WorkspaceKanbanSearchField": {},
         "WorktreeIssueLinkField": {
           "25852bfc59": "Linear",
           "5b440069e6": "GitHub",
@@ -6142,12 +6106,6 @@
           "d9657ac204": "Terminal session shutdown requested.",
           "e8f25bd903": "Couldn’t finish terminal cleanup.",
           "a702d4196e": "This closes every terminal tab across all workspaces and requests shutdown for its current terminal sessions. Any unsaved terminal work is lost. The daemon itself keeps running, and new terminals can be opened immediately. This can't be undone."
-        }
-      },
-      "setup": {
-        "guide": {
-          "SetupGuideModal": {},
-          "SetupGuideProgressRing": {}
         }
       },
       "settings": {
@@ -6840,9 +6798,7 @@
             "description": "Preview updated worktree-card layout, metadata placement, card-display menu options, and status presentation.",
             "title": "New card style",
             "toggleLabel": "Toggle new card style"
-          },
-          "nativeChat": {},
-          "agentDashboard": {}
+          }
         },
         "FloatingWorkspacePane": {
           "aeaf76fda9": "Status Bar",
@@ -7244,9 +7200,6 @@
           "82436439eb": "Add MCP config",
           "0a5c1ead54": "Create empty config"
         },
-        "MobileEmulatorAgentControlRow": {},
-        "MobileEmulatorExamples": {},
-        "MobileEmulatorSettingsPane": {},
         "MobileNetworkInterfaceSection": {
           "63d5e4ae1e": "Regenerate the QR code and scan it from the Orcinus mobile app.",
           "87985ba6f5": "In this Network Interface menu, choose the Tailscale address, usually a 100.x.y.z IP.",
@@ -7337,8 +7290,6 @@
           "76e02467b8": "Change Custom File",
           "d3756cf5bc": "disabled"
         },
-        "OpenAiTranscriptionKeyDialog": {},
-        "OpenAiTranscriptionSettingsRow": {},
         "OpenInMenuSetting": {
           "03b00b1f64": "Custom app",
           "c1d817e027": "Added",
@@ -7368,7 +7319,6 @@
           "nestedWorkerDepthTitle": "Nested worker depth",
           "nestedWorkerDepthDescription": "How many generations of dispatched workers may spawn their own workers. 1 keeps the agent tree flat: a coordinator dispatches workers, and those workers do not dispatch."
         },
-        "OrchestrationSetupCard": {},
         "OrchestrationSkillAgentCoverage": {
           "6dec5ce2d2": "Agent coverage",
           "ffe13e36fb": "Missing",
@@ -7389,8 +7339,6 @@
           "d3dc559225": "Failed to copy install command.",
           "239bf9132b": "Copied install command."
         },
-        "PrivacyDiagnosticBundleControls": {},
-        "PrivacyDiagnosticsSection": {},
         "PrivacyPane": {
           "afec8b03be": "ci"
         },
@@ -8433,10 +8381,6 @@
         "UIZoomControl": {
           "c2c64b24d0": "Reset"
         },
-        "VoicePane": {
-          "b6536a1d12": "extracting",
-          "901985625d": "toggle"
-        },
         "WorktreeSymlinksSection": {
           "1c1e35b219": "Remove {{value0}}",
           "b814c618e2": "Linked paths",
@@ -9101,9 +9045,7 @@
             "92a9357d1f": "agents view",
             "fa72e71f05": "agents",
             "4d63251595": "Threaded left-sidebar feed for agent completions and blocking states.",
-            "ccc5548ac5": "Agents View",
-            "nativeChat": {},
-            "agentDashboard": {}
+            "ccc5548ac5": "Agents View"
           }
         },
         "floating": {
@@ -9441,9 +9383,6 @@
           }
         },
         "mobile": {
-          "emulator": {
-            "search": {}
-          },
           "pane": {
             "search": {
               "dbccde3a60": "close",
@@ -9579,9 +9518,6 @@
             "e05ff36753": "Coordinate multiple coding agents via messaging, task DAGs, dispatch, and decision gates.",
             "c34045764e": "Agent Orchestration"
           }
-        },
-        "privacy": {
-          "search": {}
         },
         "quick": {
           "commands": {
@@ -10114,11 +10050,6 @@
             }
           }
         },
-        "voice": {
-          "pane": {
-            "search": {}
-          }
-        },
         "source": {
           "control": {
             "action": {
@@ -10379,7 +10310,6 @@
           "cancel": "Cancel",
           "applyRuntimeChange": "Apply runtime change"
         },
-        "PrivacyDiagnosticsRows": {},
         "ShortcutCommandBlock": {
           "eb72c52c28": "Press a shortcut, or double-tap a modifier (e.g. {{value0}}). Esc cancels.",
           "70b5d25583": "{{value0}} shortcut",
@@ -10424,7 +10354,6 @@
           "distroRequired": "Choose a WSL distro before projects can inherit WSL.",
           "wslDescription": "Detect and launch agents in {{value0}} via WSL for projects that do not override their runtime."
         },
-        "MobileEmulatorSdkStatus": {},
         "AppearanceAdvancedDisclosure": {
           "advanced": "Advanced"
         },
@@ -11129,7 +11058,6 @@
           "downloadInstaller": "Download installer",
           "manualInstallHint": "{{value0}} builds are unsigned on Windows, so the in-app updater cannot install one over a signed build. Run the downloaded installer once — Windows will warn about an unknown publisher — and every later switch, including back to Stable, works from here."
         },
-        "VoiceMicrophoneSetting": {},
         "TerminalTccAttributionNotice": {
           "body": "The terminal daemon was started by an Orcinus install that no longer exists, so macOS can’t attribute its commands to Orcinus — Accessibility and Automation grants are silently ignored (osascript fails with error -25211). Restarting the daemon fixes this; running terminal sessions will close.",
           "openManageSessions": "Open Manage Sessions",
@@ -11341,7 +11269,6 @@
         "shortcutDefinitionCatalog": {
           "missionControlConflict": "Blocked by Mission Control. Remap here or change it in System Settings."
         },
-        "NativeChatSupportedAgents": {},
         "contrast": {
           "title": "Color Contrast",
           "description": "Improve text readability or preserve the colors chosen by terminal programs.",
@@ -12903,11 +12830,6 @@
           }
         }
       },
-      "pet": {
-        "pet": {
-          "models": {}
-        }
-      },
       "onboarding": {
         "AgentStep": {
           "e6a369bd04": "Popular agents",
@@ -13464,141 +13386,6 @@
           }
         }
       },
-      "feature": {
-        "wall": {
-          "AgentCapabilitiesSetupAction": {},
-          "AiCommitPrSettingsCard": {},
-          "BrowserAnimatedVisual": {},
-          "BrowserUseSkillSetupCard": {},
-          "ComputerUseAnimatedVisual": {
-            "d8401975b1": "approved",
-            "f27676a92c": "status:",
-            "6804cb356f": "click sent",
-            "1719b28a81": "found \"Approve\"",
-            "79445f7512": "approve the note in my app",
-            "99a8624bcb": ">",
-            "2adb561b44": "Claude Code session started",
-            "94787f01f8": "Claude Code",
-            "9cddfe96b2": "Local app",
-            "9634d870d1": "Approve",
-            "3cc2df3671": "Done",
-            "bdd5312213": "Pending",
-            "c11dda000b": "Approved"
-          },
-          "EditorAnimatedVisual": {},
-          "FeatureWallBody": {},
-          "FeatureWallModal": {},
-          "FeatureWallPreview": {},
-          "FeatureWallRail": {},
-          "FeatureWallSetupChecklist": {
-            "b1f1981c5e": "See tasks"
-          },
-          "FeatureWallSetupWorkflowActions": {},
-          "FeatureWallTourPanel": {},
-          "KeepAwakeCard": {},
-          "ReviewNotesAnimatedVisual": {},
-          "ReviewPRViewAnimatedVisual": {},
-          "ReviewShipAnimatedVisual": {},
-          "TasksAnimatedVisual": {
-            "72f9e516a3": "pressing"
-          },
-          "WorkbenchAnimatedVisual": {},
-          "agent": {
-            "capability": {
-              "setup": {
-                "status": {}
-              }
-            }
-          },
-          "feature": {
-            "wall": {
-              "setup": {
-                "checklist": {
-                  "localized": {
-                    "copy": {}
-                  }
-                }
-              },
-              "usage": {
-                "tracking": {}
-              }
-            }
-          },
-          "review": {
-            "animated": {
-              "visual": {
-                "shared": {},
-                "notes": {
-                  "styles": {}
-                },
-                "pr": {
-                  "view": {
-                    "styles": {}
-                  }
-                },
-                "ship": {
-                  "styles": {}
-                }
-              }
-            },
-            "notes": {
-              "diff": {
-                "rows": {}
-              }
-            }
-          },
-          "agents": {
-            "orchestration": {
-              "OrchestrationPage": {},
-              "types": {
-                "coordinatorInitial": "Splitting auth rewrite into 2 PRs…",
-                "codexInitial": "Writing the users table migration…",
-                "claudeInitial": "Sketching withSession middleware…",
-                "codexBeat1": "Adding the email_verified column…",
-                "claudeBeat1": "Wiring withSession middleware…",
-                "coordinatorBeat1": "PR 1/2 ready",
-                "coordinatorBeat2": "PR 2/2 ready"
-              },
-              "steps": {
-                "name": "Orchestration",
-                "subtitle": "Orchestration",
-                "description": "Enable agents to manage and coordinate Orcinus workspaces to execute larger tasks."
-              },
-              "StatusesPage": {},
-              "UsageAccountsCard": {},
-              "UsagePage": {},
-              "orchestration": {
-                "cards": {
-                  "da6f1f97c9": "working"
-                }
-              }
-            }
-          },
-          "ReviewAnimatedVisual": {
-            "8ab622e4d6": "notes"
-          },
-          "FeatureWallBrowserAction": {},
-          "ConnectIntegrationsList": {},
-          "connect": {
-            "integration": {
-              "step": {}
-            }
-          },
-          "FullDiskAccessSetupPrompt": {}
-        },
-        "tips": {
-          "CliFeatureTipVisual": {},
-          "CliSkillSetupTerminal": {},
-          "CmdJPaletteTipDialog": {},
-          "FeatureTipActions": {},
-          "FeatureTipsModal": {},
-          "CmdJPaletteFeatureTipVisual": {
-            "d20ccf1e61": "done",
-            "379d776971": "typing",
-            "0418f9becc": "open"
-          }
-        }
-      },
       "error": {
         "boundaries": {
           "RecoverableRenderErrorBoundary": {
@@ -13606,59 +13393,6 @@
             "34a189ae0f": "The rest of the app is still running. Retry this surface or switch away and come back.",
             "ab855c11f4": "This part of Orcinus hit an error."
           }
-        }
-      },
-      "emulator": {
-        "pane": {
-          "EmulatorPane": {},
-          "emulator": {
-            "device": {
-              "frame": {}
-            },
-            "pane": {
-              "toolbar": {}
-            },
-            "screen": {
-              "stream": {
-                "content": {}
-              }
-            },
-            "unavailable": {
-              "pane": {}
-            }
-          },
-          "use": {
-            "emulator": {
-              "frame": {
-                "stream": {}
-              }
-            },
-            "mobile": {
-              "emulator": {
-                "agent": {
-                  "setup": {
-                    "state": {}
-                  }
-                },
-                "tab": {
-                  "intro": {
-                    "actions": {}
-                  }
-                }
-              }
-            }
-          },
-          "MobileEmulatorAgentSetupGuide": {},
-          "MobileEmulatorAgentSetupGuideSteps": {},
-          "MobileEmulatorTabIntroCallout": {},
-          "mobile": {
-            "emulator": {
-              "hidden": {
-                "toast": {}
-              }
-            }
-          },
-          "useEmulatorScreenKeyboard": {}
         }
       },
       "editor": {
@@ -14369,10 +14103,6 @@
           }
         }
       },
-      "dictation": {
-        "DictationController": {},
-        "DictationIndicator": {}
-      },
       "dashboard": {
         "DashboardAgentChildDisclosure": {
           "1b57ce9fa4": "{{value0}} {{value1}} child {{value2}}"
@@ -14388,49 +14118,6 @@
         "DashboardAgentRowMessage": {
           "0a01046763": "interrupted",
           "1ec01cef03": "Interrupted by user"
-        }
-      },
-      "crash": {
-        "report": {
-          "CrashReportDialog": {
-            "56a3dfa283": "Failed to send crash report.",
-            "b175e90213": "No crash report is available.",
-            "b2e36f53a1": "Failed to send crash report. Diagnostic ticket {{value0}} was uploaded but not linked."
-          },
-          "submit": {
-            "notice": {}
-          },
-          "copy": {}
-        }
-      },
-      "contextual": {
-        "tours": {
-          "ContextualTourControl": {
-            "02e8373219": "Auto-generates a new name when you leave this text box empty."
-          },
-          "ContextualTourOverlaySurface": {
-            "ffa4412b66": "next"
-          },
-          "ContextualTourProgressDots": {},
-          "contextual": {
-            "tour": {
-              "overlay": {
-                "measurement": {
-                  "automations": {
-                    "intro": {},
-                    "results": {}
-                  },
-                  "client": {
-                    "hosted": {
-                      "browser": {
-                        "intro": {}
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
         }
       },
       "cmd": {
@@ -15275,17 +14962,6 @@
           "fc0268e4ed": "Agents"
         }
       },
-      "activity": {
-        "ActivityPrototypePage": {
-          "state": {}
-        },
-        "clearCompleted": {},
-        "standaloneWorktree": {},
-        "ActivityTitlebarControls": {},
-        "ActivityScopeFilterControls": {},
-        "ActivityThreadHoverCard": {},
-        "ActivityThreadRow": {}
-      },
       "confirmation": {
         "dialog": {
           "8490e5d36a": "Confirm",
@@ -15598,9 +15274,6 @@
           }
         }
       },
-      "nativeChat": {
-        "contextMenu": {}
-      },
       "orca": {
         "profiles": {
           "signout": {
@@ -15848,11 +15521,6 @@
         "clientNoteLocalStorage": "Imports read this device’s browsers. Cookies are stored locally.",
         "remoteNoteRemoteStorage": "Imports read browsers on {{value0}}. Cookies are stored on that machine, and a permission prompt may appear on its screen."
       },
-      "native": {
-        "chat": {
-          "NativeChatStructuredSession": {}
-        }
-      },
       "ComposerParentWorktreePicker": {
         "label": "Parent worktree",
         "noParent": "No parent",
@@ -15991,47 +15659,6 @@
       "select": "Select {{value0}}",
       "search": "Search users",
       "empty": "No users found"
-    },
-    "native-chat": {
-      "taskList": {},
-      "turnDiff": {},
-      "receipt": {},
-      "notices": {},
-      "composer": {
-        "optionValue": {}
-      },
-      "tool": {
-        "running": "Running…",
-        "ranCommandOneToolSummary": "Ran {{commandCount}} command and used {{toolCount}} tool",
-        "ranCommandManyToolsSummary": "Ran {{commandCount}} command and used {{toolCount}} tools",
-        "ranCommandsOneToolSummary": "Ran {{commandCount}} commands and used {{toolCount}} tool",
-        "ranCommandsManyToolsSummary": "Ran {{commandCount}} commands and used {{toolCount}} tools",
-        "usedOneSummary": "Used 1 tool",
-        "usedManySummary": "Used {{toolCount}} tools"
-      },
-      "providerFrame": {},
-      "status": {},
-      "backgroundTasks": {},
-      "toggle": {},
-      "state": {
-        "loading": {},
-        "error": {},
-        "notAgent": {},
-        "empty": {}
-      },
-      "copyMessage": {},
-      "question": {
-        "other": "Other…"
-      },
-      "approval": {},
-      "handoff": {
-        "stage": {},
-        "mode": {}
-      },
-      "subagents": {
-        "state": {}
-      },
-      "conversationCommand": {}
     },
     "tab": {
       "bar": {
@@ -16334,29 +15961,6 @@
       }
     }
   },
-  "dashboardPopout": {
-    "view": {},
-    "map": {
-      "host": {},
-      "filters": {},
-      "status": {},
-      "quickView": {}
-    },
-    "placeholder": {},
-    "recoverableError": {},
-    "bucket": {},
-    "settings": {},
-    "card": {
-      "time": {},
-      "review": {}
-    },
-    "terminal": {},
-    "filters": {
-      "review": {}
-    },
-    "search": {},
-    "host": {}
-  },
   "dashboard": {
     "sidebar": {
       "projects": "Projects",
@@ -16378,9 +15982,6 @@
         "unknown": "Restart Orcinus to try again."
       }
     }
-  },
-  "featureTips": {
-    "voice": {}
   },
   "quickOpen": {
     "moreMatchesAvailable": "More matches may be available. Refine your search to narrow the results."

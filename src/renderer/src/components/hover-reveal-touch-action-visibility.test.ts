@@ -9,7 +9,6 @@ import { describe, expect, it } from 'vitest'
 const MAIN_CSS = resolve(__dirname, '../assets/main.css')
 
 const HOVER_REVEAL_FILES = [
-  resolve(__dirname, 'activity/ActivityPrototypePage.tsx'),
   resolve(__dirname, 'browser-pane/annotate/browser-page-annotation-tray.tsx'),
   resolve(__dirname, 'dashboard/DashboardAgentRow.tsx'),
   resolve(__dirname, 'dashboard/DashboardAgentRowTrailingControls.tsx'),
@@ -17,7 +16,6 @@ const HOVER_REVEAL_FILES = [
   resolve(__dirname, 'editor/DiffSectionHeader.tsx'),
   resolve(__dirname, 'github-project/ProjectPicker.tsx'),
   resolve(__dirname, 'github-project/ProjectRow.tsx'),
-  resolve(__dirname, 'native-chat/NativeChatMessageRow.tsx'),
   resolve(__dirname, 'right-sidebar/AiVaultSessionRow.tsx'),
   resolve(__dirname, 'right-sidebar/ChecksPanel.tsx'),
   resolve(__dirname, 'right-sidebar/local-port-row.tsx'),
@@ -30,7 +28,6 @@ const HOVER_REVEAL_FILES = [
   resolve(__dirname, 'settings/ShortcutCommandBlock.tsx'),
   resolve(__dirname, 'sidebar/HostSectionHeaderMenu.tsx'),
   resolve(__dirname, 'sidebar/PendingWorktreeRow.tsx'),
-  resolve(__dirname, 'sidebar/WorkspaceKanbanStatusLane.tsx'),
   resolve(__dirname, 'sidebar/WorktreeCardPorts.tsx'),
   resolve(__dirname, 'sidebar/WorktreeList.tsx'),
   resolve(__dirname, 'sidebar/worktree-list/rows/HostSectionHeader.tsx'),

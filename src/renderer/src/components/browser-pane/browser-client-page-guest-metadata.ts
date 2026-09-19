@@ -32,8 +32,8 @@ export function readBrowserClientPageGuestMetadataIfLive(
       canGoForward: webview.canGoForward()
     }
   } catch (error) {
-    // Why recorded: the catch is total, so a read failure that is NOT guest death would otherwise
-    // be indistinguishable from one — the breadcrumb carries the error text the console cannot.
+    // Why warn: the catch is total, so a read failure that is NOT guest death would otherwise
+    // be indistinguishable from one — the console is the only place the error text survives.
     console.warn('[browser-client-page] guest read failed, treating the page as gone:', error)
 
     return null

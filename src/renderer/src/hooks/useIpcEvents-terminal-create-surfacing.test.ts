@@ -210,8 +210,6 @@ describe('useIpcEvents updater integration', () => {
     focusTerminalTabSurface.mockClear()
     storeState.settings = {
       ...storeState.settings,
-      experimentalNativeChat: true,
-      openAgentTabsInChatByDefault: true
     }
     requestTerminalCreateListenerRef.current({
       requestId: 'req-renderer-backed',
@@ -515,7 +513,6 @@ describe('useIpcEvents updater integration', () => {
     })
 
     createTab.mockClear()
-    storeState.settings.openAgentTabsInChatByDefault = false
     createTerminalListenerRef.current({
       worktreeId: 'wt-2',
       ptyId: 'pty-explicit-chat',
@@ -528,7 +525,6 @@ describe('useIpcEvents updater integration', () => {
       launchAgent: 'codex',
       viewMode: 'chat'
     })
-    storeState.settings.openAgentTabsInChatByDefault = true
 
     createTab.mockClear()
     setActiveView.mockClear()

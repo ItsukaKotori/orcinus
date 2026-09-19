@@ -106,7 +106,6 @@ export function prepareWebSessionTabsSnapshotBase(
   )
   const nextHostTerminalTabIds = new Set(terminalSurfaceTabs.map((tab) => tab.parentTabId))
   const exactProvisionalHandoffs = new Set<string>()
-  const provisionalHandoffHostTabIds = new Map<string, string>()
   for (const tab of currentTerminalTabs) {
     if (isMirroredTerminalSurfaceId(tab.id)) {
       continue
@@ -194,7 +193,6 @@ export function prepareWebSessionTabsSnapshotBase(
     nextRemotePtyIds,
     nextMirroredTerminalIds,
     exactProvisionalHandoffs,
-    provisionalHandoffHostTabIds,
     retainedTerminalTabs,
     mirroredTerminalTabs,
     mirroredTerminalTabEntries,

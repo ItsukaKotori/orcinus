@@ -73,12 +73,8 @@ const RUNTIME = {
   resolvedGroupId: 'group-1',
   generatedTabTitlesEnabled: false,
   unifiedTabByVisibleId: new Map(),
-  nativeChatEnabled: false,
   tabAgentTypesByTabId: {},
-  nativeChatTabWideFallbackUnsafeTabsById: {},
-  nativeChatTranscriptIsLocalReadable: false,
   managedBrowserCreationEnabled: false,
-  toggleTabViewMode: () => {},
   statusByRelativePath: new Map()
 } as unknown as TabBarRuntimeModel
 

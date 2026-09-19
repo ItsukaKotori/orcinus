@@ -191,10 +191,6 @@
         "c4afa68159": "Try a worktree, setting, action, tab title, agent prompt, URL, PR, or port.",
         "dabd819ca1": "Type to see all {{value0}} worktrees"
       },
-      "activity": {
-        "ActivityPrototypePage": {},
-        "ActivityScopeFilterControls": {}
-      },
       "artifacts": {
         "ArtifactsPage": {
           "openArtifact": "Open artifact",
@@ -320,28 +316,6 @@
           }
         }
       },
-      "contextual": {
-        "tours": {
-          "ContextualTourControl": {
-            "02e8373219": "Auto-generates a new name when you leave this text box empty."
-          },
-          "ContextualTourOverlaySurface": {
-            "ffa4412b66": "next"
-          }
-        }
-      },
-      "crash": {
-        "report": {
-          "CrashReportDialog": {
-            "56a3dfa283": "Failed to send crash report.",
-            "b175e90213": "No crash report is available.",
-            "b2e36f53a1": "Failed to send crash report. Diagnostic ticket {{value0}} was uploaded but not linked."
-          }
-        }
-      },
-      "dashboard": {
-        "DashboardAgentRow": {}
-      },
       "editor": {
         "CombinedDiffFileTree": {
           "d5ac717d65": "uncommitted"
@@ -399,85 +373,6 @@
         },
         "RichMarkdownSlashMenu": {
           "e2e12b0e98": "component"
-        }
-      },
-      "emulator": {
-        "pane": {
-          "emulator": {
-            "device": {
-              "frame": {}
-            },
-            "unavailable": {
-              "pane": {}
-            }
-          }
-        }
-      },
-      "feature": {
-        "tips": {
-          "CmdJPaletteFeatureTipVisual": {
-            "0418f9becc": "open",
-            "379d776971": "typing",
-            "d20ccf1e61": "done"
-          }
-        },
-        "wall": {
-          "ComputerUseAnimatedVisual": {
-            "1719b28a81": "found \"Approve\"",
-            "2adb561b44": "Claude Code session started",
-            "3cc2df3671": "Done",
-            "6804cb356f": "click sent",
-            "79445f7512": "approve the note in my app",
-            "94787f01f8": "Claude Code",
-            "9634d870d1": "Approve",
-            "99a8624bcb": ">",
-            "9cddfe96b2": "Local app",
-            "bdd5312213": "Pending",
-            "c11dda000b": "Approved",
-            "d8401975b1": "approved",
-            "f27676a92c": "status:"
-          },
-          "FeatureWallSetupChecklist": {
-            "b1f1981c5e": "See tasks"
-          },
-          "ReviewAnimatedVisual": {
-            "8ab622e4d6": "notes"
-          },
-          "TasksAnimatedVisual": {
-            "72f9e516a3": "pressing"
-          },
-          "agents": {
-            "orchestration": {
-              "orchestration": {
-                "cards": {
-                  "da6f1f97c9": "working"
-                }
-              },
-              "steps": {
-                "description": "Enable agents to manage and coordinate Orcinus workspaces to execute larger tasks.",
-                "name": "Orchestration",
-                "subtitle": "Orchestration"
-              },
-              "types": {
-                "claudeBeat1": "Wiring withSession middleware…",
-                "claudeInitial": "Sketching withSession middleware…",
-                "codexBeat1": "Adding the email_verified column…",
-                "codexInitial": "Writing the users table migration…",
-                "coordinatorBeat1": "PR 1/2 ready",
-                "coordinatorBeat2": "PR 2/2 ready",
-                "coordinatorInitial": "Splitting auth rewrite into 2 PRs…"
-              }
-            }
-          },
-          "review": {
-            "animated": {
-              "visual": {
-                "ship": {
-                  "styles": {}
-                }
-              }
-            }
-          }
         }
       },
       "floating": {
@@ -825,11 +720,6 @@
             "3e8f21954f": "error",
             "74168d7ada": "idle",
             "d8f40128ee": "{basePrompt} is Orcinus's default prompt."
-          },
-          "activity": {
-            "bar": {
-              "buttons": {}
-            }
           },
           "checks": {
             "panel": {
@@ -1276,8 +1166,6 @@
         "McpConfigFileRow": {
           "845ae248e8": "valid"
         },
-        "MobileEmulatorAgentControlRow": {},
-        "MobileEmulatorSdkStatus": {},
         "MobileNetworkInterfaceSection": {
           "1dc87a7fbc": "Tailscale",
           "1e64659126": "Regenerate",
@@ -1486,10 +1374,6 @@
           "catalog_description": "Choose terminal themes and divider colors for dark and light mode.",
           "f012172e21": "Choose the theme used for terminal panes in dark mode.",
           "target_label": "Theme Mode"
-        },
-        "VoicePane": {
-          "901985625d": "toggle",
-          "b6536a1d12": "extracting"
         },
         "WarpThemeImportModal": {
           "found_theme_one": "Found 1 theme",
@@ -1868,7 +1752,6 @@
           "bc96dbd041": "Workspace options ({{value0}})",
           "c7591b6014": "repo"
         },
-        "WorkspaceKanbanSettingsMenu": {},
         "WorkspaceStatusAppearancePopover": {
           "514be2f569": "Set {{value0}} color to {{value1}}"
         },
@@ -2580,28 +2463,6 @@
     }
   },
   "components": {
-    "native-chat": {
-      "composer": {},
-      "question": {
-        "other": "Other…"
-      },
-      "state": {
-        "empty": {},
-        "error": {},
-        "loading": {},
-        "notAgent": {}
-      },
-      "status": {},
-      "tool": {
-        "ranCommandManyToolsSummary": "Ran {{commandCount}} command and used {{toolCount}} tools",
-        "ranCommandOneToolSummary": "Ran {{commandCount}} command and used {{toolCount}} tool",
-        "ranCommandsManyToolsSummary": "Ran {{commandCount}} commands and used {{toolCount}} tools",
-        "ranCommandsOneToolSummary": "Ran {{commandCount}} commands and used {{toolCount}} tool",
-        "running": "Running…",
-        "usedManySummary": "Used {{toolCount}} tools",
-        "usedOneSummary": "Used 1 tool"
-      }
-    },
     "onboarding": {
       "integrations": {
         "capabilities": {
@@ -2641,17 +2502,6 @@
         }
       }
     }
-  },
-  "dashboard": {
-    "sidebar": {}
-  },
-  "dashboardPopout": {
-    "card": {},
-    "map": {
-      "host": {}
-    },
-    "placeholder": {},
-    "view": {}
   },
   "runtimeRpc": {
     "startupFailure": {

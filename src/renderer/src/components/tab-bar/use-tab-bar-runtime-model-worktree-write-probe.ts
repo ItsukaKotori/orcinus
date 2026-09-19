@@ -20,7 +20,6 @@ export type TabBarProbeState = {
   sshConnectionStates: Map<string, unknown>
   pinTab: (tabId: string) => void
   unpinTab: (tabId: string) => void
-  toggleTabViewMode: (tabId: string) => void
 }
 
 export type TabBarProbeStore = {
@@ -50,8 +49,7 @@ export async function createTabBarProbeStore(): Promise<TabBarProbeStore> {
       worktreesByRepo: {},
       sshConnectionStates: new Map(),
       pinTab: noop,
-      unpinTab: noop,
-      toggleTabViewMode: noop
+      unpinTab: noop
     }))
   }
   return globals[globalKey] as TabBarProbeStore

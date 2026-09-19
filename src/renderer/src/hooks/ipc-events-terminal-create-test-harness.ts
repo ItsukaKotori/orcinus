@@ -100,8 +100,6 @@ export async function setupTerminalCreateSurfacing(
     clearTabPtyId: vi.fn(),
     settings: {
       terminalFontSize: 13,
-      experimentalNativeChat: false,
-      openAgentTabsInChatByDefault: false,
       activeRuntimeEnvironmentId: undefined as string | undefined
     }
   }

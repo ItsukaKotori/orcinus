@@ -379,11 +379,6 @@
         "public": "パブリックアドレス",
         "custom": "カスタムホスト名"
       },
-      "ensure": {
-        "simulator": {
-          "tab": {}
-        }
-      },
       "fix": {
         "checks": {
           "agent": {
@@ -463,11 +458,6 @@
               "d62b12e98a": "Cursor",
               "173553f73a": "VS Code"
             }
-          }
-        },
-        "mobile": {
-          "emulator": {
-            "tab": {}
           }
         }
       },
@@ -678,11 +668,6 @@
       },
       "pluginCommandKeybindings": {
         "group": "プラグイン"
-      },
-      "feedback": {
-        "image": {
-          "attachments": {}
-        }
       }
     },
     "hooks": {
@@ -823,7 +808,6 @@
         "9375620cc3": "このセッションを再起動して {{value0}} を使用してください。それまでは前のアカウントのままです。",
         "6133594b12": "以前のアカウントを保持"
       },
-      "FirstLaunchBanner": {},
       "GitHubItemDialog": {
         "3ab6ac0fc8": "選択した GitHub Issue または PR をプレビュー・編集します。",
         "3cd5ae5b7b": "ファイルは変更されませんでした。",
@@ -3065,7 +3049,6 @@
       },
       "status": {
         "bar": {
-          "PetStatusSegment": {},
           "PortsStatusSegment": {
             "4ebf90c12e": "外部ポートが検出されませんでした",
             "7dac3ecc9d": "外部ポート",
@@ -4241,7 +4224,6 @@
         "ScrollToCurrentWorkspaceToolbarButton": {
           "23989bb663": "アクティブなワークスペースを表示する"
         },
-        "SetupGuideSidebarEntry": {},
         "SetupScriptPromptCard": {
           "ff1e819a11": "セットアップスクリプトを追加する",
           "70715947fb": "セットアップスクリプトを空にすることはできません",
@@ -4272,8 +4254,6 @@
           "822ff300ad": "閉じる",
           "5bfd5c8779": "セットアップスクリプトを閉じる"
         },
-        "SidebarFeedbackDialog": {},
-        "SidebarFilter": {},
         "SidebarHeader": {
           "projects": "プロジェクト",
           "92154beb7e": "新規ワークスペース",
@@ -4403,11 +4383,6 @@
           "4677394048": "接続中…",
           "75ad429b5d": "接続"
         },
-        "WorkspaceKanbanCard": {},
-        "WorkspaceKanbanDrawerHeader": {},
-        "WorkspaceKanbanPinDropTarget": {},
-        "WorkspaceKanbanSettingsMenu": {},
-        "WorkspaceKanbanStatusLane": {},
         "WorkspaceStatusAppearancePopover": {
           "514be2f569": "{{value0}} の色を {{value1}} に設定します",
           "8be427206b": "アイコン",
@@ -5010,7 +4985,6 @@
           "3c4d5e6f7a": "ホストを管理…",
           "6e7f8a9b0c": "ホストを削除…"
         },
-        "WorkspaceKanbanDrawer": {},
         "WorktreeParentPickerPopover": {
           "failedSetParent": "親ワークツリーを設定できませんでした",
           "current": "現在",
@@ -5108,9 +5082,7 @@
         "WorktreeDeveloperMenu": {
           "developer": "Developer",
           "parkTerminal": "ターミナルを退避"
-        },
-        "SidebarFeedbackImageAttachments": {},
-        "WorkspaceKanbanSearchField": {}
+        }
       },
       "shared": {
         "useDaemonActions": {
@@ -5141,12 +5113,6 @@
           "d9657ac204": "ターミナルセッションのシャットダウンリクエストが送信されました。",
           "e8f25bd903": "ターミナルクリーンアップを完了できませんでした。",
           "a702d4196e": "これにより、すべてのワークスペースのターミナルタブが閉じられ、現在のターミナルセッションのシャットダウンがリクエストされます。保存されていないターミナル作業は失われます。デーモン自体は実行を続け、新規ターミナルはすぐに開けます。この操作は取り消せません。"
-        }
-      },
-      "setup": {
-        "guide": {
-          "SetupGuideModal": {},
-          "SetupGuideProgressRing": {}
         }
       },
       "settings": {
@@ -5763,9 +5729,7 @@
             "description": "更新されたワークツリーカードのレイアウト、メタデータ配置、カード表示メニュー項目、ステータス表示をプレビューします。",
             "title": "新規カードスタイル",
             "toggleLabel": "新規カードスタイルを切り替え"
-          },
-          "nativeChat": {},
-          "agentDashboard": {}
+          }
         },
         "FloatingWorkspacePane": {
           "aeaf76fda9": "ステータスバー",
@@ -6161,9 +6125,6 @@
           "82436439eb": "MCP 構成の追加",
           "0a5c1ead54": "空の構成を作成する"
         },
-        "MobileEmulatorAgentControlRow": {},
-        "MobileEmulatorExamples": {},
-        "MobileEmulatorSettingsPane": {},
         "MobileNetworkInterfaceSection": {
           "63d5e4ae1e": "QR コードを再生成し、Orcinus モバイルアプリからスキャンします。",
           "87985ba6f5": "このネットワークインターフェースメニューで、Tailscale アドレス (通常は 100.x.y.z IP) を選択します。",
@@ -6250,8 +6211,6 @@
           "76e02467b8": "カスタムファイルの変更",
           "d3756cf5bc": "無効"
         },
-        "OpenAiTranscriptionKeyDialog": {},
-        "OpenAiTranscriptionSettingsRow": {},
         "OpenInMenuSetting": {
           "03b00b1f64": "カスタムアプリ",
           "c1d817e027": "追加した",
@@ -6279,7 +6238,6 @@
           "2aacdb0517": "ハンドオフ、ワークツリーのハンドオーバー、および子 Agent の作業全体にわたってコーディング Agent を調整します。",
           "191ac34567": "Agent オーケストレーション"
         },
-        "OrchestrationSetupCard": {},
         "OrchestrationSkillAgentCoverage": {
           "6dec5ce2d2": "Agent の範囲",
           "ffe13e36fb": "不足",
@@ -6294,8 +6252,6 @@
           "d3dc559225": "インストールコマンドのコピーに失敗しました。",
           "239bf9132b": "インストールコマンドをコピーしました。"
         },
-        "PrivacyDiagnosticBundleControls": {},
-        "PrivacyDiagnosticsSection": {},
         "PrivacyPane": {
           "afec8b03be": "ci"
         },
@@ -7311,10 +7267,6 @@
         "UIZoomControl": {
           "c2c64b24d0": "リセット"
         },
-        "VoicePane": {
-          "b6536a1d12": "抽出する",
-          "901985625d": "トグル"
-        },
         "WorktreeSymlinksSection": {
           "1c1e35b219": "{{value0}} を削除",
           "b814c618e2": "リンクされたパス",
@@ -7917,9 +7869,7 @@
               "title": "新規カードスタイル",
               "worktree": "ワークツリー",
               "worktrees": "ワークツリー"
-            },
-            "nativeChat": {},
-            "agentDashboard": {}
+            }
           }
         },
         "floating": {
@@ -8235,9 +8185,6 @@
           }
         },
         "mobile": {
-          "emulator": {
-            "search": {}
-          },
           "pane": {
             "search": {
               "dbccde3a60": "閉じる",
@@ -8367,9 +8314,6 @@
             "e05ff36753": "メッセージング、タスク DAG、ディスパッチ、意思決定ゲートを介して複数のコーディング Agent を調整します。",
             "c34045764e": "Agent オーケストレーション"
           }
-        },
-        "privacy": {
-          "search": {}
         },
         "quick": {
           "commands": {
@@ -8856,11 +8800,6 @@
             }
           }
         },
-        "voice": {
-          "pane": {
-            "search": {}
-          }
-        },
         "source": {
           "control": {
             "action": {
@@ -9125,7 +9064,6 @@
           "cancel": "キャンセル",
           "applyRuntimeChange": "ランタイムの変更を適用"
         },
-        "PrivacyDiagnosticsRows": {},
         "ShortcutCommandBlock": {
           "eb72c52c28": "ショートカットを押すか、修飾キーを 2 回続けて押してください（例: {{value0}}）。Esc でキャンセルします。",
           "70b5d25583": "{{value0}} のショートカット",
@@ -9170,7 +9108,6 @@
           "distroRequired": "プロジェクトが WSL を継承できるようにするには、先に WSL ディストリビューションを選択してください。",
           "wslDescription": "ランタイムをオーバーライドしないプロジェクトの WSL 経由で {{value0}} 内の Agent を検出して起動します。"
         },
-        "MobileEmulatorSdkStatus": {},
         "AppearanceAdvancedDisclosure": {
           "advanced": "詳細設定"
         },
@@ -11203,11 +11140,6 @@
           }
         }
       },
-      "pet": {
-        "pet": {
-          "models": {}
-        }
-      },
       "onboarding": {
         "AgentStep": {
           "e6a369bd04": "人気の Agent",
@@ -11723,134 +11655,6 @@
           }
         }
       },
-      "feature": {
-        "wall": {
-          "AgentCapabilitiesSetupAction": {},
-          "AiCommitPrSettingsCard": {},
-          "BrowserAnimatedVisual": {},
-          "BrowserUseSkillSetupCard": {},
-          "ComputerUseAnimatedVisual": {
-            "d8401975b1": "承認された",
-            "f27676a92c": "状態：",
-            "6804cb356f": "クリック送信",
-            "1719b28a81": "「承認」を見つけました",
-            "79445f7512": "アプリでメモを承認する",
-            "99a8624bcb": ">",
-            "2adb561b44": "Claude Code セッションが開始されました",
-            "94787f01f8": "Claude Code",
-            "9cddfe96b2": "ローカルアプリ",
-            "9634d870d1": "承認する",
-            "3cc2df3671": "完了",
-            "bdd5312213": "保留中",
-            "c11dda000b": "承認された"
-          },
-          "EditorAnimatedVisual": {},
-          "FeatureWallBody": {},
-          "FeatureWallModal": {},
-          "FeatureWallPreview": {},
-          "FeatureWallRail": {},
-          "FeatureWallSetupChecklist": {
-            "b1f1981c5e": "タスクを参照"
-          },
-          "FeatureWallSetupWorkflowActions": {},
-          "FeatureWallTourPanel": {},
-          "KeepAwakeCard": {},
-          "ReviewNotesAnimatedVisual": {},
-          "ReviewPRViewAnimatedVisual": {},
-          "ReviewShipAnimatedVisual": {},
-          "TasksAnimatedVisual": {
-            "72f9e516a3": "押す"
-          },
-          "WorkbenchAnimatedVisual": {},
-          "agent": {
-            "capability": {
-              "setup": {
-                "status": {}
-              }
-            }
-          },
-          "feature": {
-            "wall": {
-              "usage": {
-                "tracking": {}
-              }
-            }
-          },
-          "review": {
-            "animated": {
-              "visual": {
-                "shared": {},
-                "notes": {
-                  "styles": {}
-                },
-                "pr": {
-                  "view": {
-                    "styles": {}
-                  }
-                },
-                "ship": {
-                  "styles": {}
-                }
-              }
-            },
-            "notes": {
-              "diff": {
-                "rows": {}
-              }
-            }
-          },
-          "agents": {
-            "orchestration": {
-              "OrchestrationPage": {},
-              "types": {
-                "coordinatorInitial": "認証の書き換えを 2 つの PR に分割中…",
-                "codexInitial": "users テーブルの移行を記述中…",
-                "claudeInitial": "withSession ミドルウェアをスケッチ中…",
-                "codexBeat1": "email_verified カラムを追加中…",
-                "claudeBeat1": "withSession ミドルウェアを接続中…",
-                "coordinatorBeat1": "PR 1/2 準備完了",
-                "coordinatorBeat2": "PR 2/2 準備完了"
-              },
-              "steps": {
-                "name": "オーケストレーション",
-                "subtitle": "オーケストレーション",
-                "description": "Agent が Orcinus ワークスペースを管理・調整し、より大きなタスクを実行できるようにします。"
-              },
-              "StatusesPage": {},
-              "UsageAccountsCard": {},
-              "UsagePage": {},
-              "orchestration": {
-                "cards": {
-                  "da6f1f97c9": "実行中"
-                }
-              }
-            }
-          },
-          "ReviewAnimatedVisual": {
-            "8ab622e4d6": "メモ"
-          },
-          "FeatureWallBrowserAction": {},
-          "ConnectIntegrationsList": {},
-          "connect": {
-            "integration": {
-              "step": {}
-            }
-          },
-          "FullDiskAccessSetupPrompt": {}
-        },
-        "tips": {
-          "CliFeatureTipVisual": {},
-          "CliSkillSetupTerminal": {},
-          "CmdJPaletteTipDialog": {},
-          "FeatureTipActions": {},
-          "FeatureTipsModal": {},
-          "CmdJPaletteFeatureTipVisual": {
-            "d20ccf1e61": "完了",
-            "379d776971": "タイピング",
-            "0418f9becc": "開く"
-          }
-        }
-      },
       "error": {
         "boundaries": {
           "RecoverableRenderErrorBoundary": {
@@ -11858,59 +11662,6 @@
             "34a189ae0f": "アプリの残りの部分はまだ実行されています。このサーフェスを再試行するか、切り替えて戻ってきてください。",
             "ab855c11f4": "Orcinus のこの部分でエラーが発生しました。"
           }
-        }
-      },
-      "emulator": {
-        "pane": {
-          "EmulatorPane": {},
-          "emulator": {
-            "device": {
-              "frame": {}
-            },
-            "pane": {
-              "toolbar": {}
-            },
-            "screen": {
-              "stream": {
-                "content": {}
-              }
-            },
-            "unavailable": {
-              "pane": {}
-            }
-          },
-          "use": {
-            "emulator": {
-              "frame": {
-                "stream": {}
-              }
-            },
-            "mobile": {
-              "emulator": {
-                "agent": {
-                  "setup": {
-                    "state": {}
-                  }
-                },
-                "tab": {
-                  "intro": {
-                    "actions": {}
-                  }
-                }
-              }
-            }
-          },
-          "MobileEmulatorAgentSetupGuide": {},
-          "MobileEmulatorAgentSetupGuideSteps": {},
-          "MobileEmulatorTabIntroCallout": {},
-          "mobile": {
-            "emulator": {
-              "hidden": {
-                "toast": {}
-              }
-            }
-          },
-          "useEmulatorScreenKeyboard": {}
         }
       },
       "editor": {
@@ -12572,10 +12323,6 @@
           }
         }
       },
-      "dictation": {
-        "DictationController": {},
-        "DictationIndicator": {}
-      },
       "dashboard": {
         "DashboardAgentChildDisclosure": {
           "1b57ce9fa4": "{{value0}} {{value1}} 子 {{value2}}"
@@ -12591,37 +12338,6 @@
         "DashboardAgentRowMessage": {
           "0a01046763": "中断された",
           "1ec01cef03": "ユーザーによる中断"
-        }
-      },
-      "crash": {
-        "report": {
-          "CrashReportDialog": {
-            "56a3dfa283": "クラッシュレポートの送信に失敗しました。",
-            "b175e90213": "クラッシュレポートはありません。",
-            "b2e36f53a1": "クラッシュレポートを送信できませんでした。診断チケット {{value0}} はアップロードされましたが、関連付けられていません。"
-          },
-          "submit": {
-            "notice": {}
-          },
-          "copy": {}
-        }
-      },
-      "contextual": {
-        "tours": {
-          "ContextualTourControl": {
-            "02e8373219": "このテキストボックスを空のままにすると、名前が自動生成されます。"
-          },
-          "ContextualTourOverlaySurface": {
-            "ffa4412b66": "次"
-          },
-          "ContextualTourProgressDots": {},
-          "contextual": {
-            "tour": {
-              "overlay": {
-                "measurement": {}
-              }
-            }
-          }
         }
       },
       "cmd": {
@@ -13287,14 +13003,6 @@
           "fc0268e4ed": "Agent"
         }
       },
-      "activity": {
-        "ActivityPrototypePage": {
-          "state": {}
-        },
-        "ActivityScopeFilterControls": {},
-        "ActivityThreadRow": {},
-        "ActivityTitlebarControls": {}
-      },
       "confirmation": {
         "dialog": {
           "8490e5d36a": "確認する",
@@ -13489,9 +13197,6 @@
             "later": "後で"
           }
         }
-      },
-      "nativeChat": {
-        "contextMenu": {}
       },
       "orca": {
         "profiles": {
@@ -13696,27 +13401,6 @@
         }
       }
     },
-    "native-chat": {
-      "composer": {
-        "optionValue": {}
-      },
-      "tool": {
-        "running": "実行中…"
-      },
-      "status": {},
-      "toggle": {},
-      "state": {
-        "loading": {},
-        "error": {},
-        "notAgent": {},
-        "empty": {}
-      },
-      "copyMessage": {},
-      "question": {
-        "other": "他の…"
-      },
-      "approval": {}
-    },
     "tab": {
       "bar": {
         "SortableTabContextMenu": {
@@ -13776,25 +13460,6 @@
         "copySessionIdError": "セッション ID のコピーに失敗しました"
       }
     }
-  },
-  "dashboardPopout": {
-    "view": {},
-    "map": {
-      "host": {}
-    },
-    "placeholder": {},
-    "recoverableError": {},
-    "bucket": {},
-    "card": {
-      "time": {},
-      "review": {}
-    },
-    "terminal": {},
-    "filters": {
-      "review": {}
-    },
-    "search": {},
-    "settings": {}
   },
   "dashboard": {
     "sidebar": {

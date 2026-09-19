@@ -55,7 +55,6 @@ const store = {
   setTabBarOrder: vi.fn(),
   setAgentStatus: vi.fn(),
   seedNativeChatLaunchPrompt: vi.fn(),
-  seedNativeChatLaunchDraft: vi.fn(),
   markNativeChatLaunchPromptFailed: vi.fn()
 }
 

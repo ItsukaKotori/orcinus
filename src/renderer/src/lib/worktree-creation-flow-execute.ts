@@ -263,7 +263,6 @@ export async function executeWorktreeCreation(
     creationId,
     request: preparedRequest,
     worktreeId: worktree.id,
-    structuredLaunchAccepted: false,
     activation,
     primaryTabId,
     startupTerminalTabId: result.startupTerminal?.tabId,

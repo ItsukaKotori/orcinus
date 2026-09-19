@@ -68,8 +68,6 @@ export function createHarnessStoreState(
     editorFontZoomLevel: 0,
     settings: {
       terminalFontSize: 13,
-      experimentalNativeChat: false,
-      openAgentTabsInChatByDefault: false,
       activeRuntimeEnvironmentId: undefined
     },
     ...overrides

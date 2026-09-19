@@ -25,7 +25,6 @@ const mocks = vi.hoisted(() => ({
   resolveHostSessionTabIdForWebSessionTab: vi.fn(),
   trackTerminalPaneSplit: vi.fn(),
   deliverLaunchPromptToAgentTab: vi.fn(),
-  seedNativeChatLaunchDraftForAgentTab: vi.fn(),
   getRuntimeEnvironmentIdForWorktree: vi.fn(),
   hasMaterializedWebRuntimeBrowserPage: vi.fn(),
   recoverWebSessionTerminalOrphansBeforeApply: vi.fn(
@@ -65,7 +64,6 @@ vi.mock('@/lib/worktree-runtime-owner', () => ({
 
 vi.mock('@/lib/agent-launch-prompt-delivery', () => ({
   deliverLaunchPromptToAgentTab: mocks.deliverLaunchPromptToAgentTab,
-  seedNativeChatLaunchDraftForAgentTab: mocks.seedNativeChatLaunchDraftForAgentTab
 }))
 
 vi.mock('./web-runtime-browser-materialization', () => ({

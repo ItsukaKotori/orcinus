@@ -379,11 +379,6 @@
         "public": "Dirección pública",
         "custom": "Nombre de host personalizado"
       },
-      "ensure": {
-        "simulator": {
-          "tab": {}
-        }
-      },
       "fix": {
         "checks": {
           "agent": {
@@ -463,11 +458,6 @@
               "d62b12e98a": "Cursor",
               "173553f73a": "VS Code"
             }
-          }
-        },
-        "mobile": {
-          "emulator": {
-            "tab": {}
           }
         }
       },
@@ -678,11 +668,6 @@
       },
       "pluginCommandKeybindings": {
         "group": "Plugins"
-      },
-      "feedback": {
-        "image": {
-          "attachments": {}
-        }
       }
     },
     "hooks": {
@@ -823,7 +808,6 @@
         "9375620cc3": "Reinicia esta sesión para usar {{value0}}. Se mantiene en la cuenta anterior hasta que lo hagas.",
         "6133594b12": "Mantener cuenta anterior"
       },
-      "FirstLaunchBanner": {},
       "GitHubItemDialog": {
         "3ab6ac0fc8": "Previsualiza y edita el issue o pull request de GitHub seleccionado.",
         "3cd5ae5b7b": "No se cambiaron archivos.",
@@ -3065,7 +3049,6 @@
       },
       "status": {
         "bar": {
-          "PetStatusSegment": {},
           "PortsStatusSegment": {
             "4ebf90c12e": "No se detectaron puertos externos",
             "7dac3ecc9d": "Puertos externos",
@@ -4260,7 +4243,6 @@
         "ScrollToCurrentWorkspaceToolbarButton": {
           "23989bb663": "Mostrar espacio de trabajo activo"
         },
-        "SetupGuideSidebarEntry": {},
         "SetupScriptPromptCard": {
           "ff1e819a11": "Agregar un script de configuración",
           "70715947fb": "El script de configuración no puede estar vacío",
@@ -4291,8 +4273,6 @@
           "822ff300ad": "Descartar",
           "5bfd5c8779": "Descartar scripts de configuración"
         },
-        "SidebarFeedbackDialog": {},
-        "SidebarFilter": {},
         "SidebarHeader": {
           "projects": "Proyectos",
           "92154beb7e": "Nuevo espacio de trabajo",
@@ -4422,11 +4402,6 @@
           "4677394048": "Conectando…",
           "75ad429b5d": "Conectar"
         },
-        "WorkspaceKanbanCard": {},
-        "WorkspaceKanbanDrawerHeader": {},
-        "WorkspaceKanbanPinDropTarget": {},
-        "WorkspaceKanbanSettingsMenu": {},
-        "WorkspaceKanbanStatusLane": {},
         "WorkspaceStatusAppearancePopover": {
           "514be2f569": "Establecer color de {{value0}} en {{value1}}",
           "8be427206b": "Icono",
@@ -5010,7 +4985,6 @@
           "3c4d5e6f7a": "Administrar host…",
           "6e7f8a9b0c": "Quitar host…"
         },
-        "WorkspaceKanbanDrawer": {},
         "WorktreeParentPickerPopover": {
           "failedSetParent": "No se pudo establecer el worktree padre",
           "current": "Actual",
@@ -5108,9 +5082,7 @@
         "WorktreeDeveloperMenu": {
           "developer": "Developer",
           "parkTerminal": "Park terminal"
-        },
-        "SidebarFeedbackImageAttachments": {},
-        "WorkspaceKanbanSearchField": {}
+        }
       },
       "shared": {
         "useDaemonActions": {
@@ -5141,12 +5113,6 @@
           "d9657ac204": "Se solicitó el apagado de la sesión de terminal.",
           "e8f25bd903": "No se pudo completar la limpieza del terminal.",
           "a702d4196e": "Esto cierra cada pestaña de terminal en todos los espacios de trabajo y solicita el apagado de sus sesiones de terminal actuales. Cualquier trabajo de terminal no guardado se pierde. El daemon en sí continúa ejecutándose y se pueden abrir terminales nuevas inmediatamente. Esta acción no se puede deshacer."
-        }
-      },
-      "setup": {
-        "guide": {
-          "SetupGuideModal": {},
-          "SetupGuideProgressRing": {}
         }
       },
       "settings": {
@@ -5778,9 +5744,7 @@
             "description": "Previsualiza el diseño actualizado de tarjetas de worktree, la ubicación de metadatos, las opciones del menú de visualización de tarjetas y la presentación de estado.",
             "title": "Nuevo estilo de tarjeta",
             "toggleLabel": "Alternar nuevo estilo de tarjeta"
-          },
-          "nativeChat": {},
-          "agentDashboard": {}
+          }
         },
         "FloatingWorkspacePane": {
           "aeaf76fda9": "Barra de estado",
@@ -6139,9 +6103,6 @@
           "82436439eb": "Agregar configuración de MCP",
           "0a5c1ead54": "Crear configuración vacía"
         },
-        "MobileEmulatorAgentControlRow": {},
-        "MobileEmulatorExamples": {},
-        "MobileEmulatorSettingsPane": {},
         "MobileNetworkInterfaceSection": {
           "63d5e4ae1e": "Regenera el código QR y escanéalo desde la aplicación móvil de Orcinus.",
           "87985ba6f5": "En este menú de Interfaz de red, elija la dirección Tailscale, generalmente una IP 100.x.y.z.",
@@ -6228,8 +6189,6 @@
           "76e02467b8": "Cambiar archivo personalizado",
           "d3756cf5bc": "desactivado"
         },
-        "OpenAiTranscriptionKeyDialog": {},
-        "OpenAiTranscriptionSettingsRow": {},
         "OpenInMenuSetting": {
           "03b00b1f64": "Aplicación personalizada",
           "c1d817e027": "Añadida",
@@ -6257,7 +6216,6 @@
           "2aacdb0517": "Coordina agentes de programación en handoffs, handoffs de worktree y trabajo de agentes secundarios.",
           "191ac34567": "Orquestación de agentes"
         },
-        "OrchestrationSetupCard": {},
         "OrchestrationSkillAgentCoverage": {
           "6dec5ce2d2": "Cobertura de agentes",
           "ffe13e36fb": "Falta",
@@ -6272,8 +6230,6 @@
           "d3dc559225": "No se pudo copiar el comando de instalación.",
           "239bf9132b": "Comando de instalación copiado."
         },
-        "PrivacyDiagnosticBundleControls": {},
-        "PrivacyDiagnosticsSection": {},
         "PrivacyPane": {
           "afec8b03be": "ci"
         },
@@ -7289,10 +7245,6 @@
         "UIZoomControl": {
           "c2c64b24d0": "Restablecer"
         },
-        "VoicePane": {
-          "b6536a1d12": "extrayendo",
-          "901985625d": "alternar"
-        },
         "WorktreeSymlinksSection": {
           "1c1e35b219": "Quitar {{value0}}",
           "b814c618e2": "Rutas vinculadas",
@@ -7895,9 +7847,7 @@
               "title": "Nuevo estilo de tarjeta",
               "worktree": "worktree",
               "worktrees": "worktrees"
-            },
-            "nativeChat": {},
-            "agentDashboard": {}
+            }
           }
         },
         "floating": {
@@ -8213,9 +8163,6 @@
           }
         },
         "mobile": {
-          "emulator": {
-            "search": {}
-          },
           "pane": {
             "search": {
               "dbccde3a60": "cerrar",
@@ -8345,9 +8292,6 @@
             "e05ff36753": "Coordina varios agentes de codificación mediante mensajería, DAG de tareas, dispatch y controles de decisión.",
             "c34045764e": "Orquestación de agentes"
           }
-        },
-        "privacy": {
-          "search": {}
         },
         "quick": {
           "commands": {
@@ -8834,11 +8778,6 @@
             }
           }
         },
-        "voice": {
-          "pane": {
-            "search": {}
-          }
-        },
         "source": {
           "control": {
             "action": {
@@ -9125,7 +9064,6 @@
           "cancel": "Cancelar",
           "applyRuntimeChange": "Aplicar cambio de runtime"
         },
-        "PrivacyDiagnosticsRows": {},
         "ShortcutCommandBlock": {
           "eb72c52c28": "Pulsa un atajo o toca dos veces una tecla modificadora (p. ej., {{value0}}). Esc cancela.",
           "70b5d25583": "Atajo de {{value0}}",
@@ -9170,7 +9108,6 @@
           "distroRequired": "Elige una distro de WSL antes de que los proyectos puedan heredar WSL.",
           "wslDescription": "Detecta y lanza agentes en {{value0}} mediante WSL para proyectos que no anulan su runtime."
         },
-        "MobileEmulatorSdkStatus": {},
         "AppearanceAdvancedDisclosure": {
           "advanced": "Avanzado"
         },
@@ -11203,11 +11140,6 @@
           }
         }
       },
-      "pet": {
-        "pet": {
-          "models": {}
-        }
-      },
       "onboarding": {
         "AgentStep": {
           "e6a369bd04": "Agentes populares",
@@ -11723,134 +11655,6 @@
           }
         }
       },
-      "feature": {
-        "wall": {
-          "AgentCapabilitiesSetupAction": {},
-          "AiCommitPrSettingsCard": {},
-          "BrowserAnimatedVisual": {},
-          "BrowserUseSkillSetupCard": {},
-          "ComputerUseAnimatedVisual": {
-            "d8401975b1": "aprobado",
-            "f27676a92c": "estado:",
-            "6804cb356f": "clic enviado",
-            "1719b28a81": "encontrado \"Aprobar\"",
-            "79445f7512": "aprobar la nota en mi aplicación",
-            "99a8624bcb": ">",
-            "2adb561b44": "Sesión de Claude Code iniciada",
-            "94787f01f8": "Claude Code",
-            "9cddfe96b2": "app local",
-            "9634d870d1": "Aprobar",
-            "3cc2df3671": "Hecho",
-            "bdd5312213": "Pendiente",
-            "c11dda000b": "Aprobado"
-          },
-          "EditorAnimatedVisual": {},
-          "FeatureWallBody": {},
-          "FeatureWallModal": {},
-          "FeatureWallPreview": {},
-          "FeatureWallRail": {},
-          "FeatureWallSetupChecklist": {
-            "b1f1981c5e": "Ver tareas"
-          },
-          "FeatureWallSetupWorkflowActions": {},
-          "FeatureWallTourPanel": {},
-          "KeepAwakeCard": {},
-          "ReviewNotesAnimatedVisual": {},
-          "ReviewPRViewAnimatedVisual": {},
-          "ReviewShipAnimatedVisual": {},
-          "TasksAnimatedVisual": {
-            "72f9e516a3": "pulsando"
-          },
-          "WorkbenchAnimatedVisual": {},
-          "agent": {
-            "capability": {
-              "setup": {
-                "status": {}
-              }
-            }
-          },
-          "feature": {
-            "wall": {
-              "usage": {
-                "tracking": {}
-              }
-            }
-          },
-          "review": {
-            "animated": {
-              "visual": {
-                "shared": {},
-                "notes": {
-                  "styles": {}
-                },
-                "pr": {
-                  "view": {
-                    "styles": {}
-                  }
-                },
-                "ship": {
-                  "styles": {}
-                }
-              }
-            },
-            "notes": {
-              "diff": {
-                "rows": {}
-              }
-            }
-          },
-          "agents": {
-            "orchestration": {
-              "OrchestrationPage": {},
-              "types": {
-                "coordinatorInitial": "Dividiendo la reescritura de autenticación en 2 PRs…",
-                "codexInitial": "Escribiendo la migración de la tabla users…",
-                "claudeInitial": "Diseñando el middleware withSession…",
-                "codexBeat1": "Agregando la columna email_verified…",
-                "claudeBeat1": "Conectando el middleware withSession…",
-                "coordinatorBeat1": "PR 1/2 listo",
-                "coordinatorBeat2": "PR 2/2 listo"
-              },
-              "steps": {
-                "name": "Orquestación",
-                "subtitle": "Orquestación",
-                "description": "Permite que los agentes administren y coordinen los workspaces de Orcinus para ejecutar tareas más grandes."
-              },
-              "StatusesPage": {},
-              "UsageAccountsCard": {},
-              "UsagePage": {},
-              "orchestration": {
-                "cards": {
-                  "da6f1f97c9": "laboral"
-                }
-              }
-            }
-          },
-          "ReviewAnimatedVisual": {
-            "8ab622e4d6": "notas"
-          },
-          "FeatureWallBrowserAction": {},
-          "ConnectIntegrationsList": {},
-          "connect": {
-            "integration": {
-              "step": {}
-            }
-          },
-          "FullDiskAccessSetupPrompt": {}
-        },
-        "tips": {
-          "CliFeatureTipVisual": {},
-          "CliSkillSetupTerminal": {},
-          "CmdJPaletteTipDialog": {},
-          "FeatureTipActions": {},
-          "FeatureTipsModal": {},
-          "CmdJPaletteFeatureTipVisual": {
-            "d20ccf1e61": "hecho",
-            "379d776971": "escribiendo",
-            "0418f9becc": "abierto"
-          }
-        }
-      },
       "error": {
         "boundaries": {
           "RecoverableRenderErrorBoundary": {
@@ -11858,59 +11662,6 @@
             "34a189ae0f": "El resto de la app sigue ejecutándose. Reintenta esta vista o cambia a otra y vuelve.",
             "ab855c11f4": "Esta parte de Orcinus encontró un error."
           }
-        }
-      },
-      "emulator": {
-        "pane": {
-          "EmulatorPane": {},
-          "emulator": {
-            "device": {
-              "frame": {}
-            },
-            "pane": {
-              "toolbar": {}
-            },
-            "screen": {
-              "stream": {
-                "content": {}
-              }
-            },
-            "unavailable": {
-              "pane": {}
-            }
-          },
-          "use": {
-            "emulator": {
-              "frame": {
-                "stream": {}
-              }
-            },
-            "mobile": {
-              "emulator": {
-                "agent": {
-                  "setup": {
-                    "state": {}
-                  }
-                },
-                "tab": {
-                  "intro": {
-                    "actions": {}
-                  }
-                }
-              }
-            }
-          },
-          "MobileEmulatorAgentSetupGuide": {},
-          "MobileEmulatorAgentSetupGuideSteps": {},
-          "MobileEmulatorTabIntroCallout": {},
-          "mobile": {
-            "emulator": {
-              "hidden": {
-                "toast": {}
-              }
-            }
-          },
-          "useEmulatorScreenKeyboard": {}
         }
       },
       "editor": {
@@ -12572,10 +12323,6 @@
           }
         }
       },
-      "dictation": {
-        "DictationController": {},
-        "DictationIndicator": {}
-      },
       "dashboard": {
         "DashboardAgentChildDisclosure": {
           "1b57ce9fa4": "{{value0}} {{value1}} niño {{value2}}"
@@ -12591,37 +12338,6 @@
         "DashboardAgentRowMessage": {
           "0a01046763": "interrumpido",
           "1ec01cef03": "Interrumpido por el usuario"
-        }
-      },
-      "crash": {
-        "report": {
-          "CrashReportDialog": {
-            "56a3dfa283": "No se pudo enviar el informe de fallas.",
-            "b175e90213": "No hay ningún informe de fallo disponible.",
-            "b2e36f53a1": "No se pudo enviar el informe de fallo. Se subió el ticket de diagnóstico {{value0}}, pero no se vinculó."
-          },
-          "submit": {
-            "notice": {}
-          },
-          "copy": {}
-        }
-      },
-      "contextual": {
-        "tours": {
-          "ContextualTourControl": {
-            "02e8373219": "Genera automáticamente un nuevo nombre cuando deja este cuadro de texto vacío."
-          },
-          "ContextualTourOverlaySurface": {
-            "ffa4412b66": "próximo"
-          },
-          "ContextualTourProgressDots": {},
-          "contextual": {
-            "tour": {
-              "overlay": {
-                "measurement": {}
-              }
-            }
-          }
         }
       },
       "cmd": {
@@ -13287,14 +13003,6 @@
           "fc0268e4ed": "Agentes"
         }
       },
-      "activity": {
-        "ActivityPrototypePage": {
-          "state": {}
-        },
-        "ActivityScopeFilterControls": {},
-        "ActivityThreadRow": {},
-        "ActivityTitlebarControls": {}
-      },
       "confirmation": {
         "dialog": {
           "8490e5d36a": "Confirmar",
@@ -13490,9 +13198,6 @@
           }
         }
       },
-      "nativeChat": {
-        "contextMenu": {}
-      },
       "orca": {
         "profiles": {
           "signout": {
@@ -13661,27 +13366,6 @@
     }
   },
   "components": {
-    "native-chat": {
-      "composer": {
-        "optionValue": {}
-      },
-      "tool": {
-        "running": "Ejecutando…"
-      },
-      "status": {},
-      "toggle": {},
-      "state": {
-        "loading": {},
-        "error": {},
-        "notAgent": {},
-        "empty": {}
-      },
-      "copyMessage": {},
-      "question": {
-        "other": "Otro…"
-      },
-      "approval": {}
-    },
     "tab": {
       "bar": {
         "SortableTabContextMenu": {
@@ -13741,25 +13425,6 @@
         "copySessionIdError": "No se pudo copiar el ID de sesión"
       }
     }
-  },
-  "dashboardPopout": {
-    "view": {},
-    "map": {
-      "host": {}
-    },
-    "placeholder": {},
-    "recoverableError": {},
-    "bucket": {},
-    "card": {
-      "time": {},
-      "review": {}
-    },
-    "terminal": {},
-    "filters": {
-      "review": {}
-    },
-    "search": {},
-    "settings": {}
   },
   "dashboard": {
     "sidebar": {

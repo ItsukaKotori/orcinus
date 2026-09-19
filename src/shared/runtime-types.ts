@@ -87,7 +87,6 @@ export type {
   RuntimeFilePreviewResult,
   RuntimeFileReadChunkResult,
   RuntimeFileReadResult,
-  RuntimeNativeChatFileContext,
   RuntimeTerminalPathOpenTarget,
   RuntimeTerminalPathResolution
 } from './runtime-file-contracts'

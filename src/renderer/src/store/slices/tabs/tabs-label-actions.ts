@@ -1,12 +1,7 @@
-import type { TuiAgent } from '../../../../../shared/tui-agent'
 import type { TabsSlice, TabsSliceGet, TabsSliceSet } from './tabs-slice-contract'
 import { findTabAndWorktree, patchTab, updateGroup, dedupeTabOrder } from '../tab-group-state'
 import { applyTabOrderSortValues, partitionPinnedTabOrder } from './tabs-tab-order'
-import {
-  mirrorTabPinnedToHost,
-  mirrorTabViewModeToHost,
-  patchTerminalTabRow
-} from './tabs-host-mirroring'
+import { mirrorTabPinnedToHost, patchTerminalTabRow } from './tabs-host-mirroring'
 
 export function createTabsLabelActions(
   set: TabsSliceSet,
@@ -15,8 +10,6 @@ export function createTabsLabelActions(
   TabsSlice,
   | 'reorderUnifiedTabs'
   | 'setTabLabel'
-  | 'setTabViewMode'
-  | 'toggleTabViewMode'
   | 'setTabCustomLabel'
   | 'setUnifiedTabColor'
   | 'pinTab'
@@ -58,53 +51,6 @@ export function createTabsLabelActions(
 
     setTabLabel: (tabId, label) => {
       set((state) => patchTab(state.unifiedTabsByWorktree, tabId, { label }) ?? {})
-    },
-
-    setTabViewMode: (tabId, mode) => {
-      set((state) => ({
-        ...patchTab(state.unifiedTabsByWorktree, tabId, { viewMode: mode }),
-        // Why the row too: viewMode is declared on both types and host-sync
-        // already writes it to the row. Only these local toggles skipped it, so
-        // readers had to OR the two indices to find out who owns the surface.
-        ...patchTerminalTabRow(state.tabsByWorktree, tabId, { viewMode: mode })
-      }))
-      mirrorTabViewModeToHost(get(), tabId, mode)
-    },
-
-    toggleTabViewMode: (tabId) => {
-      let toggled: {
-        from: 'terminal' | 'chat'
-        to: 'terminal' | 'chat'
-        agent: TuiAgent | null
-      } | null = null
-      set((state) => {
-        const found = findTabAndWorktree(state.unifiedTabsByWorktree, tabId)
-        if (!found) {
-          return {}
-        }
-        // Why: viewMode defaults to 'terminal' for legacy/missing, so the first toggle flips to 'chat'.
-        const fromMode: 'terminal' | 'chat' = found.tab.viewMode === 'chat' ? 'chat' : 'terminal'
-        const nextMode = fromMode === 'chat' ? 'terminal' : 'chat'
-        // Why: launchAgent lives on the legacy terminal tab (keyed by entityId); resolve it here so toggle telemetry can attribute by agent.
-        const agent =
-          (state.tabsByWorktree[found.worktreeId] ?? []).find(
-            (terminal) => terminal.id === found.tab.entityId
-          )?.launchAgent ?? null
-        toggled = { from: fromMode, to: nextMode, agent }
-        return {
-          ...patchTab(state.unifiedTabsByWorktree, tabId, { viewMode: nextMode }),
-          ...patchTerminalTabRow(state.tabsByWorktree, tabId, { viewMode: nextMode })
-        }
-      })
-      // Why: emit after the state write so the event reflects the committed mode.
-      const committed = toggled as {
-        from: 'terminal' | 'chat'
-        to: 'terminal' | 'chat'
-        agent: TuiAgent | null
-      } | null
-      if (committed) {
-        mirrorTabViewModeToHost(get(), tabId, committed.to)
-      }
     },
 
     setTabCustomLabel: (tabId, label, opts) => {

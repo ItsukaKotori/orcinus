@@ -222,7 +222,6 @@ export function useFullCreationExecution(input: FullCreationExecutionInput) {
         persistDraft,
         clearNewWorkspaceDraft,
         onCreated,
-        structuredLaunchAccepted: false,
         worktreeId: worktree.id,
         activation,
         queueWorkspaceActivationTerminalFocus

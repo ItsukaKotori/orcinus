@@ -113,8 +113,6 @@ export type TerminalCreateSurfacingStore = {
   clearTabPtyId: SpyMock
   settings: {
     terminalFontSize: number
-    experimentalNativeChat: boolean
-    openAgentTabsInChatByDefault: boolean
     activeRuntimeEnvironmentId: string | undefined
   }
 }
