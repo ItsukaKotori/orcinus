@@ -5,17 +5,9 @@ import { getGeneralPaneSearchEntries } from '@/components/settings/general-searc
 import { getIntegrationsPaneSearchEntries } from '@/components/settings/integrations-search'
 import { getLinearAgentSkillPaneSearchEntries } from '@/components/settings/linear-agent-skill-search'
 import { getOrchestrationPaneSearchEntries } from '@/components/settings/orchestration-search'
-import { getVoicePaneSearchEntries } from '@/components/settings/voice-pane-search'
 import { translate } from '@/i18n/i18n'
 import type { SettingsNavSection } from '@/lib/settings-navigation-types'
-import {
-  Blocks,
-  Bot,
-  Mic,
-  MousePointerClick,
-  Network,
-  SlidersHorizontal
-} from 'lucide-react'
+import { Blocks, Bot, MousePointerClick, Network, SlidersHorizontal } from 'lucide-react'
 import type { SettingsNavigationBuildOptions } from './settings-navigation-build-options'
 
 export function buildCapabilitySettingsSections({
@@ -80,17 +72,6 @@ export function buildCapabilitySettingsSections({
             ),
             icon: MousePointerClick,
             searchEntries: getComputerUsePaneSearchEntries(),
-            group: 'capabilities'
-          },
-          {
-            id: 'voice',
-            title: translate('auto.hooks.useSettingsNavigationMetadata.6a50cdcd7c', 'Voice'),
-            description: translate(
-              'auto.hooks.useSettingsNavigationMetadata.8ac3de82f5',
-              'Local speech-to-text dictation with on-device models.'
-            ),
-            icon: Mic,
-            searchEntries: getVoicePaneSearchEntries(),
             group: 'capabilities'
           }
         ]

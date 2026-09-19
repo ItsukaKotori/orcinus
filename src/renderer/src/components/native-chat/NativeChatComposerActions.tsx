@@ -1,4 +1,4 @@
-import { ArrowUp, Mic, Plus, Square } from 'lucide-react'
+import { ArrowUp, Plus, Square } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { translate } from '@/i18n/i18n'
@@ -11,15 +11,9 @@ import type { NativeChatOptionPickerRequest } from './native-chat-composer-types
 
 export type NativeChatComposerActionsProps = {
   attachDisabled: boolean
-  dictationDisabled: boolean
   sendDisabled: boolean
   isWorking: boolean
-  isDictating: boolean
-  isDictationHoldMode: boolean
   onAttach: () => void
-  onDictationToggle: () => void
-  onDictationHoldStart: () => void
-  onDictationHoldEnd: () => void
   onSend: () => void
   onStop?: () => void
   sessionOptionsSurface: SessionOptionsSurface | null
@@ -29,15 +23,9 @@ export type NativeChatComposerActionsProps = {
 
 export function NativeChatComposerActions({
   attachDisabled,
-  dictationDisabled,
   sendDisabled,
   isWorking,
-  isDictating,
-  isDictationHoldMode,
   onAttach,
-  onDictationToggle,
-  onDictationHoldStart,
-  onDictationHoldEnd,
   onSend,
   onStop,
   sessionOptionsSurface,
@@ -56,9 +44,6 @@ export function NativeChatComposerActions({
       onSend()
     }
   }
-  const dictationLabel = isDictating
-    ? translate('components.native-chat.composer.stopDictation', 'Stop dictation')
-    : translate('components.native-chat.composer.startDictation', 'Start dictation')
   return (
     <div className="flex w-full items-center justify-between gap-2">
       <div className="flex min-w-0 items-center gap-0.5">
@@ -82,58 +67,13 @@ export function NativeChatComposerActions({
         </Tooltip>
       </div>
       <div className="ml-auto flex items-center gap-1.5">
-        {/* Why: keep session controls beside the actions they affect; the
-        model trigger is ordered last so it sits directly next to dictation. */}
+        {/* Why: keep session controls beside the actions they affect. */}
         <NativeChatSessionOptionPickers
           surface={sessionOptionsSurface}
           snapshot={sessionOptionsSnapshot}
           isWorking={isWorking}
           pickerRequest={sessionOptionsPickerRequest}
         />
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant={isDictating ? 'secondary' : 'ghost'}
-              size="icon-sm"
-              aria-label={dictationLabel}
-              disabled={dictationDisabled}
-              onClick={isDictationHoldMode ? undefined : onDictationToggle}
-              onPointerDown={(event) => {
-                if (!isDictationHoldMode || dictationDisabled) {
-                  return
-                }
-                event.preventDefault()
-                onDictationHoldStart()
-              }}
-              onPointerUp={() => {
-                if (isDictationHoldMode && !dictationDisabled) {
-                  onDictationHoldEnd()
-                }
-              }}
-              onPointerCancel={() => {
-                if (isDictationHoldMode && !dictationDisabled) {
-                  onDictationHoldEnd()
-                }
-              }}
-              onPointerLeave={(event) => {
-                if (isDictationHoldMode && event.buttons === 1 && !dictationDisabled) {
-                  onDictationHoldEnd()
-                }
-              }}
-              className="pointer-coarse:size-11"
-            >
-              {isDictating ? (
-                <Square className="size-3.5 fill-current" />
-              ) : (
-                <Mic className="size-4" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top" sideOffset={4}>
-            {dictationLabel}
-          </TooltipContent>
-        </Tooltip>
         <Button
           type="button"
           data-native-chat-critical-action={isWorking ? 'stop' : undefined}

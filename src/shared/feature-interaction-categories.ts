@@ -72,7 +72,6 @@ export const FEATURE_INTERACTION_CATEGORY_BY_ID = {
   'terminal-tabs': 'terminal',
   'tab-splits': 'terminal',
   'usage-tracking': 'settings',
-  'voice-dictation': 'voice',
   'workspace-cleanup': 'workspace'
 } as const satisfies Record<FeatureInteractionId, FeatureInteractionCategory>
 

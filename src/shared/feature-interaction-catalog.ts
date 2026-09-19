@@ -51,7 +51,6 @@ export type FeatureInteractionId =
   | 'terminal-tabs'
   | 'tab-splits'
   | 'usage-tracking'
-  | 'voice-dictation'
   | 'workspace-cleanup'
 
 export type FeatureInteractionDefinition = {
@@ -160,7 +159,6 @@ export const FEATURE_INTERACTIONS = [
     id: 'usage-tracking',
     interaction: 'Stats & Usage or provider usage details opened or configured'
   },
-  { id: 'voice-dictation', interaction: 'dictation session started' },
   {
     id: 'workspace-cleanup',
     interaction: 'workspace disk space scan, review, or cleanup action used'

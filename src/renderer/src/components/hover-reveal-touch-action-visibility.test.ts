@@ -28,7 +28,6 @@ const HOVER_REVEAL_FILES = [
   resolve(__dirname, 'settings/MobilePairingQrSection.tsx'),
   resolve(__dirname, 'settings/ShortcutBindingSubRow.tsx'),
   resolve(__dirname, 'settings/ShortcutCommandBlock.tsx'),
-  resolve(__dirname, 'settings/VoiceSpeechModelSection.tsx'),
   resolve(__dirname, 'sidebar/HostSectionHeaderMenu.tsx'),
   resolve(__dirname, 'sidebar/PendingWorktreeRow.tsx'),
   resolve(__dirname, 'sidebar/WorkspaceKanbanStatusLane.tsx'),

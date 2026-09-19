@@ -15,10 +15,7 @@ import { ZoomOverlay } from '../components/ZoomOverlay'
 import { useAppStore } from '../store'
 import type { UpdateStatus } from '../../../shared/update-status-types'
 import { useLazyModalMounts } from './use-lazy-modal-mounts'
-import {
-  selectAppRootSurfaceTelemetryOptedIn,
-  selectAppRootSurfaceVoiceEnabled
-} from './app-root-surface-settings'
+import { selectAppRootSurfaceTelemetryOptedIn } from './app-root-surface-settings'
 import type { FloatingWorkspacePanelState } from './use-floating-workspace-panel'
 import type { OnboardingGate } from './use-onboarding'
 
@@ -39,11 +36,6 @@ const ProjectAddedDialog = lazy(() => import('../components/sidebar/ProjectAdded
 const DeleteWorktreeDialog = lazy(() => import('../components/sidebar/DeleteWorktreeDialog'))
 const PreservedBranchBatchReviewModal = lazy(
   () => import('../components/sidebar/PreservedBranchBatchReviewModal')
-)
-const DictationController = lazy(() =>
-  import('../components/dictation/DictationController').then((module) => ({
-    default: module.DictationController
-  }))
 )
 const UpdateCard = lazy(() =>
   import('../components/UpdateCard').then((module) => ({ default: module.UpdateCard }))
@@ -109,14 +101,11 @@ export function AppRootSurfaces(props: {
   const activeModal = useAppStore((s) => s.activeModal)
   // Keep this always-mounted surface subscribed only to the settings fields it reads. A
   // settings object replacement for an unrelated preference should not rerender every overlay.
-  const voiceEnabled = useAppStore(selectAppRootSurfaceVoiceEnabled)
   const telemetryOptedIn = useAppStore(selectAppRootSurfaceTelemetryOptedIn)
   const statusBarVisible = useAppStore((s) => s.statusBarVisible)
-  const dictationState = useAppStore((s) => s.dictationState)
   const updateStatus = useAppStore((s) => s.updateStatus)
 
   const shouldMountUpdateCard = shouldMountUpdateCardForStatus(updateStatus)
-  const shouldMountDictationController = voiceEnabled || dictationState !== 'idle'
 
   return (
     <>
@@ -285,13 +274,6 @@ export function AppRootSurfaces(props: {
               onOnboardingChange={onboardingGate.setOnboarding}
             />
           </RecoverableRenderErrorBoundary>
-        </Suspense>
-      ) : null}
-      {shouldMountDictationController ? (
-        <Suspense fallback={null}>
-          <OverlayBoundary boundaryId="overlay.dictation" resetKey={activeView}>
-            <DictationController />
-          </OverlayBoundary>
         </Suspense>
       ) : null}
       <OverlayBoundary boundaryId="overlay.recent-tab-switcher" resetKey={activeView}>

@@ -50,7 +50,6 @@ import type { ProjectGroupsApi, ProjectsApi, RepositoryApi } from './api/reposit
 import type { RuntimeApi } from './api/runtime-api'
 import type { KeybindingsApi, SettingsApi } from './api/settings-api'
 import type { ShellApi } from './api/shell-api'
-import type { SpeechApi } from './api/speech-api'
 import type { SshApi } from './api/ssh-api'
 import type { DiagnosticsApi, MemoryApi, StatsApi, TelemetryApi } from './api/telemetry-api'
 import type { UiCommandEventApi } from './api/ui-command-event-api'
@@ -146,7 +145,6 @@ export type PreloadApi = {
   plugins: PluginsApi
   agentStatus: AgentStatusApi
   mobile: MobileApi
-  speech: SpeechApi
 }
 
 export type { ClaudeUsageApi, CodexUsageApi, OpenCodeUsageApi } from './api/agent-usage-api'

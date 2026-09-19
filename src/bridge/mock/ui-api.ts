@@ -68,7 +68,6 @@ export function createUiApi(): PreloadApi['ui'] {
     onCtrlTabKeyDown: noopUnsubscribe,
     onCtrlTabKeyUp: noopUnsubscribe,
     onToggleStatusBar: noopUnsubscribe,
-    onDictationKeyDown: noopUnsubscribe,
     onExportPdfRequested: noopUnsubscribe,
     onAppMenuPaste: noopUnsubscribe,
     onAppMenuSelectionAction: noopUnsubscribe,

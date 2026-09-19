@@ -79,7 +79,6 @@ const SETTINGS_ALIASES: Record<string, string[]> = {
   integrations: ['gitlab', 'github', 'linear'],
   notifications: ['notification settings'],
   mobile: ['phone'],
-  voice: ['dictation'],
   'computer-use': ['computer use'],
   stats: ['usage'],
   privacy: ['telemetry']

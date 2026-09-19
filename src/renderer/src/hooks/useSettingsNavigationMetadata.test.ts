@@ -33,11 +33,10 @@ function ids(
 
 describe('settings navigation metadata', () => {
   it('puts AI capability panes at the top on desktop', () => {
-    expect(ids().slice(0, 7)).toEqual([
+    expect(ids().slice(0, 6)).toEqual([
       'agents',
       'orchestration',
       'computer-use',
-      'voice',
       'general',
       'integrations',
       'automations'
@@ -127,7 +126,6 @@ describe('settings navigation metadata', () => {
     expect(webIds).not.toContain('ssh')
     expect(webIds).not.toContain('mobile')
     expect(webIds).not.toContain('computer-use')
-    expect(webIds).not.toContain('voice')
     expect(webIds).not.toContain('advanced')
     expect(webIds).not.toContain('servers')
     expect(webIds).toContain('repo-repo-1')
@@ -175,7 +173,6 @@ describe('settings navigation metadata', () => {
     })
 
     expect(sections.find((section) => section.id === 'computer-use')?.badge).toBeUndefined()
-    expect(sections.find((section) => section.id === 'voice')?.badge).toBeUndefined()
   })
 
   it('places Plugins under Experimental on desktop and omits it on the web', () => {

@@ -1,6 +1,5 @@
 import type { GlobalSettings } from './global-settings-types'
 import type { NotificationSettings } from './notification-settings-types'
-import type { VoiceSettings } from './speech-types'
 import { DEFAULT_TERMINAL_FONT_WEIGHT, DEFAULT_TERMINAL_FONT_WEIGHT_BOLD } from './terminal-fonts'
 import { getDefaultTerminalQuickCommands } from './terminal-quick-commands'
 import { TASK_PROVIDERS } from './task-providers'
@@ -27,7 +26,6 @@ export function buildDefaultSettings(args: {
   terminalInactivePaneOpacity: number
   terminalRightClickToPaste: boolean
   notifications: NotificationSettings
-  voice: VoiceSettings
 }): GlobalSettings {
   return {
     workspaceDir: args.workspaceDir,
@@ -252,7 +250,6 @@ export function buildDefaultSettings(args: {
       customPrompt: '',
       customAgentCommand: ''
     },
-    sourceControlAi: getDefaultSourceControlAiSettings(),
-    voice: args.voice
+    sourceControlAi: getDefaultSourceControlAiSettings()
   }
 }

@@ -123,8 +123,6 @@ type RuntimeTypeInventory = [
   Runtime.RuntimeRepoList,
   Runtime.RuntimeRepoSearchRefs,
   Runtime.RuntimeSessionTabCloseReason,
-  Runtime.RuntimeSpeechModelSummary,
-  Runtime.RuntimeSpeechSetupState,
   Runtime.RuntimeStatus,
   Runtime.RuntimeSyncedLeaf,
   Runtime.RuntimeSyncedTab,

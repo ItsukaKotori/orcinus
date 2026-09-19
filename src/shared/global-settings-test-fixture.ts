@@ -1,5 +1,5 @@
 import type { GlobalSettings } from './global-settings-types'
-import { getDefaultNotificationSettings, getDefaultVoiceSettings } from './constants'
+import { getDefaultNotificationSettings } from './constants'
 import { buildDefaultSettings } from './default-global-settings'
 
 // Why: tests need a complete GlobalSettings without hand-copying every field, so
@@ -18,8 +18,7 @@ export function createGlobalSettingsFixture(
       terminalFontFamily: 'JetBrains Mono',
       terminalInactivePaneOpacity: 0.5,
       terminalRightClickToPaste: false,
-      notifications: getDefaultNotificationSettings(),
-      voice: getDefaultVoiceSettings()
+      notifications: getDefaultNotificationSettings()
     }),
     ...overrides
   }

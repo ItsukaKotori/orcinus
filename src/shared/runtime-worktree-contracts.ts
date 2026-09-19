@@ -78,23 +78,6 @@ export type RuntimeGitLocalBranches = {
   branches: string[]
 }
 
-export type RuntimeSpeechModelSummary = {
-  id: string
-  label: string
-  provider: 'local' | 'openai'
-  sizeBytes: number | null
-  recommended: boolean
-  status: 'ready' | 'not-downloaded' | 'downloading' | 'extracting' | 'error'
-  progress: number | null
-}
-
-export type RuntimeSpeechSetupState = {
-  enabled: boolean
-  selectedModelId: string
-  dictationMode: 'toggle' | 'hold'
-  models: RuntimeSpeechModelSummary[]
-}
-
 export type RuntimeGitCheckoutResult = {
   ok: true
   branch: string

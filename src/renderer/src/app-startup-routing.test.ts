@@ -310,14 +310,12 @@ describe('renderer startup runtime routing', () => {
     )
   })
 
-  it('loads dictation only when voice is enabled or a session is active', () => {
+  it('no longer mounts the removed dictation controller', () => {
     const source = readSource(ROOT_SURFACES_PATH)
 
-    expect(source).toContain("import('../components/dictation/DictationController').then")
-    expect(source).not.toContain("from '../components/dictation/DictationController'")
-    expect(source).toContain('useAppStore(selectAppRootSurfaceVoiceEnabled)')
-    expect(source).toContain("voiceEnabled || dictationState !== 'idle'")
-    expect(source).toContain('shouldMountDictationController ?')
+    expect(source).not.toContain('DictationController')
+    expect(source).not.toContain('selectAppRootSurfaceVoiceEnabled')
+    expect(source).not.toContain('dictationState')
   })
 
   it('no longer mounts the removed SSH passphrase dialog', () => {

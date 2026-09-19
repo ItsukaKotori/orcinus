@@ -56,8 +56,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('../../store', () => {
   const state = {
-    dictationState: 'idle',
-    settings: { voice: { enabled: false }, nativeChatSessionOptions: {} },
+    settings: { nativeChatSessionOptions: {} },
     updateSettings: vi.fn(),
     clearNativeChatLaunchDraft: mocks.clearNativeChatLaunchDraft,
     markNativeChatLaunchDraftAdopted: mocks.markNativeChatLaunchDraftAdopted
@@ -137,9 +136,6 @@ vi.mock('./use-native-chat-external-attachments', () => ({
     attachExternalPaths: vi.fn(),
     resolveAttachmentOwner: vi.fn()
   })
-}))
-vi.mock('../dictation/dictation-control-events', () => ({
-  dispatchDictationControl: vi.fn()
 }))
 vi.mock('./use-native-chat-composer-keydown', () => ({
   useNativeChatComposerKeyDown: (args: { isComposing: () => boolean }) => {
