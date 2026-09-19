@@ -65,9 +65,6 @@ vi.mock('./terminal-parked-tab-watchers', () => ({
   syncParkedTerminalTabWatchers: vi.fn()
 }))
 
-vi.mock('@/lib/crash-breadcrumb-recorder', () => ({
-  recordRendererCrashBreadcrumb: vi.fn()
-}))
 
 import {
   TERMINAL_TAB_COLD_PARK_DELAY_MS,

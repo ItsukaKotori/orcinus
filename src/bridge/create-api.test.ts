@@ -10,11 +10,6 @@ describe('createAdeApi', () => {
     expect(entries.some((entry) => entry.scope === 'project')).toBe(true)
   })
 
-  it('crashReports breadcrumbs are fire-and-forget, matching the preload contract', () => {
-    const api = createAdeApi()
-    expect(api.crashReports.recordBreadcrumb({ name: 'create-api-test' })).toBeUndefined()
-  })
-
   it('platform.get returns platform info synchronously, not a rejection promise', () => {
     const api = createAdeApi()
     const info = api.platform.get()

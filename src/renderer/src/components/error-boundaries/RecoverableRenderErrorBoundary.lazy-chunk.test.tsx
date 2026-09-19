@@ -7,12 +7,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { lazyWithRetry } from '@/lib/lazy-with-retry'
 import { RecoverableRenderErrorBoundary } from './RecoverableRenderErrorBoundary'
 
-const reportCrashMock = vi.hoisted(() => vi.fn())
-
-vi.mock('@/lib/react-error-boundary-reporting', () => ({
-  reportReactErrorBoundaryCrash: reportCrashMock
-}))
-
 const RELOAD_GUARD_KEY = 'orca:lazy-chunk-reload-attempted'
 const LANDED_RELOAD_GUARD_VALUE = 'doc-before-the-reload'
 
@@ -26,7 +20,7 @@ function createContainer(): { container: HTMLDivElement; root: Root } {
 
 function BoundaryHarness({ children }: { children: ReactNode }): ReactElement {
   return (
-    <RecoverableRenderErrorBoundary boundaryId="page.automations" surface="page">
+    <RecoverableRenderErrorBoundary boundaryId="page.automations">
       <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
     </RecoverableRenderErrorBoundary>
   )
@@ -44,7 +38,6 @@ describe('RecoverableRenderErrorBoundary lazy chunk containment', () => {
   let consoleError: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
-    reportCrashMock.mockReset()
     window.sessionStorage.clear()
     consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
   })
@@ -60,7 +53,7 @@ describe('RecoverableRenderErrorBoundary lazy chunk containment', () => {
     consoleError.mockRestore()
   })
 
-  it('renders the fallback without reporting after guarded dynamic import exhaustion', async () => {
+  it('renders the fallback after guarded dynamic import exhaustion', async () => {
     window.sessionStorage.setItem(RELOAD_GUARD_KEY, LANDED_RELOAD_GUARD_VALUE)
     const LazyRejectingImport = lazyWithRetry(
       () =>
@@ -82,13 +75,11 @@ describe('RecoverableRenderErrorBoundary lazy chunk containment', () => {
     await flushReactWork()
 
     expect(container?.querySelector('[role="alert"]')).not.toBeNull()
-    expect(reportCrashMock).not.toHaveBeenCalled()
   })
 
-  it('still reports ordinary render errors', async () => {
-    const error = new Error('ordinary render failure')
+  it('contains ordinary render errors behind the fallback', async () => {
     function BrokenSurface(): ReactElement {
-      throw error
+      throw new Error('ordinary render failure')
     }
     ;({ container, root } = createContainer())
 
@@ -101,13 +92,5 @@ describe('RecoverableRenderErrorBoundary lazy chunk containment', () => {
     })
 
     expect(container?.querySelector('[role="alert"]')).not.toBeNull()
-    expect(reportCrashMock).toHaveBeenCalledTimes(1)
-    expect(reportCrashMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        boundaryId: 'page.automations',
-        surface: 'page',
-        error
-      })
-    )
   })
 })

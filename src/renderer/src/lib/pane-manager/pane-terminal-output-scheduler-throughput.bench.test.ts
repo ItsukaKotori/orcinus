@@ -16,9 +16,6 @@ vi.mock('@/lib/e2e-config', () => ({
   e2eConfig: { exposeStore: false }
 }))
 
-vi.mock('@/lib/crash-breadcrumb-recorder', () => ({
-  recordRendererCrashBreadcrumb: vi.fn()
-}))
 
 const TOTAL_CHARS = 4 * 1024 * 1024
 const FEED_CHUNK_CHARS = 8 * 1024

@@ -4,18 +4,15 @@ import { lazyWithRetry as lazy } from '@/lib/lazy-with-retry'
 import { translate } from '@/i18n/i18n'
 import { RecoverableRenderErrorBoundary } from '../components/error-boundaries/RecoverableRenderErrorBoundary'
 import NewWorkspaceComposerModal from '../components/NewWorkspaceComposerModal'
-import { CrashReportDialog } from '../components/crash-report/CrashReportDialog'
 import { MarkdownTemplatePicker } from '../components/editor/MarkdownTemplatePicker'
 import RecentTabSwitcher from '../components/tab-bar/RecentTabSwitcher'
 import { StarNagCard } from '../components/StarNagCard'
 import { StarNagAgentValueMomentObserver } from '../components/star-nag/StarNagAgentValueMomentObserver'
 import { StarNagToastHost } from '../components/star-nag/StarNagToastHost'
-import { TelemetryFirstLaunchSurface } from '../components/TelemetryFirstLaunchSurface'
 import { ZoomOverlay } from '../components/ZoomOverlay'
 import { useAppStore } from '../store'
 import type { UpdateStatus } from '../../../shared/update-status-types'
 import { useLazyModalMounts } from './use-lazy-modal-mounts'
-import { selectAppRootSurfaceTelemetryOptedIn } from './app-root-surface-settings'
 import type { FloatingWorkspacePanelState } from './use-floating-workspace-panel'
 import type { OnboardingGate } from './use-onboarding'
 
@@ -63,7 +60,7 @@ type BoundaryProps = {
 
 function ModalBoundary({ children, ...props }: BoundaryProps): React.JSX.Element {
   return (
-    <RecoverableRenderErrorBoundary surface="modal" compact {...props}>
+    <RecoverableRenderErrorBoundary compact {...props}>
       {children}
     </RecoverableRenderErrorBoundary>
   )
@@ -71,7 +68,7 @@ function ModalBoundary({ children, ...props }: BoundaryProps): React.JSX.Element
 
 function OverlayBoundary({ children, ...props }: BoundaryProps): React.JSX.Element {
   return (
-    <RecoverableRenderErrorBoundary surface="overlay" compact {...props}>
+    <RecoverableRenderErrorBoundary compact {...props}>
       {children}
     </RecoverableRenderErrorBoundary>
   )
@@ -99,9 +96,6 @@ export function AppRootSurfaces(props: {
   const { mountedLazyModalIds, shouldMountAddRepoDialog } = useLazyModalMounts()
   const activeView = useAppStore((s) => s.activeView)
   const activeModal = useAppStore((s) => s.activeModal)
-  // Keep this always-mounted surface subscribed only to the settings fields it reads. A
-  // settings object replacement for an unrelated preference should not rerender every overlay.
-  const telemetryOptedIn = useAppStore(selectAppRootSurfaceTelemetryOptedIn)
   const statusBarVisible = useAppStore((s) => s.statusBarVisible)
   const updateStatus = useAppStore((s) => s.updateStatus)
 
@@ -222,10 +216,6 @@ export function AppRootSurfaces(props: {
         <StarNagToastHost />
       </OverlayBoundary>
       <StarNagAgentValueMomentObserver />
-      {/* Why: mount at App root to render once per session; internal cohort gate limits it to pre-telemetry users — see telemetry-plan.md §First-launch experience. */}
-      <OverlayBoundary boundaryId="overlay.telemetry-first-launch" resetKey={telemetryOptedIn}>
-        <TelemetryFirstLaunchSurface />
-      </OverlayBoundary>
       <OverlayBoundary boundaryId="overlay.zoom" resetKey={activeView}>
         <ZoomOverlay />
       </OverlayBoundary>
@@ -244,25 +234,10 @@ export function AppRootSurfaces(props: {
       <ModalBoundary boundaryId="modal.markdown-template-picker" resetKey={activeModal}>
         <MarkdownTemplatePicker />
       </ModalBoundary>
-      <RecoverableRenderErrorBoundary
-        boundaryId="modal.crash-report"
-        surface="modal"
-        reportAsCrash={false}
-        resetKey={activeModal}
-        compact
-        title={translate('auto.App.722d03aa62', 'The crash report dialog hit an error.')}
-        description={translate(
-          'auto.App.acd66311dc',
-          'Use the Help menu after retrying if you still need diagnostics.'
-        )}
-      >
-        <CrashReportDialog />
-      </RecoverableRenderErrorBoundary>
       {onboardingGate.onboarding && onboardingGate.shouldRender ? (
         <Suspense fallback={null}>
           <RecoverableRenderErrorBoundary
             boundaryId="modal.onboarding"
-            surface="modal"
             title={translate('auto.App.f02d37278a', 'Onboarding hit an error.')}
             description={translate(
               'auto.App.221a95ba38',

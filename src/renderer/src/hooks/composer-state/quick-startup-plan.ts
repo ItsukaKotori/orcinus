@@ -9,7 +9,7 @@ import {
   resolveTuiAgentLaunchArgs,
   resolveTuiAgentLaunchEnv
 } from '../../../../shared/tui-agent-launch-defaults'
-import { tuiAgentToAgentKind } from '@/lib/telemetry'
+import { tuiAgentToAgentKind } from '../../../../shared/agent-kind'
 
 export type QuickComposerStartupInput = {
   agent: TuiAgent | null

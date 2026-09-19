@@ -159,7 +159,6 @@ describe('AddProjectFromFolderDialog', () => {
     })
     expect(mocks.finishProjectAddWithDefaultCheckout).toHaveBeenCalledWith({
       repoId: repo.id,
-      source: 'local_folder_picker',
       selectedPath: '/projects/child',
       executionHostId: 'local',
       closeModal: mocks.state.closeModal,
@@ -211,7 +210,6 @@ describe('AddProjectFromFolderDialog', () => {
     })
     expect(mocks.finishProjectAddWithDefaultCheckout).toHaveBeenCalledWith({
       repoId: repo.id,
-      source: 'runtime_server_path',
       selectedPath: '/srv/projects/child',
       executionHostId: 'runtime:runtime-a',
       closeModal: mocks.state.closeModal,
@@ -242,7 +240,6 @@ describe('AddProjectFromFolderDialog', () => {
     })
     expect(mocks.finishProjectAddWithDefaultCheckout).toHaveBeenCalledWith({
       repoId: repo.id,
-      source: 'ssh_remote_path',
       selectedPath: '/srv/projects/child',
       executionHostId: 'ssh:ssh-target-1',
       closeModal: mocks.state.closeModal,
@@ -268,7 +265,6 @@ describe('AddProjectFromFolderDialog', () => {
     })
     expect(mocks.finishProjectAddWithDefaultCheckout).toHaveBeenCalledWith({
       repoId: repo.id,
-      source: 'local_folder_picker',
       selectedPath: '/projects/child',
       executionHostId: 'local',
       closeModal: mocks.state.closeModal,

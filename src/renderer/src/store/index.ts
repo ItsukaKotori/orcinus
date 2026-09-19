@@ -52,74 +52,65 @@ import {
   registerWorkspaceHttpLinkBrowserOpener
 } from '@/lib/http-link-routing'
 import { installStoreListenerCensus } from './store-listener-census'
-import { withReactCommitCascadeWriteProbe } from './react-commit-cascade-write-probe'
 import { withStoreIdentityChurnProbe } from './store-identity-churn-probe'
-import {
-  registerRendererMemoryProfileContributor,
-  summarizeStateCollectionSizes
-} from '@/lib/renderer-memory-profile'
-import { estimateStateCollectionKB } from '@/lib/state-collection-byte-estimate'
 
 // Why dev-only: nothing in the app arms the churn probe, so a shipped build would
-// pay its wrapper frame on every write for a diagnostic it can never read. The
-// cascade probe stays unconditional because crash telemetry arms it in the field.
+// pay its wrapper frame on every write for a diagnostic it can never read.
 const withDevelopmentStoreProbes = (createState: StateCreator<AppState, [], []>) =>
   import.meta.env.DEV || e2eConfig.exposeStore
     ? withStoreIdentityChurnProbe(createState)
     : createState
 
 export const useAppStore = create<AppState>()(
-  withDevelopmentStoreProbes(
-    withReactCommitCascadeWriteProbe((...a) => {
-      // Why: the inner api is only reachable here, before create() copies subscribe onto the hook.
-      installStoreListenerCensus(a[2])
-      return {
-        ...createRepoSlice(...a),
-        ...createSparsePresetsSlice(...a),
-        ...createWorktreeSlice(...a),
-        ...createTerminalSlice(...a),
-        ...createTabsSlice(...a),
-        ...createUISlice(...a),
-        ...createSettingsSlice(...a),
-        ...createKeybindingsSlice(...a),
-        ...createGitHubSlice(...a),
-        ...createHostedReviewSlice(...a),
-        ...createLinearSlice(...a),
-        ...createPreflightSlice(...a),
-        ...createJiraSlice(...a),
-        ...createEditorSlice(...a),
-        ...createStatsSlice(...a),
-        ...createMemorySlice(...a),
-        ...createWorkspaceSpaceSlice(...a),
-        ...createClaudeUsageSlice(...a),
-        ...createCodexUsageSlice(...a),
-        ...createOpenCodeUsageSlice(...a),
-        ...createBrowserSlice(...a),
-        ...createRateLimitSlice(...a),
-        ...createSshSlice(...a),
-        ...createRuntimeEnvironmentSshSlice(...a),
-        ...createAgentStatusSlice(...a),
-        ...createPaneForegroundAgentSlice(...a),
-        ...createDiffCommentsSlice(...a),
-        ...createDetectedAgentsSlice(...a),
-        ...createRuntimeDetectedAgentsSlice(...a),
-        ...createWorktreeNavHistorySlice(...a),
-        ...createWorkspaceCleanupSlice(...a),
-        ...createWorkspaceCleanupBrowseSlice(...a),
-        ...createRuntimeStatusSlice(...a),
-        ...createPullRequestGenerationSlice(...a),
-        ...createCommitMessageGenerationSlice(...a),
-        ...createPinnedTabCloseConfirmSlice(...a),
-        ...createRecentlyClosedTabsSlice(...a),
-        ...createOrcaProfilesSlice(...a),
-        ...createNewIssueDraftSlice(...a),
-        ...createTaskCreationDraftsSlice(...a),
-        ...createRemoteServerUpdatesSlice(...a),
-        ...createTerminalQuickCommandHostsSlice(...a),
-        ...createPluginCenterSlice(...a)
-      }
-    })
-  )
+  withDevelopmentStoreProbes((...a) => {
+    // Why: the inner api is only reachable here, before create() copies subscribe onto the hook.
+    installStoreListenerCensus(a[2])
+    return {
+      ...createRepoSlice(...a),
+      ...createSparsePresetsSlice(...a),
+      ...createWorktreeSlice(...a),
+      ...createTerminalSlice(...a),
+      ...createTabsSlice(...a),
+      ...createUISlice(...a),
+      ...createSettingsSlice(...a),
+      ...createKeybindingsSlice(...a),
+      ...createGitHubSlice(...a),
+      ...createHostedReviewSlice(...a),
+      ...createLinearSlice(...a),
+      ...createPreflightSlice(...a),
+      ...createJiraSlice(...a),
+      ...createEditorSlice(...a),
+      ...createStatsSlice(...a),
+      ...createMemorySlice(...a),
+      ...createWorkspaceSpaceSlice(...a),
+      ...createClaudeUsageSlice(...a),
+      ...createCodexUsageSlice(...a),
+      ...createOpenCodeUsageSlice(...a),
+      ...createBrowserSlice(...a),
+      ...createRateLimitSlice(...a),
+      ...createSshSlice(...a),
+      ...createRuntimeEnvironmentSshSlice(...a),
+      ...createAgentStatusSlice(...a),
+      ...createPaneForegroundAgentSlice(...a),
+      ...createDiffCommentsSlice(...a),
+      ...createDetectedAgentsSlice(...a),
+      ...createRuntimeDetectedAgentsSlice(...a),
+      ...createWorktreeNavHistorySlice(...a),
+      ...createWorkspaceCleanupSlice(...a),
+      ...createWorkspaceCleanupBrowseSlice(...a),
+      ...createRuntimeStatusSlice(...a),
+      ...createPullRequestGenerationSlice(...a),
+      ...createCommitMessageGenerationSlice(...a),
+      ...createPinnedTabCloseConfirmSlice(...a),
+      ...createRecentlyClosedTabsSlice(...a),
+      ...createOrcaProfilesSlice(...a),
+      ...createNewIssueDraftSlice(...a),
+      ...createTaskCreationDraftsSlice(...a),
+      ...createRemoteServerUpdatesSlice(...a),
+      ...createTerminalQuickCommandHostsSlice(...a),
+      ...createPluginCenterSlice(...a)
+    }
+  })
 )
 
 registerHttpLinkStoreAccessor(() => useAppStore.getState())
@@ -127,18 +118,6 @@ registerWorkspaceHttpLinkBrowserOpener(async (request) => {
   const { openWorkspaceBrowserTab } = await import('@/lib/workspace-browser-tab-open')
   await openWorkspaceBrowserTab(request)
 })
-
-// Why: names the fattest store slices in renderer_memory_highwater breadcrumbs
-// so OOM crash reports identify what grew without a local repro.
-registerRendererMemoryProfileContributor('store', () =>
-  summarizeStateCollectionSizes(useAppStore.getState(), 20)
-)
-
-// Why bytes too: counts miss value-weight growth (97b9e86d leaked ~700MB while
-// its biggest slice grew by 4 entries); sampled KB names what got FAT.
-registerRendererMemoryProfileContributor('storeKB', () =>
-  estimateStateCollectionKB(useAppStore.getState(), 16)
-)
 
 export type { AppState } from './types'
 

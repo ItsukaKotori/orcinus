@@ -334,7 +334,6 @@
         "report": {
           "CrashReportDialog": {
             "56a3dfa283": "Failed to send crash report.",
-            "835037edc9": "· Orcinus",
             "b175e90213": "No crash report is available.",
             "b2e36f53a1": "Failed to send crash report. Diagnostic ticket {{value0}} was uploaded but not linked."
           }

@@ -1,14 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { recordRendererCrashBreadcrumb } from '@/lib/crash-breadcrumb-recorder'
 import { recordTerminalWebglDiagnostic } from '../../../../shared/terminal-webgl-diagnostics'
 import {
   getTerminalFreezeBreadcrumbs,
   resetTerminalFreezeBreadcrumbsForTesting
 } from './terminal-freeze-breadcrumbs'
-
-vi.mock('@/lib/crash-breadcrumb-recorder', () => ({
-  recordRendererCrashBreadcrumb: vi.fn()
-}))
 
 // Why: lib-layer WebGL code records through the shared sink because it may not
 // import the components-layer ring. Importing terminal-freeze-breadcrumbs wires
@@ -17,7 +12,6 @@ vi.mock('@/lib/crash-breadcrumb-recorder', () => ({
 describe('WebGL diagnostics → freeze breadcrumb ring', () => {
   beforeEach(() => {
     resetTerminalFreezeBreadcrumbsForTesting()
-    vi.mocked(recordRendererCrashBreadcrumb).mockClear()
   })
 
   afterEach(() => {
@@ -34,27 +28,7 @@ describe('WebGL diagnostics → freeze breadcrumb ring', () => {
     expect(crumbs[1]?.detail).toEqual({ managers: 1 })
   })
 
-  // Why: the freeze ring is DevTools-only (window.n()), so a renderer that dies
-  // takes its WebGL history with it. Windows crash F0BKR84AHEH had three GPU
-  // deaths in the 65s before its renderer OOM and zero WebGL evidence.
-  it('mirrors WebGL crumbs into the crash report so a dead renderer still reports them', () => {
-    recordTerminalWebglDiagnostic('webgl-context-loss', { paneId: 3 })
-
-    expect(recordRendererCrashBreadcrumb).toHaveBeenCalledWith('terminal_webgl_diagnostic', {
-      kind: 'webgl-context-loss',
-      paneId: 3
-    })
-  })
-
-  it('mirrors detail-less crumbs without inventing fields', () => {
-    recordTerminalWebglDiagnostic('webgl-context-restore')
-
-    expect(recordRendererCrashBreadcrumb).toHaveBeenCalledWith('terminal_webgl_diagnostic', {
-      kind: 'webgl-context-restore'
-    })
-  })
-
-  it('bounds atlas mismatch storm IPC while retaining the local occurrence count', () => {
+  it('coalesces an atlas mismatch storm in the ring', () => {
     vi.useFakeTimers()
     try {
       for (let mismatch = 0; mismatch < 10_000; mismatch++) {
@@ -64,7 +38,6 @@ describe('WebGL diagnostics → freeze breadcrumb ring', () => {
         })
       }
 
-      expect(recordRendererCrashBreadcrumb).toHaveBeenCalledTimes(1)
       expect(getTerminalFreezeBreadcrumbs()).toEqual([
         expect.objectContaining({ kind: 'atlas-font-probe-mismatch', repeats: 10_000 })
       ])
@@ -74,10 +47,11 @@ describe('WebGL diagnostics → freeze breadcrumb ring', () => {
         desired: '550',
         actual: '700 14px Menlo'
       })
-      expect(recordRendererCrashBreadcrumb).toHaveBeenLastCalledWith(
-        'terminal_webgl_diagnostic',
-        expect.objectContaining({ rendererSuppressedSinceLast: 9_999 })
-      )
+      // The coalesce window is 1s, so the post-storm record opens a fresh entry.
+      const crumbs = getTerminalFreezeBreadcrumbs()
+      expect(crumbs).toHaveLength(2)
+      expect(crumbs[0]).toMatchObject({ kind: 'atlas-font-probe-mismatch', repeats: 10_000 })
+      expect(crumbs[1]?.repeats).toBeUndefined()
     } finally {
       vi.useRealTimers()
     }

@@ -23,7 +23,7 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
 function BoundaryHarness({ children }: { children: ReactNode }): ReactElement {
   return (
-    <RecoverableRenderErrorBoundary boundaryId="right-sidebar" surface="right-sidebar">
+    <RecoverableRenderErrorBoundary boundaryId="right-sidebar">
       <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
     </RecoverableRenderErrorBoundary>
   )

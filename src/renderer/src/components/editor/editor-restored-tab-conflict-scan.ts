@@ -87,10 +87,7 @@ export function attachRestoredTabConflictScan(store: AppStoreApi): () => void {
         return
       }
       if (getDiskBaselineSignature(result.content) !== file.lastKnownDiskSignature) {
-        markFileChangedOnDisk(store.getState(), liveFile, {
-          connectionId: getConnectionIdForFile(file.worktreeId, file.filePath) ?? undefined,
-          origin: 'restore'
-        })
+        markFileChangedOnDisk(store.getState(), liveFile)
       }
     } catch {
       if (disposed) {

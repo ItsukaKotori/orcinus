@@ -33,12 +33,6 @@ function spyOnReload(): ReturnType<typeof vi.fn> {
   return reload
 }
 
-function stubCrashReportsBreadcrumb(): ReturnType<typeof vi.fn> {
-  const recordBreadcrumb = vi.fn()
-  Object.assign(window, { api: { crashReports: { recordBreadcrumb } } })
-  return recordBreadcrumb
-}
-
 // Why: happy-dom's Storage is a Proxy that vi.spyOn cannot reliably restore, so
 // override window.sessionStorage with a throwing getter and restore the saved
 // descriptor in afterEach.
@@ -126,7 +120,6 @@ describe('loadLazyWithRetry', () => {
 
   it('contains the failure when the guarded reload never tears the document down', async () => {
     const reload = spyOnReload()
-    stubCrashReportsBreadcrumb()
     const error = chunkParseError()
     const factory = vi.fn(() => Promise.reject(error))
 
@@ -190,9 +183,8 @@ describe('loadLazyWithRetry', () => {
     expect(isLazyChunkLoadError(caught)).toBe(true)
   })
 
-  it('records a lazy_chunk_reload_vetoed breadcrumb in the tick that contains the failure', async () => {
+  it('contains a vetoed lazy-chunk reload in the tick that contains the failure', async () => {
     spyOnReload()
-    const recordBreadcrumb = stubCrashReportsBreadcrumb()
     window.sessionStorage.setItem(RELOAD_GUARD_KEY, String(performance.timeOrigin))
     const error = chunkParseError()
 
@@ -204,14 +196,6 @@ describe('loadLazyWithRetry', () => {
     await vi.advanceTimersByTimeAsync(1)
     await assertion
 
-    expect(recordBreadcrumb).toHaveBeenCalledWith({
-      name: 'lazy_chunk_reload_vetoed',
-      data: {
-        reloadKey: 'rich-markdown-editor',
-        message: "Unexpected token ']'",
-        outcome: 'guard-not-landed'
-      }
-    })
   })
 
   it('preserves the original error when the guarded failure is not a dynamic import failure', async () => {
@@ -290,9 +274,8 @@ describe('loadLazyWithRetry', () => {
     expect(isLazyChunkLoadError(caught)).toBe(false)
   })
 
-  it('records a lazy_chunk_reload breadcrumb (with reloadKey) before reloading', async () => {
-    const reload = spyOnReload()
-    const recordBreadcrumb = stubCrashReportsBreadcrumb()
+  it('keeps the page alive after requesting a guarded chunk reload', async () => {
+    spyOnReload()
     const factory = vi.fn(() => Promise.reject(chunkParseError()))
 
     const loaded = loadLazyWithRetry(factory, { retries: 0, reloadKey: 'right-sidebar' })
@@ -307,15 +290,6 @@ describe('loadLazyWithRetry', () => {
     )
     await vi.advanceTimersByTimeAsync(5000)
 
-    expect(recordBreadcrumb).toHaveBeenCalledTimes(1)
-    expect(recordBreadcrumb).toHaveBeenCalledWith({
-      name: 'lazy_chunk_reload',
-      data: { reloadKey: 'right-sidebar', message: "Unexpected token ']'" }
-    })
-    // The breadcrumb must land before window.location.reload() tears the page down.
-    expect(recordBreadcrumb.mock.invocationCallOrder[0]).toBeLessThan(
-      reload.mock.invocationCallOrder[0]
-    )
     expect(settled).toBe(false)
   })
 
@@ -455,7 +429,6 @@ describe('loadLazyWithRetry recovery reload vs the dirty-editor-tab unload veto'
 
   it('refuses to reload when unsaved buffers cannot be backed up', async () => {
     const harness = installDirtyEditorTab({ hotExitBackupFails: true })
-    const recordBreadcrumb = stubCrashReportsBreadcrumb()
     const restartAborted = vi.fn()
     window.addEventListener(ORCA_APP_RESTART_ABORTED_EVENT, restartAborted)
     const error = chunkParseError()
@@ -480,20 +453,11 @@ describe('loadLazyWithRetry recovery reload vs the dirty-editor-tab unload veto'
     expect(settled).toMatchObject({ cause: error })
     expect(restartAborted).toHaveBeenCalled()
     expect(isIntentionalAppRestartInProgress()).toBe(false)
-    expect(recordBreadcrumb).toHaveBeenCalledWith({
-      name: 'lazy_chunk_reload_vetoed',
-      data: {
-        reloadKey: 'rich-markdown-editor',
-        message: "Unexpected token ']'",
-        outcome: 'checkpoint-refused'
-      }
-    })
     window.removeEventListener(ORCA_APP_RESTART_ABORTED_EVENT, restartAborted)
   })
 
   it('clears recovery state when the host rejects the reload request', async () => {
     const harness = installDirtyEditorTab()
-    const recordBreadcrumb = stubCrashReportsBreadcrumb()
     vi.mocked(window.location.reload).mockImplementation(() => {
       throw new Error('reload unavailable')
     })
@@ -510,14 +474,6 @@ describe('loadLazyWithRetry recovery reload vs the dirty-editor-tab unload veto'
     expect(isIntentionalAppRestartInProgress()).toBe(false)
     expect(window.sessionStorage.getItem(RELOAD_GUARD_KEY)).toBeNull()
     expect(vi.getTimerCount()).toBe(0)
-    expect(recordBreadcrumb).toHaveBeenCalledWith({
-      name: 'lazy_chunk_reload_vetoed',
-      data: {
-        reloadKey: 'rich-markdown-editor',
-        message: "Unexpected token ']'",
-        outcome: 'request-failed'
-      }
-    })
   })
 
   it('settles on the unload-prevented signal instead of waiting out the blind grace window', async () => {

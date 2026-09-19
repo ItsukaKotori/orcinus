@@ -2,22 +2,13 @@ import { getAdvancedPaneSearchEntries } from '@/components/settings/advanced-sea
 import { getDeveloperPermissionsPaneSearchEntries } from '@/components/settings/developer-permissions-search'
 import { getExperimentalPaneSearchEntries } from '@/components/settings/experimental-search'
 import { getPluginsPaneSearchEntries } from '@/components/settings/plugins-search'
-import { getPrivacyPaneSearchEntries } from '@/components/settings/privacy-search'
 import { getRepositoryPaneSearchEntries } from '@/components/settings/repository-search'
 import { buildSettingsProjectList } from '@/components/settings/settings-project-list'
 import { translate } from '@/i18n/i18n'
 import type { SettingsNavSection } from '@/lib/settings-navigation-types'
 import { getRepoKindLabel } from '../../../shared/repo-kind'
 import type { Repo } from '../../../shared/repo-types'
-import {
-  Blocks,
-  Bug,
-  FlaskConical,
-  Lock,
-  ShieldCheck,
-  SlidersHorizontal,
-  Wrench
-} from 'lucide-react'
+import { Blocks, Bug, FlaskConical, ShieldCheck, SlidersHorizontal, Wrench } from 'lucide-react'
 import type { SettingsNavigationBuildOptions } from './settings-navigation-build-options'
 
 export function buildRemoteSettingsSections(
@@ -44,20 +35,6 @@ export function buildRemoteSettingsSections(
           }
         ]
       : []),
-    {
-      id: 'privacy',
-      title: translate(
-        'auto.hooks.useSettingsNavigationMetadata.3618579df6',
-        'Privacy & Telemetry'
-      ),
-      description: translate(
-        'auto.hooks.useSettingsNavigationMetadata.8400cfe1c1',
-        'Anonymous usage data and telemetry controls.'
-      ),
-      icon: Lock,
-      searchEntries: getPrivacyPaneSearchEntries(),
-      group: 'security'
-    },
     ...(showDesktopOnlySettings
       ? [
           {

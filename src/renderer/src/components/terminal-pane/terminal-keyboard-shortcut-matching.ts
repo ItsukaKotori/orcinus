@@ -42,11 +42,8 @@ export function resolveTerminalKeyboardShortcutAction(
   )
 }
 
-export function recordKeyboardCreatedTerminalPaneSplit(
-  createdPane: unknown,
-  args: { source: 'keyboard'; direction: 'vertical' | 'horizontal' }
-): boolean {
-  return recordCreatedTerminalPaneSplit(createdPane, args)
+export function recordKeyboardCreatedTerminalPaneSplit(createdPane: unknown): boolean {
+  return recordCreatedTerminalPaneSplit(createdPane)
 }
 
 export function isEditableTarget(target: EventTarget | null): boolean {

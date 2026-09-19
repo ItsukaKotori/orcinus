@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { WorkspaceLinkedItemSchema } from '../workspace-linked-item-schema'
 import { TaskSourceContextSchema } from '../task-source-context-schema'
-import { workspaceSourceSchema } from '../telemetry-events'
+import { WORKSPACE_SOURCE_VALUES } from '../workspace-source'
 import { RUNTIME_NAVIGATION_TARGETS } from '../runtime-navigation'
 import { sleepingAgentLaunchConfigSchema } from '../workspace-session-sleeping-agents'
 import { isTuiAgent } from '../tui-agent-config'
@@ -49,7 +49,7 @@ export const WorktreeCreate = z
     telemetrySource: z
       .unknown()
       .transform((value) => {
-        const parsed = workspaceSourceSchema.safeParse(value)
+        const parsed = z.enum(WORKSPACE_SOURCE_VALUES).safeParse(value)
         return parsed.success ? parsed.data : undefined
       })
       .optional(),

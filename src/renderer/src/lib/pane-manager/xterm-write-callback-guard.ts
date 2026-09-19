@@ -1,5 +1,3 @@
-import { recordRendererCrashBreadcrumb } from '@/lib/crash-breadcrumb-recorder'
-
 // Why: xterm's WriteBuffer._innerWrite invokes write-completion callbacks with
 // no try/catch; a synchronous throw skips the loop's tail re-schedule, and
 // write() only re-arms processing when the buffer is EMPTY — which a stalled
@@ -27,11 +25,7 @@ export function runGuardedWriteCompletionStep(context: string, step: () => void)
     }
     reportCountsByContext.set(context, reported + 1)
     console.error(`[terminal] write-completion step "${context}" threw`, error)
-    recordRendererCrashBreadcrumb('terminal_write_completion_error', {
-      context,
-      errorName: error instanceof Error ? error.name : typeof error,
-      errorMessage: error instanceof Error ? error.message : String(error)
-    })
+
   }
 }
 

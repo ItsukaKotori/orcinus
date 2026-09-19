@@ -21,8 +21,6 @@ import { workspaceCleanupApi } from './api/workspace-cleanup-bridge'
 import { workspaceSpaceApi } from './api/workspace-space-bridge'
 import { workspacePortsApi } from './api/workspace-ports-bridge'
 import { ptyApi } from './api/pty-bridge'
-import { feedbackApi } from './api/feedback-bridge'
-import { crashReportsApi } from './api/crash-reports-bridge'
 import { exportApi } from './api/export-bridge'
 import { ghApi } from './api/gh-bridge'
 import { hostedReviewApi } from './api/hosted-review-bridge'
@@ -31,7 +29,6 @@ import { bitbucketApi } from './api/bitbucket-bridge'
 import { linearApi } from './api/linear-bridge'
 import { jiraApi } from './api/jira-bridge'
 import { starNagApi } from './api/star-nag-bridge'
-import { diagnosticsApi } from './api/diagnostics-bridge'
 import { settingsApi } from './api/settings-bridge'
 import { agentAwakeApi } from './api/agent-awake-bridge'
 import { localhostWorktreeLabelsApi } from './api/localhost-worktree-labels-bridge'
@@ -82,16 +79,6 @@ import { agentStatusApi } from './api/agent-status-bridge'
 installNativeFileDropHandlers()
 installBrowserFindListener()
 
-// Custom APIs for renderer. Each domain bridge owns its IPC contract.
-const telemetryTrackApi: PreloadApi['telemetryTrack'] = (name, props) =>
-  ipcRenderer.invoke('telemetry:track', name, props)
-const telemetrySetOptInApi: PreloadApi['telemetrySetOptIn'] = (optedIn) =>
-  ipcRenderer.invoke('telemetry:setOptIn', optedIn)
-const telemetryAcknowledgeBannerApi: PreloadApi['telemetryAcknowledgeBanner'] = () =>
-  ipcRenderer.invoke('telemetry:acknowledgeBanner')
-const telemetryGetConsentStateApi: PreloadApi['telemetryGetConsentState'] = () =>
-  ipcRenderer.invoke('telemetry:getConsentState')
-
 const api = {
   app: appApi,
   orcaProfiles: orcaProfilesApi,
@@ -110,8 +97,6 @@ const api = {
   workspaceSpace: workspaceSpaceApi,
   workspacePorts: workspacePortsApi,
   pty: ptyApi,
-  feedback: feedbackApi,
-  crashReports: crashReportsApi,
   export: exportApi,
   gh: ghApi,
   hostedReview: hostedReviewApi,
@@ -120,11 +105,6 @@ const api = {
   linear: linearApi,
   jira: jiraApi,
   starNag: starNagApi,
-  telemetryTrack: telemetryTrackApi,
-  telemetrySetOptIn: telemetrySetOptInApi,
-  telemetryAcknowledgeBanner: telemetryAcknowledgeBannerApi,
-  telemetryGetConsentState: telemetryGetConsentStateApi,
-  diagnostics: diagnosticsApi,
   settings: settingsApi,
   agentAwake: agentAwakeApi,
   localhostWorktreeLabels: localhostWorktreeLabelsApi,

@@ -22,7 +22,6 @@ export { closeWebRuntimeSessionTab } from './web-runtime-session-tab-lifecycle'
 export { moveWebRuntimeSessionTab } from './web-runtime-session-tab-move'
 export {
   splitWebRuntimeTerminal,
-  consumePendingWebRuntimeSplitMirrorTelemetry,
   closeWebRuntimeTerminal,
   updateWebRuntimePaneLayout,
   setWebRuntimeTabProps,

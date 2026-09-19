@@ -3,7 +3,7 @@ import {
   encodeTerminalStreamJson
 } from '../../../shared/terminal-stream-protocol'
 import { e2eDisableRemoteTerminalStallRecovery } from '@/lib/e2e-config'
-import { recordRendererCrashBreadcrumb } from '@/lib/crash-breadcrumb-recorder'
+
 import { RemoteRuntimeTerminalBinaryController } from './remote-runtime-terminal-binary-controller'
 import {
   CONTROL_STREAM_ID,
@@ -60,18 +60,7 @@ export class RemoteRuntimeTerminalMultiplexer extends RemoteRuntimeTerminalBinar
           state.watchdog.completeCommandResponseProbe()
           return
         }
-        recordRendererCrashBreadcrumb('remote_terminal_stream_stall_recovery', {
-          environmentId: this.environmentId,
-          expectedSeq: state.expectedSeq ?? null,
-          inactiveForMs: stall.inactiveForMs,
-          outstandingDeliveryBytes: stall.outstandingDeliveryBytes,
-          pendingAckBytes: state.pendingAckBytes,
-          reason: stall.reason,
-          resyncAttempts: state.resyncAttempts,
-          snapshotPending: state.pendingSnapshotRequest !== null,
-          streamId: state.streamId,
-          terminal: state.terminal
-        })
+
         if (stall.reason === 'command-response-timeout') {
           this.probeCommandResponse(state)
         } else {

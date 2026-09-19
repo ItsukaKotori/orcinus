@@ -9,7 +9,7 @@ import type {
 } from '../../../../shared/agent-session-host-authority'
 import type { StartupCommandDelivery } from '../../../../shared/codex-startup-delivery'
 import type { ProjectExecutionRuntimeResolution } from '../../../../shared/project-execution-runtime'
-import type { EventProps } from '../../../../shared/telemetry-events'
+import type { AgentLaunchContext } from '../../../../shared/launch-context'
 import type { TerminalOscColorQueryReplyColors } from '../../../../shared/terminal-osc-color-reply'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import type { ExecutionHostId } from '../../../../shared/execution-host'
@@ -266,7 +266,7 @@ export type IpcPtyTransportOptions = {
   shellOverride?: string
   projectRuntime?: ProjectExecutionRuntimeResolution
   terminalColorQueryReplies?: TerminalOscColorQueryReplyColors
-  telemetry?: EventProps<'agent_started'>
+  telemetry?: AgentLaunchContext
   onPtyExit?: (ptyId: string, exitCode?: number) => void
   onTitleChange?: (title: string, rawTitle: string) => void
   onPtySpawn?: (ptyId: string) => void

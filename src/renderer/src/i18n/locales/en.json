@@ -276,8 +276,6 @@
     "App": {
       "221a95ba38": "Retry onboarding or close it and continue in the app.",
       "f02d37278a": "Onboarding hit an error.",
-      "acd66311dc": "Use the Help menu after retrying if you still need diagnostics.",
-      "722d03aa62": "The crash report dialog hit an error.",
       "8a023cea1f": "Retry the status bar to remount its controls.",
       "2e8ff36f94": "The status bar hit an error.",
       "7cbfbf622f": "Retry the floating workspace or close and reopen it.",
@@ -360,7 +358,6 @@
             "10898045f3": "Shortcut for \"{{value0}}\" was ignored: Use a string array.",
             "36761d9604": "Unknown keybinding action \"{{value0}}\" was ignored.",
             "d2e43e426a": "{{value0}} must be an object.",
-            "fb290366b2": "Unavailable on web.",
             "76122208ca": "Shortcut for \"{{value0}}\" was ignored: {{value1}}"
           }
         },
@@ -942,16 +939,7 @@
       },
       "feedback": {
         "image": {
-          "attachments": {
-            "fallbackName": "Image attachment",
-            "unsupportedType": "{{fileName}} is not a supported image type.",
-            "empty": "{{fileName}} is empty.",
-            "tooLarge": "{{fileName}} is larger than {{maxSize}}.",
-            "tooMany": "You can attach up to {{maxCount}} images.",
-            "dimensionsTooLarge": "{{fileName}} has dimensions that are too large to preview safely.",
-            "invalidImage": "{{fileName}} is not a valid supported image.",
-            "additionalErrors": "{{count}} additional images could not be attached."
-          }
+          "attachments": {}
         }
       },
       "activateAiVaultStructuredSession": {},
@@ -1026,8 +1014,6 @@
         "225071c560": "Experimental",
         "e338c507c1": "Low-level compatibility settings for troubleshooting.",
         "580a04cd81": "Advanced",
-        "8400cfe1c1": "Anonymous usage data and telemetry controls.",
-        "3618579df6": "Privacy & Telemetry",
         "65ec7d1968": "macOS privacy access for terminal-launched developer tools.",
         "d91ae31fbd": "macOS Permissions",
         "95a1886d94": "Control terminals and agents from your phone.",
@@ -1152,15 +1138,7 @@
         "e6b7139d2a": "Restart this session to load your current Codex configuration.",
         "7b1d20f4c8": "Keep current session"
       },
-      "FirstLaunchBanner": {
-        "b9e1b966c7": "Dismiss notice",
-        "94cc673726": "Got it",
-        "fc5cc29955": "Opt out",
-        "d1deebb050": "Privacy policy",
-        "958d2cc31b": "Anonymous counts of which features you use help us prioritize what to build. No file contents, prompts, terminal output, or anything that identifies you. Change anytime in Settings -> Privacy & Telemetry.",
-        "9784b4d7bc": "Help us decide what to build next",
-        "fcbee32f08": "Telemetry notice"
-      },
+      "FirstLaunchBanner": {},
       "GitHubItemDialog": {
         "3ab6ac0fc8": "Preview and edit the selected GitHub issue or pull request.",
         "3cd5ae5b7b": "No files changed.",
@@ -5196,28 +5174,7 @@
           "822ff300ad": "Dismiss",
           "5bfd5c8779": "Dismiss setup scripts"
         },
-        "SidebarFeedbackDialog": {
-          "8bf619e4cf": "Cancel",
-          "8de03e23c5": "Submit with your typed feedback only, or connect `gh` to include GitHub identity.",
-          "d20439c560": "Checking GitHub identity…",
-          "5b120b9634": "Submit anonymously",
-          "c9e5ea0791": "GitHub:",
-          "d46ddd66fc": "What could we improve?",
-          "3460258a54": "Follow on X",
-          "26108d3699": "Join Discord",
-          "d245c4ef6c": "GitHub issues",
-          "9b33530b3d": "Other ways to reach us",
-          "a828fa4aee": "Share what's working, what's broken, or what Orcinus should do next.",
-          "0eb643f07f": "Send Feedback",
-          "60b721e857": "Failed to submit feedback. Please try again.",
-          "7a46c228b8": "Thanks for the feedback.",
-          "a2fd890d9e": "Please enter feedback before submitting.",
-          "f2e42e1307": "Send",
-          "69969ba364": "Sending…",
-          "imageReadFailed": "Could not read the attached images. Try attaching them again.",
-          "attachWhileSending": "Wait for the current feedback to finish sending before attaching more images.",
-          "imagesNotDelivered": "Feedback sent, but image delivery could not be confirmed."
-        },
+        "SidebarFeedbackDialog": {},
         "SidebarFilter": {},
         "SidebarHeader": {
           "projects": "Projects",
@@ -5265,7 +5222,6 @@
           "5f83d86d92": "Changelog",
           "cdc87f897e": "Docs",
           "e565171a7c": "Keyboard Shortcuts",
-          "4cf5b868d7": "Send Feedback",
           "a428c25998": "Settings",
           "2991a0106c": "Help",
           "4e8f5710d3": "Couldn't restart Orcinus.",
@@ -6048,11 +6004,7 @@
           "developer": "Developer",
           "parkTerminal": "Park terminal"
         },
-        "SidebarFeedbackImageAttachments": {
-          "screenshotsHint": "Attach up to {count} screenshots",
-          "attachImages": "Attach",
-          "removeImage": "Remove {{fileName}}"
-        },
+        "SidebarFeedbackImageAttachments": {},
         "WorkspaceKanbanSearchField": {},
         "WorktreeIssueLinkField": {
           "25852bfc59": "Linear",
@@ -7437,37 +7389,9 @@
           "d3dc559225": "Failed to copy install command.",
           "239bf9132b": "Copied install command."
         },
-        "PrivacyDiagnosticBundleControls": {
-          "dc8404a930": "Create diagnostic file",
-          "a5acaffdb6": "Discard",
-          "aca2c8a367": "Send to support",
-          "798b6f0be5": "Open review file",
-          "2ae9a6b63e": "Done",
-          "7f14a1733c": "Delete sent file",
-          "2801d4ce22": "Copy reference ID",
-          "d8be621237": "Open the review file first.",
-          "61676df223": "Diagnostics sent. Share this reference ID with support: {{value0}}.",
-          "fd7b3891af": "You opened the review file ({{value0}}). Send that file to support, or discard it.",
-          "62340d4439": "Your review file is ready ({{value0}}). Open it to see what would be sent, then choose whether to send it to support.",
-          "19ec5e29b3": "Collects recent app activity and errors into a redacted file you can review before sending. Nothing is uploaded until you choose to send it."
-        },
-        "PrivacyDiagnosticsSection": {
-          "af2fc82cde": "Send app diagnostics to support",
-          "c18cbe45df": "Sent diagnostics deleted",
-          "7a4944595b": "Could not copy reference ID",
-          "13eb2c65a1": "Reference ID copied",
-          "860bca9ec9": "Review file discarded",
-          "49fc6c80e8": "Diagnostics sent",
-          "db3228e01a": "Review file opened",
-          "a2b3505c77": "Review file created"
-        },
+        "PrivacyDiagnosticBundleControls": {},
+        "PrivacyDiagnosticsSection": {},
         "PrivacyPane": {
-          "36e0e2e63b": "environment variable. Unset it and restart to re-enable.",
-          "79a0f3c16c": "Telemetry is disabled by the",
-          "e3970bbbf5": "Telemetry is disabled because a CI environment variable is set. Unset it and restart.",
-          "fe904ac984": "Share anonymous usage data",
-          "77410e0566": "Privacy policy",
-          "8bfdd23a88": "Help us figure out what to build next. Orcinus sends anonymous counts of which features you use and where things break.",
           "afec8b03be": "ci"
         },
         "QuickCommandsList": {
@@ -7925,8 +7849,6 @@
           "8b017f2506": "Experimental",
           "499c1cd7f9": "Low-level compatibility settings for troubleshooting.",
           "1c87f8d024": "Advanced",
-          "c1b43dc4e2": "Anonymous usage data and telemetry controls.",
-          "d7e3f62d70": "Privacy & Telemetry",
           "9b83cc62c2": "macOS privacy access for terminal-launched developer tools.",
           "65660d4548": "macOS Permissions",
           "c6c01ac209": "Control terminals and agents from your phone.",
@@ -9659,36 +9581,7 @@
           }
         },
         "privacy": {
-          "search": {
-            "3922051573": "data",
-            "e8bc614a18": "disable",
-            "d8191ae5ca": "environment variable",
-            "94e04427f6": "env",
-            "664f1a8984": "continuous integration",
-            "5854a5c752": "ci",
-            "69637f4dc4": "orca_telemetry_disabled",
-            "058550f6bc": "do_not_track",
-            "83a6cd79b3": "do not track",
-            "f7a2d9f137": "Environment variables that disable telemetry transmission.",
-            "e058a3c98d": "Telemetry environment variables",
-            "1686c07fee": "support",
-            "c0494ff48a": "diagnostics",
-            "8b08f32366": "App diagnostics and support sharing controls.",
-            "6d258d2ed6": "Diagnostics",
-            "ead1deded2": "share",
-            "27a27b2f63": "opt out",
-            "4d4bb76bf4": "opt in",
-            "b021b9cb81": "anonymous",
-            "79c319948b": "usage",
-            "77d3180def": "telemetry",
-            "b707cc3981": "Help improve Orcinus by sending anonymous feature-usage events.",
-            "57b283461a": "Share Anonymous Usage Data",
-            "2b5a5c312f": "posthog",
-            "4104f6f0f3": "analytics",
-            "10124159f1": "privacy",
-            "aa3b794c17": "Anonymous product usage data, diagnostics, and telemetry controls.",
-            "5c508bad41": "Privacy & Telemetry"
-          }
+          "search": {}
         },
         "quick": {
           "commands": {
@@ -10486,13 +10379,7 @@
           "cancel": "Cancel",
           "applyRuntimeChange": "Apply runtime change"
         },
-        "PrivacyDiagnosticsRows": {
-          "5a7cbe069a": "DO_NOT_TRACK=1 is set — creating and sending diagnostic files is disabled.",
-          "63d03261d1": "ORCA_TELEMETRY_DISABLED=1 is set — creating and sending diagnostic files is disabled.",
-          "d37e92a06b": "ORCA_DIAGNOSTICS_DISABLED=1 is set — app diagnostics are off.",
-          "5ebb31e1fb": "Running in CI — diagnostics are off.",
-          "e27c8d45bf": "Diagnostics are disabled by an environment variable."
-        },
+        "PrivacyDiagnosticsRows": {},
         "ShortcutCommandBlock": {
           "eb72c52c28": "Press a shortcut, or double-tap a modifier (e.g. {{value0}}). Esc cancels.",
           "70b5d25583": "{{value0}} shortcut",
@@ -14506,36 +14393,14 @@
       "crash": {
         "report": {
           "CrashReportDialog": {
-            "b4951cd27c": "Send Report",
-            "88fea8e84e": "Don't Send",
-            "50b00dc327": "Copy Details",
-            "6d3ebe216a": "Diagnostic text",
-            "835037edc9": "· Orcinus",
             "56a3dfa283": "Failed to send crash report.",
-            "8e24fe4f75": "Crash report sent.",
-            "8b8473c544": "Crash report copied.",
             "b175e90213": "No crash report is available.",
-            "765591798d": "Checking for crash reports...",
-            "b2e36f53a1": "Failed to send crash report. Diagnostic ticket {{value0}} was uploaded but not linked.",
-            "ead6fc0510": "No automatic crash report was captured. You can still send details and include recent diagnostic logs when available.",
-            "b082f27490": "Attach recent diagnostic logs",
-            "e59f0b9427": "Sends a capped redacted log bundle with the report."
+            "b2e36f53a1": "Failed to send crash report. Diagnostic ticket {{value0}} was uploaded but not linked."
           },
           "submit": {
-            "notice": {
-              "unknownError": "The crash report request failed before it returned a reason.",
-              "ticketUploaded": "Diagnostic ticket {{value0}} was uploaded but not linked.",
-              "uncheckDiagnostics": "Uncheck \"Attach recent diagnostic logs\" and try again, or copy the details.",
-              "checkConnection": "Check your connection and try again, or copy the details.",
-              "notSent": "Crash report wasn't sent",
-              "copyDetails": "Copy Details",
-              "sentWithoutDiagnostics": "Crash report sent without diagnostic logs",
-              "diagnosticsReason": "Diagnostic logs were not attached: {{value0}}"
-            }
+            "notice": {}
           },
-          "copy": {
-            "copyFailed": "Crash report details could not be copied."
-          }
+          "copy": {}
         }
       },
       "contextual": {

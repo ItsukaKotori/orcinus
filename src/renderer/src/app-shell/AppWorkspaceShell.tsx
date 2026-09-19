@@ -45,7 +45,6 @@ function WorktreeSidebar({
   return (
     <RecoverableRenderErrorBoundary
       boundaryId="sidebar.worktrees"
-      surface="sidebar"
       resetKey={layout.activeView}
       title={translate('auto.App.1468601e7b', 'The workspace list hit an error.')}
       description={
@@ -109,7 +108,6 @@ export function AppWorkspaceShell(props: {
     // Why: workspace activation is a hot path; activeWorktreeId in reset keys would remount whole surfaces during wake.
     <RecoverableRenderErrorBoundary
       boundaryId="app.workspace-shell"
-      surface="workspace-shell"
       resetKey={layout.activeView}
       title={translate('auto.App.df1d56bf87', 'The workspace shell hit an error.')}
       description={translate(
@@ -189,7 +187,6 @@ export function AppWorkspaceShell(props: {
                       <Suspense fallback={null}>
                         <RecoverableRenderErrorBoundary
                           boundaryId="terminal.workbench"
-                          surface="terminal-workbench"
                           resetKey="terminal"
                           title={translate(
                             'auto.App.5a9519aef0',
@@ -208,7 +205,6 @@ export function AppWorkspaceShell(props: {
                   <Suspense fallback={null}>
                     <RecoverableRenderErrorBoundary
                       boundaryId={`page.${layout.activeView}`}
-                      surface="page"
                       resetKey={layout.activeView}
                       title={translate('auto.App.b7a714db1e', 'This page hit an error.')}
                       description={translate(
@@ -234,7 +230,6 @@ export function AppWorkspaceShell(props: {
         {layout.showRightSidebarControls ? (
           <RecoverableRenderErrorBoundary
             boundaryId="right-sidebar"
-            surface="right-sidebar"
             resetKey={
               layout.rightSidebarTab === 'explorer'
                 ? `${layout.rightSidebarTab}:${layout.rightSidebarExplorerView}`

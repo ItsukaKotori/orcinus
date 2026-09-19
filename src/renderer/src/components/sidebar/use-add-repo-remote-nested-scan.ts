@@ -1,6 +1,5 @@
 import { useCallback } from 'react'
-import { track } from '@/lib/telemetry'
-import { buildNestedRepoScanTelemetry } from '../../../../shared/nested-repo-telemetry'
+
 import type { NestedRepoScanResult } from '../../../../shared/project-group-types'
 
 export function useAddRepoRemoteNestedScan({
@@ -12,8 +11,6 @@ export function useAddRepoRemoteNestedScan({
     scan: NestedRepoScanResult
     selectedPath: string
     connectionId: string
-    attemptId: string
-    runtimeKind: 'ssh'
     inProgress: boolean
     scanId: string | null
     runtimeEnvironmentId?: string | null
@@ -24,7 +21,6 @@ export function useAddRepoRemoteNestedScan({
       scan: NestedRepoScanResult,
       selectedPath: string,
       connectionId: string,
-      attemptId: string,
       inProgress: boolean,
       scanId: string | null
     ) => {
@@ -33,8 +29,6 @@ export function useAddRepoRemoteNestedScan({
         scan,
         selectedPath,
         connectionId,
-        attemptId,
-        runtimeKind: 'ssh',
         inProgress,
         scanId,
         runtimeEnvironmentId: null
@@ -43,20 +37,5 @@ export function useAddRepoRemoteNestedScan({
     [setActiveNestedScanId, showNestedRepoReview]
   )
 
-  const trackRemoteNestedScanResult = useCallback(
-    (scan: NestedRepoScanResult | null, attemptId: string) => {
-      track(
-        'add_repo_nested_scan_result',
-        buildNestedRepoScanTelemetry({
-          attemptId,
-          surface: 'sidebar',
-          runtimeKind: 'ssh',
-          scan
-        })
-      )
-    },
-    []
-  )
-
-  return { showRemoteNestedRepoReview, trackRemoteNestedScanResult }
+  return { showRemoteNestedRepoReview }
 }

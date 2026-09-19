@@ -24,7 +24,6 @@ const mockStore = vi.hoisted(() => ({
 // (React.memo shallow-equal props) does NOT invoke it — which is the claim
 // under test: order-preserving epoch bumps must not re-render cards.
 const cardRenderSpy = vi.hoisted(() => vi.fn())
-const trackSpy = vi.hoisted(() => vi.fn())
 
 type WorktreeListComponent = React.ComponentType<{
   scrollOffsetRef: React.RefObject<number>
@@ -104,7 +103,6 @@ vi.mock('@/lib/sidebar-worktree-activation', () => ({
   activateWorktreeFromSidebar: mockStore.activateWorktreeFromSidebar
 }))
 
-vi.mock('@/lib/telemetry', () => ({ track: trackSpy }))
 
 vi.mock('@/lib/worktree-activation', () => ({
   activateAndRevealWorktree: vi.fn()
@@ -331,7 +329,7 @@ describe('WorktreeCard memo bail-out across epoch bumps', () => {
     expect(cardRenderSpy).toHaveBeenCalledWith('wt-a')
   })
 
-  it('tracks Smart attention changes that preserve the displayed order', async () => {
+  it('keeps the displayed order when Smart attention changes', async () => {
     mockStore.state = { ...mockStore.state, sortBy: 'smart' }
     const container = document.createElement('div')
     document.body.appendChild(container)
@@ -344,7 +342,6 @@ describe('WorktreeCard memo bail-out across epoch bumps', () => {
         card.getAttribute('data-mock-worktree-card')
       )
     expect(renderedOrder()).toEqual(['wt-a', 'wt-b'])
-    expect(trackSpy).not.toHaveBeenCalledWith('smart_sort_class_distribution', expect.anything())
 
     const now = Date.now()
     const paneKey = 'tab-a:11111111-1111-4111-8111-111111111111'
@@ -366,10 +363,6 @@ describe('WorktreeCard memo bail-out across epoch bumps', () => {
     await renderList(root)
 
     expect(renderedOrder()).toEqual(['wt-a', 'wt-b'])
-    expect(trackSpy).toHaveBeenCalledWith(
-      'smart_sort_class_distribution',
-      expect.objectContaining({ class_3: 1, total_worktrees: 2 })
-    )
 
     mockStore.state = {
       ...mockStore.state,
@@ -381,6 +374,5 @@ describe('WorktreeCard memo bail-out across epoch bumps', () => {
     await renderList(root)
 
     expect(renderedOrder()).toEqual(['wt-a', 'wt-b'])
-    expect(trackSpy).toHaveBeenCalledWith('smart_sort_class_1_promotion', { cause: 'blocked' })
   })
 })

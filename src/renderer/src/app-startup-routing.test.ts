@@ -277,39 +277,6 @@ describe('renderer startup runtime routing', () => {
     expect(source).not.toContain("from '../components/UpdateCard'")
   })
 
-  it('keeps crash-report listeners eager while lazy-loading the dialog surface', () => {
-    const surfacesSource = readSource(ROOT_SURFACES_PATH)
-    const hostSource = readSource('src/renderer/src/components/crash-report/CrashReportDialog.tsx')
-
-    expect(surfacesSource).toContain(
-      "import { CrashReportDialog } from '../components/crash-report/CrashReportDialog'"
-    )
-    expect(surfacesSource).not.toContain(
-      "from '../components/crash-report/CrashReportDialogSurface'"
-    )
-    expect(hostSource).toContain("import('./CrashReportDialogSurface').then")
-    expect(hostSource).toContain('window.api.crashReports.getLatestPending()')
-    expect(hostSource).toContain('window.api.ui.onOpenCrashReport')
-    expect(hostSource).toContain('REACT_ERROR_BOUNDARY_REPORT_AVAILABLE_EVENT')
-    expect(hostSource).toContain('if (!open) {')
-    expect(hostSource).not.toContain('if (!open && !loading)')
-  })
-
-  it('clears stale crash-report state before opening the lazy manual report surface', () => {
-    const hostSource = readSource('src/renderer/src/components/crash-report/CrashReportDialog.tsx')
-    const manualOpenStart = hostSource.indexOf('return window.api.ui.onOpenCrashReport(() => {')
-    const manualOpenEnd = hostSource.indexOf('  }, [loadCrashReport])', manualOpenStart)
-    const manualOpenBlock = hostSource.slice(manualOpenStart, manualOpenEnd)
-
-    expect(manualOpenBlock.indexOf('setReport(null)')).toBeGreaterThanOrEqual(0)
-    expect(manualOpenBlock.indexOf('setReport(null)')).toBeLessThan(
-      manualOpenBlock.indexOf('setOpen(true)')
-    )
-    expect(manualOpenBlock.indexOf('setReport(null)')).toBeLessThan(
-      manualOpenBlock.indexOf('loadCrashReport(false)')
-    )
-  })
-
   it('no longer mounts the removed dictation controller', () => {
     const source = readSource(ROOT_SURFACES_PATH)
 

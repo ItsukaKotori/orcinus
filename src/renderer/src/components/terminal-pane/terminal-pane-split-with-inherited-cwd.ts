@@ -34,10 +34,7 @@ export function splitTerminalPaneWithInheritedCwd(args: {
   const cached = args.paneCwdMap.get(args.pane.id)
   if (cached?.confirmed && cached.cwd) {
     const createdPane = manager.splitPane(args.pane.id, args.direction, { cwd: cached.cwd })
-    recordCreatedTerminalPaneSplit(createdPane, {
-      source: args.source,
-      direction: args.direction
-    })
+    recordCreatedTerminalPaneSplit(createdPane)
     return
   }
   const paneId = args.pane.id
@@ -50,8 +47,5 @@ export function splitTerminalPaneWithInheritedCwd(args: {
       fallbackCwd: args.fallbackCwd
     })
   const createdPane = manager.splitPane(paneId, args.direction, { cwdPromise })
-  recordCreatedTerminalPaneSplit(createdPane, {
-    source: args.source,
-    direction: args.direction
-  })
+  recordCreatedTerminalPaneSplit(createdPane)
 }

@@ -3,13 +3,8 @@ import { getDefaultOnboardingState } from '../../../shared/constants'
 import { markOnboardingProjectAdded } from './onboarding-project-checklist'
 
 const mocks = vi.hoisted(() => ({
-  track: vi.fn(),
   onboardingGet: vi.fn(),
   onboardingUpdate: vi.fn()
-}))
-
-vi.mock('@/lib/telemetry', () => ({
-  track: mocks.track
 }))
 
 describe('markOnboardingProjectAdded', () => {
@@ -31,31 +26,23 @@ describe('markOnboardingProjectAdded', () => {
     vi.unstubAllGlobals()
   })
 
-  it('marks an added Git project and emits activation checklist telemetry', async () => {
+  it('marks an added Git project', async () => {
     await markOnboardingProjectAdded('addedRepo')
 
     expect(mocks.onboardingUpdate).toHaveBeenCalledWith({
       checklist: { addedRepo: true }
     })
-    expect(mocks.track).toHaveBeenCalledWith('activation_checklist_item_completed', {
-      item: 'addedRepo',
-      time_since_completed_ms: 0
-    })
   })
 
-  it('marks an added folder and emits activation checklist telemetry', async () => {
+  it('marks an added folder', async () => {
     await markOnboardingProjectAdded('addedFolder')
 
     expect(mocks.onboardingUpdate).toHaveBeenCalledWith({
       checklist: { addedFolder: true }
     })
-    expect(mocks.track).toHaveBeenCalledWith('activation_checklist_item_completed', {
-      item: 'addedFolder',
-      time_since_completed_ms: 0
-    })
   })
 
-  it('does not duplicate checklist telemetry for an already completed item', async () => {
+  it('does not rewrite an already completed item', async () => {
     mocks.onboardingGet.mockResolvedValue({
       ...getDefaultOnboardingState(),
       checklist: { ...getDefaultOnboardingState().checklist, addedRepo: true }
@@ -64,6 +51,5 @@ describe('markOnboardingProjectAdded', () => {
     await markOnboardingProjectAdded('addedRepo')
 
     expect(mocks.onboardingUpdate).not.toHaveBeenCalled()
-    expect(mocks.track).not.toHaveBeenCalled()
   })
 })

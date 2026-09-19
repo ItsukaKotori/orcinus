@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAppStore } from '@/store'
 import { getAllWorktreesFromState } from '@/store/selectors'
-import { track } from '@/lib/telemetry'
+
 import { tabHasLivePty } from '@/lib/tab-has-live-pty'
 import { persistWorktreeSortOrderByHost } from '@/lib/worktree-sort-order-persistence'
 import type { Repo } from '../../../../../../shared/repo-types'
@@ -15,42 +15,12 @@ import {
 import {
   buildAttentionByWorktree,
   hasFreshAttributedAgentStatus,
-  type SmartClass,
   type WorktreeAttention
 } from '../../smart-attention'
 import { useReusedArrayIdentity } from './use-reused-array-identity'
 
 // Debounce re-sort after a sortEpoch bump so background score changes don't jar row positions.
 const SORT_SETTLE_MS = 3_000
-
-function trackSmartClassDistribution(attention: ReadonlyMap<string, WorktreeAttention>): void {
-  let class1 = 0
-  let class2 = 0
-  let class3 = 0
-  let class4 = 0
-  let class5 = 0
-  for (const info of attention.values()) {
-    if (info.cls === 1) {
-      class1++
-    } else if (info.cls === 2) {
-      class2++
-    } else if (info.cls === 3) {
-      class3++
-    } else if (info.cls === 4) {
-      class4++
-    } else {
-      class5++
-    }
-  }
-  track('smart_sort_class_distribution', {
-    class_1: class1,
-    class_2: class2,
-    class_3: class3,
-    class_4: class4,
-    class_5: class5,
-    total_worktrees: attention.size
-  })
-}
 
 // Why debounce: scores are time-decaying, so recomputing on every sortEpoch bump makes worktrees jump; settle to coalesce.
 // Structural changes (add/remove) bypass the debounce so a new worktree appears at its sorted position immediately.
@@ -169,57 +139,6 @@ export function useSidebarWorktreeSortOrder(args: {
       sessionHasHadLiveSmartSignal.current = true
     }
   }, [recomputedSort.detectedLiveSmartSignal])
-
-  // Why a ref of prior class: fire class_1_promotion only on transitions into Class 1, not every recompute that stays there.
-  const prevClassByWorktreeIdRef = useRef<Map<string, SmartClass>>(new Map())
-  // Why gate the first observation: an empty prev-class map makes every existing Class-1 worktree look freshly promoted; treat the first pass as a silent baseline.
-  const hasObservedSmartOnceRef = useRef<boolean>(false)
-
-  useEffect(() => {
-    const attention = recomputedSort.attentionByWorktree
-    if (sortBy !== 'smart' || !attention) {
-      // Why reset: leaving Smart drops the prior-class map (and first-observation gate) so re-entry doesn't fire stale promotions.
-      prevClassByWorktreeIdRef.current = new Map()
-      hasObservedSmartOnceRef.current = false
-      return
-    }
-    const next = new Map<string, SmartClass>()
-    const isFirstObservation = !hasObservedSmartOnceRef.current
-    for (const [worktreeId, info] of attention) {
-      const prev = prevClassByWorktreeIdRef.current.get(worktreeId)
-      if (!isFirstObservation && info.cls === 1 && prev !== 1 && info.cause) {
-        track('smart_sort_class_1_promotion', { cause: info.cause })
-      }
-      next.set(worktreeId, info.cls)
-    }
-    prevClassByWorktreeIdRef.current = next
-    hasObservedSmartOnceRef.current = true
-  }, [sortBy, recomputedSort.attentionByWorktree, recomputedSort.sortedIds])
-
-  // Why retry on recomputation: Smart may activate before attention hydrates; fire once, then stay quiet until the user leaves Smart.
-  const hasTrackedSmartDistributionRef = useRef(false)
-  useEffect(() => {
-    if (sortBy !== 'smart') {
-      hasTrackedSmartDistributionRef.current = false
-      return
-    }
-    const attention = recomputedSort.attentionByWorktree
-    if (hasTrackedSmartDistributionRef.current || !attention || attention.size === 0) {
-      return
-    }
-    trackSmartClassDistribution(attention)
-    hasTrackedSmartDistributionRef.current = true
-  }, [sortBy, recomputedSort.attentionByWorktree, recomputedSort.sortedIds])
-
-  // Why fire on the transition: switching away from Smart is the signal; compare via ref so a round-trip doesn't double-fire.
-  const prevSortByRef = useRef(sortBy)
-  useEffect(() => {
-    const prev = prevSortByRef.current
-    prevSortByRef.current = sortBy
-    if (prev === 'smart' && sortBy === 'recent') {
-      track('smart_to_recent_switch', {})
-    }
-  }, [sortBy])
 
   // Why: only persist during live sessions so cold start reads the persisted order instead of overwriting it.
   useEffect(() => {

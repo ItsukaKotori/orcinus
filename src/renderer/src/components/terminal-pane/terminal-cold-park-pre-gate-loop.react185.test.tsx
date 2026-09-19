@@ -106,9 +106,6 @@ vi.mock('./terminal-parking-e2e-overrides', () => ({
   getTerminalParkingPolicyOverrides: () => ({ coldParkDelayMs: 0, hotRetainMs: 0 })
 }))
 
-vi.mock('@/lib/crash-breadcrumb-recorder', () => ({
-  recordRendererCrashBreadcrumb: vi.fn()
-}))
 
 import { useAppStore } from '../../store'
 import TerminalPaneOverlayLayer from './TerminalPaneOverlayLayer'

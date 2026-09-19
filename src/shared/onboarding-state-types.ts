@@ -1,6 +1,3 @@
-// Subset of onboarding Ghostty DiscoveryState statuses that emit telemetry; UI-only 'idle'/'detecting' don't.
-export type DiscoveryStatusEmitted = 'found' | 'absent' | 'imported'
-
 export type OnboardingOutcome = 'completed' | 'dismissed'
 
 export type OnboardingChecklistState = {
@@ -15,7 +12,7 @@ export type OnboardingChecklistState = {
   addedFolder: boolean
   openedFile: boolean
   ranAgentOnFile: boolean
-  // Why: UI state flag (panel visibility), not an activation event; telemetry checklist enum omits it.
+  // Why: UI state flag (panel visibility), not a task the user performed.
   dismissed: boolean
 }
 

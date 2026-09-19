@@ -2,7 +2,7 @@ import {
   TerminalStreamOpcode,
   encodeTerminalStreamJson
 } from '../../../shared/terminal-stream-protocol'
-import { recordRendererCrashBreadcrumb } from '@/lib/crash-breadcrumb-recorder'
+
 import { RemoteRuntimeTerminalMultiplexerBase } from './remote-runtime-terminal-multiplexer-base'
 import {
   REMOTE_TERMINAL_RESYNC_RETRY_BASE_MS,
@@ -208,13 +208,7 @@ export abstract class RemoteRuntimeTerminalSnapshotController extends RemoteRunt
             typeof stream.commandProbeBaselineSeq === 'number' &&
             snapshot.seq > stream.commandProbeBaselineSeq
           ) {
-            recordRendererCrashBreadcrumb('remote_terminal_stream_stall_probe_baseline_advanced', {
-              baselineSeq: stream.commandProbeBaselineSeq,
-              environmentId: this.environmentId,
-              snapshotSeq: snapshot.seq,
-              streamId: stream.streamId,
-              terminal: stream.terminal
-            })
+
             this.recoverStalledStream(stream)
             return
           }
@@ -224,25 +218,12 @@ export abstract class RemoteRuntimeTerminalSnapshotController extends RemoteRunt
           typeof stream.expectedSeq === 'number' &&
           snapshot.seq > stream.expectedSeq
         ) {
-          recordRendererCrashBreadcrumb('remote_terminal_stream_stall_probe_detected_gap', {
-            deliveredSeq: stream.expectedSeq,
-            environmentId: this.environmentId,
-            snapshotSeq: snapshot.seq,
-            streamId: stream.streamId,
-            terminal: stream.terminal
-          })
+
           this.recoverStalledStream(stream)
           return
         }
         stream.watchdog.completeCommandResponseProbe()
-        recordRendererCrashBreadcrumb('remote_terminal_stream_stall_probe_succeeded', {
-          deliveredSeq: stream.expectedSeq ?? null,
-          environmentId: this.environmentId,
-          probeBaselineSeq: stream.commandProbeBaselineSeq ?? null,
-          snapshotSeq: snapshot?.seq ?? null,
-          streamId: stream.streamId,
-          terminal: stream.terminal
-        })
+
       },
       () => {
         // Snapshot timeout owns recovery; an explicit host error already proves liveness.

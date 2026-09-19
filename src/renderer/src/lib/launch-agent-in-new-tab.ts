@@ -4,7 +4,7 @@ import { planLaunchAgentStartupPrompt } from '@/lib/launch-agent-startup-prompt-
 import { CLIENT_PLATFORM } from '@/lib/new-workspace'
 import { getAgentLaunchPlatformForRepo } from '@/lib/agent-launch-platform'
 import { persistAgentLaunchTabOrder } from '@/lib/launch-agent-tab-order'
-import { tuiAgentToAgentKind } from '@/lib/telemetry'
+import { tuiAgentToAgentKind } from '../../../shared/agent-kind'
 import { createPasteReadinessTimeoutNotice } from '@/lib/launch-agent-paste-timeout-notice'
 import { deliverLaunchPromptToAgentTab } from '@/lib/agent-launch-prompt-delivery'
 import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
@@ -19,7 +19,7 @@ import { resolveLocalWindowsAgentStartupShell } from '../../../shared/windows-te
 import { TUI_AGENT_CONFIG } from '../../../shared/tui-agent-config'
 import { seedCommandCodeSubmittedPromptStatus } from '@/lib/command-code-prompt-status-seed'
 import type { TuiAgent } from '../../../shared/tui-agent'
-import type { LaunchSource } from '../../../shared/telemetry-events'
+import type { LaunchSource } from '../../../shared/launch-context'
 import { getConnectionIdFromState } from '@/lib/connection-context'
 
 export type LaunchAgentInNewTabArgs = {
@@ -198,7 +198,6 @@ function launchAgentInNewTabInternal(args: LaunchAgentInNewTabArgs): LaunchAgent
     const timeoutNotice = createPasteReadinessTimeoutNotice({
       worktreeId,
       tabId: tab.id,
-      agent,
       submitted: submitPastedPrompt
     })
     const deliveryPromise = deliverLaunchPromptToAgentTab({

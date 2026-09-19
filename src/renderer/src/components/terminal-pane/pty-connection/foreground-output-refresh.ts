@@ -1,13 +1,13 @@
-import { recordTerminalFreezeBreadcrumb } from '../terminal-freeze-breadcrumbs'
-import { redactPtyIdForDiagnostics } from '../../../../../shared/pty-delivery-diagnostics'
 import {
   terminalRewriteOutputRenderRefreshDecision,
   terminalRewriteOutputPrefersRenderRefresh,
   windowsEastAsianOutputPrefersRenderRefresh
 } from '@/lib/pane-manager/terminal-complex-script'
 import { RESET_AFTER_BYTE_GAP } from '../../../../../shared/terminal-mode-reset-profiles'
+import { redactPtyIdForDiagnostics } from '../../../../../shared/pty-delivery-diagnostics'
 import { recordTerminalOutput } from '@/lib/pane-manager/pane-scroll'
 import { ensureArabicShapingJoinerForText } from '@/lib/pane-manager/terminal-arabic-shaping-joiner'
+import { recordTerminalFreezeBreadcrumb } from '../terminal-freeze-breadcrumbs'
 import { registerPtyModelRestoreNeededHandler } from '../pty-model-restore-channel'
 import {
   acquireHiddenRendererPtyDeliveryClaim,

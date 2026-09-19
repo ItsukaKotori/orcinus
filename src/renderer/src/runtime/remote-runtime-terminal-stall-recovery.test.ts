@@ -89,16 +89,6 @@ describe('remote terminal stalled stream recovery', () => {
     expect(onTransportClose).toHaveBeenCalledWith({ recoverable: true })
     expect(sentUnsubscribeStreamIds()).toEqual([stalled.streamId])
     expect(unsubscribe).not.toHaveBeenCalled()
-    expect(recordBreadcrumb).toHaveBeenCalledWith({
-      name: 'remote_terminal_stream_stall_recovery',
-      data: expect.objectContaining({
-        inactiveForMs: REMOTE_TERMINAL_DELIVERY_STALL_TIMEOUT_MS,
-        outstandingDeliveryBytes: 'host output that xterm never parses'.length,
-        reason: 'delivery-credit-timeout',
-        streamId: stalled.streamId,
-        terminal: 'term-stalled'
-      })
-    })
     healthy.close()
   })
 
@@ -193,16 +183,6 @@ describe('remote terminal stalled stream recovery', () => {
 
     expect(onTransportClose).toHaveBeenCalledWith({ recoverable: true })
     expect(sentUnsubscribeStreamIds()).toEqual([stream.streamId])
-    expect(recordBreadcrumb).toHaveBeenCalledWith({
-      name: 'remote_terminal_stream_stall_recovery',
-      data: expect.objectContaining({
-        inactiveForMs: REMOTE_TERMINAL_COMMAND_RESPONSE_TIMEOUT_MS,
-        outstandingDeliveryBytes: 0,
-        reason: 'command-response-timeout',
-        streamId: stream.streamId,
-        terminal: 'term-silent'
-      })
-    })
   })
 
   it('keeps a silent responsive stream after its authoritative snapshot probe', async () => {

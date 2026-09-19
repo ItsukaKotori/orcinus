@@ -82,7 +82,6 @@ describe('ProjectAddedDialog', () => {
     expect(mocks.state.fetchWorktrees).toHaveBeenCalledWith('repo-1')
     expect(mocks.finishProjectAddWithDefaultCheckout).toHaveBeenCalledWith({
       repoId: 'repo-1',
-      source: 'project_added_compat',
       closeModal: mocks.state.closeModal,
       setHideDefaultBranchWorkspace: mocks.state.setHideDefaultBranchWorkspace
     })
@@ -114,7 +113,6 @@ describe('ProjectAddedDialog', () => {
     expect(mocks.finishProjectAddWithDefaultCheckout).toHaveBeenCalledTimes(1)
     expect(mocks.finishProjectAddWithDefaultCheckout).toHaveBeenCalledWith({
       repoId: 'repo-1',
-      source: 'project_added_compat',
       closeModal: mocks.state.closeModal,
       setHideDefaultBranchWorkspace: mocks.state.setHideDefaultBranchWorkspace
     })

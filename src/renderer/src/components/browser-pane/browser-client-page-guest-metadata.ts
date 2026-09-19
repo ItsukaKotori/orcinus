@@ -1,7 +1,7 @@
 import type { BrowserLoadError } from '../../../../shared/browser-workspace-types'
 import type { BrowserPageFailLoadEvent } from './describe-page/browser-page-types'
 import { resolveBrowserWebviewLoadFailure } from './navigate/browser-webview-load-failure'
-import { recordRendererCrashBreadcrumb } from '@/lib/crash-breadcrumb-recorder'
+
 import { redactKagiSessionToken } from '../../../../shared/browser-url'
 import type { BrowserClientPageMetadataSnapshot } from './browser-client-page-metadata-publisher'
 
@@ -35,10 +35,7 @@ export function readBrowserClientPageGuestMetadataIfLive(
     // Why recorded: the catch is total, so a read failure that is NOT guest death would otherwise
     // be indistinguishable from one — the breadcrumb carries the error text the console cannot.
     console.warn('[browser-client-page] guest read failed, treating the page as gone:', error)
-    recordRendererCrashBreadcrumb('browser_client_page_guest_read_failed', {
-      errorName: error instanceof Error ? error.name : typeof error,
-      errorMessage: error instanceof Error ? error.message : String(error)
-    })
+
     return null
   }
 }

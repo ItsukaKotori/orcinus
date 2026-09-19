@@ -60,9 +60,6 @@ vi.mock('./terminal-parking-e2e-overrides', () => ({
   getTerminalParkingPolicyOverrides: () => ({})
 }))
 
-vi.mock('@/lib/crash-breadcrumb-recorder', () => ({
-  recordRendererCrashBreadcrumb: () => {}
-}))
 
 // Why mount writes: a revealing pane publishes its title and registers its
 // layout leaf — the mount-lifecycle writes that feed the exemption's layout

@@ -3,7 +3,7 @@ import { launchAgentInNewTab } from '@/lib/launch-agent-in-new-tab'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { Repo } from '../../../../shared/repo-types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
-import type { LaunchSource } from '../../../../shared/telemetry-events'
+import type { LaunchSource } from '../../../../shared/launch-context'
 import type {
   SourceControlActionRecipe,
   SourceControlLaunchActionId

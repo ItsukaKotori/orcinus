@@ -356,7 +356,6 @@ describe('useIpcEvents agent status snapshot integration', () => {
 
   it('buffers ready push events until a mounted tab contains the pane leaf', async () => {
     const setAgentStatus = vi.fn()
-    const track = vi.fn()
     const onSetListenerRef: { current: ((data: AgentStatusSetData) => void) | null } = {
       current: null
     }
@@ -394,7 +393,6 @@ describe('useIpcEvents agent status snapshot integration', () => {
       }
     }))
     stubAuxiliaryModules()
-    vi.doMock('@/lib/telemetry', () => ({ track }))
     vi.stubGlobal(
       'window',
       buildWindowApi({
@@ -433,9 +431,6 @@ describe('useIpcEvents agent status snapshot integration', () => {
     })
 
     expect(setAgentStatus).not.toHaveBeenCalled()
-    expect(track).toHaveBeenCalledWith('agent_hook_unattributed', {
-      reason: 'unknown_tab_id'
-    })
 
     const previousStoreState = { ...storeState }
     storeState.terminalLayoutsByTabId = {

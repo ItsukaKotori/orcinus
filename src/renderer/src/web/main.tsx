@@ -77,7 +77,6 @@ function WebRootBoundary(): React.JSX.Element {
   return (
     <RecoverableRenderErrorBoundary
       boundaryId="web.root"
-      surface="web-root"
       title={translate('app.recoverableError.webTitle', 'Orca web hit a renderer error.')}
       description={translate(
         'app.recoverableError.webDescription',

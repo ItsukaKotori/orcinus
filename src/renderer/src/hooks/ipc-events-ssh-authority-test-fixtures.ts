@@ -83,9 +83,6 @@ export function buildSshAuthorityReconciliationHarness(args: {
   vi.doMock('./direct-ssh-reconnect-coordinator', () => ({
     createDirectSshReconnectCoordinator: () => coordinator
   }))
-  vi.doMock('@/lib/direct-ssh-reconnect-product-telemetry', () => ({
-    createDirectSshReconnectProductTelemetryAdapter: vi.fn()
-  }))
   vi.stubGlobal(
     'window',
     buildWindowApi({

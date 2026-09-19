@@ -8,13 +8,8 @@ const MOCK_HOME = 'C:\\Users\\orcinus'
 export function createSettingsApi(): SettingsApi {
   let state: GlobalSettings = {
     ...getDefaultSettings(MOCK_HOME),
-    // Simplified groups from spec 6.4; only 插件/遥测 carry explicit mock values.
-    pluginSystemEnabled: true,
-    telemetry: {
-      optedIn: false,
-      installId: 'mock-install-id',
-      existedBeforeTelemetryRelease: true
-    }
+    // Simplified groups from spec 6.4; only 插件 carries an explicit mock value.
+    pluginSystemEnabled: true
   }
   return {
     get: async () => state,

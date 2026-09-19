@@ -21,11 +21,11 @@ import {
   shouldSkipAltFrameForWidthMismatch
 } from '../terminal-snapshot-replay-paint'
 
+import { recordTerminalFreezeBreadcrumb } from '../terminal-freeze-breadcrumbs'
 import { HIDDEN_OUTPUT_RESTORE_UNAVAILABLE_WARNING } from './hidden-output-restore-limits'
 import { shouldWritePtyOutputForeground } from './foreground-output-scan'
 import { isRemoteRuntimePtyId } from './paired-parked-terminal-restore'
 import { restoredSnapshotPaintsPrintableContent } from '../restored-snapshot-coverage'
-import { recordTerminalFreezeBreadcrumb } from '../terminal-freeze-breadcrumbs'
 
 import type { ConnectPanePtySession } from './connect-pane-pty-session'
 

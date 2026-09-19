@@ -10,7 +10,6 @@ import { translate } from '@/i18n/i18n'
 import type { OpenFile } from '@/store/slices/editor'
 import { ExternalFileChangeCompareDialog } from './ExternalFileChangeCompareDialog'
 import { getDiskBaselineSignature } from './diff-content-signature'
-import { trackExternalChangeConflictAction } from './editor-external-change-telemetry'
 
 // Why: when an external process (usually an agent) rewrites a file while the
 // tab holds unsaved edits, the reload pipeline preserves the buffer and marks
@@ -71,7 +70,6 @@ export function reloadTabContentFromDisk(
             // restart scan re-deriving the conflict the undo just brought back.
             current.setLastKnownDiskSignature(file.id, discardedDiskSignature)
           }
-          trackExternalChangeConflictAction(file, 'undo_reload')
         }
       }
     }
@@ -125,15 +123,12 @@ export function ExternalFileChangeBanner({
   const [compareOpen, setCompareOpen] = useState(false)
 
   const handleReload = (): void => {
-    trackExternalChangeConflictAction(file, 'reload')
     reloadTabContentFromDisk(file, reloadContent)
   }
   const handleKeepEdits = (): void => {
-    trackExternalChangeConflictAction(file, 'keep')
     keepTabEditsOverExternalChange(file)
   }
   const handleCompare = (): void => {
-    trackExternalChangeConflictAction(file, 'compare')
     setCompareOpen(true)
   }
 

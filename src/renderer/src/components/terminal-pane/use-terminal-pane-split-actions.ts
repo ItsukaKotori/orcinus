@@ -9,14 +9,8 @@ import {
 import { recordCreatedTerminalPaneSplit } from './terminal-pane-split-completion'
 import { splitTerminalPaneWithInheritedCwd } from './terminal-pane-split-with-inherited-cwd'
 
-export function recordContextMenuCreatedTerminalPaneSplit(
-  createdPane: unknown,
-  args: {
-    source: 'context_menu'
-    direction: 'vertical' | 'horizontal'
-  }
-): boolean {
-  return recordCreatedTerminalPaneSplit(createdPane, args)
+export function recordContextMenuCreatedTerminalPaneSplit(createdPane: unknown): boolean {
+  return recordCreatedTerminalPaneSplit(createdPane)
 }
 
 type UseTerminalPaneSplitActionsDeps = {

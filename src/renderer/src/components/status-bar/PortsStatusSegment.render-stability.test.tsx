@@ -64,9 +64,8 @@ describe('PortsStatusSegment render stability', () => {
       root.render(
         <RecoverableRenderErrorBoundary
           boundaryId="oracle.status-bar"
-          surface="overlay"
+         
           compact
-          reportAsCrash={false}
           title="The status bar hit an error."
           description="Retry the status bar to remount its controls."
         >

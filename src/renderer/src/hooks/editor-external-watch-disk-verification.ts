@@ -85,13 +85,13 @@ function readFileForEchoVerification(args: {
   return pending
 }
 
-function markTabsChangedOnDisk(fileIds: string[], connectionId: string | undefined): void {
+function markTabsChangedOnDisk(fileIds: string[], _connectionId: string | undefined): void {
   const state = useAppStore.getState()
   for (const fileId of fileIds) {
     const file = state.openFiles.find((candidate) => candidate.id === fileId)
     // Why: echo verification resolves async — the tab may have been closed since, so only mark files still open.
     if (file) {
-      markFileChangedOnDisk(state, file, { connectionId, origin: 'live' })
+      markFileChangedOnDisk(state, file)
     }
   }
 }
@@ -145,7 +145,7 @@ type LiveMoveVerifyCandidate = {
 function resolveLiveMoveVerification(
   candidate: LiveMoveVerifyCandidate,
   diskSignature: string | null,
-  connectionId: string | undefined,
+  _connectionId: string | undefined,
   consumeProvenance: boolean
 ): void {
   const { fileId, baseline, generation, operationId } = candidate
@@ -171,7 +171,7 @@ function resolveLiveMoveVerification(
   }
   const isMoveEcho = baseline !== undefined && diskSignature === baseline
   if (!isMoveEcho) {
-    markFileChangedOnDisk(state, file, { connectionId, origin: 'live' })
+    markFileChangedOnDisk(state, file)
   }
 }
 

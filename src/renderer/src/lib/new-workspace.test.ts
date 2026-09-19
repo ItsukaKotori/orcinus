@@ -334,7 +334,7 @@ describe('ensureAgentStartupInTerminal prompt delivery', () => {
     })
 
     expect(mockSendRuntimePtyInputVerified).not.toHaveBeenCalled()
-    expect(mockShowAutomationPromptNotSentToast).toHaveBeenCalledWith('aider')
+    expect(mockShowAutomationPromptNotSentToast).toHaveBeenCalledWith()
   })
 
   it('does not toast when a follow-up prompt is delivered', async () => {
@@ -370,7 +370,7 @@ describe('ensureAgentStartupInTerminal prompt delivery', () => {
       | undefined
     expect(call?.onTimeout).toBeTypeOf('function')
     call?.onTimeout?.()
-    expect(mockShowAutomationPromptNotSentToast).toHaveBeenCalledWith('claude')
+    expect(mockShowAutomationPromptNotSentToast).toHaveBeenCalledWith()
   })
 
   it('does not track when follow-up prompt delivery rejects', async () => {

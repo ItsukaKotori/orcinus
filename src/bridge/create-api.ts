@@ -6,7 +6,6 @@ import { createAutomationsApi } from './mock/automations-api'
 import { createBrowserApi } from './mock/browser-api'
 import { createCacheApi } from './mock/cache-api'
 import { createCliApi } from './mock/cli-api'
-import { createCrashReportsApi } from './mock/crash-reports-api'
 import { createDocPreviewApi } from './mock/doc-preview-api'
 import { createFolderWorkspacesApi } from './mock/folder-workspaces-api'
 import { createFsApi } from './mock/fs-api'
@@ -51,7 +50,6 @@ export function createAdeApi(): PreloadApi {
     browser: createBrowserApi(),
     cache: createCacheApi(),
     cli: createCliApi(),
-    crashReports: createCrashReportsApi(),
     docPreview: createDocPreviewApi(),
     folderWorkspaces: createFolderWorkspacesApi(),
     fs: createFsApi(),

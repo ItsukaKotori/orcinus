@@ -1,6 +1,6 @@
 import { useAppStore } from '@/store'
 import { reconcileTabOrder } from '@/components/tab-bar/reconcile-order'
-import { tuiAgentToAgentKind } from '@/lib/telemetry'
+import { tuiAgentToAgentKind } from '../../../shared/agent-kind'
 import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
 import {
   createWebRuntimeSessionTerminal,

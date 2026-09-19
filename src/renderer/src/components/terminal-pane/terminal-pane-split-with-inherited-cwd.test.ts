@@ -81,10 +81,7 @@ describe('splitTerminalPaneWithInheritedCwd', () => {
     })
 
     expect(splitPane).toHaveBeenCalledWith(1, 'horizontal', { cwd: '/cached' })
-    expect(mocks.recordCreatedTerminalPaneSplit).toHaveBeenCalledWith(createdPane, {
-      source: 'keyboard',
-      direction: 'horizontal'
-    })
+    expect(mocks.recordCreatedTerminalPaneSplit).toHaveBeenCalledWith(createdPane)
   })
 
   it('creates and records the split before asynchronous cwd resolution settles', async () => {
@@ -126,10 +123,7 @@ describe('splitTerminalPaneWithInheritedCwd', () => {
     })
     expect(staleSplitPane).not.toHaveBeenCalled()
     expect(liveSplitPane).toHaveBeenCalledWith(1, 'vertical', { cwdPromise: cwd.promise })
-    expect(mocks.recordCreatedTerminalPaneSplit).toHaveBeenCalledWith(createdPane, {
-      source: 'keyboard',
-      direction: 'vertical'
-    })
+    expect(mocks.recordCreatedTerminalPaneSplit).toHaveBeenCalledWith(createdPane)
 
     const spawnHints = liveSplitPane.mock.calls[0]?.[2] as
       | { cwdPromise?: Promise<string> }

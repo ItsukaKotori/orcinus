@@ -147,8 +147,7 @@ function createCoordinatorHarness(fakeScheduler = createFakeScheduler()) {
     }),
     finalizeHydratedTerminalPanes: vi.fn(() => 1),
     correctUnboundTerminalPanes: vi.fn(() => 1),
-    syncRemoteWorkspaceAfterConnect: vi.fn(),
-    onTelemetry: vi.fn()
+    syncRemoteWorkspaceAfterConnect: vi.fn()
   }
   const coordinator = createDirectSshReconnectCoordinator(deps)
   return { coordinator, deps, current, events, ...fakeScheduler }
@@ -496,71 +495,4 @@ describe('createDirectSshReconnectCoordinator', () => {
     expect(harness.coordinator.correctUnboundTerminals(latest, 'wake-refresh')).toBe(0)
   })
 
-  it('emits one aggregate for joined work with scheduler and scope metrics', async () => {
-    const harness = createCoordinatorHarness()
-    const owner = authority('target-a')
-    harness.current.set(owner.targetId, owner)
-    harness.coordinator.replaceAuthority(owner)
-    const input = preparationInput(owner, ['repo'], {
-      telemetry: {
-        catalogOutcome: 'degraded',
-        catalogDurationMs: 12,
-        gitWorktreeCount: 3,
-        folderWorkspaceCount: 2,
-        ambiguousOwnerCount: 1,
-        contradictoryOwnerCount: 1
-      }
-    })
-
-    const first = harness.coordinator.prepareOnly(input)
-    const joined = harness.coordinator.prepareOnly(input)
-    harness.leases[0].deferred.resolve({
-      status: 'complete',
-      metrics: {
-        queueWaitDurationsMs: [8],
-        providerExecutionDurationsMs: [13],
-        timeoutRetryCount: 1,
-        locallySettledWaiterCount: 1,
-        cancelDebtCount: 1,
-        replacementAdmissionDelayedCount: 1,
-        overlappingJoinCount: 2,
-        peakLocallyUnsettled: 4,
-        estimatedLateWorkAllowanceCount: 1
-      }
-    })
-    await Promise.all([first, joined])
-
-    expect(harness.deps.onTelemetry).toHaveBeenCalledOnce()
-    expect(harness.deps.onTelemetry).toHaveBeenCalledWith(
-      expect.objectContaining({
-        mode: 'prepare-only',
-        catalogOutcome: 'degraded',
-        catalogDurationMs: 12,
-        gitWorktreeCount: 3,
-        folderWorkspaceCount: 2,
-        queueWaitDurationsMs: [8],
-        providerExecutionDurationsMs: [13],
-        timeoutRetryCount: 1,
-        cancelDebtCount: 1,
-        replacementAdmissionDelayedCount: 1,
-        overlappingJoinCount: 3,
-        peakLocallyUnsettled: 4
-      })
-    )
-  })
-
-  it('does not let a telemetry callback failure affect recovery', async () => {
-    const harness = createCoordinatorHarness()
-    const owner = authority('target-a')
-    harness.current.set(owner.targetId, owner)
-    vi.mocked(harness.deps.onTelemetry!).mockImplementation(() => {
-      throw new Error('telemetry unavailable')
-    })
-
-    const pending = harness.coordinator.requestReconnect(owner)
-    await flush()
-    harness.complete(0)
-
-    await expect(pending).resolves.toMatchObject({ status: 'complete' })
-  })
 })

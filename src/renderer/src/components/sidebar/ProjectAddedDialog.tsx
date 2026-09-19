@@ -100,7 +100,6 @@ export default function ProjectAddedDialog(): null {
       if (!cancelled && handoffRunRef.current === runId) {
         await finishProjectAddWithDefaultCheckout({
           repoId,
-          source: 'project_added_compat',
           closeModal,
           setHideDefaultBranchWorkspace
         })

@@ -13,7 +13,7 @@ import {
   getGitHubPRRefreshStateExpiryAt
 } from '@/store/github/pr-refresh-state'
 import type { ChecksPanelControllerState } from './use-checks-panel-controller-state'
-import { recordChecksPanelPRRefreshBreadcrumb } from '../checks-panel-pr-refresh-breadcrumb'
+
 import { isChecksPanelHardRefreshErrorType } from '../checks-panel-review-creation'
 import type { PRInfo } from '../../../../../shared/github/pull-request-types'
 import type { PRRefreshErrorType } from '../../../../../shared/github/pull-request-refresh-types'
@@ -264,18 +264,7 @@ export function useChecksPanelContextState(model: ChecksPanelContextStateInput) 
           return
         }
         // Why: time alone doesn't publish Zustand updates; this timeout clears abandoned refresh UI without treating expiry as no-PR evidence.
-        recordChecksPanelPRRefreshBreadcrumb({
-          event: 'stale_cleared',
-          provider: 'github',
-          repoId: repo?.id,
-          worktreeId: activeWorktreeId,
-          branch,
-          prCacheKey,
-          prNumber,
-          prState: pr?.state,
-          prChecksStatus: pr?.checksStatus,
-          refreshState: rawState
-        })
+
         storeState.expireGitHubPRRefreshState(prCacheKey, token)
       },
       Math.max(0, expiryAt - Date.now() + 1)

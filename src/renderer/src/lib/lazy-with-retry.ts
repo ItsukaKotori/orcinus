@@ -1,9 +1,6 @@
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react'
 
-import {
-  requestLazyChunkRecoveryReload,
-  type LazyChunkRecoveryReloadOutcome
-} from './lazy-chunk-recovery-reload'
+import { requestLazyChunkRecoveryReload } from './lazy-chunk-recovery-reload'
 
 /**
  * Resilient replacement for React.lazy.
@@ -106,28 +103,6 @@ export function resetLazyChunkReloadRequestsForTest(): void {
   reloadRequestInFlight = false
 }
 
-type ReloadBreadcrumbName = 'lazy_chunk_reload' | 'lazy_chunk_reload_vetoed'
-
-function recordReloadBreadcrumb(
-  name: ReloadBreadcrumbName,
-  reloadKey: string,
-  message: string,
-  outcome?: string
-): void {
-  // Inlined rather than importing crash-diagnostics so this low-level recovery
-  // primitive stays free of the renderer/webview module graph (keeps it SSR- and
-  // unit-test-friendly). Mirrors crash-diagnostics' best-effort breadcrumb call.
-  try {
-    const api = (window as Window & { api?: Window['api'] }).api
-    api?.crashReports.recordBreadcrumb({
-      name,
-      data: { reloadKey, message, ...(outcome === undefined ? {} : { outcome }) }
-    })
-  } catch {
-    // Crash evidence is best-effort and must never mask the original failure.
-  }
-}
-
 const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
 
 /** Recovery is spent, so name the failure in the one way the boundary can contain. */
@@ -191,7 +166,6 @@ export async function loadLazyWithRetry<T extends AnyComponent>(
   }
 
   const reloadKey = options.reloadKey ?? 'unknown'
-  const failureMessage = lastError instanceof Error ? lastError.message : String(lastError)
   const reloadGuardState = readChunkReloadGuardState()
 
   if (
@@ -205,15 +179,12 @@ export async function loadLazyWithRetry<T extends AnyComponent>(
     }
     reloadRequestsThisDocument += 1
     reloadRequestInFlight = true
-    recordReloadBreadcrumb('lazy_chunk_reload', reloadKey, failureMessage)
-    let outcome: LazyChunkRecoveryReloadOutcome = 'request-failed'
     try {
       // A landed reload tears down this document before the promise settles.
-      outcome = await requestLazyChunkRecoveryReload(window)
+      await requestLazyChunkRecoveryReload(window)
     } finally {
       reloadRequestInFlight = false
       clearChunkReloadGuard()
-      recordReloadBreadcrumb('lazy_chunk_reload_vetoed', reloadKey, failureMessage, outcome)
     }
     // The reload was this document's last recovery step for this chunk, whether it
     // was refused outright or simply never navigated.
@@ -230,12 +201,6 @@ export async function loadLazyWithRetry<T extends AnyComponent>(
     if (!reloadRequestInFlight && isKnownDynamicImportFailure(lastError)) {
       // Record the veto before the ring can evict it; the failure is then contained.
       clearChunkReloadGuard()
-      recordReloadBreadcrumb(
-        'lazy_chunk_reload_vetoed',
-        reloadKey,
-        failureMessage,
-        'guard-not-landed'
-      )
     }
     throw containedChunkFailure(lastError, reloadKey)
   }

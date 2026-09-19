@@ -1,4 +1,3 @@
-import { getConnectionIdForFile } from '@/lib/connection-context'
 import { getOpenFilesForExternalFileChange, type EditorPathMutationTarget } from './editor-autosave'
 import { markFileChangedOnDisk } from './editor-changed-on-disk-mark'
 import { hasRecentSelfWrite } from './editor-self-write-registry'
@@ -33,10 +32,7 @@ export function createEditorExternalChangeTabReset({
       if (file.isDirty) {
         // Why: skip Orca's own-save echo, which routes here bypassing the watch hook's echo verification.
         if (!hasRecentSelfWrite(file.filePath, file.runtimeEnvironmentId)) {
-          markFileChangedOnDisk(state, file, {
-            connectionId: getConnectionIdForFile(file.worktreeId, file.filePath) ?? undefined,
-            origin: 'live'
-          })
+          markFileChangedOnDisk(state, file)
         }
         continue
       }

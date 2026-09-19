@@ -296,7 +296,7 @@ async function deliverAgentStartupToTerminal(
     // Why: a dropped follow-up is otherwise silent — surface the same toast the
     // draft path uses so the user knows to open the workspace and paste it.
     if (!delivered) {
-      showAutomationPromptNotSentToast(startup.agent)
+      showAutomationPromptNotSentToast()
     }
   }
 
@@ -313,7 +313,7 @@ async function deliverAgentStartupToTerminal(
       // planning is unavailable, so this paste is the first delivery attempt.
       forcePaste: true,
       // Why: surface a dropped draft instead of silently losing it.
-      onTimeout: () => showAutomationPromptNotSentToast(startup.agent)
+      onTimeout: () => showAutomationPromptNotSentToast()
     })
   }
 }

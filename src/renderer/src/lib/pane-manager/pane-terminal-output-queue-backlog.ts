@@ -1,4 +1,3 @@
-import { recordRendererCrashBreadcrumb } from '@/lib/crash-breadcrumb-recorder'
 import {
   recordTerminalOutputQueueDebugPressure as recordQueueDebugPressure,
   terminalOutputSchedulerDebugEnabled as debugEnabled,
@@ -9,18 +8,7 @@ import {
   clearForegroundRelease,
   isEntryDrainable
 } from './pane-terminal-foreground-queue-state'
-import {
-  ALWAYS_REFRESH_FOREGROUND_SYNCHRONOUSLY,
-  BACKGROUND_BACKLOG_WARNING,
-  FOREGROUND_BACKLOG_WARNING,
-  LARGE_BACKLOG_CHARS,
-  MAX_BACKGROUND_QUEUE_CHUNKS,
-  fireQueuedAckCredits,
-  getTerminalOutputMaxQueueChars,
-  queuedByTerminal,
-  type QueueEntry,
-  type TerminalOutputBeforeWrite
-} from './pane-terminal-output-queue-registry'
+import { ALWAYS_REFRESH_FOREGROUND_SYNCHRONOUSLY, BACKGROUND_BACKLOG_WARNING, LARGE_BACKLOG_CHARS, MAX_BACKGROUND_QUEUE_CHUNKS, fireQueuedAckCredits, getTerminalOutputMaxQueueChars, queuedByTerminal, type QueueEntry, type TerminalOutputBeforeWrite } from './pane-terminal-output-queue-registry'
 
 export function discardDetachedQueueEntry(entry: QueueEntry): void {
   fireQueuedAckCredits(entry)
@@ -45,11 +33,7 @@ export function replaceBacklogWithWarning(
   const shouldNotify = !entry.backgroundBacklogDropped
   if (shouldNotify) {
     // Why: field visibility for cap tuning — drop frequency and size decide whether the cap is too small (issue #2836 / #7017).
-    recordRendererCrashBreadcrumb('terminal_output_backlog_dropped', {
-      foreground: warning === FOREGROUND_BACKLOG_WARNING,
-      droppedChars: entry.queuedChars,
-      capChars: getTerminalOutputMaxQueueChars()
-    })
+
   }
   let beforeWrite: TerminalOutputBeforeWrite | undefined
   for (let index = entry.chunks.length - 1; index >= entry.chunkIndex; index--) {

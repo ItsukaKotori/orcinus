@@ -19,6 +19,7 @@ import type { PtyRendererDeliveryHealthReply } from '../../../../shared/pty-rend
 import { redactPtyIdForDiagnostics } from '../../../../shared/pty-delivery-diagnostics'
 import { deliverPulledPtyModelRestoreMarkers } from './pty-model-restore-channel'
 import { getProcessedPtyCharTotals } from './terminal-pty-ack-gate'
+
 import { recordTerminalFreezeBreadcrumb } from './terminal-freeze-breadcrumbs'
 
 const WATCHDOG_INTERVAL_MS = 15_000
@@ -156,6 +157,7 @@ async function healDeadPushDelivery(
       }))
     )
   }
+
   recordTerminalFreezeBreadcrumb('watchdog-heal', {
     listenerCountBeforeReattach,
     writtenOffPtyCount: writtenOff.length,

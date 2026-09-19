@@ -1,15 +1,13 @@
 import type { TuiAgent } from '../../../shared/tui-agent'
-import type { EventProps } from '../../../shared/telemetry-events'
 import type { StartupCommandDelivery } from '../../../shared/codex-startup-delivery'
 import type {
   AgentProviderSessionMetadata,
   SleepingAgentLaunchConfig
 } from '../../../shared/agent-session-resume'
 import type { SessionOptionValue } from '../../../shared/agent-session-option-types'
+import type { AgentLaunchContext } from '../../../shared/launch-context'
 
-/** Telemetry threaded from the launch site to `pty:spawn`; main fires `agent_started`
- *  only after the spawn succeeds. See telemetry-plan.md§Agent launch semantics. */
-export type AgentStartedTelemetry = EventProps<'agent_started'>
+export type AgentStartedTelemetry = AgentLaunchContext
 
 /** Startup command threaded onto a worktree's first terminal at activation. */
 export type WorktreeStartupPayload = {

@@ -175,11 +175,6 @@ export function installPaneAgentIdentity(session: ConnectPanePtySession): void {
       // surviving shell then receives pointer moves as typed SGR reports; the
       // replay guard keeps xterm's auto-replies from leaking to the shell.
       replayIntoTerminal(session.pane, session.deps.replayingPanesRef, POST_REPLAY_REATTACH_RESET, {
-        breadcrumbIdentity: {
-          tabId: session.deps.tabId,
-          worktreeId: session.deps.worktreeId,
-          ptyId: session.transport.getPtyId()
-        },
         shouldRefreshViewportSynchronously: session.shouldRefreshForegroundSynchronously
       })
       if (reason === 'visible-pty') {

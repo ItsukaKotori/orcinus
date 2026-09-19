@@ -9,7 +9,7 @@ import {
   selectRetentionForceParkedTerminalWorktrees,
   type TerminalWorktreeRetentionCandidate
 } from './terminal-pane/terminal-hidden-worktree-retention'
-import { recordRendererCrashBreadcrumb } from '@/lib/crash-breadcrumb-recorder'
+
 import { selectEvictionExemptTerminalTabIds } from './terminal-pane/terminal-eviction-exempt-tabs'
 import { captureForceParkedWorktreeBuffers } from './terminal-pane/force-park-buffer-capture'
 import { warnTerminalLifecycleAnomaly } from './terminal-pane/terminal-lifecycle-diagnostics'
@@ -103,10 +103,7 @@ export function useTerminalParkingPass(controller: TerminalParkingFoundation): v
             worktreeId,
             reason: `exemptTabs=${forceParkedTabs.length} ${formatEvictionExemptRouteCounts(exemptRouteCounts)}`
           })
-          recordRendererCrashBreadcrumb('terminal_force_park_freed_no_panes', {
-            exemptTabs: forceParkedTabs.length,
-            ...exemptRouteCounts
-          })
+
         }
         if (
           captureForceParkedWorktreeBuffers({

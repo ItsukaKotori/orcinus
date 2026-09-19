@@ -4,7 +4,6 @@ import { useAppStore } from '@/store'
 import { useMountedRef } from '@/hooks/useMountedRef'
 import type { NestedRepoScanResult } from '../../../../shared/project-group-types'
 import type { SshTarget, SshConnectionState } from '../../../../shared/ssh-types'
-import { createNestedRepoTelemetryAttemptId } from '../../../../shared/nested-repo-telemetry'
 import { translate } from '@/i18n/i18n'
 import { extractIpcErrorMessage } from '@/lib/ipc-error'
 import { upsertAddedRepoWithProjectHostSetup } from './add-repo-store-upsert'
@@ -34,11 +33,9 @@ export function useRemoteRepo(
     scan: NestedRepoScanResult,
     selectedPath: string,
     connectionId: string,
-    attemptId: string,
     inProgress: boolean,
     scanId: string | null
-  ) => void,
-  onNestedScanResult?: (scan: NestedRepoScanResult | null, attemptId: string) => void
+  ) => void
 ) {
   const [sshTargets, setSshTargets] = useState<(SshTarget & { state?: SshConnectionState })[]>([])
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null)
@@ -147,7 +144,6 @@ export function useRemoteRepo(
     setIsAddingRemote(true)
     setRemoteError(null)
     try {
-      const attemptId = createNestedRepoTelemetryAttemptId()
       const scanId = `nested-repo-scan-${Date.now()}-${Math.random().toString(36).slice(2)}`
       setRemoteNestedScanId(scanId)
       const scan = await scanNestedRepos?.(trimmedRemotePath, selectedTargetId, {
@@ -162,22 +158,14 @@ export function useRemoteRepo(
           ) {
             return
           }
-          showNestedRepoReview?.(
-            progressScan,
-            trimmedRemotePath,
-            selectedTargetId,
-            attemptId,
-            true,
-            scanId
-          )
+          showNestedRepoReview?.(progressScan, trimmedRemotePath, selectedTargetId, true, scanId)
         }
       })
       if (!mountedRef.current || gen !== remoteGenRef.current) {
         return
       }
-      onNestedScanResult?.(scan ?? null, attemptId)
       if (scan?.selectedPathKind === 'non_git_folder' && scan.repos.length > 0) {
-        showNestedRepoReview?.(scan, trimmedRemotePath, selectedTargetId, attemptId, false, scanId)
+        showNestedRepoReview?.(scan, trimmedRemotePath, selectedTargetId, false, scanId)
         setRemoteNestedScanId(null)
         return
       }
@@ -239,7 +227,6 @@ export function useRemoteRepo(
     remotePath,
     scanNestedRepos,
     showNestedRepoReview,
-    onNestedScanResult,
     fetchWorktrees,
     mountedRef,
     closeModal,

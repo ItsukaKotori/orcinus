@@ -264,11 +264,6 @@ export function installPtyExitHibernate(session: ConnectPanePtySession): void {
         // eats every click and keystroke against a dead transport — disarm the
         // modes now and arm the reveal-time wake.
         replayIntoTerminal(session.pane, session.deps.replayingPanesRef, POST_REPLAY_MODE_RESET, {
-          breadcrumbIdentity: {
-            tabId: session.deps.tabId,
-            worktreeId: session.deps.worktreeId,
-            ptyId
-          },
           shouldRefreshViewportSynchronously: session.shouldRefreshForegroundSynchronously
         })
         session.hibernatedWakeTarget = { ptyId, record: sleepingRecordEntry.record }

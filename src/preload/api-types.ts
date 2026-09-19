@@ -19,7 +19,6 @@ import type { AppApi, E2EApi, PlatformApi } from './api/app-api'
 import type { AutomationsApi } from './api/automation-api'
 import type { BrowserApi } from './api/browser-api'
 import type { CliApi } from './api/cli-install-api'
-import type { CrashReportsApi, FeedbackApi } from './api/crash-report-api'
 import type { TerminalPreviewApi } from './api/terminal-preview-bridge'
 import type { DocPreviewApi } from './api/doc-preview-api'
 import type { EphemeralVmApi } from './api/ephemeral-vm-api'
@@ -49,8 +48,8 @@ import type { RuntimeApi } from './api/runtime-api'
 import type { KeybindingsApi, SettingsApi } from './api/settings-api'
 import type { ShellApi } from './api/shell-api'
 import type { SshApi } from './api/ssh-api'
-import type { DiagnosticsApi, MemoryApi, StatsApi, TelemetryApi } from './api/telemetry-api'
 import type { UiCommandEventApi } from './api/ui-command-event-api'
+import type { MemorySnapshot } from '../shared/process-stats-types'
 import type { UiWindowApi } from './api/ui-window-api'
 import type { UpdaterApi } from './api/updater-api'
 import type { WorkspaceCleanupApi, WorkspaceSpaceApi } from './api/workspace-cleanup-api'
@@ -60,6 +59,19 @@ import type { FolderWorkspacesApi, SparsePresetsApi, WorktreeApi } from './api/w
 
 // Flattens contracts that share one PreloadApi key: an intersection is not type-identical to the flat shape.
 type Merged<T> = { [K in keyof T]: T[K] }
+
+export type StatsApi = {
+  getSummary: () => Promise<{
+    totalAgentsSpawned: number
+    totalPRsCreated: number
+    totalAgentTimeMs: number
+    firstEventAt: number | null
+  }>
+}
+
+export type MemoryApi = {
+  getSnapshot: () => Promise<MemorySnapshot>
+}
 
 export type PreloadApi = {
   app: AppApi
@@ -76,8 +88,6 @@ export type PreloadApi = {
   workspaceSpace: WorkspaceSpaceApi
   workspacePorts: WorkspacePortsApi
   pty: PtyApi
-  feedback: FeedbackApi
-  crashReports: CrashReportsApi
   export: ExportApi
   gh: Merged<GithubPullRequestApi & GithubWorkItemApi>
   hostedReview: HostedReviewApi
@@ -86,11 +96,6 @@ export type PreloadApi = {
   linear: LinearApi
   jira: JiraApi
   starNag: StarNagApi
-  telemetryTrack: TelemetryApi['telemetryTrack']
-  telemetrySetOptIn: TelemetryApi['telemetrySetOptIn']
-  diagnostics: DiagnosticsApi
-  telemetryGetConsentState: TelemetryApi['telemetryGetConsentState']
-  telemetryAcknowledgeBanner: TelemetryApi['telemetryAcknowledgeBanner']
   settings: SettingsApi
   agentAwake: AgentAwakeApi
   localhostWorktreeLabels: LocalhostWorktreeLabelsApi
@@ -175,13 +180,6 @@ export type {
   ShellOpenExternalEditorResult,
   ShellOpenLocalPathResult
 } from './api/shell-api'
-export type {
-  DiagnosticsBundlePayload,
-  DiagnosticsStatusPayload,
-  DiagnosticsUploadPayload,
-  MemoryApi,
-  StatsApi
-} from './api/telemetry-api'
 
 declare global {
   // oxlint-disable-next-line typescript-eslint/consistent-type-definitions -- declaration merging requires interface

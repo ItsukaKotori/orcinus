@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ManagedPane } from '@/lib/pane-manager/pane-manager'
 import {
   isPaneReplaying,
@@ -15,18 +15,6 @@ import {
   notifyUndeliverableWrite,
   registerUndeliverableWriteHandler
 } from '@/lib/pane-manager/terminal-write-pipeline-health'
-
-const mocks = vi.hoisted(() => ({
-  recordRendererCrashBreadcrumb: vi.fn()
-}))
-
-vi.mock('@/lib/crash-breadcrumb-recorder', () => ({
-  recordRendererCrashBreadcrumb: mocks.recordRendererCrashBreadcrumb
-}))
-
-beforeEach(() => {
-  mocks.recordRendererCrashBreadcrumb.mockClear()
-})
 
 afterEach(() => {
   vi.useRealTimers()
@@ -465,7 +453,6 @@ describe('replay-guard stall handling (probe-certified release)', () => {
     terminal.flush()
     expect(isPaneReplaying(ref, 1)).toBe(false)
     expect(ref.current.has(1)).toBe(false)
-    expect(mocks.recordRendererCrashBreadcrumb).not.toHaveBeenCalled()
 
     vi.advanceTimersByTime(120_000)
     expect(ref.current.has(1)).toBe(false)
@@ -486,47 +473,6 @@ describe('replay-guard stall handling (probe-certified release)', () => {
       // parsed — releasing now cannot leak auto-replies.
       terminal.flush()
       expect(isPaneReplaying(ref, 1)).toBe(false)
-      expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledWith(
-        'terminal_replay_guard_lost_completion',
-        { paneId: 1 }
-      )
-    } finally {
-      errorSpy.mockRestore()
-    }
-  })
-
-  it('records correlatable replay identity without exposing worktree or PTY paths', () => {
-    vi.useFakeTimers()
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    try {
-      const ref = makeRef()
-      const { pane, terminal } = makeFakePane(1)
-      pane.leafId = 'leaf-private-identity' as ManagedPane['leafId']
-
-      replayIntoTerminal(pane, ref, 'restored bytes', {
-        breadcrumbIdentity: {
-          tabId: 'tab-private-identity',
-          worktreeId: 'repo::/Users/alice/private-worktree',
-          ptyId: '/Users/alice/private-worktree@@ab12cd34'
-        },
-        stallCheckMs: 1_000
-      })
-      terminal.pendingCallbacks.shift()
-      vi.advanceTimersByTime(1_000)
-      terminal.flush()
-
-      const breadcrumbData = mocks.recordRendererCrashBreadcrumb.mock.calls[0]?.[1]
-      expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledWith(
-        'terminal_replay_guard_lost_completion',
-        {
-          paneId: 1,
-          leafIdHash: expect.stringMatching(/^[0-9a-f]{8}$/),
-          tabIdHash: expect.stringMatching(/^[0-9a-f]{8}$/),
-          worktreeIdHash: expect.stringMatching(/^[0-9a-f]{8}$/),
-          ptyId: '…@@ab12cd34'
-        }
-      )
-      expect(JSON.stringify(breadcrumbData)).not.toContain('/Users/alice')
     } finally {
       errorSpy.mockRestore()
     }
@@ -547,10 +493,6 @@ describe('replay-guard stall handling (probe-certified release)', () => {
       // emit auto-replies either, so this bounded release cannot leak input.
       vi.advanceTimersByTime(1_000)
       expect(isPaneReplaying(ref, 1)).toBe(false)
-      expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledWith(
-        'terminal_replay_guard_wedged_release',
-        { paneId: 1 }
-      )
     } finally {
       errorSpy.mockRestore()
     }
@@ -585,14 +527,12 @@ describe('replay-guard stall handling (probe-certified release)', () => {
       vi.advanceTimersByTime(900)
       expect(isPaneReplaying(ref, 1)).toBe(true)
       expect(recoveryReasons).toEqual([])
-      expect(mocks.recordRendererCrashBreadcrumb).not.toHaveBeenCalled()
 
       // Parse catches up: FIFO releases B as parsed, probes are no-ops.
       terminal.flush()
       expect(isPaneReplaying(ref, 1)).toBe(false)
       expect(ref.current.has(1)).toBe(false)
       expect(recoveryReasons).toEqual([])
-      expect(mocks.recordRendererCrashBreadcrumb).not.toHaveBeenCalled()
     } finally {
       unregister()
       _resetWritePipelineHealthForTests(terminal)
@@ -625,10 +565,6 @@ describe('replay-guard stall handling (probe-certified release)', () => {
       vi.advanceTimersByTime(1_000)
       expect(isPaneReplaying(ref, 1)).toBe(false)
       expect(recoveryReasons).toEqual(['replay-wedged'])
-      expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledWith(
-        'terminal_replay_guard_wedged_release',
-        { paneId: 1 }
-      )
     } finally {
       unregister()
       _resetWritePipelineHealthForTests(terminal)
@@ -654,10 +590,6 @@ describe('replay-guard stall handling (probe-certified release)', () => {
       expect(isPaneReplaying(ref, 1)).toBe(false)
       expect(hasTerminalParseProgressSince(terminal, generation)).toBe(false)
       expect(recoveryReasons).toEqual(['replay-wedged'])
-      expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledWith(
-        'terminal_replay_guard_wedged_release',
-        { paneId: 1 }
-      )
     } finally {
       unregister()
       _resetWritePipelineHealthForTests(terminal)
@@ -678,10 +610,6 @@ describe('replay-guard stall handling (probe-certified release)', () => {
       }
       vi.advanceTimersByTime(1_000)
       expect(isPaneReplaying(ref, 1)).toBe(false)
-      expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledWith(
-        'terminal_replay_guard_wedged_release',
-        { paneId: 1 }
-      )
     } finally {
       errorSpy.mockRestore()
     }
@@ -721,7 +649,6 @@ describe('replay-guard stall handling (probe-certified release)', () => {
 
     vi.advanceTimersByTime(60_000)
     expect(terminal.lastData).toEqual(['healthy'])
-    expect(mocks.recordRendererCrashBreadcrumb).not.toHaveBeenCalled()
   })
 
   it('resolves replayIntoTerminalAsync via the wedged path so restore chains cannot hang', async () => {

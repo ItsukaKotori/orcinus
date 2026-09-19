@@ -8,7 +8,6 @@ import {
   FEATURE_INTERACTION_USAGE_BUCKETS,
   getFeatureInteractionUsageBucket,
   hasFeatureInteraction,
-  normalizeFeatureInteractionTelemetryBuckets,
   normalizeFeatureInteractions,
   type FeatureInteractionId
 } from './feature-interactions'
@@ -178,21 +177,6 @@ describe('feature interactions', () => {
     expect(FEATURE_INTERACTION_CATEGORY_BY_ID['terminal-tabs']).toBe('terminal')
     expect(FEATURE_INTERACTION_CATEGORY_BY_ID['ai-commit-generation']).toBe('source_control')
     expect(FEATURE_INTERACTION_CATEGORY_BY_ID['resource-manager']).toBe('resource_management')
-  })
-
-  it('normalizes persisted telemetry bucket markers by removing unknown ids and buckets', () => {
-    expect(
-      normalizeFeatureInteractionTelemetryBuckets({
-        tasks: 'count_1',
-        browser: 'count_1000_plus',
-        automations: 'count_4',
-        unknown: 'count_1',
-        'not-a-feature': null
-      })
-    ).toEqual({
-      tasks: 'count_1',
-      browser: 'count_1000_plus'
-    })
   })
 
   it('keeps every catalog id wired to a production writer', () => {

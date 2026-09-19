@@ -35,7 +35,7 @@ import {
   resolveTuiAgentLaunchEnv
 } from '../../../../shared/tui-agent-launch-defaults'
 import type { AgentStartedTelemetry } from '@/lib/worktree-startup-payload'
-import { tuiAgentToAgentKind } from '@/lib/telemetry'
+import { tuiAgentToAgentKind } from '../../../../shared/agent-kind'
 import type { PendingSmartGitHubSubmitResolution } from './source-selection-decisions'
 
 export function useFullSubmitPreparation(input: FullSubmitPreparationInput) {

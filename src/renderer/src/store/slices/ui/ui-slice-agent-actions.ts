@@ -1,5 +1,5 @@
 import type { UISlice, UISliceGet, UISliceSet } from './ui-slice-contract'
-import { formatAgentTypeLabel, agentKindForAgentType } from '../../../lib/agent-status'
+import { formatAgentTypeLabel } from '../../../lib/agent-status'
 import {
   deriveRunningAgentSendTargets,
   resolveRunningAgentSendTarget
@@ -192,18 +192,11 @@ export function createUiAgentActions(
         return false
       }
 
-      // Delivery ack, telemetry, and toast belong to the completed send, not to the
-      // picker that launched it; only the close below is scoped to this instance.
+      // Delivery ack and toast belong to the completed send, not to the picker
+      // that launched it; only the close below is scoped to this instance.
       mode.onPromptDelivered?.()
-      const [{ toast }, { track }] = await Promise.all([
-        import('sonner'),
-        import('@/lib/telemetry')
-      ])
-      track('agent_prompt_sent', {
-        agent_kind: agentKindForAgentType(target.entry.agentType),
-        launch_source: mode.launchSource,
-        request_kind: 'followup'
-      })
+      const { toast } = await import('sonner')
+
       toast.success(
         translate('auto.store.slices.ui.66e3bd7ce6', 'Sent to {{value0}}', { value0: label })
       )

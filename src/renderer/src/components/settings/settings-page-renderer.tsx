@@ -32,10 +32,7 @@ import {
   renderNotificationsSettingsSection,
   renderShortcutsSettingsSection
 } from './settings-interface-secondary-section-renderers'
-import {
-  renderDeveloperPermissionsSettingsSection,
-  renderPrivacySettingsSection
-} from './settings-remote-security-section-renderers'
+import { renderDeveloperPermissionsSettingsSection } from './settings-remote-security-section-renderers'
 import {
   renderAdvancedSettingsSection,
   renderDevSettingsSection,
@@ -124,7 +121,6 @@ export function renderSettingsPage(context: SettingsRenderContext): React.JSX.El
                 {renderNotificationsSettingsSection(context)}
                 {renderShortcutsSettingsSection(context)}
                 {renderDeveloperPermissionsSettingsSection(context)}
-                {renderPrivacySettingsSection(context)}
                 {renderAdvancedSettingsSection(context)}
                 {renderDevSettingsSection(context)}
                 {renderExperimentalSettingsSection(context)}

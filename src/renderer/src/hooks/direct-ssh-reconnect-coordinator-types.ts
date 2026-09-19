@@ -19,16 +19,6 @@ export type DirectSshPreparationInput = DirectSshAuthority & {
   authorityRequirement: DirectSshAuthorityRequirement
   snapshotRevision?: number
   reason: DirectSshPreparationReason
-  telemetry?: DirectSshPreparationInputTelemetry
-}
-
-export type DirectSshPreparationInputTelemetry = {
-  catalogOutcome: 'complete' | 'degraded'
-  catalogDurationMs: number
-  gitWorktreeCount: number
-  folderWorkspaceCount: number
-  ambiguousOwnerCount: number
-  contradictoryOwnerCount: number
 }
 
 export type DirectSshPreparationToken = {
@@ -83,36 +73,6 @@ export type DirectSshCorrectionReason =
   | 'workspace-hydrated'
   | 'snapshot-applied'
 
-export type DirectSshCoordinatorTelemetry = {
-  mode: 'reconnect' | 'prepare-only'
-  reason: DirectSshPreparationReason
-  outcome: DirectSshReconnectOutcome['status']
-  durationMs: number
-  staleBindingsCleared: number
-  retriedTerminals: number
-  correctedTerminals: number
-  terminalFinalizationDurationMs: number
-  catalogOutcome: 'complete' | 'degraded' | 'stale'
-  catalogDurationMs: number
-  gitWorktreeCount: number
-  folderWorkspaceCount: number
-  ambiguousOwnerCount: number
-  contradictoryOwnerCount: number
-  repoOutcomes: DirectSshRepoOutcomeCounts
-  lineageOutcome: DirectSshPreparationOutcome['lineageOutcome']
-  queueWaitDurationsMs: readonly number[]
-  providerExecutionDurationsMs: readonly number[]
-  timeoutRetryCount: number
-  locallySettledWaiterCount: number
-  cancelDebtCount: number
-  replacementAdmissionDelayedCount: number
-  overlappingJoinCount: number
-  peakLocallyUnsettled: number
-  estimatedLateWorkAllowanceCount: number
-  authorityRotationCount: number
-  damped: boolean
-}
-
 export type DirectSshReconnectTimer = unknown
 
 export type DirectSshReconnectCoordinatorDeps = {
@@ -131,7 +91,6 @@ export type DirectSshReconnectCoordinatorDeps = {
     reason: DirectSshCorrectionReason
   ) => number
   syncRemoteWorkspaceAfterConnect: (token: DirectSshPreparationToken) => void | Promise<void>
-  onTelemetry?: (event: DirectSshCoordinatorTelemetry) => void
   now?: () => number
   setTimer?: (callback: () => void, delayMs: number) => DirectSshReconnectTimer
   clearTimer?: (timer: DirectSshReconnectTimer) => void

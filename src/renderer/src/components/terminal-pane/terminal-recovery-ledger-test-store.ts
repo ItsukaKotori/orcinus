@@ -28,7 +28,6 @@ type RecoveryLedgerMocks = {
   }
   remountTerminalTabForRecovery: Mock<(tabId: string) => void>
   getTab: Mock<() => { viewMode?: 'terminal' | 'chat' } | null>
-  recordRendererCrashBreadcrumb: Mock<(...args: unknown[]) => void>
   hasPty: Mock<(id: string) => Promise<boolean | null>>
 }
 
@@ -42,7 +41,6 @@ export const recoveryLedgerMocks: RecoveryLedgerMocks = {
   // meaning "a remount happened" rather than "a remount was asked for".
   remountTerminalTabForRecovery: vi.fn<(tabId: string) => void>(),
   getTab: vi.fn<() => { viewMode?: 'terminal' | 'chat' } | null>(() => ({})),
-  recordRendererCrashBreadcrumb: vi.fn(),
   hasPty: vi.fn<(id: string) => Promise<boolean | null>>(async () => true)
 }
 
@@ -90,7 +88,6 @@ export function resetRecoveryLedgerStore(): void {
   recoveryLedgerMocks.getTab.mockReturnValue({})
   recoveryLedgerMocks.state.terminalLayoutsByTabId = {}
   recoveryLedgerMocks.state.pendingStartupByTabId = {}
-  recoveryLedgerMocks.recordRendererCrashBreadcrumb.mockClear()
   recoveryLedgerMocks.hasPty.mockClear()
   recoveryLedgerMocks.hasPty.mockResolvedValue(true)
 }

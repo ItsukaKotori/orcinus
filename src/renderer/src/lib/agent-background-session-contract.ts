@@ -1,5 +1,5 @@
 import type { ParsedAgentStatusPayload } from '../../../shared/agent-status-types'
-import type { LaunchSource } from '../../../shared/telemetry-events'
+import type { LaunchSource } from '../../../shared/launch-context'
 import type { TuiAgent } from '../../../shared/tui-agent'
 import type { AgentStartupPlan } from '@/lib/tui-agent-startup'
 import type { AutomationTerminalOwnership } from '@/lib/automation-terminal-ownership'

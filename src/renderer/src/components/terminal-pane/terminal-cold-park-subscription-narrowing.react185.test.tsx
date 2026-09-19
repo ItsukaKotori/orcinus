@@ -32,9 +32,6 @@ vi.mock('./terminal-parked-tab-watchers', () => ({
   syncParkedTerminalTabWatchers: vi.fn()
 }))
 
-vi.mock('@/lib/crash-breadcrumb-recorder', () => ({
-  recordRendererCrashBreadcrumb: vi.fn()
-}))
 
 import { useAppStore } from '../../store'
 import { useTerminalTabColdParking } from './use-terminal-tab-cold-parking'

@@ -5,7 +5,6 @@ import {
   ORCA_RENDERER_UNLOAD_PREVENTED_EVENT,
   publishShutdownCheckpointFailureReason
 } from '../../../shared/renderer-shutdown-events'
-import { recordRendererCrashBreadcrumb } from './crash-breadcrumb-recorder'
 
 export type ShutdownCheckpointGuard = {
   persistOnce: () => boolean
@@ -19,7 +18,7 @@ function reportShutdownCheckpointFailure(error: unknown): void {
   console.error('[app] Shutdown checkpoint persist failed:', error)
   const message = formatShutdownCheckpointFailureReason(error)
   publishShutdownCheckpointFailureReason(message)
-  recordRendererCrashBreadcrumb('renderer_shutdown_checkpoint_failed', { message })
+
 }
 
 export function createShutdownCheckpointGuard(

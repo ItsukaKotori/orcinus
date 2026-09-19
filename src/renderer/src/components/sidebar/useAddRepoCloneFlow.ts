@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateA
 import { toast } from 'sonner'
 import { useAppStore } from '@/store'
 import { callRuntimeRpc, getActiveRuntimeTarget } from '@/runtime/runtime-rpc-client'
-import type { AddRepoExistingWorkspaceSource } from '../../../../shared/telemetry-events'
 import type { Repo } from '../../../../shared/repo-types'
 import { getCloneDestinationAutoFill } from './clone-defaults'
 import type { AddRepoDialogStep } from './add-repo-dialog-types'
@@ -28,11 +27,7 @@ export function useAddRepoCloneFlow({
     repoId: string,
     options?: { requireAuthoritative?: boolean; executionHostId?: ExecutionHostId }
   ) => Promise<unknown>
-  onGitRepoReady: (
-    repoId: string,
-    source: AddRepoExistingWorkspaceSource,
-    executionHostId?: ExecutionHostId
-  ) => Promise<void>
+  onGitRepoReady: (repoId: string, executionHostId?: ExecutionHostId) => Promise<void>
 }): {
   cloneUrl: string
   cloneDestination: string
@@ -172,7 +167,7 @@ export function useAddRepoCloneFlow({
       if (gen !== cloneGenRef.current || requestHostToken !== hostTokenRef.current) {
         return
       }
-      await onGitRepoReady(ownedRepo.id, 'clone_url', ownerOptions.executionHostId)
+      await onGitRepoReady(ownedRepo.id, ownerOptions.executionHostId)
     } catch (err) {
       if (gen !== cloneGenRef.current || requestHostToken !== hostTokenRef.current) {
         return

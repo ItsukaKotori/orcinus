@@ -20,18 +20,14 @@ import {
   deriveNotesSendAgentTargets,
   type NotesSendAgentTarget
 } from '@/lib/notes-send-agent-targets'
-import {
-  agentKindForAgentType,
-  formatAgentTypeLabel,
-  agentTypeToIconAgent
-} from '@/lib/agent-status'
-import { track } from '@/lib/telemetry'
+import { formatAgentTypeLabel, agentTypeToIconAgent } from '@/lib/agent-status'
+
 import { useNow } from '@/hooks/use-now'
 import type { DashboardAgentRow as DashboardAgentRowData } from '@/components/dashboard/useDashboardData'
 import { lastEnteredDoneAt } from '@/components/dashboard/agent-finished-timestamp'
 import { selectLivePtyIdsForWorktree } from '@/components/sidebar/worktree-card-status-inputs'
 import { useWorktreeAgentRows } from '@/components/sidebar/useWorktreeAgentRows'
-import type { LaunchSource } from '../../../../shared/telemetry-events'
+import type { LaunchSource } from '../../../../shared/launch-context'
 import { agentRowDotState } from '@/lib/agent-row-dot-state'
 import { translate } from '@/i18n/i18n'
 
@@ -168,11 +164,7 @@ export function ReviewNotesSendMenuContent({
           onPromptDelivered?.()
           // Why: mirror the sidebar send-target telemetry so dropdown-routed
           // follow-up notes show up identically on `agent_prompt_sent`.
-          track('agent_prompt_sent', {
-            agent_kind: agentKindForAgentType(target.agentType),
-            launch_source: launchSource,
-            request_kind: 'followup'
-          })
+
         },
         { explicitTarget: true }
       )

@@ -106,11 +106,6 @@ export function bindFreshSpawnFollowReset(session: ConnectPanePtySession): void 
     // scheduler's deferred drain cannot land older bytes on top of the replay.
     flushTerminalOutput(session.pane.terminal)
     replayIntoTerminal(session.pane, session.deps.replayingPanesRef, data, {
-      breadcrumbIdentity: {
-        tabId: session.deps.tabId,
-        worktreeId: session.deps.worktreeId,
-        ptyId: session.transport.getPtyId()
-      },
       shouldRefreshViewportSynchronously: session.shouldRefreshForegroundSynchronously,
       shouldReleaseRenderPause: () => session.deps.isVisibleRef.current
     })
@@ -121,11 +116,6 @@ export function bindFreshSpawnFollowReset(session: ConnectPanePtySession): void 
     // merely after the write was queued.
     flushTerminalOutput(session.pane.terminal)
     return replayIntoTerminalAsync(session.pane, session.deps.replayingPanesRef, data, {
-      breadcrumbIdentity: {
-        tabId: session.deps.tabId,
-        worktreeId: session.deps.worktreeId,
-        ptyId: session.transport.getPtyId()
-      },
       shouldRefreshViewportSynchronously: session.shouldRefreshForegroundSynchronously,
       shouldReleaseRenderPause: () => session.deps.isVisibleRef.current
     })

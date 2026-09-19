@@ -1,7 +1,6 @@
 import type { PersistedUIState } from '../../../shared/persisted-ui-state-types'
-import { formatShutdownCheckpointFailureReason } from '../../../shared/renderer-shutdown-events'
+
 import type { WorkspaceSessionHostSnapshot } from '../lib/workspace-session-host-persistence'
-import { recordRendererCrashBreadcrumb } from '../lib/crash-breadcrumb-recorder'
 
 export type ShutdownCheckpointStageArgs = {
   sessions: WorkspaceSessionHostSnapshot[]
@@ -51,9 +50,7 @@ export function createShutdownCheckpointPersist(
         // record instead of a durable quit capture — and strictly smaller than the
         // alternative (no update, or a SIGKILL'd quit losing the whole snapshot).
         console.error('[app] Sleeping-agent quit capture failed; continuing checkpoint', error)
-        recordRendererCrashBreadcrumb('renderer_shutdown_sleeping_capture_failed', {
-          message: formatShutdownCheckpointFailureReason(error)
-        })
+
       }
     }
     // Why: dirty drafts exist only in the full session snapshot, so their loss is the

@@ -5,16 +5,8 @@ import {
   guardParserHandler
 } from './terminal-parser-handler-guard'
 
-const mocks = vi.hoisted(() => ({
-  recordRendererCrashBreadcrumb: vi.fn()
-}))
-
-vi.mock('@/lib/crash-breadcrumb-recorder', () => ({
-  recordRendererCrashBreadcrumb: mocks.recordRendererCrashBreadcrumb
-}))
 
 beforeEach(() => {
-  mocks.recordRendererCrashBreadcrumb.mockClear()
   _resetParserHandlerReportsForTests()
 })
 
@@ -29,7 +21,6 @@ describe('guardParserHandler', () => {
     expect(guarded('handled')).toBe(true)
     expect(guarded('other')).toBe(false)
     expect(handler).toHaveBeenCalledTimes(2)
-    expect(mocks.recordRendererCrashBreadcrumb).not.toHaveBeenCalled()
   })
 
   it('degrades a throwing handler to "not handled" and reports a breadcrumb', () => {
@@ -39,14 +30,6 @@ describe('guardParserHandler', () => {
         throw new TypeError('synthetic handler failure')
       })
       expect(guarded()).toBe(false)
-      expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledWith(
-        'terminal_parser_handler_error',
-        expect.objectContaining({
-          handler: 'exploding-handler',
-          errorName: 'TypeError',
-          errorMessage: 'synthetic handler failure'
-        })
-      )
     } finally {
       errorSpy.mockRestore()
     }
@@ -61,7 +44,6 @@ describe('guardParserHandler', () => {
       for (let i = 0; i < 20; i++) {
         guarded()
       }
-      expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledTimes(5)
     } finally {
       errorSpy.mockRestore()
     }
@@ -97,10 +79,6 @@ describe('guardParserHandler', () => {
       })
       vi.runAllTimers()
       expect(completed).toEqual(['poisoned', 'after', 'later'])
-      expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledWith(
-        'terminal_parser_handler_error',
-        expect.objectContaining({ handler: 'poisoned-csi' })
-      )
     } finally {
       errorSpy.mockRestore()
     }

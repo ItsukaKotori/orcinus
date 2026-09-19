@@ -4,7 +4,7 @@ import type {
   LaunchAgentBackgroundSessionArgs,
   LaunchAgentBackgroundSessionResult
 } from '@/lib/agent-background-session-contract'
-import { tuiAgentToAgentKind } from '@/lib/telemetry'
+import { tuiAgentToAgentKind } from '../../../shared/agent-kind'
 import { scheduleAgentBackgroundDraft } from '@/lib/agent-background-draft-delivery'
 import { requestBackgroundTerminalWorktreeMount } from '@/components/terminal/background-terminal-worktree-mount'
 import {

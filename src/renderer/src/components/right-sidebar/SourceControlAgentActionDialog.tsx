@@ -11,7 +11,7 @@ import type {
   SourceControlLaunchActionId
 } from '../../../../shared/source-control-ai-actions'
 import type { TuiAgent } from '../../../../shared/tui-agent'
-import type { LaunchSource } from '../../../../shared/telemetry-events'
+import type { LaunchSource } from '../../../../shared/launch-context'
 import type { SourceControlAiWriteTarget } from '../../../../shared/source-control-ai-recipe-save'
 import { SourceControlAgentActionDialogForm } from './SourceControlAgentActionDialogForm'
 import { useSourceControlAgentActionDialog } from './useSourceControlAgentActionDialog'

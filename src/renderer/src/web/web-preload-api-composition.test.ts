@@ -28,8 +28,6 @@ describe('web preload API composition', () => {
       'agentAwake',
       'keybindings',
       'ui',
-      'crashReports',
-      'diagnostics',
       'session',
       'onboarding',
       'cache',
@@ -69,11 +67,7 @@ describe('web preload API composition', () => {
       'pwsh',
       'gitBash',
       'agentStatus',
-      'mobile',
-      'telemetryTrack',
-      'telemetrySetOptIn',
-      'telemetryGetConsentState',
-      'telemetryAcknowledgeBanner'
+      'mobile'
     ])
     expect(Object.keys(globals.window.api.projects)).toEqual([])
     expect(Reflect.get(globals.window.api.projects, 'then')).toBeUndefined()

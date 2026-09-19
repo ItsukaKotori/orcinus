@@ -6,7 +6,7 @@ import { launchAgentInNewTab } from '@/lib/launch-agent-in-new-tab'
 import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
 import { useAppStore } from '@/store'
 import { isTuiAgentEnabled } from '../../../shared/tui-agent-selection'
-import type { LaunchSource } from '../../../shared/telemetry-events'
+import type { LaunchSource } from '../../../shared/launch-context'
 import type { TuiAgent } from '../../../shared/tui-agent'
 import { translate } from '@/i18n/i18n'
 

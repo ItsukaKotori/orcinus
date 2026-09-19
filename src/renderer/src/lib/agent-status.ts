@@ -5,7 +5,7 @@ import type { AgentStatusState, AgentType } from '../../../shared/agent-status-t
 import { tabHasLivePty } from './tab-has-live-pty'
 import type { WorktreeStatus } from './worktree-status'
 import { tuiAgentToAgentKind } from '../../../shared/agent-kind'
-import type { AgentKind } from '../../../shared/telemetry-events'
+import type { AgentKind } from '../../../shared/agent-kind'
 
 // Re-export from shared so existing renderer imports work; main process now shares the detection logic.
 export {

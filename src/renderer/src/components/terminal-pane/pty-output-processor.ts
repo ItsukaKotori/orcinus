@@ -253,7 +253,6 @@ export function createPtyOutputProcessor({
     resetBellDetector: () => bellDetector.reset(),
     resetAgentStatusCarry: () => {
       processAgentStatusChunk = createAgentStatusOscProcessor()
-    },
-    disposePendingSideEffectGauge: sideEffects.disposeGauge
+    }
   }
 }

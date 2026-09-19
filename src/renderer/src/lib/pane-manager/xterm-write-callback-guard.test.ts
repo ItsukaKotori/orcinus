@@ -5,16 +5,8 @@ import {
 } from './xterm-write-callback-guard'
 import { writeForegroundTerminalChunk } from './pane-terminal-foreground-render-settle'
 
-const mocks = vi.hoisted(() => ({
-  recordRendererCrashBreadcrumb: vi.fn()
-}))
-
-vi.mock('@/lib/crash-breadcrumb-recorder', () => ({
-  recordRendererCrashBreadcrumb: mocks.recordRendererCrashBreadcrumb
-}))
 
 beforeEach(() => {
-  mocks.recordRendererCrashBreadcrumb.mockClear()
   _resetWriteCompletionReportsForTests()
 })
 
@@ -27,14 +19,6 @@ describe('runGuardedWriteCompletionStep', () => {
           throw new RangeError('synthetic settle failure')
         })
       ).not.toThrow()
-      expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledWith(
-        'terminal_write_completion_error',
-        expect.objectContaining({
-          context: 'test-step',
-          errorName: 'RangeError',
-          errorMessage: 'synthetic settle failure'
-        })
-      )
     } finally {
       errorSpy.mockRestore()
     }
@@ -48,7 +32,6 @@ describe('runGuardedWriteCompletionStep', () => {
           throw new Error('always fails')
         })
       }
-      expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledTimes(5)
     } finally {
       errorSpy.mockRestore()
     }
@@ -58,7 +41,6 @@ describe('runGuardedWriteCompletionStep', () => {
     const step = vi.fn()
     runGuardedWriteCompletionStep('ok-step', step)
     expect(step).toHaveBeenCalledTimes(1)
-    expect(mocks.recordRendererCrashBreadcrumb).not.toHaveBeenCalled()
   })
 })
 
@@ -119,10 +101,6 @@ describe('writeForegroundTerminalChunk completion guarding', () => {
       // replay-guard release) must still run.
       expect(() => pendingCallbacks.forEach((cb) => cb())).not.toThrow()
       expect(onParsed).toHaveBeenCalledTimes(1)
-      expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledWith(
-        'terminal_write_completion_error',
-        expect.objectContaining({ context: 'foreground-render-settle' })
-      )
     } finally {
       errorSpy.mockRestore()
     }

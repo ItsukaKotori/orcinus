@@ -1,7 +1,5 @@
 import React from 'react'
-import { recordRendererCrashBreadcrumb } from '@/lib/crash-breadcrumb-recorder'
-import { isLazyChunkLoadError } from '@/lib/lazy-with-retry'
-import { reportReactErrorBoundaryCrash } from '@/lib/react-error-boundary-reporting'
+
 import { translate } from '@/i18n/i18n'
 
 type Props = {
@@ -12,21 +10,6 @@ type Props = {
 type State = {
   error: Error | null
   fileId: string
-}
-
-// Module scope deduplicates breadcrumbs across file-keyed boundary remounts.
-const recordedLazyChunkCauses = new Set<string>()
-
-export function clearLazyChunkBreadcrumbDedupeForTest(): void {
-  recordedLazyChunkCauses.clear()
-}
-
-function describeLazyChunkCause(error: Error): string {
-  const cause = (error as { cause?: unknown }).cause
-  if (cause instanceof Error) {
-    return `${cause.name}: ${cause.message}`
-  }
-  return cause === undefined ? 'unknown' : String(cause)
 }
 
 // Why: a thrown exception inside the TipTap/ProseMirror render or in the
@@ -55,24 +38,6 @@ export class RichMarkdownErrorBoundary extends React.Component<Props, State> {
 
   componentDidCatch(error: Error, info: React.ErrorInfo): void {
     console.error('[RichMarkdownEditor] render crash contained by boundary', error, info)
-    if (isLazyChunkLoadError(error)) {
-      const cause = describeLazyChunkCause(error)
-      if (!recordedLazyChunkCauses.has(cause)) {
-        recordedLazyChunkCauses.add(cause)
-        recordRendererCrashBreadcrumb('lazy_chunk_boundary_degraded', {
-          boundaryId: 'editor.rich-markdown',
-          reloadKey: error.reloadKey,
-          cause
-        })
-      }
-      return
-    }
-    void reportReactErrorBoundaryCrash({
-      boundaryId: 'editor.rich-markdown',
-      surface: 'rich-markdown-editor',
-      error,
-      errorInfo: info
-    })
   }
 
   handleReset = (): void => {

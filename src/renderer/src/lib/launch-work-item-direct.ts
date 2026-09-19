@@ -263,7 +263,7 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
       content: draftContent,
       submit,
       forcePaste: submit,
-      onTimeout: () => notifyDirectWorkItemAgentStartTimeout(agent, submit)
+      onTimeout: () => notifyDirectWorkItemAgentStartTimeout(submit)
     })
   }
   return true

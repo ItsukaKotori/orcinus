@@ -2,16 +2,10 @@ import { toast } from 'sonner'
 import type { AppState } from '@/store/types'
 import { translate } from '@/i18n/i18n'
 import { ONBOARDING_FINAL_STEP, ONBOARDING_FLOW_VERSION } from '../../../../shared/constants'
-import type { EventProps } from '../../../../shared/telemetry-events'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { OnboardingState } from '../../../../shared/onboarding-state-types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import { STEPS } from './use-onboarding-flow-types'
-
-type TaskSourcesSnapshotProps = EventProps<'onboarding_task_sources_snapshot'>
-type TaskSourcesGithubStatus = TaskSourcesSnapshotProps['github_status']
-type TaskSourcesLinearStatus = TaskSourcesSnapshotProps['linear_status']
-export type TaskSourcesExitAction = TaskSourcesSnapshotProps['exit_action']
 
 export function shouldSkipIntegrationsStep(status: AppState['preflightStatus']): boolean {
   return status?.gh.installed === true
@@ -49,29 +43,6 @@ export function resolveStepIndex(
     nextIndex = candidate
   }
   return nextIndex
-}
-
-export function getGitHubTaskSourceStatus(
-  status: AppState['preflightStatus'],
-  loading: boolean
-): TaskSourcesGithubStatus {
-  if (loading || !status) {
-    return 'checking'
-  }
-  if (!status.gh.installed) {
-    return 'not_installed'
-  }
-  return status.gh.authenticated ? 'connected' : 'not_authenticated'
-}
-
-export function getLinearTaskSourceStatus(
-  status: AppState['linearStatus'],
-  checked: boolean
-): TaskSourcesLinearStatus {
-  if (status.connected) {
-    return 'connected'
-  }
-  return checked ? 'not_connected' : 'checking'
 }
 
 type OnboardingStepId = (typeof STEPS)[number]['id']

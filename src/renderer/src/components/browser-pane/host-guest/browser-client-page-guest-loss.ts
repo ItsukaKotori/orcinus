@@ -1,5 +1,4 @@
 import type { MutableRefObject } from 'react'
-import { recordRendererCrashBreadcrumb } from '@/lib/crash-breadcrumb-recorder'
 
 export type BrowserClientPageGuestLossReason = 'unreadable' | 'destroyed' | 'render-process-gone'
 
@@ -23,18 +22,12 @@ export function watchBrowserClientPageGuestLoss(options: {
     }
   }
   let lost = false
-  const lose = (reason: BrowserClientPageGuestLossReason): void => {
+  const lose = (_reason: BrowserClientPageGuestLossReason): void => {
     if (lost) {
       return
     }
     lost = true
-    // Why the breadcrumb: the crash report this replaces was the only field signal for guest death.
-    recordRendererCrashBreadcrumb('browser_client_page_guest_unavailable', {
-      browserPageId: options.browserPageId,
-      pageHostGeneration: options.pageHostGeneration,
-      reason,
-      tagConnected: webview.isConnected
-    })
+
     releaseWebviewRef()
     options.onLost()
   }

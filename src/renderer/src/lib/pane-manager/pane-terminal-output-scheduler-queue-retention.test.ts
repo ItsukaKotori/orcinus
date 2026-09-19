@@ -6,18 +6,10 @@ vi.mock('@/lib/e2e-config', () => ({
   e2eConfig: { exposeStore: true }
 }))
 
-const mocks = vi.hoisted(() => ({
-  recordRendererCrashBreadcrumb: vi.fn()
-}))
-
-vi.mock('@/lib/crash-breadcrumb-recorder', () => ({
-  recordRendererCrashBreadcrumb: mocks.recordRendererCrashBreadcrumb
-}))
 
 describe('pane terminal output scheduler', () => {
   beforeEach(() => {
     vi.stubGlobal('window', globalThis)
-    mocks.recordRendererCrashBreadcrumb.mockClear()
   })
 
   afterEach(() => {

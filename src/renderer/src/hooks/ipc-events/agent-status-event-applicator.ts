@@ -8,7 +8,7 @@ import { isDecorativeAgentTitleFrameChange } from '../../../../shared/agent-deco
 import { parsePaneKey } from '../../../../shared/stable-pane-id'
 import { shouldSuppressCodexAutoApprovalStatus } from '@/components/terminal-pane/codex-auto-approval-notification-suppression'
 import { resolveAgentStatusTerminalTitle } from '@/lib/agent-status-terminal-title'
-import { track } from '@/lib/telemetry'
+
 import { resolveAgentPaneAuthorityKey } from '@/store/slices/agent-pane-authority'
 import type { AgentStatusBatchUpdate, AgentStatusUpdate } from '@/store/slices/agent-status'
 import { observeAgentHookCompletionForNotification } from '../agent-hook-completion-notifications'
@@ -104,7 +104,7 @@ export function createAgentStatusEventApplicator(args: {
         return 'dropped'
       }
       if (options?.retry !== true) {
-        track('agent_hook_unattributed', { reason: 'unknown_tab_id' })
+
         enqueuePendingAgentStatus(data)
       }
       return 'pending'

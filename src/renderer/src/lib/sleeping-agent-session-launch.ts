@@ -1,7 +1,7 @@
 import { toast } from 'sonner'
 import { useAppStore } from '@/store'
 import { buildAgentResumeStartupPlan } from '@/lib/tui-agent-startup'
-import { tuiAgentToAgentKind } from '@/lib/telemetry'
+import { tuiAgentToAgentKind } from '../../../shared/agent-kind'
 import { reconcileTabOrder } from '@/components/tab-bar/reconcile-order'
 import {
   resolveAgentResumeLaunchTarget,

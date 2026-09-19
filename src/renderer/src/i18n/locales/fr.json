@@ -159,8 +159,6 @@
     "App": {
       "221a95ba38": "Relancez l'onboarding, ou fermez-le et continuez dans l'app.",
       "f02d37278a": "Une erreur est survenue dans l'onboarding.",
-      "acd66311dc": "Utilisez le menu Aide après avoir réessayé si vous avez toujours besoin d'un diagnostic.",
-      "722d03aa62": "La boîte de dialogue de rapport de plantage a rencontré une erreur.",
       "8a023cea1f": "Réessayez la barre d'état pour remonter ses contrôles.",
       "2e8ff36f94": "La barre d'état a rencontré une erreur.",
       "7cbfbf622f": "Réessayez l'espace de travail flottant, ou fermez-le et rouvrez-le.",
@@ -243,7 +241,6 @@
             "10898045f3": "Raccourci pour « {{value0}} » ignoré : utilisez un tableau de chaînes.",
             "36761d9604": "Action de raccourci inconnue « {{value0}} » ignorée.",
             "d2e43e426a": "{{value0}} doit être un objet.",
-            "fb290366b2": "Indisponible sur le web.",
             "76122208ca": "Raccourci pour « {{value0}} » ignoré : {{value1}}"
           }
         },
@@ -803,16 +800,7 @@
       },
       "feedback": {
         "image": {
-          "attachments": {
-            "fallbackName": "Pièce jointe image",
-            "unsupportedType": "{{fileName}} n'est pas un type d'image pris en charge.",
-            "empty": "{{fileName}} est vide.",
-            "tooLarge": "{{fileName}} dépasse {{maxSize}}.",
-            "tooMany": "Vous pouvez joindre jusqu'à {{maxCount}} images.",
-            "dimensionsTooLarge": "{{fileName}} a des dimensions trop grandes pour un aperçu sans risque.",
-            "invalidImage": "{{fileName}} n'est pas une image valide prise en charge.",
-            "additionalErrors": "{{count}} images supplémentaires n'ont pas pu être jointes."
-          }
+          "attachments": {}
         }
       },
       "ephemeralVmWorktreeCreation": {
@@ -875,8 +863,6 @@
         "225071c560": "Expérimental",
         "e338c507c1": "Paramètres de compatibilité bas niveau pour le dépannage.",
         "580a04cd81": "Avancé",
-        "8400cfe1c1": "Données d'utilisation anonymes et contrôles de télémétrie.",
-        "3618579df6": "Confidentialité & télémétrie",
         "65ec7d1968": "Accès de confidentialité macOS pour les outils de développement lancés depuis le terminal.",
         "d91ae31fbd": "Autorisations macOS",
         "95a1886d94": "Contrôlez les terminaux et les agents depuis votre téléphone.",
@@ -983,15 +969,7 @@
         "e6b7139d2a": "Redémarrez cette session pour charger votre configuration Codex actuelle.",
         "7b1d20f4c8": "Conserver la session actuelle"
       },
-      "FirstLaunchBanner": {
-        "b9e1b966c7": "Masquer l'avis",
-        "94cc673726": "Compris",
-        "fc5cc29955": "Refuser",
-        "d1deebb050": "Politique de confidentialité",
-        "958d2cc31b": "Des comptages anonymes des fonctionnalités que vous utilisez nous aident à prioriser ce qu'il faut construire. Aucun contenu de fichier, prompt, sortie de terminal ni rien qui vous identifie. Modifiable à tout moment dans Paramètres -> Confidentialité & télémétrie.",
-        "9784b4d7bc": "Aidez-nous à décider quoi construire ensuite",
-        "fcbee32f08": "Avis de télémétrie"
-      },
+      "FirstLaunchBanner": {},
       "GitHubItemDialog": {
         "3ab6ac0fc8": "Prévisualisez et modifiez l'issue ou la pull request GitHub sélectionnée.",
         "3cd5ae5b7b": "Aucun fichier modifié.",
@@ -4946,28 +4924,7 @@
           "822ff300ad": "Ignorer",
           "5bfd5c8779": "Ignorer les scripts de setup"
         },
-        "SidebarFeedbackDialog": {
-          "8bf619e4cf": "Annuler",
-          "8de03e23c5": "Envoyez avec votre commentaire texte uniquement, ou connectez `gh` pour inclure votre identité GitHub.",
-          "d20439c560": "Vérification de l'identité GitHub…",
-          "5b120b9634": "Envoyer anonymement",
-          "c9e5ea0791": "GitHub :",
-          "d46ddd66fc": "Que pouvons-nous améliorer ?",
-          "3460258a54": "Suivre sur X",
-          "26108d3699": "Rejoindre Discord",
-          "d245c4ef6c": "Issues GitHub",
-          "9b33530b3d": "Autres moyens de nous contacter",
-          "a828fa4aee": "Partagez ce qui fonctionne, ce qui est cassé, ou ce qu'Orcinus devrait faire ensuite.",
-          "0eb643f07f": "Envoyer un commentaire",
-          "60b721e857": "Échec de l'envoi du commentaire. Réessayez.",
-          "7a46c228b8": "Merci pour votre commentaire.",
-          "a2fd890d9e": "Saisissez un commentaire avant d'envoyer.",
-          "f2e42e1307": "Envoyer",
-          "69969ba364": "Envoi…",
-          "imageReadFailed": "Impossible de lire les images jointes. Essayez de les joindre à nouveau.",
-          "attachWhileSending": "Attendez la fin de l'envoi du commentaire en cours avant de joindre d'autres images.",
-          "imagesNotDelivered": "Commentaire envoyé, mais la livraison des images n'a pas pu être confirmée."
-        },
+        "SidebarFeedbackDialog": {},
         "SidebarFilter": {},
         "SidebarHeader": {
           "92154beb7e": "Nouvel espace de travail",
@@ -5012,7 +4969,6 @@
           "5f83d86d92": "Journal des modifications",
           "cdc87f897e": "Docs",
           "e565171a7c": "Raccourcis clavier",
-          "4cf5b868d7": "Envoyer un commentaire",
           "a428c25998": "Paramètres",
           "2991a0106c": "Aide",
           "4e8f5710d3": "Impossible de redémarrer Orcinus.",
@@ -5787,11 +5743,7 @@
           "developer": "Développeur",
           "parkTerminal": "Parquer le terminal"
         },
-        "SidebarFeedbackImageAttachments": {
-          "screenshotsHint": "Joignez jusqu'à {count} captures d'écran",
-          "attachImages": "Joindre",
-          "removeImage": "Supprimer {{fileName}}"
-        },
+        "SidebarFeedbackImageAttachments": {},
         "WorkspaceKanbanSearchField": {},
         "WorktreeIssueLinkField": {
           "25852bfc59": "Linear",
@@ -7141,37 +7093,9 @@
           "d3dc559225": "Échec de la copie de la commande d'installation.",
           "239bf9132b": "Commande d'installation copiée."
         },
-        "PrivacyDiagnosticBundleControls": {
-          "dc8404a930": "Créer le fichier de diagnostic",
-          "a5acaffdb6": "Abandonner",
-          "aca2c8a367": "Envoyer au support",
-          "798b6f0be5": "Ouvrir le fichier de révision",
-          "2ae9a6b63e": "Terminé",
-          "7f14a1733c": "Supprimer le fichier envoyé",
-          "2801d4ce22": "Copier l'ID de référence",
-          "d8be621237": "Ouvrez d'abord le fichier de révision.",
-          "61676df223": "Diagnostics envoyés. Communiquez cet ID de référence au support : {{value0}}.",
-          "fd7b3891af": "Vous avez ouvert le fichier de révision ({{value0}}). Envoyez ce fichier au support, ou abandonnez-le.",
-          "62340d4439": "Votre fichier de révision est prêt ({{value0}}). Ouvrez-le pour voir ce qui serait envoyé, puis choisissez de l'envoyer ou non au support.",
-          "19ec5e29b3": "Collecte l'activité récente de l'app et les erreurs dans un fichier expurgé que vous pouvez consulter avant l'envoi. Rien n'est téléversé tant que vous n'avez pas choisi de l'envoyer."
-        },
-        "PrivacyDiagnosticsSection": {
-          "af2fc82cde": "Envoyer les diagnostics de l'app au support",
-          "c18cbe45df": "Diagnostics envoyés supprimés",
-          "7a4944595b": "Impossible de copier l'ID de référence",
-          "13eb2c65a1": "ID de référence copié",
-          "860bca9ec9": "Fichier de révision abandonné",
-          "49fc6c80e8": "Diagnostics envoyés",
-          "db3228e01a": "Fichier de révision ouvert",
-          "a2b3505c77": "Fichier de révision créé"
-        },
+        "PrivacyDiagnosticBundleControls": {},
+        "PrivacyDiagnosticsSection": {},
         "PrivacyPane": {
-          "36e0e2e63b": "variable d'environnement. Supprimez-la et redémarrez pour réactiver.",
-          "79a0f3c16c": "La télémétrie est désactivée par la",
-          "e3970bbbf5": "La télémétrie est désactivée car une variable d'environnement CI est définie. Supprimez-la et redémarrez.",
-          "fe904ac984": "Partager les données d'utilisation anonymes",
-          "77410e0566": "Politique de confidentialité",
-          "8bfdd23a88": "Aidez-nous à décider quoi développer ensuite. Orcinus envoie anonymement des comptages des fonctionnalités que vous utilisez et des endroits où ça casse.",
           "afec8b03be": "ci"
         },
         "QuickCommandsList": {
@@ -7625,8 +7549,6 @@
           "8b017f2506": "Expérimental",
           "499c1cd7f9": "Paramètres de compatibilité bas niveau pour le dépannage.",
           "1c87f8d024": "Avancé",
-          "c1b43dc4e2": "Données d'utilisation anonymes et contrôles de télémétrie.",
-          "d7e3f62d70": "Confidentialité & télémétrie",
           "9b83cc62c2": "Accès de confidentialité macOS pour les outils de développement lancés depuis le terminal.",
           "65660d4548": "Autorisations macOS",
           "c6c01ac209": "Contrôlez les terminaux et les agents depuis votre téléphone.",
@@ -9276,36 +9198,7 @@
           }
         },
         "privacy": {
-          "search": {
-            "3922051573": "données",
-            "e8bc614a18": "désactiver",
-            "d8191ae5ca": "variable d'environnement",
-            "94e04427f6": "env",
-            "664f1a8984": "intégration continue",
-            "5854a5c752": "ci",
-            "69637f4dc4": "orca_telemetry_disabled",
-            "058550f6bc": "do_not_track",
-            "83a6cd79b3": "do not track",
-            "f7a2d9f137": "Variables d'environnement qui désactivent l'envoi des données de télémétrie.",
-            "e058a3c98d": "Variables d'environnement de télémétrie",
-            "1686c07fee": "assistance",
-            "c0494ff48a": "diagnostics",
-            "8b08f32366": "Diagnostics de l'app et contrôles de partage avec le support.",
-            "6d258d2ed6": "Diagnostics",
-            "ead1deded2": "partager",
-            "27a27b2f63": "refuser",
-            "4d4bb76bf4": "accepter",
-            "b021b9cb81": "anonyme",
-            "79c319948b": "utilisation",
-            "77d3180def": "télémétrie",
-            "b707cc3981": "Aidez à améliorer Orcinus en envoyant des événements anonymes d'utilisation des fonctionnalités.",
-            "57b283461a": "Partager les données d'utilisation anonymes",
-            "2b5a5c312f": "posthog",
-            "4104f6f0f3": "analytique",
-            "10124159f1": "confidentialité",
-            "aa3b794c17": "Données d'utilisation anonymes du produit, diagnostics et contrôles de télémétrie.",
-            "5c508bad41": "Confidentialité & télémétrie"
-          }
+          "search": {}
         },
         "quick": {
           "commands": {
@@ -10055,13 +9948,7 @@
           "cancel": "Annuler",
           "applyRuntimeChange": "Appliquer le changement de runtime"
         },
-        "PrivacyDiagnosticsRows": {
-          "5a7cbe069a": "DO_NOT_TRACK=1 est défini — la création et l'envoi de fichiers de diagnostic sont désactivés.",
-          "63d03261d1": "ORCA_TELEMETRY_DISABLED=1 est défini — la création et l'envoi de fichiers de diagnostic sont désactivés.",
-          "d37e92a06b": "ORCA_DIAGNOSTICS_DISABLED=1 est défini — les diagnostics de l'app sont désactivés.",
-          "5ebb31e1fb": "Exécution en CI — diagnostics désactivés.",
-          "e27c8d45bf": "Les diagnostics sont désactivés par une variable d'environnement."
-        },
+        "PrivacyDiagnosticsRows": {},
         "ShortcutCommandBlock": {
           "eb72c52c28": "Appuyez sur un raccourci, ou appuyez deux fois sur une touche modificatrice (ex. {{value0}}). Échap annule.",
           "70b5d25583": "Raccourci {{value0}}",
@@ -13943,36 +13830,14 @@
       "crash": {
         "report": {
           "CrashReportDialog": {
-            "b4951cd27c": "Envoyer le rapport",
-            "88fea8e84e": "Ne pas envoyer",
-            "50b00dc327": "Copier les détails",
-            "6d3ebe216a": "Texte de diagnostic",
-            "835037edc9": "· Orcinus",
             "56a3dfa283": "Échec de l'envoi du rapport de plantage.",
-            "8e24fe4f75": "Rapport de plantage envoyé.",
-            "8b8473c544": "Rapport de plantage copié.",
             "b175e90213": "Aucun rapport de plantage disponible.",
-            "765591798d": "Recherche de rapports de plantage...",
-            "b2e36f53a1": "Échec de l'envoi du rapport de plantage. Le ticket de diagnostic {{value0}} a été téléversé, mais pas associé.",
-            "ead6fc0510": "Aucun rapport de plantage automatique n'a été capturé. Vous pouvez toujours envoyer des détails et inclure les journaux de diagnostic récents lorsqu'ils sont disponibles.",
-            "b082f27490": "Joindre les journaux de diagnostic récents",
-            "e59f0b9427": "Envoie avec le rapport un lot de journaux anonymisés et de taille limitée."
+            "b2e36f53a1": "Échec de l'envoi du rapport de plantage. Le ticket de diagnostic {{value0}} a été téléversé, mais pas associé."
           },
           "submit": {
-            "notice": {
-              "unknownError": "La demande de rapport de plantage a échoué avant de renvoyer une raison.",
-              "ticketUploaded": "Le ticket de diagnostic {{value0}} a été téléversé, mais pas associé.",
-              "uncheckDiagnostics": "Décochez « Joindre les journaux de diagnostic récents » et réessayez, ou copiez les détails.",
-              "checkConnection": "Vérifiez votre connexion et réessayez, ou copiez les détails.",
-              "notSent": "Le rapport de plantage n'a pas été envoyé",
-              "copyDetails": "Copier les détails",
-              "sentWithoutDiagnostics": "Rapport de plantage envoyé sans journaux de diagnostic",
-              "diagnosticsReason": "Journaux de diagnostic non joints : {{value0}}"
-            }
+            "notice": {}
           },
-          "copy": {
-            "copyFailed": "Impossible de copier les détails du rapport de plantage."
-          }
+          "copy": {}
         }
       },
       "contextual": {

@@ -29,9 +29,6 @@ vi.mock('./web-session-tabs-sync', () => ({
   resolveHostSessionTabIdForWebSessionTab: vi.fn()
 }))
 
-vi.mock('@/lib/feature-education-telemetry', () => ({
-  trackTerminalPaneSplit: vi.fn()
-}))
 
 vi.mock('@/lib/worktree-runtime-owner', () => ({
   getRuntimeEnvironmentIdForWorktree: vi.fn()

@@ -10,18 +10,10 @@ vi.mock('@/lib/e2e-config', () => ({
   e2eConfig: { exposeStore: true }
 }))
 
-const mocks = vi.hoisted(() => ({
-  recordRendererCrashBreadcrumb: vi.fn()
-}))
-
-vi.mock('@/lib/crash-breadcrumb-recorder', () => ({
-  recordRendererCrashBreadcrumb: mocks.recordRendererCrashBreadcrumb
-}))
 
 describe('pane terminal output scheduler', () => {
   beforeEach(() => {
     vi.stubGlobal('window', globalThis)
-    mocks.recordRendererCrashBreadcrumb.mockClear()
   })
 
   afterEach(() => {
@@ -82,14 +74,6 @@ describe('pane terminal output scheduler', () => {
       writeTerminalOutput(terminal, chunk, { foreground: false })
     }
 
-    expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledWith(
-      'terminal_output_backlog_dropped',
-      expect.objectContaining({
-        foreground: false,
-        droppedChars: expect.any(Number),
-        capChars: 2 * 1024 * 1024
-      })
-    )
   })
 
   it('scales the backlog cap with the scrollback setting', async () => {

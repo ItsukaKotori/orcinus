@@ -2,9 +2,6 @@ import React from 'react'
 import { AlertTriangle, RotateCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { isLazyChunkLoadError } from '@/lib/lazy-with-retry'
-import { reportReactErrorBoundaryCrash } from '@/lib/react-error-boundary-reporting'
-import type { ReactErrorBoundaryReportArgs } from '../../../../shared/crash-reporting'
 import { translate } from '@/i18n/i18n'
 
 type BoundaryFallbackArgs = {
@@ -14,11 +11,9 @@ type BoundaryFallbackArgs = {
 
 type Props = {
   boundaryId: string
-  surface: ReactErrorBoundaryReportArgs['surface']
   children: React.ReactNode
   className?: string
   compact?: boolean
-  reportAsCrash?: boolean
   resetKey?: string | number | boolean | null
   title?: string
   description?: string
@@ -46,19 +41,6 @@ export class RecoverableRenderErrorBoundary extends React.Component<Props, State
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     console.error(`[${this.props.boundaryId}] render crash contained by boundary`, error, errorInfo)
-    if (this.props.reportAsCrash === false) {
-      return
-    }
-    if (isLazyChunkLoadError(error)) {
-      // Contained by this fallback; recovery breadcrumbs live on the load path.
-      return
-    }
-    void reportReactErrorBoundaryCrash({
-      boundaryId: this.props.boundaryId,
-      surface: this.props.surface,
-      error,
-      errorInfo
-    })
   }
 
   handleReset = (): void => {

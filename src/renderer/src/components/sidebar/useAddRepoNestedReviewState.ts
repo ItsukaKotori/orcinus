@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState, type Dispatch, type SetStateAction } from 'react'
-import type { NestedRepoTelemetryRuntimeKind } from '../../../../shared/nested-repo-telemetry'
 import type { NestedRepoScanResult } from '../../../../shared/project-group-types'
 import { defaultProjectGroupNameForPath, type AddRepoDialogStep } from './add-repo-dialog-types'
 
@@ -7,19 +6,15 @@ type ShowNestedRepoReviewArgs = {
   scan: NestedRepoScanResult
   selectedPath: string
   connectionId: string | null
-  attemptId: string
-  runtimeKind: NestedRepoTelemetryRuntimeKind
   inProgress: boolean
   scanId: string | null
   runtimeEnvironmentId?: string | null
 }
 
 export function useAddRepoNestedReviewState({
-  activeRuntimeEnvironmentId,
   cancelNestedRepoScan,
   setStep
 }: {
-  activeRuntimeEnvironmentId: string | null | undefined
   cancelNestedRepoScan: (
     scanId: string,
     options?: { runtimeEnvironmentId?: string | null }
@@ -30,8 +25,6 @@ export function useAddRepoNestedReviewState({
   nestedSelectedPaths: Set<string>
   nestedGroupName: string
   nestedConnectionId: string | null
-  nestedAttemptId: string | null
-  nestedRuntimeKind: NestedRepoTelemetryRuntimeKind | null
   nestedScanInProgress: boolean
   nestedScanId: string | null
   nestedImportScanId: string | null
@@ -39,7 +32,6 @@ export function useAddRepoNestedReviewState({
   setNestedSelectedPaths: Dispatch<SetStateAction<Set<string>>>
   setNestedGroupName: Dispatch<SetStateAction<string>>
   setNestedScanInProgress: Dispatch<SetStateAction<boolean>>
-  getNestedRepoRuntimeKind: (connectionId: string | null) => NestedRepoTelemetryRuntimeKind
   showNestedRepoReview: (args: ShowNestedRepoReviewArgs) => void
   setActiveNestedScanId: (scanId: string | null, runtimeEnvironmentId?: string | null) => void
   handleStopNestedScan: () => void
@@ -49,10 +41,6 @@ export function useAddRepoNestedReviewState({
   const [nestedSelectedPaths, setNestedSelectedPaths] = useState<Set<string>>(new Set())
   const [nestedGroupName, setNestedGroupName] = useState('')
   const [nestedConnectionId, setNestedConnectionId] = useState<string | null>(null)
-  const [nestedAttemptId, setNestedAttemptId] = useState<string | null>(null)
-  const [nestedRuntimeKind, setNestedRuntimeKind] = useState<NestedRepoTelemetryRuntimeKind | null>(
-    null
-  )
   const [nestedScanInProgress, setNestedScanInProgress] = useState(false)
   const [nestedScanId, setNestedScanId] = useState<string | null>(null)
   const [nestedImportScanId, setNestedImportScanId] = useState<string | null>(null)
@@ -62,16 +50,6 @@ export function useAddRepoNestedReviewState({
   const nestedScanIdRef = useRef<string | null>(null)
   const nestedScanRuntimeEnvironmentIdRef = useRef<string | null | undefined>(undefined)
 
-  const getNestedRepoRuntimeKind = useCallback(
-    (connectionId: string | null): NestedRepoTelemetryRuntimeKind => {
-      if (connectionId) {
-        return 'ssh'
-      }
-      return activeRuntimeEnvironmentId?.trim() ? 'runtime' : 'local'
-    },
-    [activeRuntimeEnvironmentId]
-  )
-
   const showNestedRepoReview = useCallback(
     (args: ShowNestedRepoReviewArgs): void => {
       setNestedScan(args.scan)
@@ -80,8 +58,6 @@ export function useAddRepoNestedReviewState({
         defaultProjectGroupNameForPath(args.scan.selectedPath || args.selectedPath)
       )
       setNestedConnectionId(args.connectionId)
-      setNestedAttemptId(args.attemptId)
-      setNestedRuntimeKind(args.runtimeKind)
       setNestedScanInProgress(args.inProgress)
       setNestedImportScanId(args.scanId)
       setNestedRuntimeEnvironmentId(args.runtimeEnvironmentId ?? null)
@@ -120,8 +96,6 @@ export function useAddRepoNestedReviewState({
     setNestedSelectedPaths(new Set())
     setNestedGroupName('')
     setNestedConnectionId(null)
-    setNestedAttemptId(null)
-    setNestedRuntimeKind(null)
     setNestedScanInProgress(false)
     setNestedImportScanId(null)
     setNestedRuntimeEnvironmentId(null)
@@ -133,8 +107,6 @@ export function useAddRepoNestedReviewState({
     nestedSelectedPaths,
     nestedGroupName,
     nestedConnectionId,
-    nestedAttemptId,
-    nestedRuntimeKind,
     nestedScanInProgress,
     nestedScanId,
     nestedImportScanId,
@@ -142,7 +114,6 @@ export function useAddRepoNestedReviewState({
     setNestedSelectedPaths,
     setNestedGroupName,
     setNestedScanInProgress,
-    getNestedRepoRuntimeKind,
     showNestedRepoReview,
     setActiveNestedScanId,
     handleStopNestedScan,

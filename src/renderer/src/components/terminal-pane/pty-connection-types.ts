@@ -4,7 +4,7 @@ import type { SessionRestoredBannerReason } from './session-restored-banner-pane
 import type { ReplayingPanesRef } from './replay-guard'
 import type { RestoredViewportBlankingPanesRef } from './terminal-restored-viewport'
 import type { AgentCompletionStatusSnapshot } from './agent-completion-coordinator-types'
-import type { EventProps } from '../../../../shared/telemetry-events'
+import type { AgentLaunchContext } from '../../../../shared/launch-context'
 import type { TerminalColorSchemeMode } from '../../../../shared/terminal-color-scheme-protocol'
 import type { StartupCommandDelivery } from '../../../../shared/codex-startup-delivery'
 import type { TuiAgent } from '../../../../shared/tui-agent'
@@ -37,7 +37,7 @@ export type PtyPaneStartup = {
   sessionOptions?: Record<string, SessionOptionValue>
   /** Telemetry payload for `agent_started`. Forwarded to `pty:spawn`
    *  so main fires the event only after the spawn succeeds. */
-  telemetry?: EventProps<'agent_started'>
+  telemetry?: AgentLaunchContext
   /** Initial prompt-start status for agents that lack native prompt hooks. */
   initialAgentStatus?: { agent: TuiAgent; prompt: string }
   /** Show the restored-session banner when this startup command mounts. */

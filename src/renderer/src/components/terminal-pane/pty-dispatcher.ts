@@ -20,6 +20,7 @@ import {
   recordPtyDataReceived,
   startTerminalDeliveryWatchdog
 } from './terminal-delivery-watchdog'
+
 import { recordTerminalFreezeBreadcrumb } from './terminal-freeze-breadcrumbs'
 import { installTerminalFreezeReport } from './terminal-freeze-report'
 import {

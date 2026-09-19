@@ -1,5 +1,3 @@
-import { recordRendererCrashBreadcrumb } from '@/lib/crash-breadcrumb-recorder'
-
 // Why: xterm's EscapeSequenceParser invokes custom CSI/OSC handlers
 // synchronously inside WriteBuffer._innerWrite, which has no try/catch. A
 // handler throw skips the loop's tail re-schedule, and write() only re-arms
@@ -28,11 +26,7 @@ export function guardParserHandler<HandlerArgs extends unknown[]>(
       if (reported < MAX_REPORTS_PER_HANDLER) {
         reportCountsByHandler.set(handlerName, reported + 1)
         console.error(`[terminal] parser handler "${handlerName}" threw`, error)
-        recordRendererCrashBreadcrumb('terminal_parser_handler_error', {
-          handler: handlerName,
-          errorName: error instanceof Error ? error.name : typeof error,
-          errorMessage: error instanceof Error ? error.message : String(error)
-        })
+
       }
       return false
     }

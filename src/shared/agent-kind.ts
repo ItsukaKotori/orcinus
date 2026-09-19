@@ -1,15 +1,55 @@
 // Mapping from the renderer's `TuiAgent` union (every agent Orca knows how
-// to launch) to the closed `agentKindSchema` enum on telemetry events. Every
-// shipped agent maps to a concrete telemetry value so dashboards can
+// to launch) to the closed `AgentKind` enum carried on launch/startup payloads.
+// Every shipped agent maps to a concrete kind so downstream consumers can
 // distinguish launch interest instead of collapsing the long tail to `other`.
 //
-// Lives in `src/shared/` (not the renderer) because main-side telemetry
-// emission (`agent_started` from the `pty:spawn` IPC handler) needs the
-// same mapping. Centralizing here means a new TuiAgent member is one edit,
-// not a sweep across renderer + main.
+// Lives in `src/shared/` (not the renderer) because the pty launch contract
+// needs the same mapping. Centralizing here means a new TuiAgent member is one
+// edit, not a sweep across renderer + main.
 
-import type { AgentKind } from './telemetry-events'
 import type { TuiAgent } from './tui-agent'
+
+// `claude`↔`claude-code` (product, not CLI string). `other` is the escape hatch.
+export const AGENT_KIND_VALUES = [
+  'claude-code',
+  'claude-agent-teams',
+  'openclaude',
+  'codex',
+  'autohand',
+  'opencode',
+  'mimo-code',
+  'pi',
+  'omp',
+  'prime-agent',
+  'gemini',
+  'antigravity',
+  'aider',
+  'goose',
+  'amp',
+  'kilo',
+  'kiro',
+  'crush',
+  'aug',
+  'cline',
+  'codebuff',
+  'command-code',
+  'continue',
+  'cursor',
+  'droid',
+  'kimi',
+  'mistral-vibe',
+  'qwen-code',
+  'rovo',
+  'hermes',
+  'openclaw',
+  'copilot',
+  'grok',
+  'devin',
+  'ante',
+  'trae',
+  'other'
+] as const
+export type AgentKind = (typeof AGENT_KIND_VALUES)[number]
 
 type ConcreteAgentKind = Exclude<AgentKind, 'other'>
 
@@ -60,7 +100,7 @@ export function tuiAgentToAgentKind(agent: TuiAgent): AgentKind {
   return TUI_AGENT_KIND_BY_AGENT[agent] ?? 'other'
 }
 
-// Why: the worktree-initial-terminal launch path only carries the telemetry
+// Why: the worktree-initial-terminal launch path only carries the launch
 // `agent_kind`, not the TuiAgent. Reverse the map so that path can stamp the
 // tab's launch agent without threading TuiAgent through every startup builder.
 const AGENT_BY_TUI_AGENT_KIND: Partial<Record<AgentKind, TuiAgent>> = Object.fromEntries(

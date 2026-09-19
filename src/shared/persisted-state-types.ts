@@ -7,7 +7,6 @@ import type {
 } from './ssh-types'
 import type { Automation, AutomationRun } from './automations-types'
 import type { MigrationUnsupportedPtyEntry } from './agent-status-types'
-import type { FeatureInteractionTelemetryBucketState } from './feature-interactions'
 import type { CodexResetCreditAttemptLedger } from './codex-reset-credit-attempt-ledger'
 import type { DiffComment } from './diff-comment-types'
 import type { FolderWorkspace, WorkspaceKey } from './folder-workspace-types'
@@ -110,8 +109,6 @@ export type PersistedState = {
   automations: Automation[]
   automationRuns: AutomationRun[]
   onboarding: OnboardingState
-  /** Main-owned telemetry de-dupe marker; never exposed through PersistedUIState. */
-  featureInteractionTelemetryBuckets?: FeatureInteractionTelemetryBucketState
   /** Main-owned reset mutation journal. Never expose this through renderer settings APIs. */
   codexResetCreditAttemptLedger?: CodexResetCreditAttemptLedger
 }

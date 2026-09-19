@@ -23,7 +23,7 @@ import { isTuiAgentEnabled } from '../../../shared/tui-agent-selection'
 import type { GitHubWorkItem } from '../../../shared/github/work-item-types'
 import type { TuiAgent } from '../../../shared/tui-agent'
 import type { WorkspaceSource as WorkspaceCreateTelemetrySource } from '../../../shared/workspace-source'
-import type { LaunchSource } from '../../../shared/telemetry-events'
+import type { LaunchSource } from '../../../shared/launch-context'
 import { translate } from '@/i18n/i18n'
 
 type StartFixChecksAgentArgs = {

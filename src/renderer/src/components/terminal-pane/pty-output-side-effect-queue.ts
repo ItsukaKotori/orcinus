@@ -1,7 +1,3 @@
-import {
-  registerPtySideEffectPendingGauge,
-  type PtySideEffectGauge
-} from './pty-side-effect-pending-census'
 import type { ProcessedAgentStatusChunk } from '../../../../shared/agent-status-osc'
 
 const MAX_PTY_SIDE_EFFECTS_PER_DRAIN = 64
@@ -29,7 +25,6 @@ export type PtyOutputSideEffectQueue = {
   clear: () => void
   isDrained: () => boolean
   pendingWorkingTitleCount: () => number
-  disposeGauge: () => void
 }
 
 export function createPtyOutputSideEffectQueue({
@@ -40,11 +35,6 @@ export function createPtyOutputSideEffectQueue({
   let pendingEffects: PendingPtySideEffect[] = []
   let pendingIndex = 0
   let pendingWorkingTitles = 0
-  const gauge: PtySideEffectGauge = {
-    pending: () => pendingEffects.length - pendingIndex,
-    retained: () => pendingEffects.length
-  }
-  const disposeGauge = registerPtySideEffectPendingGauge(gauge)
 
   function compact(force = false): void {
     if (pendingIndex === 0) {
@@ -155,7 +145,6 @@ export function createPtyOutputSideEffectQueue({
       pendingWorkingTitles = 0
     },
     isDrained: () => pendingIndex >= pendingEffects.length,
-    pendingWorkingTitleCount: () => pendingWorkingTitles,
-    disposeGauge
+    pendingWorkingTitleCount: () => pendingWorkingTitles
   }
 }

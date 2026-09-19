@@ -11,7 +11,8 @@ import type {
   PtyRendererDeliveryHealthReply,
   PtyRendererDeliveryStateReport
 } from '../../shared/pty-renderer-delivery-health'
-import type { AgentKind, LaunchSource, RequestKind } from '../../shared/telemetry-events'
+import type { AgentKind } from '../../shared/agent-kind'
+import type { LaunchSource, RequestKind } from '../../shared/launch-context'
 import type { TerminalSideEffectBatch } from '../../shared/terminal-side-effect-facts'
 import type { TerminalViewAttributes } from '../../shared/terminal-view-attributes'
 import type { TuiAgent } from '../../shared/tui-agent'
@@ -45,7 +46,7 @@ export type PtyApi = {
     // Why: main sync-flushes the (worktreeId,tabId,leafId→ptyId) binding before pty:spawn returns to close a SIGKILL race (INVESTIGATION.md).
     tabId?: string
     leafId?: string
-    // Why: main fires `agent_started` only on spawn success, so launch metadata rides this field (telemetry-plan.md §Agent launch semantics).
+    // Why: launch metadata is stamped at the call site; main owns whether the spawn actually happened.
     telemetry?: { agent_kind: AgentKind; launch_source: LaunchSource; request_kind: RequestKind }
   }) => Promise<{
     id: string

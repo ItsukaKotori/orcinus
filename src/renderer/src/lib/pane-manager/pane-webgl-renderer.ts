@@ -297,8 +297,8 @@ export function attachWebgl(pane: ManagedPaneInternal): void {
       // report — it means the glyph atlas was wiped (needs a full reset), not
       // just a missed repaint. Silent breadcrumb; the console.warn stays.
       // Census rides along: a GPU-process death loses every pane's context at
-      // once, and the crash-report ring coalesces repeats, so the count has to
-      // be in the payload rather than in the number of crumbs.
+      // once, and the freeze ring coalesces repeats, so the count has to be in
+      // the payload rather than in the number of crumbs.
       const census = getLivePaneCensus()
       const lossesInWindow = recordPaneWebglContextLoss(pane)
       recordTerminalWebglDiagnostic('webgl-context-loss', {

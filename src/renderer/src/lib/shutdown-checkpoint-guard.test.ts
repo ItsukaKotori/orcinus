@@ -64,10 +64,6 @@ describe('createShutdownCheckpointGuard', () => {
     expect(guard.persistOnce()).toBe(false)
 
     expect(consumeShutdownCheckpointFailureReason()).toBe('sendSync payload rejected')
-    expect(recordBreadcrumb).toHaveBeenCalledWith({
-      name: 'renderer_shutdown_checkpoint_failed',
-      data: { message: 'sendSync payload rejected' }
-    })
   })
 
   it('clears a stale failure cause once a later checkpoint succeeds (STA-5505)', () => {

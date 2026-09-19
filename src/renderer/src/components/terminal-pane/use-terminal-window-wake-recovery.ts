@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import type { PaneManager } from '@/lib/pane-manager/pane-manager'
 import { recoverVisibleTerminalWindowWake } from './terminal-visibility-resume'
+import { recordTerminalFreezeBreadcrumb } from './terminal-freeze-breadcrumbs'
 import { repairPaneWebglCanvasDpr } from '@/lib/pane-manager/terminal-canvas-dpr-repair'
 import { presentPaneViewport } from '@/lib/pane-manager/pane-webgl-renderer'
-import { recordTerminalFreezeBreadcrumb } from './terminal-freeze-breadcrumbs'
+
 import type { IDisposable } from '@xterm/xterm'
 
 type UseTerminalWindowWakeRecoveryArgs = {
@@ -70,6 +71,7 @@ export function useTerminalWindowWakeRecovery({
       // Source is in the kind so distinct triggers don't coalesce into one
       // entry (focus and resume often fire together); repeats of the same
       // source still fold, which is the noise control we want.
+
       recordTerminalFreezeBreadcrumb(`wake-recovery:${source}`, { clearGlyphAtlases })
       // Focus and visibility often fire together; keep one immediate recovery and one settled RAF pass.
       if (wakeRecoveryFrameId !== null) {

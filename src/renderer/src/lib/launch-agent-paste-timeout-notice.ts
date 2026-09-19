@@ -1,8 +1,6 @@
 import { toast } from 'sonner'
 import { useAppStore } from '@/store'
-import { track, tuiAgentToAgentKind } from '@/lib/telemetry'
 import { translate } from '@/i18n/i18n'
-import type { TuiAgent } from '../../../shared/tui-agent'
 
 /**
  * Notice for a post-launch paste that never landed — a stalled readiness wait
@@ -14,7 +12,6 @@ import type { TuiAgent } from '../../../shared/tui-agent'
 export function createPasteReadinessTimeoutNotice(args: {
   worktreeId: string
   tabId: string
-  agent: TuiAgent
   submitted: boolean
 }): { onTimeout: () => void; wasNotified: () => boolean } {
   let notified = false
@@ -42,10 +39,6 @@ export function createPasteReadinessTimeoutNotice(args: {
         )
       )
       notified = true
-      track('agent_error', {
-        error_class: 'paste_readiness_timeout',
-        agent_kind: tuiAgentToAgentKind(args.agent)
-      })
     }
   }
 }

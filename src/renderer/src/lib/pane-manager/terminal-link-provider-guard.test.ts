@@ -5,16 +5,8 @@ import {
   installGuardedLinkProviderRegistration
 } from './terminal-link-provider-guard'
 
-const mocks = vi.hoisted(() => ({
-  recordRendererCrashBreadcrumb: vi.fn()
-}))
-
-vi.mock('@/lib/crash-diagnostics', () => ({
-  recordRendererCrashBreadcrumb: mocks.recordRendererCrashBreadcrumb
-}))
 
 beforeEach(() => {
-  mocks.recordRendererCrashBreadcrumb.mockClear()
 })
 
 function collectLinks(provider: ILinkProvider, bufferLineNumber = 1): ILink[] | undefined {
@@ -41,15 +33,6 @@ describe('guardLinkProvider', () => {
 
     expect(() => collectLinks(guarded)).not.toThrow()
     expect(collectLinks(guarded)).toBeUndefined()
-    expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledWith(
-      'terminal_link_provider_error',
-      {
-        provider: 'web-links',
-        bufferLineNumber: 1,
-        errorName: 'RangeError',
-        errorMessage: 'Invalid array length'
-      }
-    )
   })
 
   it('passes provided links through unchanged when the provider succeeds', () => {
@@ -60,7 +43,6 @@ describe('guardLinkProvider', () => {
     const guarded = guardLinkProvider(provider, 'orca-handle')
 
     expect(collectLinks(guarded)).toBe(links)
-    expect(mocks.recordRendererCrashBreadcrumb).not.toHaveBeenCalled()
   })
 
   it('does not double-invoke the callback when the provider throws after resolving', () => {
@@ -77,7 +59,6 @@ describe('guardLinkProvider', () => {
     expect(() => guarded.provideLinks(1, callback)).not.toThrow()
     expect(callback).toHaveBeenCalledTimes(1)
     expect(callback).toHaveBeenCalledWith(links)
-    expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledOnce()
   })
 })
 
@@ -103,9 +84,5 @@ describe('installGuardedLinkProviderRegistration', () => {
     expect(registered).toHaveLength(1)
     expect(() => collectLinks(registered[0])).not.toThrow()
     expect(collectLinks(registered[0])).toBeUndefined()
-    expect(mocks.recordRendererCrashBreadcrumb).toHaveBeenCalledWith(
-      'terminal_link_provider_error',
-      expect.objectContaining({ provider: 'provider-1', errorName: 'RangeError' })
-    )
   })
 })

@@ -12,7 +12,7 @@ import type { PaneManager } from '@/lib/pane-manager/pane-manager'
 import { replayIntoTerminal, type ReplayingPanesRef } from './replay-guard'
 import type { RestoredViewportBlankingPanesRef } from './terminal-restored-viewport'
 import { isXtermInstanceDisposed } from '@/lib/pane-manager/xterm-instance-disposed'
-import { recordRendererCrashBreadcrumb } from '@/lib/crash-breadcrumb-recorder'
+
 import {
   getLeftmostLeafId,
   normalizeTerminalLayoutSnapshot,
@@ -164,9 +164,7 @@ export function restoreScrollbackBuffers(
     }
     // Breadcrumb: writes into a disposed xterm are silent (no throw), the suspected source of startup zombie panes.
     if (isXtermInstanceDisposed(pane.terminal)) {
-      recordRendererCrashBreadcrumb('terminal_restore_write_target_disposed', {
-        paneId: pane.id
-      })
+
       continue
     }
     try {
@@ -196,11 +194,7 @@ export function restoreScrollbackBuffers(
       }
     } catch (error: unknown) {
       // Breadcrumb: this catch was silent while zombie panes went undiagnosed.
-      recordRendererCrashBreadcrumb('terminal_restore_write_failed', {
-        paneId: pane.id,
-        errorName: error instanceof Error ? error.name : typeof error,
-        errorMessage: error instanceof Error ? error.message : String(error)
-      })
+
     }
   }
 }

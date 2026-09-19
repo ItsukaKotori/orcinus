@@ -1,14 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { recordRendererCrashBreadcrumb } from '@/lib/crash-breadcrumb-recorder'
 import type { ManagedPane, ManagedPaneInternal, ScrollState } from './pane-manager-types'
 import { readProposedPaneFitDimensions, safeFit, safeFitAndThen } from './pane-fit'
 import { applyOrDeferPaneMetricOptions } from './pane-metric-options-deferral'
 import { paneFitClientSizeChanged } from './pane-reveal-fit'
 import { setFitOverride } from './mobile-fit-overrides'
-
-vi.mock('@/lib/crash-breadcrumb-recorder', () => ({
-  recordRendererCrashBreadcrumb: vi.fn()
-}))
 
 let nextRafId = 1
 let pendingRafs = new Map<number, FrameRequestCallback>()
@@ -193,17 +188,6 @@ describe('safeFitAndThen unmeasurable-pane retry', () => {
     }
 
     expect(continuation).not.toHaveBeenCalled()
-    // Why census fields: main coalesces this crumb by name, so the pane count
-    // must ride on the payload — the burst multiplicity no longer carries it.
-    expect(recordRendererCrashBreadcrumb).toHaveBeenCalledWith(
-      'terminal_safe_fit_retry_exhausted',
-      {
-        paneId: 7,
-        leafId: '22222222-2222-4222-8222-222222222222',
-        livePanes: 0,
-        livePaneManagers: 0
-      }
-    )
     await expect(handle.completion).resolves.toBe(false)
 
     pane.setRect({ width: 800, height: 600 })
@@ -218,7 +202,6 @@ describe('safeFitAndThen unmeasurable-pane retry', () => {
     const pane = createPane({ rect: { width: 0, height: 0 } })
     pane.setDisplay('none')
     const continuation = vi.fn()
-    vi.mocked(recordRendererCrashBreadcrumb).mockClear()
 
     const handle = safeFitAndThen(pane, 'reattach-pty-resize', continuation, {
       retryIfUnmeasurable: true,
@@ -228,7 +211,6 @@ describe('safeFitAndThen unmeasurable-pane retry', () => {
     // Completion resolves immediately so reattach never holds live output behind a hidden pane.
     await expect(handle.completion).resolves.toBe(false)
     expect(continuation).not.toHaveBeenCalled()
-    expect(recordRendererCrashBreadcrumb).not.toHaveBeenCalled()
 
     pane.setDisplay('block')
     pane.setRect({ width: 800, height: 600 })
@@ -360,7 +342,6 @@ describe('safeFitAndThen unmeasurable-pane retry', () => {
   })
 
   it('does not retry a pane explicitly hidden with display none', async () => {
-    vi.mocked(recordRendererCrashBreadcrumb).mockClear()
     const pane = createPane({ rect: { width: 0, height: 0 } })
     const container = (pane as unknown as ManagedPaneInternal).xtermContainer
     Object.assign(container, {
@@ -377,12 +358,10 @@ describe('safeFitAndThen unmeasurable-pane retry', () => {
 
     expect(requestAnimationFrame).not.toHaveBeenCalled()
     expect(continuation).not.toHaveBeenCalled()
-    expect(recordRendererCrashBreadcrumb).not.toHaveBeenCalled()
     await expect(handle.completion).resolves.toBe(false)
   })
 
   it('stops retrying when a pane becomes display none', async () => {
-    vi.mocked(recordRendererCrashBreadcrumb).mockClear()
     const pane = createPane({ rect: { width: 0, height: 0 } })
     const container = (pane as unknown as ManagedPaneInternal).xtermContainer
     let display = 'block'
@@ -403,7 +382,6 @@ describe('safeFitAndThen unmeasurable-pane retry', () => {
 
     expect(requestAnimationFrame).toHaveBeenCalledOnce()
     expect(continuation).not.toHaveBeenCalled()
-    expect(recordRendererCrashBreadcrumb).not.toHaveBeenCalled()
     await expect(handle.completion).resolves.toBe(false)
   })
 })
