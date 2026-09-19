@@ -10,11 +10,13 @@
 
 1. **生产可达性分析**（Task 0 工具 `orcinus-reach.mjs`，固化于 `.superpowers/sdd/2026-09-17-feature-trim/tools/`）：
    入口 = `src/renderer/index.html → main.tsx`、`popout.html → popout.tsx`（Task 5 前）、`web-index.html → web/main.tsx`，以及 `src/main`、`src/preload`、`src/bridge`、`src/types` 全量文件；解析相对导入、`@/`、`@renderer/` 别名与 lazy `import()` 字面量；测试文件（`*.test.ts(x)`/`*.spec.ts(x)`）不纳入可达性图（test-support 文件因此常驻不可达清单）。
-2. **基线**：可达性基线 `baseline-reach.txt`（4983abb 时 697 行）；测试基线 `baseline-test-failures.txt`（db90d46 时 175 个 test 级失败名）。
+2. **基线**：可达性基线 `baseline-reach.txt`（4983abb 时 697 行）；测试基线 `baseline-test-failures.txt`（db90d46 时 171 条 test 级失败名 + 4 条 collection 失败，共 175 行）。
 3. **删除规则**：域内文件整域 `git rm`（R4：域内互引使分批门禁不可行，改为一次删除 + 一次门禁）；reach diff 中新增不可达文件逐个判定，仅「无生产/测试导入者」才删；`*.d.ts` 永不作为删除候选（R5，ambient declarations 无导入边）。
 4. **门禁**：每次删除后 `pnpm typecheck && pnpm build:web` 必须 exit 0；自 Task 4 起 typecheck 一律先 `rm -f tsconfig.tsbuildinfo` 冷检（R7：增量缓存曾掩盖 10 个错误）。
 5. **i18n**：`orcinus-domain-keys.sh` 从待删/待改文件收集候选键 → `orcinus-i18n-prune.mjs` 仅删「catalog 中存在 + 剩余源码无完整字面量 + 父路径无 `${}` 模板拼接」的键；Task 8 另做空壳与残留全量清键。
-6. **提交策略**：每域一个提交（审查修复轮单独提交），全程不 merge/push，每域可独立 revert。最终 `git log --oneline phase1-trim-features ^main` = 3 个前置文档提交（spec/plan/gitignore）+ 12 个域提交（10 域，含 4 个审查修复轮）+ 1 个收尾 = 16 个提交（计划预期「9 个提交」按「spec + Tasks 1–7 + 收尾」计算，未计前置文档与修复轮）。
+6. **提交策略**：每域一个提交（审查修复轮单独提交），全程不 merge/push，每域可独立 revert。最终 `git log --oneline phase1-trim-features ^main` = 3 个前置文档提交（spec/plan/gitignore）+ 12 个域提交（10 域，含 4 个审查修复轮）+ 1 个收尾（`9de18b7`）+ 1 个记录修正（`1b66df4`）+ 1 个终审修复 = 18 个提交（计划预期「9 个提交」按「spec + Tasks 1–7 + 收尾」计算，未计前置文档与修复轮）。
+
+> 说明：`.superpowers/sdd/…` 下的工具、基线与报告均为本地未跟踪证据（`.superpowers/` 已 gitignore），不是提交产物。
 
 ## 提交与门禁表
 
@@ -46,6 +48,8 @@ bb3e08d 780 files changed,   537 insertions, 96428 deletions
 d558770  11 files changed,   157 insertions,   155 deletions
 6ecbb30 352 files changed,   616 insertions, 19780 deletions
 493e967  12 files changed,    37 insertions,   298 deletions
+9de18b7  68 files changed,   276 insertions,  3336 deletions
+1b66df4   2 files changed,     6 insertions,     6 deletions
 ```
 
 ## 全局可达性兜底（Task 8 Step 1）
@@ -129,11 +133,14 @@ Test Files  40 failed | 3813 passed | 8 skipped (3861)
   Duration  507.26s
 ```
 
-对比 `baseline-test-failures.txt`（175 test 级失败名，按「去前导空白 + 去 collection `[ path ]` 后缀 + LC_ALL=C 排序」归一）：
+对比 `baseline-test-failures.txt`（175 行 = 171 条 test 级失败名 + 4 条 collection 失败路径；最终日志 176 条 `FAIL` = 172 条 test 级 + 同 4 条 collection。归一方式：去前导空白 + 去 collection `[ path ]` 后缀 + `LC_ALL=C sort -u`）：
 
-- **新增失败：0**
-- **修复：3**（`NativeChatPromptEditor.test.tsx` 的 3 个 skill editor 用例，随 native-chat 域删除）
-- 172 = 175 − 3；`Errors 3` 对应 4 个 suite 因仓库缺文件收集失败（`web-session-tabs-sync-terminal-mirroring`、`web-session-terminal-orphan-recovery-{prior-removal,adoption-regressions}`、`windows-lane-tree-removal-boundary`），这 4 条均逐字出现在基线失败文件清单中，非本删减引入。
+- **集合差：+4 / −3**。此前记录的「新增失败 0 / 172 = 175 − 3」只做了 test 级名称集合对比，掩盖了下方两处已红用例内部的增量。
+- **+4**：`terminal-ime-xterm-composition-deduplication.test.ts` 的 4 个参数化变体（中文、旗帜与 emoji 组合等 4 个参数行，文件内 `it.each` 用例）。该文件在本分支上零改动（`git log main..HEAD -- <file>` 为空），属运行波动（同一批参数化行在两次运行间时好时坏）。
+- **−3**：`NativeChatPromptEditor.test.tsx` 的 3 个 skill editor 用例，随 native-chat 域删除而消失。
+- **隐藏增量 1**：`feature-interactions.test.ts > keeps every catalog id wired to a production writer`（基线即红）的 missing-writer 集合由 5 条增至 7 条，新增 `workspace-agent-sessions`、`client-hosted-browser`——其唯一 writer 为已删除的 tour hooks（task-2 report 已记录）。测试名不变，故名称集合对比看不到。
+- **隐藏增量 2**：`useIpcEvents-lifecycle.test.ts`（基线即红）在最终运行中的失败 diff 同时包含 `runtime.onNativeChatLaunchDraftResolved`（生产已删而测试期望未同步）与既有 `ui.onOpenSkillShare` 缺口。前者已在本轮终审修复中从期望清单移除；修复后该文件唯一失败为 `ui.onOpenSkillShare`（真实基线缺口）。
+- 4 条 collection 行与基线逐字一致，均因仓库缺文件收集失败（`web-session-tabs-sync-terminal-mirroring`、`web-session-terminal-orphan-recovery-{prior-removal,adoption-regressions}`、`windows-lane-tree-removal-boundary`），非本删减引入；对应 `Errors 3`。
 
 ## 自动启动冒烟（人工冒烟的机器部分）
 

@@ -25,7 +25,6 @@ const EXPECTED_DIRECT_CALLBACK_METHODS = [
   'runtime.onBrowserDriverChanged',
   'runtime.onBrowserRemoteViewersChanged',
   'runtime.onClientHostedBrowserRowsChanged',
-  'runtime.onNativeChatLaunchDraftResolved',
   'runtime.onTerminalDriverChanged',
   'runtime.onTerminalFitOverrideChanged',
   'runtimeEnvironments.onStatusChanged',
@@ -186,7 +185,6 @@ const EXPECTED_CALLBACK_REGISTRATION_SEQUENCE = [
   'agentStatus.onLegacyWorkerTerminalRecovery',
   'runtime.onTerminalFitOverrideChanged',
   'runtime.onTerminalDriverChanged',
-  'runtime.onNativeChatLaunchDraftResolved',
   'runtime.onBrowserDriverChanged',
   'runtime.onBrowserRemoteViewersChanged',
   'runtime.onClientHostedBrowserRowsChanged'
@@ -423,7 +421,6 @@ describe('useIpcEvents App-lifetime lifecycle', () => {
       groupOrder([
         'runtime.onTerminalFitOverrideChanged',
         'runtime.onTerminalDriverChanged',
-        'runtime.onNativeChatLaunchDraftResolved',
         'runtime.onBrowserDriverChanged',
         'runtime.onBrowserRemoteViewersChanged',
         'runtime.onClientHostedBrowserRowsChanged',
@@ -436,7 +433,6 @@ describe('useIpcEvents App-lifetime lifecycle', () => {
     ).toEqual([
       'runtime.onTerminalFitOverrideChanged',
       'runtime.onTerminalDriverChanged',
-      'runtime.onNativeChatLaunchDraftResolved',
       'runtime.onBrowserDriverChanged',
       'runtime.onBrowserRemoteViewersChanged',
       'runtime.onClientHostedBrowserRowsChanged',
