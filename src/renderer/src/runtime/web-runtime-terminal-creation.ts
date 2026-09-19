@@ -1,8 +1,5 @@
 import type { TuiAgent } from '../../../shared/tui-agent'
-import {
-  deliverLaunchPromptToAgentTab,
-  seedNativeChatLaunchDraftForAgentTab
-} from '../lib/agent-launch-prompt-delivery'
+import { deliverLaunchPromptToAgentTab } from '../lib/agent-launch-prompt-delivery'
 import { createWebRuntimeSessionTerminalResult } from './web-runtime-terminal-create-operation'
 import { toWebTerminalSurfaceTabId } from './web-terminal-surface-id'
 import type {
@@ -54,12 +51,5 @@ export async function createWebRuntimeAgentSessionTerminalWithLaunchDraft(
   }
 ): Promise<WebRuntimeTerminalCreateOutcome> {
   const created = await createWebRuntimeSessionTerminalResult(args)
-  if (created.outcome.status !== 'failed' && created.hostTabId) {
-    seedNativeChatLaunchDraftForAgentTab({
-      tabId: toWebTerminalSurfaceTabId(created.hostTabId),
-      agent: args.agent,
-      text: args.launchDraft
-    })
-  }
   return created.outcome
 }

@@ -69,11 +69,6 @@ export const probeWindowsCapabilities: WindowsTerminalCapabilities = {
 
 export const localProjectRuntimeSpy = vi.fn(() => undefined)
 
-const AGENT_PROJECTIONS = Object.freeze({
-  nativeChatEnabled: false,
-  tabAgentTypesByTabId: Object.freeze({}),
-  nativeChatTabWideFallbackUnsafeTabsById: Object.freeze({})
-})
 const CREATION_POLICY = Object.freeze({
   'managed-browser': { state: 'enabled' }
 })
@@ -107,9 +102,7 @@ export function tabBarRuntimeModelStubs(): Record<string, () => Record<string, u
     connectionContext: () => ({ getConnectionIdFromState: () => null }),
     runtimeOwner: () => ({ getRuntimeEnvironmentIdForWorktree: () => null }),
     runtimeRpcClient: () => ({ getActiveRuntimeTarget: () => RUNTIME_TARGET }),
-    nativeChatReadability: () => ({ isNativeChatTranscriptLocalReadable: () => false }),
     creationPolicy: () => ({ getClientCreationActionPolicy: () => CREATION_POLICY }),
-    agentProjections: () => ({ selectTabBarAgentProjections: () => AGENT_PROJECTIONS }),
     localPreflight: () => ({
       getLocalProjectExecutionRuntimeContext: localProjectRuntimeSpy
     }),

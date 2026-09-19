@@ -13,12 +13,10 @@ import {
 import type { ClientHostedBrowserRowsEvent } from '../../../../shared/client-hosted-browser-rows'
 import { setDriverForPty, hydrateDrivers } from '@/lib/pane-manager/mobile-driver-state'
 import { setFitOverride, hydrateOverrides } from '@/lib/pane-manager/mobile-fit-overrides'
-import { applyNativeChatLaunchDraftResolved } from '@/runtime/native-chat-launch-draft-runtime-resolution'
 import type {
   RuntimeBrowserDriverState,
   RuntimeTerminalDriverState
 } from '../../../../shared/runtime-types'
-import { useAppStore } from '../../store'
 
 const MAX_PENDING_MOBILE_STATE_EVENTS = 300
 
@@ -96,17 +94,6 @@ export function registerMobileDriverIpcBridge(
       setDriverForPty(event.ptyId, event.driver)
     })
   )
-  const unsubscribeLaunchDraftResolution = window.api.runtime.onNativeChatLaunchDraftResolved?.(
-    (event) => {
-      applyNativeChatLaunchDraftResolved(useAppStore.getState(), {
-        type: 'nativeChatLaunchDraftResolved',
-        ...event
-      })
-    }
-  )
-  if (unsubscribeLaunchDraftResolution) {
-    unsubs.push(unsubscribeLaunchDraftResolution)
-  }
   unsubs.push(
     window.api.runtime.onBrowserDriverChanged((event) => {
       if (isRuntimeEnvironmentActive()) {

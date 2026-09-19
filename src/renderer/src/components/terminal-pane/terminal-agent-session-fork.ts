@@ -247,32 +247,8 @@ export async function startAgentSessionFork(fork: PreparedAgentSessionFork): Pro
     launchSource: 'terminal_context_menu',
     ...(launchPlatform ? { launchPlatform } : {})
   })
-  if (!result?.structuredSettlement) {
-    activateAndRevealWorktree(forkWorktreeId, { sidebarRevealBehavior: 'auto' })
-    if (!result) {
-      return copyAgentSessionForkContext(fork)
-    }
-    notifyForkOpened()
-    return true
-  }
-  // Why: the fresh worktree has no tabs yet; without the opt-out activation seeds a shell beside
-  // the structured tab that is still on its way.
-  activateAndRevealWorktree(forkWorktreeId, {
-    sidebarRevealBehavior: 'auto',
-    providesInitialSurface: true
-  })
-  const settlement = await result.structuredSettlement
-  // Why: a refusal whose terminal fallback opened nothing is the structured twin of a null launch.
-  if (settlement.kind === 'refused-then-legacy' && settlement.primaryTabId === null) {
-    return copyAgentSessionForkContext(fork)
-  }
-  // Why: the worktree already exists, so a false return would keep the dialog open and a second
-  // click would create another one. Unknown already shows the launch badge; failed hands the
-  // user the context the way a null launch does.
-  if (settlement.kind === 'visibility-unknown') {
-    return true
-  }
-  if (settlement.kind === 'failed' || settlement.kind === 'cancelled') {
+  activateAndRevealWorktree(forkWorktreeId, { sidebarRevealBehavior: 'auto' })
+  if (!result) {
     return copyAgentSessionForkContext(fork)
   }
   notifyForkOpened()

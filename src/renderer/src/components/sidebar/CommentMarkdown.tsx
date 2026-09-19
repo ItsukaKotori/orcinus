@@ -13,7 +13,7 @@ import {
   isTrustedCompactImageSrc,
   type CommentMarkdownLinkClickHandler
 } from './comment-markdown-element-renderers'
-import { remarkNativeChatFileLinks } from './comment-markdown-native-chat-file-links'
+import { remarkMarkdownFileLinks } from './comment-markdown-file-links'
 
 export type { CommentMarkdownLinkClickHandler } from './comment-markdown-element-renderers'
 
@@ -222,7 +222,7 @@ const CommentMarkdown = React.memo(
     }, [expandImages, variant, onLinkClick])
     const activeRemarkPlugins = React.useMemo(() => {
       const plugins = linkifyFilePaths
-        ? [...remarkPlugins, remarkNativeChatFileLinks]
+        ? [...remarkPlugins, remarkMarkdownFileLinks]
         : remarkPlugins
       return githubRepo ? [...plugins, remarkGitHubReferences(githubRepo)] : plugins
     }, [githubRepo, linkifyFilePaths])

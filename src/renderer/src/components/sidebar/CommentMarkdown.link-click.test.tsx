@@ -4,9 +4,9 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
-  NATIVE_CHAT_FILE_HREF_PREFIX,
-  routeNativeChatHref
-} from '../../../../shared/native-chat-href-routing'
+  MARKDOWN_FILE_HREF_PREFIX,
+  routeMarkdownHref
+} from '../../../../shared/markdown-href-routing'
 import CommentMarkdown from './CommentMarkdown'
 
 describe('CommentMarkdown link click handler', () => {
@@ -234,7 +234,7 @@ describe('CommentMarkdown link click handler', () => {
     })
 
     const routes = Array.from(container.querySelectorAll<HTMLAnchorElement>('a')).map((anchor) =>
-      routeNativeChatHref(anchor.getAttribute('href'))
+      routeMarkdownHref(anchor.getAttribute('href'))
     )
     expect(routes).toEqual([
       { kind: 'file', pathText: '/tmp/sta-6481-explainer.html', line: null },
@@ -265,7 +265,7 @@ describe('CommentMarkdown link click handler', () => {
     const code = container.querySelector('code')
     const anchor = code?.closest('a')
     expect(anchor).not.toBeNull()
-    expect(routeNativeChatHref(anchor?.getAttribute('href'))).toEqual({
+    expect(routeMarkdownHref(anchor?.getAttribute('href'))).toEqual({
       kind: 'file',
       pathText: String.raw`C:\Reports\release.docx`,
       line: null
@@ -354,7 +354,7 @@ describe('CommentMarkdown link click handler', () => {
       "Don't skip \"Brennan's Folder/notes.md\"; open 'My Folder/guide.md'."
     )
     expect(
-      Array.from(anchors).map((anchor) => routeNativeChatHref(anchor.getAttribute('href')))
+      Array.from(anchors).map((anchor) => routeMarkdownHref(anchor.getAttribute('href')))
     ).toEqual([
       { kind: 'file', pathText: "Brennan's Folder/notes.md", line: null },
       { kind: 'file', pathText: 'My Folder/guide.md', line: null }
@@ -379,7 +379,7 @@ describe('CommentMarkdown link click handler', () => {
 
     const anchor = container.querySelector<HTMLAnchorElement>('a')
     expect(anchor?.textContent).toBe('My Folder/notes.md')
-    expect(routeNativeChatHref(anchor?.getAttribute('href'))).toEqual({
+    expect(routeMarkdownHref(anchor?.getAttribute('href'))).toEqual({
       kind: 'file',
       pathText: 'My Folder/notes.md',
       line: null
@@ -431,7 +431,7 @@ describe('CommentMarkdown link click handler', () => {
       'My Notes.md:7',
       String.raw`C:\My Folder\notes.txt:12:3`
     ])
-    expect(anchors.map((anchor) => routeNativeChatHref(anchor.getAttribute('href')))).toEqual([
+    expect(anchors.map((anchor) => routeMarkdownHref(anchor.getAttribute('href')))).toEqual([
       { kind: 'file', pathText: 'My Folder/notes:12', line: null },
       { kind: 'file', pathText: 'My Notes.md:7', line: null },
       { kind: 'file', pathText: String.raw`C:\My Folder\notes.txt:12:3`, line: null }
@@ -558,7 +558,7 @@ describe('CommentMarkdown link click handler', () => {
     })
 
     const anchor = container.querySelector<HTMLAnchorElement>('a')
-    expect(anchor?.getAttribute('href')).toMatch(new RegExp(`^${NATIVE_CHAT_FILE_HREF_PREFIX}`))
+    expect(anchor?.getAttribute('href')).toMatch(new RegExp(`^${MARKDOWN_FILE_HREF_PREFIX}`))
     const event = new window.MouseEvent('click', { bubbles: true, cancelable: true })
 
     act(() => {
@@ -593,7 +593,7 @@ describe('CommentMarkdown link click handler', () => {
 
     const anchors = container.querySelectorAll<HTMLAnchorElement>('a')
     expect(anchors).toHaveLength(1)
-    expect(routeNativeChatHref(anchors[0]?.getAttribute('href'))).toEqual({
+    expect(routeMarkdownHref(anchors[0]?.getAttribute('href'))).toEqual({
       kind: 'file',
       pathText: String.raw`C:\Reports\summary.pdf`,
       line: null

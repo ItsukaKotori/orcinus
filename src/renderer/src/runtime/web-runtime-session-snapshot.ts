@@ -23,11 +23,6 @@ export async function refreshWebRuntimeSessionTabsSnapshot(
   options: {
     expectedEnvironmentPairingRevision?: number
     acceptCurrentSnapshot?: boolean
-    confirmAgentSessionHandoff?: {
-      provisionalTabId: string
-      hostTabId: string
-      hostTerminalHandle: string
-    }
     afterCurrentInFlight?: boolean
     errorMode?: 'warn' | 'throw'
   } = {}
@@ -51,7 +46,7 @@ export async function refreshWebRuntimeSessionTabsSnapshot(
       acceptReplayedWebSessionTabsSnapshot(environmentId, worktreeId)
     }
     const listSessionTabs =
-      options.confirmAgentSessionHandoff || options.afterCurrentInFlight
+      options.afterCurrentInFlight
         ? listRemoteRuntimeSessionTabsAfterCurrentInFlight
         : listRemoteRuntimeSessionTabsDeduped
     if (options.afterCurrentInFlight) {
@@ -76,16 +71,6 @@ export async function refreshWebRuntimeSessionTabsSnapshot(
         )
       }
     })
-    if (options.confirmAgentSessionHandoff) {
-      const { confirmWebAgentSessionHandoffAfterCreate } =
-        await import('./web-agent-session-handoff')
-      // Why: this list completed after structured creation, so absence now proves the exact host tab already retired.
-      confirmWebAgentSessionHandoffAfterCreate({
-        environmentId,
-        worktreeId,
-        ...options.confirmAgentSessionHandoff
-      })
-    }
     const {
       applyWebSessionTabsSnapshot,
       applyWebSessionTabsStorePatch,

@@ -54,7 +54,6 @@ export function createTerminalPanePtyDeps(args: {
     isActiveRef: deps.isActiveRef,
     isVisibleRef: deps.isVisibleRef,
     onPtyExitRef: deps.onPtyExitRef,
-    onAgentExitedRef: deps.onAgentExitedRef,
     onPtyErrorRef: deps.onPtyErrorRef,
     onPtyErrorClearedRef: deps.onPtyErrorClearedRef,
     onPaneProcessDied: deps.onPaneProcessDied,

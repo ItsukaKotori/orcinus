@@ -1,7 +1,6 @@
 import type { TerminalPaneHandle, TerminalPaneProps } from './terminal-pane-types'
 import { useTerminalPaneFoundation } from './use-terminal-pane-foundation'
 import { useTerminalPaneTitleState } from './use-terminal-pane-title-state'
-import { useTerminalPaneChatState } from './use-terminal-pane-chat-state'
 import { useTerminalPaneStoreBindings } from './use-terminal-pane-store-bindings'
 import { useTerminalPaneStartupActions } from './use-terminal-pane-startup-actions'
 import { useTerminalPaneLayoutPersistence } from './use-terminal-pane-layout-persistence'
@@ -22,8 +21,7 @@ export function useTerminalPaneController(
 ) {
   const foundation = useTerminalPaneFoundation(props, ref)
   const title = Object.assign(foundation, useTerminalPaneTitleState(foundation))
-  const chat = Object.assign(title, useTerminalPaneChatState(title))
-  const store = Object.assign(chat, useTerminalPaneStoreBindings(chat))
+  const store = Object.assign(title, useTerminalPaneStoreBindings(title))
   const startup = Object.assign(store, useTerminalPaneStartupActions(store))
   const layout = Object.assign(startup, useTerminalPaneLayoutPersistence(startup))
   const bindings = Object.assign(layout, useTerminalPaneLayoutBindings(layout))

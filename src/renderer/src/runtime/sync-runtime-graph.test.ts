@@ -359,48 +359,6 @@ describe('getRuntimeMobileSessionSyncKey', () => {
     expect(runtimeMobileSessionSyncKeysEqual(before, after)).toBe(false)
   })
 
-  it('changes when a native-chat launch draft is seeded or cleared', () => {
-    const sharedOverrides = makeSharedOverrides()
-    const launchDraft = {
-      tabId: 'term-1',
-      agent: 'claude' as const,
-      text: 'https://github.com/o/r/issues/12',
-      createdAt: 1
-    }
-
-    const before = getRuntimeMobileSessionSyncKey(
-      makeState({ ...sharedOverrides, nativeChatLaunchDraftByTabId: {} })
-    )
-    const after = getRuntimeMobileSessionSyncKey(
-      makeState({
-        ...sharedOverrides,
-        nativeChatLaunchDraftByTabId: { 'term-1': launchDraft }
-      })
-    )
-
-    expect(runtimeMobileSessionSyncKeysEqual(before, after)).toBe(false)
-  })
-
-  it('does not skip the App subscriber gate when a launch draft is seeded', () => {
-    // The key is never even built when this gate skips, so the draft-aware key
-    // case above cannot catch a regression here.
-    const sharedOverrides = makeSharedOverrides()
-    const before = makeState({ ...sharedOverrides, nativeChatLaunchDraftByTabId: {} })
-    const after = makeState({
-      ...sharedOverrides,
-      nativeChatLaunchDraftByTabId: {
-        'term-1': {
-          tabId: 'term-1',
-          agent: 'claude' as const,
-          text: 'https://github.com/o/r/issues/12',
-          createdAt: 1
-        }
-      }
-    })
-
-    expect(canSkipRuntimeMobileSessionSyncKeyBuild(after, before)).toBe(false)
-  })
-
   it('changes and does not skip when a folder workspace is removed', () => {
     const sharedOverrides = makeSharedOverrides()
     const folderWorkspace = {

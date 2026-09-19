@@ -68,7 +68,6 @@ import { claudeUsageApi } from './api/claude-usage-bridge'
 import { codexUsageApi } from './api/codex-usage-bridge'
 import { openCodeUsageApi } from './api/open-code-usage-bridge'
 import { aiVaultApi } from './api/ai-vault-bridge'
-import { nativeChatApi } from './api/native-chat-bridge'
 import { runtimeApi } from './api/runtime-bridge'
 import { runtimeEnvironmentsApi } from './api/runtime-environments-bridge'
 import { rateLimitsApi } from './api/rate-limits-bridge'
@@ -162,7 +161,6 @@ const api = {
   codexUsage: codexUsageApi,
   openCodeUsage: openCodeUsageApi,
   aiVault: aiVaultApi,
-  nativeChat: nativeChatApi,
   runtime: runtimeApi,
   runtimeEnvironments: runtimeEnvironmentsApi,
   rateLimits: rateLimitsApi,

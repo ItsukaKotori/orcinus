@@ -2582,50 +2582,23 @@
   },
   "components": {
     "native-chat": {
-      "composer": {
-        "effort": "Effort"
-      },
+      "composer": {},
       "question": {
         "other": "Other…"
       },
       "state": {
-        "empty": {
-          "subtitle": "Ask {{value0}} to inspect code, explain output, or make a change.",
-          "title": "Start a chat with {{value0}}"
-        },
-        "error": {
-          "subtitle": "The transcript could not be read. Toggle back to the terminal to keep working.",
-          "title": "Could not load conversation"
-        },
-        "loading": {
-          "subtitle": "Reading the agent transcript.",
-          "title": "Loading conversation…"
-        },
-        "notAgent": {
-          "subtitle": "This terminal is not running a recognized coding agent.",
-          "title": "No conversation here"
-        }
+        "empty": {},
+        "error": {},
+        "loading": {},
+        "notAgent": {}
       },
-      "status": {
-        "responding": "Agent is responding",
-        "thinking": "Thinking",
-        "toggleDetails": "Toggle turn details",
-        "workedFor": "Worked for {{value0}}",
-        "workingFor": "Working for {{value0}}"
-      },
+      "status": {},
       "tool": {
-        "countN": "{{value0}} tool calls",
-        "countOne": "1 tool call",
-        "moreCalls": "+{{value0}} more",
         "ranCommandManyToolsSummary": "Ran {{commandCount}} command and used {{toolCount}} tools",
         "ranCommandOneToolSummary": "Ran {{commandCount}} command and used {{toolCount}} tool",
         "ranCommandsManyToolsSummary": "Ran {{commandCount}} commands and used {{toolCount}} tools",
         "ranCommandsOneToolSummary": "Ran {{commandCount}} commands and used {{toolCount}} tool",
         "running": "Running…",
-        "runningCommand": "Running command",
-        "runningNamed": "Running {{toolName}}",
-        "runningNamedPreview": "Running {{toolName}} {{preview}}",
-        "runningPreview": "Running {{preview}}",
         "usedManySummary": "Used {{toolCount}} tools",
         "usedOneSummary": "Used 1 tool"
       }

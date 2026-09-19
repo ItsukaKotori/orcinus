@@ -1,6 +1,5 @@
 import type { AppState } from '@/store/types'
-import { parsePaneKey, makePaneKey } from '../../../../shared/stable-pane-id'
-import { nativeChatLaunchAgentForLeaf } from '../../components/native-chat/native-chat-leaf-routing'
+import { parsePaneKey } from '../../../../shared/stable-pane-id'
 import { getIndexedWorktreesById } from '@/store/worktree-repo-index'
 import {
   EMPTY_NARROWED_BY_KEY,
@@ -19,10 +18,6 @@ import type {
   OpenFileIndexes
 } from './types'
 import { captureMountedTerminalSurfaces, narrowRecordByKeys } from './mobile-session-capture'
-import {
-  getRuntimeLeafIdsForTerminal,
-  resolveMobileTabWideAgentHintLeafId
-} from './mobile-session-surfaces'
 
 export function getOpenFileIndexes(openFiles: AppState['openFiles']): OpenFileIndexes {
   if (graphState.cachedOpenFileIndexesSource === openFiles && graphState.cachedOpenFileIndexes) {
@@ -144,12 +139,6 @@ export function buildMobileSessionWorktreeInputs(
     openFileIds,
     terminalLayoutByTabId,
     paneTitlesByTabId: narrowRecordByKeys(state.runtimePaneTitlesByTabId, terminalTabIds),
-    launchDraftByPaneKey: buildMobileLaunchDraftsByPaneKey({
-      terminalTabs,
-      terminalLayoutByTabId,
-      mountedSurfaceCaptureByTabId,
-      launchDraftByTabId: narrowRecordByKeys(state.nativeChatLaunchDraftByTabId, terminalTabIds)
-    }),
     agentStatusByPaneKey:
       publication.agentStatusByWorktreeId.get(worktreeId) ?? EMPTY_NARROWED_BY_KEY,
     editorDraftVersionByFileId: narrowMapByKeys(
@@ -190,44 +179,4 @@ function narrowMapByKeys<T>(
     narrowed.set(key, source.get(key) as T)
   }
   return narrowed ?? EMPTY_NARROWED_BY_KEY
-}
-
-export function buildMobileLaunchDraftsByPaneKey(args: {
-  terminalTabs: AppState['tabsByWorktree'][string]
-  terminalLayoutByTabId: MobileSessionWorktreeInputs['terminalLayoutByTabId']
-  mountedSurfaceCaptureByTabId: MobileSessionWorktreeInputs['mountedSurfaceCaptureByTabId']
-  launchDraftByTabId: ReadonlyMap<
-    string,
-    NonNullable<AppState['nativeChatLaunchDraftByTabId']>[string]
-  >
-}): MobileSessionWorktreeInputs['launchDraftByPaneKey'] {
-  if (args.launchDraftByTabId.size === 0) {
-    return EMPTY_NARROWED_BY_KEY
-  }
-  let draftsByPaneKey: Map<
-    string,
-    NonNullable<AppState['nativeChatLaunchDraftByTabId']>[string]
-  > | null = null
-  for (const terminal of args.terminalTabs) {
-    const draft = args.launchDraftByTabId.get(terminal.id)
-    if (!draft || draft.resolved) {
-      continue
-    }
-    const capture = args.mountedSurfaceCaptureByTabId.get(terminal.id)
-    const savedLayout = args.terminalLayoutByTabId.get(terminal.id)
-    const leafIds = getRuntimeLeafIdsForTerminal(capture, savedLayout)
-    const ownerLeafId = resolveMobileTabWideAgentHintLeafId(capture, savedLayout)
-    const launchAgent = nativeChatLaunchAgentForLeaf({
-      launchAgent: terminal.launchAgent,
-      launchAgentLeafId: ownerLeafId,
-      leafId: ownerLeafId,
-      leafIds
-    })
-    if (!launchAgent || launchAgent !== draft.agent || !ownerLeafId) {
-      continue
-    }
-    draftsByPaneKey ??= new Map()
-    draftsByPaneKey.set(makePaneKey(terminal.id, ownerLeafId), draft)
-  }
-  return draftsByPaneKey ?? EMPTY_NARROWED_BY_KEY
 }

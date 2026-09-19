@@ -1,6 +1,6 @@
 import type { SleepingAgentLaunchConfig } from '../../../shared/agent-session-resume'
 import type { StartupCommandDelivery } from '../../../shared/codex-startup-delivery'
-import type { SessionOptionValue } from '../../../shared/native-chat-session-options'
+import type { SessionOptionValue } from '../../../shared/agent-session-option-types'
 import type { RuntimeTerminalCreate } from '../../../shared/runtime-types'
 import type { TuiAgent } from '../../../shared/tui-agent'
 import {

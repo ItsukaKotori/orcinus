@@ -7,17 +7,14 @@ import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner
 import { closeWorkspaceBrowserTab } from '@/lib/workspace-browser-tab-close'
 import { callRuntimeRpc, getActiveRuntimeTarget } from '@/runtime/runtime-rpc-client'
 import { withLocalSessionTabCloseOwner } from '@/runtime/local-session-tab-close-owner'
-import { closeStructuredAgentSession } from '@/runtime/structured-agent-session-close'
-import { cancelStructuredAgentLaunch } from '@/lib/structured-agent-session-launch'
-import { clearStructuredAgentLaunchDraft } from '@/lib/structured-agent-session-launch-draft'
 import { toRuntimeWorktreeSelector } from '@/runtime/runtime-worktree-selector'
 import { translate } from '@/i18n/i18n'
 
-function reportStructuredSessionCloseError(error: unknown): void {
+function reportAgentSessionCloseError(error: unknown): void {
   toast.error(
     translate(
-      'components.native-chat.structuredSessionCloseFailed',
-      'Could not close this chat session'
+      'components.workspaceTab.closeAgentSessionFailed',
+      'Could not close this agent session'
     ),
     { description: error instanceof Error ? error.message : String(error) }
   )
@@ -79,33 +76,26 @@ export function createWorkspaceTabCloseCommands({
       worktreeId
     )
     if (item.contentType === 'agent-session') {
-      // Cancel pending creation and retire the host session before removing its tab.
-      cancelStructuredAgentLaunch(worktreeId, item.entityId)
+      // Retire the host session before removing its tab.
       const target = getActiveRuntimeTarget({
         activeRuntimeEnvironmentId: runtimeEnvironmentId
       })
-      void closeStructuredAgentSession(target, item.entityId)
-        .then(() => {
-          const closeHostTab = () =>
-            callRuntimeRpc(target, 'session.tabs.close', {
-              worktree: toRuntimeWorktreeSelector(worktreeId),
-              tabId: `agent-session:${item.entityId}`,
-              reason: 'user'
-            })
-          return target.kind === 'local'
-            ? withLocalSessionTabCloseOwner(worktreeId, item.id, closeHostTab)
-            : closeHostTab()
+      const closeHostTab = () =>
+        callRuntimeRpc(target, 'session.tabs.close', {
+          worktree: toRuntimeWorktreeSelector(worktreeId),
+          tabId: `agent-session:${item.entityId}`,
+          reason: 'user'
         })
+      void (target.kind === 'local'
+        ? withLocalSessionTabCloseOwner(worktreeId, item.id, closeHostTab)
+        : closeHostTab())
         .then(() => {
           closeUnifiedTab(item.id)
-          // Why: cancel above drops the seed only while the launch is still pending; a settled
-          // launch whose composer never adopted it would otherwise keep it until worktree removal.
-          clearStructuredAgentLaunchDraft(item.entityId)
           if (!opts?.skipEmptyCheck) {
             leaveWorktreeIfEmpty()
           }
         })
-        .catch(reportStructuredSessionCloseError)
+        .catch(reportAgentSessionCloseError)
       return
     }
     if (item.contentType === 'terminal') {

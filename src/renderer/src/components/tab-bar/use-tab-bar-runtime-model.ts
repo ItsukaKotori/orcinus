@@ -11,7 +11,6 @@ import { useDetectedAgents } from '@/hooks/useDetectedAgents'
 import { useAgentDetectionTargetForWorktree } from '@/hooks/useAgentDetectionTarget'
 import { getConnectionIdFromState } from '@/lib/connection-context'
 import { getLocalProjectExecutionRuntimeContext } from '@/lib/local-preflight-context'
-import { isNativeChatTranscriptLocalReadable } from '@/lib/native-chat-transcript-readability'
 import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
 import { getActiveRuntimeTarget } from '@/runtime/runtime-rpc-client'
 import { useOptionalShortcutLabel, useShortcutLabel } from '@/hooks/useShortcutLabel'
@@ -20,10 +19,6 @@ import {
   useWindowsTerminalCapabilities,
   type WindowsTerminalCapabilities
 } from '@/lib/windows-terminal-capabilities'
-import {
-  selectTabBarAgentProjections,
-  type TabBarAgentProjections
-} from './tab-agent-types-by-tab-id'
 import { buildTabAgentLaunchOptions, orderTabLaunchAgents } from './tab-agent-launch-options'
 import type { TabAgentLaunchOption } from './tab-agent-launch-options'
 import { DEFAULT_DISABLED_TUI_AGENTS } from '../../../../shared/tui-agent-selection'
@@ -78,10 +73,8 @@ export type TabBarRuntimeModel = {
   resolvedGroupId: string
   statusByRelativePath: Map<string, GitFileStatus>
   unifiedTabByVisibleId: Map<string, Tab>
-  toggleTabViewMode: (tabId: string) => void
-  nativeChatTranscriptIsLocalReadable: boolean
   managedBrowserCreationEnabled: boolean
-} & TabBarAgentProjections
+}
 
 export function useTabBarRuntimeModel({
   worktreeId,
@@ -224,14 +217,6 @@ export function useTabBarRuntimeModel({
       return [policy['managed-browser'].state === 'enabled'] as const
     })
   )
-  // Why: tab-wide launch/title hints are safe only before split; gate the view-mode toggle to the active leaf's agent.
-  const toggleTabViewMode = useAppStore((s) => s.toggleTabViewMode)
-  // Why: every retained TabBar observes the same hot maps; one feature-gated selector shares their projections.
-  const { nativeChatEnabled, tabAgentTypesByTabId, nativeChatTabWideFallbackUnsafeTabsById } =
-    useAppStore(useShallow(selectTabBarAgentProjections))
-  const nativeChatTranscriptIsLocalReadable = useAppStore((s) =>
-    isNativeChatTranscriptLocalReadable(getConnectionIdFromState(s, worktreeId))
-  )
 
   return {
     newTerminalShortcut,
@@ -251,11 +236,6 @@ export function useTabBarRuntimeModel({
     resolvedGroupId,
     statusByRelativePath,
     unifiedTabByVisibleId,
-    toggleTabViewMode,
-    nativeChatEnabled,
-    tabAgentTypesByTabId,
-    nativeChatTabWideFallbackUnsafeTabsById,
-    nativeChatTranscriptIsLocalReadable,
     managedBrowserCreationEnabled
   }
 }

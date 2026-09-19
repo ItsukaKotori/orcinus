@@ -3,10 +3,6 @@ import type { AppState } from '@/store/types'
 import { getConnectionId } from '@/lib/connection-context'
 import { CLIENT_PLATFORM } from '@/lib/new-workspace'
 import { getLocalProjectExecutionRuntimeContext } from '@/lib/local-preflight-context'
-import type {
-  AgentSessionLaunchPlan,
-  planAgentSessionLaunch
-} from '@/lib/agent-session-launch-plan'
 import {
   buildDirectWorkItemStartup,
   markDirectWorkItemAgentTrusted,
@@ -20,9 +16,6 @@ export type DirectWorkItemAgentLaunchPreparation = {
   startupPlan: ReturnType<typeof buildDirectWorkItemStartup>['startupPlan']
   draftLaunchedNatively: boolean
   startupPlanFailed: boolean
-  structuredLaunch: boolean
-  /** Null when no agent was selected. */
-  plan: AgentSessionLaunchPlan | null
 }
 
 export async function prepareDirectWorkItemAgentLaunch(args: {
@@ -39,7 +32,6 @@ export async function prepareDirectWorkItemAgentLaunch(args: {
   promptDelivery: 'draft' | 'submit-after-ready'
   launchPlatform?: NodeJS.Platform
   repoProjectRuntime?: Parameters<typeof buildDirectWorkItemStartup>[0]['repoProjectRuntime']
-  planLaunch: typeof planAgentSessionLaunch
 }): Promise<DirectWorkItemAgentLaunchPreparation> {
   const launchConnectionId = getConnectionId(args.worktreeId) ?? args.repoConnectionId
   const agentSelection = await resolveDirectWorkItemAgent({
@@ -56,9 +48,7 @@ export async function prepareDirectWorkItemAgentLaunch(args: {
       effectiveAgent: null,
       startupPlan: null,
       draftLaunchedNatively: false,
-      startupPlanFailed: false,
-      structuredLaunch: false,
-      plan: null
+      startupPlanFailed: false
     }
   }
 
@@ -90,21 +80,7 @@ export async function prepareDirectWorkItemAgentLaunch(args: {
         : undefined
   })
 
-  const plan =
-    effectiveAgent === null
-      ? null
-      : args.planLaunch(args.latestStore, {
-          agent: effectiveAgent,
-          workspace: { kind: 'git-worktree', worktreeId: args.worktreeId, repoId: args.repoId },
-          prompt: args.draftContent,
-          promptDelivery: args.promptDelivery,
-          tuiCustomization: { agentArgs: args.agentArgs },
-          initialSessionOptions: startupPlan?.sessionOptions
-        })
-  const structuredLaunch = plan?.route === 'structured-native-chat'
-
   await markDirectWorkItemAgentTrusted({
-    structuredLaunch,
     agent: effectiveAgent,
     workspacePath: args.worktreePath,
     connectionId: args.repoConnectionId
@@ -116,8 +92,6 @@ export async function prepareDirectWorkItemAgentLaunch(args: {
     effectiveAgent,
     startupPlan,
     draftLaunchedNatively,
-    startupPlanFailed,
-    structuredLaunch,
-    plan
+    startupPlanFailed
   }
 }

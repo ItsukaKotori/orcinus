@@ -233,8 +233,6 @@ export const RECONCILIATION_WRITABLE_KEYS = [
   'pendingSetupSplitByTabId',
   'pendingIssueCommandSplitByTabId',
   'automaticAgentResumeClaimsByTabId',
-  'nativeChatLaunchPromptByTabId',
-  'nativeChatLaunchDraftByTabId',
   'tabBarOrderByWorktree',
   'cacheTimerByKey',
   'activeTabIdByWorktree',

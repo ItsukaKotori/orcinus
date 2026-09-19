@@ -5812,17 +5812,7 @@
             "title": "新規カードスタイル",
             "toggleLabel": "新規カードスタイルを切り替え"
           },
-          "nativeChat": {
-            "title": "Chat UI",
-            "description": "対応 Agent のターミナルセッション用デスクトップチャット画面をプレビューします。",
-            "copy": "対応 Agent のターミナルペインから切り替えられる Chat UI ビューを追加します。トランスクリプトの忠実度、ストリーミング、ターミナルとの同等性を調整しているため、試験運用中です。",
-            "toggleLabel": "Chat UI の切り替え",
-            "defaultTitle": "デフォルトのビュー",
-            "defaultCopy": "対応 Agent の新規ターミナルタブを開く方法を選択します。",
-            "defaultViewLabel": "デフォルトの Chat UI ビュー",
-            "defaultViewTerminal": "ターミナルチャット",
-            "defaultViewNative": "Chat UI"
-          },
+          "nativeChat": {},
           "agentDashboard": {}
         },
         "FloatingWorkspacePane": {
@@ -8006,11 +7996,7 @@
               "worktree": "ワークツリー",
               "worktrees": "ワークツリー"
             },
-            "nativeChat": {
-              "title": "Chat UI",
-              "description": "対応 Agent のターミナルセッション用デスクトップチャット画面をプレビューします。",
-              "grok": "grok"
-            },
+            "nativeChat": {},
             "agentDashboard": {}
           }
         },
@@ -13640,9 +13626,7 @@
         }
       },
       "nativeChat": {
-        "contextMenu": {
-          "copy": "コピー"
-        }
+        "contextMenu": {}
       },
       "orca": {
         "profiles": {
@@ -13849,123 +13833,28 @@
     },
     "native-chat": {
       "composer": {
-        "imageUnsupported": "この Agent では画像の貼り付けはサポートされていません。",
-        "send": "送信",
-        "noPty": "ライブターミナルがありません - 再接続するには元に切り替えてください。",
-        "locked": "入力は別のデバイスによって保持されます。",
-        "placeholder": "メッセージを送信してください…",
-        "mentionHint": "参照ファイル:",
-        "attach": "ファイルを添付する",
-        "noSkills": "一致するスキルがありません",
-        "localAttachmentUnsupported": "ローカル添付ファイルはリモートセッションでは使用できません。",
-        "removeAttachment": "添付ファイルを削除する",
-        "pastedImageLabel": "貼り付けた画像",
-        "imagePasteFailed": "画像の貼り付けに失敗しました。",
-        "worktreeNotReady": "ワークツリーが準備できていません — しばらくしてから再試行してください。",
-        "uploadingAttachments": "{{value0}}個のファイルをリモートにアップロード中…",
-        "model": "モデル",
-        "effort": "推論レベル",
-        "fastMode": "高速モード",
-        "thinking": "思考",
-        "options": "オプション",
-        "sessionOptions": "セッションオプション",
-        "chooseInAgentPicker": "Agent の選択画面で選ぶ…",
-        "toggleOption": "{{value0}}を切り替える",
-        "pillAccessibleName": "{{value0}} {{value1}}",
-        "valueUnknown": "現在の値が不明です — オンまたはオフを選んでください",
-        "sentNotConfirmed": "Agent に送信済み — 未確認",
-        "setWhenSessionStarts": "セッション開始時に設定してください。",
-        "availableAfterSessionStarts": "セッション開始後に利用できます。",
-        "optionUpdateFailed": "オプションを更新できませんでした",
-        "optionValue": {
-          "fast": "高速",
-          "minimal": "最小",
-          "low": "低",
-          "medium": "中",
-          "high": "高",
-          "xhigh": "最高",
-          "max": "最大",
-          "ultra": "ウルトラ",
-          "on": "オン",
-          "off": "オフ"
-        },
-        "noCommandsOrSkills": "一致するコマンドやスキルがありません",
-        "commands": "コマンド",
-        "skills": "スキル",
-        "loadingSkills": "スキルを読み込み中…",
-        "skillsUnavailableHost": "このホストではスキルが利用できません",
-        "skillsLoadFailed": "このホストからスキルを読み込めませんでした",
-        "retrySkills": "再試行",
-        "skillCommandCollision": "スキル名でもあります - Agent が判断します",
-        "skillMultipleSources": "{{sourceCount}} 個のソース - Agent が解決します",
-        "skillScopeProject": "プロジェクト",
-        "skillScopePersonal": "個人",
-        "skillScopeBuiltIn": "組み込み",
-        "skillScopePlugin": "プラグイン",
-        "skillsLoaded": "スキルを読み込みました",
-        "noCommands": "一致するコマンドがありません"
+        "optionValue": {}
       },
       "tool": {
-        "running": "実行中…",
-        "result": "結果"
+        "running": "実行中…"
       },
-      "status": {
-        "responding": "Agent が応答中です"
-      },
-      "jumpToLatest": "最新にジャンプ",
-      "toggle": {
-        "showTerminal": "ターミナルを表示",
-        "showChat": "チャットビューを表示"
-      },
+      "status": {},
+      "toggle": {},
       "state": {
-        "loading": {
-          "title": "会話を読み込んでいます…",
-          "subtitle": "Agent の記録を読んでいます。"
-        },
-        "error": {
-          "title": "会話を読み込めませんでした",
-          "subtitle": "トランスクリプトを読み取ることができませんでした。作業を続けるには、ターミナルに切り替えてください。"
-        },
-        "pairHost": "ホストをペアリングして、Agent のチャット履歴を表示します。",
-        "notAgent": {
-          "title": "ここでは会話はありません",
-          "subtitle": "このターミナルは認識されたコーディング Agent を実行していません。"
-        },
-        "empty": {
-          "title": "{{value0}} とチャットを開始する",
-          "subtitle": "{{value0}} にコードの検査、出力の説明、または変更を依頼してください。"
-        }
+        "loading": {},
+        "error": {},
+        "notAgent": {},
+        "empty": {}
       },
-      "stop": "Agent を停止",
-      "copyMessage": {
-        "copied": "コピーしました",
-        "copy": "メッセージをコピーする"
-      },
-      "scrollMessageToTop": "このメッセージを一番上までスクロールします",
-      "loadingEarlier": "読み込み中…",
-      "loadEarlier": "以前のメッセージをロードする",
+      "copyMessage": {},
       "question": {
-        "step": "ステップ {{value0}}",
-        "other": "他の…",
-        "otherPlaceholder": "答えを入力してください",
-        "cancel": "キャンセル",
-        "send": "送信",
-        "next": "次へ",
-        "skip": "スキップ",
-        "sending": "送信中…"
+        "other": "他の…"
       },
-      "approval": {
-        "title": "{{value0}} を許可しますか?",
-        "allow": "許可する",
-        "deny": "拒否"
-      },
-      "launchPromptNotDelivered": "配信されませんでした — ターミナルを確認してください"
+      "approval": {}
     },
     "tab": {
       "bar": {
         "SortableTabContextMenu": {
-          "switchToTerminalView": "ターミナルビューに切り替える",
-          "switchToChatView": "チャットビューに切り替える",
           "closeTabsToLeft": "左側のタブを閉じる"
         },
         "BrowserTab": {

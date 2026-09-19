@@ -30,7 +30,6 @@ describe('selectTerminalPaneHostState', () => {
     })
 
     expect(selectTerminalPaneHostState(localState, 'wt-local')).toEqual({
-      nativeChatTranscriptIsLocalReadable: true,
       sshReconnectEnvironmentId: null,
       sshReconnectError: null,
       sshReconnectStatus: null,
@@ -51,7 +50,6 @@ describe('selectTerminalPaneHostState', () => {
     })
 
     expect(selectTerminalPaneHostState(sshState, 'wt-ssh')).toEqual({
-      nativeChatTranscriptIsLocalReadable: false,
       sshReconnectEnvironmentId: null,
       sshReconnectError: null,
       sshReconnectStatus: 'connected',
@@ -107,7 +105,6 @@ describe('selectTerminalPaneHostState', () => {
     })
 
     expect(selectTerminalPaneHostState(state, 'wt-runtime')).toEqual({
-      nativeChatTranscriptIsLocalReadable: false,
       sshReconnectEnvironmentId: 'env-a',
       sshReconnectError: null,
       sshReconnectStatus: 'disconnected',
@@ -152,7 +149,6 @@ describe('selectTerminalPaneHostState', () => {
     })
 
     expect(selectTerminalPaneHostState(state, 'wt-ephemeral')).toEqual({
-      nativeChatTranscriptIsLocalReadable: true,
       sshReconnectEnvironmentId: null,
       sshReconnectError: null,
       sshReconnectStatus: null,

@@ -9,14 +9,13 @@ import type {
 } from '../../../../shared/agent-session-resume'
 import type { ExecutionHostId } from '../../../../shared/execution-host'
 import type { StartupCommandDelivery } from '../../../../shared/codex-startup-delivery'
-import type { SessionOptionValue } from '../../../../shared/native-chat-session-options'
+import type { SessionOptionValue } from '../../../../shared/agent-session-option-types'
 import type { AgentStartedTelemetry } from '../../lib/worktree-startup-payload'
 import type {
   DirectSshLivePtyBinding,
   DirectSshPaneRetryAttempt,
   DirectSshPaneRetryHistory
 } from '../slices/direct-ssh-terminal-recovery'
-import type { NativeChatLaunchDraft, NativeChatLaunchPrompt } from '@/lib/native-chat-launch-prompt'
 import type { HostSessionSlices } from '@/lib/workspace-session-host-split'
 import type { AutomaticAgentResumeClaim, CodexRestartNotice } from './terminal-contracts'
 import type { StateCreator } from 'zustand'
@@ -47,8 +46,6 @@ export type TerminalState = {
   recentQuickCommandIdByGroup: Record<string, string>
   /** Runtime-only claim bridging startup payload consumption until terminal hooks mount. */
   automaticAgentResumeClaimsByTabId: Record<string, AutomaticAgentResumeClaim>
-  nativeChatLaunchPromptByTabId: Record<string, NativeChatLaunchPrompt>
-  nativeChatLaunchDraftByTabId: Record<string, NativeChatLaunchDraft>
   pendingStartupByTabId: Record<
     string,
     {

@@ -232,8 +232,7 @@ export function prepareTerminalPaneMount(
     worktreeId: deps.worktreeId,
     getManager: () => deps.managerRef.current,
     getContainer: () => deps.containerRef.current,
-    getPtyIdForPane: (paneId) => paneTransports.get(paneId)?.getPtyId() ?? null,
-    getTabWideAgentHintLeafId: deps.getTabWideAgentHintLeafId
+    getPtyIdForPane: (paneId) => paneTransports.get(paneId)?.getPtyId() ?? null
   })
   const fileOpenLinkHint = getTerminalFileOpenHint()
   const getUrlOpenLinkHint = (paneId: number): string =>

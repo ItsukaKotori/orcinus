@@ -4,12 +4,6 @@ import {
   refreshWebRuntimeSessionTabsSnapshot
 } from './web-runtime-session'
 import { clearRuntimeCompatibilityCacheForTests } from './runtime-rpc-client'
-import {
-  confirmWebAgentSessionHandoffAfterCreate,
-  isWebAgentSessionHandoffPostCreateSnapshotConfirmed,
-  recordWebAgentSessionHandoff,
-  resetWebAgentSessionHandoffsForTests
-} from './web-agent-session-handoff'
 import { resetWebSessionCloseIntentForTests } from './web-session-close-intent'
 import { ENVIRONMENT_ID, WORKTREE_ID, makeSnapshot } from './web-runtime-session-test-harness'
 import { replaceRuntimeEnvironmentRevisions } from './runtime-environment-revision'
@@ -85,77 +79,9 @@ afterEach(() => resetWebSessionCloseIntentForTests())
 
 describe('refreshWebRuntimeSessionTabsSnapshot', () => {
   afterEach(() => {
-    resetWebAgentSessionHandoffsForTests()
     replaceRuntimeEnvironmentRevisions([])
     vi.unstubAllGlobals()
     vi.clearAllMocks()
-  })
-
-  it('confirms only the exact handoff after its post-create list completes', async () => {
-    const runtimeCall = vi.fn().mockResolvedValue({
-      id: 'list',
-      ok: true,
-      result: makeSnapshot()
-    })
-    vi.stubGlobal('window', {
-      api: { runtimeEnvironments: { call: runtimeCall } }
-    })
-    mocks.setState.mockImplementation((updater: (state: unknown) => unknown) =>
-      updater({ state: 'before' })
-    )
-    mocks.applyWebSessionTabsSnapshot.mockImplementation((state) => state)
-    recordWebAgentSessionHandoff({
-      environmentId: ENVIRONMENT_ID,
-      worktreeId: WORKTREE_ID,
-      provisionalTabId: 'provisional-a',
-      hostTabId: 'host-a',
-      hostTerminalHandle: 'term_host-a'
-    })
-    recordWebAgentSessionHandoff({
-      environmentId: ENVIRONMENT_ID,
-      worktreeId: WORKTREE_ID,
-      provisionalTabId: 'provisional-b',
-      hostTabId: 'host-b',
-      hostTerminalHandle: 'term_host-b'
-    })
-
-    await refreshWebRuntimeSessionTabsSnapshot(ENVIRONMENT_ID, WORKTREE_ID, {
-      acceptCurrentSnapshot: true,
-      confirmAgentSessionHandoff: {
-        provisionalTabId: 'provisional-a',
-        hostTabId: 'host-a',
-        hostTerminalHandle: 'term_host-a'
-      }
-    })
-
-    const confirmed = (provisionalTabId: string): boolean =>
-      isWebAgentSessionHandoffPostCreateSnapshotConfirmed({
-        environmentId: ENVIRONMENT_ID,
-        worktreeId: WORKTREE_ID,
-        provisionalTabId
-      })
-    expect(confirmed('provisional-a')).toBe(true)
-    expect(confirmed('provisional-b')).toBe(false)
-    expect(mocks.acceptReplayedWebSessionTabsSnapshot).toHaveBeenCalledWith(
-      ENVIRONMENT_ID,
-      WORKTREE_ID
-    )
-
-    recordWebAgentSessionHandoff({
-      environmentId: ENVIRONMENT_ID,
-      worktreeId: WORKTREE_ID,
-      provisionalTabId: 'provisional-a',
-      hostTabId: 'host-a',
-      hostTerminalHandle: 'term_host-a-replacement'
-    })
-    confirmWebAgentSessionHandoffAfterCreate({
-      environmentId: ENVIRONMENT_ID,
-      worktreeId: WORKTREE_ID,
-      provisionalTabId: 'provisional-a',
-      hostTabId: 'host-a',
-      hostTerminalHandle: 'term_host-a'
-    })
-    expect(confirmed('provisional-a')).toBe(false)
   })
 
   it('applies the recovered snapshot instead of a transient pending-handle frame', async () => {

@@ -25,10 +25,6 @@ import {
 import { clearWebSessionReorderIntentsForWorktree } from '../web-session-reorder-intent'
 import { clearWebSessionCloseIntentsForWorktree } from '../web-session-close-intent'
 import {
-  clearWebAgentSessionHandoffsForWorktree,
-  clearWebAgentSessionHandoffsForEnvironment
-} from '../web-agent-session-handoff'
-import {
   clearWebSessionBrowserPlacementsForWorktree,
   clearWebSessionBrowserPlacementsForEnvironment,
   resetWebSessionBrowserPlacementsForTests
@@ -141,7 +137,6 @@ export function clearWebSessionTabsTrackingForWorktree(
   clearWebRuntimeWakeTerminalRespawnForWorktree(worktreeId)
   clearWebSessionReorderIntentsForWorktree({ environmentId }, worktreeId)
   clearWebSessionCloseIntentsForWorktree({ environmentId }, worktreeId)
-  clearWebAgentSessionHandoffsForWorktree(environmentId, worktreeId)
   clearHostSessionTabIdMappings(environmentId, worktreeId)
   clearWebSessionBrowserPlacementsForWorktree(environmentId, worktreeId)
   clearWebSessionTerminalPlacementsForWorktree(environmentId, worktreeId)
@@ -214,7 +209,6 @@ export function clearWebSessionTabsTrackingForEnvironment(environmentId: string)
     }
     hostSessionTabMappingKeysByEnvironmentAndWorktree.delete(trimmedEnvironmentId)
   }
-  clearWebAgentSessionHandoffsForEnvironment(trimmedEnvironmentId)
   clearWebSessionBrowserPlacementsForEnvironment(trimmedEnvironmentId)
   clearWebSessionTerminalPlacementsForEnvironment(trimmedEnvironmentId)
   clearHostSessionMirrorHydration(trimmedEnvironmentId)

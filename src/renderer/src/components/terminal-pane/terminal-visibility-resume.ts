@@ -31,7 +31,6 @@ export type TerminalHiddenReason = 'surface' | 'tab'
 type ResumeTerminalVisibilityArgs = {
   manager: PaneManager
   isActive: boolean
-  isChatViewMode: boolean
   wasVisible: boolean
   shouldUseLightTabResume: boolean
   captureViewportPositions: (useRememberedSnapshots: boolean) => Map<number, ScrollState>
@@ -55,14 +54,12 @@ type HideTerminalVisibilityResult = {
 type RecoverVisibleTerminalWindowWakeArgs = {
   manager: PaneManager
   isActive: boolean
-  isChatViewMode: boolean
   clearGlyphAtlases: boolean
 }
 
 export function resumeTerminalVisibility({
   manager,
   isActive,
-  isChatViewMode,
   wasVisible,
   shouldUseLightTabResume,
   captureViewportPositions,
@@ -103,13 +100,13 @@ export function resumeTerminalVisibility({
         // cell size — refit so cols/rows match before the overlay settles.
         manager.fitAllRevealedPanes()
       }
-      if (isActive && !isChatViewMode) {
+      if (isActive) {
         focusActivePane(manager)
       }
     } else {
       // fitAllRevealedPanes flushes after WebGL reattaches, avoiding a redundant
       // full refresh in the suspended DOM renderer while preserving first paint.
-      repairedDpr = resumeTerminalVisibilityHeavy(manager, isActive && !isChatViewMode)
+      repairedDpr = resumeTerminalVisibilityHeavy(manager, isActive)
     }
     enforceTerminalViewportIntents(manager)
     if (!shouldUseLightTabResume) {
@@ -177,7 +174,6 @@ export function hideTerminalVisibility({
 export function recoverVisibleTerminalWindowWake({
   manager,
   isActive,
-  isChatViewMode,
   clearGlyphAtlases
 }: RecoverVisibleTerminalWindowWakeArgs): void {
   // Why: macOS screensaver/display wake can leave xterm visible but with a
@@ -205,7 +201,7 @@ export function recoverVisibleTerminalWindowWake({
   manager.resumeRendering()
   // Why: wake re-attaches WebGL — same transient cell-metric wobble guard as the heavy resume.
   manager.fitAllRevealedPanes()
-  if (isActive && !isChatViewMode) {
+  if (isActive) {
     focusActivePane(manager)
   }
   enforceTerminalViewportIntents(manager)

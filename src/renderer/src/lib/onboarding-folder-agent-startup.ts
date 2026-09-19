@@ -11,8 +11,7 @@ import type { SleepingAgentLaunchConfig } from '../../../shared/agent-session-re
 import type { GlobalSettings } from '../../../shared/global-settings-types'
 import type { OnboardingState } from '../../../shared/onboarding-state-types'
 import type { TuiAgent } from '../../../shared/tui-agent'
-import { resolveInitialNativeChatSessionOptions } from '@/components/native-chat/native-chat-launch-session-options'
-import type { SessionOptionValue } from '../../../shared/native-chat-session-options'
+import type { SessionOptionValue } from '../../../shared/agent-session-option-types'
 
 export type OnboardingFolderAgentStartup = {
   command: string
@@ -32,8 +31,7 @@ function getClientPlatform(): NodeJS.Platform {
 }
 
 export function buildOnboardingFolderAgentStartup(
-  settings: GlobalSettings | null,
-  nativeChatTranscriptIsLocalReadable = true
+  settings: GlobalSettings | null
 ): OnboardingFolderAgentStartup | undefined {
   const agent = settings?.defaultTuiAgent
   if (
@@ -51,10 +49,6 @@ export function buildOnboardingFolderAgentStartup(
     cmdOverrides: settings.agentCmdOverrides ?? {},
     agentArgs: resolveTuiAgentLaunchArgs(agent, settings.agentDefaultArgs),
     agentEnv: resolveTuiAgentLaunchEnv(agent, settings.agentDefaultEnv),
-    sessionOptions: resolveInitialNativeChatSessionOptions(settings, {
-      agent,
-      nativeChatTranscriptIsLocalReadable
-    }),
     platform: getClientPlatform(),
     allowEmptyPromptLaunch: true
   })
@@ -94,11 +88,10 @@ export function shouldSeedFolderAgentAfterDismissedOnboarding(
 export function buildDismissedOnboardingFolderAgentStartup(
   settings: GlobalSettings | null,
   onboarding: OnboardingState | null,
-  hasExistingProject: boolean,
-  nativeChatTranscriptIsLocalReadable = true
+  hasExistingProject: boolean
 ): OnboardingFolderAgentStartup | undefined {
   if (!shouldSeedFolderAgentAfterDismissedOnboarding(onboarding, hasExistingProject)) {
     return undefined
   }
-  return buildOnboardingFolderAgentStartup(settings, nativeChatTranscriptIsLocalReadable)
+  return buildOnboardingFolderAgentStartup(settings)
 }

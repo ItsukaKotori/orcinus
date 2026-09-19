@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { SleepingAgentSessionRecord } from '../../../shared/agent-session-resume'
-import { structuredAgentSessionTabId } from '../../../shared/structured-agent-session-projection'
+
+function structuredAgentSessionTabId(sessionId: string): string {
+  return `structured-agent-session-${sessionId}`
+}
 import type { PtyListedSession } from '../../../shared/pty-listed-session'
 import type { RuntimeMobileSessionTabsResult } from '../../../shared/runtime-types'
 import type { TerminalLayoutSnapshot, TerminalTab } from '../../../shared/terminal-tab-types'

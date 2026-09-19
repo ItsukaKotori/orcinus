@@ -34,11 +34,7 @@ import { toFolderWorkspaceLinkedTask } from '@/components/sidebar/folder-workspa
 import { ensureAgentStartupInTerminal } from '@/lib/new-workspace'
 import { createBrowserUuid } from '@/lib/browser-uuid'
 import { activateAndRevealWorktree } from '@/lib/worktree-activation'
-import { seedNativeChatAppliedSessionOptions } from '@/components/native-chat/native-chat-session-option-cache'
 import { queueWorkspaceActivationTerminalFocus } from '@/lib/workspace-activation-terminal-focus'
-import { useAppStore } from '@/store'
-import { planAgentSessionLaunch } from '@/lib/agent-session-launch-plan'
-import { settleFullCreationStructuredLaunch } from './full-creation-structured-launch'
 import { finalizeFullCreation } from './full-creation-finalization'
 import { buildFullCreationIssueCommand } from './full-creation-issue-command'
 import { buildFullCreationStartup } from './full-creation-startup'
@@ -129,20 +125,6 @@ export function useFullCreationExecution(input: FullCreationExecutionInput) {
         return
       }
 
-      const launchPlan = planAgentSessionLaunch(useAppStore.getState(), {
-        agent: tuiAgent,
-        workspace: {
-          kind: selectedRepoIsGit ? 'git-worktree' : 'folder',
-          repoId,
-          executionHostId: selectedRepoExecutionHostId ?? undefined
-        },
-        prompt: startupPlan?.draftPrompt ?? submitStartupPrompt,
-        promptDelivery: startupPlan?.draftPrompt ? 'draft' : 'auto-submit',
-        initialSessionOptions: startupPlan?.sessionOptions
-      })
-      const structuredLaunch = launchPlan.route === 'structured-native-chat'
-      const effectiveBackendStartup = structuredLaunch ? undefined : backendStartup
-
       const result = await createWorktree(
         repoId,
         workspaceName,
@@ -165,7 +147,7 @@ export function useFullCreationExecution(input: FullCreationExecutionInput) {
         resolvedInitialWorkspaceStatus,
         smartGitHubResolution.kind === 'none' ? (linkedGitLabMR ?? undefined) : undefined,
         smartGitHubResolution.kind === 'none' ? (linkedGitLabIssue ?? undefined) : undefined,
-        effectiveBackendStartup,
+        backendStartup,
         pendingFirstAgentMessageRename,
         undefined,
         linkedLinearIssueWorkspaceId,
@@ -181,7 +163,7 @@ export function useFullCreationExecution(input: FullCreationExecutionInput) {
           ...(createDisplayName
             ? { displayNameKind: nameIsAutoManaged ? ('generated' as const) : ('user' as const) }
             : {}),
-          ...(!structuredLaunch && !effectiveBackendStartup && startupPlan?.draftPrompt
+          ...(!backendStartup && startupPlan?.draftPrompt
             ? { startupDraft: startupPlan.draftPrompt }
             : {}),
           ...(parentWorktreeId ? { parentWorktreeId } : {})
@@ -217,50 +199,17 @@ export function useFullCreationExecution(input: FullCreationExecutionInput) {
         telemetry: composerTelemetry
       })
 
-      const initialActivation = activateAndRevealWorktree(worktree.id, {
+      const activation = activateAndRevealWorktree(worktree.id, {
         sidebarRevealBehavior: 'auto',
         agent: tuiAgent,
         setup: result.setup,
         defaultTabs: result.defaultTabs,
         issueCommand,
         ...(backendSpawnedStartup ? { backendStartupTerminalSpawned: true } : {}),
-        ...(!structuredLaunch && startup ? { startup } : {}),
-        ...(structuredLaunch ? { providesInitialSurface: true } : {})
+        ...(startup ? { startup } : {})
       })
 
-      const settlement = await settleFullCreationStructuredLaunch({
-        plan: launchPlan,
-        agent: tuiAgent,
-        worktreeId: worktree.id,
-        startup,
-        pendingFirstAgentMessageRename,
-        applyWorktreeMeta
-      })
-
-      // Why: both leave the workspace revealed and the composer text intact; the launch layer has
-      // already toasted a failure, and an unknown outcome reconciles on the next click.
-      if (settlement?.kind === 'visibility-unknown' || settlement?.kind === 'failed') {
-        setSidebarOpen(true)
-        onCreated?.()
-        return
-      }
-      const structuredLaunchAccepted = settlement?.kind === 'structured'
-      // Why: the workspace was already activated before launch; the fallback's activation, when
-      // present, supersedes it.
-      const activation =
-        settlement?.kind === 'refused-then-legacy'
-          ? (settlement.activation ?? initialActivation)
-          : initialActivation
-
-      if (!structuredLaunchAccepted && startupPlan) {
-        const optionScopeKey =
-          (activation !== false ? activation.primaryTabId : null) ?? result.startupTerminal?.tabId
-        if (optionScopeKey) {
-          seedNativeChatAppliedSessionOptions(optionScopeKey, tuiAgent, startupPlan.sessionOptions)
-        }
-      }
-
-      if (!structuredLaunchAccepted && startupPlan && !backendSpawnedStartup) {
+      if (startupPlan && !backendSpawnedStartup) {
         void ensureAgentStartupInTerminal({
           worktreeId: worktree.id,
           primaryTabId: activation === false ? null : activation.primaryTabId,
@@ -273,7 +222,7 @@ export function useFullCreationExecution(input: FullCreationExecutionInput) {
         persistDraft,
         clearNewWorkspaceDraft,
         onCreated,
-        structuredLaunchAccepted,
+        structuredLaunchAccepted: false,
         worktreeId: worktree.id,
         activation,
         queueWorkspaceActivationTerminalFocus

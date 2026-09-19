@@ -33,7 +33,6 @@ import type { BitbucketApi, HostedReviewApi } from './api/hosted-review-api'
 import type { JiraApi } from './api/jira-api'
 import type { LinearApi } from './api/linear-api'
 import type { MobileApi } from './api/mobile-api'
-import type { NativeChatApi } from './api/native-chat-api'
 import type { OnboardingApi, StarNagApi } from './api/onboarding-api'
 import type { OrcaProfileApi } from './api/orca-profile-api'
 import type {
@@ -125,7 +124,6 @@ export type PreloadApi = {
   codexUsage: CodexUsageApi
   openCodeUsage: OpenCodeUsageApi
   aiVault: AiVaultApi
-  nativeChat: NativeChatApi
   fs: FilesystemApi['fs']
   git: Merged<GitInspectionApi & GitOperationApi>
   ui: Merged<UiCommandEventApi & UiWindowApi>
@@ -150,14 +148,6 @@ export type { AutomationsApi, ExternalAutomationManagerResult } from './api/auto
 export type { AppApi } from './api/app-api'
 export type { BrowserApi, DetectedBrowserInfo, DetectedBrowserProfileInfo } from './api/browser-api'
 export type { ExportApi } from './api/filesystem-api'
-export type {
-  NativeChatApi,
-  NativeChatAppendedMessages,
-  NativeChatAppendedPayload,
-  NativeChatReadSessionResult,
-  NativeChatSubscribeArgs,
-  NativeChatSubscriptionFrame
-} from './api/native-chat-api'
 export type {
   PluginHostInstallResult,
   PluginHostInstallSource,

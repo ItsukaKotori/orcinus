@@ -27,7 +27,6 @@ export function useTerminalPaneLifecycleStage(controller: TerminalPaneCloseContr
     markTerminalPaneUnread,
     markTerminalTabUnread,
     markWorktreeUnread,
-    onAgentExitedRef,
     onPtyErrorClearedRef,
     onPtyErrorRef,
     onPtyExitRef,
@@ -69,7 +68,6 @@ export function useTerminalPaneLifecycleStage(controller: TerminalPaneCloseContr
     updateTabTitle,
     worktreeId,
     expandedStyleSnapshotRef,
-    getTabWideAgentHintLeafIdRef,
     handlePaneProcessDied
   } = controller
   const { consumeSuppressedPtyExit, isPtyShutdownPending } = useTerminalPaneStoreActions()
@@ -92,7 +90,6 @@ export function useTerminalPaneLifecycleStage(controller: TerminalPaneCloseContr
     effectiveMacOptionAsAltRef: macOptionAsAltRef,
     initialLayoutRef,
     managerRef,
-    getTabWideAgentHintLeafId: () => getTabWideAgentHintLeafIdRef.current(),
     containerRef,
     expandedStyleSnapshotRef,
     paneFontSizesRef,
@@ -106,7 +103,6 @@ export function useTerminalPaneLifecycleStage(controller: TerminalPaneCloseContr
     isActiveRef,
     isVisibleRef,
     onPtyExitRef,
-    onAgentExitedRef,
     onPtyErrorRef,
     onPtyErrorClearedRef,
     onPaneProcessDied: handlePaneProcessDied,

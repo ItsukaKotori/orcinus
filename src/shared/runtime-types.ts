@@ -132,7 +132,6 @@ export type {
   RuntimeMobileSessionTerminalClientTab,
   RuntimeMobileSessionTerminalTab,
   RuntimeMobileTerminalTheme,
-  RuntimeNativeChatLaunchDraftResolution,
   RuntimeRendererSyncWindowGraph,
   RuntimeSessionTabCloseReason,
   RuntimeStatus,

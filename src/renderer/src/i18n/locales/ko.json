@@ -5817,17 +5817,7 @@
             "title": "새 카드 스타일",
             "toggleLabel": "새 카드 스타일 전환"
           },
-          "nativeChat": {
-            "title": "Chat UI",
-            "description": "지원되는 에이전트 터미널 세션의 데스크톱 채팅 화면을 미리 봅니다.",
-            "copy": "지원되는 에이전트 터미널 창에서 전환할 수 있는 Chat UI 보기를 추가합니다. 대화 기록 충실도, 스트리밍, 터미널 동작 일치를 조정하는 동안 실험적으로 제공됩니다.",
-            "toggleLabel": "Chat UI 전환",
-            "defaultTitle": "기본 보기",
-            "defaultCopy": "지원되는 에이전트의 새 터미널 탭을 여는 방식을 선택합니다.",
-            "defaultViewLabel": "기본 Chat UI 보기",
-            "defaultViewTerminal": "Terminal 채팅",
-            "defaultViewNative": "Chat UI"
-          },
+          "nativeChat": {},
           "agentDashboard": {}
         },
         "FloatingWorkspacePane": {
@@ -7974,11 +7964,7 @@
               "worktree": "worktree",
               "worktrees": "worktrees"
             },
-            "nativeChat": {
-              "title": "Chat UI",
-              "description": "지원되는 에이전트 터미널 세션의 데스크톱 채팅 화면을 미리 봅니다.",
-              "grok": "grok"
-            },
+            "nativeChat": {},
             "agentDashboard": {}
           }
         },
@@ -13695,9 +13681,7 @@
         }
       },
       "nativeChat": {
-        "contextMenu": {
-          "copy": "복사"
-        }
+        "contextMenu": {}
       },
       "orca": {
         "profiles": {
@@ -13904,123 +13888,28 @@
     },
     "native-chat": {
       "composer": {
-        "imageUnsupported": "이 에이전트는 이미지 붙여넣기를 지원하지 않습니다.",
-        "send": "보내기",
-        "noPty": "라이브 terminal이 없습니다. 다시 연결하려면 다시 전환하세요.",
-        "locked": "입력이 다른 장치에 의해 보류됩니다.",
-        "placeholder": "메시지 보내기…",
-        "mentionHint": "참조 파일:",
-        "attach": "파일첨부",
-        "noSkills": "어울리는 스킬 없음",
-        "localAttachmentUnsupported": "원격 세션에는 로컬 첨부 파일을 사용할 수 없습니다.",
-        "removeAttachment": "첨부파일 삭제",
-        "pastedImageLabel": "붙여넣은 이미지",
-        "imagePasteFailed": "이미지 붙여넣기 실패.",
-        "worktreeNotReady": "워크트리가 준비되지 않았습니다 — 잠시 후 다시 시도하세요.",
-        "uploadingAttachments": "{{value0}}개 파일을 원격으로 업로드 중…",
-        "model": "모델",
-        "effort": "추론 수준",
-        "fastMode": "빠른 모드",
-        "thinking": "사고",
-        "options": "옵션",
-        "sessionOptions": "세션 옵션",
-        "chooseInAgentPicker": "에이전트 선택기에서 선택…",
-        "toggleOption": "{{value0}} 전환",
-        "pillAccessibleName": "{{value0}} {{value1}}",
-        "valueUnknown": "현재 값을 알 수 없음 — 켜짐 또는 꺼짐을 선택하세요",
-        "sentNotConfirmed": "에이전트에 전송됨 — 확인되지 않음",
-        "setWhenSessionStarts": "세션을 시작할 때 설정하세요.",
-        "availableAfterSessionStarts": "세션이 시작된 후 사용할 수 있습니다.",
-        "optionUpdateFailed": "옵션을 업데이트하지 못했습니다",
-        "optionValue": {
-          "fast": "빠름",
-          "minimal": "최소",
-          "low": "낮음",
-          "medium": "중간",
-          "high": "높음",
-          "xhigh": "매우 높음",
-          "max": "최대",
-          "ultra": "울트라",
-          "on": "켜짐",
-          "off": "꺼짐"
-        },
-        "noCommandsOrSkills": "일치하는 명령어 또는 스킬이 없습니다",
-        "commands": "명령어",
-        "skills": "스킬",
-        "loadingSkills": "스킬 로딩 중…",
-        "skillsUnavailableHost": "이 호스트에서는 스킬을 사용할 수 없습니다",
-        "skillsLoadFailed": "이 호스트에서 스킬을 불러올 수 없습니다",
-        "retrySkills": "재시도",
-        "skillCommandCollision": "스킬 이름이기도 합니다 - 에이전트가 결정합니다",
-        "skillMultipleSources": "{{sourceCount}}개 소스 - 에이전트가 해결합니다",
-        "skillScopeProject": "프로젝트",
-        "skillScopePersonal": "개인",
-        "skillScopeBuiltIn": "내장",
-        "skillScopePlugin": "플러그인",
-        "skillsLoaded": "스킬 로드 완료",
-        "noCommands": "일치하는 명령어가 없습니다"
+        "optionValue": {}
       },
       "tool": {
-        "running": "실행 중…",
-        "result": "결과"
+        "running": "실행 중…"
       },
-      "status": {
-        "responding": "Agent이 응답 중입니다."
-      },
-      "jumpToLatest": "최신으로 이동",
-      "toggle": {
-        "showTerminal": "terminal 표시",
-        "showChat": "채팅 보기 표시"
-      },
+      "status": {},
+      "toggle": {},
       "state": {
-        "loading": {
-          "title": "대화 로드 중…",
-          "subtitle": "agent 기록을 읽는 중입니다."
-        },
-        "error": {
-          "title": "대화를 로드할 수 없습니다.",
-          "subtitle": "스크립트를 읽을 수 없습니다. 계속 작업하려면 terminal로 다시 전환하세요."
-        },
-        "pairHost": "호스트를 페어링하여 에이전트 채팅 기록을 확인하세요.",
-        "notAgent": {
-          "title": "여기에는 대화가 없습니다.",
-          "subtitle": "이 terminal은 인식된 코딩 agent를 실행하고 있지 않습니다."
-        },
-        "empty": {
-          "title": "{{value0}}님과 채팅을 시작하세요",
-          "subtitle": "{{value0}}에게 코드 검사, 출력 설명 또는 변경을 요청하세요."
-        }
+        "loading": {},
+        "error": {},
+        "notAgent": {},
+        "empty": {}
       },
-      "stop": "에이전트 중지",
-      "copyMessage": {
-        "copied": "복사됨",
-        "copy": "메시지 복사"
-      },
-      "scrollMessageToTop": "이 메시지를 맨 위로 스크롤",
-      "loadingEarlier": "로드 중…",
-      "loadEarlier": "이전 메시지 로드",
+      "copyMessage": {},
       "question": {
-        "step": "{{value0}} 단계",
-        "other": "다른…",
-        "otherPlaceholder": "답변을 입력하세요",
-        "cancel": "취소",
-        "send": "제출",
-        "next": "다음",
-        "skip": "건너뛰기",
-        "sending": "전송 중…"
+        "other": "다른…"
       },
-      "approval": {
-        "title": "{{value0}}을(를) 허용하시겠습니까?",
-        "allow": "허용",
-        "deny": "거부"
-      },
-      "launchPromptNotDelivered": "전달되지 않음 — 터미널을 확인하세요"
+      "approval": {}
     },
     "tab": {
       "bar": {
         "SortableTabContextMenu": {
-          "switchToTerminalView": "terminal 보기로 전환",
-          "switchToChatView": "채팅 보기로 전환",
           "closeTabsToLeft": "왼쪽으로 탭 닫기"
         },
         "BrowserTab": {

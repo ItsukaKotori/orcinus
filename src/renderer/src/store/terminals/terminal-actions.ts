@@ -11,7 +11,7 @@ import type {
 } from '../../../../shared/agent-session-resume'
 import type { DirectSshAuthority } from '../../../../shared/ssh-types'
 import type { StartupCommandDelivery } from '../../../../shared/codex-startup-delivery'
-import type { SessionOptionValue } from '../../../../shared/native-chat-session-options'
+import type { SessionOptionValue } from '../../../../shared/agent-session-option-types'
 import type { AgentStartedTelemetry } from '../../lib/worktree-startup-payload'
 import type { AiVaultSessionTitle } from '../../../../shared/ai-vault-session-title'
 import type {
@@ -22,7 +22,6 @@ import type {
   DirectSshPaneRetryAttemptId,
   DirectSshPaneRetryResult
 } from '../slices/direct-ssh-terminal-recovery'
-import type { NativeChatLaunchDraft, NativeChatLaunchPrompt } from '@/lib/native-chat-launch-prompt'
 import type { AgentStatusWorktreeShutdownReason } from '../slices/agent-status'
 import type {
   TerminalTabCloseReason,
@@ -39,16 +38,6 @@ export type TerminalActions = {
   setTerminalStartupRestorationReady: (value: boolean) => void
   setRecentQuickCommandForGroup: (groupId: string, quickCommandId: string) => void
   claimAutomaticAgentResume: (tabId: string, claim: AutomaticAgentResumeClaim) => void
-  seedNativeChatLaunchPrompt: (prompt: NativeChatLaunchPrompt) => void
-  markNativeChatLaunchPromptFailed: (tabId: string) => void
-  clearNativeChatLaunchPrompt: (tabId: string) => void
-  seedNativeChatLaunchDraft: (draft: NativeChatLaunchDraft) => void
-  markNativeChatLaunchDraftAdopted: (tabId: string) => void
-  resolveNativeChatLaunchDraft: (
-    tabId: string,
-    resolution: Pick<NativeChatLaunchDraft, 'createdAt' | 'text'>
-  ) => void
-  clearNativeChatLaunchDraft: (tabId: string) => void
   markDefaultTerminalTabsApplied: (worktreeId: string) => void
   setHydrationSucceeded: (value: boolean) => void
   consumePendingSnapshot: (ptyId: string) => {

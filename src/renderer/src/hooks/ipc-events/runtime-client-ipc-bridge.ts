@@ -1,7 +1,6 @@
 import { applyHostWorktreeTerminalSleepState } from '@/components/terminal-pane/pty-shutdown-exit-deferral'
 import { dispatchTerminalSideEffectBatch } from '@/components/terminal-pane/terminal-side-effect-facts-handler'
 import { emitAutomationsChangedWindowEvent } from '@/lib/automations-changed-window-event'
-import { applyNativeChatLaunchDraftResolved } from '@/runtime/native-chat-launch-draft-runtime-resolution'
 import { getRuntimeEnvironmentRevision } from '@/runtime/runtime-environment-revision'
 import {
   applyRuntimeEnvironmentSshStateChanged,
@@ -86,10 +85,6 @@ export function registerRuntimeClientIpcBridge(
         ...event.batch,
         ptyId: toRemoteRuntimePtyId(event.batch.ptyId, environmentId)
       })
-      return
-    }
-    if (event.type === 'nativeChatLaunchDraftResolved') {
-      applyNativeChatLaunchDraftResolved(useAppStore.getState(), event)
       return
     }
     if (event.type === 'reposChanged') {

@@ -70,7 +70,6 @@ import { listRemoteRuntimeSessionTabsDeduped } from '@/runtime/remote-runtime-se
 import { subscribeAcceptedWebSessionTerminalHandle } from '@/runtime/web-session-terminal-handle-events'
 import { runRemoteAgentSessionLaunch } from '@/runtime/remote-agent-session-launch'
 import { useAppStore } from '@/store'
-import { recordWebAgentSessionHandoff } from '@/runtime/web-agent-session-handoff'
 import { refreshWebRuntimeSessionTabsSnapshot } from '@/runtime/web-runtime-session'
 import {
   bufferPtyShutdownData,
@@ -2321,22 +2320,10 @@ export function createRemoteRuntimePtyTransport(
         const createdTerminal = created.terminal
         adoptExecutionMetadata(createdTerminal)
         if (created.disposition !== undefined && tabId && createdTerminal.tabId) {
-          recordWebAgentSessionHandoff({
-            environmentId: createEnvironmentId,
-            worktreeId,
-            provisionalTabId: tabId,
-            hostTabId: createdTerminal.tabId,
-            hostTerminalHandle: createdTerminal.handle
-          })
           // Snapshot parity must not delay attachment to a terminal the host already created.
           void refreshWebRuntimeSessionTabsSnapshot(createEnvironmentId, worktreeId, {
             expectedEnvironmentPairingRevision: runtimeEnvironmentPairingRevision,
-            acceptCurrentSnapshot: true,
-            confirmAgentSessionHandoff: {
-              provisionalTabId: tabId,
-              hostTabId: createdTerminal.tabId,
-              hostTerminalHandle: createdTerminal.handle
-            }
+            acceptCurrentSnapshot: true
           })
         }
         if (destroyed || lifecycleEpoch !== connectLifecycleEpoch) {

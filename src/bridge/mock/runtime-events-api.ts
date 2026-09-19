@@ -26,7 +26,6 @@ export function createRuntimeApi(): PreloadApi['runtime'] {
     getClientHostedBrowserRows: async () => [],
     onTerminalFitOverrideChanged: () => noopUnsubscribe,
     onTerminalDriverChanged: () => noopUnsubscribe,
-    onNativeChatLaunchDraftResolved: () => noopUnsubscribe,
     onBrowserDriverChanged: () => noopUnsubscribe,
     onBrowserRemoteViewersChanged: () => noopUnsubscribe,
     onClientHostedBrowserRowsChanged: () => noopUnsubscribe

@@ -47,8 +47,6 @@ export const createTerminalSlice: StateCreator<AppState, [], [], TerminalSlice> 
   pendingSetupSplitByTabId: {},
   pendingIssueCommandSplitByTabId: {},
   automaticAgentResumeClaimsByTabId: {},
-  nativeChatLaunchPromptByTabId: {},
-  nativeChatLaunchDraftByTabId: {},
   tabBarOrderByWorktree: {},
   workspaceSessionReady: false,
   terminalStartupRestorationReady: false,

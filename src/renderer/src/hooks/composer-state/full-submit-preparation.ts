@@ -34,8 +34,6 @@ import {
   resolveTuiAgentLaunchArgs,
   resolveTuiAgentLaunchEnv
 } from '../../../../shared/tui-agent-launch-defaults'
-import { resolveInitialNativeChatSessionOptions } from '@/components/native-chat/native-chat-launch-session-options'
-import { isNativeChatTranscriptLocalReadable } from '@/lib/native-chat-transcript-readability'
 import type { AgentStartedTelemetry } from '@/lib/worktree-startup-payload'
 import { tuiAgentToAgentKind } from '@/lib/telemetry'
 import type { PendingSmartGitHubSubmitResolution } from './source-selection-decisions'
@@ -184,19 +182,6 @@ export function useFullSubmitPreparation(input: FullSubmitPreparationInput) {
         cmdOverrides: settings?.agentCmdOverrides ?? {},
         agentArgs: resolveTuiAgentLaunchArgs(tuiAgent, settings?.agentDefaultArgs),
         agentEnv: resolveTuiAgentLaunchEnv(tuiAgent, settings?.agentDefaultEnv),
-        sessionOptions: resolveInitialNativeChatSessionOptions(
-          {
-            experimentalNativeChat: settings?.experimentalNativeChat,
-            openAgentTabsInChatByDefault: settings?.openAgentTabsInChatByDefault,
-            nativeChatSessionOptions: settings?.nativeChatSessionOptions
-          },
-          {
-            agent: tuiAgent,
-            nativeChatTranscriptIsLocalReadable: isNativeChatTranscriptLocalReadable(
-              selectedRepo?.connectionId
-            )
-          }
-        ),
         platform: selectedRepoAgentLaunchPlatform,
         shell: selectedRepoStartupShell,
         isRemote: selectedRepoIsRemote

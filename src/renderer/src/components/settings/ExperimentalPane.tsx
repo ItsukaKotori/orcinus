@@ -8,7 +8,6 @@ import { getExperimentalPaneSearchEntries, getExperimentalSearchEntry } from './
 import { HiddenExperimentalGroup } from './HiddenExperimentalGroup'
 import { NumberField, SettingsSwitch } from './SettingsFormControls'
 import { translate } from '@/i18n/i18n'
-import { NativeChatExperimentalSetting } from './NativeChatExperimentalSetting'
 import {
   MAX_AGENT_HIBERNATION_IDLE_MS,
   MIN_AGENT_HIBERNATION_IDLE_MS,
@@ -33,9 +32,6 @@ export function ExperimentalPane({
   hiddenExperimentalUnlocked = false
 }: ExperimentalPaneProps): React.JSX.Element {
   const searchQuery = useAppStore((s) => s.settingsSearchQuery)
-  const showNativeChat = matchesSettingsSearch(searchQuery, [
-    getExperimentalSearchEntry().nativeChat
-  ])
   const showTerminalAttention = matchesSettingsSearch(searchQuery, [
     getExperimentalSearchEntry().terminalAttention
   ])
@@ -55,10 +51,6 @@ export function ExperimentalPane({
 
   return (
     <div className="space-y-4">
-      {showNativeChat ? (
-        <NativeChatExperimentalSetting settings={settings} updateSettings={updateSettings} />
-      ) : null}
-
       {showTerminalAttention ? (
         <SearchableSetting
           title={translate(

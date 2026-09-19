@@ -158,15 +158,8 @@ export type RuntimeRendererSyncWindowGraph = RuntimeSyncWindowGraph & {
   rendererGeneration: string
 }
 
-export type RuntimeNativeChatLaunchDraftResolution = {
-  tabId: string
-  text: string
-  createdAt: number
-}
-
 export type RuntimeSyncWindowGraphResult = RuntimeStatus & {
   agentOrchestrationByPaneKey?: Record<string, AgentStatusOrchestrationContext>
-  nativeChatLaunchDraftResolutions?: RuntimeNativeChatLaunchDraftResolution[]
   mobileSessionResyncWorktrees?: string[]
 }
 

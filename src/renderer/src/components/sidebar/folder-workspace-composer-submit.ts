@@ -1,5 +1,4 @@
 import { ensureAgentStartupInTerminal, type LinkedWorkItemSummary } from '@/lib/new-workspace'
-import { seedNativeChatLaunchDraftForAgentTab } from '@/lib/agent-launch-prompt-delivery'
 import { preflightAgentTrust } from '@/lib/agent-trust-preflight'
 import { createBrowserUuid } from '@/lib/browser-uuid'
 import { buildAgentStartupPlan } from '@/lib/tui-agent-startup'
@@ -11,16 +10,13 @@ import type { ProjectGroup } from '../../../../shared/project-group-types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import { resolveLocalWindowsAgentStartupShell } from '../../../../shared/windows-terminal-shell'
 import type { LaunchSource } from '../../../../shared/telemetry-events'
-import type { SessionOptionValue } from '../../../../shared/native-chat-session-options'
+import type { SessionOptionValue } from '../../../../shared/agent-session-option-types'
 import type { TaskSourceContext } from '../../../../shared/task-source-context'
 import { folderWorkspaceKey } from '../../../../shared/workspace-scope'
 import {
   getLinkedItemDisplayName,
   toFolderWorkspaceLinkedTask
 } from './folder-workspace-composer-helpers'
-import { planAgentSessionLaunch } from '@/lib/agent-session-launch-plan'
-import { getNewWorkspaceProjectGroupHostId } from '@/lib/new-workspace-project-options'
-import { useAppStore } from '@/store'
 import {
   buildFolderWorkspaceLinkedStartupPlan,
   getFolderWorkspaceAgentLaunchPlatform,
@@ -130,21 +126,6 @@ export async function submitFolderWorkspaceCreate({
   // `startupPlan.draftPrompt` alone can't tell whether this launch has one.
   const launchDraftPrompt =
     quickAgent && linkedWorkItem ? resolveFolderWorkspaceLaunchDraft(linkedWorkItem, note) : null
-  const plan = quickAgent
-    ? planAgentSessionLaunch(useAppStore.getState(), {
-        agent: quickAgent,
-        workspace: {
-          kind: 'folder',
-          runtimeEnvironmentId,
-          executionHostId: getNewWorkspaceProjectGroupHostId(projectGroup)
-        },
-        prompt: launchDraftPrompt ?? note,
-        promptDelivery: launchDraftPrompt ? 'draft' : 'auto-submit',
-        tuiCustomization: { agentArgs },
-        initialSessionOptions: startupPlan?.sessionOptions
-      })
-    : null
-  const structuredLaunch = plan?.route === 'structured-native-chat'
   // Why: the pending badge should only appear when the submitted prompt can
   // actually produce the first agent message that names the workspace.
   const pendingFirstAgentMessageRename =
@@ -168,13 +149,11 @@ export async function submitFolderWorkspaceCreate({
   if (!workspace) {
     return false
   }
-  if (!structuredLaunch) {
-    await preflightAgentTrust({
-      agent: quickAgent,
-      workspacePath: workspace.folderPath,
-      connectionId: workspace.connectionId ?? projectGroup.connectionId
-    })
-  }
+  await preflightAgentTrust({
+    agent: quickAgent,
+    workspacePath: workspace.folderPath,
+    connectionId: workspace.connectionId ?? projectGroup.connectionId
+  })
   if (startupPlan && !startupPlan.launchToken) {
     // Why: delayed delivery must target the exact pane spawned from this queued
     // startup, so both halves share one renderer-session token.
@@ -206,77 +185,12 @@ export async function submitFolderWorkspaceCreate({
       : undefined
   onOpenChange(false)
   try {
-    let activation = activateAndRevealFolderWorkspace(workspace.id, {
+    const activation = activateAndRevealFolderWorkspace(workspace.id, {
       agent: quickAgent,
-      ...(!structuredLaunch && startup ? { startup } : {}),
-      ...(structuredLaunch ? { providesInitialSurface: true } : {}),
+      ...(startup ? { startup } : {}),
       runtimeEnvironmentId
     })
-    let structuredLaunchAccepted = structuredLaunch
-    const settlement =
-      plan?.route === 'structured-native-chat'
-        ? await plan.launch(
-            {
-              legacyFallback: async () => {
-                if (pendingFirstAgentMessageRename) {
-                  await useAppStore
-                    .getState()
-                    .updateFolderWorkspace(workspace.id, { pendingFirstAgentMessageRename: true })
-                    .catch(() => undefined)
-                }
-                await preflightAgentTrust({
-                  agent: quickAgent,
-                  workspacePath: workspace.folderPath,
-                  connectionId: workspace.connectionId ?? projectGroup.connectionId
-                })
-                const fallbackActivation = activateAndRevealFolderWorkspace(workspace.id, {
-                  agent: quickAgent,
-                  ...(startup ? { startup } : {}),
-                  runtimeEnvironmentId
-                })
-                return {
-                  activation: fallbackActivation,
-                  primaryTabId:
-                    fallbackActivation === false ? null : fallbackActivation.primaryTabId
-                }
-              }
-            },
-            { worktreeId: folderWorkspaceKey(workspace.id) }
-          )
-        : null
-    if (settlement) {
-      // Why: the workspace exists either way. Unknown keeps reporting false and failed true, as
-      // the boolean did before the loop was shared; the launch layer owns the failure toast.
-      if (settlement.kind === 'visibility-unknown') {
-        return false
-      }
-      if (settlement.kind === 'failed' || settlement.kind === 'cancelled') {
-        return true
-      }
-      if (settlement.kind === 'refused-then-legacy') {
-        structuredLaunchAccepted = false
-        // Why: this flow's own fallback always activates; `??` only satisfies the shared type.
-        activation = settlement.activation ?? false
-      }
-    }
     if (
-      !structuredLaunchAccepted &&
-      quickAgent &&
-      startupPlan &&
-      launchDraftPrompt &&
-      activation !== false &&
-      activation.primaryTabId
-    ) {
-      // Why: draft launch context reaches only the TUI input; seed the
-      // chat-composer copy so it isn't invisible in the chat view.
-      seedNativeChatLaunchDraftForAgentTab({
-        tabId: activation.primaryTabId,
-        agent: quickAgent,
-        text: launchDraftPrompt
-      })
-    }
-    if (
-      !structuredLaunchAccepted &&
       startupPlan &&
       (startupPlan.followupPrompt || startupPlan.draftPrompt) &&
       activation !== false

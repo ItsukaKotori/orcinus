@@ -4,9 +4,9 @@ import type { AppState } from '@/store/types'
 import type { RuntimeMobileSessionSnapshotTab } from '../../../../shared/runtime-types'
 import type { TerminalLayoutSnapshot } from '../../../../shared/terminal-tab-types'
 import {
-  isNativeChatTabWideFallbackSafe,
-  nativeChatLaunchAgentForLeaf
-} from '../../components/native-chat/native-chat-leaf-routing'
+  isTabWideFallbackSafe,
+  launchAgentForLeaf
+} from './mobile-tab-wide-agent-evidence'
 import type { MobileSessionWorktreeInputs } from './types'
 import {
   isClaudeManagementTitle,
@@ -76,7 +76,7 @@ export function buildMobileTerminalSurfaceTabs(
     const leafTitle = paneTitle?.trim() || sanitizedSavedLayout?.titlesByLeafId?.[leafId]?.trim()
     const paneKey = isTerminalLeafId(leafId) ? makePaneKey(terminal.id, leafId) : null
     const tabWideFallbackSafe =
-      isNativeChatTabWideFallbackSafe(parentLayout) && launchAgentLeafId === leafId
+      isTabWideFallbackSafe(parentLayout) && launchAgentLeafId === leafId
     const title = tabWideFallbackSafe
       ? resolveRuntimeTerminalTitle(
           terminal,
@@ -89,17 +89,12 @@ export function buildMobileTerminalSurfaceTabs(
       paneKey && !isClaudeManagementTitle(agentStatusTitle)
         ? inputs.agentStatusByPaneKey.get(paneKey)
         : undefined
-    const launchAgent = nativeChatLaunchAgentForLeaf({
+    const launchAgent = launchAgentForLeaf({
       launchAgent: terminal.launchAgent,
       launchAgentLeafId,
       leafId,
       leafIds
     })
-    const launchDraft = paneKey ? inputs.launchDraftByPaneKey.get(paneKey) : undefined
-    const publishedLaunchDraft =
-      launchDraft && launchDraft.agent === launchAgent && launchDraft.text.trim()
-        ? launchDraft
-        : null
     return {
       type: 'terminal' as const,
       id: mobileTerminalSurfaceId(terminal.id, leafId),
@@ -113,12 +108,6 @@ export function buildMobileTerminalSurfaceTabs(
       ...(inputs.terminalTheme ? { terminalTheme: inputs.terminalTheme } : {}),
       ...(agentStatus ? { agentStatus } : {}),
       ...(launchAgent ? { launchAgent } : {}),
-      ...(publishedLaunchDraft
-        ? {
-            launchDraft: publishedLaunchDraft.text,
-            launchDraftCreatedAt: publishedLaunchDraft.createdAt
-          }
-        : {}),
       parentLayout,
       isActive: isDesktopTabActive && leafId === activeLeafId
     }

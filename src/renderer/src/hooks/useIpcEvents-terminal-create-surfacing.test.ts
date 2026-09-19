@@ -232,7 +232,6 @@ describe('useIpcEvents updater integration', () => {
       activate: false,
       recordInteraction: false,
       launchAgent: 'codex',
-      viewMode: 'chat',
       startupCwd: '/repo/packages/app'
     })
     expect(setActiveView).not.toHaveBeenCalled()
@@ -481,8 +480,7 @@ describe('useIpcEvents updater integration', () => {
     expect(createTab).toHaveBeenCalledWith('wt-2', undefined, undefined, {
       initialPtyId: 'pty-bg',
       activate: false,
-      launchAgent: 'codex',
-      viewMode: 'chat'
+      launchAgent: 'codex'
     })
     expect(setActiveView).not.toHaveBeenCalled()
     expect(setActiveWorktree).not.toHaveBeenCalled()

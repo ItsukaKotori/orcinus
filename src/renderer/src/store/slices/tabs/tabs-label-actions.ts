@@ -1,4 +1,3 @@
-import { emitNativeChatToggled } from '@/lib/native-chat-telemetry'
 import type { TuiAgent } from '../../../../../shared/tui-agent'
 import type { TabsSlice, TabsSliceGet, TabsSliceSet } from './tabs-slice-contract'
 import { findTabAndWorktree, patchTab, updateGroup, dedupeTabOrder } from '../tab-group-state'
@@ -104,7 +103,6 @@ export function createTabsLabelActions(
         agent: TuiAgent | null
       } | null
       if (committed) {
-        emitNativeChatToggled(committed)
         mirrorTabViewModeToHost(get(), tabId, committed.to)
       }
     },

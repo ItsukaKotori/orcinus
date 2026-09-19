@@ -13,7 +13,6 @@ import type {
 import type { AgentStartupPlan } from '@/lib/tui-agent-startup'
 import type { AgentStartedTelemetry } from '@/lib/worktree-startup-payload'
 import type { TaskSourceContext, WorkspaceRunContext } from '../../../shared/task-source-context'
-import type { AgentLaunchRoute } from '@/lib/agent-launch-routing'
 
 /** Two-phase status reported by the main process while a worktree is created.
  *  `preparing` covers renderer-side preflight before `createWorktree` starts;
@@ -77,8 +76,6 @@ export type WorktreeCreationRequest = {
   linkedPR?: number
   pushTarget?: GitPushTarget
   agent: TuiAgent | null
-  /** Renderer-owned route decision captured at submit time and reused on retry. */
-  agentLaunchRoute?: AgentLaunchRoute
   linkedLinearIssue?: string
   linkedLinearIssueWorkspaceId?: string | null
   linkedLinearIssueOrganizationUrlKey?: string | null
@@ -109,7 +106,7 @@ export type WorktreeCreationRequest = {
    *  startup paste); completion seeds the chat-composer copy from it. */
   launchDraftPrompt?: string
   /** How a structured launch delivers `launchDraftPrompt ?? quickPrompt`; decided once by the
-   *  composer beside `agentLaunchRoute`, never re-derived from the prompt fields. */
+   *  composer, never re-derived from the prompt fields. */
   promptDelivery?: 'draft' | 'auto-submit'
   quickTelemetry: AgentStartedTelemetry | null
   /** When the composer stays open for sequential creates, completion must not
@@ -138,8 +135,6 @@ export type PendingWorktreeCreation = {
   loaderVisible: boolean
   error?: string
   provisioningLog?: string
-  /** Existing worktree whose uncertain structured launch must be reconciled instead of recreated. */
-  structuredLaunchRecoveryWorktreeId?: string
   request: WorktreeCreationRequest
 }
 

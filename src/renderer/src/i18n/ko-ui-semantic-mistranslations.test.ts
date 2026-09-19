@@ -24,8 +24,6 @@ const correctedValues = {
   'auto.components.sidebar.AddRemoteHostDialog.sshImportSynced':
     '{{value0}} 호스트{{value1}}을(를) Orcinus에 추가했습니다.',
   'auto.components.editor.CheckRunJobs.1c0a4d7e02': '성공',
-  'components.native-chat.approval.allow': '허용',
-  'components.native-chat.approval.deny': '거부'
 } as const
 
 function getLocaleValue(path: string): unknown {

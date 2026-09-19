@@ -6,10 +6,9 @@ import { isWebTerminalSurfaceTabId } from '../../../../shared/terminal-surface-i
 import type { Tab } from '../../../../shared/tab-types'
 import { parseRemoteRuntimePtyId } from '../runtime-terminal-stream'
 import {
-  isNativeChatTabWideFallbackSafe,
-  nativeChatLaunchAgentForLeaf,
-  resolveNativeChatActiveLayoutLeafId
-} from '../../components/native-chat/native-chat-leaf-routing'
+  isTabWideFallbackSafe,
+  resolveActiveLayoutLeafId
+} from './mobile-tab-wide-agent-evidence'
 import type { MobileSessionWorktreeInputs, MountedTerminalSurfaceCapture } from './types'
 
 export function mobileTerminalSurfaceId(parentTabId: string, leafId: string): string {
@@ -58,9 +57,7 @@ export function resolveMobileTabWideAgentHintLeafId(
   if (capture) {
     return capture.tabWideAgentHintLeafId
   }
-  return isNativeChatTabWideFallbackSafe(savedLayout)
-    ? resolveNativeChatActiveLayoutLeafId(savedLayout)
-    : null
+  return isTabWideFallbackSafe(savedLayout) ? resolveActiveLayoutLeafId(savedLayout) : null
 }
 
 export function isEditorSurfaceTab(tab: Pick<Tab, 'contentType'>): boolean {
@@ -112,4 +109,4 @@ export function isUnifiedTabActiveInActiveGroup(
   )
 }
 
-export { isClaudeManagementTitle, isTerminalLeafId, makePaneKey, nativeChatLaunchAgentForLeaf }
+export { isClaudeManagementTitle, isTerminalLeafId, makePaneKey }

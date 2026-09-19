@@ -1,9 +1,7 @@
 import type { CSSProperties, RefObject } from 'react'
 import {
-  MessageSquare,
   MessageSquarePlus,
   SquareSplitVertical,
-  SquareTerminal,
   X
 } from 'lucide-react'
 import type { ManagedPane, PaneManager } from '@/lib/pane-manager/pane-manager'
@@ -42,16 +40,6 @@ type TerminalPaneHeaderOverlayProps = {
   hiddenStartupStyle: CSSProperties
   managerRef: RefObject<PaneManager | null>
   paneTransportsRef: RefObject<Map<number, PtyTransport>>
-  /** When true, this pane can switch between the terminal and the native chat
-   *  view; renders a chat/terminal toggle as the first button in the pane header
-   *  actions row (beside split/close). The caller gates it to the active pane to
-   *  avoid duplicating it across splits, and to bridge chat only — a structured
-   *  session has no terminal underneath to switch to. */
-  canToggleNativeChat?: boolean
-  /** True when the active pane is currently showing the native chat view. */
-  isChatViewMode?: boolean
-  /** Flip the active pane between the terminal and the native chat view. */
-  onToggleNativeChat?: () => void
   canContinueAgentSessionInNewSession?: boolean
   onContinueAgentSessionInNewSession?: (pane: ManagedPane) => void
   onSplitPane: (pane: ManagedPane, direction: 'vertical' | 'horizontal') => void
@@ -87,9 +75,6 @@ export default function TerminalPaneHeaderOverlay({
   hiddenStartupStyle,
   managerRef,
   paneTransportsRef,
-  canToggleNativeChat,
-  isChatViewMode,
-  onToggleNativeChat,
   canContinueAgentSessionInNewSession,
   onContinueAgentSessionInNewSession,
   onSplitPane,
@@ -271,47 +256,6 @@ export default function TerminalPaneHeaderOverlay({
                           'components.agentSessionContinuation.continueInNewSession',
                           'Continue in New Session…'
                         )}
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : null}
-                  {canToggleNativeChat && isActivePane ? (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-xs"
-                          // Same class as split so it shares the hover/active reveal
-                          // and sits as a peer in the [chat][split][×] cluster.
-                          className="pane-title-split-trigger"
-                          aria-label={
-                            isChatViewMode
-                              ? translate(
-                                  'components.native-chat.toggle.showTerminal',
-                                  'Show terminal'
-                                )
-                              : translate(
-                                  'components.native-chat.toggle.showChat',
-                                  'Show chat view'
-                                )
-                          }
-                          aria-pressed={isChatViewMode}
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            onToggleNativeChat?.()
-                          }}
-                        >
-                          {isChatViewMode ? (
-                            <SquareTerminal className="size-3" />
-                          ) : (
-                            <MessageSquare className="size-3" />
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" sideOffset={4}>
-                        {isChatViewMode
-                          ? translate('components.native-chat.toggle.showTerminal', 'Show terminal')
-                          : translate('components.native-chat.toggle.showChat', 'Show chat view')}
                       </TooltipContent>
                     </Tooltip>
                   ) : null}

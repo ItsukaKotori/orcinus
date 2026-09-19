@@ -13,11 +13,6 @@ import {
   resolveWebSessionVisibleTabId,
   clearWebSessionFocusIntent
 } from '../web-session-focus-intent'
-import {
-  resolveWebAgentSessionHandoff,
-  isWebAgentSessionHandoffPostCreateSnapshotConfirmed,
-  clearWebAgentSessionHandoff
-} from '../web-agent-session-handoff'
 import { toRemoteRuntimePtyId } from '../runtime-terminal-stream'
 import { toWebTerminalSurfaceTabId } from '../web-runtime-session'
 import {
@@ -110,30 +105,16 @@ export function prepareWebSessionTabsSnapshotBase(
     terminalSurfaceTabs.map((tab) => toWebTerminalSurfaceTabId(tab.parentTabId))
   )
   const nextHostTerminalTabIds = new Set(terminalSurfaceTabs.map((tab) => tab.parentTabId))
+  const exactProvisionalHandoffs = new Set<string>()
   const provisionalHandoffHostTabIds = new Map<string, string>()
   for (const tab of currentTerminalTabs) {
     if (isMirroredTerminalSurfaceId(tab.id)) {
       continue
     }
     if (nextHostTerminalTabIds.has(tab.id)) {
-      provisionalHandoffHostTabIds.set(tab.id, tab.id)
-      continue
-    }
-    const handoff = {
-      environmentId,
-      worktreeId,
-      provisionalTabId: tab.id
-    }
-    const hostTabId = resolveWebAgentSessionHandoff(handoff)
-    if (
-      hostTabId !== null &&
-      (nextHostTerminalTabIds.has(hostTabId) ||
-        isWebAgentSessionHandoffPostCreateSnapshotConfirmed(handoff))
-    ) {
-      provisionalHandoffHostTabIds.set(tab.id, hostTabId)
+      exactProvisionalHandoffs.add(tab.id)
     }
   }
-  const exactProvisionalHandoffs = new Set(provisionalHandoffHostTabIds.keys())
   const replacedConversations = new Set(
     snapshot.tabs.flatMap((tab) =>
       tab.type === 'agent-session' && tab.replacesSessionId ? [tab.replacesSessionId] : []
@@ -191,10 +172,6 @@ export function prepareWebSessionTabsSnapshotBase(
   const removedTerminalResourceIds = [...removedTerminalIds].filter(
     (tabId) => !mirroredTerminalIds.has(tabId)
   )
-  for (const provisionalTabId of exactProvisionalHandoffs) {
-    clearWebAgentSessionHandoff({ environmentId, worktreeId, provisionalTabId })
-  }
-
   return {
     state,
     rawSnapshot,
@@ -216,8 +193,8 @@ export function prepareWebSessionTabsSnapshotBase(
     readyTerminalTabs,
     nextRemotePtyIds,
     nextMirroredTerminalIds,
-    provisionalHandoffHostTabIds,
     exactProvisionalHandoffs,
+    provisionalHandoffHostTabIds,
     retainedTerminalTabs,
     mirroredTerminalTabs,
     mirroredTerminalTabEntries,

@@ -135,8 +135,6 @@ export function createTerminalTabCloseActions(
         const nextAutomaticAgentResumeClaimsByTabId = omitByTabId(
           s.automaticAgentResumeClaimsByTabId
         )
-        const nextNativeChatLaunchPromptByTabId = omitByTabId(s.nativeChatLaunchPromptByTabId)
-        const nextNativeChatLaunchDraftByTabId = omitByTabId(s.nativeChatLaunchDraftByTabId)
         const nextPendingInitialCwdByTabId = omitByTabId(s.pendingInitialCwdByTabId)
         const nextPendingSetupSplitByTabId = omitByTabId(s.pendingSetupSplitByTabId)
         const nextPendingIssueCommandSplitByTabId = omitByTabId(s.pendingIssueCommandSplitByTabId)
@@ -221,8 +219,6 @@ export function createTerminalTabCloseActions(
           terminalLayoutsByTabId: nextLayouts,
           pendingStartupByTabId: nextPendingStartupByTabId,
           automaticAgentResumeClaimsByTabId: nextAutomaticAgentResumeClaimsByTabId,
-          nativeChatLaunchPromptByTabId: nextNativeChatLaunchPromptByTabId,
-          nativeChatLaunchDraftByTabId: nextNativeChatLaunchDraftByTabId,
           pendingInitialCwdByTabId: nextPendingInitialCwdByTabId,
           pendingSetupSplitByTabId: nextPendingSetupSplitByTabId,
           pendingIssueCommandSplitByTabId: nextPendingIssueCommandSplitByTabId,

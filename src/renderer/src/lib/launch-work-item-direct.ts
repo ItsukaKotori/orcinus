@@ -1,9 +1,6 @@
 import { toast } from 'sonner'
 import { useAppStore } from '@/store'
-import {
-  deliverLaunchPromptToAgentTab,
-  seedNativeChatLaunchDraftForAgentTab
-} from '@/lib/agent-launch-prompt-delivery'
+import { deliverLaunchPromptToAgentTab } from '@/lib/agent-launch-prompt-delivery'
 import { planAgentCliArgsSuffix } from '@/lib/tui-agent-startup'
 import { activateAndRevealWorktree } from '@/lib/worktree-activation'
 import { CLIENT_PLATFORM, getWorkspaceIntentName, getWorkspaceSeedName } from '@/lib/new-workspace'
@@ -34,12 +31,7 @@ import type { LaunchWorkItemDirectArgs } from '@/lib/launch-work-item-direct-typ
 import { resolveSourceControlLaunchPlatform } from '@/lib/source-control-launch-platform'
 import { getSettingsForRepoRuntimeOwner } from '@/lib/repo-runtime-owner'
 import { getLocalRepoProjectExecutionRuntimeContext } from '@/lib/local-preflight-context'
-import { settleDirectWorkItemStructuredLaunch } from '@/lib/launch-work-item-direct-agent-routing'
 import { prepareDirectWorkItemAgentLaunch } from '@/lib/launch-work-item-direct-route-preparation'
-import {
-  planAgentSessionLaunch,
-  type AgentSessionLaunchPlan
-} from '@/lib/agent-session-launch-plan'
 
 /**
  * "Use" flow: create the workspace, activate it, launch the default agent,
@@ -164,7 +156,6 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
   let startupPlan = null as ReturnType<typeof buildDirectWorkItemAgentStartupPlan>['startupPlan']
   let effectiveAgent: TuiAgent | null = null
   let draftLaunchedNatively = false
-  let plan: AgentSessionLaunchPlan | null = null
   const draftContent = await getDirectWorkItemDraftContent(item, repoConnectionId)
   let startupPlanFailed = false
   try {
@@ -212,8 +203,7 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
       draftContent,
       promptDelivery,
       launchPlatform: args.launchPlatform,
-      repoProjectRuntime,
-      planLaunch: planAgentSessionLaunch
+      repoProjectRuntime
     })
     if (launchPreparation.unavailable) {
       activateAndRevealWorktree(worktreeId, {
@@ -227,20 +217,17 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
     startupPlan = launchPreparation.startupPlan
     draftLaunchedNatively = launchPreparation.draftLaunchedNatively
     startupPlanFailed = launchPreparation.startupPlanFailed
-    plan = launchPreparation.plan
 
     const activation = activateAndRevealWorktree(worktreeId, {
       sidebarRevealBehavior: 'auto',
       setup: result.setup,
       defaultTabs: result.defaultTabs,
-      ...(launchPreparation.structuredLaunch
-        ? { providesInitialSurface: true }
-        : buildDirectWorkItemStartupOpts(
-            effectiveAgent,
-            startupPlan,
-            launchSource,
-            promptDelivery === 'draft' ? draftContent : undefined
-          ))
+      ...buildDirectWorkItemStartupOpts(
+        effectiveAgent,
+        startupPlan,
+        launchSource,
+        promptDelivery === 'draft' ? draftContent : undefined
+      )
     })
     if (!activation) {
       // Worktree vanished between create and activate — extremely unlikely but
@@ -257,39 +244,11 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
 
   store.setSidebarOpen(true)
 
-  const structuredResult = await settleDirectWorkItemStructuredLaunch({
-    plan,
-    worktreeId,
-    workspacePath: worktreePath,
-    connectionId: repoConnectionId,
-    primaryTabId,
-    startupPlan,
-    launchSource
-  })
-  if (structuredResult.visibilityUnknown || structuredResult.failed) {
-    // Why: callers hang irreversible follow-up work off a `true` here, so a structured launch that
-    // opened no surface must not report the workspace as started.
-    return false
-  }
-  if (structuredResult.completed) {
-    return true
-  }
-  primaryTabId = structuredResult.primaryTabId
-
   if (startupPlanFailed) {
     toast.error(agentLaunchCommandErrorMessage())
     return false
   }
 
-  if (primaryTabId && effectiveAgent && promptDelivery === 'draft') {
-    // Why: the draft rides in on argv or the startup payload, so no paste runs
-    // below; mirror it into chat the way the new-tab launcher does.
-    seedNativeChatLaunchDraftForAgentTab({
-      tabId: primaryTabId,
-      agent: effectiveAgent,
-      text: draftContent
-    })
-  }
   if (
     primaryTabId &&
     startupPlan &&

@@ -9,7 +9,6 @@ import {
 } from '../../runtime/web-runtime-session'
 import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
 import { browserWorkspaceHasRemoteOwner } from '@/runtime/remote-browser-tab-ownership'
-import { activateStructuredAgentSessionTab } from '@/lib/structured-agent-session-tab-activation'
 import type { TabGroupWorktreeSnapshot } from './useTabGroupItemProjections'
 
 export function useTabGroupActivationCommands({
@@ -134,12 +133,9 @@ export function useTabGroupActivationCommands({
     [activateTab, focusGroup, groupId, groupTabs, setActiveBrowserTab, setActiveTabType, worktreeId]
   )
 
-  const activateAgentSession = useCallback(
-    (tabId: string) => {
-      activateStructuredAgentSessionTab({ worktreeId, tabId })
-    },
-    [worktreeId]
-  )
+  const activateAgentSession = useCallback((): void => {
+    // Native chat removal retires agent-session tab activation.
+  }, [])
 
   return {
     activateTerminal,

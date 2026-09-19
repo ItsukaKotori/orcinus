@@ -5878,17 +5878,7 @@
             "title": "新卡片样式",
             "toggleLabel": "切换新卡片样式"
           },
-          "nativeChat": {
-            "title": "Chat UI",
-            "description": "预览受支持的智能体终端会话的桌面聊天界面。",
-            "copy": "添加可从受支持的智能体终端窗格切换的 Chat UI 视图。在我们调整记录保真度、流式传输和终端一致性期间，此功能仍处于实验阶段。",
-            "toggleLabel": "切换 Chat UI",
-            "defaultTitle": "默认视图",
-            "defaultCopy": "选择如何打开受支持智能体的新终端标签页。",
-            "defaultViewLabel": "默认 Chat UI 视图",
-            "defaultViewTerminal": "终端聊天",
-            "defaultViewNative": "Chat UI"
-          },
+          "nativeChat": {},
           "agentDashboard": {}
         },
         "FloatingWorkspacePane": {
@@ -8039,11 +8029,7 @@
               "worktree": "工作树",
               "worktrees": "工作树"
             },
-            "nativeChat": {
-              "title": "Chat UI",
-              "description": "预览受支持的智能体终端会话的桌面聊天界面。",
-              "grok": "grok"
-            },
+            "nativeChat": {},
             "agentDashboard": {}
           }
         },
@@ -13711,9 +13697,7 @@
         }
       },
       "nativeChat": {
-        "contextMenu": {
-          "copy": "复制"
-        }
+        "contextMenu": {}
       },
       "orca": {
         "profiles": {
@@ -13885,123 +13869,28 @@
   "components": {
     "native-chat": {
       "composer": {
-        "imageUnsupported": "此智能体不支持粘贴图片。",
-        "send": "发送",
-        "noPty": "没有实时终端，请切回终端以重新连接。",
-        "locked": "输入正被另一台设备占用。",
-        "placeholder": "发送消息…",
-        "mentionHint": "引用文件：",
-        "attach": "附加文件",
-        "noSkills": "没有匹配的技能",
-        "localAttachmentUnsupported": "远程会话不支持本地附件。",
-        "removeAttachment": "移除附件",
-        "pastedImageLabel": "粘贴的图片",
-        "imagePasteFailed": "图片粘贴失败。",
-        "worktreeNotReady": "工作树未就绪 — 请稍后重试。",
-        "uploadingAttachments": "正在将 {{value0}} 个文件上传到远端…",
-        "model": "模型",
-        "effort": "推理强度",
-        "fastMode": "快速模式",
-        "thinking": "思考",
-        "options": "选项",
-        "sessionOptions": "会话选项",
-        "chooseInAgentPicker": "在智能体选择器中选择…",
-        "toggleOption": "切换{{value0}}",
-        "pillAccessibleName": "{{value0}} {{value1}}",
-        "valueUnknown": "当前值未知 — 请选择开或关",
-        "sentNotConfirmed": "已发送给智能体 — 尚未确认",
-        "setWhenSessionStarts": "请在会话开始时设置。",
-        "availableAfterSessionStarts": "会话开始后可用。",
-        "optionUpdateFailed": "无法更新选项",
-        "optionValue": {
-          "fast": "快速",
-          "minimal": "最小",
-          "low": "低",
-          "medium": "中",
-          "high": "高",
-          "xhigh": "极高",
-          "max": "最大",
-          "ultra": "极致",
-          "on": "开",
-          "off": "关"
-        },
-        "noCommandsOrSkills": "没有匹配的命令或技能",
-        "commands": "命令",
-        "skills": "技能",
-        "loadingSkills": "正在加载技能…",
-        "skillsUnavailableHost": "此主机上无法使用技能",
-        "skillsLoadFailed": "无法从此主机加载技能",
-        "retrySkills": "重试",
-        "skillCommandCollision": "也是技能名称 — 由智能体决定",
-        "skillMultipleSources": "{{sourceCount}} 个来源 — 由智能体处理",
-        "skillScopeProject": "项目",
-        "skillScopePersonal": "个人",
-        "skillScopeBuiltIn": "内置",
-        "skillScopePlugin": "插件",
-        "skillsLoaded": "技能已加载",
-        "noCommands": "没有匹配的命令"
+        "optionValue": {}
       },
       "tool": {
-        "running": "正在运行…",
-        "result": "结果"
+        "running": "正在运行…"
       },
-      "status": {
-        "responding": "智能体正在回复"
-      },
-      "jumpToLatest": "跳到最新消息",
-      "toggle": {
-        "showTerminal": "显示终端",
-        "showChat": "显示聊天视图"
-      },
+      "status": {},
+      "toggle": {},
       "state": {
-        "loading": {
-          "title": "正在加载对话…",
-          "subtitle": "正在读取智能体记录。"
-        },
-        "error": {
-          "title": "无法加载对话",
-          "subtitle": "无法读取记录。请切回终端继续工作。"
-        },
-        "pairHost": "配对主机以查看智能体聊天记录。",
-        "notAgent": {
-          "title": "这里没有对话",
-          "subtitle": "此终端未运行可识别的编码智能体。"
-        },
-        "empty": {
-          "title": "开始与 {{value0}} 聊天",
-          "subtitle": "让 {{value0}} 检查代码、解释输出或进行修改。"
-        }
+        "loading": {},
+        "error": {},
+        "notAgent": {},
+        "empty": {}
       },
-      "stop": "停止智能体",
-      "copyMessage": {
-        "copied": "已复制",
-        "copy": "复制消息"
-      },
-      "scrollMessageToTop": "将此消息滚动到顶部",
-      "loadingEarlier": "正在加载…",
-      "loadEarlier": "加载更早的消息",
+      "copyMessage": {},
       "question": {
-        "step": "步骤 {{value0}}",
-        "other": "其他…",
-        "otherPlaceholder": "输入你的回答",
-        "cancel": "取消",
-        "send": "提交",
-        "next": "下一步",
-        "skip": "跳过",
-        "sending": "正在发送…"
+        "other": "其他…"
       },
-      "approval": {
-        "title": "允许 {{value0}}？",
-        "allow": "允许",
-        "deny": "拒绝"
-      },
-      "launchPromptNotDelivered": "未送达 — 请检查终端"
+      "approval": {}
     },
     "tab": {
       "bar": {
         "SortableTabContextMenu": {
-          "switchToTerminalView": "切换到终端视图",
-          "switchToChatView": "切换到聊天视图",
           "closeTabsToLeft": "关闭左侧的选项卡"
         },
         "BrowserTab": {

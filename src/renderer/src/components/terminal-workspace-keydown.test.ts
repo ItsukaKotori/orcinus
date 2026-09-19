@@ -190,25 +190,6 @@ describe('tab.close uses the unified active tab', () => {
     return event
   }
 
-  it.each(['darwin', 'win32', 'linux'] as const)(
-    'closes native chat from its composer on %s',
-    async (platform) => {
-      expect(close(platform).defaultPrevented).toBe(true)
-      await vi.waitFor(() => expect(closeUnifiedTab).toHaveBeenCalledWith(tab.id))
-      expect(mocks.closeStructuredAgentSession).toHaveBeenCalledWith(
-        { kind: 'local' },
-        'chat-session'
-      )
-      expect(mocks.callRuntimeRpc).toHaveBeenCalledWith({ kind: 'local' }, 'session.tabs.close', {
-        worktree: `id:${worktreeId}`,
-        tabId: 'agent-session:chat-session',
-        reason: 'user'
-      })
-      expect(mocks.cancelStructuredAgentLaunch).toHaveBeenCalledTimes(1)
-      expect(mocks.closeTerminalTab).not.toHaveBeenCalled()
-    }
-  )
-
   it.each(['editor', 'diff', 'conflict-review', 'check-details', 'browser'] as const)(
     'closes the focused %s tab through the same command',
     (contentType) => {

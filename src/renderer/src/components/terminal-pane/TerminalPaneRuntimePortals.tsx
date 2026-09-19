@@ -7,7 +7,6 @@ import { MobileDriverOverlay } from './MobileDriverOverlay'
 import { getDriverForPty } from '@/lib/pane-manager/mobile-driver-state'
 import { getFitOverrideForPty } from '@/lib/pane-manager/mobile-fit-overrides'
 import { shouldShowMobileDriverOverlay } from './mobile-driver-overlay-visibility'
-import { shouldChatTakeOverMobileSurface } from '../native-chat/native-chat-send-eligibility'
 import type { TerminalPaneController } from './use-terminal-pane-controller'
 
 export function TerminalPaneCodexRestartPortals({
@@ -154,8 +153,6 @@ export function TerminalPaneMobileDriverPortals({
   controller: TerminalPaneController
 }): React.JSX.Element {
   const {
-    chatLeafId,
-    effectiveChatViewMode,
     managedPanes,
     paneTransportsRef,
     restoreAllTerminalFits,
@@ -172,11 +169,6 @@ export function TerminalPaneMobileDriverPortals({
         const fitMode = getFitOverrideForPty(ptyId)?.mode ?? null
         const hasFitOverride = fitMode === 'mobile-fit'
         if (!shouldShowMobileDriverOverlay(driver.kind, fitMode)) {
-          return null
-        }
-        const paneSurface =
-          effectiveChatViewMode && pane.leafId === chatLeafId ? 'chat' : 'terminal'
-        if (shouldChatTakeOverMobileSurface(paneSurface)) {
           return null
         }
         return createPortal(

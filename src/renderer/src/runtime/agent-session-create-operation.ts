@@ -2,7 +2,7 @@ import type {
   AgentLaunchPreferences,
   RuntimeCreateAgentSessionRequest
 } from '../../../shared/agent-session-host-authority'
-import type { SessionOptionValue } from '../../../shared/native-chat-session-options'
+import type { SessionOptionValue } from '../../../shared/agent-session-option-types'
 import { createAgentSessionOperationId } from './agent-session-operation-id'
 import { RuntimeRpcCallError } from './runtime-rpc-client'
 

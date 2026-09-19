@@ -1,4 +1,3 @@
-import type { GlobalSettings } from '../../../shared/global-settings-types'
 import type { Tab } from '../../../shared/tab-types'
 import type { TuiAgent } from '../../../shared/tui-agent'
 import type { SetupSplitDirection } from '../../../shared/worktree/launch-types'
@@ -57,7 +56,6 @@ export type WorktreeActivationStore = Partial<WorktreeRuntimeOwnerState> & {
     startup: { command: string; env?: Record<string, string> }
   ) => void
   queueTabInitialCwd: (tabId: string, cwd: string) => void
-  settings?: Pick<GlobalSettings, 'experimentalNativeChat' | 'openAgentTabsInChatByDefault'> | null
 }
 
 export type InitialTerminalOptions = {

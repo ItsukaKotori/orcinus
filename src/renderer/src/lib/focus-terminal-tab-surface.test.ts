@@ -9,11 +9,8 @@ vi.mock('@/components/terminal-pane/terminal-ime-input-context-refresh', () => (
   refreshTerminalImeInputContext: mocks.refreshTerminalImeInputContext
 }))
 
-// Why: tab-wide queries skip leaves whose xterm sits under the native chat portal.
-const TAB_HELPER_SELECTOR =
-  '[data-terminal-tab-id="tab-1"] [data-leaf-id]:not(:has(.native-chat-pane-shell)) .xterm-helper-textarea'
-const GLOBAL_HELPER_SELECTOR =
-  '[data-leaf-id]:not(:has(.native-chat-pane-shell)) .xterm-helper-textarea'
+const TAB_HELPER_SELECTOR = '[data-terminal-tab-id="tab-1"] [data-leaf-id] .xterm-helper-textarea'
+const GLOBAL_HELPER_SELECTOR = '[data-leaf-id] .xterm-helper-textarea'
 
 describe('focusTerminalTabSurface', () => {
   afterEach(() => {
@@ -104,64 +101,7 @@ describe('focusTerminalTabSurface', () => {
     expect(textarea.focus).not.toHaveBeenCalled()
   })
 
-  it('does not focus xterm while chat covers the terminal tab', () => {
-    flushAnimationFrames()
-    const textarea = { focus: vi.fn() }
-    vi.stubGlobal('document', {
-      querySelector: vi.fn((selector: string) => {
-        if (selector === '[data-terminal-tab-id="tab-1"]') {
-          return {
-            getAttribute: (name: string) => (name === 'data-terminal-chat-view' ? 'true' : null)
-          }
-        }
-        return selector === TAB_HELPER_SELECTOR ? textarea : null
-      })
-    })
-
-    focusTerminalTabSurface('tab-1')
-
-    expect(textarea.focus).not.toHaveBeenCalled()
-  })
-
-  it('skips the chat leaf helper when a split chat tab has an active terminal leaf', () => {
-    flushAnimationFrames()
-    const coveredTextarea = { focus: vi.fn() }
-    const terminalTextarea = { focus: vi.fn() }
-    vi.stubGlobal('document', {
-      querySelector: vi.fn((selector: string) => {
-        if (selector === '[data-terminal-tab-id="tab-1"]') {
-          return { getAttribute: () => null }
-        }
-        if (selector === TAB_HELPER_SELECTOR) {
-          return terminalTextarea
-        }
-        return selector === '[data-terminal-tab-id="tab-1"] .xterm-helper-textarea'
-          ? coveredTextarea
-          : null
-      })
-    })
-
-    focusTerminalTabSurface('tab-1')
-
-    expect(terminalTextarea.focus).toHaveBeenCalledOnce()
-    expect(coveredTextarea.focus).not.toHaveBeenCalled()
-  })
-
-  it('does not use a covered chat helper as the global mount-race fallback', () => {
-    flushAnimationFrames()
-    const coveredTextarea = { focus: vi.fn() }
-    vi.stubGlobal('document', {
-      querySelector: vi.fn((selector: string) =>
-        selector === '.xterm-helper-textarea' ? coveredTextarea : null
-      )
-    })
-
-    focusTerminalTabSurface('tab-1')
-
-    expect(coveredTextarea.focus).not.toHaveBeenCalled()
-  })
-
-  it('keeps the global mount-race fallback for an uncovered terminal helper', () => {
+  it('keeps the global mount-race fallback for a terminal helper', () => {
     flushAnimationFrames()
     const textarea = { focus: vi.fn() }
     vi.stubGlobal('document', {

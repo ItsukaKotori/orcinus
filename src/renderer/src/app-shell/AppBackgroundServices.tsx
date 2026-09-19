@@ -4,7 +4,6 @@ import RetainedAgentsSyncGate from '../components/dashboard/RetainedAgentsSyncGa
 import { WorkspacePortScanner } from '../components/ports/WorkspacePortScanner'
 import { MacosTccPromptNoticeHost } from '../hooks/MacosTccPromptNoticeHost'
 import { useAppStore } from '../store'
-import { StructuredAgentSessionStatusBridge } from '../components/native-chat/StructuredAgentSessionStatusBridge'
 
 /**
  * App-level gates that render nothing. Each lives here rather than inside the surface that
@@ -22,7 +21,6 @@ export function AppBackgroundServices(): React.JSX.Element {
       <RetainedAgentsSyncGate />
       <AiVaultTabTitleSyncGate />
       <AgentHibernationGate />
-      <StructuredAgentSessionStatusBridge />
     </>
   )
 }

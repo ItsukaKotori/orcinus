@@ -821,9 +821,7 @@
         "creation": {
           "flow": {
             "structured": {
-              "launch": {
-                "unknown": "Could not confirm whether Codex chat opened. Retry to check again."
-              }
+              "launch": {}
             }
           }
         }
@@ -956,11 +954,7 @@
           }
         }
       },
-      "activateAiVaultStructuredSession": {
-        "unavailable": "The structured agent session is not available yet. Retry in a moment.",
-        "gone": "This chat is no longer on this host, so it cannot be reopened here.",
-        "hostCannotOpen": "This chat can't be reopened until Orcinus is updated."
-      },
+      "activateAiVaultStructuredSession": {},
       "ephemeralVmWorktreeCreation": {
         "sparseCheckoutUnsupported": "Provisioned-root recipes do not support sparse checkout."
       },
@@ -6895,21 +6889,7 @@
             "title": "New card style",
             "toggleLabel": "Toggle new card style"
           },
-          "nativeChat": {
-            "title": "Chat UI",
-            "description": "Preview the desktop chat surface for supported agent terminal sessions.",
-            "copy": "Enables the experimental Chat UI for newly created supported local sessions. Existing terminal sessions keep the terminal chat path while we tune transcript fidelity, streaming, and parity.",
-            "toggleLabel": "Toggle Chat UI",
-            "defaultTitle": "Default view",
-            "defaultCopy": "Choose how new supported agent terminal tabs open.",
-            "defaultViewLabel": "Default Chat UI view",
-            "defaultViewTerminal": "Terminal chat",
-            "defaultViewNative": "Chat UI",
-            "structuredTitle": "Use updated structured native chat",
-            "structuredCopy": "Opt in to the host-owned structured chat runtime for Codex and Claude. Off keeps the existing terminal-backed chat path.",
-            "structuredScope": "Local sessions only for now. WSL and remote execution hosts (including SSH) continue to use terminal chat, and Windows falls back to it unless Orcinus can read process start times.",
-            "structuredToggleLabel": "Toggle updated structured native chat"
-          },
+          "nativeChat": {},
           "agentDashboard": {}
         },
         "FloatingWorkspacePane": {
@@ -9200,19 +9180,7 @@
             "fa72e71f05": "agents",
             "4d63251595": "Threaded left-sidebar feed for agent completions and blocking states.",
             "ccc5548ac5": "Agents View",
-            "nativeChat": {
-              "title": "Chat UI",
-              "description": "Preview the desktop chat surface for supported agent terminal sessions.",
-              "grok": "grok",
-              "native": "native",
-              "chat": "chat",
-              "claude": "claude",
-              "codex": "codex",
-              "openclaude": "openclaude",
-              "omp": "omp",
-              "terminal": "terminal",
-              "agent": "agent"
-            },
+            "nativeChat": {},
             "agentDashboard": {}
           }
         },
@@ -11486,9 +11454,7 @@
         "shortcutDefinitionCatalog": {
           "missionControlConflict": "Blocked by Mission Control. Remap here or change it in System Settings."
         },
-        "NativeChatSupportedAgents": {
-          "label": "Supported agents:"
-        },
+        "NativeChatSupportedAgents": {},
         "contrast": {
           "title": "Color Contrast",
           "description": "Improve text readability or preserve the colors chosen by terminal programs.",
@@ -12704,10 +12670,7 @@
             "localSessionSshWorkspaceUnsupported": "This session's history is stored on this machine, so it can't resume in an SSH workspace. Open a local workspace instead.",
             "prepareSessionResumeFailed": "Could not prepare this session for resume.",
             "sessionDeleted": "Session deleted",
-            "sessionDeleteFailed": "Couldn't delete the session",
-            "resumeInChatConflict": "Another chat is already holding this conversation.",
-            "resumeInChatTranscriptMissing": "This conversation's history could not be loaded, so it cannot be resumed in chat.",
-            "resumeInChatFailed": "Could not resume this session in a new chat."
+            "sessionDeleteFailed": "Couldn't delete the session"
           },
           "AiVaultPanelControls": {
             "scanningSessions": "Scanning sessions",
@@ -14643,18 +14606,8 @@
                 "removeWorktree": "remove worktree",
                 "trashWorktree": "trash worktree",
                 "addQuickCommand": "add quick command",
-                "newQuickCommand": "new quick command",
-                "splitChatRight": "split chat right",
-                "moveChatRight": "move chat right",
-                "chatPaneRight": "chat pane right",
-                "splitChatDown": "split chat down",
-                "moveChatDown": "move chat down",
-                "chatPaneBelow": "chat pane below"
-              },
-              "splitChatRight": "Split Chat Right",
-              "splitChatRightDescription": "Open the active chat in a split pane to the right.",
-              "splitChatDown": "Split Chat Down",
-              "splitChatDownDescription": "Open the active chat in a split pane below."
+                "newQuickCommand": "new quick command"
+              }
             }
           },
           "palette": {
@@ -15781,9 +15734,7 @@
         }
       },
       "nativeChat": {
-        "contextMenu": {
-          "copy": "Copy"
-        }
+        "contextMenu": {}
       },
       "orca": {
         "profiles": {
@@ -16034,11 +15985,7 @@
       },
       "native": {
         "chat": {
-          "NativeChatStructuredSession": {
-            "1f772bb5d0": "Message delivery is unconfirmed.",
-            "93ef441197": "Message was not sent.",
-            "a5e7f14068": "Retry"
-          }
+          "NativeChatStructuredSession": {}
         }
       },
       "ComposerParentWorktreePicker": {
@@ -16181,298 +16128,49 @@
       "empty": "No users found"
     },
     "native-chat": {
-      "taskList": {
-        "title": "Tasks",
-        "completed": "Completed",
-        "inProgress": "In progress",
-        "pending": "Pending",
-        "empty": "No tasks",
-        "progress": "{{completed}} of {{total}} tasks completed",
-        "added": "Added {{task}}",
-        "removed": "Removed {{task}}",
-        "started": "Started {{task}}",
-        "finished": "Completed {{task}}",
-        "reset": "Marked pending: {{task}}",
-        "updated": "Updated {{task}}",
-        "unchanged": "Tasks unchanged",
-        "showAll": "Full task list"
-      },
-      "turnDiff": {
-        "one": "1 changed file",
-        "many": "{{count}} changed files",
-        "partial": "Partial diff",
-        "recorded": "Totals from recorded edits in this turn."
-      },
-      "receipt": {
-        "unavailable": "Selected answer unavailable",
-        "cancelled": "Cancelled",
-        "resolved": "Resolved",
-        "resolver": "Answered on {{device}}",
-        "cancelledBy": "Cancelled on {{device}}"
-      },
-      "notices": {
-        "compaction": "Context compacted",
-        "details": "Details",
-        "plan": "Plan"
-      },
+      "taskList": {},
+      "turnDiff": {},
+      "receipt": {},
+      "notices": {},
       "composer": {
-        "imageUnsupported": "Image paste is not supported for this agent.",
-        "send": "Send",
-        "noPty": "No live terminal — toggle back to reconnect.",
-        "locked": "Input is held by another device.",
-        "placeholder": "Send a message…",
-        "mentionHint": "Referencing file:",
-        "attach": "Attach file",
-        "noSkills": "No matching skills",
-        "noCommandsOrSkills": "No matching commands or skills",
-        "noCommands": "No matching commands",
-        "commands": "Commands",
-        "skills": "Skills",
-        "loadingSkills": "Loading skills...",
-        "skillsLoaded": "Skills loaded",
-        "skillsUnavailableHost": "Skills are unavailable for this host",
-        "skillsLoadFailed": "Could not load skills from this host",
-        "retrySkills": "Retry",
-        "skillCommandCollision": "Also a skill name - agent decides",
-        "skillMultipleSources": "{{sourceCount}} sources - agent resolves",
-        "skillScopeProject": "Project",
-        "skillScopePersonal": "Personal",
-        "skillScopeBuiltIn": "Built-in",
-        "skillScopePlugin": "Plugin",
-        "localAttachmentUnsupported": "Local attachments are not available for remote sessions.",
-        "removeAttachment": "Remove attachment",
-        "pastedImageLabel": "Pasted image",
-        "imagePasteFailed": "Image paste failed.",
-        "imageSaving": "Saving pasted image…",
-        "worktreeNotReady": "Worktree not ready — try again in a moment.",
-        "uploadingAttachments": "Uploading {{value0}} file(s) to remote…",
-        "model": "Model",
-        "effort": "Effort",
-        "fastMode": "Fast mode",
-        "thinking": "Thinking",
-        "options": "Options",
-        "sessionOptions": "Session options",
-        "chooseInAgentPicker": "Choose in agent picker…",
-        "toggleOption": "Toggle {{value0}}",
-        "pillAccessibleName": "{{value0}} {{value1}}",
-        "valueUnknown": "Current value unknown — pick On or Off",
-        "sentNotConfirmed": "Sent to the agent — not confirmed",
-        "setWhenSessionStarts": "Set when the session starts.",
-        "availableAfterSessionStarts": "Available after the session starts.",
-        "optionUpdateFailed": "Could not update option",
-        "optionValue": {
-          "fast": "Fast",
-          "minimal": "Minimal",
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High",
-          "xhigh": "Extra high",
-          "max": "Max",
-          "ultra": "Ultra",
-          "on": "On",
-          "off": "Off"
-        },
-        "pendingAttachmentLimit": "Too many attachments are waiting. Finish composing before attaching more.",
-        "viewAttachment": "View image",
-        "imagePreview": "Full-size image preview",
-        "imagePreviewUnavailable": "Preview unavailable",
-        "workspaceAttachmentMismatch": "Files can only be attached to their source workspace.",
-        "attachmentOwnerChanged": "This workspace changed hosts while attaching — drop the files again.",
-        "attachmentUnreadable": "Couldn't read the dropped files."
+        "optionValue": {}
       },
       "tool": {
-        "exitCode": "exit {{value0}}",
-        "milliseconds": "{{value0}}ms",
         "running": "Running…",
-        "result": "Result",
-        "countOne": "1 tool call",
-        "countN": "{{value0}} tool calls",
-        "moreCalls": "+{{value0}} more",
-        "runningPreview": "Running {{preview}}",
-        "runningCommand": "Running command",
-        "runningNamedPreview": "Running {{toolName}} {{preview}}",
-        "runningNamed": "Running {{toolName}}",
         "ranCommandOneToolSummary": "Ran {{commandCount}} command and used {{toolCount}} tool",
         "ranCommandManyToolsSummary": "Ran {{commandCount}} command and used {{toolCount}} tools",
         "ranCommandsOneToolSummary": "Ran {{commandCount}} commands and used {{toolCount}} tool",
         "ranCommandsManyToolsSummary": "Ran {{commandCount}} commands and used {{toolCount}} tools",
         "usedOneSummary": "Used 1 tool",
-        "usedManySummary": "Used {{toolCount}} tools",
-        "editedFile": "Edited file",
-        "addedFile": "Added file",
-        "deletedFile": "Deleted file",
-        "renamedFile": "Renamed file",
-        "copyDiff": "Copy diff",
-        "diffGap": "Lines not shown",
-        "diffTruncated": "Diff truncated"
+        "usedManySummary": "Used {{toolCount}} tools"
       },
-      "providerFrame": {
-        "byteLength": "{{value0}} bytes"
-      },
-      "status": {
-        "responding": "Agent is responding",
-        "working": "Working…",
-        "thinking": "Thinking",
-        "workingFor": "Working for {{value0}}",
-        "workedFor": "Worked for {{value0}}",
-        "toggleDetails": "Toggle turn details"
-      },
-      "backgroundTasks": {
-        "monitoring": "Monitoring background tasks",
-        "stop": "Stop",
-        "stopTask": "Stop {{value0}}",
-        "stopAll": "Stop background tasks",
-        "agent": "Background agent",
-        "workflow": "Background workflow",
-        "command": "Background command",
-        "monitor": "Background monitor",
-        "task": "Background task",
-        "detailsUnavailable": "Task details are unavailable for this session.",
-        "countAgentsOne": "1 agent",
-        "countAgentsMany": "{{value0}} agents",
-        "countShellOne": "1 shell",
-        "countShellMany": "{{value0}} shells",
-        "countShellCommandOne": "1 shell command",
-        "countMonitorsOne": "1 monitor",
-        "countMonitorsMany": "{{value0}} monitors",
-        "countWorkflowsOne": "1 workflow",
-        "countWorkflowsMany": "{{value0}} workflows",
-        "countTasksOne": "1 task",
-        "countTasksMany": "{{value0}} tasks",
-        "headerTotal": "{{value0}} background tasks",
-        "stateWorking": "working",
-        "stateMonitoring": "monitoring",
-        "stateWaiting": "waiting",
-        "stateBlocked": "blocked",
-        "stateDone": "done",
-        "stateIdle": "stopped",
-        "stateUnverifiable": "unverifiable",
-        "reasonWaiting": "needs approval",
-        "reasonUnverifiable": "no contact",
-        "reasonBlocked": "failed",
-        "groupAgents": "Agents",
-        "groupShell": "Shell",
-        "groupMonitors": "Monitors",
-        "groupWorkflows": "Workflows",
-        "groupTasks": "Tasks"
-      },
-      "jumpToLatest": "Jump to latest",
-      "toggle": {
-        "showTerminal": "Show terminal",
-        "showChat": "Show chat view"
-      },
+      "providerFrame": {},
+      "status": {},
+      "backgroundTasks": {},
+      "toggle": {},
       "state": {
-        "loading": {
-          "title": "Loading conversation…",
-          "subtitle": "Reading the agent transcript."
-        },
-        "error": {
-          "title": "Could not load conversation",
-          "subtitle": "The transcript could not be read. Toggle back to the terminal to keep working."
-        },
-        "pairHost": "Pair a host to view agent chat history.",
-        "notAgent": {
-          "title": "No conversation here",
-          "subtitle": "This terminal is not running a recognized coding agent."
-        },
-        "empty": {
-          "title": "Start a chat with {{value0}}",
-          "subtitle": "Ask {{value0}} to inspect code, explain output, or make a change."
-        }
+        "loading": {},
+        "error": {},
+        "notAgent": {},
+        "empty": {}
       },
-      "stop": "Stop the agent",
-      "copyMessage": {
-        "copied": "Copied",
-        "copy": "Copy message"
-      },
-      "scrollMessageToTop": "Scroll this message to top",
-      "loadingEarlier": "Loading…",
-      "loadEarlier": "Load earlier messages",
+      "copyMessage": {},
       "question": {
-        "step": "Step {{value0}}",
-        "other": "Other…",
-        "otherPlaceholder": "Type your answer",
-        "cancel": "Cancel",
-        "send": "Submit",
-        "next": "Next",
-        "skip": "Skip",
-        "sending": "Sending…"
+        "other": "Other…"
       },
-      "approval": {
-        "title": "Allow {{value0}}?",
-        "allow": "Allow",
-        "deny": "Deny"
-      },
-      "launchPromptNotDelivered": "Not delivered — check the terminal",
-      "structuredSessionCloseFailed": "Could not close this chat session",
-      "structuredSessionLaunchFailed": "Could not open {{value0}} chat",
-      "structuredSessionLaunchPending": "Starting {{value0}} chat…",
-      "structuredSessionCloseFailedDescription": "The terminal stayed open so the provider remains recoverable.",
+      "approval": {},
       "handoff": {
-        "stage": {
-          "finishingChat": "Finishing chat session…",
-          "finishingTerminal": "Finishing agent terminal…",
-          "openingTerminal": "Opening agent terminal…",
-          "resumingChat": "Resuming chat session…",
-          "verifyingTerminal": "Verifying agent terminal…",
-          "verifyingChat": "Verifying chat session…",
-          "recovering": "Recovering agent session…",
-          "manualRecovery": "Agent session needs recovery"
-        },
-        "switchingOwner": "Switching session owner…",
-        "mode": {
-          "switching": "Switching",
-          "terminal": "Terminal",
-          "chat": "Chat"
-        },
-        "switchingAfterTurn": "Switching after this turn",
-        "returningAfterTurn": "Returning after this turn",
-        "cancel": "Cancel",
-        "switchAfterTurn": "Switch after this turn",
-        "stopTurnAndSwitch": "Stop turn and switch",
-        "openAgentTui": "Open agent TUI",
-        "returnAfterTurn": "Return after this turn",
-        "returnToChat": "Return to chat",
-        "agentOpenOnHost": "Agent is open in terminal on {{value0}}.",
-        "agentOpen": "Agent is open in terminal.",
-        "exitTerminal": "Exit the agent terminal to continue in chat.",
-        "retryProof": "Retry proof",
-        "retry": "Retry",
-        "details": "Details"
+        "stage": {},
+        "mode": {}
       },
-      "structuredSessionFellBackToTerminal": "Structured chat isn't available",
-      "structuredSessionFellBackToTerminalDescription": "Orcinus tried to open a {{value0}} terminal instead.",
-      "structuredSessionLaunchFailedDescription": "Orcinus could not open a structured {{value0}} chat. See the logs for details.",
       "subagents": {
-        "state": {
-          "completed": "completed",
-          "working": "working",
-          "idle": "idle",
-          "failed": "failed",
-          "stopped": "stopped",
-          "unverifiable": "unverifiable",
-          "workingCount": "{{value0}} working",
-          "idleCount": "{{value0}} idle",
-          "failedCount": "{{value0}} failed",
-          "stoppedCount": "{{value0}} stopped",
-          "unverifiableCount": "{{value0}} unverifiable"
-        },
-        "startedOne": "Kicked off 1 subagent",
-        "startedN": "Kicked off {{value0}} subagents",
-        "ranOne": "Ran 1 subagent",
-        "ranN": "Ran {{value0}} subagents",
-        "tokens": "{{value0}} tokens"
+        "state": {}
       },
-      "conversationCommand": {
-        "pendingWork": "Wait for pending work and messages to finish before using this command.",
-        "unconfirmed": "Conversation operation was not confirmed."
-      }
+      "conversationCommand": {}
     },
     "tab": {
       "bar": {
         "SortableTabContextMenu": {
-          "switchToTerminalView": "Switch to terminal view",
-          "switchToChatView": "Switch to chat view",
           "closeTabsToLeft": "Close Tabs To The Left"
         },
         "BrowserTab": {

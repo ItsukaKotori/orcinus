@@ -34,7 +34,6 @@ describe('web preload API composition', () => {
       'onboarding',
       'cache',
       'runtime',
-      'nativeChat',
       'runtimeEnvironments',
       'repos',
       'worktrees',

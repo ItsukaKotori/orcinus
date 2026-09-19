@@ -6603,17 +6603,7 @@
             "title": "Nouveau style de carte",
             "toggleLabel": "Activer le nouveau style de carte"
           },
-          "nativeChat": {
-            "title": "Chat UI",
-            "description": "Prévisualisez la surface de chat de bureau pour les sessions de terminal d'agents prises en charge.",
-            "copy": "Ajoute une vue Chat UI accessible depuis les volets de terminal d'agents pris en charge. Expérimental pendant que nous peaufinons la fidélité de la transcription, le streaming et la parité avec le terminal.",
-            "toggleLabel": "Activer Chat UI",
-            "defaultTitle": "Vue par défaut",
-            "defaultCopy": "Choisissez comment s'ouvrent les nouveaux onglets de terminal d'agents pris en charge.",
-            "defaultViewLabel": "Vue Chat UI par défaut",
-            "defaultViewTerminal": "Chat dans le terminal",
-            "defaultViewNative": "Chat UI"
-          },
+          "nativeChat": {},
           "agentDashboard": {}
         },
         "FloatingWorkspacePane": {
@@ -8831,11 +8821,7 @@
             "fa72e71f05": "agents",
             "4d63251595": "Flux groupé dans la barre latérale gauche pour les achèvements d'agents et les états bloquants.",
             "ccc5548ac5": "Vue Agents",
-            "nativeChat": {
-              "title": "Chat UI",
-              "description": "Prévisualisez la surface de chat de bureau pour les sessions de terminal d'agents prises en charge.",
-              "grok": "grok"
-            },
+            "nativeChat": {},
             "agentDashboard": {}
           }
         },
@@ -14907,9 +14893,7 @@
         }
       },
       "nativeChat": {
-        "contextMenu": {
-          "copy": "Copier"
-        }
+        "contextMenu": {}
       },
       "orca": {
         "profiles": {
@@ -15208,125 +15192,28 @@
   "components": {
     "native-chat": {
       "composer": {
-        "imageUnsupported": "Le collage d'image n'est pas pris en charge pour cet agent.",
-        "send": "Envoyer",
-        "noPty": "Aucun terminal actif — rebasculez pour vous reconnecter.",
-        "locked": "La saisie est détenue par un autre appareil.",
-        "placeholder": "Envoyer un message…",
-        "mentionHint": "Fichier référencé :",
-        "attach": "Joindre un fichier",
-        "noSkills": "Aucune skill correspondante",
-        "noCommandsOrSkills": "Aucune commande ou skill correspondante",
-        "noCommands": "Aucune commande correspondante",
-        "commands": "Commandes",
-        "skills": "Skills",
-        "loadingSkills": "Chargement des skills...",
-        "skillsLoaded": "Skills chargées",
-        "skillsUnavailableHost": "Les skills sont indisponibles pour cet hôte",
-        "skillsLoadFailed": "Impossible de charger les skills depuis cet hôte",
-        "retrySkills": "Réessayer",
-        "skillCommandCollision": "Aussi un nom de skill - l'agent décide",
-        "skillMultipleSources": "{{sourceCount}} sources - l'agent décide",
-        "skillScopeProject": "Projet",
-        "skillScopePersonal": "Personnel",
-        "skillScopeBuiltIn": "Intégrée",
-        "skillScopePlugin": "Plugin",
-        "localAttachmentUnsupported": "Les pièces jointes locales ne sont pas disponibles pour les sessions distantes.",
-        "removeAttachment": "Retirer la pièce jointe",
-        "pastedImageLabel": "Image collée",
-        "imagePasteFailed": "Échec du collage de l'image.",
-        "worktreeNotReady": "Worktree pas encore prêt — réessayez dans un instant.",
-        "uploadingAttachments": "Envoi de {{value0}} fichier(s) vers le distant…",
-        "model": "Modèle",
-        "effort": "Effort",
-        "fastMode": "Mode rapide",
-        "thinking": "Réflexion",
-        "options": "Options",
-        "sessionOptions": "Options de session",
-        "chooseInAgentPicker": "Choisir dans le sélecteur d'agents…",
-        "toggleOption": "Basculer {{value0}}",
-        "pillAccessibleName": "{{value0}} {{value1}}",
-        "valueUnknown": "Valeur actuelle inconnue — choisissez Activé ou Désactivé",
-        "sentNotConfirmed": "Envoyé à l'agent — non confirmé",
-        "setWhenSessionStarts": "Défini au démarrage de la session.",
-        "availableAfterSessionStarts": "Disponible après le démarrage de la session.",
-        "optionUpdateFailed": "Impossible de mettre à jour l'option",
-        "optionValue": {
-          "fast": "Rapide",
-          "minimal": "Minimal",
-          "low": "Basse",
-          "medium": "Moyenne",
-          "high": "Haute",
-          "xhigh": "Extra élevé",
-          "max": "Max",
-          "ultra": "Ultra",
-          "on": "Activé",
-          "off": "Désactivé"
-        }
+        "optionValue": {}
       },
       "tool": {
-        "running": "En cours…",
-        "result": "Résultat",
-        "countOne": "1 appel d'outil",
-        "countN": "{{value0}} appels d'outils"
+        "running": "En cours…"
       },
-      "status": {
-        "responding": "L'agent répond"
-      },
-      "jumpToLatest": "Aller au dernier message",
-      "toggle": {
-        "showTerminal": "Afficher le terminal",
-        "showChat": "Afficher la vue chat"
-      },
+      "status": {},
+      "toggle": {},
       "state": {
-        "loading": {
-          "title": "Chargement de la conversation…",
-          "subtitle": "Lecture de la transcription de l'agent."
-        },
-        "error": {
-          "title": "Impossible de charger la conversation",
-          "subtitle": "La transcription n'a pas pu être lue. Rebasculez sur le terminal pour continuer à travailler."
-        },
-        "pairHost": "Associez un hôte pour consulter l'historique de chat des agents.",
-        "notAgent": {
-          "title": "Aucune conversation ici",
-          "subtitle": "Ce terminal n'exécute aucun agent de code reconnu."
-        },
-        "empty": {
-          "title": "Démarrer un chat avec {{value0}}",
-          "subtitle": "Demandez à {{value0}} d'inspecter du code, d'expliquer une sortie ou de faire une modification."
-        }
+        "loading": {},
+        "error": {},
+        "notAgent": {},
+        "empty": {}
       },
-      "stop": "Arrêter l'agent",
-      "copyMessage": {
-        "copied": "Copied",
-        "copy": "Copier le message"
-      },
-      "scrollMessageToTop": "Revenir au début du message",
-      "loadingEarlier": "Chargement…",
-      "loadEarlier": "Charger les messages précédents",
+      "copyMessage": {},
       "question": {
-        "step": "Étape {{value0}}",
-        "other": "Autre…",
-        "otherPlaceholder": "Saisissez votre réponse",
-        "cancel": "Annuler",
-        "send": "Valider",
-        "next": "Suivant",
-        "skip": "Ignorer",
-        "sending": "Envoi…"
+        "other": "Autre…"
       },
-      "approval": {
-        "title": "Autoriser {{value0}} ?",
-        "allow": "Autoriser",
-        "deny": "Refuser"
-      },
-      "launchPromptNotDelivered": "Non livré — vérifiez le terminal"
+      "approval": {}
     },
     "tab": {
       "bar": {
         "SortableTabContextMenu": {
-          "switchToTerminalView": "Passer à la vue terminal",
-          "switchToChatView": "Passer à la vue chat",
           "closeTabsToLeft": "Fermer les onglets à gauche"
         },
         "BrowserTab": {

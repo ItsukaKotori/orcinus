@@ -46,7 +46,6 @@ import { resolveQuickCreateLinkedWorkItemPrompt } from '@/lib/linked-work-item-c
 import { buildQuickComposerStartup } from './quick-startup-plan'
 import { buildQuickCreationRequest } from './quick-creation-request'
 import type { PendingSmartGitHubSubmitResolution } from './source-selection-decisions'
-import { planAgentSessionLaunch } from '@/lib/agent-session-launch-plan'
 
 export function useQuickCreationExecution(input: QuickCreationExecutionInput) {
   const {
@@ -195,23 +194,6 @@ export function useQuickCreationExecution(input: QuickCreationExecutionInput) {
       }
 
       const promptDelivery = quickDraftPrompt ? 'draft' : 'auto-submit'
-      // Why: the verdict is persisted on the request as data and re-entered once the worktree exists.
-      const agentLaunchRoute = agent
-        ? planAgentSessionLaunch(useAppStore.getState(), {
-            agent,
-            workspace: {
-              kind: selectedRepoIsGit ? 'git-worktree' : 'folder',
-              repoId,
-              executionHostId: ephemeralVmRecipe
-                ? 'runtime:pending-ephemeral-vm'
-                : (workspaceRunContext?.hostId ?? selectedRepoExecutionHostId ?? undefined)
-            },
-            prompt: quickDraftPrompt ?? quickPrompt,
-            promptDelivery,
-            initialSessionOptions: startupPlan?.sessionOptions
-          }).route
-        : 'terminal-tui'
-      const structuredLaunch = agentLaunchRoute === 'structured-native-chat'
 
       const request = buildQuickCreationRequest({
         repoId,
@@ -237,7 +219,6 @@ export function useQuickCreationExecution(input: QuickCreationExecutionInput) {
         linkedPR: submitLinkedPR,
         pushTarget: submitPushTarget,
         agent,
-        agentLaunchRoute,
         linkedLinearIssue,
         linkedLinearIssueWorkspaceId,
         linkedLinearIssueOrganizationUrlKey,
@@ -247,7 +228,7 @@ export function useQuickCreationExecution(input: QuickCreationExecutionInput) {
         linkedGitLabMR,
         linkedGitLabIssue,
         includeGitLabLinks: smartGitHubResolution.kind === 'none',
-        startup: structuredLaunch ? undefined : backendStartup,
+        startup: backendStartup,
         issueCommand,
         pendingFirstAgentMessageRename,
         note: trimmedNote,

@@ -1,11 +1,7 @@
 import type { ExecutionHostId } from '../../../shared/execution-host'
+import type { GlobalSettings } from '../../../shared/global-settings-types'
 import type { OnboardingState } from '../../../shared/onboarding-state-types'
 import type { TuiAgent } from '../../../shared/tui-agent'
-import type { AgentLaunchRouteStore } from '@/lib/agent-launch-route-input'
-import {
-  planAgentSessionLaunch,
-  type AgentSessionLaunchPlan
-} from '@/lib/agent-session-launch-plan'
 import {
   buildDismissedOnboardingFolderAgentStartup,
   type OnboardingFolderAgentStartup
@@ -14,41 +10,23 @@ import { activateAndRevealWorktree } from '@/lib/worktree-activation'
 
 export type OnboardingFolderAgentLaunch = {
   agent: TuiAgent | null
-  /** Planned before the folder workspace row exists; null when no default agent applies. */
-  plan: AgentSessionLaunchPlan | null
   startup?: OnboardingFolderAgentStartup
-  fallbackStartup?: OnboardingFolderAgentStartup
 }
 
 /** Why: lives beside the launch, not the startup builder, because the store root imports that
  *  builder eagerly and the planner's launch graph reaches back to the store root. */
 export function resolveDismissedOnboardingFolderAgentLaunch(args: {
-  store: AgentLaunchRouteStore
+  store: { settings?: GlobalSettings | null }
   onboarding: OnboardingState | null
   hasExistingProject: boolean
-  executionHostId: string
-  nativeChatTranscriptIsLocalReadable?: boolean
+  executionHostId?: string
 }): OnboardingFolderAgentLaunch {
   const startup = buildDismissedOnboardingFolderAgentStartup(
     args.store.settings ?? null,
     args.onboarding,
-    args.hasExistingProject,
-    args.nativeChatTranscriptIsLocalReadable
+    args.hasExistingProject
   )
-  const agent = startup?.launchAgent ?? null
-  if (!startup || !agent) {
-    return { agent: null, plan: null }
-  }
-  const plan = planAgentSessionLaunch(args.store, {
-    agent,
-    workspace: { kind: 'folder', executionHostId: args.executionHostId },
-    initialSessionOptions: startup.sessionOptions
-  })
-  return {
-    agent,
-    plan,
-    ...(plan.route === 'structured-native-chat' ? { fallbackStartup: startup } : { startup })
-  }
+  return { agent: startup?.launchAgent ?? null, startup }
 }
 
 /** Reveal a folder just added after dismissed onboarding and start its default agent on the
@@ -59,30 +37,9 @@ export async function revealOnboardingFolderWithAgentLaunch(args: {
   executionHostId: ExecutionHostId | undefined
   launch: OnboardingFolderAgentLaunch
 }): Promise<void> {
-  const reveal = (
-    startup: OnboardingFolderAgentStartup | undefined,
-    providesInitialSurface = false
-  ) =>
-    activateAndRevealWorktree(args.worktreeId, {
-      sidebarRevealBehavior: 'auto',
-      ...(args.executionHostId ? { executionHostId: args.executionHostId } : {}),
-      ...(startup ? { startup } : {}),
-      ...(providesInitialSurface ? { providesInitialSurface: true } : {})
-    })
-  const { plan } = args.launch
-  const structured = plan?.route === 'structured-native-chat'
-  reveal(args.launch.startup, structured)
-  if (!structured) {
-    return
-  }
-  // Why: the outcome is not consumed; the workspace is already revealed and the launch layer toasts.
-  await plan.launch(
-    {
-      legacyFallback: async () => {
-        const activation = reveal(args.launch.fallbackStartup)
-        return { activation, primaryTabId: activation === false ? null : activation.primaryTabId }
-      }
-    },
-    { worktreeId: args.worktreeId }
-  )
+  activateAndRevealWorktree(args.worktreeId, {
+    sidebarRevealBehavior: 'auto',
+    ...(args.executionHostId ? { executionHostId: args.executionHostId } : {}),
+    ...(args.launch.startup ? { startup: args.launch.startup } : {})
+  })
 }

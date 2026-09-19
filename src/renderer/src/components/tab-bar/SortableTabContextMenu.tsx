@@ -1,11 +1,9 @@
 import {
-  MessageSquare,
   PanelLeftClose,
   PanelRightClose,
   Pin,
   PinOff,
   Pencil,
-  SquareTerminal,
   X,
   ListX
 } from 'lucide-react'
@@ -107,15 +105,6 @@ type SortableTabContextMenuProps = {
   onRenameOpen: () => void
   onSetTabColor: (tabId: string, color: string | null) => void
   onTogglePin: () => void
-  /** True when this tab is an agent terminal that can switch between the terminal
-   *  and native chat views; gates the "Switch view" menu item. Structured
-   *  sessions never qualify — they have no terminal underneath. */
-  canToggleViewMode?: boolean
-  /** True when the tab is currently showing the native chat view (drives the
-   *  item's label/icon between "chat" and "terminal"). */
-  isChatView?: boolean
-  /** Toggle the tab between terminal and native chat view. */
-  onToggleViewMode?: () => void
   canSplitTerminal?: boolean
 }
 
@@ -139,9 +128,6 @@ export function SortableTabContextMenu({
   onRenameOpen,
   onSetTabColor,
   onTogglePin,
-  canToggleViewMode = false,
-  isChatView = false,
-  onToggleViewMode,
   canSplitTerminal = true
 }: SortableTabContextMenuProps): React.JSX.Element {
   const keybindings = useAppStore((state) => state.keybindings)
@@ -172,27 +158,6 @@ export function SortableTabContextMenu({
           splitDownShortcut={splitDownShortcut}
           showTerminalSplit={canSplitTerminal}
         />
-        {canToggleViewMode && onToggleViewMode ? (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={onToggleViewMode}>
-              {isChatView ? (
-                <SquareTerminal className="size-3.5 shrink-0" />
-              ) : (
-                <MessageSquare className="size-3.5 shrink-0" />
-              )}
-              {isChatView
-                ? translate(
-                    'components.tab.bar.SortableTabContextMenu.switchToTerminalView',
-                    'Switch to terminal view'
-                  )
-                : translate(
-                    'components.tab.bar.SortableTabContextMenu.switchToChatView',
-                    'Switch to chat view'
-                  )}
-            </DropdownMenuItem>
-          </>
-        ) : null}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={onTogglePin}>
           {isPinned ? (

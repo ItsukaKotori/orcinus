@@ -35,7 +35,6 @@ import {
 } from '../../../shared/execution-host'
 import { mapWithConcurrency } from '../../../shared/map-with-concurrency'
 import type { OnboardingState } from '../../../shared/onboarding-state-types'
-import { restoreLocalStructuredSessionTabsOnce } from '../runtime/local-structured-session-tabs-sync'
 import { ensureLocalRuntimeCapabilities } from '../runtime/local-runtime-capabilities'
 
 async function listRuntimeSessionHostIdsForStartup(): Promise<ExecutionHostId[]> {
@@ -281,11 +280,6 @@ export function useAppStartupHydration(onOnboardingLoaded: (state: OnboardingSta
           await timeRendererStartupStep('recover-legacy-worker-terminals-post-reconnect', () =>
             window.api.app.recoverLegacyWorkerTerminalsForRendererStartup()
           )
-          if (useAppStore.getState().settings?.experimentalStructuredNativeChat === true) {
-            await timeRendererStartupStep('project-structured-session-tabs', () =>
-              restoreLocalStructuredSessionTabsOnce()
-            )
-          }
           if (cancelled) {
             return
           }

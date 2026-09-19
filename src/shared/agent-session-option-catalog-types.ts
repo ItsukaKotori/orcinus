@@ -1,12 +1,10 @@
 import type { AgentType } from './agent-status-types'
-import type {
-  SessionOptionDescriptor,
-  SessionOptionSelectChoice,
-  SessionOptionValue
-} from './native-chat-session-options'
+import type { SessionOptionSelectChoice, SessionOptionValue } from './agent-session-option-types'
 
 export type CatalogAgentInteractionDetection = 'claude-model-switch-confirmation'
 export type CatalogCommandDelivery = 'type'
+
+export type SessionOptionCategory = 'model' | 'thought_level' | 'model_config' | 'mode'
 
 export type CatalogMidSessionApply =
   | {
@@ -34,7 +32,7 @@ export type CatalogOption = {
   id: string
   label: string
   description?: string
-  category?: SessionOptionDescriptor['category']
+  category?: SessionOptionCategory
   kind:
     | {
         type: 'select'

@@ -71,7 +71,6 @@ export function canSkipRuntimeMobileSessionSyncKeyBuild(
     state.activeTabId === previousState.activeTabId &&
     state.terminalLayoutsByTabId === previousState.terminalLayoutsByTabId &&
     state.runtimePaneTitlesByTabId === previousState.runtimePaneTitlesByTabId &&
-    state.nativeChatLaunchDraftByTabId === previousState.nativeChatLaunchDraftByTabId &&
     state.folderWorkspaces === previousState.folderWorkspaces &&
     state.agentStatusEpoch === previousState.agentStatusEpoch &&
     state.agentStatusByPaneKey === previousState.agentStatusByPaneKey
@@ -101,7 +100,6 @@ export function getRuntimeMobileSessionSyncKey(
   return {
     terminalLayoutsByTabId: state.terminalLayoutsByTabId,
     runtimePaneTitlesByTabId: state.runtimePaneTitlesByTabId,
-    nativeChatLaunchDraftByTabId: state.nativeChatLaunchDraftByTabId,
     folderWorkspaces: state.folderWorkspaces,
     groupsByWorktree: state.groupsByWorktree,
     activeGroupIdByWorktree: state.activeGroupIdByWorktree,
@@ -156,7 +154,6 @@ export function runtimeMobileSessionSyncKeysEqual(
   return (
     a.terminalLayoutsByTabId === b.terminalLayoutsByTabId &&
     a.runtimePaneTitlesByTabId === b.runtimePaneTitlesByTabId &&
-    a.nativeChatLaunchDraftByTabId === b.nativeChatLaunchDraftByTabId &&
     a.folderWorkspaces === b.folderWorkspaces &&
     a.groupsByWorktree === b.groupsByWorktree &&
     a.activeGroupIdByWorktree === b.activeGroupIdByWorktree &&

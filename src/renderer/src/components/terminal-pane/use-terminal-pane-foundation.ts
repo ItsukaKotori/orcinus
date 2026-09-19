@@ -67,7 +67,6 @@ export function useTerminalPaneFoundation(
   // react-doctor-disable-next-line react-doctor/no-ref-current-in-render
   isVisibleRef.current = isRendererVisible
   const {
-    nativeChatTranscriptIsLocalReadable,
     sshReconnectEnvironmentId,
     sshReconnectError,
     sshReconnectStatus,
@@ -118,11 +117,6 @@ export function useTerminalPaneFoundation(
   const [quickCommandEditorOpen, setQuickCommandEditorOpen] = useState(false)
   const [quickCommandEditorHostId, setQuickCommandEditorHostId] =
     useState<ExecutionHostId>(LOCAL_EXECUTION_HOST_ID)
-  const [chatLeafId, setChatLeafId] = useState<string | null>(null)
-  const onAgentExitedRef = useRef<(leafId: string) => void>(() => {})
-  const [tabWideAgentHintLeafId, setTabWideAgentHintLeafId] = useState<string | null | undefined>(
-    undefined
-  )
   const [quickCommandDraft, setQuickCommandDraft] = useState(createTerminalQuickCommandDraft)
   const [agentSessionFork, setAgentSessionFork] = useState<PreparedAgentSessionFork | null>(null)
   const [agentSessionContinuation, setAgentSessionContinuation] =
@@ -179,7 +173,6 @@ export function useTerminalPaneFoundation(
     isRendererVisible,
     isVisibleRef,
     sshReconnectTargetId,
-    nativeChatTranscriptIsLocalReadable,
     sshReconnectEnvironmentId,
     sshReconnectError,
     sshReconnectStatus,
@@ -206,11 +199,6 @@ export function useTerminalPaneFoundation(
     setQuickCommandEditorOpen,
     quickCommandEditorHostId,
     setQuickCommandEditorHostId,
-    chatLeafId,
-    setChatLeafId,
-    onAgentExitedRef,
-    tabWideAgentHintLeafId,
-    setTabWideAgentHintLeafId,
     quickCommandDraft,
     setQuickCommandDraft,
     agentSessionFork,

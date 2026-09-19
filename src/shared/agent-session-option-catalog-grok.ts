@@ -7,7 +7,7 @@ import type {
 import { parseGrokModelList } from './grok-model-list-probe'
 
 // The offered slice of grok's canonical ladder, low to high. Its `none` tier is
-// omitted because `native-chat-session-option-labels.ts` leaves it untranslated;
+// omitted because the session-option labels leave it untranslated;
 // `minimal` and `max` because no grok model's menu has ever advertised them.
 const GROK_EFFORT_CHOICES = [
   { value: 'low', label: 'Low' },

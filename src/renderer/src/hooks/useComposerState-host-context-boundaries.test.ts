@@ -567,7 +567,6 @@ describe('useComposerState host-context boundaries', () => {
     expect(section).toContain(
       'const submitLinkedWorkItem = smartGitHubMetadata?.linkedWorkItem ?? linkedWorkItem'
     )
-    expect(section).toContain('resolveFolderWorkspaceLaunchDraft(submitLinkedWorkItem, note)')
     expect(section).toContain('linkedWorkItem: submitLinkedWorkItem')
   })
 
@@ -683,7 +682,7 @@ describe('useComposerState host-context boundaries', () => {
   it('passes its own startup to activation when submit planned an agent', () => {
     const activation = COMPOSER_SOURCE.fullCreation + COMPOSER_SOURCE.fullCreationStartup
 
-    expect(activation).toContain('...(!structuredLaunch && startup ? { startup } : {})')
+    expect(activation).toContain('...(startup ? { startup } : {})')
     expect(activation).toContain('backendStartupTerminalSpawned: true')
     expect(activation).toContain('command: args.startupPlan.launchCommand')
     expect(activation).toContain('launchAgent: args.agent')

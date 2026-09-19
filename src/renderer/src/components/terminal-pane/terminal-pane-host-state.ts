@@ -1,7 +1,6 @@
 import type { AppState } from '@/store/types'
 import { getConnectionIdFromState } from '@/lib/connection-context'
 import { getExplicitRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
-import { isNativeChatTranscriptLocalReadable } from '@/lib/native-chat-transcript-readability'
 import {
   selectRuntimeAwareSshError,
   selectRuntimeAwareSshStatus,
@@ -11,7 +10,6 @@ import {
 import { isRuntimeOwnedSshTargetId } from '../../../../shared/execution-host'
 
 export type TerminalPaneHostState = {
-  nativeChatTranscriptIsLocalReadable: boolean
   sshReconnectEnvironmentId: string | null
   /** The failure detail behind the status; the overlay shows only a canned sentence without it. */
   sshReconnectError: string | null
@@ -23,13 +21,10 @@ export type TerminalPaneHostState = {
 
 function computeTerminalPaneHostState(state: AppState, worktreeId: string): TerminalPaneHostState {
   const connectionId = getConnectionIdFromState(state, worktreeId)
-  const nativeChatTranscriptIsLocalReadableResult =
-    isNativeChatTranscriptLocalReadable(connectionId)
   const sshReconnectTargetId =
     connectionId && !isRuntimeOwnedSshTargetId(connectionId) ? connectionId : null
   if (!sshReconnectTargetId) {
     return {
-      nativeChatTranscriptIsLocalReadable: nativeChatTranscriptIsLocalReadableResult,
       sshReconnectEnvironmentId: null,
       sshReconnectError: null,
       sshReconnectStatus: null,
@@ -40,7 +35,6 @@ function computeTerminalPaneHostState(state: AppState, worktreeId: string): Term
   }
   const sshReconnectEnvironmentId = getExplicitRuntimeEnvironmentIdForWorktree(state, worktreeId)
   return {
-    nativeChatTranscriptIsLocalReadable: nativeChatTranscriptIsLocalReadableResult,
     sshReconnectEnvironmentId,
     sshReconnectError: selectRuntimeAwareSshError(
       state,
@@ -68,7 +62,6 @@ function computeTerminalPaneHostState(state: AppState, worktreeId: string): Term
 
 function isSameHostState(a: TerminalPaneHostState, b: TerminalPaneHostState): boolean {
   return (
-    a.nativeChatTranscriptIsLocalReadable === b.nativeChatTranscriptIsLocalReadable &&
     a.sshReconnectEnvironmentId === b.sshReconnectEnvironmentId &&
     a.sshReconnectError === b.sshReconnectError &&
     a.sshReconnectStatus === b.sshReconnectStatus &&

@@ -14,7 +14,6 @@ vi.mock('@/i18n/i18n', () => ({
 import { toast } from 'sonner'
 import { track } from '@/lib/telemetry'
 import {
-  buildDirectWorkItemAgentStartupPlan,
   buildDirectWorkItemStartupOpts,
   notifyDirectWorkItemAgentStartTimeout
 } from './launch-work-item-direct-agent'
@@ -69,53 +68,7 @@ describe('buildDirectWorkItemStartupOpts', () => {
   })
 })
 
-const settings = {
-  agentCmdOverrides: {},
-  agentDefaultArgs: {},
-  agentDefaultEnv: {},
-  experimentalNativeChat: true,
-  nativeChatSessionOptions: {
-    codex: {
-      model: 'gpt-5.2-codex',
-      valuesByModel: { 'gpt-5.2-codex': { effort: 'medium' } }
-    }
-  }
-}
-
 describe('buildDirectWorkItemAgentStartupPlan', () => {
-  it('omits native-chat preferences when the new workspace opens in terminal mode', () => {
-    const result = buildDirectWorkItemAgentStartupPlan({
-      agent: 'codex',
-      draftContent: 'Review issue 42',
-      promptDelivery: 'draft',
-      settings: { ...settings, openAgentTabsInChatByDefault: false },
-      launchPlatform: 'darwin',
-      nativeChatTranscriptIsLocalReadable: true
-    })
-
-    expect(result.startupPlan?.launchCommand).not.toContain("'-m'")
-    expect(result.startupPlan?.sessionOptions).toBeUndefined()
-  })
-
-  it('applies native-chat preferences when the new workspace opens in chat', () => {
-    const result = buildDirectWorkItemAgentStartupPlan({
-      agent: 'codex',
-      draftContent: 'Review issue 42',
-      promptDelivery: 'draft',
-      settings: { ...settings, openAgentTabsInChatByDefault: true },
-      launchPlatform: 'darwin',
-      nativeChatTranscriptIsLocalReadable: true
-    })
-
-    expect(result.startupPlan?.launchCommand).toContain("'-m' 'gpt-5.2-codex'")
-    expect(result.startupPlan?.sessionOptions).toEqual({
-      model: 'gpt-5.2-codex',
-      effort: 'medium'
-    })
-  })
-})
-
-describe('notifyDirectWorkItemAgentStartTimeout', () => {
   it('toasts the paste hint and records the startup timeout', () => {
     notifyDirectWorkItemAgentStartTimeout('codex', true)
 

@@ -8,7 +8,26 @@ import {
 } from './agent-session-option-catalog'
 import { GROK_SESSION_OPTION_CATALOG } from './agent-session-option-catalog-grok'
 import { resolveAgentSessionOptionLaunch } from './agent-session-option-launch'
-import { parseBuiltSessionOptionCommand } from './native-chat-session-option-commands'
+import type { SessionOptionValue } from './agent-session-option-types'
+
+function parseBuiltSessionOptionCommand(
+  build: (value: SessionOptionValue) => string,
+  command: string
+): string | null {
+  const marker = '__orca_session_option_value__'
+  const template = build(marker)
+  const markerIndex = template.indexOf(marker)
+  if (markerIndex === -1) {
+    return null
+  }
+  const prefix = template.slice(0, markerIndex)
+  const suffix = template.slice(markerIndex + marker.length)
+  if (!command.startsWith(prefix) || !command.endsWith(suffix)) {
+    return null
+  }
+  const value = command.slice(prefix.length, command.length - suffix.length).trim()
+  return value || null
+}
 
 function grokEffortOption(modelId = 'grok-4.6'): CatalogOption {
   const model = GROK_SESSION_OPTION_CATALOG.models.find((candidate) => candidate.id === modelId)!

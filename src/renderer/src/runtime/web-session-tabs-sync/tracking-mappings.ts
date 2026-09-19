@@ -3,7 +3,6 @@ import {
   hostSessionTabIdByLocalKey,
   hostSessionTabMappingKeysByEnvironmentAndWorktree
 } from './state'
-import { resolveWebAgentSessionHandoff } from '../web-agent-session-handoff'
 
 function hostSessionTabMappingKey(args: {
   environmentId: string
@@ -46,13 +45,5 @@ export function resolveHostSessionTabIdForWebSessionTab(
   _state: WebSessionTabsSyncState,
   args: { environmentId: string; worktreeId: string; tabId: string }
 ): string | null {
-  return (
-    hostSessionTabIdByLocalKey.get(hostSessionTabMappingKey(args)) ??
-    // Why: structured create returns canonical identity before its confirming snapshot; an immediate user close must already target that host tab.
-    resolveWebAgentSessionHandoff({
-      environmentId: args.environmentId,
-      worktreeId: args.worktreeId,
-      provisionalTabId: args.tabId
-    })
-  )
+  return hostSessionTabIdByLocalKey.get(hostSessionTabMappingKey(args)) ?? null
 }

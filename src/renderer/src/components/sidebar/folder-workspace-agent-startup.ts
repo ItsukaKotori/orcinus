@@ -9,7 +9,7 @@ import { isWindowsAbsolutePathLike } from '../../../../shared/cross-platform-pat
 import type { ProjectGroup } from '../../../../shared/project-group-types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import type { AgentStartupShell } from '../../../../shared/tui-agent-startup-shell'
-import type { SessionOptionValue } from '../../../../shared/native-chat-session-options'
+import type { SessionOptionValue } from '../../../../shared/agent-session-option-types'
 import { isWslUncPath } from '../../../../shared/wsl-paths'
 
 export function getFolderWorkspaceAgentLaunchPlatform(

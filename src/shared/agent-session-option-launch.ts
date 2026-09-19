@@ -1,6 +1,6 @@
 import type { AgentType } from './agent-status-types'
 import { findCatalogModel, getAgentSessionOptionCatalog } from './agent-session-option-catalog'
-import type { SessionOptionValue } from './native-chat-session-options'
+import type { SessionOptionValue } from './agent-session-option-types'
 
 export type ResolvedSessionOptionLaunch = {
   args: string[]

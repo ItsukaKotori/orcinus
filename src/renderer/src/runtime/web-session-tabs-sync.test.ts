@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+function structuredAgentSessionTabId(sessionId: string): string {
+  return `structured-agent-session-${sessionId}`
+}
 import type { RuntimeMobileSessionTabsResult } from '../../../shared/runtime-types'
 import { toWebTerminalSurfaceTabId } from '../../../shared/terminal-surface-id'
-import { structuredAgentSessionTabId } from '../../../shared/structured-agent-session-projection'
 import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../shared/constants'
 import {
   clearWebSessionCloseIntent,

@@ -8,7 +8,6 @@ export type RuntimeMobileSessionSyncKey = {
   // Reference changes signal layout/title updates without stringifying thousands of tabs.
   terminalLayoutsByTabId: AppState['terminalLayoutsByTabId']
   runtimePaneTitlesByTabId: AppState['runtimePaneTitlesByTabId']
-  nativeChatLaunchDraftByTabId: AppState['nativeChatLaunchDraftByTabId']
   folderWorkspaces: AppState['folderWorkspaces']
   groupsByWorktree: AppState['groupsByWorktree']
   activeGroupIdByWorktree: AppState['activeGroupIdByWorktree']
@@ -38,7 +37,8 @@ export type RegisteredTerminalTab = {
   getManager: () => PaneManager | null
   getContainer: () => HTMLDivElement | null
   getPtyIdForPane: (paneId: number) => string | null
-  getTabWideAgentHintLeafId: () => string | null
+  /** Optional tab-wide agent hint; no production producer remains after native chat removal. */
+  getTabWideAgentHintLeafId?: () => string | null
 }
 
 export type OpenFileByWorktreeAndId = Map<string, Map<string, AppState['openFiles'][number]>>
@@ -161,10 +161,6 @@ export type MobileSessionWorktreeInputs = {
   openFileIds: readonly string[]
   terminalLayoutByTabId: ReadonlyMap<string, AppState['terminalLayoutsByTabId'][string]>
   paneTitlesByTabId: ReadonlyMap<string, AppState['runtimePaneTitlesByTabId'][string]>
-  launchDraftByPaneKey: ReadonlyMap<
-    string,
-    NonNullable<AppState['nativeChatLaunchDraftByTabId']>[string]
-  >
   agentStatusByPaneKey: ReadonlyMap<string, AppState['agentStatusByPaneKey'][string]>
   editorDraftVersionByFileId: ReadonlyMap<string, string>
   pagesByBrowserWorkspaceId: ReadonlyMap<

@@ -149,10 +149,7 @@ describe('host-session-mirror settle census', () => {
       'runtime/web-session-tabs-sync/load-initial.ts': 1,
       'runtime/web-session-tabs-sync/visibility-resume-repair.ts': 1,
       // The eager post-create session.tabs.list refresh.
-      'runtime/web-runtime-session-snapshot.ts': 1,
-      // The local structured-session mirror owns two: the inventory/subscription
-      // frame, and the toggle-off teardown that retracts the tabs it published.
-      'runtime/local-structured-session-tabs-sync/snapshot-apply.ts': 2
+      'runtime/web-runtime-session-snapshot.ts': 1
     })
   })
 
@@ -205,11 +202,7 @@ describe('host-session-mirror settle census', () => {
       'runtime/web-session-tabs-sync/global-session-inventory-event.ts': { settleHydration: 1 },
       'runtime/web-session-tabs-sync/load-initial.ts': { settleHydration: 1 },
       'runtime/web-session-tabs-sync/visibility-resume-repair.ts': { settle: 1 },
-      'runtime/web-runtime-session-snapshot.ts': { settleMirror: 1 },
-      'runtime/local-structured-session-tabs-sync/snapshot-apply.ts': {
-        settleStructuredSessionClear: 1,
-        settleStructuredSessionMirror: 1
-      }
+      'runtime/web-runtime-session-snapshot.ts': { settleMirror: 1 }
     })
   })
 

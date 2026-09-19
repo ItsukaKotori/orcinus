@@ -9,9 +9,6 @@ const mockSetTabViewMode = vi.fn()
 const mockSetTabBarOrder = vi.fn()
 const mockSetAgentStatus = vi.fn()
 const mockPasteDraftWhenAgentReady = vi.fn()
-const mockSeedNativeChatLaunchPrompt = vi.fn()
-const mockSeedNativeChatLaunchDraft = vi.fn()
-const mockMarkNativeChatLaunchPromptFailed = vi.fn()
 const mockTrack = vi.fn()
 const mockToastMessage = vi.fn()
 const mockWaitForAgentReady = vi.fn()
@@ -85,9 +82,6 @@ const store = {
   setTabViewMode: mockSetTabViewMode,
   setTabBarOrder: mockSetTabBarOrder,
   setAgentStatus: mockSetAgentStatus,
-  seedNativeChatLaunchPrompt: mockSeedNativeChatLaunchPrompt,
-  seedNativeChatLaunchDraft: mockSeedNativeChatLaunchDraft,
-  markNativeChatLaunchPromptFailed: mockMarkNativeChatLaunchPromptFailed
 }
 
 vi.mock('@/store', () => ({
@@ -220,76 +214,6 @@ describe('launchAgentInNewTab', () => {
     )
   })
 
-  it('keeps prompted Codex launches on the ordinary terminal path', async () => {
-    store.settings = {
-      agentCmdOverrides: {},
-      agentDefaultArgs: {},
-      agentDefaultEnv: {},
-      activeRuntimeEnvironmentId: null,
-      experimentalNativeChat: true,
-      experimentalStructuredNativeChat: true,
-      openAgentTabsInChatByDefault: true
-    }
-    const { launchAgentInNewTab } = await import('./launch-agent-in-new-tab')
-
-    launchAgentInNewTab({
-      agent: 'codex',
-      worktreeId: 'wt-1',
-      prompt: 'large generated prompt',
-      promptDelivery: 'submit-after-ready'
-    })
-
-    expect(mockCreateTab).toHaveBeenCalledWith('wt-1', undefined, undefined, {
-      launchAgent: 'codex',
-      viewMode: 'chat'
-    })
-    expect(mockQueueTabStartupCommand).toHaveBeenCalledWith(
-      'tab-1',
-      expect.objectContaining({
-        command: expect.not.stringContaining('large generated prompt')
-      })
-    )
-    expect(mockSeedNativeChatLaunchPrompt).toHaveBeenCalledWith({
-      tabId: 'tab-1',
-      agent: 'codex',
-      text: 'large generated prompt',
-      createdAt: expect.any(Number)
-    })
-    expect(mockSetTabViewMode).not.toHaveBeenCalled()
-  })
-
-  it('opens local Grok submit-after-ready launches in native chat', async () => {
-    store.settings = {
-      agentCmdOverrides: {},
-      agentDefaultArgs: {},
-      agentDefaultEnv: {},
-      activeRuntimeEnvironmentId: null,
-      experimentalNativeChat: true,
-      experimentalStructuredNativeChat: true,
-      openAgentTabsInChatByDefault: true
-    }
-    const { launchAgentInNewTab } = await import('./launch-agent-in-new-tab')
-
-    launchAgentInNewTab({
-      agent: 'grok',
-      worktreeId: 'wt-1',
-      prompt: 'large generated prompt',
-      promptDelivery: 'submit-after-ready'
-    })
-
-    expect(mockCreateTab).toHaveBeenCalledWith('wt-1', undefined, undefined, {
-      launchAgent: 'grok',
-      quickCommandLabel: undefined,
-      viewMode: 'chat'
-    })
-    expect(mockSeedNativeChatLaunchPrompt).toHaveBeenCalledWith({
-      tabId: 'tab-1',
-      agent: 'grok',
-      text: 'large generated prompt',
-      createdAt: expect.any(Number)
-    })
-  })
-
   it('keeps Model-A SSH Grok launches in terminal mode', async () => {
     store.settings = {
       agentCmdOverrides: {},
@@ -309,63 +233,6 @@ describe('launchAgentInNewTab', () => {
       launchAgent: 'grok',
       quickCommandLabel: undefined
     })
-  })
-
-  it('mirrors an argv-prefill draft into chat and opens the tab there', async () => {
-    store.settings = {
-      agentCmdOverrides: {},
-      agentDefaultArgs: {},
-      agentDefaultEnv: {},
-      activeRuntimeEnvironmentId: null,
-      experimentalNativeChat: true,
-      experimentalStructuredNativeChat: true,
-      openAgentTabsInChatByDefault: true
-    }
-    const { launchAgentInNewTab } = await import('./launch-agent-in-new-tab')
-
-    const result = launchAgentInNewTab({
-      agent: 'claude',
-      worktreeId: 'wt-1',
-      prompt: 'https://github.com/o/r/issues/12',
-      promptDelivery: 'draft'
-    })
-
-    // Claude's --prefill launch seeds the draft without a paste callback.
-    expect(result?.pasteDraftAfterLaunch).toBe(false)
-    expect(mockSeedNativeChatLaunchDraft).toHaveBeenCalledWith(
-      expect.objectContaining({
-        tabId: 'tab-1',
-        agent: 'claude',
-        text: 'https://github.com/o/r/issues/12'
-      })
-    )
-    expect(mockCreateTab.mock.calls[0]?.[3]).toHaveProperty('viewMode', 'chat')
-  })
-
-  it('mirrors a multi-line draft into chat and opens the tab there', async () => {
-    store.settings = {
-      agentCmdOverrides: {},
-      agentDefaultArgs: {},
-      agentDefaultEnv: {},
-      activeRuntimeEnvironmentId: null,
-      experimentalNativeChat: true,
-      experimentalStructuredNativeChat: true,
-      openAgentTabsInChatByDefault: true
-    }
-    const { launchAgentInNewTab } = await import('./launch-agent-in-new-tab')
-
-    const prompt = 'Reproduce first\n\nhttps://github.com/o/r/issues/12'
-    launchAgentInNewTab({
-      agent: 'claude',
-      worktreeId: 'wt-1',
-      prompt,
-      promptDelivery: 'draft'
-    })
-
-    expect(mockSeedNativeChatLaunchDraft).toHaveBeenCalledWith(
-      expect.objectContaining({ tabId: 'tab-1', agent: 'claude', text: prompt })
-    )
-    expect(mockCreateTab.mock.calls[0]?.[3]).toHaveProperty('viewMode', 'chat')
   })
 
   it('passes quick command labels only to locally-created agent tabs', async () => {
@@ -414,114 +281,6 @@ describe('launchAgentInNewTab', () => {
     expect(launch.command).not.toContain("'-m'")
     expect(launch.command).not.toContain('model_reasoning_effort=')
     expect(launch.sessionOptions).toBeUndefined()
-  })
-
-  it('applies native-chat model preferences to Quick Commands opened in chat', async () => {
-    store.settings = {
-      agentCmdOverrides: {},
-      agentDefaultArgs: {},
-      agentDefaultEnv: {},
-      activeRuntimeEnvironmentId: null,
-      experimentalNativeChat: true,
-      experimentalStructuredNativeChat: true,
-      openAgentTabsInChatByDefault: true,
-      nativeChatSessionOptions: {
-        codex: {
-          model: 'gpt-5.2-codex',
-          valuesByModel: { 'gpt-5.2-codex': { effort: 'medium' } }
-        }
-      }
-    }
-    const { launchAgentInNewTab } = await import('./launch-agent-in-new-tab')
-
-    launchAgentInNewTab({
-      agent: 'codex',
-      worktreeId: 'wt-1',
-      prompt: 'Review this diff',
-      launchSource: 'quick_command',
-      quickCommandLabel: 'Review'
-    })
-
-    const launch = mockQueueTabStartupCommand.mock.calls[0]?.[1]
-    expect(launch.command).toContain("'-m' 'gpt-5.2-codex'")
-    expect(launch.command).toContain("'-c' 'model_reasoning_effort=medium'")
-    expect(launch.sessionOptions).toEqual({ model: 'gpt-5.2-codex', effort: 'medium' })
-    expect(mockCreateTab).toHaveBeenCalledWith(
-      'wt-1',
-      undefined,
-      undefined,
-      expect.objectContaining({ viewMode: 'chat' })
-    )
-    expect(mockSetTabViewMode).not.toHaveBeenCalled()
-  })
-
-  it('preserves paired-host draft delivery and supported launch preferences', async () => {
-    mockIsWebRuntimeSessionActive.mockReturnValue(true)
-    store.settings = {
-      agentCmdOverrides: {},
-      agentDefaultArgs: {},
-      agentDefaultEnv: {},
-      activeRuntimeEnvironmentId: 'web-runtime',
-      experimentalNativeChat: true,
-      experimentalStructuredNativeChat: true,
-      openAgentTabsInChatByDefault: true,
-      nativeChatSessionOptions: {
-        claude: {
-          model: 'opus',
-          valuesByModel: { opus: { effort: 'high', fastMode: true } }
-        }
-      }
-    }
-    const { launchAgentInNewTab } = await import('./launch-agent-in-new-tab')
-
-    const result = launchAgentInNewTab({
-      agent: 'claude',
-      worktreeId: 'wt-1',
-      prompt: 'review before sending',
-      promptDelivery: 'draft',
-      agentArgs: '--permission-mode plan'
-    })
-
-    expect(result).toEqual(expect.objectContaining({ tabId: null, pasteDraftAfterLaunch: false }))
-    expect(mockCreateWebRuntimeAgentSessionTerminalWithLaunchDraft).toHaveBeenCalledWith(
-      expect.objectContaining({
-        launchAgent: 'claude',
-        prompt: 'review before sending',
-        promptDelivery: 'draft',
-        agentArgs: '--permission-mode plan',
-        launchPreferences: { model: 'opus', effort: 'high' },
-        agent: 'claude',
-        launchDraft: 'review before sending'
-      })
-    )
-    expect(mockCreateWebRuntimeSessionTerminal).not.toHaveBeenCalled()
-    expect(mockCreateTab).not.toHaveBeenCalled()
-  })
-
-  it('propagates the default chat mode to paired web runtime launches', async () => {
-    mockIsWebRuntimeSessionActive.mockReturnValue(true)
-    store.settings = {
-      agentCmdOverrides: {},
-      agentDefaultArgs: {},
-      agentDefaultEnv: {},
-      activeRuntimeEnvironmentId: 'web-runtime',
-      experimentalNativeChat: true,
-      experimentalStructuredNativeChat: true,
-      openAgentTabsInChatByDefault: true
-    }
-    const { launchAgentInNewTab } = await import('./launch-agent-in-new-tab')
-
-    launchAgentInNewTab({ agent: 'codex', worktreeId: 'wt-1' })
-
-    expect(mockCreateWebRuntimeSessionTerminal).toHaveBeenCalledWith(
-      expect.objectContaining({
-        worktreeId: 'wt-1',
-        environmentId: 'web-runtime',
-        agentSessionKind: 'fresh',
-        agent: 'codex',
-        viewMode: 'chat'
-      })
-    )
   })
 
   it('propagates the resolved terminal mode to paired web runtime launches', async () => {

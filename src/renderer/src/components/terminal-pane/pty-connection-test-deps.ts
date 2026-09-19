@@ -22,7 +22,6 @@ export type PaneConnectionDeps = {
   isActiveRef: { current: boolean }
   isVisibleRef: { current: boolean }
   onPtyExitRef: MockRef
-  onAgentExitedRef: MockRef
   onPtyErrorRef: MockRef
   clearTabPtyId: Mock
   consumeSuppressedPtyExit: Mock<() => boolean>
@@ -65,7 +64,6 @@ export function buildPaneConnectionDeps(
     isActiveRef: { current: true },
     isVisibleRef: { current: true },
     onPtyExitRef: { current: vi.fn() },
-    onAgentExitedRef: { current: vi.fn() },
     onPtyErrorRef: { current: vi.fn() },
     clearTabPtyId: vi.fn(),
     consumeSuppressedPtyExit: vi.fn(() => false),

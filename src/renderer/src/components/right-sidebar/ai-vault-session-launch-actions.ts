@@ -14,17 +14,25 @@ import { agentLabel } from './ai-vault-session-filters'
 import type { AiVaultSessionResumeTargetState } from './ai-vault-session-resume'
 import { prepareAiVaultSessionContinuation } from './ai-vault-session-continuation'
 import type { AgentSessionContinuationRequest } from '@/lib/agent-session-continuation'
-import { activateAiVaultStructuredSession } from '@/lib/activate-ai-vault-structured-session'
-import { isAgentSessionHandleProvider } from '../../../../shared/agent-session-provider-handle'
-import {
-  activateAiVaultResumeWorkspace,
-  resumeAiVaultSessionInNewChat
-} from './ai-vault-session-resume-in-chat-launch'
 import {
   aiVaultResumeUnsupportedMessage,
   resolveAiVaultSessionLaunchTarget,
   resolveAiVaultTargetWorkspacePath
 } from './ai-vault-session-launch-target'
+import { parseWorkspaceKey } from '../../../../shared/workspace-scope'
+import {
+  activateAndRevealFolderWorkspace,
+  activateAndRevealWorktree
+} from '@/lib/worktree-activation'
+
+function activateAiVaultResumeWorkspace(workspaceId: string): void {
+  const workspaceScope = parseWorkspaceKey(workspaceId)
+  if (workspaceScope?.type === 'folder') {
+    activateAndRevealFolderWorkspace(workspaceScope.folderWorkspaceId)
+    return
+  }
+  activateAndRevealWorktree(workspaceId)
+}
 
 export function useAiVaultSessionLaunchActions({
   activeWorktree,
@@ -82,10 +90,6 @@ export function useAiVaultSessionLaunchActions({
 
   const handleResume = useCallback(
     (session: AiVaultSession, targetWorktreeId?: string): void => {
-      if (session.structuredSession) {
-        void activateAiVaultStructuredSession(session)
-        return
-      }
       const targetId = resolveAiVaultSessionLaunchTargetOrNotify({
         sessionFilePath: session.filePath,
         sessionExecutionHostId: session.executionHostId,
@@ -143,25 +147,9 @@ export function useAiVaultSessionLaunchActions({
     [activeWorktree?.id, activeWorktreeId, buildResumeStartup, targetState]
   )
 
-  const handleResumeInNewChat = useCallback(
-    (session: AiVaultSession, targetWorktreeId?: string): void => {
-      if (!isAgentSessionHandleProvider(session.agent)) {
-        return
-      }
-      const worktreeId = targetWorktreeId ?? activeWorktreeId ?? activeWorktree?.id ?? null
-      if (!worktreeId) {
-        toast.error(
-          translate(
-            'auto.components.right.sidebar.AiVaultPanel.openWorkspaceBeforeResuming',
-            'Open a workspace before resuming a session.'
-          )
-        )
-        return
-      }
-      void resumeAiVaultSessionInNewChat(session, session.agent, worktreeId)
-    },
-    [activeWorktree?.id, activeWorktreeId]
-  )
+  const handleResumeInNewChat = useCallback((): void => {
+    // Native chat removal retires resuming a vault session into a chat.
+  }, [])
 
   const handleContinueInNewSession = useCallback(
     (session: AiVaultSession, targetWorktreeId: string): void => {

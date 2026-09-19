@@ -12,7 +12,6 @@ import type {
 } from '../../../../shared/runtime-types'
 import { isTerminalLeafId } from '../../../../shared/stable-pane-id'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
-import { applyNativeChatLaunchDraftResolved } from '../native-chat-launch-draft-runtime-resolution'
 import { resolveTerminalLayoutRoot } from '../remote-terminal-layout-resolution'
 import { buildMobileSessionTabSnapshots } from './mobile-session-snapshots'
 import { isWebOnlyMirroredTerminalTab } from './mobile-session-surfaces'
@@ -190,14 +189,6 @@ export async function syncRuntimeGraph(): Promise<void> {
     commitMobileSessionPublication(mobileSessionTabs, result?.mobileSessionResyncWorktrees)
     const currentState = graphState.getStoreState()
     currentState?.setRuntimeAgentOrchestrationByPaneKey?.(result?.agentOrchestrationByPaneKey ?? {})
-    for (const resolution of result?.nativeChatLaunchDraftResolutions ?? []) {
-      if (currentState) {
-        applyNativeChatLaunchDraftResolved(currentState, {
-          type: 'nativeChatLaunchDraftResolved',
-          ...resolution
-        })
-      }
-    }
     if (result?.mobileSessionResyncWorktrees?.length) {
       scheduleTrailingGraphSync()
     }

@@ -46,102 +46,6 @@ function registerMobileTestSurface(args: {
 }
 
 describe('buildMobileSessionTabSnapshots', () => {
-  it('publishes the native-chat launch draft on terminal surface tabs', () => {
-    const leafId = '11111111-1111-4111-8111-111111111111'
-    const state = makeState({
-      tabsByWorktree: {
-        'wt-1': [{ id: 'term-1', title: 'Terminal 1', launchAgent: 'claude' }]
-      } as unknown as AppState['tabsByWorktree'],
-      terminalLayoutsByTabId: {
-        'term-1': {
-          root: { type: 'leaf', leafId },
-          activeLeafId: leafId,
-          expandedLeafId: null,
-          ptyIdsByLeafId: { [leafId]: 'pty-1' }
-        }
-      } as unknown as AppState['terminalLayoutsByTabId'],
-      nativeChatLaunchDraftByTabId: {
-        'term-1': {
-          tabId: 'term-1',
-          agent: 'claude',
-          text: 'https://github.com/o/r/issues/12',
-          createdAt: 1
-        }
-      }
-    })
-
-    const snapshot = buildMobileSessionTabSnapshots(state)[0]
-
-    expect(snapshot?.tabs).toEqual([
-      expect.objectContaining({
-        type: 'terminal',
-        parentTabId: 'term-1',
-        launchDraft: 'https://github.com/o/r/issues/12',
-        launchDraftCreatedAt: 1
-      })
-    ])
-  })
-
-  it('retracts a launch draft as soon as mobile resolves it', () => {
-    const leafId = '11111111-1111-4111-8111-111111111111'
-    const state = makeState({
-      tabsByWorktree: {
-        'wt-1': [{ id: 'term-1', title: 'Terminal 1', launchAgent: 'claude' }]
-      } as unknown as AppState['tabsByWorktree'],
-      terminalLayoutsByTabId: {
-        'term-1': {
-          root: { type: 'leaf', leafId },
-          activeLeafId: leafId,
-          expandedLeafId: null,
-          ptyIdsByLeafId: { [leafId]: 'pty-1' }
-        }
-      } as unknown as AppState['terminalLayoutsByTabId'],
-      nativeChatLaunchDraftByTabId: {
-        'term-1': {
-          tabId: 'term-1',
-          agent: 'claude',
-          text: 'issue link',
-          createdAt: 1,
-          resolved: true
-        }
-      }
-    })
-
-    expect(buildMobileSessionTabSnapshots(state)[0]?.tabs[0]).not.toHaveProperty('launchDraft')
-  })
-
-  it('withholds a launch draft seeded for a different agent than the tab runs', () => {
-    // The seed is keyed by tab id, which survives an agent switch. Desktop's
-    // consumer declines on mismatch; publishing anyway would prefill the new
-    // agent's mobile chat with the previous agent's link.
-    const leafId = '11111111-1111-4111-8111-111111111111'
-    const state = makeState({
-      tabsByWorktree: {
-        'wt-1': [{ id: 'term-1', title: 'Terminal 1', launchAgent: 'codex' }]
-      } as unknown as AppState['tabsByWorktree'],
-      terminalLayoutsByTabId: {
-        'term-1': {
-          root: { type: 'leaf', leafId },
-          activeLeafId: leafId,
-          expandedLeafId: null,
-          ptyIdsByLeafId: { [leafId]: 'pty-1' }
-        }
-      } as unknown as AppState['terminalLayoutsByTabId'],
-      nativeChatLaunchDraftByTabId: {
-        'term-1': {
-          tabId: 'term-1',
-          agent: 'claude',
-          text: 'https://github.com/o/r/issues/12',
-          createdAt: 1
-        }
-      }
-    })
-
-    const snapshot = buildMobileSessionTabSnapshots(state)[0]
-
-    expect(snapshot?.tabs[0]).not.toHaveProperty('launchDraft')
-  })
-
   it('keeps agent identity and launch context off a plain sibling leaf', () => {
     const agentLeafId = '11111111-1111-4111-8111-111111111111'
     const shellLeafId = '22222222-2222-4222-8222-222222222222'
@@ -191,14 +95,6 @@ describe('buildMobileSessionTabSnapshots', () => {
             terminalTitle: 'Codex working'
           })
         },
-        nativeChatLaunchDraftByTabId: {
-          'term-1': {
-            tabId: 'term-1',
-            agent: 'codex',
-            text: 'inspect this image',
-            createdAt: 1
-          }
-        }
       })
 
       const tabs = buildMobileSessionTabSnapshots(state)[0]?.tabs ?? []
@@ -212,66 +108,7 @@ describe('buildMobileSessionTabSnapshots', () => {
       expect(shellLeaf).toMatchObject({ title: 'zsh' })
       expect(shellLeaf).not.toHaveProperty('agentStatus')
       expect(shellLeaf).not.toHaveProperty('launchAgent')
-      expect(shellLeaf).not.toHaveProperty('launchDraft')
       expect(shellLeaf).not.toHaveProperty('quickCommandLabel')
-    } finally {
-      surface.unregister()
-    }
-  })
-
-  it('re-engages tab-wide launch context after the owning leaf becomes the sole leaf', () => {
-    const agentLeafId = '33333333-3333-4333-8333-333333333333'
-    const shellLeafId = '44444444-4444-4444-8444-444444444444'
-    const surface = registerMobileTestSurface({
-      tabId: 'term-collapse',
-      leafIds: [agentLeafId, shellLeafId],
-      activeLeafId: shellLeafId,
-      launchAgentLeafId: agentLeafId
-    })
-    try {
-      surface.setTopology([agentLeafId], agentLeafId)
-      const state = makeState({
-        tabsByWorktree: {
-          'wt-1': [
-            {
-              id: 'term-collapse',
-              title: 'Codex ready',
-              customTitle: null,
-              launchAgent: 'codex',
-              aiVaultTitle: {
-                agent: 'codex',
-                sessionId: 'session-collapse',
-                title: 'Inspect mobile routing'
-              }
-            }
-          ]
-        } as unknown as AppState['tabsByWorktree'],
-        terminalLayoutsByTabId: {
-          'term-collapse': {
-            root: { type: 'leaf', leafId: agentLeafId },
-            activeLeafId: agentLeafId,
-            expandedLeafId: null
-          }
-        } as AppState['terminalLayoutsByTabId'],
-        nativeChatLaunchDraftByTabId: {
-          'term-collapse': {
-            tabId: 'term-collapse',
-            agent: 'codex',
-            text: 'inspect mobile routing',
-            createdAt: 2
-          }
-        },
-        runtimePaneTitlesByTabId: { 'term-collapse': { 1: 'Codex live title' } }
-      })
-
-      expect(buildMobileSessionTabSnapshots(state)[0]?.tabs).toEqual([
-        expect.objectContaining({
-          leafId: agentLeafId,
-          title: 'Inspect mobile routing',
-          launchAgent: 'codex',
-          launchDraft: 'inspect mobile routing'
-        })
-      ])
     } finally {
       surface.unregister()
     }

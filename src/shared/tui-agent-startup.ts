@@ -13,7 +13,7 @@ import { buildSleepingAgentLaunchConfig } from './sleeping-agent-launch-config'
 import { planHermesStartupQuery } from './hermes-startup-query'
 import { inlineAgentDraftFitsPlatform } from './agent-draft-platform-limit'
 import type { TuiAgent } from './tui-agent'
-import type { SessionOptionValue } from './native-chat-session-options'
+import type { SessionOptionValue } from './agent-session-option-types'
 import { resolveAgentLaunchCommand } from './tui-agent-launch-command'
 
 export { buildAgentResumeStartupPlan } from './tui-agent-resume-startup'
@@ -29,7 +29,7 @@ export type AgentStartupPlan = {
   env?: Record<string, string>
   startupCommandDelivery?: StartupCommandDelivery
   /** Values actually emitted into this launch command, kept as base model ids
-   * so the native-chat surface can render only launch-backed state. */
+   * so the chat surface can render only launch-backed state. */
   sessionOptions?: Record<string, SessionOptionValue>
 }
 

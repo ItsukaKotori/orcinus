@@ -70,7 +70,6 @@ function resumeArgs(manager: FakeManager, shouldUseLightTabResume: boolean) {
   return {
     manager: manager as never as PaneManager,
     isActive: true,
-    isChatViewMode: false,
     wasVisible: false,
     shouldUseLightTabResume,
     captureViewportPositions: vi.fn(() => new Map()),
@@ -206,20 +205,6 @@ describe('resumeTerminalVisibility reveal repaint', () => {
   it.each([
     ['light', true],
     ['heavy', false]
-  ])('does not focus the covered terminal on a %s chat reveal', async (_path, lightResume) => {
-    const manager = createManager()
-    const args = resumeArgs(manager, lightResume)
-    args.isChatViewMode = true
-    const { focusActivePane } = vi.mocked(await import('./pane-helpers'))
-
-    resumeTerminalVisibility(args)
-
-    expect(focusActivePane).not.toHaveBeenCalled()
-  })
-
-  it.each([
-    ['light', true],
-    ['heavy', false]
   ])('keeps focusing an active terminal on a %s reveal', async (_path, lightResume) => {
     const manager = createManager()
     const { focusActivePane } = vi.mocked(await import('./pane-helpers'))
@@ -260,26 +245,11 @@ describe('resumeTerminalVisibility reveal repaint', () => {
     recoverVisibleTerminalWindowWake({
       manager: manager as never as PaneManager,
       isActive: true,
-      isChatViewMode: false,
       clearGlyphAtlases: false
     })
 
     expect(manager.fitAllRevealedPanes).toHaveBeenCalledTimes(1)
     expect(manager.fitAllPanes).not.toHaveBeenCalled()
-  })
-
-  it('does not focus the covered terminal during chat window-wake recovery', async () => {
-    const manager = createManager()
-    const { focusActivePane } = vi.mocked(await import('./pane-helpers'))
-
-    recoverVisibleTerminalWindowWake({
-      manager: manager as never as PaneManager,
-      isActive: true,
-      isChatViewMode: true,
-      clearGlyphAtlases: false
-    })
-
-    expect(focusActivePane).not.toHaveBeenCalled()
   })
 
   it('repairs WebGL canvas backing-store dpr on window wake', () => {
@@ -294,7 +264,6 @@ describe('resumeTerminalVisibility reveal repaint', () => {
     recoverVisibleTerminalWindowWake({
       manager: manager as never as PaneManager,
       isActive: true,
-      isChatViewMode: false,
       clearGlyphAtlases: false
     })
 
@@ -318,7 +287,6 @@ describe('resumeTerminalVisibility reveal repaint', () => {
     recoverVisibleTerminalWindowWake({
       manager: manager as never as PaneManager,
       isActive: true,
-      isChatViewMode: false,
       clearGlyphAtlases: false
     })
 
@@ -358,7 +326,6 @@ describe('resumeTerminalVisibility reveal repaint', () => {
     recoverVisibleTerminalWindowWake({
       manager: manager as never as PaneManager,
       isActive: true,
-      isChatViewMode: false,
       clearGlyphAtlases: false
     })
 
@@ -375,7 +342,6 @@ describe('resumeTerminalVisibility reveal repaint', () => {
     recoverVisibleTerminalWindowWake({
       manager: manager as never as PaneManager,
       isActive: true,
-      isChatViewMode: false,
       clearGlyphAtlases: false
     })
 
@@ -387,7 +353,6 @@ describe('resumeTerminalVisibility reveal repaint', () => {
     recoverVisibleTerminalWindowWake({
       manager: manager as never as PaneManager,
       isActive: false,
-      isChatViewMode: false,
       clearGlyphAtlases: true
     })
 
@@ -403,7 +368,6 @@ describe('resumeTerminalVisibility reveal repaint', () => {
     recoverVisibleTerminalWindowWake({
       manager: manager as never as PaneManager,
       isActive: false,
-      isChatViewMode: false,
       clearGlyphAtlases: true
     })
 
@@ -424,7 +388,6 @@ describe('resumeTerminalVisibility reveal repaint', () => {
     recoverVisibleTerminalWindowWake({
       manager: manager as never as PaneManager,
       isActive: false,
-      isChatViewMode: false,
       clearGlyphAtlases: false
     })
 

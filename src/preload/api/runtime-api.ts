@@ -62,14 +62,11 @@ export type RuntimeApi = {
     onTerminalDriverChanged: (
       callback: (event: { ptyId: string; driver: RuntimeTerminalDriverState }) => void
     ) => () => void
-    onNativeChatLaunchDraftResolved?: (
-      callback: (event: { tabId: string; text: string; createdAt: number }) => void
-    ) => () => void
     onBrowserDriverChanged: (
       callback: (event: { browserPageId: string; driver: RuntimeBrowserDriverState }) => void
     ) => () => void
-    // Why optional: matches onNativeChatLaunchDraftResolved — a renderer running against an older
-    // preload keeps working without the retention signal instead of throwing on every mount.
+    // Why optional: a renderer running against an older preload keeps working without the
+    // retention signal instead of throwing on every mount.
     onBrowserRemoteViewersChanged?: (
       callback: (event: { browserPageId: string; hasRemoteViewers: boolean }) => void
     ) => () => void

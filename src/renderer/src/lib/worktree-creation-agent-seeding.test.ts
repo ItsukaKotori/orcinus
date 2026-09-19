@@ -37,7 +37,6 @@ const request: WorktreeCreationRequest = {
   name: 'feature',
   setupDecision: 'inherit',
   agent: 'codex',
-  agentLaunchRoute: 'terminal-tui',
   pendingFirstAgentMessageRename: false,
   note: '',
   startupPlan: null,

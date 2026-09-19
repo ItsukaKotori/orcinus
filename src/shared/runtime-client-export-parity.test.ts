@@ -117,8 +117,6 @@ type RuntimeTypeInventory = [
   Runtime.RuntimeMobileSessionTerminalClientTab,
   Runtime.RuntimeMobileSessionTerminalTab,
   Runtime.RuntimeMobileTerminalTheme,
-  Runtime.RuntimeNativeChatFileContext,
-  Runtime.RuntimeNativeChatLaunchDraftResolution,
   Runtime.RuntimeRendererSyncWindowGraph,
   Runtime.RuntimeRepoList,
   Runtime.RuntimeRepoSearchRefs,

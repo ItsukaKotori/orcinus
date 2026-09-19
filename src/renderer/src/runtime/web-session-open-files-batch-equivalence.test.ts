@@ -7,7 +7,6 @@ import type { OpenFile } from '../store/slices/editor'
 import { resetWebSessionFocusIntentForTests } from './web-session-focus-intent'
 import { resetWebSessionCloseIntentForTests } from './web-session-close-intent'
 import { resetWebSessionReorderIntentForTests } from './web-session-reorder-intent'
-import { resetWebAgentSessionHandoffsForTests } from './web-agent-session-handoff'
 import {
   applyWebSessionTabsSnapshot,
   applyWebSessionTabsSnapshots,
@@ -37,8 +36,7 @@ function resetModuleState(): void {
   resetWebSessionFocusIntentForTests()
   resetWebSessionCloseIntentForTests()
   resetWebSessionReorderIntentForTests()
-  resetWebAgentSessionHandoffsForTests()
-}
+  }
 
 function baseState(overrides: Partial<WebSessionTabsSyncState>): WebSessionTabsSyncState {
   return {

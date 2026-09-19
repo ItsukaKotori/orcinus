@@ -17,7 +17,7 @@ export function readLocalRuntimeCapabilitiesOrUnknown(): readonly RuntimeCapabil
 
 /** Like `readLocalRuntimeCapabilitiesOrUnknown`, but probes the local runtime when no answer
  *  has landed yet, so a caller that can wait never reads "not asked yet" as "unsupported"
- *  (#19154: that reads a structured-native-chat create as a bare terminal).
+ *  (#19154: that reads a structured agent-session create as a bare terminal).
  *
  *  The renderer boot chain calls this once, ungated, so the answer is normally already cached
  *  by the time any launch route is resolved — including for the readers that are synchronous

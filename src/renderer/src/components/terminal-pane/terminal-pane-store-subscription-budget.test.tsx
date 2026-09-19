@@ -25,8 +25,12 @@ import {
  * Pinned budget for one mounted TerminalPane. Raising it costs one extra listener
  * visit per store publication for every retained tab in the app — read the doc
  * above before you do.
+ *
+ * Native chat removal deleted the chat-state stage and folded its surviving reads
+ * into store-bindings (pane titles, pane agent types, layout, terminal tab, tab
+ * label, restart notices, and six launch maps), leaving 15 listeners per pane.
  */
-const TERMINAL_PANE_LISTENER_BUDGET = 16
+const TERMINAL_PANE_LISTENER_BUDGET = 15
 /** What the same mount cost before the stable-action and unified-tab folds. */
 const PRE_FOLD_LISTENERS_PER_PANE = 49
 
@@ -104,8 +108,8 @@ describe('TerminalPane store subscription budget', () => {
 
     expect(perPane).toBe(TERMINAL_PANE_LISTENER_BUDGET)
     expect(perPane).toBeLessThan(PRE_FOLD_LISTENERS_PER_PANE)
-    // 28 stable actions, four duplicate unified-tab reads, one dead dispatch-status read.
-    expect(PRE_FOLD_LISTENERS_PER_PANE - perPane).toBe(TERMINAL_PANE_STORE_ACTION_KEYS.length + 5)
+    // 28 stable actions, plus six readings the chat-state fold moved onto the pane.
+    expect(PRE_FOLD_LISTENERS_PER_PANE - perPane).toBe(TERMINAL_PANE_STORE_ACTION_KEYS.length + 6)
 
     unmount()
     expect(listenerCount()).toBe(baseline)

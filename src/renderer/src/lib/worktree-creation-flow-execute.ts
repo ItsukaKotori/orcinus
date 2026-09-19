@@ -13,18 +13,11 @@ import {
   formatWorkspaceCreateError,
   getWorkspaceCreateErrorToastMessage
 } from '@/lib/workspace-create-error-format'
-import { isAgentSessionHandleProvider } from '../../../shared/agent-session-provider-handle'
 import type { CreateWorktreeResult } from '../../../shared/worktree/create-types'
 import type { WorktreeCreationRequest } from '@/lib/pending-worktree-creation'
 import { createBrowserUuid } from '@/lib/browser-uuid'
-import { resolveBackendDraftStartup } from '@/lib/worktree-draft-startup-view-mode'
 import { buildWorktreeCreationStartupOpt } from '@/lib/worktree-creation-flow-startup'
-import {
-  launchStructuredWorktreeSession,
-  type WorktreeCreationStructuredSessionResult
-} from '@/lib/worktree-creation-structured-session'
 import { completeWorktreeCreation } from '@/lib/worktree-creation-completion'
-import { markStructuredWorktreeLaunchUnconfirmed } from '@/lib/worktree-creation-structured-recovery'
 import { ensureWebRuntimeWorktreeTerminalAfterWake } from '@/lib/web-runtime-worktree-terminal-after-wake'
 
 // Why: activePendingCreationId can outlive the terminal route when the user
@@ -46,9 +39,7 @@ export async function executeWorktreeCreation(
   let result: CreateWorktreeResult
   try {
     const provisionedRoot = getProvisionedRootCreateOptions(preparedRequest)
-    const structuredLaunch = preparedRequest.agentLaunchRoute === 'structured-native-chat'
-    const backendStartup =
-      provisionedRoot || structuredLaunch ? undefined : resolveBackendDraftStartup(preparedRequest)
+    const backendStartup = provisionedRoot ? undefined : preparedRequest.startup
     result = await useAppStore
       .getState()
       .createWorktree(
@@ -89,10 +80,7 @@ export async function executeWorktreeCreation(
             ? { linkedTaskSourceContext: preparedRequest.linkedTaskSourceContext }
             : {}),
           // Why: the remote host must own task-draft startup so its initial terminal is the agent, not an idle fallback shell.
-          ...(!structuredLaunch &&
-          !backendStartup &&
-          preparedRequest.agent &&
-          preparedRequest.launchDraftPrompt
+          ...(!backendStartup && preparedRequest.agent && preparedRequest.launchDraftPrompt
             ? { startupDraft: preparedRequest.launchDraftPrompt }
             : {}),
           ...(provisionedRoot ? { provisionedRoot } : {}),
@@ -127,7 +115,6 @@ export async function executeWorktreeCreation(
   }
 
   const worktree = result.worktree
-  const structuredLaunch = preparedRequest.agentLaunchRoute === 'structured-native-chat'
   // Why: cancellation can race a successful backend adoption; clean up again after it settles so an adopted workspace cannot outlive its destroyed VM.
   if (!useAppStore.getState().pendingWorktreeCreations[creationId]) {
     if (preparedRequest.ephemeralVmRuntimeId) {
@@ -144,9 +131,9 @@ export async function executeWorktreeCreation(
     preparedRequest.startupPlan.launchToken = createBrowserUuid()
   }
   const fallbackStartupOpt = buildWorktreeCreationStartupOpt(preparedRequest, backendSpawned)
-  const startupOpt = structuredLaunch ? undefined : fallbackStartupOpt
+  const startupOpt = fallbackStartupOpt
 
-  if (worktree.path && !structuredLaunch) {
+  if (worktree.path) {
     const repoConnectionId =
       useAppStore.getState().repos.find((repo) => repo.id === worktree.repoId)?.connectionId ?? null
     await preflightAgentTrust({
@@ -172,7 +159,7 @@ export async function executeWorktreeCreation(
   // creation surface over the finished workspace instead of reaching completion.
   let activation: ActivateAndRevealResult | false = false
   let primaryTabId: string | null = null
-  if (shouldActivateOnCompletion && !structuredLaunch) {
+  if (shouldActivateOnCompletion) {
     try {
       activation = activateAndRevealWorktree(worktree.id, {
         sidebarRevealBehavior: 'auto',
@@ -237,7 +224,6 @@ export async function executeWorktreeCreation(
       }
     }
   } else {
-    // Keep chat creation on its pending surface until the session is ready.
     const hasExplicitTerminalWork = Boolean(
       startupOpt || result.setup || preparedRequest.issueCommand || result.defaultTabs
     )
@@ -260,7 +246,7 @@ export async function executeWorktreeCreation(
         console.error('worktree create: initial terminal seeding failed', worktree.id, error)
       }
     }
-    if (!structuredLaunch && !backendSpawned) {
+    if (!backendSpawned) {
       try {
         ensureWebRuntimeWorktreeTerminalAfterWake(worktree.id, {
           startup: startupOpt,
@@ -273,48 +259,11 @@ export async function executeWorktreeCreation(
     }
   }
 
-  let structuredLaunchAccepted = structuredLaunch
-  const { agentLaunchRoute } = preparedRequest
-  if (
-    agentLaunchRoute === 'structured-native-chat' &&
-    isAgentSessionHandleProvider(preparedRequest.agent)
-  ) {
-    let structuredSession: WorktreeCreationStructuredSessionResult | null = null
-    try {
-      structuredSession = await launchStructuredWorktreeSession({
-        creationId,
-        request: preparedRequest,
-        agentLaunchRoute,
-        worktreeId: worktree.id,
-        shouldActivateOnCompletion,
-        fallbackStartupOpt,
-        activation,
-        primaryTabId
-      })
-    } catch (error) {
-      // Why: plan.launch is guarded inside, but its sync prologue is not; treat
-      // an escaped throw like a failed launch (accepted) and still complete.
-      console.error('worktree create: structured session launch failed', worktree.id, error)
-    }
-    if (structuredSession) {
-      structuredLaunchAccepted = structuredSession.accepted
-      activation = structuredSession.activation
-      primaryTabId = structuredSession.primaryTabId
-      if (structuredSession.cancelled) {
-        return
-      }
-      if (structuredSession.visibilityUnknown) {
-        markStructuredWorktreeLaunchUnconfirmed(creationId, worktree.id)
-        return
-      }
-    }
-  }
-
   await completeWorktreeCreation({
     creationId,
     request: preparedRequest,
     worktreeId: worktree.id,
-    structuredLaunchAccepted,
+    structuredLaunchAccepted: false,
     activation,
     primaryTabId,
     startupTerminalTabId: result.startupTerminal?.tabId,

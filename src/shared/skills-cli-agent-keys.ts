@@ -14,7 +14,7 @@ import type { TuiAgent } from './tui-agent'
 export const SKILLS_CLI_AGENT_KEY_BY_TUI_AGENT = {
   claude: 'claude-code',
   'claude-agent-teams': 'claude-code',
-  // Why: Orca states OpenClaude reads Claude-owned roots (native-chat-agent-profiles).
+  // Why: Orca states OpenClaude reads Claude-owned roots (agent-profile catalog).
   openclaude: 'claude-code',
   codex: 'codex',
   autohand: 'autohand-code',

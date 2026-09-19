@@ -345,16 +345,6 @@ describe('renderer startup runtime routing', () => {
     expect(reconnectIndex).toBeGreaterThan(capabilityIndex)
   })
 
-  it('skips startup structured tab projection while the host setting is off', () => {
-    const source = readSource(STARTUP_HYDRATION_PATH)
-    const projectIndex = source.indexOf("timeRendererStartupStep('project-structured-session-tabs'")
-
-    expect(projectIndex).toBeGreaterThanOrEqual(0)
-    expect(source.slice(projectIndex - 180, projectIndex)).toContain(
-      'settings?.experimentalStructuredNativeChat === true'
-    )
-  })
-
   it('probes local runtime capabilities before any startup gate can hold the answer back', () => {
     const source = readSource(STARTUP_HYDRATION_PATH)
     const probeIndex = source.indexOf('void ensureLocalRuntimeCapabilities()')
@@ -373,7 +363,7 @@ describe('renderer startup runtime routing', () => {
     expect(source.slice(effectStart, probeIndex)).not.toContain('experimentalStructuredNativeChat')
   })
 
-  it('orders packaged restoration before adoption, projection, and default creation', () => {
+  it('orders packaged restoration before adoption and default creation', () => {
     // Why this file: the startup sequence moved out of App.tsx into the hydration hook;
     // the ordering it asserts is unchanged, only the module that now spells it out.
     const appSource = readFileSync(
@@ -389,9 +379,6 @@ describe('renderer startup runtime routing', () => {
       "timeRendererStartupStep('prepare-terminal-startup-restoration'"
     )
     const reconnectIndex = appSource.indexOf("timeRendererStartupStep('reconnect-terminals'")
-    const projectIndex = appSource.indexOf(
-      "timeRendererStartupStep('project-structured-session-tabs'"
-    )
     const readyIndex = appSource.indexOf('actions.setTerminalStartupRestorationReady(true)')
     const gateStart = terminalSource.indexOf('const startupActivationGateWorktreeIdsRef')
     const gateEnd = terminalSource.indexOf('const startupResumeWorktreeIdsRef', gateStart)
@@ -404,8 +391,7 @@ describe('renderer startup runtime routing', () => {
     expect(hydrateIndex).toBeGreaterThanOrEqual(0)
     expect(hydrateIndex).toBeLessThan(prepareIndex)
     expect(prepareIndex).toBeLessThan(reconnectIndex)
-    expect(reconnectIndex).toBeLessThan(projectIndex)
-    expect(projectIndex).toBeLessThan(readyIndex)
+    expect(reconnectIndex).toBeLessThan(readyIndex)
     expect(gateBlock).toContain('terminalStartupRestorationReady')
     expect(gateBlock).not.toContain('hydrationSucceeded')
     expect(gateIndex).toBeGreaterThanOrEqual(0)

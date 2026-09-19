@@ -5827,17 +5827,7 @@
             "title": "Nuevo estilo de tarjeta",
             "toggleLabel": "Alternar nuevo estilo de tarjeta"
           },
-          "nativeChat": {
-            "title": "Chat UI",
-            "description": "Previsualiza la interfaz de chat de escritorio para sesiones de terminal de agentes compatibles.",
-            "copy": "Añade una vista de Chat UI a la que puedes cambiar desde paneles de terminal de agentes compatibles. Es experimental mientras ajustamos la fidelidad de las transcripciones, la transmisión y la paridad con el terminal.",
-            "toggleLabel": "Alternar Chat UI",
-            "defaultTitle": "Vista predeterminada",
-            "defaultCopy": "Elige cómo se abren las nuevas pestañas de terminal de agentes compatibles.",
-            "defaultViewLabel": "Vista predeterminada de Chat UI",
-            "defaultViewTerminal": "Chat en terminal",
-            "defaultViewNative": "Chat UI"
-          },
+          "nativeChat": {},
           "agentDashboard": {}
         },
         "FloatingWorkspacePane": {
@@ -7984,11 +7974,7 @@
               "worktree": "worktree",
               "worktrees": "worktrees"
             },
-            "nativeChat": {
-              "title": "Chat UI",
-              "description": "Previsualiza la interfaz de chat de escritorio para sesiones de terminal de agentes compatibles.",
-              "grok": "grok"
-            },
+            "nativeChat": {},
             "agentDashboard": {}
           }
         },
@@ -13640,9 +13626,7 @@
         }
       },
       "nativeChat": {
-        "contextMenu": {
-          "copy": "Copiar"
-        }
+        "contextMenu": {}
       },
       "orca": {
         "profiles": {
@@ -13814,123 +13798,28 @@
   "components": {
     "native-chat": {
       "composer": {
-        "imageUnsupported": "Este agente no admite pegar imágenes.",
-        "send": "Enviar",
-        "noPty": "No hay terminal activa: vuelva a alternar para volver a conectarse.",
-        "locked": "La entrada está retenida por otro dispositivo.",
-        "placeholder": "Enviar un mensaje…",
-        "mentionHint": "Archivo de referencia:",
-        "attach": "Adjuntar archivo",
-        "noSkills": "Sin habilidades coincidentes",
-        "localAttachmentUnsupported": "Los archivos adjuntos locales no están disponibles para sesiones remotas.",
-        "removeAttachment": "Quitar archivo adjunto",
-        "pastedImageLabel": "Imagen pegada",
-        "imagePasteFailed": "Error al pegar imagen.",
-        "worktreeNotReady": "Worktree no está listo — intenta de nuevo en un momento.",
-        "uploadingAttachments": "Subiendo {{value0}} archivo(s) al remoto…",
-        "model": "Modelo",
-        "effort": "Esfuerzo",
-        "fastMode": "Modo rápido",
-        "thinking": "Razonamiento",
-        "options": "Opciones",
-        "sessionOptions": "Opciones de sesión",
-        "chooseInAgentPicker": "Elegir en el selector del agente…",
-        "toggleOption": "Alternar {{value0}}",
-        "pillAccessibleName": "{{value0}} {{value1}}",
-        "valueUnknown": "Valor actual desconocido — elige Activado o Desactivado",
-        "sentNotConfirmed": "Enviado al agente — sin confirmar",
-        "setWhenSessionStarts": "Configúralo al iniciar la sesión.",
-        "availableAfterSessionStarts": "Disponible después de iniciar la sesión.",
-        "optionUpdateFailed": "No se pudo actualizar la opción",
-        "optionValue": {
-          "fast": "Rápido",
-          "minimal": "Mínimo",
-          "low": "Bajo",
-          "medium": "Medio",
-          "high": "Alto",
-          "xhigh": "Muy alto",
-          "max": "Máximo",
-          "ultra": "Supremo",
-          "on": "Activado",
-          "off": "Desactivado"
-        },
-        "noCommandsOrSkills": "No hay comandos o habilidades coincidentes",
-        "commands": "Comandos",
-        "skills": "Habilidades",
-        "loadingSkills": "Cargando habilidades…",
-        "skillsUnavailableHost": "Las habilidades no están disponibles para este host",
-        "skillsLoadFailed": "No se pudieron cargar las habilidades de este host",
-        "retrySkills": "Reintentar",
-        "skillCommandCollision": "También es un nombre de habilidad - el agente decide",
-        "skillMultipleSources": "{{sourceCount}} fuentes - el agente resuelve",
-        "skillScopeProject": "Proyecto",
-        "skillScopePersonal": "Personal",
-        "skillScopeBuiltIn": "Integrado",
-        "skillScopePlugin": "Plugin",
-        "skillsLoaded": "Habilidades cargadas",
-        "noCommands": "No hay comandos coincidentes"
+        "optionValue": {}
       },
       "tool": {
-        "running": "Ejecutando…",
-        "result": "Resultado"
+        "running": "Ejecutando…"
       },
-      "status": {
-        "responding": "El agente está respondiendo"
-      },
-      "jumpToLatest": "Saltar a lo último",
-      "toggle": {
-        "showTerminal": "Mostrar terminal",
-        "showChat": "Mostrar vista de chat"
-      },
+      "status": {},
+      "toggle": {},
       "state": {
-        "loading": {
-          "title": "Cargando conversación…",
-          "subtitle": "Leyendo la transcripción del agente."
-        },
-        "error": {
-          "title": "No se pudo cargar la conversación",
-          "subtitle": "No se pudo leer la transcripción. Vuelva a la terminal para seguir trabajando."
-        },
-        "pairHost": "Empareje un host para ver el historial de chat del agente.",
-        "notAgent": {
-          "title": "No hay conversación aquí",
-          "subtitle": "Este terminal no está ejecutando un agente de código reconocido."
-        },
-        "empty": {
-          "title": "Iniciar un chat con {{value0}}",
-          "subtitle": "Pídale a {{value0}} que inspeccione el código, explique el resultado o realice un cambio."
-        }
+        "loading": {},
+        "error": {},
+        "notAgent": {},
+        "empty": {}
       },
-      "stop": "Detener el agente",
-      "copyMessage": {
-        "copied": "Copiado",
-        "copy": "Copiar mensaje"
-      },
-      "scrollMessageToTop": "Desplazar este mensaje hacia arriba",
-      "loadingEarlier": "Cargando…",
-      "loadEarlier": "Cargar mensajes anteriores",
+      "copyMessage": {},
       "question": {
-        "step": "Paso {{value0}}",
-        "other": "Otro…",
-        "otherPlaceholder": "Escribe tu respuesta",
-        "cancel": "Cancelar",
-        "send": "Enviar",
-        "next": "Siguiente",
-        "skip": "Omitir",
-        "sending": "Enviando…"
+        "other": "Otro…"
       },
-      "approval": {
-        "title": "¿Permitir {{value0}}?",
-        "allow": "Permitir",
-        "deny": "Denegar"
-      },
-      "launchPromptNotDelivered": "No entregado — revisa la terminal"
+      "approval": {}
     },
     "tab": {
       "bar": {
         "SortableTabContextMenu": {
-          "switchToTerminalView": "Cambiar a la vista de terminal",
-          "switchToChatView": "Cambiar a vista de chat",
           "closeTabsToLeft": "Cerrar pestañas a la izquierda"
         },
         "BrowserTab": {

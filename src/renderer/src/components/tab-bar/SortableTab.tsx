@@ -53,11 +53,8 @@ type SortableTabProps = {
   dropIndicator?: DropIndicator
   includeTopTabBorder?: boolean
   /** True when this agent terminal can switch between the terminal and native chat views; surfaces the "Switch view" context-menu item. */
-  canToggleViewMode?: boolean
   /** True when the tab is currently showing the native chat view. */
-  isChatView?: boolean
   /** Toggle the tab between terminal and native chat view. */
-  onToggleViewMode?: () => void
   canSplitTerminal?: boolean
 }
 
@@ -85,9 +82,6 @@ export default function SortableTab({
   dragData,
   dropIndicator,
   includeTopTabBorder = true,
-  canToggleViewMode = false,
-  isChatView = false,
-  onToggleViewMode,
   canSplitTerminal = true
 }: SortableTabProps): React.JSX.Element {
   // Why: agent-completion unread exists even with terminal-attention off; collapse both sources to one primitive so unrelated tabs don't re-render.
@@ -398,9 +392,6 @@ export default function SortableTab({
         onRenameOpen={handleRenameOpen}
         onSetTabColor={onSetTabColor}
         onTogglePin={onTogglePin}
-        canToggleViewMode={canToggleViewMode}
-        isChatView={isChatView}
-        onToggleViewMode={onToggleViewMode}
         canSplitTerminal={canSplitTerminal}
       />
     </>

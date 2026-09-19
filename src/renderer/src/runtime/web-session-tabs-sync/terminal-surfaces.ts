@@ -20,7 +20,10 @@ import type {
   MirroredAgentTab
 } from './state'
 import type { Tab } from '../../../../shared/tab-types'
-import { structuredAgentSessionTabId } from '../../../../shared/structured-agent-session-projection'
+
+function structuredAgentSessionTabId(sessionId: string): string {
+  return `structured-agent-session-${sessionId}`
+}
 
 export function isReadyTerminalTab(
   tab: RuntimeMobileSessionTabsResult['tabs'][number]
