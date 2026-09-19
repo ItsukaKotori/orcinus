@@ -11,7 +11,7 @@ describe('shouldShowWorktreeHistoryControls', () => {
 
   it('hides controls on full-page views outside the history stack', () => {
     expect(shouldShowWorktreeHistoryControls('settings')).toBe(false)
-    expect(shouldShowWorktreeHistoryControls('activity')).toBe(false)
+    expect(shouldShowWorktreeHistoryControls('plugin-center')).toBe(false)
     expect(shouldShowWorktreeHistoryControls('space')).toBe(false)
   })
 })

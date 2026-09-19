@@ -20,7 +20,7 @@ import type { AutomationsApi } from './api/automation-api'
 import type { BrowserApi } from './api/browser-api'
 import type { CliApi } from './api/cli-install-api'
 import type { CrashReportsApi, FeedbackApi } from './api/crash-report-api'
-import type { DashboardApi, TerminalPreviewApi } from './api/dashboard-api'
+import type { TerminalPreviewApi } from './api/terminal-preview-bridge'
 import type { DocPreviewApi } from './api/doc-preview-api'
 import type { EphemeralVmApi } from './api/ephemeral-vm-api'
 import type { ExportApi, FilesystemApi } from './api/filesystem-api'
@@ -104,7 +104,6 @@ export type PreloadApi = {
   preflight: PreflightApi
   notifications: NotificationsApi
   onboarding: OnboardingApi
-  dashboard: DashboardApi
   terminalPreview: TerminalPreviewApi
   macosTccPrompts: MacosTccPromptsApi
   developerPermissions: DeveloperPermissionsApi

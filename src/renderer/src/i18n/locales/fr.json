@@ -104,9 +104,7 @@
     "quit": "Quitter",
     "minimizeNotice": {
       "body": "Orcinus continue de tourner dans la zone de notification"
-    },
-    "activityWaiting": "Orcinus - activité en attente",
-    "activityWaitingSuffix": "activité en attente"
+    }
   },
   "worktreeJumpPalette": {
     "matchLabel": {
@@ -4970,26 +4968,7 @@
           "attachWhileSending": "Attendez la fin de l'envoi du commentaire en cours avant de joindre d'autres images.",
           "imagesNotDelivered": "Commentaire envoyé, mais la livraison des images n'a pas pu être confirmée."
         },
-        "SidebarFilter": {
-          "e3b3898218": "Ajouter un projet",
-          "92a23e6d07": "Réinitialiser les filtres",
-          "81ded53722": "SSH",
-          "b9e8802e73": "Aucun projet ne correspond",
-          "779b7ba05d": "Effacer",
-          "139877b384": "Tout sélectionner",
-          "5f7085a077": "Projets",
-          "e5cb32a898": "Masquer la branche par défaut",
-          "638a2d221d": "Masquer les espaces en veille",
-          "f506a1262a": "Filtrer les espaces de travail",
-          "75405270ed": "Modifier les filtres ({{value0}} actifs)",
-          "489d1c8c9f": "Rechercher des projets...",
-          "ee240a39eb": "Modifier les filtres",
-          "automationCreated": "Masquer ceux créés par l'automatisation",
-          "cliCreated": "Masquer ceux créés par le CLI",
-          "detachedHead": "Masquer les HEAD détachés",
-          "keepDefaultBranch": "Sauf la branche par défaut",
-          "keepDefaultBranchAria": "Garder la branche par défaut visible tout en masquant les espaces de travail en veille"
-        },
+        "SidebarFilter": {},
         "SidebarHeader": {
           "92154beb7e": "Nouvel espace de travail",
           "49f62c5665": "Tableau des espaces de travail",
@@ -5043,9 +5022,6 @@
           "c4f8e1b72a": "X"
         },
         "SidebarToolbar": {
-          "87d0064026": "Tableau des espaces de travail déplacé dans la barre inférieure",
-          "a30e34eb5c": "Fermer le tableau des espaces de travail",
-          "49f62c5665": "Tableau des espaces de travail",
           "19e32d0e5f": "Ouvrir le sélecteur de dossiers pour ajouter un projet",
           "abc62b6328": "Ajouter un projet"
         },
@@ -5132,35 +5108,11 @@
           "4677394048": "Connexion…",
           "75ad429b5d": "Se connecter"
         },
-        "WorkspaceKanbanCard": {
-          "cefae8983e": "Épinglés"
-        },
-        "WorkspaceKanbanDrawerHeader": {
-          "f369f5c5a3": "Fermer",
-          "e1a34450fc": "Organisez les espaces de travail par statut et ouvrez les cartes d'espace de travail.",
-          "81870af08f": "sélectionnés",
-          "c6a77ab0f4": "Tableau des espaces de travail"
-        },
-        "WorkspaceKanbanPinDropTarget": {
-          "c30151c5ee": "Déposez ici pour épingler sans changer de statut.",
-          "8fae2d0862": "Épinglés"
-        },
-        "WorkspaceKanbanSettingsMenu": {
-          "79eb990aa4": "Ajouter un statut",
-          "054cb50df7": "Supprimer {{value0}}",
-          "b45b350eb0": "Déplacer {{value0}} vers la gauche",
-          "8ce44af9a8": "Renommer {{value0}}",
-          "395e541d5d": "Statuts",
-          "34f03eb0de": "Paramètres du tableau",
-          "26cbc92150": "Paramètres du tableau des espaces de travail",
-          "87d24a0c2f": "Synchroniser le tableau et le statut des issues",
-          "4c2eaa78cc": "Déplacer un espace de travail lié met à jour le statut de son issue Linear quand un état de workflow correspondant existe."
-        },
-        "WorkspaceKanbanStatusLane": {
-          "8ad104642b": "Vide",
-          "3611d1ae7f": "Redimensionner les colonnes du tableau des espaces de travail",
-          "2df01a03ff": "Aucun résultat"
-        },
+        "WorkspaceKanbanCard": {},
+        "WorkspaceKanbanDrawerHeader": {},
+        "WorkspaceKanbanPinDropTarget": {},
+        "WorkspaceKanbanSettingsMenu": {},
+        "WorkspaceKanbanStatusLane": {},
         "WorkspaceStatusAppearancePopover": {
           "514be2f569": "Définir la couleur de {{value0}} sur {{value1}}",
           "8be427206b": "Icône",
@@ -5704,19 +5656,7 @@
           "b7e3a91c4f": "Faites glisser les en-têtes de projets pour les réordonner, ou passez à",
           "e8c1f4a2b9": "dans les options de l'espace de travail."
         },
-        "WorkspaceKanbanDrawer": {
-          "1975a4e480": "Échec de la synchronisation du statut des tâches",
-          "e02b0d92ff": "Synchronisation du statut des tâches ignorée",
-          "c1d2e3f4a5": "L'issue Linear {{value0}} n'a pas pu être lue.",
-          "d2e3f4a5b6": "Aucun état de workflow Linear ne correspond à {{value0}}.",
-          "e3f4a5b6c7": "Plusieurs états de workflow Linear correspondent à {{value0}}.",
-          "f4a5b6c7d8": "Impossible de mettre à jour l'issue Linear {{value0}}.",
-          "a5b6c7d8e9": "Impossible de synchroniser l'issue Linear {{value0}}.",
-          "b6c7d8e9f0": "La synchronisation du statut des tâches n'a pas pu aboutir.",
-          "c7d8e9f0a1": "{{value0}} mis à jour",
-          "d8e9f0a1b2": "{{value0}} ignoré",
-          "e9f0a1b2c3": "{{value0}} a échoué"
-        },
+        "WorkspaceKanbanDrawer": {},
         "WorktreeParentPickerPopover": {
           "failedSetParent": "Échec de la définition du worktree parent",
           "current": "Actuel",
@@ -5852,14 +5792,7 @@
           "attachImages": "Joindre",
           "removeImage": "Supprimer {{fileName}}"
         },
-        "WorkspaceKanbanSearchField": {
-          "bdb753c78d": "Aucun espace de travail correspondant",
-          "4d96c209d6": "{{value0}} espaces de travail sur {{value1}} correspondent",
-          "c0cd6bdf6c": "Rechercher des espaces de travail",
-          "3b7ea51793": "Effacer la recherche",
-          "7f1c2e94a5": "Texte de recherche trop long — le tableau n'est pas filtré",
-          "9a4d0f6b21": "Trop long"
-        },
+        "WorkspaceKanbanSearchField": {},
         "WorktreeIssueLinkField": {
           "25852bfc59": "Linear",
           "5b440069e6": "GitHub",
@@ -6681,17 +6614,7 @@
             "defaultViewTerminal": "Chat dans le terminal",
             "defaultViewNative": "Chat UI"
           },
-          "agentDashboard": {
-            "title": "Tableau de bord des agents",
-            "description": "Tableau Kanban pour surveiller les agents de tous les worktrees, dans la fenêtre ou en fenêtre indépendante.",
-            "copy": "Ajoute une entrée Tableau de bord des agents à la barre latérale gauche. Surveillez les agents qui ont besoin de vous, qui travaillent ou qui ont terminé, avec en option les agents inactifs.",
-            "toggleLabel": "Activer le tableau de bord des agents",
-            "modeLabel": "Mode d'affichage",
-            "modeCopy": "Affiche le tableau de bord dans la fenêtre, à côté de la barre latérale, ou dans une fenêtre indépendante.",
-            "modeAriaLabel": "Mode d'ouverture du tableau de bord des agents",
-            "modeInWindow": "Dans la fenêtre",
-            "modePopout": "Fenêtre indépendante"
-          }
+          "agentDashboard": {}
         },
         "FloatingWorkspacePane": {
           "aeaf76fda9": "Barre d'état",
@@ -8913,10 +8836,7 @@
               "description": "Prévisualisez la surface de chat de bureau pour les sessions de terminal d'agents prises en charge.",
               "grok": "grok"
             },
-            "agentDashboard": {
-              "title": "Tableau de bord des agents",
-              "description": "Tableau Kanban pour surveiller les agents de tous les worktrees, dans la fenêtre ou en fenêtre indépendante."
-            }
+            "agentDashboard": {}
           }
         },
         "floating": {
@@ -11641,8 +11561,7 @@
           "activity": {
             "bar": {
               "buttons": {
-                "1fd284e931": "Autres onglets de la barre latérale",
-                "f1132ea95d": "neutre"
+                "1fd284e931": "Autres onglets de la barre latérale"
               }
             }
           },
@@ -14028,9 +13947,7 @@
           "a41fb5376e": "Réduire les détails",
           "5ae84475cc": "Ignorer",
           "b06e13fcf7": "Rejeter l'agent",
-          "0272969e28": "Envoyer à cet agent",
-          "92a7017987": "envoi",
-          "019b74d93a": "éligible"
+          "0272969e28": "Envoyer à cet agent"
         },
         "DashboardAgentRowMessage": {
           "0a01046763": "interrompu",
@@ -14780,50 +14697,10 @@
         }
       },
       "activity": {
-        "ActivityPrototypePage": {
-          "cf780197a1": "Sélectionnez un agent pour voir son activité",
-          "e3db9892f6": "Aucune activité pour l'instant.",
-          "1b633f5c1e": "Connexion au terminal...",
-          "8de7c5beaa": "Terminal indisponible",
-          "866083500b": "Faire glisser pour redimensionner",
-          "443690186e": "Redimensionner la liste des fils d'activité",
-          "7cd632006b": "Aucune activité d'agent ne correspond à ces filtres.",
-          "a2b4437bfb": "Activité de {{value0}}",
-          "023ff75afe": "Tout marquer comme lu",
-          "f70e4bec47": "Mode compact",
-          "a472a14700": "Plus d'options",
-          "db8a1878b5": "Options de la liste des fils",
-          "d1a88df9a8": "Afficher uniquement les fils non lus",
-          "f6396e1f85": "Agent",
-          "b29191b3e0": "Worktree",
-          "8c3b621ddf": "Projet",
-          "4a3986b200": "Statut",
-          "770d458144": "Grouper l'activité des agents par",
-          "795cbf26e2": "Filtrer...",
-          "4616ea39fd": "Aller à l'espace de travail",
-          "threadListOptionsFiltered": "Options de la liste des fils, filtres actifs",
-          "showSearch": "Afficher la recherche",
-          "showUnreadOnly": "Afficher uniquement les fils non lus",
-          "showChildAgents": "Afficher les agents enfants",
-          "filtersSection": "Filtres",
-          "viewSection": "Affichage",
-          "59b131fbd9": "Marquer le fil comme non lu",
-          "beb2c19173": "Non lus",
-          "5651b216c6": "Projet inconnu",
-          "22b22034bc": "Terminal autonome indisponible dans Activité.",
-          "afdc2139a8": "Terminal de l'agent fermé. Ouvrez un nouveau terminal dans cet espace de travail pour continuer."
-        },
-        "ActivityScopeFilterControls": {
-          "resetScope": "Afficher tous les hôtes et projets"
-        },
-        "ActivityThreadRow": {
-          "clearNotification": "Effacer la notification"
-        },
-        "ActivityTitlebarControls": {
-          "f915168c8e": "non lu",
-          "d6a8de3934": "agents",
-          "dc708f3eff": "Fermer les agents"
-        }
+        "ActivityPrototypePage": {},
+        "ActivityScopeFilterControls": {},
+        "ActivityThreadRow": {},
+        "ActivityTitlebarControls": {}
       },
       "confirmation": {
         "dialog": {
@@ -15742,160 +15619,30 @@
     }
   },
   "dashboardPopout": {
-    "view": {
-      "label": "Vue tableau de bord",
-      "board": "Tableau de bord",
-      "map": "Carte des agents"
-    },
+    "view": {},
     "map": {
-      "host": {
-        "local": "Local",
-        "ssh": "SSH",
-        "wsl": "WSL",
-        "remote": "Distant"
-      },
-      "filters": {
-        "showStates": "États des agents",
-        "agentlessWorkspaces": "Espaces de travail sans agents",
-        "orchestrationLinks": "Liens d'orchestration",
-        "orchestrationLinksHidden": "Liens d'orchestration masqués",
-        "workspaceVisibility": "Contenu de la carte",
-        "title": "Contrôles de la carte",
-        "reset": "Réinitialiser",
-        "ofTotalAgents": "sur {{total}} agents affichés",
-        "quickViews": "Vues rapides",
-        "agents": "Agents",
-        "time": "Heure",
-        "lifespan": "Durée de vie de la session",
-        "sinceMessage": "Depuis le dernier message",
-        "timeInState": "Temps dans l'état actuel",
-        "timeMinimum": "{{label}} minimum",
-        "timeMaximum": "{{label}} maximum",
-        "timeAny": "tous",
-        "timeRangeCount": "{{count}} plages",
-        "resetRanges": "Réinitialiser les plages",
-        "summaryAll": "Tous",
-        "summaryCount": "{{shown}} sur {{total}}",
-        "summarySelected": "{{count}} sélectionnés",
-        "workspace": "Espace de travail",
-        "stateChip": "État : {{states}}"
-      },
-      "liveContainmentMap": "Carte d'imbrication en temps réel",
-      "empty": "Aucun agent ne correspond aux filtres actuels.",
-      "canvasLabel": "Carte imbriquée des projets, espaces de travail et agents",
-      "zoomOut": "Zoom arrière",
-      "zoomIn": "Zoom avant",
-      "fit": "Ajuster",
-      "openWorktree": "Ouvrir les détails du worktree {{worktree}}",
-      "openFolderWorkspace": "Ouvrir les détails de l'espace de travail de type dossier {{workspace}}",
-      "worktreeSummary": "{{total}} agents · {{active}} actifs · {{done}} terminés",
-      "worktreeSummary_one": "{{total}} agent · {{active}} actif · {{done}} terminé",
-      "worktreeSummary_other": "{{total}} agents · {{active}} actifs · {{done}} terminés",
-      "runningAgents": "Agents",
-      "spawnAgent": "Démarrer un nouvel agent",
-      "noLaunchableAgents": "Aucun agent activé détecté.",
-      "sleepWorkspace": "Veille",
-      "projectCount": "{{agents}} agents · {{workspaces}} workspaces",
-      "agentCount": "{{count}} agents",
-      "agentCount_one": "{{count}} agent",
-      "agentCount_other": "{{count}} agents",
-      "noWorkspaceAgents": "Aucun agent dans cet espace de travail.",
-      "status": {
-        "doneSeen": "Terminé, vu"
-      },
-      "quickView": {
-        "everything": "Tout",
-        "attention": "Me concerne",
-        "stuck": "Bloqué",
-        "unread": "Non lus",
-        "recent": "30 dernières minutes",
-        "longRunning": "Exécutions longues",
-        "stale": "Inactif > 3 j",
-        "orchestration": "Orchestration"
-      }
+      "host": {},
+      "filters": {},
+      "status": {},
+      "quickView": {}
     },
-    "placeholder": {
-      "title": "Tableau de bord des agents",
-      "description": "C'est ici que tous vos agents s'afficheront d'un coup d'œil. Le tableau arrive bientôt."
-    },
-    "recoverableError": {
-      "title": "Le tableau de bord Orcinus a rencontré une erreur.",
-      "description": "Le tableau de bord n'a pas pu terminer son rendu. Réessayez pour le recharger, ou rouvrez-le."
-    },
-    "bucket": {
-      "attention": "Vous concerne",
-      "working": "En activité",
-      "idle": "Inactif",
-      "empty": "Aucun",
-      "done": "Terminé"
-    },
-    "title": "Agents",
-    "total": "{{count}} au total",
-    "close": "Fermer le tableau de bord",
-    "settings": {
-      "showIdle": "Afficher les agents inactifs",
-      "showIdleCopy": "Inclure les agents restés silencieux pendant 30 minutes sans signaler leur achèvement. Masqués par défaut."
-    },
-    "settingsTooltip": "Paramètres du tableau",
+    "placeholder": {},
+    "recoverableError": {},
+    "bucket": {},
+    "settings": {},
     "card": {
-      "you": "Vous",
-      "time": {
-        "justNow": "à l'instant",
-        "minutes": "{{count}} m",
-        "hours": "{{count}} h",
-        "days": "{{count}} j"
-      },
-      "review": {
-        "open": "Ouvrir la review",
-        "draft": "Revue de brouillon",
-        "merged": "Review fusionnée",
-        "closed": "Review fermée"
-      },
-      "subagents_one": "{{count}} sous-agent",
-      "subagents_other": "{{count}} sous-agents"
+      "time": {},
+      "review": {}
     },
-    "terminal": {
-      "closed": "Pas de terminal en direct — le volet de cet agent est fermé.",
-      "focusWorktree": "Ouvrir le worktree",
-      "close": "Fermer"
-    },
+    "terminal": {},
     "filters": {
-      "remove": "Retirer le filtre {{label}}",
-      "active": "Filtres",
-      "clear": "Effacer",
-      "review": {
-        "open": "Ouvert",
-        "draft": "Brouillon",
-        "merged": "Fusionnés",
-        "closed": "Fermé",
-        "none": "Pas de review"
-      },
-      "reviewChip": "Review : {{state}}",
-      "label": "Filtre",
-      "project": "Projet",
-      "workspaceStatus": "Statut de l'espace de travail",
-      "reviewStatus": "Statut PR / MR",
-      "clearAll": "Effacer tous les filtres",
-      "removeChip": "Retirer {{filter}}"
+      "review": {}
     },
-    "search": {
-      "placeholder": "Rechercher un worktree, un projet ou un agent…",
-      "label": "Rechercher des agents",
-      "clear": "Effacer la recherche",
-      "results": "{{shown}} sur {{total}} affichés"
-    },
-    "settingsLabel": "Paramètres du tableau de bord des agents",
-    "host": {
-      "sshNamed": "Hôte SSH · {{host}}",
-      "ssh": "Hôte SSH",
-      "remoteNamed": "Hôte Orcinus distant · {{host}}",
-      "remote": "Hôte Orcinus distant"
-    }
+    "search": {},
+    "host": {}
   },
   "dashboard": {
-    "sidebar": {
-      "label": "Tableau de bord des agents"
-    }
+    "sidebar": {}
   },
   "runtimeRpc": {
     "startupFailure": {

@@ -77,9 +77,7 @@
     "quit": "退出",
     "minimizeNotice": {
       "body": "Orcinus 仍在系统托盘中运行"
-    },
-    "activityWaiting": "Orcinus - 活动等待中",
-    "activityWaitingSuffix": "等待活动"
+    }
   },
   "worktreeJumpPalette": {
     "matchLabel": {
@@ -4366,26 +4364,7 @@
           "attachWhileSending": "请等待当前反馈发送完成，再附加更多图片。",
           "imagesNotDelivered": "反馈已发送，但无法确认图片已送达。"
         },
-        "SidebarFilter": {
-          "e3b3898218": "添加项目",
-          "92a23e6d07": "重置筛选条件",
-          "81ded53722": "SSH",
-          "b9e8802e73": "没有匹配的项目",
-          "779b7ba05d": "清除",
-          "139877b384": "选择全部",
-          "5f7085a077": "项目",
-          "e5cb32a898": "隐藏默认分支",
-          "638a2d221d": "隐藏休眠项",
-          "f506a1262a": "搜索工作区",
-          "75405270ed": "编辑筛选条件（{{value0}} 个已启用）",
-          "489d1c8c9f": "搜索项目...",
-          "ee240a39eb": "编辑筛选条件",
-          "automationCreated": "隐藏自动化创建的工作区",
-          "cliCreated": "Hide CLI-created",
-          "detachedHead": "隐藏分离 HEAD",
-          "keepDefaultBranch": "默认分支除外",
-          "keepDefaultBranchAria": "隐藏休眠工作区时仍显示默认分支"
-        },
+        "SidebarFilter": {},
         "SidebarHeader": {
           "projects": "项目",
           "92154beb7e": "新工作区",
@@ -4441,10 +4420,7 @@
         },
         "SidebarToolbar": {
           "19e32d0e5f": "打开文件夹选择器以添加项目",
-          "abc62b6328": "添加项目",
-          "87d0064026": "工作区板已移到底部栏",
-          "a30e34eb5c": "关闭工作区板",
-          "49f62c5665": "工作区板"
+          "abc62b6328": "添加项目"
         },
         "SidebarWorkspaceFilterSection": {
           "c3fa13dc2e": "隐藏默认分支",
@@ -4519,35 +4495,11 @@
           "4677394048": "正在连接…",
           "75ad429b5d": "连接"
         },
-        "WorkspaceKanbanCard": {
-          "cefae8983e": "已固定"
-        },
-        "WorkspaceKanbanDrawerHeader": {
-          "f369f5c5a3": "关闭",
-          "e1a34450fc": "按状态组织工作区并打开工作区卡。",
-          "81870af08f": "已选择",
-          "c6a77ab0f4": "工作区板"
-        },
-        "WorkspaceKanbanPinDropTarget": {
-          "c30151c5ee": "拖放到此处即可固定，无需更改状态。",
-          "8fae2d0862": "已固定"
-        },
-        "WorkspaceKanbanSettingsMenu": {
-          "79eb990aa4": "添加状态",
-          "054cb50df7": "删除 {{value0}}",
-          "b45b350eb0": "向左手机 {{value0}}",
-          "8ce44af9a8": "重命名 {{value0}}",
-          "395e541d5d": "状态",
-          "34f03eb0de": "董事会设置",
-          "26cbc92150": "工作区板设置",
-          "87d24a0c2f": "同步看板和议题状态",
-          "4c2eaa78cc": "移动已关联的工作区时，如果存在匹配的工作流状态，将更新其 Linear 议题状态。"
-        },
-        "WorkspaceKanbanStatusLane": {
-          "8ad104642b": "空的",
-          "3611d1ae7f": "调整工作区板列的大小",
-          "2df01a03ff": "没有匹配项"
-        },
+        "WorkspaceKanbanCard": {},
+        "WorkspaceKanbanDrawerHeader": {},
+        "WorkspaceKanbanPinDropTarget": {},
+        "WorkspaceKanbanSettingsMenu": {},
+        "WorkspaceKanbanStatusLane": {},
         "WorkspaceStatusAppearancePopover": {
           "514be2f569": "将 {{value0}} 颜色设置为 {{value1}}",
           "8be427206b": "图标",
@@ -5150,19 +5102,7 @@
           "3c4d5e6f7a": "管理主机…",
           "6e7f8a9b0c": "删除主机..."
         },
-        "WorkspaceKanbanDrawer": {
-          "1975a4e480": "任务状态同步失败",
-          "e02b0d92ff": "任务状态同步已跳过",
-          "c1d2e3f4a5": "无法读取 Linear 议题 {{value0}}。",
-          "d2e3f4a5b6": "没有与 {{value0}} 匹配的 Linear 工作流状态。",
-          "e3f4a5b6c7": "有多个 Linear 工作流状态与 {{value0}} 匹配。",
-          "f4a5b6c7d8": "无法更新 Linear 议题 {{value0}}。",
-          "a5b6c7d8e9": "无法同步 Linear 议题 {{value0}}。",
-          "b6c7d8e9f0": "无法完成任务状态同步。",
-          "c7d8e9f0a1": "已更新 {{value0}} 个",
-          "d8e9f0a1b2": "已跳过 {{value0}} 个",
-          "e9f0a1b2c3": "失败 {{value0}} 个"
-        },
+        "WorkspaceKanbanDrawer": {},
         "WorktreeParentPickerPopover": {
           "failedSetParent": "无法设置父工作树",
           "current": "当前",
@@ -5266,14 +5206,7 @@
           "attachImages": "Attach",
           "removeImage": "Remove {{fileName}}"
         },
-        "WorkspaceKanbanSearchField": {
-          "bdb753c78d": "没有匹配的工作区",
-          "4d96c209d6": "{{value1}} 个工作区中有 {{value0}} 个匹配",
-          "c0cd6bdf6c": "搜索工作区",
-          "3b7ea51793": "清除搜索",
-          "7f1c2e94a5": "搜索文本过长 — 看板未被筛选",
-          "9a4d0f6b21": "过长"
-        }
+        "WorkspaceKanbanSearchField": {}
       },
       "shared": {
         "useDaemonActions": {
@@ -5956,17 +5889,7 @@
             "defaultViewTerminal": "终端聊天",
             "defaultViewNative": "Chat UI"
           },
-          "agentDashboard": {
-            "title": "智能体仪表盘",
-            "description": "用于监控跨工作树的智能体的看板，支持窗口内或弹出窗口显示。",
-            "copy": "在左侧边栏添加智能体仪表盘入口。监控需要你处理、正在工作或已完成的智能体，并可选择显示空闲智能体。",
-            "toggleLabel": "切换智能体仪表盘",
-            "modeLabel": "打开方式",
-            "modeCopy": "将仪表盘显示为侧边栏旁的窗口内看板，或单独的弹出窗口。",
-            "modeAriaLabel": "智能体仪表盘打开模式",
-            "modeInWindow": "窗口内",
-            "modePopout": "弹出窗口"
-          }
+          "agentDashboard": {}
         },
         "FloatingWorkspacePane": {
           "aeaf76fda9": "状态栏",
@@ -8121,11 +8044,7 @@
               "description": "预览受支持的智能体终端会话的桌面聊天界面。",
               "grok": "grok"
             },
-            "agentDashboard": {
-              "title": "智能体仪表盘",
-              "description": "用于监控跨工作树的智能体的看板，支持窗口内或弹出窗口显示。",
-              "dashboard": "仪表盘"
-            }
+            "agentDashboard": {}
           }
         },
         "floating": {
@@ -10673,8 +10592,7 @@
           "activity": {
             "bar": {
               "buttons": {
-                "1fd284e931": "更多侧边栏选项卡",
-                "f1132ea95d": "中性"
+                "1fd284e931": "更多侧边栏选项卡"
               }
             }
           },
@@ -12866,9 +12784,7 @@
           "a41fb5376e": "折叠详情",
           "5ae84475cc": "关闭",
           "b06e13fcf7": "关闭智能体",
-          "0272969e28": "发送给该智能体",
-          "92a7017987": "发送",
-          "019b74d93a": "有资格的"
+          "0272969e28": "发送给该智能体"
         },
         "DashboardAgentRowMessage": {
           "0a01046763": "被打断",
@@ -13593,66 +13509,11 @@
       },
       "activity": {
         "ActivityPrototypePage": {
-          "cf780197a1": "选择一个智能体以查看其活动",
-          "e3db9892f6": "还没有活动。",
-          "1b633f5c1e": "连接终端...",
-          "8de7c5beaa": "终端不可用",
-          "866083500b": "拖动以调整大小",
-          "443690186e": "调整活动线程列表的大小",
-          "7cd632006b": "没有智能体活动与这些筛选条件匹配。",
-          "a2b4437bfb": "{{value0}} 活动",
-          "023ff75afe": "标记全部已读",
-          "f70e4bec47": "紧凑模式",
-          "a472a14700": "更多选择",
-          "db8a1878b5": "线程列表选项",
-          "d1a88df9a8": "仅显示未读主题",
-          "f6396e1f85": "智能体",
-          "b29191b3e0": "工作树",
-          "8c3b621ddf": "项目",
-          "4a3986b200": "状态",
-          "770d458144": "分组方式",
-          "795cbf26e2": "筛选...",
-          "4616ea39fd": "跳转到工作区",
-          "threadListOptionsFiltered": "线程列表选项，筛选器已启用",
-          "showSearch": "显示搜索",
-          "markThreadRead": "将话题标记为已读",
-          "59b131fbd9": "将话题标记为未读",
-          "beb2c19173": "未读",
-          "5651b216c6": "未知项目",
-          "22b22034bc": "独立终端在活动中不可用。",
-          "afdc2139a8": "智能体终端关闭。在此工作区中打开一个新终端以继续。",
-          "clearCompleted": "清除已完成",
-          "none": "无",
-          "search": "搜索",
-          "showUnreadOnly": "仅显示未读",
-          "showChildAgents": "显示子智能体",
-          "activityOptions": "活动选项",
-          "interrupted": "已中断",
-          "state": {
-            "working": "工作中",
-            "monitoring": "监控后台任务",
-            "blocked": "受阻",
-            "waiting": "等待输入",
-            "failed": "失败",
-            "done": "完成",
-            "idle": "空闲",
-            "unverifiable": "暂无近期更新",
-            "permission": "需注意"
-          },
-          "filtersSection": "筛选",
-          "viewSection": "视图"
+          "state": {}
         },
-        "ActivityScopeFilterControls": {
-          "resetScope": "显示所有主机和项目"
-        },
-        "ActivityThreadRow": {
-          "clearNotification": "清除通知"
-        },
-        "ActivityTitlebarControls": {
-          "f915168c8e": "未读",
-          "d6a8de3934": "智能体",
-          "dc708f3eff": "紧密智能体"
-        }
+        "ActivityScopeFilterControls": {},
+        "ActivityThreadRow": {},
+        "ActivityTitlebarControls": {}
       },
       "confirmation": {
         "dialog": {
@@ -14260,104 +14121,26 @@
     }
   },
   "dashboardPopout": {
-    "view": {
-      "label": "仪表盘视图",
-      "board": "仪表盘",
-      "map": "智能体地图"
-    },
+    "view": {},
     "map": {
-      "host": {
-        "local": "本地",
-        "ssh": "SSH",
-        "wsl": "WSL",
-        "remote": "远程"
-      },
-      "liveContainmentMap": "实时包含关系图",
-      "empty": "没有智能体符合当前筛选条件。",
-      "canvasLabel": "项目、工作区和智能体的嵌套关系图",
-      "zoomOut": "缩小",
-      "zoomIn": "放大",
-      "fit": "适配屏幕",
-      "projectCount": "{{agents}} 个智能体 · {{workspaces}} 个工作区",
-      "agentCount": "{{count}} 个智能体"
+      "host": {}
     },
-    "placeholder": {
-      "title": "智能体仪表盘",
-      "description": "你的所有智能体都会在这里一览无余。看板即将上线。"
-    },
-    "recoverableError": {
-      "title": "Orcinus 看板遇到错误。",
-      "description": "看板未能完成渲染。请重试以重新挂载，或重新打开。"
-    },
-    "bucket": {
-      "attention": "需要你",
-      "working": "工作中",
-      "idle": "空闲",
-      "empty": "无",
-      "done": "已完成"
-    },
-    "title": "智能体",
-    "total": "共 {{count}} 个",
+    "placeholder": {},
+    "recoverableError": {},
+    "bucket": {},
     "card": {
-      "you": "你",
-      "time": {
-        "justNow": "刚刚",
-        "minutes": "{{count}} 分钟",
-        "hours": "{{count}} 小时",
-        "days": "{{count}} 天"
-      },
-      "review": {
-        "open": "开放的评审",
-        "draft": "草稿评审",
-        "merged": "已合并的评审",
-        "closed": "已关闭的评审"
-      },
-      "subagents_one": "{{count}} 个子智能体",
-      "subagents_other": "{{count}} 个子智能体"
+      "time": {},
+      "review": {}
     },
-    "terminal": {
-      "closed": "没有活动的终端 — 该智能体的窗格已关闭。",
-      "focusWorktree": "聚焦工作树",
-      "close": "关闭"
-    },
-    "close": "关闭仪表盘",
-    "settingsTooltip": "看板设置",
+    "terminal": {},
     "filters": {
-      "remove": "移除 {{label}} 筛选条件",
-      "active": "筛选条件",
-      "clear": "清除",
-      "review": {
-        "open": "开放",
-        "draft": "草稿",
-        "merged": "已合并",
-        "closed": "已关闭",
-        "none": "无评审"
-      },
-      "reviewChip": "评审：{{state}}",
-      "label": "筛选",
-      "project": "项目",
-      "workspaceStatus": "工作区状态",
-      "reviewStatus": "PR / MR 状态",
-      "clearAll": "清除所有筛选条件"
+      "review": {}
     },
-    "search": {
-      "placeholder": "搜索工作树、项目或智能体…",
-      "label": "搜索智能体",
-      "clear": "清除搜索",
-      "results": "显示 {{shown}} / {{total}}"
-    },
-    "settingsLabel": "智能体仪表盘设置",
-    "settings": {
-      "showIdle": "显示空闲智能体",
-      "showIdleCopy": "包括已安静 30 分钟且未报告完成的智能体。默认隐藏。"
-    }
+    "search": {},
+    "settings": {}
   },
   "dashboard": {
     "sidebar": {
-      "label": "智能体",
-      "dashboardLabel": "智能体仪表盘",
-      "openActivity": "查看活动",
-      "closeActivity": "关闭活动视图",
       "projects": "项目",
       "workspaces": "工作区"
     }
@@ -14403,9 +14186,6 @@
   },
   "agentsSidebarIntro": {
     "migrated": {
-      "title": "智能体更容易找到了",
-      "description": "智能体视图现在是侧边栏的专用标签页。你的活动和筛选条件都会保留。",
-      "dismiss": "知道了",
       "action": "打开智能体"
     },
     "new": {

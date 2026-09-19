@@ -50,13 +50,12 @@ function lookup(catalog: unknown, key: string): string | undefined {
   return typeof value === 'string' ? value : undefined
 }
 
-// Sampled across the reverted set: an unconditional sidebar filter row, plugin
-// command failures on two surfaces, a settings description, and a status-bar
-// metric — so a partial re-revert cannot pass by covering one namespace.
-// (workingSetDescription was re-translated upstream for ja/ko; it still guards
-// es/zh, and every other key here was English in all four.)
+// Sampled across the reverted set: plugin command failures on two surfaces, a
+// settings description, and a status-bar metric — so a partial re-revert cannot
+// pass by covering one namespace. (workingSetDescription was re-translated
+// upstream for ja/ko; it still guards es/zh, and every other key here was
+// English in all four.)
 const REVERTED_KEYS = [
-  'auto.components.sidebar.SidebarFilter.detachedHead',
   'auto.App.pluginCommandFailed',
   'auto.components.WorktreeJumpPalette.pluginCommandFailed',
   'auto.hooks.useSettingsNavigationMetadata.pluginsDescription',

@@ -22,9 +22,6 @@ export type FloatingTerminalCwdRequest = {
   requireTrusted?: boolean
 }
 
-/** Presentation mode for the experimental Agent Dashboard. */
-export type AgentDashboardMode = 'in-window' | 'popout'
-
 export type WorktreeCardProperty =
   | 'status'
   | 'unread'
@@ -48,10 +45,6 @@ export type WorktreeCardProperty =
 export type WorktreeCardMode = 'Default' | 'Compact'
 
 export type AgentActivityDisplayMode = 'compact' | 'full'
-
-// Re-exported so existing importers keep one home for UI chrome types; the
-// value domain lives with the normalizers that police it.
-export type { ActivityGroupBy, ThreadReadFilter } from './agents-view-thread-filters'
 
 export type StatusBarItem =
   | 'claude'
@@ -114,7 +107,6 @@ export type StaticTopLevelView =
   | 'terminal'
   | 'settings'
   | 'tasks'
-  | 'activity'
   | 'automations'
   | 'space'
   | 'artifacts'

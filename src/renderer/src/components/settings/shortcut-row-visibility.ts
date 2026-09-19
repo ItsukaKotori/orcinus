@@ -23,7 +23,6 @@ export function buildShortcutRowVisibility(options: {
   terminalShortcutPolicy: TerminalShortcutPolicy
   platform: NodeJS.Platform
   managedBrowserCreationEnabled: boolean
-  agentDashboardEnabled: boolean
   settingsSearchQuery: string
   shortcutQuery: string
   shortcutFilter: ShortcutFilter
@@ -37,10 +36,7 @@ export function buildShortcutRowVisibility(options: {
     title: group.title,
     rows: group.items
       .filter(
-        (item) =>
-          (options.managedBrowserCreationEnabled || item.id !== 'tab.newBrowser') &&
-          // Why: the toggle is inert while the experiment is off, so binding it here would silently do nothing.
-          (options.agentDashboardEnabled || item.id !== 'dashboard.toggle')
+        (item) => options.managedBrowserCreationEnabled || item.id !== 'tab.newBrowser'
       )
       .map((item) => {
         const effective = getEffectiveKeybindingsForDefinition(

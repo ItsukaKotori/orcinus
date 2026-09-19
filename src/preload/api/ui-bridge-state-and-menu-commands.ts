@@ -89,20 +89,10 @@ export const uiStateAndMenuCommandsApi = {
     ipcRenderer.on('ui:deleteCurrentWorkspace', listener)
     return () => ipcRenderer.removeListener('ui:deleteCurrentWorkspace', listener)
   },
-  onOpenWorkspaceBoard: (callback: () => void): (() => void) => {
-    const listener = (_event: Electron.IpcRendererEvent) => callback()
-    ipcRenderer.on('ui:openWorkspaceBoard', listener)
-    return () => ipcRenderer.removeListener('ui:openWorkspaceBoard', listener)
-  },
   onOpenTasks: (callback: () => void): (() => void) => {
     const listener = (_event: Electron.IpcRendererEvent) => callback()
     ipcRenderer.on('ui:openTasks', listener)
     return () => ipcRenderer.removeListener('ui:openTasks', listener)
-  },
-  onToggleAgentDashboard: (callback: () => void): (() => void) => {
-    const listener = (_event: Electron.IpcRendererEvent) => callback()
-    ipcRenderer.on('ui:toggleAgentDashboard', listener)
-    return () => ipcRenderer.removeListener('ui:toggleAgentDashboard', listener)
   },
   onJumpToWorktreeIndex: (callback: (index: number) => void): (() => void) => {
     const listener = (_event: Electron.IpcRendererEvent, index: number) => callback(index)

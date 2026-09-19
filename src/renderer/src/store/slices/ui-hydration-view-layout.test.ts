@@ -50,17 +50,13 @@ beforeEach(() => {
 })
 
 describe('sidebar reveal actions', () => {
-  it('switch the sidebar body back to Spaces so the worktree list can consume the reveal', () => {
+  it('queue the reveal request for the worktree list', () => {
     const store = createUIStore()
-    store.getState().setSidebarBody('agents')
 
     store.getState().revealWorktreeInSidebar('wt-1', { highlight: true })
-    expect(store.getState().sidebarBody).toBe('workspaces')
     expect(store.getState().pendingRevealWorktree?.worktreeId).toBe('wt-1')
 
-    store.getState().setSidebarBody('agents')
     store.getState().revealSidebarRow('repo:r1')
-    expect(store.getState().sidebarBody).toBe('workspaces')
     expect(store.getState().pendingRevealSidebarRow?.rowKey).toBe('repo:r1')
   })
 })
@@ -176,15 +172,15 @@ describe('createUISlice hydratePersistedUI', () => {
     expect(store.getState().activeView).toBe('terminal')
   })
 
-  it('keeps a persisted activity view when the settings fetch failed', () => {
+  it('keeps a persisted full-page view when the settings fetch failed', () => {
     // A failed window.api.settings.get() leaves settings null; downgrading here would let the
     // persisted-UI writer overwrite the saved view with terminal.
     const store = createUIStore()
     store.setState({ settings: null as unknown as AppState['settings'] })
 
-    store.getState().hydratePersistedUI(makePersistedUI({ activeView: 'activity' }), 'startup')
+    store.getState().hydratePersistedUI(makePersistedUI({ activeView: 'space' }), 'startup')
 
-    expect(store.getState().activeView).toBe('activity')
+    expect(store.getState().activeView).toBe('space')
   })
 
   it('does not overwrite the current view on a later cross-window sync hydration', () => {

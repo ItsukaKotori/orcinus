@@ -1,9 +1,6 @@
 import { useEffect } from 'react'
 import type { WorktreeDragRuntime } from './use-runtime'
-import type {
-  WorktreeDropCommitContext,
-  WorktreeStatusDropAtIndexArgs
-} from './drop-commit-context'
+import type { WorktreeDropCommitContext } from './drop-commit-context'
 import { commitWorktreePointerDrop } from './pointer-commit'
 import type { WorktreePointerDrag } from './row-state'
 
@@ -16,16 +13,8 @@ export function useWorktreePointerDragWindowEvents(args: {
   runtime: WorktreeDragRuntime
   beginWorktreePointerDrag: (drag: WorktreePointerDrag) => void
   scheduleWorktreePointerDragFrame: (drag: WorktreePointerDrag) => void
-  onWorkspaceBoardDragPreviewCommit: () => void
-  onDropWorktreesOnWorkspaceBoard: (dropArgs: WorktreeStatusDropAtIndexArgs) => void
 }): void {
-  const {
-    ctx,
-    beginWorktreePointerDrag,
-    scheduleWorktreePointerDragFrame,
-    onWorkspaceBoardDragPreviewCommit,
-    onDropWorktreesOnWorkspaceBoard
-  } = args
+  const { ctx, beginWorktreePointerDrag, scheduleWorktreePointerDragFrame } = args
   const { worktreePointerDragRef, clearWorktreeDrag } = args.runtime
 
   useEffect(() => {
@@ -64,9 +53,7 @@ export function useWorktreePointerDragWindowEvents(args: {
       commitWorktreePointerDrop({
         event,
         drag,
-        ctx,
-        onWorkspaceBoardDragPreviewCommit,
-        onDropWorktreesOnWorkspaceBoard
+        ctx
       })
     }
 
@@ -101,8 +88,6 @@ export function useWorktreePointerDragWindowEvents(args: {
     beginWorktreePointerDrag,
     clearWorktreeDrag,
     ctx,
-    onDropWorktreesOnWorkspaceBoard,
-    onWorkspaceBoardDragPreviewCommit,
     scheduleWorktreePointerDragFrame,
     worktreePointerDragRef
   ])

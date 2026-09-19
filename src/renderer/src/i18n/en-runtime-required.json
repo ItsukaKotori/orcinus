@@ -192,14 +192,8 @@
         "dabd819ca1": "Type to see all {{value0}} worktrees"
       },
       "activity": {
-        "ActivityPrototypePage": {
-          "770d458144": "Group by",
-          "a472a14700": "More options",
-          "beb2c19173": "Unread"
-        },
-        "ActivityScopeFilterControls": {
-          "hiddenCount": "{{value0}} hidden"
-        }
+        "ActivityPrototypePage": {},
+        "ActivityScopeFilterControls": {}
       },
       "artifacts": {
         "ArtifactsPage": {
@@ -347,10 +341,7 @@
         }
       },
       "dashboard": {
-        "DashboardAgentRow": {
-          "019b74d93a": "eligible",
-          "92a7017987": "sending"
-        }
+        "DashboardAgentRow": {}
       },
       "editor": {
         "CombinedDiffFileTree": {
@@ -838,9 +829,7 @@
           },
           "activity": {
             "bar": {
-              "buttons": {
-                "f1132ea95d": "neutral"
-              }
+              "buttons": {}
             }
           },
           "checks": {
@@ -1880,9 +1869,7 @@
           "bc96dbd041": "Workspace options ({{value0}})",
           "c7591b6014": "repo"
         },
-        "WorkspaceKanbanSettingsMenu": {
-          "b45b350eb0": "Move {{value0}} left"
-        },
+        "WorkspaceKanbanSettingsMenu": {},
         "WorkspaceStatusAppearancePopover": {
           "514be2f569": "Set {{value0}} color to {{value1}}"
         },
@@ -2684,40 +2671,15 @@
     }
   },
   "dashboard": {
-    "sidebar": {
-      "closeActivity": "Turn off activity view",
-      "label": "Agents",
-      "openActivity": "View activity"
-    }
+    "sidebar": {}
   },
   "dashboardPopout": {
-    "card": {
-      "subagents_one": "{{count}} subagent",
-      "subagents_other": "{{count}} subagents"
-    },
+    "card": {},
     "map": {
-      "agentCount": "{{count}} agents",
-      "agentCount_one": "{{count}} agent",
-      "agentCount_other": "{{count}} agents",
-      "host": {
-        "local": "Local",
-        "remote": "Remote",
-        "ssh": "SSH",
-        "wsl": "WSL"
-      },
-      "liveContainmentMap": "Live containment map",
-      "worktreeSummary_one": "{{total}} agent · {{active}} active · {{done}} done",
-      "worktreeSummary_other": "{{total}} agents · {{active}} active · {{done}} done"
+      "host": {}
     },
-    "placeholder": {
-      "description": "This is where all your agents will show up at a glance. The board is coming soon.",
-      "title": "Agent dashboard"
-    },
-    "view": {
-      "board": "Dashboard",
-      "label": "Dashboard view",
-      "map": "Agent Map"
-    }
+    "placeholder": {},
+    "view": {}
   },
   "runtimeRpc": {
     "startupFailure": {

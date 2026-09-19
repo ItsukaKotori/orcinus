@@ -44,8 +44,7 @@ function renderReorder(worktrees: readonly Worktree[]) {
         worktrees,
         folderWorkspaces: []
       }),
-      workspaceStatuses: [],
-      sortBy: 'smart'
+      workspaceStatuses: []
     })
   ).result
 }

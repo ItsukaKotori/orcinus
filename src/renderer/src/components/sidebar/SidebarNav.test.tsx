@@ -2,7 +2,6 @@
 
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { getDefaultSettings } from '../../../../shared/constants'
@@ -15,14 +14,11 @@ const mocks = vi.hoisted(() => ({
   state: {} as Record<string, unknown>,
   openTaskPage: vi.fn(),
   openAutomationsPage: vi.fn(),
-  openActivityPage: vi.fn(),
   openArtifactsPage: vi.fn(),
   openModal: vi.fn(),
   updateSettings: vi.fn(),
   refreshPreflightStatus: vi.fn(),
-  checkLinearConnection: vi.fn(),
-  agentBucketCounts: { attention: 0, working: 0, done: 0, idle: 0 },
-  getAgentBucketCounts: vi.fn()
+  checkLinearConnection: vi.fn()
 }))
 
 vi.mock('@/store', () => ({
@@ -34,17 +30,6 @@ vi.mock('@/store/selectors', () => ({
     new Map(
       ((mocks.state.repos as Repo[] | undefined) ?? []).map((repo) => [repo.id, repo] as const)
     )
-}))
-
-vi.mock('@/components/activity/useActivityUnreadCount', () => ({
-  useActivityUnreadCount: () => 0
-}))
-
-vi.mock('@/components/dashboard/useAgentBucketCounts', () => ({
-  useAgentBucketCounts: () => {
-    mocks.getAgentBucketCounts()
-    return mocks.agentBucketCounts
-  }
 }))
 
 vi.mock('@/hooks/useShortcutLabel', () => ({
@@ -106,7 +91,6 @@ function setSidebarState({
     activeView: 'worktrees',
     openTaskPage: mocks.openTaskPage,
     openAutomationsPage: mocks.openAutomationsPage,
-    openActivityPage: mocks.openActivityPage,
     openArtifactsPage: mocks.openArtifactsPage,
     openModal: mocks.openModal,
     updateSettings: mocks.updateSettings,
@@ -186,55 +170,7 @@ describe('SidebarNav', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     await i18n.changeLanguage('en')
-    mocks.agentBucketCounts = { attention: 0, working: 0, done: 0, idle: 0 }
     setSidebarState()
-  })
-
-  it('keeps the Agent Dashboard row unmounted while its experiment is off', async () => {
-    const container = await renderSidebarNav()
-
-    expect(queryButtonByText(container, 'Agent Dashboard')).toBeNull()
-    expect(mocks.getAgentBucketCounts).not.toHaveBeenCalled()
-  })
-
-  it('mounts the Agent Dashboard row only when its experiment is enabled', async () => {
-    setSidebarState({
-      settings: {
-        ...getDefaultSettings('/tmp'),
-        experimentalAgentDashboardPopout: true
-      }
-    })
-    const container = await renderSidebarNav()
-
-    await waitFor(() => expect(queryButtonByText(container, 'Agent Dashboard')).not.toBeNull())
-    expect(mocks.getAgentBucketCounts).toHaveBeenCalledTimes(1)
-  })
-
-  it('uses a question glyph only for the Needs You count', async () => {
-    mocks.agentBucketCounts = { attention: 2, working: 3, done: 1, idle: 4 }
-    setSidebarState({
-      settings: {
-        ...getDefaultSettings('/tmp'),
-        experimentalAgentDashboardPopout: true,
-        experimentalAgentDashboardShowIdle: true
-      }
-    })
-    const container = await renderSidebarNav()
-
-    await waitFor(() =>
-      expect(container.querySelector('[aria-label="Needs You: 2"]')).not.toBeNull()
-    )
-    const attention = container.querySelector('[aria-label="Needs You: 2"]')
-    const working = container.querySelector('[aria-label="Working: 3"]')
-    const done = container.querySelector('[aria-label="Done: 1"]')
-    const idle = container.querySelector('[aria-label="Idle: 4"]')
-    expect(attention?.querySelector('.lucide-message-circle-question-mark')).not.toBeNull()
-    expect(working?.querySelector('.rounded-full')).not.toBeNull()
-    expect(done?.querySelector('.rounded-full')).not.toBeNull()
-    expect(idle?.querySelector('.rounded-full')).not.toBeNull()
-    expect(working?.querySelector('svg')).toBeNull()
-    expect(done?.querySelector('svg')).toBeNull()
-    expect(idle?.querySelector('svg')).toBeNull()
   })
 
   it('hides the Artifacts entry by default for older settings', () => {

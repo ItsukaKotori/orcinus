@@ -135,7 +135,6 @@ export type UISliceCore = {
   activeView: TopLevelView
   previousViewBeforeTasks: Exclude<UiViewHistory, 'tasks'>
   previousViewBeforeSettings: Exclude<UiViewHistory, 'settings'>
-  previousViewBeforeActivity: Exclude<UiViewHistory, 'activity'>
   previousViewBeforeAutomations: Exclude<UiViewHistory, 'automations'>
   previousViewBeforeSpace: Exclude<UiViewHistory, 'space'>
   previousViewBeforeArtifacts: Exclude<UiViewHistory, 'artifacts'>
@@ -153,8 +152,6 @@ export type UISliceCore = {
     options?: { recordTasksInteraction?: boolean }
   ) => void
   closeTaskPage: () => void
-  openActivityPage: () => void
-  closeActivityPage: () => void
   selectedAutomationId: string | null
   setSelectedAutomationId: (id: string | null) => void
   pendingAutomationRunNavigation: {

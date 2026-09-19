@@ -4,7 +4,7 @@ import type { ActivityTerminalPortalTarget } from './activity/activity-terminal-
 import type { TerminalWorkspaceFoundation } from './use-terminal-workspace-foundation'
 
 export function useTerminalWorkspaceStoreBindings(controller: TerminalWorkspaceFoundation) {
-  const { activeView, renderedActiveWorktreeId } = controller
+  const { renderedActiveWorktreeId } = controller
   const activeTabId = useAppStore((state) => state.activeTabId)
   const activeTabIdByWorktree = useAppStore((state) => state.activeTabIdByWorktree)
   const createTab = useAppStore((state) => state.createTab)
@@ -60,9 +60,7 @@ export function useTerminalWorkspaceStoreBindings(controller: TerminalWorkspaceF
   const tabBarOrder = renderedActiveWorktreeId
     ? tabBarOrderByWorktree[renderedActiveWorktreeId]
     : undefined
-  const activityTerminalPortals: ActivityTerminalPortalTarget[] = useActivityTerminalPortals(
-    activeView === 'activity'
-  )
+  const activityTerminalPortals: ActivityTerminalPortalTarget[] = useActivityTerminalPortals(false)
 
   return {
     activeTabId,

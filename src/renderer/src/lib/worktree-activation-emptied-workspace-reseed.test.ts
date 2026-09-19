@@ -295,7 +295,6 @@ describe('activating a folder workspace whose last terminal was closed', () => {
     'opens a notification on %s without revealing the folder',
     (executionHostId) => {
       seedEmptiedFolderWorkspaceOnTwoHosts()
-      useAppStore.setState({ sidebarBody: 'agents' })
 
       const result = activateAndRevealWorkspace(FOLDER_KEY, {
         executionHostId,
@@ -305,7 +304,6 @@ describe('activating a folder workspace whose last terminal was closed', () => {
 
       expect(result).not.toBe(false)
       expect(useAppStore.getState().activeWorktreeId).toBe(FOLDER_KEY)
-      expect(useAppStore.getState().sidebarBody).toBe('agents')
       expect(useAppStore.getState().revealWorktreeInSidebar).not.toHaveBeenCalled()
     }
   )

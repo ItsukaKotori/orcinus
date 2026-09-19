@@ -1,8 +1,7 @@
 import { useCallback, useEffect } from 'react'
 import type React from 'react'
-import type { WorkspaceStatus, Worktree } from '../../../../../../shared/worktree/types'
+import type { Worktree } from '../../../../../../shared/worktree/types'
 import { getWorktreeHostIdentity } from '../../../../../../shared/worktree/host-qualified-identity'
-import { hasWorkspaceKanbanSidebarDropBoard } from '../../workspace-kanban-sidebar-drop'
 import {
   createSidebarDragPreview,
   isSidebarPointerDragBlocked,
@@ -10,11 +9,7 @@ import {
 } from '../../worktree-sidebar-pointer-drag-dom'
 import { getWorktreeSidebarDragRectsForGroup } from '../../worktree-sidebar-drag-autoscroll'
 import { getWorktreeSidebarDragGrab } from '../../worktree-sidebar-drag-geometry'
-import { NOOP_WORKSPACE_BOARD_DRAG_PREVIEW_CALLBACK } from './drop-commit-context'
-import type {
-  WorktreeDropCommitContext,
-  WorktreeStatusDropAtIndexArgs
-} from './drop-commit-context'
+import type { WorktreeDropCommitContext } from './drop-commit-context'
 import type { WorktreeDragRuntime } from './use-runtime'
 import type { WorktreeDragSession } from './use-session'
 import { useWorktreePointerDragAutoscroll } from './use-pointer-autoscroll'
@@ -30,14 +25,6 @@ export function useWorktreePointerDrag(args: {
   markScrollMovement: () => void
   selectedWorktreeIds: ReadonlySet<string>
   selectedWorktrees: readonly Worktree[]
-  workspaceBoardOpen: boolean
-  onWorkspaceBoardDragPreviewStart: () => void
-  onWorkspaceBoardDragPreviewCommit: () => void
-  onDropWorktreesOnWorkspaceBoard: (dropArgs: WorktreeStatusDropAtIndexArgs) => void
-  shouldShowWorkspaceBoardDropIndicator: (
-    worktreeIds: readonly string[],
-    status: WorkspaceStatus
-  ) => boolean
 }) {
   const {
     ctx,
@@ -46,12 +33,7 @@ export function useWorktreePointerDrag(args: {
     scrollRef,
     markScrollMovement,
     selectedWorktreeIds,
-    selectedWorktrees,
-    workspaceBoardOpen,
-    onWorkspaceBoardDragPreviewStart,
-    onWorkspaceBoardDragPreviewCommit,
-    onDropWorktreesOnWorkspaceBoard,
-    shouldShowWorkspaceBoardDropIndicator
+    selectedWorktrees
   } = args
   const {
     worktreePointerDragRef,
@@ -69,23 +51,15 @@ export function useWorktreePointerDrag(args: {
     flushWorktreePointerDragFrame({
       drag,
       ctx,
-      workspaceBoardOpen,
-      onWorkspaceBoardDragPreviewStart,
-      onWorkspaceBoardDragPreviewCommit,
-      shouldShowWorkspaceBoardDropIndicator,
       setWorktreeDragState,
       setDragOverStatus,
       setPinDragOver
     })
   }, [
     ctx,
-    onWorkspaceBoardDragPreviewCommit,
-    onWorkspaceBoardDragPreviewStart,
     setDragOverStatus,
     setPinDragOver,
     setWorktreeDragState,
-    shouldShowWorkspaceBoardDropIndicator,
-    workspaceBoardOpen,
     worktreePointerDragRef
   ])
 
@@ -170,14 +144,7 @@ export function useWorktreePointerDrag(args: {
         return
       }
       const rects = getWorktreeSidebarDragRectsForGroup(container, sourceGroupKey)
-      const canPreviewWorkspaceBoardOnDrag =
-        !workspaceBoardOpen &&
-        onWorkspaceBoardDragPreviewStart !== NOOP_WORKSPACE_BOARD_DRAG_PREVIEW_CALLBACK
-      if (
-        rects.length <= 1 &&
-        !hasWorkspaceKanbanSidebarDropBoard() &&
-        !canPreviewWorkspaceBoardOnDrag
-      ) {
+      if (rects.length <= 1) {
         return
       }
       const draggedIds =
@@ -206,20 +173,16 @@ export function useWorktreePointerDrag(args: {
         preview: null,
         previewOffsetX: 0,
         previewOffsetY: 0,
-        workspaceBoardDragPreviewRequested: false,
         frameId: null,
         reorderIntent: null,
-        latestBoardDropTarget: null,
         latestStatusDropTarget: null
       }
     },
     [
-      onWorkspaceBoardDragPreviewStart,
       scrollRef,
       selectedWorktreeIds,
       selectedWorktrees,
       session,
-      workspaceBoardOpen,
       worktreePointerDragRef
     ]
   )
@@ -239,9 +202,7 @@ export function useWorktreePointerDrag(args: {
     ctx,
     runtime,
     beginWorktreePointerDrag,
-    scheduleWorktreePointerDragFrame,
-    onWorkspaceBoardDragPreviewCommit,
-    onDropWorktreesOnWorkspaceBoard
+    scheduleWorktreePointerDragFrame
   })
 
   useEffect(() => {

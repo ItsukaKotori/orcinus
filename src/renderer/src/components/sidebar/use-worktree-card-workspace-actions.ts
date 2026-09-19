@@ -160,7 +160,7 @@ export function useWorktreeCardWorkspaceActions({
 
   const stopQuickActionPointerPropagation = useCallback(
     (event: React.PointerEvent<HTMLButtonElement>) => {
-      // Why: document-level pointer handling dismisses the Kanban board; quick actions must not count as card activation.
+      // Why: document-level pointer handling treats stray pointer events as activation; quick actions must not count as card activation.
       event.stopPropagation()
     },
     []

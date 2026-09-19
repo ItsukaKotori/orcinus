@@ -9,8 +9,7 @@ import {
 import { normalizeWorkspaceCleanupBrowseState } from '../../../../../shared/workspace-cleanup-browse-state'
 import {
   normalizeExecutionHostScope,
-  normalizeExecutionHostOrder,
-  normalizeVisibleExecutionHostIds
+  normalizeExecutionHostOrder
 } from '../../../../../shared/execution-host'
 import { normalizeFeatureInteractions } from '../../../../../shared/feature-interactions'
 import {
@@ -18,15 +17,7 @@ import {
   normalizeWorktreeCardProperties,
   normalizeAgentActivityDisplayMode
 } from '../../../../../shared/constants'
-import {
-  normalizeActivityGroupBy,
-  normalizeThreadReadFilter
-} from '../../../../../shared/agents-view-thread-filters'
-import {
-  clampWorkspaceBoardColumnWidth,
-  clampWorkspaceBoardOpacity,
-  normalizeWorkspaceStatuses
-} from '../../../../../shared/workspace-statuses'
+import { normalizeWorkspaceStatuses } from '../../../../../shared/workspace-statuses'
 import { clampMarkdownTocPanelWidth } from '../../../../../shared/markdown-toc-panel-width'
 import { clampCombinedDiffFileTreeWidth } from '../../../../../shared/combined-diff-file-tree-width'
 import { parsePersistedAutomationHostFilter } from '../../../../../shared/automation-host-filter'
@@ -50,7 +41,6 @@ import {
   hydrateTrustedOrcaHooks,
   hydrateUnexpectedSignoutDismissal,
   normalizeHydratedVisibleWorkspaceHostIds,
-  preserveStringArrayIdentity,
   sanitizeHydratedActiveView,
   sanitizePersistedRepoIds,
   sanitizeShowDotfilesByWorktree,
@@ -100,7 +90,6 @@ export function createUiHydrationActions(set: UISliceSet, _get: UISliceGet): Par
         const validRepoIds = new Set(s.repos.map((repo) => repo.id))
         const validRepoHostIdentities = new Set(s.repos.map(getRepoHostIdentity))
         const persistedFilterRepoIds = sanitizePersistedRepoIds(ui.filterRepoIds)
-        const persistedAgentsFilterRepoIds = sanitizePersistedRepoIds(ui.agentsFilterRepoIds)
         // Migration: one-shot old-'recent'→'smart' runs in main (_sortBySmartMigrated), not here, so a deliberate 'recent' choice survives restart.
         const sortBy = ui.sortBy
         const statusBarItemsWithGrok = hydrateStatusBarItems(ui)
@@ -163,21 +152,6 @@ export function createUiHydrationActions(set: UISliceSet, _get: UISliceGet): Par
             validRepoIds.size === 0
               ? persistedFilterRepoIds
               : persistedFilterRepoIds.filter((repoId) => validRepoIds.has(repoId)),
-          agentsVisibleHostIds: preserveStringArrayIdentity(
-            s.agentsVisibleHostIds,
-            normalizeVisibleExecutionHostIds(ui.agentsVisibleHostIds)
-          ),
-          agentsFilterRepoIds: preserveStringArrayIdentity(
-            s.agentsFilterRepoIds,
-            validRepoIds.size === 0
-              ? persistedAgentsFilterRepoIds
-              : persistedAgentsFilterRepoIds.filter((repoId) => validRepoIds.has(repoId))
-          ),
-          agentsShowChildAgents: ui.agentsShowChildAgents === true,
-          agentsCompactMode: ui.agentsCompactMode !== false,
-          agentsShowSearch: ui.agentsShowSearch !== false,
-          agentsReadFilter: normalizeThreadReadFilter(ui.agentsReadFilter),
-          agentsGroupBy: normalizeActivityGroupBy(ui.agentsGroupBy),
           collapsedGroups: new Set(ui.collapsedGroups ?? []),
           uiZoomLevel: ui.uiZoomLevel ?? 0,
           editorFontZoomLevel: ui.editorFontZoomLevel ?? 0,
@@ -185,9 +159,6 @@ export function createUiHydrationActions(set: UISliceSet, _get: UISliceGet): Par
           _worktreeCardModeDefaulted: ui._worktreeCardModeDefaulted === true,
           agentActivityDisplayMode: normalizeAgentActivityDisplayMode(ui.agentActivityDisplayMode),
           workspaceStatuses: normalizeWorkspaceStatuses(ui.workspaceStatuses),
-          workspaceBoardOpacity: clampWorkspaceBoardOpacity(ui.workspaceBoardOpacity),
-          workspaceBoardColumnWidth: clampWorkspaceBoardColumnWidth(ui.workspaceBoardColumnWidth),
-          syncTaskStatusFromWorkspaceBoard: ui.syncTaskStatusFromWorkspaceBoard === true,
           statusBarItems: statusBarItemsWithGrok,
           statusBarVisible: ui.statusBarVisible ?? true,
           usagePercentageDisplay: normalizeUsagePercentageDisplay(ui.usagePercentageDisplay),

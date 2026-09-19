@@ -32,12 +32,6 @@ export const WORKTREE_PALETTE_HOST_FIELD_ID = 'host'
 export type PRCacheEntry = { data?: { number: number; title: string } | null } | undefined
 export type IssueCacheEntry = { data?: { number: number; title: string } | null } | undefined
 
-/**
- * `board` is the Kanban profile: cards may only be filtered by text printed on
- * them, so palette-only evidence such as ports and reviews is excluded.
- */
-export type WorktreePaletteEvidencePolicy = 'palette' | 'board'
-
 export type WorktreePaletteDocumentSources = {
   repoMap: ReadonlyMap<string, Repo>
   repoMapByHostIdentity?: ReadonlyMap<string, Repo>
@@ -49,7 +43,6 @@ export type WorktreePaletteDocumentSources = {
   >
   checksReviewByWorktree?: ReadonlyMap<Worktree, HostedReviewInfo | null>
   hostLabelByWorktreeId?: ReadonlyMap<string, string>
-  evidencePolicy?: WorktreePaletteEvidencePolicy
 }
 
 function resolveReviewSource(
@@ -115,10 +108,6 @@ function buildEvidence(
   sources: WorktreePaletteDocumentSources
 ): PaletteComposedEvidence[] {
   const comment = buildWorktreeCommentEvidence(worktree.comment ?? '')
-  if (sources.evidencePolicy === 'board') {
-    return comment ? [comment] : []
-  }
-
   const ports = sources.workspacePortsByWorktreeId?.get(worktree.id) ?? []
   const units = [
     comment,

@@ -28,7 +28,7 @@ const MAIN_PANE_KEY = makePaneKey(MAIN_TAB_ID, MAIN_LEAF_ID)
 
 function seedFloatingCompletion(): void {
   useAppStore.setState({
-    activeView: 'activity',
+    activeView: 'space',
     activeTabId: null,
     activeWorktreeId: 'wt-1',
     activeTabIdByWorktree: { [FLOATING_TERMINAL_WORKTREE_ID]: FLOATING_TAB_ID },

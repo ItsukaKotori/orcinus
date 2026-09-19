@@ -4,7 +4,6 @@ import { isFloatingWorkspacePanelFocused } from '@/lib/floating-workspace-termin
 import { requestScrollToCurrentWorkspaceRevealAndRename } from '@/lib/scroll-to-current-workspace-status'
 import { showTerminalShortcutCaptureNotification } from '@/lib/terminal-shortcut-capture-notification'
 import { shouldShowWorktreeHistoryControls } from '../lib/titlebar-worktree-history-controls'
-import { TOGGLE_WORKSPACE_BOARD_EVENT } from '../components/sidebar/useWorkspaceBoardPanel'
 import { requestTerminalTabRename } from '../components/tab-bar/terminal-tab-rename-request'
 import {
   deleteHoveredWorkspaceImmediately,
@@ -227,18 +226,6 @@ export function createAppCommandHandlers(
         }
         return claim('workspace.delete', () => {
           deleteHoveredWorkspaceImmediately(store, target)
-        })
-      }
-    ],
-    [
-      'workspace.openBoard',
-      () => {
-        if (activeView === 'settings') {
-          return false
-        }
-        return claim('workspace.openBoard', () => {
-          useAppStore.getState().setSidebarOpen(true)
-          window.dispatchEvent(new CustomEvent(TOGGLE_WORKSPACE_BOARD_EVENT))
         })
       }
     ],

@@ -465,13 +465,6 @@ describe('web UI preload API', () => {
     hideWorkspacesFromOtherDevices: true,
     manualRepoOrder: [{ hostId: 'runtime:web-env-1', repoId: 'repo-b' }],
     workspaceHostOrder: ['runtime:web-env-1', 'local'],
-    agentsVisibleHostIds: ['runtime:web-env-1'],
-    agentsFilterRepoIds: ['repo-b'],
-    agentsShowChildAgents: true,
-    agentsCompactMode: false,
-    agentsShowSearch: false,
-    agentsReadFilter: 'unread',
-    agentsGroupBy: 'project',
     activityClearedAtByPaneKey: { 'tab-1:leaf-1': 123 },
     manuallyUnreadTurnsByPaneKey: { 'tab-1:leaf-1': 321 }
   }
@@ -480,13 +473,6 @@ describe('web UI preload API', () => {
     hideWorkspacesFromOtherDevices: false,
     manualRepoOrder: [{ hostId: 'local', repoId: 'repo-a' }],
     workspaceHostOrder: ['local', 'ssh:box'],
-    agentsVisibleHostIds: ['local'],
-    agentsFilterRepoIds: ['repo-a'],
-    agentsShowChildAgents: false,
-    agentsCompactMode: true,
-    agentsShowSearch: true,
-    agentsReadFilter: 'all',
-    agentsGroupBy: 'status',
     activityClearedAtByPaneKey: { 'tab-2:leaf-2': 456 },
     manuallyUnreadTurnsByPaneKey: { 'tab-2:leaf-2': 654 }
   }

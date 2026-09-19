@@ -1,7 +1,5 @@
 export type FeatureInteractionId =
-  | 'workspace-board'
   | 'workspace-agent-sessions'
-  | 'workspace-board-actions'
   | 'cmd-j'
   | 'cmd-j-workspace-open'
   | 'cmd-j-browser-page-open'
@@ -61,14 +59,9 @@ export type FeatureInteractionDefinition = {
 // Why: these ids become persisted product state; changing them breaks
 // feature-discovery interaction tracking.
 export const FEATURE_INTERACTIONS = [
-  { id: 'workspace-board', interaction: 'workspace board opened' },
   {
     id: 'workspace-agent-sessions',
     interaction: 'workspace agent-session surface opened'
-  },
-  {
-    id: 'workspace-board-actions',
-    interaction: 'workspace board card, lane, density, or status action used'
   },
   { id: 'cmd-j', interaction: 'Cmd+J palette opened' },
   { id: 'cmd-j-workspace-open', interaction: 'workspace opened from Cmd+J' },

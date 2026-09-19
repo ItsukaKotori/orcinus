@@ -12,14 +12,6 @@ export const PAIRING_LOCAL_UI_FIELDS = [
   'hideWorkspacesFromOtherDevices',
   'manualRepoOrder',
   'workspaceHostOrder',
-  // Agent View filters and presentation belong to each client's host catalog and viewport.
-  'agentsVisibleHostIds',
-  'agentsFilterRepoIds',
-  'agentsShowChildAgents',
-  'agentsCompactMode',
-  'agentsShowSearch',
-  'agentsReadFilter',
-  'agentsGroupBy',
   'activityClearedAtByPaneKey',
   'manuallyUnreadTurnsByPaneKey'
 ] as const satisfies readonly (keyof PersistedUIState)[]

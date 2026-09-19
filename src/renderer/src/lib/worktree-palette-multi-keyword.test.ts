@@ -130,27 +130,6 @@ describe('evidence and ranking', () => {
   })
 })
 
-describe('kanban board profile', () => {
-  it('ignores palette-only evidence', () => {
-    expect(
-      searchWorktrees(CMD_J_FIXTURE_WORKTREES, 'main 3000', CMD_J_FIXTURE_REPO_MAP, {
-        workspacePortsByWorktreeId: CMD_J_FIXTURE_PORTS,
-        evidencePolicy: 'board'
-      })
-    ).toEqual([])
-  })
-
-  it('still matches the comment printed on the card', () => {
-    const matched = searchWorktrees(
-      CMD_J_FIXTURE_WORKTREES,
-      'reconnect infra',
-      CMD_J_FIXTURE_REPO_MAP,
-      { evidencePolicy: 'board' }
-    )
-    expect(matched.map((result) => result.worktreeId)).toEqual(['wt-reconnect'])
-  })
-})
-
 describe('document invalidation inputs', () => {
   it('indexes the rendered host label only when one is supplied', () => {
     expect(ids('bastion')).toEqual([])

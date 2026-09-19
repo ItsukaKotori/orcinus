@@ -5,7 +5,6 @@ import type { UsagePercentageDisplay } from './usage-percentage-display'
 import type { StatusBarUsageMode } from './status-bar-usage-mode'
 import type { PersistedTrustedOrcaHooks } from './orca-yaml-hook-types'
 import type {
-  ActivityGroupBy,
   AgentActivityDisplayMode,
   ManualRepoOrderEntry,
   ProjectOrderBy,
@@ -13,7 +12,6 @@ import type {
   RightSidebarTab,
   StatusBarItem,
   TaskResumeState,
-  ThreadReadFilter,
   TopLevelView,
   VisibleWorkspaceHostIds,
   WorkspaceHostOrder,
@@ -72,20 +70,6 @@ export type PersistedUIState = {
   /** Per-worktree Explorer dotfile visibility. Missing entries inherit the default: show. */
   showDotfilesByWorktree?: Record<string, boolean>
   filterRepoIds: string[]
-  /** Agents-view host scope; deliberately separate from visibleWorkspaceHostIds so a monitoring surface never inherits nav filters silently. `null` = all hosts. */
-  agentsVisibleHostIds?: VisibleWorkspaceHostIds
-  /** Agents-view project filter; empty = all projects. Separate from filterRepoIds (workspace nav). */
-  agentsFilterRepoIds?: string[]
-  /** Agents-view: include child (orchestration-dispatched) agent threads. Absent means off. */
-  agentsShowChildAgents?: boolean
-  /** Agents-view compact thread rows. Absent means on. */
-  agentsCompactMode?: boolean
-  /** Agents sidebar search field visibility. Absent means on. */
-  agentsShowSearch?: boolean
-  /** Agents-view unread-only thread filter. Absent means 'all'. */
-  agentsReadFilter?: ThreadReadFilter
-  /** Agents-view thread grouping. Absent means 'status'. */
-  agentsGroupBy?: ActivityGroupBy
   collapsedGroups: string[]
   uiZoomLevel: number
   editorFontZoomLevel: number
@@ -94,9 +78,6 @@ export type PersistedUIState = {
   _worktreeCardModeDefaulted?: boolean
   agentActivityDisplayMode?: AgentActivityDisplayMode
   workspaceStatuses?: WorkspaceStatusDefinition[]
-  workspaceBoardOpacity?: number
-  workspaceBoardColumnWidth?: number
-  syncTaskStatusFromWorkspaceBoard?: boolean
   /** One-shot migration flag for a short-lived build that persisted default statuses in reverse order; once stamped, ordering is never re-inferred from IDs/labels. */
   _workspaceStatusesDefaultOrderMigrated?: boolean
   /** One-shot repair flag for the exact default payload a short-lived build persisted in reverse workflow order. */
@@ -160,9 +141,6 @@ export type PersistedUIState = {
   windowBounds?: { x: number; y: number; width: number; height: number } | null
   /** Whether the window was maximized when it was last closed. */
   windowMaximized?: boolean
-  /** Saved bounds for the pop-out dashboard window so it restores to its last
-   *  position/size. Independent of the main window's bounds. */
-  dashboardPopoutBounds?: { x: number; y: number; width: number; height: number } | null
   /** One-shot flag: 'recent' once meant the smart sort (v1→v2 rename), migrated to 'smart' once so the new last-activity 'recent' isn't re-clobbered. */
   _sortBySmartMigrated?: boolean
   /** LEGACY inline-agents flag, stamped unconditionally every load so it can't gate migration; kept only for rollback forward-compat (real gate: _inlineAgentsDefaultedForAllUsers). */

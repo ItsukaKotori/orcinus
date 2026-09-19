@@ -9,7 +9,6 @@ import { ContextMenu, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { SidebarTaskNavButton } from './SidebarTaskNavButton'
 import { HideSidebarMenu } from './sidebar-nav-controls'
 import { translate } from '@/i18n/i18n'
-import { lazyWithRetry } from '@/lib/lazy-with-retry'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 
 export function shouldShowAutomationsButton(
@@ -24,14 +23,6 @@ export function shouldShowArtifactsButton(
   return settings?.showArtifactsButton === true
 }
 
-export function shouldShowAgentDashboardButton(
-  settings: Partial<Pick<GlobalSettings, 'experimentalAgentDashboardPopout'>> | null | undefined
-): boolean {
-  return settings?.experimentalAgentDashboardPopout === true
-}
-
-const AgentDashboardSidebarEntry = lazyWithRetry(() => import('./AgentDashboardSidebarEntry'))
-
 const SidebarNav = React.memo(function SidebarNav() {
   // Why: this memo boundary needs its own language subscription, while
   // translate() preserves Orca's pseudo-localization behavior.
@@ -42,7 +33,6 @@ const SidebarNav = React.memo(function SidebarNav() {
   const openModal = useAppStore((s) => s.openModal)
   const updateSettings = useAppStore((s) => s.updateSettings)
   const activeView = useAppStore((s) => s.activeView)
-  const showAgentDashboardButton = useAppStore((s) => shouldShowAgentDashboardButton(s.settings))
   const showAutomationsButton = useAppStore((s) => shouldShowAutomationsButton(s.settings))
   const showArtifactsButton = useAppStore((s) => shouldShowArtifactsButton(s.settings))
   const automationsActive = activeView === 'automations'
@@ -145,11 +135,6 @@ const SidebarNav = React.memo(function SidebarNav() {
           </ContextMenuTrigger>
           <HideSidebarMenu onHide={hideAutomationsButton} />
         </ContextMenu>
-      ) : null}
-      {showAgentDashboardButton ? (
-        <React.Suspense fallback={null}>
-          <AgentDashboardSidebarEntry />
-        </React.Suspense>
       ) : null}
     </div>
   )

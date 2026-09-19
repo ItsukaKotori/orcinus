@@ -72,15 +72,14 @@ export function useAppChromeLayout() {
   const workspaceChromeActive =
     activeView === 'terminal' && activeWorktreeId !== null && !creationLayoutActive
   const hasTabBar = tabCount >= 2
-  // Why: plugin-center and plugin-hosted views are global surfaces like Settings/Activity/Space, so they take the same full-page chrome path (no worktree sidebar, full-width titlebar).
+  // Why: plugin-center and plugin-hosted views are global surfaces like Settings/Space, so they take the same full-page chrome path (no worktree sidebar, full-width titlebar).
   const isProjectView = !(
     activeView === 'plugin-center' || activeView.startsWith('plugin:')
   )
-  // Activity/Space are full-page navigation surfaces (like Settings), so the worktree sidebar is hidden there.
+  // Space is a full-page navigation surface (like Settings), so the worktree sidebar is hidden there.
   const showSidebar =
     isProjectView &&
     activeView !== 'settings' &&
-    activeView !== 'activity' &&
     activeView !== 'space'
   // Tasks/Landing show the full titlebar only when the sidebar is collapsed; open, they mirror workspace view (creation suppresses it).
   const stackedSidebarOpen =

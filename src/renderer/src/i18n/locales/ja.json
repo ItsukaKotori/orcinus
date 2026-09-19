@@ -77,9 +77,7 @@
     "quit": "終了",
     "minimizeNotice": {
       "body": "Orcinus はシステムトレイで実行中です"
-    },
-    "activityWaiting": "Orcinus - アクティビティ待機中",
-    "activityWaitingSuffix": "件のアクティビティが待機中"
+    }
   },
   "worktreeJumpPalette": {
     "matchLabel": {
@@ -4318,26 +4316,7 @@
           "attachWhileSending": "現在のフィードバックの送信が完了してから、画像を追加してください。",
           "imagesNotDelivered": "フィードバックを送信しましたが、画像が届いたかどうかは確認できませんでした。"
         },
-        "SidebarFilter": {
-          "e3b3898218": "プロジェクトを追加",
-          "92a23e6d07": "フィルターをリセットする",
-          "81ded53722": "SSH",
-          "b9e8802e73": "一致するプロジェクトはありません",
-          "779b7ba05d": "クリア",
-          "139877b384": "すべて選択",
-          "5f7085a077": "プロジェクト",
-          "e5cb32a898": "デフォルトのブランチを非表示にする",
-          "638a2d221d": "スリープ中を非表示",
-          "f506a1262a": "ワークスペースのフィルタリング",
-          "75405270ed": "フィルターの編集 ({{value0}} がアクティブ)",
-          "489d1c8c9f": "プロジェクトを検索…",
-          "ee240a39eb": "フィルターの編集",
-          "automationCreated": "自動化で作成されたワークスペースを非表示",
-          "cliCreated": "CLI が作成したものを非表示",
-          "detachedHead": "分離 HEAD を非表示",
-          "keepDefaultBranch": "デフォルトのブランチを除く",
-          "keepDefaultBranchAria": "スリープ中のワークスペースを非表示にしてもデフォルトのブランチは表示したままにする"
-        },
+        "SidebarFilter": {},
         "SidebarHeader": {
           "projects": "プロジェクト",
           "92154beb7e": "新規ワークスペース",
@@ -4393,10 +4372,7 @@
         },
         "SidebarToolbar": {
           "19e32d0e5f": "フォルダーピッカーを開いてプロジェクトを追加します",
-          "abc62b6328": "プロジェクトを追加",
-          "87d0064026": "ワークスペースボードは下部バーに移動しました",
-          "a30e34eb5c": "ワークスペースボードを閉じる",
-          "49f62c5665": "ワークスペースボード"
+          "abc62b6328": "プロジェクトを追加"
         },
         "SidebarWorkspaceFilterSection": {
           "c3fa13dc2e": "デフォルトのブランチを非表示にする",
@@ -4471,35 +4447,11 @@
           "4677394048": "接続中…",
           "75ad429b5d": "接続"
         },
-        "WorkspaceKanbanCard": {
-          "cefae8983e": "ピン留め済み"
-        },
-        "WorkspaceKanbanDrawerHeader": {
-          "f369f5c5a3": "閉じる",
-          "e1a34450fc": "ワークスペースをステータスごとに整理し、ワークスペースカードを開きます。",
-          "81870af08f": "選択中",
-          "c6a77ab0f4": "ワークスペースボード"
-        },
-        "WorkspaceKanbanPinDropTarget": {
-          "c30151c5ee": "ここにドロップすると、ステータスを変更せずにピンを固定できます。",
-          "8fae2d0862": "ピン留め済み"
-        },
-        "WorkspaceKanbanSettingsMenu": {
-          "79eb990aa4": "ステータスの追加",
-          "054cb50df7": "{{value0}} を削除",
-          "b45b350eb0": "{{value0}} を左に移動",
-          "8ce44af9a8": "{{value0}} の名前を変更",
-          "395e541d5d": "ステータス",
-          "34f03eb0de": "ボード設定",
-          "26cbc92150": "ワークスペースボードの設定",
-          "87d24a0c2f": "ボードと Issue のステータスを同期",
-          "4c2eaa78cc": "リンク済みワークスペースを移動すると、一致するワークフロー状態がある場合に Linear Issue のステータスが更新されます。"
-        },
-        "WorkspaceKanbanStatusLane": {
-          "8ad104642b": "空の",
-          "3611d1ae7f": "ワークスペースボードの列のサイズを変更する",
-          "2df01a03ff": "一致なし"
-        },
+        "WorkspaceKanbanCard": {},
+        "WorkspaceKanbanDrawerHeader": {},
+        "WorkspaceKanbanPinDropTarget": {},
+        "WorkspaceKanbanSettingsMenu": {},
+        "WorkspaceKanbanStatusLane": {},
         "WorkspaceStatusAppearancePopover": {
           "514be2f569": "{{value0}} の色を {{value1}} に設定します",
           "8be427206b": "アイコン",
@@ -5102,19 +5054,7 @@
           "3c4d5e6f7a": "ホストを管理…",
           "6e7f8a9b0c": "ホストを削除…"
         },
-        "WorkspaceKanbanDrawer": {
-          "1975a4e480": "タスクステータスの同期に失敗しました",
-          "e02b0d92ff": "タスクステータスの同期をスキップしました",
-          "c1d2e3f4a5": "Linear Issue {{value0}} を読み取れませんでした。",
-          "d2e3f4a5b6": "{{value0}} に一致する Linear ワークフロー状態がありません。",
-          "e3f4a5b6c7": "{{value0}} に一致する Linear ワークフロー状態が複数あります。",
-          "f4a5b6c7d8": "Linear Issue {{value0}} を更新できませんでした。",
-          "a5b6c7d8e9": "Linear Issue {{value0}} を同期できませんでした。",
-          "b6c7d8e9f0": "タスクステータスの同期を完了できませんでした。",
-          "c7d8e9f0a1": "{{value0}} 件更新",
-          "d8e9f0a1b2": "{{value0}} 件スキップ",
-          "e9f0a1b2c3": "{{value0}} 件失敗"
-        },
+        "WorkspaceKanbanDrawer": {},
         "WorktreeParentPickerPopover": {
           "failedSetParent": "親ワークツリーを設定できませんでした",
           "current": "現在",
@@ -5218,14 +5158,7 @@
           "attachImages": "Attach",
           "removeImage": "{{fileName}} を削除"
         },
-        "WorkspaceKanbanSearchField": {
-          "bdb753c78d": "一致するワークスペースはありません",
-          "4d96c209d6": "{{value1}} 件中 {{value0}} 件のワークスペースが一致します",
-          "c0cd6bdf6c": "ワークスペースの検索",
-          "3b7ea51793": "検索をクリア",
-          "7f1c2e94a5": "検索テキストが長すぎます — ボードは絞り込まれていません",
-          "9a4d0f6b21": "長すぎます"
-        }
+        "WorkspaceKanbanSearchField": {}
       },
       "shared": {
         "useDaemonActions": {
@@ -5890,17 +5823,7 @@
             "defaultViewTerminal": "ターミナルチャット",
             "defaultViewNative": "Chat UI"
           },
-          "agentDashboard": {
-            "title": "Agent ダッシュボード",
-            "description": "ワークツリー Agent を監視するカンバンボード。ウィンドウ内またはポップアウトで表示できます。",
-            "copy": "左サイドバーに Agent ダッシュボードのエントリを追加します。対応が必要な Agent、作業中の Agent、完了した Agent を監視し、必要に応じてアイドル状態の Agent も表示できます。",
-            "toggleLabel": "Agent ダッシュボードの切り替え",
-            "modeLabel": "開き方",
-            "modeCopy": "ダッシュボードをサイドバー横のウィンドウ内ボードまたは別のポップアウトウィンドウとして表示します。",
-            "modeAriaLabel": "Agent ダッシュボードの開き方",
-            "modeInWindow": "ウィンドウ内",
-            "modePopout": "ポップアウト"
-          }
+          "agentDashboard": {}
         },
         "FloatingWorkspacePane": {
           "aeaf76fda9": "ステータスバー",
@@ -8088,11 +8011,7 @@
               "description": "対応 Agent のターミナルセッション用デスクトップチャット画面をプレビューします。",
               "grok": "grok"
             },
-            "agentDashboard": {
-              "title": "Agent ダッシュボード",
-              "description": "ワークツリー Agent を監視するカンバンボード。ウィンドウ内またはポップアウトで表示できます。",
-              "dashboard": "ダッシュボード"
-            }
+            "agentDashboard": {}
           }
         },
         "floating": {
@@ -10602,8 +10521,7 @@
           "activity": {
             "bar": {
               "buttons": {
-                "1fd284e931": "その他のサイドバータブ",
-                "f1132ea95d": "中性"
+                "1fd284e931": "その他のサイドバータブ"
               }
             }
           },
@@ -12795,9 +12713,7 @@
           "a41fb5376e": "詳細を折りたたむ",
           "5ae84475cc": "閉じる",
           "b06e13fcf7": "Agent を閉じる",
-          "0272969e28": "この Agent に送信",
-          "92a7017987": "送信中",
-          "019b74d93a": "適格"
+          "0272969e28": "この Agent に送信"
         },
         "DashboardAgentRowMessage": {
           "0a01046763": "中断された",
@@ -13522,66 +13438,11 @@
       },
       "activity": {
         "ActivityPrototypePage": {
-          "cf780197a1": "Agent を選択してそのアクティビティを表示します",
-          "e3db9892f6": "まだアクティビティはありません。",
-          "1b633f5c1e": "ターミナルに接続中…",
-          "8de7c5beaa": "ターミナルが使用できません",
-          "866083500b": "ドラッグしてサイズを変更します",
-          "443690186e": "アクティビティスレッドリストのサイズを変更する",
-          "7cd632006b": "これらのフィルターに一致する Agent アクティビティはありません。",
-          "a2b4437bfb": "{{value0}} アクティビティ",
-          "023ff75afe": "すべて既読としてマークする",
-          "f70e4bec47": "コンパクトモード",
-          "a472a14700": "その他のオプション",
-          "db8a1878b5": "スレッドリストのオプション",
-          "d1a88df9a8": "未読のスレッドのみを表示",
-          "f6396e1f85": "Agent",
-          "b29191b3e0": "ワークツリー",
-          "8c3b621ddf": "プロジェクト",
-          "4a3986b200": "状態",
-          "770d458144": "グループ化",
-          "795cbf26e2": "フィルター…",
-          "4616ea39fd": "ワークスペースにジャンプ",
-          "threadListOptionsFiltered": "スレッドリストのオプション、フィルターが有効",
-          "showSearch": "検索を表示",
-          "markThreadRead": "スレッドを既読としてマーク",
-          "59b131fbd9": "スレッドを未読としてマークする",
-          "beb2c19173": "未読",
-          "5651b216c6": "不明なプロジェクト",
-          "22b22034bc": "スタンドアロンターミナルはアクティビティでは使用できません。",
-          "afdc2139a8": "Agent ターミナルが閉じられました。続行するには、このワークスペースで新規ターミナルを開いてください。",
-          "clearCompleted": "完了済みをクリア",
-          "none": "なし",
-          "search": "検索",
-          "showUnreadOnly": "未読のみ表示",
-          "showChildAgents": "子 Agent を表示",
-          "activityOptions": "アクティビティのオプション",
-          "interrupted": "中断",
-          "state": {
-            "working": "作業中",
-            "monitoring": "バックグラウンドタスクを監視中",
-            "blocked": "ブロック",
-            "waiting": "入力待ち",
-            "failed": "失敗",
-            "done": "完了",
-            "idle": "アイドル",
-            "unverifiable": "最近の更新なし",
-            "permission": "要対応"
-          },
-          "filtersSection": "フィルター",
-          "viewSection": "表示"
+          "state": {}
         },
-        "ActivityScopeFilterControls": {
-          "resetScope": "すべてのホストとプロジェクトを表示"
-        },
-        "ActivityThreadRow": {
-          "clearNotification": "通知を消去"
-        },
-        "ActivityTitlebarControls": {
-          "f915168c8e": "未読",
-          "d6a8de3934": "Agent",
-          "dc708f3eff": "Agent を閉じる"
-        }
+        "ActivityScopeFilterControls": {},
+        "ActivityThreadRow": {},
+        "ActivityTitlebarControls": {}
       },
       "confirmation": {
         "dialog": {
@@ -14163,104 +14024,26 @@
     }
   },
   "dashboardPopout": {
-    "view": {
-      "label": "ダッシュボード表示",
-      "board": "ダッシュボード",
-      "map": "Agent マップ"
-    },
+    "view": {},
     "map": {
-      "host": {
-        "local": "ローカル",
-        "ssh": "SSH",
-        "wsl": "WSL",
-        "remote": "リモート"
-      },
-      "liveContainmentMap": "ライブ包含マップ",
-      "empty": "現在のフィルターに一致する Agent はありません。",
-      "canvasLabel": "プロジェクト、ワークスペース、Agent の入れ子マップ",
-      "zoomOut": "ズームアウト",
-      "zoomIn": "ズームイン",
-      "fit": "全体表示",
-      "projectCount": "{{agents}}件の Agent · {{workspaces}}件のワークスペース",
-      "agentCount": "{{count}}件の Agent"
+      "host": {}
     },
-    "placeholder": {
-      "title": "Agent ダッシュボード",
-      "description": "ここに、すべての Agent が一覧で表示されます。ボードは近日公開です。"
-    },
-    "recoverableError": {
-      "title": "Orcinus のダッシュボードでエラーが発生しました。",
-      "description": "ダッシュボードのレンダリングを完了できませんでした。再マウントを試すか、開き直してください。"
-    },
-    "bucket": {
-      "attention": "対応が必要",
-      "working": "作業中",
-      "idle": "アイドル",
-      "empty": "なし",
-      "done": "完了"
-    },
-    "title": "Agent",
-    "total": "合計 {{count}} 件",
+    "placeholder": {},
+    "recoverableError": {},
+    "bucket": {},
     "card": {
-      "you": "あなた",
-      "time": {
-        "justNow": "たった今",
-        "minutes": "{{count}}分",
-        "hours": "{{count}}時間",
-        "days": "{{count}}日"
-      },
-      "review": {
-        "open": "オープン中のレビュー",
-        "draft": "下書きレビュー",
-        "merged": "マージ済みのレビュー",
-        "closed": "クローズ済みのレビュー"
-      },
-      "subagents_one": "{{count}} 個のサブ Agent",
-      "subagents_other": "{{count}} 個のサブ Agent"
+      "time": {},
+      "review": {}
     },
-    "terminal": {
-      "closed": "実行中のターミナルがありません。この Agent のペインは閉じられています。",
-      "focusWorktree": "ワークツリーを開く",
-      "close": "閉じる"
-    },
-    "close": "ダッシュボードを閉じる",
-    "settingsTooltip": "ボード設定",
+    "terminal": {},
     "filters": {
-      "remove": "{{label}} フィルターを削除",
-      "active": "フィルター",
-      "clear": "クリア",
-      "review": {
-        "open": "オープン",
-        "draft": "下書き",
-        "merged": "マージ済み",
-        "closed": "クローズ",
-        "none": "レビューなし"
-      },
-      "reviewChip": "レビュー: {{state}}",
-      "label": "フィルター",
-      "project": "プロジェクト",
-      "workspaceStatus": "ワークスペースのステータス",
-      "reviewStatus": "PR / MR ステータス",
-      "clearAll": "すべてのフィルターをクリア"
+      "review": {}
     },
-    "search": {
-      "placeholder": "ワークツリー、プロジェクト、Agent を検索…",
-      "label": "Agent を検索",
-      "clear": "検索をクリア",
-      "results": "{{total}} 件中 {{shown}} 件を表示"
-    },
-    "settingsLabel": "Agent ダッシュボード設定",
-    "settings": {
-      "showIdle": "アイドル状態の Agent を表示",
-      "showIdleCopy": "完了を報告せずに30分間停止している Agent を含めます。デフォルトでは非表示です。"
-    }
+    "search": {},
+    "settings": {}
   },
   "dashboard": {
     "sidebar": {
-      "label": "Agent",
-      "dashboardLabel": "Agent ダッシュボード",
-      "openActivity": "アクティビティを表示",
-      "closeActivity": "アクティビティビューを閉じる",
       "projects": "プロジェクト",
       "workspaces": "ワークスペース"
     }
@@ -14306,9 +14089,6 @@
   },
   "agentsSidebarIntro": {
     "migrated": {
-      "title": "Agent が見つけやすくなりました",
-      "description": "Agent ビューはサイドバーの専用タブになりました。アクティビティとフィルターはそのまま引き継がれます。",
-      "dismiss": "OK",
       "action": "Agent を開く"
     },
     "new": {

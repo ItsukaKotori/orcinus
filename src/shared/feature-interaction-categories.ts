@@ -20,9 +20,7 @@ export const FEATURE_INTERACTION_CATEGORIES = [
 export type FeatureInteractionCategory = (typeof FEATURE_INTERACTION_CATEGORIES)[number]
 
 export const FEATURE_INTERACTION_CATEGORY_BY_ID = {
-  'workspace-board': 'workspace',
   'workspace-agent-sessions': 'workspace',
-  'workspace-board-actions': 'workspace',
   'cmd-j': 'launcher',
   'cmd-j-workspace-open': 'launcher',
   'cmd-j-browser-page-open': 'launcher',

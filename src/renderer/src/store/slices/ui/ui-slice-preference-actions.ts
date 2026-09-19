@@ -1,9 +1,5 @@
 import type { UISlice, UISliceGet, UISliceSet } from './ui-slice-contract'
 import {
-  DEFAULT_AGENTS_GROUP_BY,
-  DEFAULT_AGENTS_READ_FILTER
-} from '../../../../../shared/agents-view-thread-filters'
-import {
   DEFAULT_AGENT_ACTIVITY_DISPLAY_MODE,
   DEFAULT_SHOW_SLEEPING_WORKSPACES,
   DEFAULT_STATUS_BAR_ITEMS,
@@ -31,18 +27,12 @@ import {
   toPersistedAutomationHostFilter
 } from '../../../../../shared/automation-host-filter'
 import {
-  clampWorkspaceBoardColumnWidth,
-  clampWorkspaceBoardOpacity,
   cloneDefaultWorkspaceStatuses,
-  normalizeWorkspaceStatuses,
-  WORKSPACE_BOARD_COLUMN_WIDTH_DEFAULT
+  normalizeWorkspaceStatuses
 } from '../../../../../shared/workspace-statuses'
 
 export function createUiPreferenceActions(set: UISliceSet, get: UISliceGet): Partial<UISlice> {
   return {
-    sidebarBody: 'workspaces',
-    setSidebarBody: (body) => set({ sidebarBody: body }),
-
     groupBy: 'repo',
     // Why: group keys are mode-specific, so clear collapsed state on mode switch — stale keys are meaningless and accumulate.
     setGroupBy: (g) => {
@@ -153,43 +143,6 @@ export function createUiPreferenceActions(set: UISliceSet, get: UISliceGet): Par
     filterRepoIds: [],
     setFilterRepoIds: (ids) => set({ filterRepoIds: ids }),
 
-    agentsVisibleHostIds: null,
-    setAgentsVisibleHostIds: (ids) => {
-      const agentsVisibleHostIds = normalizeVisibleExecutionHostIds(ids)
-      set({ agentsVisibleHostIds })
-      window.api.ui.set({ agentsVisibleHostIds }).catch(console.error)
-    },
-    agentsFilterRepoIds: [],
-    setAgentsFilterRepoIds: (ids) => {
-      set({ agentsFilterRepoIds: ids })
-      window.api.ui.set({ agentsFilterRepoIds: [...ids] }).catch(console.error)
-    },
-    agentsShowChildAgents: false,
-    setAgentsShowChildAgents: (v) => {
-      set({ agentsShowChildAgents: v })
-      window.api.ui.set({ agentsShowChildAgents: v }).catch(console.error)
-    },
-    agentsCompactMode: true,
-    setAgentsCompactMode: (v) => {
-      set({ agentsCompactMode: v })
-      window.api.ui.set({ agentsCompactMode: v }).catch(console.error)
-    },
-    agentsShowSearch: true,
-    setAgentsShowSearch: (v) => {
-      set({ agentsShowSearch: v })
-      window.api.ui.set({ agentsShowSearch: v }).catch(console.error)
-    },
-    agentsReadFilter: DEFAULT_AGENTS_READ_FILTER,
-    setAgentsReadFilter: (v) => {
-      set({ agentsReadFilter: v })
-      window.api.ui.set({ agentsReadFilter: v }).catch(console.error)
-    },
-    agentsGroupBy: DEFAULT_AGENTS_GROUP_BY,
-    setAgentsGroupBy: (v) => {
-      set({ agentsGroupBy: v })
-      window.api.ui.set({ agentsGroupBy: v }).catch(console.error)
-    },
-
     collapsedGroups: new Set<string>(),
     toggleCollapsedGroup: (key) =>
       set((s) => {
@@ -242,26 +195,6 @@ export function createUiPreferenceActions(set: UISliceSet, get: UISliceGet): Par
       set({ workspaceStatuses: normalized })
     },
 
-    workspaceBoardOpacity: 1,
-    setWorkspaceBoardOpacity: (opacity) => {
-      const clamped = clampWorkspaceBoardOpacity(opacity)
-      window.api.ui.set({ workspaceBoardOpacity: clamped }).catch(console.error)
-      set({ workspaceBoardOpacity: clamped })
-    },
-
-    workspaceBoardColumnWidth: WORKSPACE_BOARD_COLUMN_WIDTH_DEFAULT,
-    setWorkspaceBoardColumnWidth: (width) => {
-      const clamped = clampWorkspaceBoardColumnWidth(width)
-      window.api.ui.set({ workspaceBoardColumnWidth: clamped }).catch(console.error)
-      set({ workspaceBoardColumnWidth: clamped })
-    },
-
-    syncTaskStatusFromWorkspaceBoard: false,
-    setSyncTaskStatusFromWorkspaceBoard: (enabled) => {
-      window.api.ui.set({ syncTaskStatusFromWorkspaceBoard: enabled }).catch(console.error)
-      set({ syncTaskStatusFromWorkspaceBoard: enabled })
-    },
-
     statusBarItems: [...DEFAULT_STATUS_BAR_ITEMS],
     toggleStatusBarItem: (item) =>
       set((s) => {
@@ -273,8 +206,6 @@ export function createUiPreferenceActions(set: UISliceSet, get: UISliceGet): Par
         return { statusBarItems: updated }
       }),
 
-    agentDashboardDrawerOpen: false,
-    setAgentDashboardDrawerOpen: (open) => set({ agentDashboardDrawerOpen: open }),
     statusBarVisible: true,
     setStatusBarVisible: (v) => {
       window.api.ui.set({ statusBarVisible: v }).catch(console.error)

@@ -7,13 +7,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { flushWorktreePointerDragFrame, type WorktreePointerDragFrameArgs } from './pointer-flush'
 import { NO_WORKTREE_SIDEBAR_DROP_TARGET, WORKTREE_ROW_DRAG_INITIAL_STATE } from './row-state'
 
-vi.mock('../../workspace-kanban-sidebar-drop', () => ({
-  clearWorkspaceKanbanSidebarDropTargetVisual: vi.fn(),
-  hasWorkspaceKanbanSidebarDropBoard: () => true,
-  isWorkspaceKanbanSidebarDropPointInBoard: () => false,
-  updateWorkspaceKanbanSidebarDropTargetVisual: () => ({ status: null, isPinDrop: false })
-}))
-
 vi.mock('./pointer-commit', () => ({ commitWorktreePointerDrop: vi.fn() }))
 
 afterEach(() => {
@@ -50,10 +43,8 @@ function setup() {
       preview: document.createElement('div'),
       previewOffsetX: 20,
       previewOffsetY: 20,
-      workspaceBoardDragPreviewRequested: false,
       frameId: null,
       reorderIntent: null,
-      latestBoardDropTarget: null,
       latestStatusDropTarget: null
     },
     ctx: {
@@ -78,10 +69,6 @@ function setup() {
       onReorderWorktrees: vi.fn(),
       onPinWorktrees: vi.fn()
     },
-    workspaceBoardOpen: false,
-    onWorkspaceBoardDragPreviewStart: vi.fn(),
-    onWorkspaceBoardDragPreviewCommit: vi.fn(),
-    shouldShowWorkspaceBoardDropIndicator: () => false,
     setDragOverStatus: vi.fn(),
     setPinDragOver: vi.fn(),
     setWorktreeDragState: (update) => {
@@ -192,20 +179,16 @@ describe('stationary pointer autoscroll', () => {
 describe('Escape during pointer dragging', () => {
   function renderDrag() {
     const t = setup()
-    const cancelBoard = vi.fn()
     const { result, unmount } = renderHook(() => {
       const runtime = useWorktreeDragRuntime({
         worktreeDragSessionRef: { current: null },
-        statusDropAnchorsRef: { current: new Map() },
-        onWorkspaceBoardDragPreviewCancel: cancelBoard
+        statusDropAnchorsRef: { current: new Map() }
       })
       useWorktreePointerDragWindowEvents({
         ctx: t.args.ctx,
         runtime,
         beginWorktreePointerDrag: vi.fn(),
-        scheduleWorktreePointerDragFrame: vi.fn(),
-        onWorkspaceBoardDragPreviewCommit: vi.fn(),
-        onDropWorktreesOnWorkspaceBoard: vi.fn()
+        scheduleWorktreePointerDragFrame: vi.fn()
       })
       return runtime
     })
@@ -213,7 +196,7 @@ describe('Escape during pointer dragging', () => {
     if (t.args.drag.preview) {
       document.body.append(t.args.drag.preview)
     }
-    return { ...t, result, unmount, cancelBoard }
+    return { ...t, result, unmount }
   }
 
   it('removes the preview and cancels frames without committing on pointer release', () => {
@@ -228,7 +211,6 @@ describe('Escape during pointer dragging', () => {
     expect(t.args.drag.preview?.isConnected).toBe(false)
     expect(cancelFrame).toHaveBeenCalledWith(12)
     expect(cancelFrame).toHaveBeenCalledWith(13)
-    expect(t.cancelBoard).toHaveBeenCalledOnce()
     window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1 }))
     expect(commitWorktreePointerDrop).not.toHaveBeenCalled()
     expect(t.result.current.worktreeDragState).toBe(WORKTREE_ROW_DRAG_INITIAL_STATE)
@@ -244,7 +226,6 @@ describe('Escape during pointer dragging', () => {
     const escape = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true })
     window.dispatchEvent(escape)
     expect(escape.defaultPrevented).toBe(false)
-    expect(t.cancelBoard).toHaveBeenCalledOnce()
   })
 
   it('removes its Escape listener on unmount', () => {
@@ -253,7 +234,6 @@ describe('Escape during pointer dragging', () => {
     const escape = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true })
     window.dispatchEvent(escape)
     expect(escape.defaultPrevented).toBe(false)
-    expect(t.cancelBoard).not.toHaveBeenCalled()
     t.args.drag.preview?.remove()
   })
 })

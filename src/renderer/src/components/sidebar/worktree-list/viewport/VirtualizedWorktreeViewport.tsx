@@ -104,8 +104,7 @@ export const VirtualizedWorktreeViewport = React.memo(function VirtualizedWorktr
   })
   const runtime = useWorktreeDragRuntime({
     worktreeDragSessionRef: session.worktreeDragSessionRef,
-    statusDropAnchorsRef: session.statusDropAnchorsRef,
-    onWorkspaceBoardDragPreviewCancel: props.onWorkspaceBoardDragPreviewCancel
+    statusDropAnchorsRef: session.statusDropAnchorsRef
   })
 
   const primaryActive = usePrimaryActiveWorktreeRow({
@@ -213,12 +212,7 @@ export const VirtualizedWorktreeViewport = React.memo(function VirtualizedWorktr
     scrollRef,
     markScrollMovement,
     selectedWorktreeIds: props.selectedWorktreeIds,
-    selectedWorktrees: props.selectedWorktrees,
-    workspaceBoardOpen: props.workspaceBoardOpen,
-    onWorkspaceBoardDragPreviewStart: props.onWorkspaceBoardDragPreviewStart,
-    onWorkspaceBoardDragPreviewCommit: props.onWorkspaceBoardDragPreviewCommit,
-    onDropWorktreesOnWorkspaceBoard: props.onDropWorktreesOnWorkspaceBoard,
-    shouldShowWorkspaceBoardDropIndicator: props.shouldShowWorkspaceBoardDropIndicator
+    selectedWorktrees: props.selectedWorktrees
   })
   const nativeDrag = useWorktreeNativeDrag({
     ctx: dropCtx,

@@ -77,9 +77,7 @@
     "quit": "종료",
     "minimizeNotice": {
       "body": "Orcinus가 시스템 트레이에서 계속 실행 중입니다"
-    },
-    "activityWaiting": "Orcinus - 활동 대기 중",
-    "activityWaitingSuffix": "activity waiting"
+    }
   },
   "worktreeJumpPalette": {
     "matchLabel": {
@@ -4323,26 +4321,7 @@
           "attachWhileSending": "Wait for the current feedback to finish sending before attaching more images.",
           "imagesNotDelivered": "Feedback sent, but image delivery could not be confirmed."
         },
-        "SidebarFilter": {
-          "e3b3898218": "프로젝트 추가",
-          "92a23e6d07": "필터 재설정",
-          "81ded53722": "SSH",
-          "b9e8802e73": "일치하는 프로젝트가 없습니다.",
-          "779b7ba05d": "지우기",
-          "139877b384": "모두 선택",
-          "5f7085a077": "프로젝트",
-          "e5cb32a898": "기본 브랜치 숨기기",
-          "638a2d221d": "슬립 중인 항목 숨기기",
-          "f506a1262a": "워크스페이스 필터링",
-          "75405270ed": "필터 편집({{value0}} 활성)",
-          "489d1c8c9f": "프로젝트 검색...",
-          "ee240a39eb": "필터 편집",
-          "automationCreated": "자동화로 생성된 워크스페이스 숨기기",
-          "cliCreated": "CLI로 생성된 워크스페이스 숨기기",
-          "detachedHead": "분리된 HEAD 숨기기",
-          "keepDefaultBranch": "기본 브랜치는 제외",
-          "keepDefaultBranchAria": "슬립 중인 워크스페이스를 숨겨도 기본 브랜치는 계속 표시"
-        },
+        "SidebarFilter": {},
         "SidebarHeader": {
           "projects": "프로젝트",
           "92154beb7e": "새로운 워크스페이스",
@@ -4398,10 +4377,7 @@
         },
         "SidebarToolbar": {
           "19e32d0e5f": "폴더 선택기를 열어 프로젝트를 추가하세요.",
-          "abc62b6328": "프로젝트 추가",
-          "87d0064026": "워크스페이스 보드가 하단 바로 옮겨졌습니다",
-          "a30e34eb5c": "워크스페이스 보드 닫기",
-          "49f62c5665": "워크스페이스 보드"
+          "abc62b6328": "프로젝트 추가"
         },
         "SidebarWorkspaceFilterSection": {
           "c3fa13dc2e": "기본 브랜치 숨기기",
@@ -4476,35 +4452,11 @@
           "4677394048": "연결 중…",
           "75ad429b5d": "연결"
         },
-        "WorkspaceKanbanCard": {
-          "cefae8983e": "고정됨"
-        },
-        "WorkspaceKanbanDrawerHeader": {
-          "f369f5c5a3": "닫기",
-          "e1a34450fc": "상태별로 워크스페이스를 구성하고 워크스페이스 카드를 엽니다.",
-          "81870af08f": "선택된",
-          "c6a77ab0f4": "워크스페이스 보드"
-        },
-        "WorkspaceKanbanPinDropTarget": {
-          "c30151c5ee": "상태를 변경하지 않고 고정하려면 여기에 드롭하세요.",
-          "8fae2d0862": "고정됨"
-        },
-        "WorkspaceKanbanSettingsMenu": {
-          "79eb990aa4": "상태 추가",
-          "054cb50df7": "{{value0}} 제거",
-          "b45b350eb0": "{{value0}} 왼쪽으로 이동",
-          "8ce44af9a8": "{{value0}} 이름 바꾸기",
-          "395e541d5d": "상태",
-          "34f03eb0de": "보드 설정",
-          "26cbc92150": "워크스페이스 보드 설정",
-          "87d24a0c2f": "보드와 이슈 상태 동기화",
-          "4c2eaa78cc": "연결된 워크스페이스를 이동하면 일치하는 워크플로 상태가 있을 때 Linear 이슈 상태가 업데이트됩니다."
-        },
-        "WorkspaceKanbanStatusLane": {
-          "8ad104642b": "비어 있음",
-          "3611d1ae7f": "워크스페이스 보드 열 크기 조정",
-          "2df01a03ff": "일치하는 항목 없음"
-        },
+        "WorkspaceKanbanCard": {},
+        "WorkspaceKanbanDrawerHeader": {},
+        "WorkspaceKanbanPinDropTarget": {},
+        "WorkspaceKanbanSettingsMenu": {},
+        "WorkspaceKanbanStatusLane": {},
         "WorkspaceStatusAppearancePopover": {
           "514be2f569": "{{value0}} 색상을 {{value1}}로 설정",
           "8be427206b": "아이콘",
@@ -5107,19 +5059,7 @@
           "3c4d5e6f7a": "호스트 관리…",
           "6e7f8a9b0c": "호스트 제거…"
         },
-        "WorkspaceKanbanDrawer": {
-          "1975a4e480": "작업 상태 동기화 실패",
-          "e02b0d92ff": "작업 상태 동기화 건너뜀",
-          "c1d2e3f4a5": "Linear 이슈 {{value0}}을(를) 읽을 수 없습니다.",
-          "d2e3f4a5b6": "{{value0}}에 일치하는 Linear 워크플로 상태가 없습니다.",
-          "e3f4a5b6c7": "{{value0}}에 일치하는 Linear 워크플로 상태가 여러 개입니다.",
-          "f4a5b6c7d8": "Linear 이슈 {{value0}}을(를) 업데이트할 수 없습니다.",
-          "a5b6c7d8e9": "Linear 이슈 {{value0}}을(를) 동기화할 수 없습니다.",
-          "b6c7d8e9f0": "작업 상태 동기화를 완료할 수 없습니다.",
-          "c7d8e9f0a1": "{{value0}}개 업데이트됨",
-          "d8e9f0a1b2": "{{value0}}개 건너뜀",
-          "e9f0a1b2c3": "{{value0}}개 실패"
-        },
+        "WorkspaceKanbanDrawer": {},
         "WorktreeParentPickerPopover": {
           "failedSetParent": "상위 워크트리를 설정하지 못했습니다",
           "current": "현재",
@@ -5223,14 +5163,7 @@
           "attachImages": "Attach",
           "removeImage": "Remove {{fileName}}"
         },
-        "WorkspaceKanbanSearchField": {
-          "bdb753c78d": "일치하는 워크스페이스가 없습니다",
-          "4d96c209d6": "워크스페이스 {{value1}}개 중 {{value0}}개 일치",
-          "c0cd6bdf6c": "워크스페이스 검색",
-          "3b7ea51793": "검색 지우기",
-          "7f1c2e94a5": "검색어가 너무 깁니다 — 보드가 필터링되지 않았습니다",
-          "9a4d0f6b21": "너무 김"
-        }
+        "WorkspaceKanbanSearchField": {}
       },
       "shared": {
         "useDaemonActions": {
@@ -5895,17 +5828,7 @@
             "defaultViewTerminal": "Terminal 채팅",
             "defaultViewNative": "Chat UI"
           },
-          "agentDashboard": {
-            "title": "에이전트 대시보드",
-            "description": "워크트리 전반에 걸친 에이전트를 모니터링하는 칸반 보드. 윈도우 내 또는 팝업으로 표시됩니다.",
-            "copy": "왼쪽 사이드바에 에이전트 대시보드 항목을 추가합니다. 사용자 확인이 필요한 에이전트, 작업 중인 에이전트, 완료된 에이전트를 모니터링하고 필요하면 유휴 에이전트도 표시합니다.",
-            "toggleLabel": "에이전트 대시보드 전환",
-            "modeLabel": "열기 형식",
-            "modeCopy": "대시보드를 사이드바 옆 윈도우 내 보드 또는 별도의 팝업 윈도우로 표시합니다.",
-            "modeAriaLabel": "에이전트 대시보드 열기 모드",
-            "modeInWindow": "윈도우 내",
-            "modePopout": "팝업"
-          }
+          "agentDashboard": {}
         },
         "FloatingWorkspacePane": {
           "aeaf76fda9": "상태 표시줄",
@@ -8056,11 +7979,7 @@
               "description": "지원되는 에이전트 터미널 세션의 데스크톱 채팅 화면을 미리 봅니다.",
               "grok": "grok"
             },
-            "agentDashboard": {
-              "title": "에이전트 대시보드",
-              "description": "워크트리 전반에 걸친 에이전트를 모니터링하는 칸반 보드. 윈도우 내 또는 팝업으로 표시됩니다.",
-              "dashboard": "대시보드"
-            }
+            "agentDashboard": {}
           }
         },
         "floating": {
@@ -10645,8 +10564,7 @@
           "activity": {
             "bar": {
               "buttons": {
-                "1fd284e931": "추가 사이드바 탭",
-                "f1132ea95d": "중립적"
+                "1fd284e931": "추가 사이드바 탭"
               }
             }
           },
@@ -12845,9 +12763,7 @@
           "a41fb5376e": "세부정보 접기",
           "5ae84475cc": "닫기",
           "b06e13fcf7": "agent 닫기",
-          "0272969e28": "이 agent에게 보내기",
-          "92a7017987": "전송 중",
-          "019b74d93a": "전송 가능"
+          "0272969e28": "이 agent에게 보내기"
         },
         "DashboardAgentRowMessage": {
           "0a01046763": "중단됨",
@@ -13577,66 +13493,11 @@
       },
       "activity": {
         "ActivityPrototypePage": {
-          "cf780197a1": "활동을 보려면 agent를 선택하세요.",
-          "e3db9892f6": "아직 활동이 없습니다.",
-          "1b633f5c1e": "terminal 연결 중...",
-          "8de7c5beaa": "Terminal을 사용할 수 없음",
-          "866083500b": "드래그하여 크기 조정",
-          "443690186e": "활동 스레드 목록 크기 조정",
-          "7cd632006b": "이 필터와 일치하는 agent 활동이 없습니다.",
-          "a2b4437bfb": "{{value0}} 활동",
-          "023ff75afe": "모두 읽은 것으로 표시",
-          "f70e4bec47": "컴팩트 모드",
-          "a472a14700": "추가 옵션",
-          "db8a1878b5": "스레드 목록 옵션",
-          "d1a88df9a8": "읽지 않은 스레드만 표시",
-          "f6396e1f85": "에이전트",
-          "b29191b3e0": "워크트리",
-          "8c3b621ddf": "프로젝트",
-          "4a3986b200": "상태",
-          "770d458144": "그룹화 기준",
-          "795cbf26e2": "필터...",
-          "4616ea39fd": "워크스페이스로 이동",
-          "threadListOptionsFiltered": "스레드 목록 옵션, 필터 활성화됨",
-          "showSearch": "검색 표시",
-          "markThreadRead": "스레드를 읽은 것으로 표시",
-          "59b131fbd9": "스레드를 읽지 않은 것으로 표시",
-          "beb2c19173": "읽지 않음",
-          "5651b216c6": "알 수 없는 프로젝트",
-          "22b22034bc": "활동에서는 독립형 terminal을 사용할 수 없습니다.",
-          "afdc2139a8": "Agent terminal이 닫혔습니다. 계속하려면 이 워크스페이스에서 새 terminal을 여세요.",
-          "clearCompleted": "완료된 항목 지우기",
-          "none": "없음",
-          "search": "검색",
-          "showUnreadOnly": "읽지 않은 항목만 표시",
-          "showChildAgents": "하위 에이전트 표시",
-          "activityOptions": "활동 옵션",
-          "interrupted": "중단됨",
-          "state": {
-            "working": "작업 중",
-            "monitoring": "백그라운드 작업 모니터링 중",
-            "blocked": "차단됨",
-            "waiting": "입력 대기 중",
-            "failed": "실패",
-            "done": "완료",
-            "idle": "유휴",
-            "unverifiable": "최근 업데이트 없음",
-            "permission": "주의 필요"
-          },
-          "filtersSection": "필터",
-          "viewSection": "보기"
+          "state": {}
         },
-        "ActivityScopeFilterControls": {
-          "resetScope": "모든 호스트 및 프로젝트 표시"
-        },
-        "ActivityThreadRow": {
-          "clearNotification": "알림 지우기"
-        },
-        "ActivityTitlebarControls": {
-          "f915168c8e": "읽지 않음",
-          "d6a8de3934": "에이전트",
-          "dc708f3eff": "agents 닫기"
-        }
+        "ActivityScopeFilterControls": {},
+        "ActivityThreadRow": {},
+        "ActivityTitlebarControls": {}
       },
       "confirmation": {
         "dialog": {
@@ -14279,104 +14140,26 @@
     }
   },
   "dashboardPopout": {
-    "view": {
-      "label": "대시보드 보기",
-      "board": "대시보드",
-      "map": "에이전트 맵"
-    },
+    "view": {},
     "map": {
-      "host": {
-        "local": "로컬",
-        "ssh": "SSH",
-        "wsl": "WSL",
-        "remote": "원격"
-      },
-      "liveContainmentMap": "실시간 포함 관계 맵",
-      "empty": "현재 필터와 일치하는 에이전트가 없습니다.",
-      "canvasLabel": "프로젝트, 작업 공간, 에이전트의 중첩 맵",
-      "zoomOut": "축소",
-      "zoomIn": "확대",
-      "fit": "맞춤",
-      "projectCount": "에이전트 {{agents}}개 · 작업 공간 {{workspaces}}개",
-      "agentCount": "에이전트 {{count}}개"
+      "host": {}
     },
-    "placeholder": {
-      "title": "에이전트 대시보드",
-      "description": "모든 에이전트를 한눈에 볼 수 있는 곳입니다. 보드는 곧 제공됩니다."
-    },
-    "recoverableError": {
-      "title": "Orcinus 대시보드에서 오류가 발생했습니다.",
-      "description": "대시보드 렌더링을 완료하지 못했습니다. 다시 시도해 다시 마운트하거나 다시 열어 보세요."
-    },
-    "bucket": {
-      "attention": "확인 필요",
-      "working": "작업 중",
-      "idle": "유휴",
-      "empty": "없음",
-      "done": "완료"
-    },
-    "title": "에이전트",
-    "total": "총 {{count}}개",
+    "placeholder": {},
+    "recoverableError": {},
+    "bucket": {},
     "card": {
-      "you": "나",
-      "time": {
-        "justNow": "방금",
-        "minutes": "{{count}}분",
-        "hours": "{{count}}시간",
-        "days": "{{count}}일"
-      },
-      "review": {
-        "open": "열린 리뷰",
-        "draft": "초안 리뷰",
-        "merged": "병합된 리뷰",
-        "closed": "닫힌 리뷰"
-      },
-      "subagents_one": "서브에이전트 {{count}}개",
-      "subagents_other": "서브에이전트 {{count}}개"
+      "time": {},
+      "review": {}
     },
-    "terminal": {
-      "closed": "실시간 터미널이 없습니다 — 이 에이전트의 창이 닫혔습니다.",
-      "focusWorktree": "워크트리 열기",
-      "close": "닫기"
-    },
-    "close": "대시보드 닫기",
-    "settingsTooltip": "보드 설정",
+    "terminal": {},
     "filters": {
-      "remove": "{{label}} 필터 제거",
-      "active": "필터",
-      "clear": "지우기",
-      "review": {
-        "open": "열림",
-        "draft": "초안",
-        "merged": "병합됨",
-        "closed": "닫힘",
-        "none": "리뷰 없음"
-      },
-      "reviewChip": "리뷰: {{state}}",
-      "label": "필터",
-      "project": "프로젝트",
-      "workspaceStatus": "워크스페이스 상태",
-      "reviewStatus": "PR / MR 상태",
-      "clearAll": "모든 필터 지우기"
+      "review": {}
     },
-    "search": {
-      "placeholder": "워크트리, 프로젝트 또는 에이전트 검색…",
-      "label": "에이전트 검색",
-      "clear": "검색 지우기",
-      "results": "총 {{total}}개 중 {{shown}}개 표시"
-    },
-    "settingsLabel": "에이전트 대시보드 설정",
-    "settings": {
-      "showIdle": "유휴 에이전트 표시",
-      "showIdleCopy": "완료를 보고하지 않은 채 30분 동안 조용한 에이전트를 포함합니다. 기본적으로 숨겨집니다."
-    }
+    "search": {},
+    "settings": {}
   },
   "dashboard": {
     "sidebar": {
-      "label": "에이전트",
-      "dashboardLabel": "에이전트 대시보드",
-      "openActivity": "활동 보기",
-      "closeActivity": "활동 보기 닫기",
       "projects": "프로젝트",
       "workspaces": "워크스페이스"
     }
@@ -14422,9 +14205,6 @@
   },
   "agentsSidebarIntro": {
     "migrated": {
-      "title": "에이전트를 더 쉽게 찾을 수 있습니다",
-      "description": "에이전트 보기가 이제 사이드바 전용 탭이 되었습니다. 활동과 필터는 그대로 유지됩니다.",
-      "dismiss": "확인",
       "action": "에이전트 열기"
     },
     "new": {

@@ -39,7 +39,7 @@ describe('getEditorCmdSaveFileId', () => {
   it('claims nothing on a non-workspace view so the shortcut is not swallowed', () => {
     const getActiveTab = vi.fn(() => null)
 
-    for (const activeView of ['tasks', 'settings', 'activity'] as const) {
+    for (const activeView of ['tasks', 'settings', 'space'] as const) {
       expect(
         getEditorCmdSaveFileId(
           { activeFileId: 'main-file', activeTabType: 'editor', activeView, getActiveTab },

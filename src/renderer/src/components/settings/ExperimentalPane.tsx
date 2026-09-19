@@ -9,7 +9,6 @@ import { HiddenExperimentalGroup } from './HiddenExperimentalGroup'
 import { NumberField, SettingsSwitch } from './SettingsFormControls'
 import { translate } from '@/i18n/i18n'
 import { NativeChatExperimentalSetting } from './NativeChatExperimentalSetting'
-import { AgentDashboardExperimentalSetting } from './AgentDashboardExperimentalSetting'
 import {
   MAX_AGENT_HIBERNATION_IDLE_MS,
   MIN_AGENT_HIBERNATION_IDLE_MS,
@@ -37,9 +36,6 @@ export function ExperimentalPane({
   const showNativeChat = matchesSettingsSearch(searchQuery, [
     getExperimentalSearchEntry().nativeChat
   ])
-  const showAgentDashboard = matchesSettingsSearch(searchQuery, [
-    getExperimentalSearchEntry().agentDashboard
-  ])
   const showTerminalAttention = matchesSettingsSearch(searchQuery, [
     getExperimentalSearchEntry().terminalAttention
   ])
@@ -59,10 +55,6 @@ export function ExperimentalPane({
 
   return (
     <div className="space-y-4">
-      {showAgentDashboard ? (
-        <AgentDashboardExperimentalSetting settings={settings} updateSettings={updateSettings} />
-      ) : null}
-
       {showNativeChat ? (
         <NativeChatExperimentalSetting settings={settings} updateSettings={updateSettings} />
       ) : null}

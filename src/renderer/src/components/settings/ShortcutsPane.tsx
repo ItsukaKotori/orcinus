@@ -70,9 +70,6 @@ export function ShortcutsPane(): React.JSX.Element {
       return [policy['managed-browser'].state === 'enabled'] as const
     })
   )
-  const agentDashboardEnabled = useAppStore(
-    (state) => state.settings?.experimentalAgentDashboardPopout === true
-  )
   const mountedRef = useMountedRef()
   const [errors, setErrors] = useState<Partial<Record<KeybindingActionId, string>>>({})
   const [recordingActionId, setRecordingActionId] = useState<KeybindingActionId | null>(null)
@@ -133,13 +130,11 @@ export function ShortcutsPane(): React.JSX.Element {
         terminalShortcutPolicy,
         platform,
         managedBrowserCreationEnabled,
-        agentDashboardEnabled,
         settingsSearchQuery: searchQuery,
         shortcutQuery,
         shortcutFilter
       }),
     [
-      agentDashboardEnabled,
       conflictByAction,
       groups,
       keybindings,

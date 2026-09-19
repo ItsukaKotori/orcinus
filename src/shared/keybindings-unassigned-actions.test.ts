@@ -90,63 +90,6 @@ describe('keybindings', () => {
     ).toBe(false)
   })
 
-  it('keeps workspace board unassigned until users customize it', () => {
-    const binding = {
-      key: 'k',
-      code: 'KeyK',
-      control: true,
-      meta: false,
-      alt: true,
-      shift: false
-    }
-
-    expect(getEffectiveKeybindingsForAction('workspace.openBoard', 'linux')).toEqual([])
-    expect(keybindingMatchesAction('workspace.openBoard', binding, 'linux')).toBe(false)
-    expect(
-      keybindingMatchesAction('workspace.openBoard', binding, 'linux', {
-        'workspace.openBoard': ['Mod+Alt+K']
-      })
-    ).toBe(true)
-
-    const definition = getKeybindingDefinition('workspace.openBoard')
-    expect(definition?.title).toBe('Toggle Workspace Board')
-    expect(definition?.searchKeywords).toEqual(
-      expect.arrayContaining(['workspace', 'board', 'kanban', 'toggle', 'open', 'close'])
-    )
-  })
-
-  it('keeps the agent dashboard toggle unassigned until users customize it', () => {
-    const platforms: readonly KeybindingPlatform[] = ['darwin', 'linux', 'win32']
-
-    for (const platform of platforms) {
-      expect(getEffectiveKeybindingsForAction('dashboard.toggle', platform)).toEqual([])
-    }
-
-    const binding = {
-      key: 'd',
-      code: 'KeyD',
-      control: true,
-      meta: false,
-      alt: true,
-      shift: false
-    }
-
-    expect(keybindingMatchesAction('dashboard.toggle', binding, 'linux')).toBe(false)
-    expect(
-      keybindingMatchesAction('dashboard.toggle', binding, 'linux', {
-        'dashboard.toggle': ['Mod+Alt+D']
-      })
-    ).toBe(true)
-
-    const definition = getKeybindingDefinition('dashboard.toggle')
-    expect(definition?.title).toBe('Toggle Agent Dashboard')
-    expect(definition?.group).toBe('Global')
-    expect(definition?.allowInTerminal).toBe(true)
-    expect(definition?.searchKeywords).toEqual(
-      expect.arrayContaining(['agent', 'dashboard', 'kanban', 'toggle', 'open', 'close'])
-    )
-  })
-
   it('keeps the quick commands menu toggle unassigned until users customize it', () => {
     const platforms: readonly KeybindingPlatform[] = ['darwin', 'linux', 'win32']
 

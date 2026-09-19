@@ -1,22 +1,15 @@
 // @vitest-environment happy-dom
 
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { tmpdir } from 'node:os'
-import { cleanup, render, waitFor } from '@testing-library/react'
+import { cleanup, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getDefaultSettings } from '../../../../shared/constants'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 
 const mocks = vi.hoisted(() => ({
-  state: {} as Record<string, unknown>,
-  // Stable callback identities so companion-board Effects only re-run on real state changes.
-  closeWorkspaceBoard: vi.fn(),
-  panel: {
-    workspaceBoardOpen: false,
-    workspaceBoardRenderedOpen: true,
-    workspaceBoardDragPreviewOpen: false
-  }
+  state: {} as Record<string, unknown>
 }))
 
 vi.mock('@/store', () => ({
@@ -40,12 +33,6 @@ vi.mock('@/components/ui/tooltip', () => ({
 
 vi.mock('./SidebarHeader', () => ({ default: () => <div data-testid="sidebar-header" /> }))
 
-vi.mock('./SidebarAgentsList', () => ({
-  default: ({ query }: { query: string }) => (
-    <div data-testid="sidebar-agents-list" data-query={query} />
-  )
-}))
-
 vi.mock('./SidebarNav', () => ({
   default: () => <div data-testid="sidebar-nav" />
 }))
@@ -62,22 +49,6 @@ vi.mock('./SidebarToolbar', () => ({
   default: () => <div data-testid="sidebar-toolbar" />
 }))
 
-vi.mock('./WorkspaceKanbanDrawer', () => ({
-  default: ({
-    leftSidebarStyle,
-    statusBarVisible
-  }: {
-    leftSidebarStyle?: CSSProperties
-    statusBarVisible: boolean
-  }) => (
-    <div
-      data-testid="workspace-kanban-drawer"
-      data-status-bar-visible={String(statusBarVisible)}
-      style={leftSidebarStyle}
-    />
-  )
-}))
-
 vi.mock('./useSidebarProjectDrop', () => ({
   useSidebarProjectDrop: () => ({
     nativeDropTarget: undefined,
@@ -86,34 +57,17 @@ vi.mock('./useSidebarProjectDrop', () => ({
   })
 }))
 
-vi.mock('./useWorkspaceBoardPanel', () => ({
-  useWorkspaceBoardPanel: () => ({
-    ...mocks.panel,
-    workspaceBoardMenuOpen: false,
-    toggleWorkspaceBoard: vi.fn(),
-    handleWorkspaceBoardOpenChange: vi.fn(),
-    setWorkspaceBoardMenuOpen: vi.fn(),
-    closeWorkspaceBoard: mocks.closeWorkspaceBoard,
-    previewWorkspaceBoardFromDrag: vi.fn(),
-    solidifyWorkspaceBoardFromDrag: vi.fn(),
-    cancelWorkspaceBoardDragPreview: vi.fn()
-  })
-}))
-
 import Sidebar from './index'
 
-function setSidebarState(settings: GlobalSettings, statusBarVisible = true): void {
+function setSidebarState(settings: GlobalSettings): void {
   mocks.state = {
     activeModal: null,
-    agentDashboardDrawerOpen: false,
-    setAgentDashboardDrawerOpen: vi.fn(),
     fetchAllWorktrees: vi.fn(),
     repos: [],
     setSidebarWidth: vi.fn(),
     settings,
     sidebarOpen: true,
-    sidebarWidth: 320,
-    statusBarVisible
+    sidebarWidth: 320
   }
 }
 
@@ -130,12 +84,7 @@ function sidebarElement(): ReactNode {
 }
 
 beforeEach(() => {
-  mocks.closeWorkspaceBoard.mockClear()
-  mocks.panel = {
-    workspaceBoardOpen: false,
-    workspaceBoardRenderedOpen: true,
-    workspaceBoardDragPreviewOpen: false
-  }
+  mocks.state = {}
 })
 
 afterEach(cleanup)
@@ -166,17 +115,7 @@ describe('Sidebar', () => {
 
     expect(markup).toContain('--worktree-sidebar:#101820')
     expect(markup).toContain('--worktree-sidebar-foreground:#f0f4f8')
-    expect(markup).toContain('data-testid="workspace-kanban-drawer"')
-    expect(markup.match(/--worktree-sidebar:#101820/g)).toHaveLength(2)
-  })
-
-  it('passes status bar visibility into the workspace board drawer', () => {
-    setSidebarState(getDefaultSettings(tmpdir()), false)
-
-    const markup = renderSidebar()
-
-    expect(markup).toContain('data-testid="workspace-kanban-drawer"')
-    expect(markup).toContain('data-status-bar-visible="false"')
+    expect(markup.match(/--worktree-sidebar:#101820/g)).toHaveLength(1)
   })
 
   it('does not start a full worktree scan while the startup session is hydrating', () => {
@@ -225,22 +164,5 @@ describe('Sidebar', () => {
     }
 
     expect(fetchAllWorktrees).not.toHaveBeenCalled()
-  })
-
-  it('closes the dashboard drawer when the dashboard experiment is disabled', async () => {
-    setSidebarState({
-      ...getDefaultSettings(tmpdir()),
-      experimentalAgentDashboardPopout: false
-    })
-    const setAgentDashboardDrawerOpen = vi.fn()
-    mocks.state = {
-      ...mocks.state,
-      agentDashboardDrawerOpen: true,
-      setAgentDashboardDrawerOpen
-    }
-
-    render(sidebarElement())
-
-    await waitFor(() => expect(setAgentDashboardDrawerOpen).toHaveBeenCalledWith(false))
   })
 })

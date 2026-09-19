@@ -76,25 +76,11 @@ function NewWorkspaceButton({
   )
 }
 
-export function SidebarHeaderActions({
-  onWorkspaceBoardMenuOpenChange,
-  agentsViewActive = false
-}: {
-  onWorkspaceBoardMenuOpenChange: (open: boolean) => void
-  agentsViewActive?: boolean
-}): React.JSX.Element {
+export function SidebarHeaderActions(): React.JSX.Element {
   return (
     <div className="flex shrink-0 items-center gap-1" data-sidebar-header-actions="">
-      {/* Why both hidden in the agents view: it lists activity, not projects. */}
-      {agentsViewActive ? null : (
-        <>
-          <SidebarWorkspaceOptionsMenu
-            preserveWorkspaceBoardOpen
-            onMenuOpenChange={onWorkspaceBoardMenuOpenChange}
-          />
-          <AddProjectButton preserveWorkspaceBoardOpen />
-        </>
-      )}
+      <SidebarWorkspaceOptionsMenu />
+      <AddProjectButton preserveWorkspaceBoardOpen />
       <NewWorkspaceButton preserveWorkspaceBoardOpen />
     </div>
   )

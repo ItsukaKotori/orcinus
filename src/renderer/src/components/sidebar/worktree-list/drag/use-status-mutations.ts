@@ -11,22 +11,18 @@ import { getWorkspaceStatus, getWorkspaceStatusGroupKey } from '../../workspace-
 import {
   buildManualOrderUpdatesForGroupDrop,
   buildManualOrderUpdatesForVisibleGroups,
-  shouldWriteManualOrderForGroupDrop,
   type WorktreeDragGroup
 } from '../../worktree-manual-order'
-import { buildWorkspaceKanbanSidebarDropUpdates } from '../../workspace-kanban-sidebar-drop'
-import type { SortBy } from '../../smart-sort'
 import type { WorktreeStatusDropAtIndexArgs } from './drop-commit-context'
 import type { WorktreeManualOrderCatalog } from '../../worktree-manual-order-catalog'
 
-// Every write a sidebar drop can make: status changes, pin, manual order, and the board lane drop.
+// Every write a sidebar drop can make: status changes, pin, and manual order.
 export function useWorktreeStatusMutations(args: {
   worktreeMap: Map<string, Worktree>
   manualOrderCatalog: WorktreeManualOrderCatalog
   workspaceStatuses: readonly WorkspaceStatusDefinition[]
-  sortBy: SortBy
 }) {
-  const { manualOrderCatalog, worktreeMap, workspaceStatuses, sortBy } = args
+  const { manualOrderCatalog, worktreeMap, workspaceStatuses } = args
   const updateWorktreeMeta = useAppStore((s) => s.updateWorktreeMeta)
   const updateWorktreesMeta = useAppStore((s) => s.updateWorktreesMeta)
   const setSortBy = useAppStore((s) => s.setSortBy)
@@ -159,53 +155,12 @@ export function useWorktreeStatusMutations(args: {
     [manualOrderCatalog, setSortBy, updateWorktreesMeta, worktreeMap]
   )
 
-  const shouldShowWorkspaceBoardDropIndicator = useCallback(
-    (worktreeIds: readonly string[], status: WorkspaceStatus) => {
-      const sourceGroupKeys = worktreeIds.flatMap((worktreeId) => {
-        const worktree = worktreeMap.get(worktreeId)
-        return worktree ? [getWorkspaceStatus(worktree, workspaceStatuses)] : []
-      })
-      return shouldWriteManualOrderForGroupDrop({
-        sortBy,
-        sourceGroupKeys,
-        targetGroupKey: status
-      })
-    },
-    [sortBy, worktreeMap, workspaceStatuses]
-  )
-
-  const dropWorktreesOnWorkspaceBoard = useCallback(
-    (dropArgs: WorktreeStatusDropAtIndexArgs) => {
-      const result = buildWorkspaceKanbanSidebarDropUpdates({
-        ...dropArgs,
-        worktreeById: worktreeMap,
-        workspaceStatuses,
-        sortBy,
-        now: Date.now(),
-        allWorktreeIds: manualOrderCatalog.orderedIds,
-        rankByWorktreeId: manualOrderCatalog.rankByWorktreeId
-      })
-      if (result.updates.length === 0) {
-        return
-      }
-      // Why: switch to Manual when the drop changes order so the placement stays visible.
-      if (result.shouldSwitchToManual) {
-        setSortBy('manual')
-      }
-      useAppStore.getState().recordFeatureInteraction('workspace-board-actions')
-      void updateWorktreesMeta(result.updates)
-    },
-    [manualOrderCatalog, setSortBy, sortBy, updateWorktreesMeta, worktreeMap, workspaceStatuses]
-  )
-
   return {
     moveWorktreeToStatus,
     moveWorktreesToStatus,
     moveWorktreesToStatusAtIndex,
     pinWorktree,
     pinWorktrees,
-    reorderWorktrees,
-    shouldShowWorkspaceBoardDropIndicator,
-    dropWorktreesOnWorkspaceBoard
+    reorderWorktrees
   }
 }

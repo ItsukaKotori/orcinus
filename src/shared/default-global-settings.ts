@@ -219,8 +219,6 @@ export function buildDefaultSettings(args: {
     mobilePairingConnectionMode: 'automatic',
     mobilePairingCustomAddress: null,
     mobilePairingCustomAddresses: [],
-    experimentalActivity: false,
-    experimentalActivityDefaultedOffForAllUsers: true,
     experimentalTerminalAttention: false,
     experimentalAgentHibernation: false,
     agentHibernationIdleMs: 30 * 60 * 1000,

@@ -6,7 +6,6 @@ import {
 import { isPluginPanelTabKey } from '../plugins/plugin-manifest'
 import { isFeatureInteractionId } from '../feature-interactions'
 import type { FeatureInteractionId } from '../feature-interactions'
-import { ACTIVITY_GROUP_BY_VALUES, THREAD_READ_FILTER_VALUES } from '../agents-view-thread-filters'
 import { isTopLevelView } from '../top-level-view'
 import type { TopLevelView } from '../ui-chrome-types'
 import { isReleaseChannel } from '../release-channel'
@@ -133,13 +132,6 @@ export const UiUpdateFields = z
     showInactiveWorkspaces: z.boolean().optional(),
     workspaceHostScope: z.string().optional(),
     visibleWorkspaceHostIds: z.array(z.string()).nullable().optional(),
-    agentsVisibleHostIds: z.array(z.string()).nullable().optional(),
-    agentsFilterRepoIds: StringArray.optional(),
-    agentsShowChildAgents: z.boolean().optional(),
-    agentsCompactMode: z.boolean().optional(),
-    agentsShowSearch: z.boolean().optional(),
-    agentsReadFilter: z.enum(THREAD_READ_FILTER_VALUES).optional(),
-    agentsGroupBy: z.enum(ACTIVITY_GROUP_BY_VALUES).optional(),
     workspaceHostOrder: z.array(z.string()).optional(),
     automationHostFilter: z
       .union([
@@ -161,9 +153,6 @@ export const UiUpdateFields = z
     _worktreeCardModeDefaulted: z.boolean().optional(),
     agentActivityDisplayMode: AgentActivityDisplayMode.optional(),
     workspaceStatuses: z.array(WorkspaceStatusDefinition).optional(),
-    workspaceBoardOpacity: z.number().finite().optional(),
-    workspaceBoardColumnWidth: z.number().finite().optional(),
-    syncTaskStatusFromWorkspaceBoard: z.boolean().optional(),
     _workspaceStatusesDefaultOrderMigrated: z.boolean().optional(),
     _workspaceStatusesReorderedDefaultRepaired: z.boolean().optional(),
     _workspaceStatusesDefaultWorkflowMigrated: z.boolean().optional(),

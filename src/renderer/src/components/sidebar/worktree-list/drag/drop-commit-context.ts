@@ -9,8 +9,6 @@ import type { WorktreeSidebarDropPreview } from '../../worktree-sidebar-drop-pre
 import type { WorktreeStatusDropRequest } from './use-session'
 import type { WorktreeSidebarLineageDropTarget } from './row-state'
 
-export const NOOP_WORKSPACE_BOARD_DRAG_PREVIEW_CALLBACK = (): void => {}
-
 export type WorktreeStatusDropAtIndexArgs = {
   worktreeIds: readonly string[]
   status: WorkspaceStatus
