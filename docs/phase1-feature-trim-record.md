@@ -101,7 +101,7 @@ d558770  11 files changed,   157 insertions,   155 deletions
 | `@sanity/diff-match-patch` | 1（`rich-markdown-source-reconcile.ts`） | 保留 |
 | `emoji-picker-react` / `emojibase-data` | 3 / 3 | 保留（composer/编辑器 emoji 与仓库图标） |
 | `react-colorful` | 1（`ui/color-picker.tsx`） | 保留 |
-| `cmdk` | 23（命令面板） | 保留 |
+| `cmdk` | 22（命令面板） | 保留 |
 
 锁文件更新：`pnpm install --lockfile-only`（仅移除两条 importer 与两条 package 记录）。清理后冷门禁 exit 0。
 
@@ -163,7 +163,7 @@ Running `target/debug/orcinus-app`     # 进程存活确认后 kill，端口 142
 | 残留 | 数量/位置 | 原因 |
 |---|---|---|
 | rpc-contract 死树 | 75 个不可达文件 | 计划非目标；Phase 1 backlog 单独安排 |
-| remote-runtime / relay 死树 | 42 | 被 live 测试支持与终端/web 代码牵住；先重构再删 |
+| remote-runtime / relay 死树 | 46 | 被 live 测试支持与终端/web 代码牵住；先重构再删 |
 | agent-hook-listener 死树 | 52 | 同上，基线即不可达 |
 | CLI 死链（`node-cli-command-resolution` → `system-cli-install-dirs` 等） | ~5–21 | Phase 1 backlog |
 | test-support/fixtures/harness | ~73 | 测试专用，无生产导入边；大量 kept 测试依赖 |

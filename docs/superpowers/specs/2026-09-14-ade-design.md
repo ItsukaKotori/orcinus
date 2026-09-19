@@ -74,7 +74,7 @@ ade/
 │   │   ├── ade-fs/            # 文件树、watch、ripgrep 搜索
 │   │   ├── ade-browser/       # 内嵌浏览器 + CDP
 │   │   ├── ade-plugins/       # 插件宿主（双作用域）
-│   │   ├── ade-shell/         # 窗口/托盘/更新/通知/computer-use/语音
+│   │   ├── ade-shell/         # 窗口/托盘/更新/通知/computer-use
 │   │   └── ade-bridge/        # Tauri commands、事件、specta TS 导出
 │   └── ade-app/               # Tauri 入口（tauri.conf.json）
 └── src/
@@ -109,7 +109,7 @@ ade/
 | `ade-fs` | 文件树、watch（notify）、搜索（ripgrep）、路径安全 | notify |
 | `ade-browser` | CEF 宿主、CDP 会话、Design Mode、cookie 导入、网络隧道 | cef |
 | `ade-plugins` | manifest 校验、安装/staging、哈希与完整性、lockfile、consent、kill list、worker supervisor、panel bridge、市场客户端 | — |
-| `ade-shell` | 窗口/托盘/自动更新/通知/全局快捷键/computer-use/语音 | tauri plugins |
+| `ade-shell` | 窗口/托盘/自动更新/通知/全局快捷键/computer-use | tauri plugins |
 | `ade-bridge` | tauri command 注册、事件、specta 导出、错误映射 | tauri, specta |
 
 ## 6. UI 结构
@@ -138,7 +138,7 @@ ade/
 
 ### 6.4 设置页简化
 
-- 保留分组：外观、终端、Agent 默认项、通知、插件、更新、快捷键、隐私/遥测
+- 保留分组：外观、终端、Agent 默认项、通知、插件、更新、快捷键、隐私
 - 删除：SSH/远程、移动端、CLI/skills/VM、多账号/用量、host 覆盖、大多数实验开关
 - 默认值固化进 `ade-core` 配置默认；**取消项目级设置覆盖**（项目仅保留业务配置，如 setup script；插件自身设置除外 `settings:own`）
 - 存储：单一版本化 `settings.json` + schema 迁移
@@ -212,7 +212,7 @@ Phase 1 追加删除：Pet、Contextual Tours、Feature Tips、Feature Wall、Se
 
 ### Phase 2 — 体验补全
 
-SQLite 持久化、scrollback 快照与重启恢复、agent 状态/hook server、通知/未读、quick open/搜索、diff 注释与评审、GitHub 等 Provider、automations、AI Vault、computer-use/语音（按依赖排序）。
+SQLite 持久化、scrollback 快照与重启恢复、agent 状态/hook server、通知/未读、quick open/搜索、diff 注释与评审、GitHub 等 Provider、automations、AI Vault、computer-use（按依赖排序）。
 
 验收：日常可替代原版使用（除浏览器/插件外）。
 
