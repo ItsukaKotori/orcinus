@@ -1526,7 +1526,6 @@
             }
           }
         },
-        "providerAccountScope": {},
         "repository": {
           "search": {
             "availableHosts": "Available Hosts",

@@ -543,7 +543,7 @@ describe('RemoteBrowserStreamLifecycle silent budget drain', () => {
 })
 
 // A transport error is NOT a stop. On a real socket failure the client calls onError and then
-// onClose (src/shared/remote-runtime-client.ts fail()), and it is onClose that starts the retry
+// onClose (the connection's fail path), and it is onClose that starts the retry
 // budget. Announcing a stop on the error therefore raises the reconnect control ~500ms before the
 // first automatic attempt — the one state this pane must never present, and with raw transport copy
 // the pane exists to keep out of the UI. The E2E cannot see this: manual disconnect delivers close
