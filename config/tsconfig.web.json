@@ -3,8 +3,9 @@
     "../src/renderer/src/env.d.ts",
     "../src/renderer/src/**/*",
     "../src/renderer/src/**/*.tsx",
+    "../src/shared/preload-api/**/*",
     "../src/preload/api-types.ts",
-    "../src/preload/api/**/*",
+    "../src/preload/api/*-api.ts",
     "../src/shared/**/*"
   ],
   "compilerOptions": {
