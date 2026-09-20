@@ -16,7 +16,7 @@
 - orca 参照仓库根为 `/Users/itsuka/CodeSpace/orca`（**不是** `../orca-main`；AGENTS.md/文档里的旧路径在 Task 10 勘误）。
 - 冷门禁（每次删除批次后必须）：`rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm build:web`，exit 0。
 - 已跟踪文件删除一律 `git rm -q --`；一次性脚本放 `.superpowers/sdd/2026-09-20-phase1-debt-payoff/tools/`（已 gitignore），不进仓库。
-- 测试基线：当前套件为红（175 项失败，见 Task 0 采样）；本计划结束时 `pnpm test` 必须 0 失败。任何「修不动的环境项」必须记录在 Task 10 的收尾文档并给出证据，不允许静默 exclude。
+- 测试基线：当前套件为红（2026-09-20 实测 173 项 test 级失败 / 41 失败文件，见 Task 0 采样）；本计划结束时 `pnpm test` 必须 0 失败。任何「修不动的环境项」必须记录在 Task 10 的收尾文档并给出证据，不允许静默 exclude。
 - 不删（本计划明确保留）：`orca-profiles` 整链、`ephemeral-vm`/run-target、renderer remote-runtime live 15 模块与 17 个 live 测试、preload 运行期树（`*-bridge.ts`、`index.ts` 等，Phase 2 随 Tauri bridge 删除）、host-compat 字段（viewMode/telemetrySource/launch telemetry）、`activity-terminal-portal`、agent-hook-listener、`data-workspace-board-preserve-open`、mock 的 fake-success 插件流程（仅动 doc-preview）。
 - 每任务提交信息用 Conventional Commits 中文（沿用仓库风格）。
 - `serve-desktop-*`（G/I 已删面）与 `src/main` type-chain 残留：本计划删除，不在 Phase 2 复活。
@@ -891,7 +891,7 @@ pnpm test src/renderer/src/components/editor 2>&1 | tail -30
 
 ```bash
 pnpm test > .superpowers/sdd/2026-09-20-phase1-debt-payoff/after-rebaseline.log 2>&1
-sed 's/.*FAIL *//' .superpowers/sdd/2026-09-20-phase1-debt-payoff/after-rebaseline.log | sort -u > .superpowers/sdd/2026-09-20-phase1-debt-payoff/after-rebaseline-failures.txt
+grep -E '^[[:space:]]*FAIL' .superpowers/sdd/2026-09-20-phase1-debt-payoff/after-rebaseline.log | sed 's/.*FAIL *//' | sort -u > .superpowers/sdd/2026-09-20-phase1-debt-payoff/after-rebaseline-failures.txt
 wc -l .superpowers/sdd/2026-09-20-phase1-debt-payoff/after-rebaseline-failures.txt
 ```
 
@@ -958,7 +958,7 @@ CEF spike 判定 no-go（体积/启动/双平台构建未达标；Windows 侧签
 
 - [ ] **Step 5: 写收尾记录**
 
-创建 `docs/phase1-debt-payoff-record.md`，结构：批次与提交序（Task 0–10）、删减统计（文件数/行数/i18n 叶子数）、测试基线→全绿对比（175 → 0）、保留与延迟项（preload 运行期树、orca-profiles 死动作、mock fake-success 流程、renderer relay harness、活动终端 portal、host-compat 字段）、Windows 验证单列跟踪（补丁构建、Windows lane、CEF 签名）、GUI 复核结果、隔离项（如有）。
+创建 `docs/phase1-debt-payoff-record.md`，结构：批次与提交序（Task 0–10）、删减统计（文件数/行数/i18n 叶子数）、测试基线→全绿对比（173 → 0）、保留与延迟项（preload 运行期树、orca-profiles 死动作、mock fake-success 流程、renderer relay harness、活动终端 portal、host-compat 字段）、Windows 验证单列跟踪（补丁构建、Windows lane、CEF 签名）、GUI 复核结果、隔离项（如有）。
 
 ```bash
 git add -A && git commit -m "docs: 债务清偿收尾（CEF 回写、勘误、记录）"
