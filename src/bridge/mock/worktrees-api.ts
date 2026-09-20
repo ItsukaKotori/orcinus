@@ -63,7 +63,7 @@ function unimplemented(path: string): never {
 export function createWorktreesApi(): WorktreeApi {
   return {
     list: async () => cloneMockValue(MOCK_WORKTREES),
-    listRetiredNames: async () => EMPTY_RETIRED_NAME_REGISTRY,
+    listRetiredNames: async () => cloneMockValue(EMPTY_RETIRED_NAME_REGISTRY),
     listDetected: async (args: { repoId: string }): Promise<DetectedWorktreeListResult> => ({
       repoId: args.repoId,
       authoritative: true,
