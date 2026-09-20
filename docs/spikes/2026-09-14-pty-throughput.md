@@ -87,3 +87,10 @@ sink 写 8,388,608 字节纯 `x`（无换行），完整捕获 ConPTY 输出为 
   Tauri Channel 仅承载控制/状态类小消息（tab 状态、resize 等）。
 - 后续如吞吐不足，可评估 Windows `PSEUDOCONSOLE_PASSTHROUGH_MODE` 直连以绕过渲染放大，
   但 `portable-pty` 未暴露该开关，需要直接调用 ConPTY API，留待 Phase 1+ 评估。
+
+## Phase 1 宿主实现要求（2026-09-20 还债批次固化）
+
+1. **CPR 应答必须跨读块边界扫描**：`ESC[6n` 可能被切在两个 read 块之间；宿主需保留至多 3 字节尾部缓冲（spike 已实现并有单测，见 `orcinus-pty/src/lib.rs`）。
+2. **读取循环不得以目标字节数为停止条件而不排空管道**：ConPTY 输出相对输入有 ~10% 放大（重绘/换行/重定位），达到阈值即停会把剩余放大数据留在管道；生产宿主必须显式排空并做背压分片，否则尾部字节丢失。
+3. **独立 reader 线程必须可回收**：spike 的 reader thread 是故意 detach 的（killed child 后 ConPTY 管道可能保持打开，join 会挂起）；生产宿主需用 supervisor 生命周期管理（关闭时先断管道再 join，或进程级回收），不得让线程/句柄泄漏。
+4. 通道决策不变：终端数据走本地 socket（Windows 命名管道 / macOS unix socket），Tauri Channel 仅承载控制/状态消息。

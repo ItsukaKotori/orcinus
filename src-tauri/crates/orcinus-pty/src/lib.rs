@@ -107,3 +107,40 @@ fn reply_to_cursor_query(
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{reply_to_cursor_query, CPR_REPLY};
+
+    #[derive(Default)]
+    struct Sink(Vec<u8>);
+
+    impl std::io::Write for Sink {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            self.0.extend_from_slice(buf);
+            Ok(buf.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn replies_when_query_splits_across_chunks() {
+        let mut tail = Vec::new();
+        let mut sink = Sink::default();
+        reply_to_cursor_query(&mut tail, b"\x1b[6", &mut sink).unwrap();
+        assert!(sink.0.is_empty());
+        reply_to_cursor_query(&mut tail, b"n", &mut sink).unwrap();
+        assert_eq!(sink.0, CPR_REPLY);
+    }
+
+    #[test]
+    fn keeps_only_partial_query_tail_without_replying() {
+        let mut tail = Vec::new();
+        let mut sink = Sink::default();
+        reply_to_cursor_query(&mut tail, b"output\x1b[", &mut sink).unwrap();
+        assert!(sink.0.is_empty());
+        assert_eq!(tail, b"t\x1b[");
+    }
+}

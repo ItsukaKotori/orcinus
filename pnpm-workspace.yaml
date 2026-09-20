@@ -6,8 +6,8 @@ shamefullyHoist: true
 allowBuilds:
   '@swc/core': true
   esbuild: true
-  # Phase 0 needs node-pty's types only; native build is deferred with the PTY work.
-  node-pty: false
+  # Patch ported; the renderer parity tests need the native build.
+  node-pty: true
 
 overrides:
   monaco-editor>dompurify: 3.4.14
