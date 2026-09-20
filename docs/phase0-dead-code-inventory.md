@@ -16,11 +16,11 @@
 
 | 项 | 清扫前 | 清扫后 | 残留内容 | 判定 |
 |---|---|---|---|---|
-| `SshPassphraseDialog` | 7 | 7 | 6 个 locale + `app-startup-routing.test.ts` 的反回归断言（断言入口不得回潮） | Phase 0 已移除入口（组件已不存在；残留为 i18n 键）→ Phase 1 清键 |
+| `SshPassphraseDialog` | 7 | 7 | 6 个 locale + `app-startup-routing.test.ts` 的反回归断言（断言入口不得回潮） | Phase 0 已移除入口（组件已不存在）；Phase 1 已清 i18n 键（`053e42d`） |
 | `RemoteServerUpdateDialog` | 9 | 9 | 6 locale + `en-runtime-required.json` + `store/slices/remote-server-updates.ts` + 其 integration test | 已整链删除（原『启动链路仍在用』前提失效）；Phase 1 提交 `4fac569` |
-| `SkillsPage` | 7 | 7 | 6 locale + `en-runtime-required.json`（无代码模块） | Phase 0 已移除入口 → Phase 1 清 i18n 键 |
-| `MobilePage` | 7 | 7 | 6 locale + `en-runtime-required.json`（无代码模块） | Phase 0 已移除入口 → Phase 1 清 i18n 键 |
-| `EphemeralVm` | 76 | 63 | 已删 shared 独占 10 模块 + 7 测试；其余 63 文件为 live 链路（renderer composer run-target、worktree creation、runtime cleanup、store teardown） | Phase 0 已移除入口；残留为 Phase 1 清理代码（须待 composer/运行目标决策） |
+| `SkillsPage` | 7 | 7 | 6 locale + `en-runtime-required.json`（无代码模块） | Phase 0 已移除入口；Phase 1 已清 i18n 键（`053e42d`） |
+| `MobilePage` | 7 | 7 | 6 locale + `en-runtime-required.json`（无代码模块） | Phase 0 已移除入口；Phase 1 已清 i18n 键（`053e42d`） |
+| `EphemeralVm` | 76 | 63 | 已删 shared 独占 10 模块 + 7 测试；其余 63 文件为 live 链路（renderer composer run-target、worktree creation、runtime cleanup、store teardown） | Phase 0 已移除入口；composer/运行目标决策已记录（见「Phase 1 建议」第 7 项：VM run-target 保留），残留 live 链路随决策保留 |
 | `skill-share` | 0 | 0 | 无内容引用；独占模块 `src/shared/skill-share-link.ts` 无任何引用 | 已删除（Phase 0 清理完成） |
 | `cli-install` | 23 | 23 | 全部为 live CLI 安装路径（`cli-install-types.ts`、Linear skill setup、onboarding、BrowserUseCliStep、feature-tip 等） | 保留功能 → Phase 1 在 CLI 面统一复核后清理 |
 | `orca-profile` | 20 | 20 | 多账号链仍被 store/preload/web/unexpected-signout/browser partition 消费 | 整链 live，不删；仅多 profile 管理死动作留待后续 |
@@ -51,7 +51,7 @@
 | `src/shared/e2ee-crypto.ts`、`src/shared/remote-runtime-*`、`src/renderer/src/components/terminal-pane/remote-runtime-pty-transport.ts` 等 | 被 live 终端/web 代码与 live 测试（含 `remote-runtime-shared-control-test-server` 测试支持）引用；live `remote-runtime-terminal-multiplexer-base.ts` 依赖 `remote-runtime-client-error-classification.ts` | Phase 1：先重构测试支持/调用点再清 |
 | `mobile-relay-pairing-fixtures.ts`、`mobile-markdown-bridge-test-harness.ts` | live 模块的测试支持（`pairing.ts` 链、`mobile-markdown-bridge.ts`） | 保留（随 live 模块） |
 | `store/slices/remote-server-updates.ts`、`store/slices/orca-profiles*.ts` | store index/types 注册、启动链路与 live 消费点 | Phase 1 切片清理 |
-| i18n 键：`SkillsPage` / `MobilePage` / `SshPassphraseDialog` / `RemoteServerUpdateDialog`（6 locale + `en-runtime-required.json`） | 仅 locale/守卫断言引用 | Phase 1 清键（需同步 i18n 回归测试） |
+| i18n 键：`SkillsPage` / `MobilePage` / `SshPassphraseDialog` / `RemoteServerUpdateDialog`（6 locale + `en-runtime-required.json`） | 仅 locale/守卫断言引用 | Phase 1 已清键（`053e42d`；i18n 回归测试已同步） |
 | `app-startup-routing.test.ts` 的 SSH 反回归断言 | 断言入口不得回潮 | 保留 |
 | `src/renderer/src/app-shell/workspace-view-cross-client-sync.test.tsx` | Task 2 记录：读取未 fork 的 `mobile/` 源码 ENOENT，已在 `vitest.config.ts` exclude | 保留并记录；Phase 1 决定重指向或删除（不要静默保留） |
 

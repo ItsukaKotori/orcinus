@@ -45,7 +45,7 @@
 | 其中生产模块 / 测试 | 149 / 39 | 同上（按 `.test.`/`.spec.` 区分） |
 | 分支 diff（截至 Task 9） | 393 文件，+18031 / −27032 | `git diff --shortstat main...9f691e9` |
 | 死树（主要批次） | rpc-contract 76 文件 + 连带契约；relay/remote-runtime 41 生产 + 25 测试 + 1 test-support；CLI 解析死链 + 孤儿模块 12（含 5 测试与 1 fixture）；remote-server-updates 11（9 runtime + 2 store）；`src/main` 残留 7 + 1 测试 + electron shim 1 | 各任务提交 `--stat` |
-| i18n 叶子删除 | **1605**：en 293 / es 248 / fr 287 / ja 248 / ko 248 / zh 248 / en-runtime-required 33 | `053e42d` + `235c83c` |
+| i18n 叶子删除 | **1687**：1605（en 293 / es 248 / fr 287 / ja 248 / ko 248 / zh 248 / en-runtime-required 33，`053e42d`）+ 26（`235c83c`）+ 56（`30a6956`/`4b3872a` 清除的空壳键） | `git show --numstat` 各提交 |
 | 追加死键删除 | 7 键 × 7 catalog（−76/+7 行） | `30a6956` |
 | ko overrides 移植 | 1693 键 / 5081 行，全文件 `Orca→Orcinus` | `9f691e9` |
 | 新增 ratchet / 工具 | `src/shared/electron-import-boundary.test.ts`、`src/bridge/mock/clone-mock-value.ts`、`config/scripts/regenerate-xterm-patches{,.test}.mjs`、`config/scripts/xterm-patch-text.mjs`、`config/scripts/rebuild-node-pty.mjs` | 各任务提交 |
@@ -84,6 +84,9 @@ Task 10 终局命令：`rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm bui
 | `matchP95Ms` 未复测 | 保持 2ms | 两轮全量未失败 | Task 9 minor |
 | windows-lane 次级覆盖 | `windows-lane-tree-removal-boundary.test.ts` 已删，未替换 | 该测试针对 ade 不存在的 Windows lane 树 | Task 9 minor / 见 §5 |
 | agent-hook-listener / `data-workspace-board-preserve-open` / ai-vault resume UI 等 | 保留 | 见 `docs/phase1-feature-trim-record.md` 残留表 | 同上 |
+| tiptap 3.31 与参照 fork 的版本分歧 | Task 9（`9f691e9`）落地并保留 3 处生产适配：`rich-markdown-extensions.ts:51` Link priority 回 1000、同文件 raw-text 转义中和、`rich-markdown-ordered-list.ts:8` 起始符守卫 | ade 解析 `@tiptap/*@3.31.3`，参照 fork `/Users/itsuka/CodeSpace/orca` 为 `3.22.5`；为使编辑器行为在新版本下保持稳定 | Phase 2 依赖对齐时复核（或将解析 pin 回 orca 的 3.22.5） |
+
+说明：`providerAccountScope` 的四条非英语翻译（`remoteServerCredentials` / `localCredentials` / `remoteServerRateLimit` / `localRateLimit`，es/fr/ja/ko/zh）在 `235c83c` 中有意删除，回退到新的英文文案。
 
 ## 5. Windows 验证单列跟踪
 
@@ -133,7 +136,7 @@ Running `target/debug/orcinus-app`
 15. node-pty 必须源码构建：`pnpm run rebuild:node`（prebuilt spawn-helper 权限 644 且不编译补丁）；脚本以 node wrapper 跨平台化。
 16. GUI 复核：本任务做 `pnpm dev` 启动冒烟并记录；需要人眼的交互项（Editor 的 ts.worker 实际加载等）在记录中标注「待用户合并前复核」。
 
-（Ruling 12、14 已并入上述条目表述。）
+（Ruling 12 的内容（worktrees `listRetiredNames` clone）见 §2「mock 加固」行；Ruling 14 已并入上述条目表述。）
 
 ## 9. 文档回写与勘误（本提交）
 
