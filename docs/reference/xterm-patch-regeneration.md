@@ -53,7 +53,7 @@ patch still written by hand — see [Known Gaps](#known-gaps).
    patch hash in two places — `patchedDependencies` and every resolution key that
    depends on the patched package — and on a warm store it will leave the
    resolution keys at their previous value while reporting success. That installs
-   locally and drifts on CI's cold store. For a version bump, follow the **Version
+   locally and drifts on a cold store. For a version bump, follow the **Version
    Bumps** workflow through step 5 (the final `--check`); if it reports a stale hash
    after an install, rerun `--write`. For a source-only edit, the four-step workflow
    above ends at `--check`.
@@ -178,8 +178,8 @@ bump fails `pnpm install --frozen-lockfile` on every machine except the
 author's. `--write` makes that edit; `--check` fails if it is missing.
 
 `config/scripts/regenerate-xterm-patches.test.mjs` asserts the same thing
-without a network or a build, so the ordinary test job catches lockfile drift
-in milliseconds even though the full rebuild runs in its own CI lane.
+without a network or a build, so the ordinary test suite catches lockfile drift
+in milliseconds; the full rebuild is a separate manual step.
 
 ## Toolchain Pin
 
@@ -257,17 +257,19 @@ risk.
 
 ## CI Contract
 
-`xterm_patch_sync` in `.github/workflows/pr.yml` runs
-`regenerate-xterm-patches.mjs --check` on every PR and is part of the `verify`
-aggregate. It clones the pinned commit, installs upstream's toolchain, builds
-twice, and byte-compares the result against the committed patch. Both builds and
-the diff together are about eight seconds; `npm ci` for upstream's toolchain is
-what the job actually spends its minutes on, and the cache key is the manifest.
+ade has no CI configured: there is no `.github/workflows`, so nothing runs
+`regenerate-xterm-patches.mjs --check` automatically. Reproduce the full check by
+hand with the **Workflow** commands above. It clones the pinned commit, installs
+upstream's toolchain, builds twice, and byte-compares the result against the
+committed patch. Both builds and the diff together are about eight seconds;
+`npm ci` for upstream's toolchain is what actually spends the minutes, and the
+cache key is the manifest. Until CI exists, that manual run is the contract.
 
 `config/scripts/regenerate-xterm-patches.test.mjs` covers the pure pieces —
 pnpm's diff flags and normalization, hunk splitting, round-trip stability, the
 commit and build-order assertions, and lockfile coupling — with no network and
-no build, so they run in the ordinary test shards.
+no build. It runs in the ordinary test suite: `vitest.config.ts` includes
+`config/scripts/**/*.test.mjs`, so `pnpm test` picks it up.
 
 ## Known Gaps
 

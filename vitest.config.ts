@@ -26,7 +26,11 @@ export default defineConfig({
       resolve('config/scripts/happy-dom-mutation-observer-retention.ts'),
       resolve('config/scripts/vitest-host-ports-setup.ts')
     ],
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    include: [
+      'src/**/*.test.ts',
+      'src/**/*.test.tsx',
+      'config/scripts/**/*.test.mjs'
+    ],
     exclude: [
       ...configDefaults.exclude,
       // Phase 0: imports Electron-backed src/main module; see Phase 1 shim removal. (This file's failures are the un-forked mobile/ sources it reads.)
