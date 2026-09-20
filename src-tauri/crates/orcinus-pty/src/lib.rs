@@ -141,6 +141,7 @@ mod tests {
         let mut sink = Sink::default();
         reply_to_cursor_query(&mut tail, b"output\x1b[", &mut sink).unwrap();
         assert!(sink.0.is_empty());
+        // CPR 查询是 4 字节；保留末尾至多 3 字节以覆盖分块边界。
         assert_eq!(tail, b"t\x1b[");
     }
 }

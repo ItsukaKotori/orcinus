@@ -7,7 +7,7 @@
     "dev": "tauri dev",
     "build": "tauri build",
     "build:web": "vite build",
-    "rebuild:node": "npm_config_build_from_source=true pnpm rebuild node-pty",
+    "rebuild:node": "node config/scripts/rebuild-node-pty.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
