@@ -3412,16 +3412,6 @@
             "detailedTooltip": "막대, 레이블, 백분율을 포함한 전체 사용량",
             "compactTooltip": "압축된 사용: 가장 좁은 창만 사용"
           },
-          "RemoteServerUpdateStatusSegment": {
-            "updating": "{{value0}}/{{value1}} 업데이트 중",
-            "updatingTooltip": "원격 Orcinus 서버 업데이트 진행 중",
-            "failed": "{{value0}} 서버 업데이트 실패",
-            "failedTooltip": "원격 Orcinus 서버 업데이트를 열어 확인하고 다시 시도하세요",
-            "updated": "{{value0}} 서버 업데이트 완료",
-            "updatedTooltip": "원격 Orcinus 서버 업데이트 완료",
-            "failedOne": "1개 서버 업데이트 실패",
-            "updatedOne": "1개 서버 업데이트 완료"
-          },
           "resource": {
             "memory": {
               "metric": {
@@ -8940,8 +8930,7 @@
           "change_host": "원격 서버 열기"
         },
         "providerAccountScope": {
-          "remoteServer": "원격 서버: {{value0}}",
-          "localMac": "로컬 Mac"
+          "remoteServer": "원격 서버: {{value0}}"
         },
         "settingOwnership": {
           "clientDefault": "클라이언트 기본값",

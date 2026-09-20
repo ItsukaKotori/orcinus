@@ -3633,16 +3633,6 @@
             "compactTooltip": "Utilisation condensée : uniquement la fenêtre la plus contrainte",
             "footerDetailAria": "Détail du pied de page d'utilisation"
           },
-          "RemoteServerUpdateStatusSegment": {
-            "updating": "Mise à jour de {{value0}}/{{value1}}",
-            "updatingTooltip": "Des mises à jour de serveurs Orcinus distants sont en cours",
-            "failed": "Échec de la mise à jour de {{value0}} serveurs",
-            "failedTooltip": "Ouvrez les mises à jour des serveurs Orcinus distants pour vérifier et relancer",
-            "updated": "{{value0}} serveurs mis à jour",
-            "updatedTooltip": "Mises à jour des serveurs Orcinus distants terminées",
-            "failedOne": "Échec de la mise à jour d'un serveur",
-            "updatedOne": "1 serveur mis à jour"
-          },
           "resource": {
             "memory": {
               "metric": {
@@ -9742,8 +9732,7 @@
           "permissionsRequired_other": "{{value0}} autorisations requises avant que les agents puissent manipuler des fenêtres d'applications."
         },
         "providerAccountScope": {
-          "remoteServer": "Serveur distant : {{value0}}",
-          "localMac": "Mac local"
+          "remoteServer": "Serveur distant : {{value0}}"
         },
         "settingOwnership": {
           "clientDefault": "Valeur par défaut du client",

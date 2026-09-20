@@ -3407,16 +3407,6 @@
             "detailedTooltip": "バー・ラベル・パーセントを含む完全な使用状況",
             "compactTooltip": "凝縮された使用状況: 最も狭いウィンドウのみ"
           },
-          "RemoteServerUpdateStatusSegment": {
-            "updating": "{{value0}}/{{value1}}を更新中",
-            "updatingTooltip": "リモート Orcinus サーバーの更新が進行中",
-            "failed": "{{value0}}台のサーバー更新に失敗",
-            "failedTooltip": "リモート Orcinus サーバーの更新を開いて確認し、再試行してください",
-            "updated": "{{value0}}台のサーバーを更新完了",
-            "updatedTooltip": "リモート Orcinus サーバーの更新が完了しました",
-            "failedOne": "1台のサーバー更新に失敗",
-            "updatedOne": "1台のサーバーを更新完了"
-          },
           "resource": {
             "memory": {
               "metric": {
@@ -8935,8 +8925,7 @@
           "change_host": "リモートサーバーを開く"
         },
         "providerAccountScope": {
-          "remoteServer": "リモートサーバー: {{value0}}",
-          "localMac": "ローカルの Mac"
+          "remoteServer": "リモートサーバー: {{value0}}"
         },
         "settingOwnership": {
           "clientDefault": "クライアントのデフォルト",

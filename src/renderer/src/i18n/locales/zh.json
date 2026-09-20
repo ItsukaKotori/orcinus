@@ -3422,16 +3422,6 @@
             "detailedTooltip": "完整使用情况，包含条形图、标签和百分比",
             "compactTooltip": "精简使用情况：仅显示最吃紧的窗口"
           },
-          "RemoteServerUpdateStatusSegment": {
-            "updating": "Updating {{value0}}/{{value1}}",
-            "updatingTooltip": "远程 Orcinus 服务器更新正在进行中",
-            "failed": "{{value0}} 个服务器更新失败",
-            "failedTooltip": "打开远程 Orcinus 服务器更新以查看并重试",
-            "updated": "{{value0}} servers updated",
-            "updatedTooltip": "远程 Orcinus 服务器更新已完成",
-            "failedOne": "1 个服务器更新失败",
-            "updatedOne": "1 server updated"
-          },
           "resource": {
             "memory": {
               "metric": {
@@ -9005,8 +8995,7 @@
           "change_host": "打开远程服务器"
         },
         "providerAccountScope": {
-          "remoteServer": "远程服务器：{{value0}}",
-          "localMac": "本地 Mac"
+          "remoteServer": "远程服务器：{{value0}}"
         },
         "settingOwnership": {
           "clientDefault": "客户端默认",

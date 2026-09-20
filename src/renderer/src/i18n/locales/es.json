@@ -3407,16 +3407,6 @@
             "detailedTooltip": "Uso completo con barras, etiquetas y porcentajes",
             "compactTooltip": "Uso condensado: sólo la ventana más estrecha"
           },
-          "RemoteServerUpdateStatusSegment": {
-            "updating": "Updating {{value0}}/{{value1}}",
-            "updatingTooltip": "Remote Orcinus Server updates are in progress",
-            "failed": "{{value0}} server updates failed",
-            "failedTooltip": "Open Remote Orcinus Server updates to review and retry",
-            "updated": "{{value0}} servers updated",
-            "updatedTooltip": "Remote Orcinus Server updates completed",
-            "failedOne": "1 server update failed",
-            "updatedOne": "1 server updated"
-          },
           "resource": {
             "memory": {
               "metric": {
@@ -8935,8 +8925,7 @@
           "change_host": "Abrir servidores remotos"
         },
         "providerAccountScope": {
-          "remoteServer": "Servidor remoto: {{value0}}",
-          "localMac": "Local Mac"
+          "remoteServer": "Servidor remoto: {{value0}}"
         },
         "settingOwnership": {
           "clientDefault": "Predeterminado del cliente",

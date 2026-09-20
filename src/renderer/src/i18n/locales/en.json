@@ -3844,16 +3844,6 @@
             "compactTooltip": "Condensed usage: only the tightest window",
             "footerDetailAria": "Usage footer detail"
           },
-          "RemoteServerUpdateStatusSegment": {
-            "updating": "Updating {{value0}}/{{value1}}",
-            "updatingTooltip": "Remote Orcinus Server updates are in progress",
-            "failed": "{{value0}} server updates failed",
-            "failedTooltip": "Open Remote Orcinus Server updates to review and retry",
-            "updated": "{{value0}} servers updated",
-            "updatedTooltip": "Remote Orcinus Server updates completed",
-            "failedOne": "1 server update failed",
-            "updatedOne": "1 server updated"
-          },
           "resource": {
             "memory": {
               "metric": {
@@ -10163,7 +10153,6 @@
         "providerAccountScope": {
           "remoteServer": "Remote server: {{value0}}",
           "remoteServerCredentials": "Credentials and account checks for this provider are owned by this remote server.",
-          "localMac": "Local Mac",
           "localCredentials": "Credentials and account checks for this provider are owned by this desktop client.",
           "remoteServerRateLimit": "{{value0}} API budget is fetched from the CLI on this remote server.",
           "localRateLimit": "{{value0}} API budget is fetched from the CLI on this desktop client."
@@ -12503,8 +12492,7 @@
             "delete": "Delete",
             "deleteReasonNonLocalHost": "Only sessions on this device can be deleted.",
             "deleteReasonSyntheticPath": "This session can't be deleted from Orcinus.",
-            "deleteReasonUnsupportedAgent": "{{value0}} sessions can't be deleted from Orcinus.",
-            "resumeInNewChat": "Resume in New Chat"
+            "deleteReasonUnsupportedAgent": "{{value0}} sessions can't be deleted from Orcinus."
           },
           "AiVaultSessionDeleteDialog": {
             "title": "Delete this session?",

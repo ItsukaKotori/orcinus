@@ -1526,9 +1526,7 @@
             }
           }
         },
-        "providerAccountScope": {
-          "localMac": "Local Mac"
-        },
+        "providerAccountScope": {},
         "repository": {
           "search": {
             "availableHosts": "Available Hosts",
