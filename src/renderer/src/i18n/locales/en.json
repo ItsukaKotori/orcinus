@@ -200,7 +200,6 @@
     "showStatusBar": "Show Status Bar",
     "showTasksButton": "Show Tasks Button",
     "showAutomationsButton": "Show Automations Button",
-    "showMobileButton": "Show Orcinus Mobile Button",
     "showTitlebarAppName": "Show Titlebar App Name",
     "view": "View",
     "reload": "Reload",
@@ -10163,11 +10162,11 @@
         },
         "providerAccountScope": {
           "remoteServer": "Remote server: {{value0}}",
-          "remoteServerCredentials": "Credentials and account checks for this provider are owned by this remote server. Use Settings > Remote Orcinus Servers > Advanced to edit another default runtime scope.",
+          "remoteServerCredentials": "Credentials and account checks for this provider are owned by this remote server.",
           "localMac": "Local Mac",
-          "localCredentials": "Credentials and account checks for this provider are owned by this desktop client. Use Settings > Remote Orcinus Servers > Advanced to edit server-owned credentials.",
-          "remoteServerRateLimit": "{{value0}} API budget is fetched from the CLI on this remote server. Use Settings > Remote Orcinus Servers > Advanced to view another default runtime budget.",
-          "localRateLimit": "{{value0}} API budget is fetched from the CLI on this desktop client. Use Settings > Remote Orcinus Servers > Advanced to view server-owned budgets."
+          "localCredentials": "Credentials and account checks for this provider are owned by this desktop client.",
+          "remoteServerRateLimit": "{{value0}} API budget is fetched from the CLI on this remote server.",
+          "localRateLimit": "{{value0}} API budget is fetched from the CLI on this desktop client."
         },
         "settingOwnership": {
           "clientDefault": "Client default",

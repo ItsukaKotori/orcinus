@@ -57,7 +57,6 @@
     "showStatusBar": "ステータスバーを表示",
     "showTasksButton": "タスクボタンを表示",
     "showAutomationsButton": "オートメーションボタンを表示",
-    "showMobileButton": "Orcinus Mobile ボタンを表示",
     "showTitlebarAppName": "タイトルバーのアプリ名を表示",
     "view": "表示",
     "reload": "リロード",
@@ -8937,11 +8936,7 @@
         },
         "providerAccountScope": {
           "remoteServer": "リモートサーバー: {{value0}}",
-          "remoteServerCredentials": "このプロバイダーの認証情報とアカウント確認は、このリモートサーバーが管理します。別の既定ランタイムスコープを編集するには、[設定] > [リモート Orcinus サーバー] > [詳細設定] を使用してください。",
-          "localMac": "ローカルの Mac",
-          "localCredentials": "このプロバイダーの認証情報とアカウント確認は、このデスクトップクライアントが管理します。サーバーが管理する認証情報を編集するには、[設定] > [リモート Orcinus サーバー] > [詳細設定] を使用してください。",
-          "remoteServerRateLimit": "{{value0}} の API 予算は、このリモートサーバー上の CLI から取得されます。別の既定ランタイムの予算を確認するには、[設定] > [リモート Orcinus サーバー] > [詳細設定] を使用してください。",
-          "localRateLimit": "{{value0}} の API 予算は、このデスクトップクライアント上の CLI から取得されます。サーバーが管理する予算を確認するには、[設定] > [リモート Orcinus サーバー] > [詳細設定] を使用してください。"
+          "localMac": "ローカルの Mac"
         },
         "settingOwnership": {
           "clientDefault": "クライアントのデフォルト",

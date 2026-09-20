@@ -57,7 +57,6 @@
     "showStatusBar": "상태 표시줄 표시",
     "showTasksButton": "작업 버튼 표시",
     "showAutomationsButton": "자동화 버튼 표시",
-    "showMobileButton": "Orcinus 모바일 버튼 표시",
     "showTitlebarAppName": "제목 표시줄 앱 이름 표시",
     "view": "보기",
     "reload": "새로고침",
@@ -8942,11 +8941,7 @@
         },
         "providerAccountScope": {
           "remoteServer": "원격 서버: {{value0}}",
-          "remoteServerCredentials": "이 공급자의 자격 증명과 계정 확인은 이 원격 서버가 소유합니다. 다른 기본 런타임 범위를 편집하려면 설정 > 원격 Orcinus 서버 > 고급을 사용하세요.",
-          "localMac": "로컬 Mac",
-          "localCredentials": "이 제공자의 자격 증명과 계정 확인은 이 데스크톱 클라이언트가 소유합니다. 서버 소유 자격 증명은 설정 > 원격 Orcinus 서버 > 고급에서 편집하세요.",
-          "remoteServerRateLimit": "{{value0}} API 예산은 이 원격 서버의 CLI에서 가져옵니다. 다른 기본 런타임 예산을 보려면 설정 > 원격 Orcinus 서버 > 고급을 사용하세요.",
-          "localRateLimit": "{{value0}} API 예산은 이 데스크톱 클라이언트의 CLI에서 가져옵니다. 서버 소유 예산을 보려면 설정 > 원격 Orcinus 서버 > 고급을 사용하세요."
+          "localMac": "로컬 Mac"
         },
         "settingOwnership": {
           "clientDefault": "클라이언트 기본값",

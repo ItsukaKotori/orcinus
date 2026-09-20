@@ -84,7 +84,6 @@
     "showStatusBar": "Afficher la barre d'état",
     "showTasksButton": "Afficher le bouton Tâches",
     "showAutomationsButton": "Afficher le bouton Automatisations",
-    "showMobileButton": "Afficher le bouton Orcinus Mobile",
     "showTitlebarAppName": "Afficher le nom de l'app dans la barre de titre",
     "view": "Affichage",
     "reload": "Recharger",
@@ -9744,11 +9743,7 @@
         },
         "providerAccountScope": {
           "remoteServer": "Serveur distant : {{value0}}",
-          "remoteServerCredentials": "Les identifiants et vérifications de compte pour ce fournisseur appartiennent à ce serveur distant. Utilisez Paramètres > Serveurs distants Orcinus > Avancé pour modifier la portée d'un autre runtime par défaut.",
-          "localMac": "Mac local",
-          "localCredentials": "Les identifiants et vérifications de compte pour ce fournisseur appartiennent à ce client de bureau. Utilisez Paramètres > Serveurs distants Orcinus > Avancé pour modifier les identifiants détenus par le serveur.",
-          "remoteServerRateLimit": "Le budget d'API {{value0}} est récupéré via la CLI sur ce serveur distant. Utilisez Paramètres > Serveurs distants Orcinus > Avancé pour afficher le budget d'un autre runtime par défaut.",
-          "localRateLimit": "Le budget d'API {{value0}} est récupéré via la CLI sur ce client de bureau. Utilisez Paramètres > Serveurs distants Orcinus > Avancé pour afficher les budgets détenus par le serveur."
+          "localMac": "Mac local"
         },
         "settingOwnership": {
           "clientDefault": "Valeur par défaut du client",
