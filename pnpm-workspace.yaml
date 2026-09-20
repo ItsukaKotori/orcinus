@@ -6,7 +6,8 @@ shamefullyHoist: true
 allowBuilds:
   '@swc/core': true
   esbuild: true
-  # Patch ported; the renderer parity tests need the native build.
+  # Patch ported; parity tests need a source build: `pnpm run rebuild:node`
+  # （源码构建，prebuilt spawn-helper 权限不正确）。
   node-pty: true
 
 overrides:
