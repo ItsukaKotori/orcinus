@@ -32,7 +32,6 @@ const SURFACE_ROWS: readonly SurfaceRow[] = [
     path: 'src/renderer/src/components/terminal-pane/pty-connection/pane-agent-identity.ts',
     marker: 'installPaneAgentIdentity'
   },
-  { row: 34, path: 'src/main/runtime/orchestration/groups.ts', marker: 'terminalIsAgent' },
   {
     row: 35,
     path: 'src/renderer/src/lib/active-agent-note-target.ts',
@@ -156,16 +155,6 @@ const SURFACE_ROWS: readonly SurfaceRow[] = [
   },
   {
     row: 59,
-    path: 'src/main/agent-hooks/server/server-authority-evidence.ts',
-    marker: 'recordCurrentAuthorityObservation'
-  },
-  {
-    row: 59,
-    path: 'src/main/runtime/orca-runtime-write-orchestration-pointer-pty.ts',
-    marker: 'resolvePaneAgentIdentityField'
-  },
-  {
-    row: 59,
     path: 'src/renderer/src/hooks/ipc-events/agent-status-event-applicator.ts',
     marker: 'createAgentStatusEventApplicator'
   },
@@ -190,11 +179,6 @@ const SURFACE_ROWS: readonly SurfaceRow[] = [
     marker: 'installTitleSpawnBell'
   },
   { row: 61, path: 'src/renderer/src/lib/worktree-status.ts', marker: 'getWorktreeStatus' },
-  {
-    row: 62,
-    path: 'src/main/runtime/runtime-worktree-status-projection.ts',
-    marker: 'getLeafWorktreeStatus'
-  },
   {
     row: 63,
     path: 'src/renderer/src/components/sidebar/smart-attention.ts',
@@ -230,16 +214,13 @@ describe('pane agent identity surface inventory (rows 6, 32–65)', () => {
  * Identity-observation rebind audit. Advancing a pane incarnation without a positive replacement
  * proof is how a legitimate reclaim and a stale-hook bug get conflated (see
  * `PaneReplacementProof` in pane-agent-identity-adapter.ts). Every existing sequencer `rebind`
- * call is pinned here by file and count: today they are the retired-pane `restart` disposition
- * (three ingress paths) and the renderer pane-key transfer. Adding a rebind call, or changing
- * these, requires updating this audit — and per the migration plan, a `replacementProof`.
+ * call is pinned here by file and count: today it is the renderer pane-key transfer. Adding a
+ * rebind call, or changing this, requires updating this audit — and per the migration plan, a
+ * `replacementProof`.
  */
 const IDENTITY_SEQUENCER_REBIND_RE = /\b(?:observations|rendererAgentStatusObservations)\.rebind\(/g
 
 const EXPECTED_REBIND_SITES: readonly (readonly [path: string, occurrences: number])[] = [
-  ['src/main/agent-hooks/server/server-ingest-normalization.ts', 1],
-  ['src/main/agent-hooks/server/server-ingest-remote.ts', 1],
-  ['src/main/agent-hooks/server/server-lifecycle.ts', 1],
   ['src/renderer/src/store/slices/agent-status-authority-actions.ts', 1]
 ]
 

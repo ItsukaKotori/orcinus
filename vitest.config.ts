@@ -31,11 +31,7 @@ export default defineConfig({
       'src/**/*.test.tsx',
       'config/scripts/**/*.test.mjs'
     ],
-    exclude: [
-      ...configDefaults.exclude,
-      // Phase 0: imports Electron-backed src/main module; see Phase 1 shim removal. (This file's failures are the un-forked mobile/ sources it reads.)
-      'src/renderer/src/app-shell/workspace-view-cross-client-sync.test.tsx'
-    ],
+    exclude: [...configDefaults.exclude],
     // Why: the full suite runs heavy TS transforms plus real git/http fixtures;
     // the Vitest 5s defaults are too tight for the slowest integration cases.
     hookTimeout: 60_000,

@@ -1,23 +1,5 @@
-import { vi } from 'vitest'
-import type {
-  RuntimeMobileSessionTabsResult,
-  RuntimeMobileSessionTabsSnapshot
-} from '../../../../shared/runtime-types'
-
-type HostFinalization = {
-  finalizeRuntimeMobileSessionTabsResult: (
-    input: {
-      snapshot: RuntimeMobileSessionTabsSnapshot
-      tabs: RuntimeMobileSessionTabsResult['tabs']
-    },
-    host: { sanitizeGroups: () => undefined }
-  ) => RuntimeMobileSessionTabsResult
-}
-
-// Keep the host-only type graph out of the renderer typecheck.
-const { finalizeRuntimeMobileSessionTabsResult } = await vi.importActual<HostFinalization>(
-  '../../../../main/runtime/runtime-mobile-session-result-finalization'
-)
+import type { RuntimeMobileSessionTabsResult } from '../../../../shared/runtime-types'
+import { dropRetirementProofsForLiveSurfaces } from '../../../../shared/terminal-retirement-proof-ledger'
 
 /** Run terminal fixtures through the host's retirement filter before the renderer consumes them. */
 export function finalizeHostTerminalSnapshot(
@@ -26,8 +8,30 @@ export function finalizeHostTerminalSnapshot(
   if (snapshot.tabGroups !== undefined || snapshot.tabGroupLayout !== undefined) {
     throw new Error('This fixture only supports ungrouped terminal snapshot finalization')
   }
-  return finalizeRuntimeMobileSessionTabsResult(
-    { snapshot, tabs: snapshot.tabs },
-    { sanitizeGroups: () => undefined }
-  )
+  const tabs = snapshot.tabs
+  const active =
+    tabs.find((tab) => tab.isActive && tab.id === snapshot.activeTabId) ??
+    tabs.find((tab) => tab.isActive) ??
+    (snapshot.activeTabId ? (tabs[0] ?? null) : null)
+  const normalizedTabs =
+    active && !tabs.some((tab) => tab.isActive)
+      ? tabs.map((tab) => (tab.id === active.id ? { ...tab, isActive: true } : tab))
+      : tabs
+  return {
+    worktree: snapshot.worktree,
+    publicationEpoch: snapshot.publicationEpoch,
+    snapshotVersion: snapshot.snapshotVersion,
+    activeGroupId: null,
+    activeTabId: active?.id ?? null,
+    activeTabType: active?.type ?? null,
+    ...(snapshot.retiredTerminalSurfaces
+      ? {
+          retiredTerminalSurfaces: dropRetirementProofsForLiveSurfaces(
+            snapshot.retiredTerminalSurfaces,
+            snapshot.tabs
+          )
+        }
+      : {}),
+    tabs: normalizedTabs
+  }
 }

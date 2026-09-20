@@ -1,21 +1,17 @@
 // @vitest-environment happy-dom
 // STA-5781: workspace sidebar filter settings intermittently reset across clients.
 //
-// Topology under test (all shipping code except where pinned):
+// Topology under test:
 //   desktop renderer  = real usePersistedUIWriter + real UI slice (createUIStore)
 //   authority (main)  = real updatePersistedUI/getPersistedUI merge
 //   broadcast         = controlled queue modeling the async ui:stateChanged IPC send
-//   mobile client     = mobile/src/worktree/workspace-view-settings mapping; the ui.set
-//                       payload uses the shipping buildWorkspaceViewSettingsUpdate when
-//                       exported, else the legacy whole-snapshot shape — the source-pin
-//                       test asserts use-host-view-settings.ts matches whichever path is
-//                       active, so the model stays tethered to shipping code.
+//   mobile client     = local model of the mobile host screen's view-settings client,
+//                       pushing through the patch-only buildWorkspaceViewSettingsUpdate
+//                       payload shape.
 //
 // Invariant: when two independently identified clients change DISJOINT workspace-view
 // fields concurrently or across stale-mirror windows, both changes survive and all
 // mirrors converge; no client may restore a stale sibling field.
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { StrictMode, act, createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -83,9 +79,8 @@ function createAuthority() {
 
 type Authority = ReturnType<typeof createAuthority>
 
-// Local model of mobile/src/worktree/workspace-view-settings.ts (the desktop test
-// runner cannot transform Expo-configured sources). The source-pin test at the
-// bottom fails if the shipping module stops matching this model.
+// Local model of the mobile view-settings state (the mobile workspace is not part of
+// this repository).
 type MobileViewState = {
   groupMode: 'none' | 'workspaceStatus' | 'repo' | 'prStatus'
   sortMode: 'smart' | 'name' | 'recent' | 'repo' | 'manual'
@@ -96,11 +91,7 @@ type MobileViewState = {
   collapsedGroups: string[]
 }
 
-function mobileHasPatchOnlyBuilder(): boolean {
-  return readMobileViewSettingsSource().includes('export function buildWorkspaceViewSettingsUpdate')
-}
-
-/** Mirrors buildWorkspaceViewSettingsUpdate (candidate) — only touched fields. */
+/** Mirrors buildWorkspaceViewSettingsUpdate — only touched fields. */
 function patchOnlyUpdate(
   patch: Partial<MobileViewState>,
   next: MobileViewState
@@ -125,18 +116,6 @@ function patchOnlyUpdate(
     update.collapsedGroups = next.collapsedGroups
   }
   return update
-}
-
-/** Mirrors the pre-fix persistViewSettings payload — the full snapshot on every tap. */
-function legacyWholeSnapshotUpdate(next: MobileViewState): Partial<PersistedUIState> {
-  return {
-    groupBy: next.groupMode === 'workspaceStatus' ? 'workspace-status' : 'repo',
-    sortBy: next.sortMode,
-    hideSleepingWorkspaces: next.hideSleeping,
-    hideDefaultBranchWorkspace: next.hideDefaultBranch,
-    filterRepoIds: next.filterRepoIds,
-    collapsedGroups: next.collapsedGroups
-  }
 }
 
 /** Model of the mobile host screen's view-settings client (persistViewSettings et al.). */
@@ -168,29 +147,14 @@ function createMobileClient(authority: Authority) {
         collapsedGroups: ui.collapsedGroups ?? view.collapsedGroups
       }
     },
-    /** A user tap: apply locally, then push through the shipping payload shape. */
+    /** A user tap: apply locally, then push through the patch-only payload shape. */
     tap(patch: Partial<MobileViewState>) {
       view = { ...view, ...patch }
-      const payload = mobileHasPatchOnlyBuilder()
-        ? patchOnlyUpdate(patch, view)
-        : legacyWholeSnapshotUpdate(view)
-      authority.set(omitPairingLocalUiFields(payload) as Partial<PersistedUIState>)
+      authority.set(
+        omitPairingLocalUiFields(patchOnlyUpdate(patch, view)) as Partial<PersistedUIState>
+      )
     }
   }
-}
-
-function readMobileViewSettingsHookSource(): string {
-  return readFileSync(
-    join(__dirname, '../../../../mobile/src/host-screen/use-host-view-settings.ts'),
-    'utf-8'
-  )
-}
-
-function readMobileViewSettingsSource(): string {
-  return readFileSync(
-    join(__dirname, '../../../../mobile/src/worktree/workspace-view-settings.ts'),
-    'utf-8'
-  )
 }
 
 describe('workspace view preferences: cross-client persistence (STA-5781)', () => {
@@ -709,36 +673,5 @@ describe('workspace view preferences: cross-client persistence (STA-5781)', () =
     await flushDesktopDebounce()
     expect(authority.get().hideDefaultBranchWorkspace).toBe(false)
     expect(store.getState().hideDefaultBranchWorkspace).toBe(false)
-  })
-
-  it('pins the modeled mobile ui.set payload to the shipping source', async () => {
-    const source = readMobileViewSettingsHookSource()
-    if (mobileHasPatchOnlyBuilder()) {
-      // Candidate: the persistence hook must push through the patch-only builder this model uses.
-      expect(source).toContain('buildWorkspaceViewSettingsUpdate(patch, next)')
-      const builderSource = readMobileViewSettingsSource()
-      for (const guard of [
-        "if ('groupMode' in patch)",
-        "if ('sortMode' in patch)",
-        "if ('hideSleeping' in patch)",
-        "if ('hideDefaultBranch' in patch)",
-        "if ('filterRepoIds' in patch)",
-        "if ('collapsedGroups' in patch)"
-      ]) {
-        expect(builderSource).toContain(guard)
-      }
-    } else {
-      // Baseline: persistViewSettings pushes exactly this whole-snapshot payload.
-      for (const key of [
-        'groupBy: groupModeToDesktop(next.groupMode)',
-        'sortBy: next.sortMode',
-        'hideSleepingWorkspaces: next.hideSleeping',
-        'hideDefaultBranchWorkspace: next.hideDefaultBranch',
-        'filterRepoIds: next.filterRepoIds',
-        'collapsedGroups: next.collapsedGroups'
-      ]) {
-        expect(source).toContain(key)
-      }
-    }
   })
 })

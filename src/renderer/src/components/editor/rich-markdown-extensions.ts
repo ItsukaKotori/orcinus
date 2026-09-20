@@ -1,4 +1,4 @@
-import type { AnyExtension } from '@tiptap/core'
+import { Extension, type AnyExtension } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import { Code } from '@tiptap/extension-code'
@@ -45,15 +45,37 @@ import { createCachedLowlight } from './rich-markdown-lowlight-cache'
 const lowlight = createCachedLowlight(createLowlight(common))
 
 const RichMarkdownLink = Link.extend({
-  // Why: link's priority must stay below code's default 100 so Markdown
-  // serializes code-styled labels as [`label`](href).
-  priority: 90
+  // Why: link must outrank code (default 100) so Markdown serializes
+  // code-styled labels as [`label`](href) — tiptap 3.31 opens the
+  // highest-priority mark outermost.
+  priority: 1000
 })
 
 const RichMarkdownCode = Code.extend({
   // Why: Markdown supports linked code labels, so code cannot exclude the link
   // mark even though it should still stay exclusive with emphasis marks.
   excludes: 'code bold italic strike underline'
+})
+
+/**
+ * Rich mode's serialization contract is byte-exact: the encoder reserves HTML
+ * and doc-link syntax before parsing, so every remaining text node must come
+ * back out verbatim. tiptap 3.31 added a backslash-escape pass over non-code
+ * text (`[12]` -> `\[12\]`, `[[a|]]` -> `\[\[a|\]\]`, transport-looking
+ * `[[ORCA_…]]` -> escaped) that rewrites authored text on save. Restore the
+ * pre-3.31 behavior per manager instance; the runtime guard keeps this inert
+ * if the hook disappears upstream.
+ */
+const RichMarkdownRawTextSerialization = Extension.create({
+  name: 'richMarkdownRawTextSerialization',
+  onBeforeCreate() {
+    const manager = this.editor.markdown as unknown as
+      | { escapeMarkdownSyntax?: (text: string) => string }
+      | undefined
+    if (manager && typeof manager.escapeMarkdownSyntax === 'function') {
+      manager.escapeMarkdownSyntax = (text: string) => text
+    }
+  }
 })
 
 export function createRichMarkdownExtensions({
@@ -255,6 +277,7 @@ export function createRichMarkdownExtensions({
         gfm: true
       }
     }),
+    RichMarkdownRawTextSerialization,
     createRichMarkdownAnnotationHighlightExtension()
   ]
 

@@ -146,8 +146,6 @@ const INVENTORY: readonly InventoryGroup[] = [
     helper: 'resolveExplicitTerminalTitleAgentType',
     classification: 'identity-consumer',
     paths: [
-      ['mobile/src/session/mobile-terminal-tab-agent.ts', 2],
-      ['src/main/runtime/tui-idle-evidence.ts', 2],
       ['src/renderer/src/lib/open-tab-occupant-agent.ts', 2],
       ['src/renderer/src/lib/use-tab-agent.ts', 3]
     ]
@@ -220,7 +218,6 @@ const INVENTORY: readonly InventoryGroup[] = [
     classification: 'identity-consumer',
     paths: [
       ['src/renderer/src/components/sidebar/worktree-agent-row-type.ts', 2],
-      ['src/main/runtime/runtime-mobile-session-projection.ts', 3],
       ['src/renderer/src/components/sidebar/worktree-title-derived-agent-rows.ts', 2],
       ['src/renderer/src/lib/tab-agent-from-signals.ts', 2],
       ['src/renderer/src/lib/use-tab-agent.ts', 2]
@@ -295,14 +292,6 @@ const INVENTORY: readonly InventoryGroup[] = [
     helper: 'detectAgentStatusFromTitle',
     classification: 'evidence-producer',
     paths: [
-      ['src/main/runtime/orca-runtime-apply-tracked-pty-title.ts', 2],
-      ['src/main/runtime/orca-runtime-get-pty-record-for-pane-key.ts', 2],
-      ['src/main/runtime/orca-runtime-get-unpersisted-tracked-title-for-pty.ts', 2],
-      ['src/main/runtime/orca-runtime-maybe-hydrate-headless-from-renderer.ts', 2],
-      ['src/main/runtime/orca-runtime-record-agent-prompt-lifecycle-state.ts', 2],
-      ['src/main/runtime/runtime-terminal-agent-status-query.ts', 3],
-      ['src/main/runtime/runtime-worktree-status-projection.ts', 4],
-      ['src/main/runtime/terminal-wait-detection.ts', 2],
       ['src/renderer/src/components/terminal-pane/agent-completion-title-observer.ts', 2],
       ['src/renderer/src/components/terminal-pane/pty-connection/shell-command-inference.ts', 4],
       ['src/renderer/src/components/terminal-pane/pty-output-title-observer.ts', 2],
@@ -371,10 +360,7 @@ const INVENTORY: readonly InventoryGroup[] = [
   {
     helper: 'resolvePublishedPaneAgentIdentity',
     classification: 'parser-implementation',
-    paths: [
-      'src/shared/published-pane-agent-identity.ts',
-      ['src/main/runtime/orca-runtime-write-orchestration-pointer-pty.ts', 2]
-    ]
+    paths: ['src/shared/published-pane-agent-identity.ts']
   }
 ]
 
@@ -399,16 +385,6 @@ const DIRECT_SINGLE_SOURCE_SURFACES: readonly {
     marker: 'resolveLeafCloseCopyKind'
   },
   {
-    path: 'src/main/runtime/orchestration/mailbox-pointer-stage.ts',
-    classification: 'action-consumer',
-    marker: 'isCursorAgentTitle'
-  },
-  {
-    path: 'src/main/providers/local-pty-session-activation.ts',
-    classification: 'action-consumer',
-    marker: 'launchAgent'
-  },
-  {
     path: 'src/renderer/src/components/terminal-pane/pty-connection/pane-serializer-settle.ts',
     classification: 'action-consumer',
     marker: 'sendStartupDraftPaste'
@@ -417,21 +393,6 @@ const DIRECT_SINGLE_SOURCE_SURFACES: readonly {
     path: 'src/renderer/src/lib/active-agent-note-send.ts',
     classification: 'action-consumer',
     marker: 'sendNotesToActiveAgentSession'
-  },
-  {
-    path: 'mobile/src/session/mobile-native-chat-send.ts',
-    classification: 'action-consumer',
-    marker: 'sendMobileNativeChatMessageWithOutcome'
-  },
-  {
-    path: 'mobile/src/session/mobile-native-chat-image-send.ts',
-    classification: 'action-consumer',
-    marker: 'pasteMobileNativeChatImagePaths'
-  },
-  {
-    path: 'mobile/src/session/pr-ai-triage-launch.ts',
-    classification: 'action-consumer',
-    marker: 'createTerminalAndSendPrompt'
   }
 ]
 
