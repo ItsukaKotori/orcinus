@@ -77,12 +77,16 @@ mkdir -p .superpowers/sdd/2026-09-20-phase1-debt-payoff/tools
 ```js
 #!/usr/bin/env node
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 const [file] = process.argv.slice(2)
 if (!file) {
   console.error('usage: node prune-allowlist.mjs <allowlist-file>')
   process.exit(2)
 }
+
+// Some allowlists are repo-relative (src/...), others are src/-relative (cli/...).
+const exists = (entry) => existsSync(entry) || existsSync(join('src', entry))
 
 const lines = readFileSync(file, 'utf8').split('\n')
 const kept = []
@@ -93,7 +97,7 @@ for (const line of lines) {
     kept.push(line)
     continue
   }
-  if (existsSync(entry)) kept.push(line)
+  if (exists(entry)) kept.push(line)
   else removed += 1
 }
 
@@ -187,12 +191,12 @@ rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm build:web
 
 ```bash
 pnpm test > .superpowers/sdd/2026-09-20-phase1-debt-payoff/baseline-test.log 2>&1
-sed 's/.*FAIL *//' .superpowers/sdd/2026-09-20-phase1-debt-payoff/baseline-test.log | sort -u > .superpowers/sdd/2026-09-20-phase1-debt-payoff/baseline-failures.txt
+grep -E '^[[:space:]]*FAIL' .superpowers/sdd/2026-09-20-phase1-debt-payoff/baseline-test.log | sed 's/.*FAIL *//' | sort -u > .superpowers/sdd/2026-09-20-phase1-debt-payoff/baseline-failures.txt
 wc -l .superpowers/sdd/2026-09-20-phase1-debt-payoff/baseline-failures.txt
 tail -5 .superpowers/sdd/2026-09-20-phase1-debt-payoff/baseline-test.log
 ```
 
-预期：记录失败清单（约 175 行，含 test 名与 collection 行）。此文件是 Task 10 改红为绿的证据基线。
+预期：记录失败清单（2026-09-20 实测 173 行 test 级失败；`sed` 必须先经 `grep -E '^\s*FAIL'` 过滤，否则非 FAIL 行会原样输出）。此文件是 Task 10 改红为绿的证据基线。
 
 ---
 
@@ -367,7 +371,7 @@ grep -rn "GeneralRemoteServerUpdates\|RemoteServerUpdateStatus" src --include='*
 node .superpowers/sdd/2026-09-20-phase1-debt-payoff/tools/i18n-prune.mjs
 ```
 
-预期：totalRemoved ≈ 1700+（四组 533 + 移动全子树 1184 + showMobileButton 2，重叠部分按实际）；7 个 catalog 写出后 JSON 合法。
+预期：totalRemoved ≈ 1447（四组 + 移动全子树 + showMobileButton 2；若 Step 1 追加两个键则 ≈1605，以脚本输出为准）；7 个 catalog 写出后 JSON 合法。
 
 ```bash
 pnpm test src/renderer/src/i18n
@@ -767,7 +771,7 @@ node .superpowers/sdd/2026-09-20-phase1-debt-payoff/tools/prune-allowlist.mjs sr
 node .superpowers/sdd/2026-09-20-phase1-debt-payoff/tools/prune-allowlist.mjs src/shared/child-process/__fixtures__/windows-console-visibility-allowlist.txt
 ```
 
-各预期剩 7 条。把 `child-process-import-boundary.test.ts:32` 的 `DIRECT_IMPORTER_PIN = 155` 改为 `7`；`windows-console-visibility.test.ts:37` 的 `UNHIDDEN_SPAWNER_PIN = 65` 改为 `7`。
+各预期剩 7 条（工具已兼容 repo-relative 与 src/-relative 两种条目；实测 child-process 删 146 留 7、windows-console 删 58 留 7）。把 `child-process-import-boundary.test.ts:32` 的 `DIRECT_IMPORTER_PIN = 155` 改为 `7`；`windows-console-visibility.test.ts:37` 的 `UNHIDDEN_SPAWNER_PIN = 65` 改为 `7`。
 
 ```bash
 pnpm test src/shared/child-process
