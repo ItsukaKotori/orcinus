@@ -236,12 +236,16 @@ CEF 内嵌浏览器（Design Mode/cookie 导入/网络隧道）；`ade-plugins` 
 
 ## 10. 风险清单
 
-1. **CEF 集成与打包**（体积、签名、公证、崩溃隔离）→ Phase 0 spike 定 go/no-go
+1. **CEF 集成与打包**（体积、签名、公证、崩溃隔离）→ Phase 0 spike 结论（2026-09-14，macOS arm64）：按阈值判定 **no-go**；Phase 3 采用系统 WebView 降级方案（§4 决策 3）。Windows 签名/公证未验证，见 §10.1。
 2. **终端性能与背压**（Tauri Channel vs 本地 socket）→ Phase 0 spike
 3. **渲染层 fork 构建体量**（~10k 文件）→ 保留 orca 懒加载设计，Phase 0 优化
 4. **987 方法迁移期的半 mock 体验** → 显式“未实现”标记 + 按视图接入
 5. **隐式行为翻译**（agent 状态识别、终端语义）→ 复用 transcript fixtures 固化为行为测试
 6. **computer-use 平台 API 的 Rust 可用性** → 放最后阶段，必要时降级
+
+### 10.1 CEF no-go 披露
+
+CEF spike 判定 no-go（体积/启动/双平台构建未达标；Windows 侧签名、公证与打包未验证）。Phase 3 浏览器能力按系统 WebView + 注入式元素拾取降级（Design Mode 仅 HTML/CSS，无录像/完整 cookie 能力），UI 标注能力差异。若未来重启 CEF 方案，需先补 Windows 构建/签名验证。
 
 ## 11. 后续
 

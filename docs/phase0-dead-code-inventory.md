@@ -17,13 +17,13 @@
 | 项 | 清扫前 | 清扫后 | 残留内容 | 判定 |
 |---|---|---|---|---|
 | `SshPassphraseDialog` | 7 | 7 | 6 个 locale + `app-startup-routing.test.ts` 的反回归断言（断言入口不得回潮） | Phase 0 已移除入口（组件已不存在；残留为 i18n 键）→ Phase 1 清键 |
-| `RemoteServerUpdateDialog` | 9 | 9 | 6 locale + `en-runtime-required.json` + `store/slices/remote-server-updates.ts` + 其 integration test | Phase 0 已移除入口；slice 仍被 store 注册、runtime polling/coordinator 仍在启动链路 → Phase 1（见下） |
+| `RemoteServerUpdateDialog` | 9 | 9 | 6 locale + `en-runtime-required.json` + `store/slices/remote-server-updates.ts` + 其 integration test | 已整链删除（原『启动链路仍在用』前提失效）；Phase 1 提交 `4fac569` |
 | `SkillsPage` | 7 | 7 | 6 locale + `en-runtime-required.json`（无代码模块） | Phase 0 已移除入口 → Phase 1 清 i18n 键 |
 | `MobilePage` | 7 | 7 | 6 locale + `en-runtime-required.json`（无代码模块） | Phase 0 已移除入口 → Phase 1 清 i18n 键 |
 | `EphemeralVm` | 76 | 63 | 已删 shared 独占 10 模块 + 7 测试；其余 63 文件为 live 链路（renderer composer run-target、worktree creation、runtime cleanup、store teardown） | Phase 0 已移除入口；残留为 Phase 1 清理代码（须待 composer/运行目标决策） |
 | `skill-share` | 0 | 0 | 无内容引用；独占模块 `src/shared/skill-share-link.ts` 无任何引用 | 已删除（Phase 0 清理完成） |
 | `cli-install` | 23 | 23 | 全部为 live CLI 安装路径（`cli-install-types.ts`、Linear skill setup、onboarding、BrowserUseCliStep、feature-tip 等） | 保留功能 → Phase 1 在 CLI 面统一复核后清理 |
-| `orca-profile` | 20 | 20 | 多账号链仍被 store/preload/web/unexpected-signout/browser partition 消费 | Phase 0 仅删死组件；整链 Phase 1 |
+| `orca-profile` | 20 | 20 | 多账号链仍被 store/preload/web/unexpected-signout/browser partition 消费 | 整链 live，不删；仅多 profile 管理死动作留待后续 |
 
 ## 清扫结果
 
@@ -44,7 +44,7 @@
 
 | 保留项 | 引用证据 | 处置 |
 |---|---|---|
-| `MobileEmulatorSettingsPane` 及 `emulator-pane` 主体 | 由 `settings-interface-primary-section-renderers.tsx` 渲染，生产可达 | **维持 Task 4 判定**：浏览器仿真能力，非移动端配对；Phase 0 保留 |
+| `MobileEmulatorSettingsPane` 及 `emulator-pane` 主体 | 由 `settings-interface-primary-section-renderers.tsx` 渲染，生产可达 | 已被 Phase 1 功能删减 §2.4 推翻（`59e7ee2` 整域删除） |
 | `src/shared/system-cli-install-dirs.ts` | 被 `node-cli-command-resolution.ts`、`posix-version-manager-bin-dirs.ts` 引用（二者自身只在死链中，非 G/I 命名） | Phase 1 随 CLI 死链整簇删除 |
 | `src/shared/mobile-push-contract.ts` | 被 `rpc-contract/notifications-params.ts` 引用（rpc-contract 整目录为死代码但非 G/I 独占） | Phase 1 随 rpc-contract 死树删除 |
 | `src/shared/mobile-relay-credential-contract.ts` | 被 `rpc-contract/rpc-params-catalog.generated.ts` 引用 | 同上 |
@@ -80,7 +80,7 @@
 4. **ratchet 重基线**：`child-process-import-allowlist.txt` 现有 146 条 stale 条目（条目总数 153 − 现存且导入 child_process 的 7 条 = 146）；删除 stale 行并把 `DIRECT_IMPORTER_PIN` 降到 7（当前 offender 数）。
 5. **i18n 清键**：`SkillsPage`/`MobilePage`/`SshPassphraseDialog`/`RemoteServerUpdateDialog` 四组键（6 locale + en-runtime-required），同步更新 i18n 回归测试。
 6. **store 切片**：`remote-server-updates`、`orca-profiles(-auth-actions)` 的用户面已移除；确认启动链路不需要后删除并清 store 注册。
-7. **composer 运行目标**：`EphemeralVm` 运行目标仍可达（RunTargetCombobox 等）；按 spec §6.5 决定是否随 VM 能力一并移除，其独占的 renderer `ephemeral-vm-*` 库与 shared `ephemeral-vm-recipes/runtimes` 方可删除。
+7. **composer 运行目标**：`EphemeralVm` 运行目标仍可达（RunTargetCombobox 等）；已决策：VM run-target 保留，端到端移除另立产品决策。其独占的 renderer `ephemeral-vm-*` 库与 shared `ephemeral-vm-recipes/runtimes` 暂不删除。
 8. **保留文件内死代码**：`setUsagePercentageDisplay`、`settings.showMobileButton`、stale copy、`MobileEmulatorSettingsPane` 的移动端语义复核。
 9. **Task 2 excluded test**：`workspace-view-cross-client-sync.test.tsx` 重指向或删除，去掉 vitest exclude。
 
@@ -91,7 +91,7 @@
 1. **xterm `patchedDependencies` 补完**：`node-pty`、`addon-webgl` 尚未移植（ligatures 已完成）——终端开发前完成。
 2. **测试套件重基线**：child-process ratchet（146 条 stale，pin 155）、windows-console-visibility（58 条 stale）、cli-runtime-pairing stale 条目、feature-interactions（缺 5 个 writer）、useIpcEvents 96/97、缺失 `config/scripts/locale-ko-key-overrides.json`、excluded test 重指向——在此之前 `pnpm test` 以 1 退出。
 3. **Mock 加固**：共享可变常量按引用返回（agent-awake / preflight / runtime-events / memory / onboarding）；5 个 mock 误用命名空间级 `withUnimplementedFallback`（onboarding / cli / repos / runtime-environments / workspace-session；应改用方法级 `withMethodFallback`），缺方法时产生同步 TypeError 而非响亮的 rejection；`doc-preview-api.ts` 注释与行为不一致（`src/bridge/mock/`）。
-4. **Fork 清理**：`src/preload` 类型抽取 + `src/main` 残留（88 个 preload、4 个 main 文件仍 `import ... from 'electron'`；R39 裁定 spec §8 三目录范围为准，抽取安排在此处）。
+4. **Fork 清理**：`src/preload` 类型抽取 + `src/main` 残留（80（基线 88，Phase 1 删减 -8）个 preload 仍 `import ... from 'electron'`；4 个 `src/main` 类型链文件已删除；R39 裁定 spec §8 三目录范围为准，抽取已在此处完成）。`src/preload` 运行期树保留至 Phase 2。
 5. **Monaco `ts.worker`**：编辑器开发前检查 `diagnostics_channel`。
 6. **PTY spike minor**：宿主设计前处理 CPR 扫描尾部、约 9% 字节盲区、detached reader thread（见 `docs/spikes/2026-09-14-pty-throughput.md`）。
 7. **清单剩余项**：rpc-contract / CLI / relay 死树、i18n 键、store 切片、composer 运行目标决策（见上文「Phase 1 建议」1–9）。

@@ -15,12 +15,12 @@
 - 平台：Windows + macOS；不引入 Linux-only 假设与依赖。
 - 禁止 Electron：`src/renderer`、`src/shared`、`src/bridge`、`src/preload` 不得 `import 'electron'` 或引用 Electron 运行时；发现残留引用即修。
 - fork 布局：`src/renderer/...` 与 `src/shared/...` 的相对位置必须与 orca 一致（5,288 处深层相对导入依赖此布局），不得重排目录。
-- 依赖版本以 `../orca-main/orca-main/package.json` 为准（逐个复制具体版本号），Tauri 相关新增依赖除外。
+- 依赖版本以 `/Users/itsuka/CodeSpace/orca/package.json` 为准（逐个复制具体版本号），Tauri 相关新增依赖除外。
 - 删除范围（Phase 0）：只移除 G/I 的**用户可见入口**（顶层视图、对话框、设置分组、导航项、快捷键默认项）；不做全量死代码清扫（Task 10 限时进行，其余记入清单留待 Phase 1）。
 - 插件 manifest 名 `ade-plugin.json`，兼容读取 `orca-plugin.json`（Phase 3 实现；Phase 0 仅 mock 数据中出现 `scope` 字段）。
-- 代码风格：遵循 `../orca-main/orca-main/AGENTS.md`——注释只写非显然的 WHY、每行尽量 1 句；不给 `max-lines` 加豁免；文件名用具业务含义的名称，禁止 `helpers`/`utils`；类型断言仅允许 `as const`，其余需 `SAFETY:` 行注释。
+- 代码风格：遵循 `/Users/itsuka/CodeSpace/orca/AGENTS.md`——注释只写非显然的 WHY、每行尽量 1 句；不给 `max-lines` 加豁免；文件名用具业务含义的名称，禁止 `helpers`/`utils`；类型断言仅允许 `as const`，其余需 `SAFETY:` 行注释。
 - 每个 Task 结束必须提交一次（Conventional Commits）；提交前跑该 Task 的验证命令。
-- 命令均在 `ade/` 目录执行；orca 参照路径为 `../orca-main/orca-main`。
+- 命令均在 `ade/` 目录执行；orca 参照路径为 `/Users/itsuka/CodeSpace/orca`。
 - 验证命令速查：`pnpm test [path]`、`pnpm typecheck`、`pnpm build:web`、`cargo check --manifest-path src-tauri/Cargo.toml`、`cargo test -p <crate>`。
 
 ---
@@ -66,7 +66,7 @@ docs/
 - Create: `package.json`, `.gitignore`, `vite.config.ts`, `vitest.config.ts`, `tsconfig.json`
 - Create: `src/renderer/index.html`, `src/renderer/src/main.tsx`, `src/renderer/src/PlaceholderApp.tsx`, `src/renderer/src/placeholder-smoke.test.tsx`
 - Create: `src-tauri/Cargo.toml`, `src-tauri/build.rs`, `src-tauri/src/main.rs`, `src-tauri/src/lib.rs`, `src-tauri/tauri.conf.json`, `src-tauri/capabilities/default.json`
-- Create: `resources/icon.png`（复制自 `../orca-main/orca-main/resources/build/icon.png`）
+- Create: `resources/icon.png`（复制自 `/Users/itsuka/CodeSpace/orca/resources/build/icon.png`）
 
 **Interfaces:**
 - Produces: `pnpm dev`（tauri dev）、`pnpm build:web`（vite 构建渲染层）、`pnpm typecheck`、`pnpm test`；`src-tauri` 为 Cargo workspace 根（后续 crate 加入 `crates/*`）。
@@ -144,7 +144,7 @@ src-tauri/gen/
 *.local
 ```
 
-`vite.config.ts`（结构参照 `../orca-main/orca-main/vite.web.config.ts`）：
+`vite.config.ts`（结构参照 `/Users/itsuka/CodeSpace/orca/vite.web.config.ts`）：
 
 ```ts
 import { resolve } from 'node:path'
@@ -365,7 +365,7 @@ fn main() {
 
 ```bash
 mkdir -p resources
-cp ../orca-main/orca-main/resources/build/icon.png resources/icon.png
+cp /Users/itsuka/CodeSpace/orca/resources/build/icon.png resources/icon.png
 pnpm tauri icon resources/icon.png
 ```
 
@@ -395,7 +395,7 @@ git commit -m "feat: Tauri v2 骨架与最小渲染入口"
 ### Task 2: fork 渲染层 / shared / preload 类型并适配构建
 
 **Files:**
-- Create（拷贝）: `src/renderer/**`、`src/shared/**`、`src/preload/**`、`src/types/**`（来自 `../orca-main/orca-main/src/*`），以及按需从 `../orca-main/orca-main/src/main/**` 复制的**类型依赖**文件
+- Create（拷贝）: `src/renderer/**`、`src/shared/**`、`src/preload/**`、`src/types/**`（来自 `/Users/itsuka/CodeSpace/orca/src/*`），以及按需从 `/Users/itsuka/CodeSpace/orca/src/main/**` 复制的**类型依赖**文件
 - Modify: `package.json`（依赖清单以 orca 为基线）、`vite.config.ts`、`vitest.config.ts`、`tsconfig.json`
 - Delete: `src/renderer/src/PlaceholderApp.tsx`、`src/renderer/src/placeholder-smoke.test.tsx`（被真实入口取代）
 
@@ -406,10 +406,10 @@ git commit -m "feat: Tauri v2 骨架与最小渲染入口"
 - [ ] **Step 1: 拷贝 fork 内容（保留相对布局）**
 
 ```bash
-cp -r ../orca-main/orca-main/src/renderer src/renderer
-cp -r ../orca-main/orca-main/src/shared src/shared
-cp -r ../orca-main/orca-main/src/preload src/preload
-cp -r ../orca-main/orca-main/src/types src/types
+cp -r /Users/itsuka/CodeSpace/orca/src/renderer src/renderer
+cp -r /Users/itsuka/CodeSpace/orca/src/shared src/shared
+cp -r /Users/itsuka/CodeSpace/orca/src/preload src/preload
+cp -r /Users/itsuka/CodeSpace/orca/src/types src/types
 rm src/renderer/src/PlaceholderApp.tsx src/renderer/src/placeholder-smoke.test.tsx
 ```
 
@@ -447,12 +447,12 @@ Expected: 报出第一处 `Cannot find module`（来自被引用的 `src/main/..
 
 - [ ] **Step 4: 逐轮补齐类型依赖（机械循环）**
 
-规则：每轮 `pnpm typecheck` 报出的缺失模块若位于 `../orca-main/orca-main/src/main/` 下，就把该文件原样复制到 ade 对应路径（`mkdir -p` 后 `cp`），直到 typecheck 不再报主进程缺失。示例（第一轮常见）：
+规则：每轮 `pnpm typecheck` 报出的缺失模块若位于 `/Users/itsuka/CodeSpace/orca/src/main/` 下，就把该文件原样复制到 ade 对应路径（`mkdir -p` 后 `cp`），直到 typecheck 不再报主进程缺失。示例（第一轮常见）：
 
 ```bash
 mkdir -p src/main/ipc src/main/gitlab
-cp ../orca-main/orca-main/src/main/ipc/worktree-logic.ts src/main/ipc/
-cp ../orca-main/orca-main/src/main/gitlab/mappers.ts src/main/gitlab/
+cp /Users/itsuka/CodeSpace/orca/src/main/ipc/worktree-logic.ts src/main/ipc/
+cp /Users/itsuka/CodeSpace/orca/src/main/gitlab/mappers.ts src/main/gitlab/
 ```
 
 已知初始集合（来自 orca `config/tsconfig.tc.web.json` 的 include；可一次性复制，缺谁的依赖再补谁）：
@@ -495,9 +495,9 @@ src/main/window/macos-app-activation.ts
 
 ```bash
 mkdir -p config/scripts
-cp ../orca-main/orca-main/config/scripts/happy-dom-offscreen-canvas.ts config/scripts/
-cp ../orca-main/orca-main/config/scripts/happy-dom-mutation-observer-retention.ts config/scripts/
-cp ../orca-main/orca-main/config/scripts/vitest-host-ports-setup.ts config/scripts/
+cp /Users/itsuka/CodeSpace/orca/config/scripts/happy-dom-offscreen-canvas.ts config/scripts/
+cp /Users/itsuka/CodeSpace/orca/config/scripts/happy-dom-mutation-observer-retention.ts config/scripts/
+cp /Users/itsuka/CodeSpace/orca/config/scripts/vitest-host-ports-setup.ts config/scripts/
 ```
 
 若这三个 setup 文件存在主进程依赖，改为在 vitest 配置中逐项启用直到测试可跑。
@@ -1452,7 +1452,7 @@ Expected: 全部通过；`pnpm test` 全量若有既存失败，记录失败清�
 
 - 规格：`docs/superpowers/specs/2026-09-14-ade-design.md`
 - Phase 0 计划：`docs/superpowers/plans/2026-09-14-ade-phase0-skeleton-ui.md`
-- 参照仓库（只读）：`../orca-main/orca-main`
+- 参照仓库（只读）：`/Users/itsuka/CodeSpace/orca`
 
 ## 开发
 

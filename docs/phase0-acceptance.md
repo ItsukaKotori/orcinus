@@ -266,4 +266,4 @@ Unhandled errors：3 次 `TypeError: Cannot read properties of undefined (readin
 - 交互项：三视图切换与重启持久化、插件中心启停、设置页分组导航（本轮仅验证渲染正确性与点击 Continue 单项）。
 - Windows 平台：全部复验在 macOS；补丁本身跨平台（入口重定向），Windows 未实测。
 - CEF no-go 结论需用户确认后回写 spec §10.1（§8、§10 未变）。
-- 另：`ts.worker-*.js`（Monaco TS worker，懒加载）仍引用 `diagnostics_channel`，不在启动路径、15 s 观测内无异常，Phase 1 接入编辑器时需复核（`task-12-remediation-report.md` §6）。
+- 另：`ts.worker-*.js`（Monaco TS worker，懒加载）仍引用 `diagnostics_channel`，不在启动路径、15 s 观测内无异常，Phase 1 接入编辑器时需复核（见 `docs/phase0-dead-code-inventory.md`「Phase 1 backlog」第 5 项）。
