@@ -1,15 +1,14 @@
 import { describe, expect, it, vi, afterEach, beforeEach } from 'vitest'
 import WebSocket, { WebSocketServer } from 'ws'
 import { WebRuntimeClient } from './web-runtime-client'
-import { encryptBytes } from './web-e2ee'
 import {
   decrypt,
   deriveSharedKey,
   encrypt,
+  encryptBytes,
   generateKeyPair,
-  publicKeyToBase64,
-  encryptBytes as encryptSharedBytes
-} from '../../../shared/e2ee-crypto'
+  publicKeyToBase64
+} from './web-e2ee'
 import type { RuntimeRpcResponse } from '../../../shared/runtime-rpc-envelope'
 import {
   AGENT_SESSION_BACKGROUND_TASK_ROW_STOP_CAPABILITY,
@@ -702,7 +701,7 @@ describe('WebRuntimeClient', () => {
           _meta: { runtimeId: 'runtime-web-test' }
         } as RuntimeRpcResponse<unknown> & { streaming: true }
         socket.send(encrypt(JSON.stringify(response), sharedKey))
-        socket.send(Buffer.from(encryptSharedBytes(frame, sharedKey)), { binary: true })
+        socket.send(Buffer.from(encryptBytes(frame, sharedKey)), { binary: true })
       })
     })
     await new Promise<void>((resolve) => wss.once('listening', resolve))

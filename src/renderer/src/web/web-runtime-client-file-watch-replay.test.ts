@@ -3,7 +3,7 @@
 // setup, so consumers must receive a conservative overflow once it is ready.
 import { describe, expect, it, vi, afterEach, beforeEach } from 'vitest'
 import { WebRuntimeClient } from './web-runtime-client'
-import { encrypt } from '../../../shared/e2ee-crypto'
+import { encrypt } from './web-e2ee'
 
 const fakeSockets: FakeWebSocket[] = []
 
