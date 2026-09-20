@@ -8,10 +8,7 @@ import {
   normalizeAgentActivityDisplayMode,
   normalizeWorktreeCardProperties
 } from '../../../../../shared/constants'
-import {
-  DEFAULT_USAGE_PERCENTAGE_DISPLAY,
-  normalizeUsagePercentageDisplay
-} from '../../../../../shared/usage-percentage-display'
+import { DEFAULT_USAGE_PERCENTAGE_DISPLAY } from '../../../../../shared/usage-percentage-display'
 import {
   DEFAULT_STATUS_BAR_USAGE_MODE,
   normalizeStatusBarUsageMode
@@ -212,11 +209,6 @@ export function createUiPreferenceActions(set: UISliceSet, get: UISliceGet): Par
       set({ statusBarVisible: v })
     },
     usagePercentageDisplay: DEFAULT_USAGE_PERCENTAGE_DISPLAY,
-    setUsagePercentageDisplay: (display) => {
-      const normalized = normalizeUsagePercentageDisplay(display)
-      window.api.ui.set({ usagePercentageDisplay: normalized }).catch(console.error)
-      set({ usagePercentageDisplay: normalized })
-    },
     statusBarUsageMode: DEFAULT_STATUS_BAR_USAGE_MODE,
     setStatusBarUsageMode: (mode) => {
       const normalized = normalizeStatusBarUsageMode(mode)

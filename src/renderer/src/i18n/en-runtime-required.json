@@ -483,36 +483,6 @@
           }
         }
       },
-      "mobile": {
-        "MobileHero": {
-          "79d2f480da": "Network interface to advertise",
-          "7af266b80d": "Install QR code",
-          "bb0074ce11": "Pairing QR code",
-          "ca85e595a7": "No interfaces found",
-          "relayDegradedNotice": "Relay couldn’t be reached — this code only works on your LAN or Tailscale."
-        },
-        "MobilePage": {
-          "1b4509a8a1": "paired",
-          "c5909374cf": "intro"
-        },
-        "MobilePageToolbar": {
-          "a4f8c2d91e": "Hide from sidebar",
-          "b7e3d1c84a": "Show in sidebar"
-        },
-        "mobile": {
-          "platform": {
-            "copy": {
-              "2a532d6fd7": "Scan with your Android camera to download the latest APK from GitHub Releases.",
-              "432db52b73": "Scan with your iPhone camera to open the App Store."
-            }
-          }
-        },
-        "slides": {
-          "WorktreeListSlide": {
-            "c5ad56786d": "spinner"
-          }
-        }
-      },
       "new": {
         "workspace": {
           "SmartWorkspaceNameField": {
@@ -1050,10 +1020,6 @@
             "copy": "Preview updated worktree-card layout, metadata placement, card-display menu options, and status presentation."
           }
         },
-        "GeneralRemoteServerUpdates": {
-          "reviewUpdateOne": "1 update available",
-          "reviewUpdates": "{{value0}} updates available"
-        },
         "GeneralSupportSection": {
           "1e29570462": "starring",
           "511782265b": "Support the project with a GitHub star via the gh CLI.",
@@ -1236,12 +1202,6 @@
           "adhocWarning": "Adhoc builds come from a branch that has not landed, and the Windows ones are unsigned. Whoever cut one may abandon it — keep a stable build handy.",
           "dailyWarning": "Daily builds ship straight from main with no test gate, and the Windows ones are unsigned. Keep a stable build handy.",
           "hourlyWarning": "Hourly builds ship straight from main with no test gate, and the Windows ones are unsigned. Keep a stable build handy."
-        },
-        "RemoteServerUpdateDialog": {
-          "checkAgain": "Check for Server Updates",
-          "restartWarning": "Updating restarts these servers. {{value0}} live tabs and {{value1}} terminal panes may briefly disconnect.",
-          "updateOne": "Update server",
-          "updating": "Updating servers…"
         },
         "RepositoryHooksSection": {
           "0e0dd5b9a5": "loaded",
@@ -1961,23 +1921,6 @@
           "01c5a15e03": "{{value0}} selected",
           "01c5a15e04": "Select all results",
           "01c5a15e05": "Share {{value0}} skills"
-        },
-        "SkillsPage": {
-          "08a321a984": "Adjust the search or filters.",
-          "0bc1379f4c": "All sources",
-          "0c74e7ff34": "Installed",
-          "38e0951c3a": "Agent Skills",
-          "39b6998ddb": "All providers",
-          "426be2aac6": "Codex",
-          "4d177feabd": "Bundled",
-          "571c5818c1": "Home",
-          "7e828fb2c6": "Back",
-          "984405683f": "Plugin",
-          "aa59462502": "Repository",
-          "ab5b777350": "Checked home, repository, bundled, and plugin skill folders.",
-          "b088e0785d": "Beta",
-          "e46e162e2e": "from",
-          "fb6bf60b52": "Claude"
         },
         "SkillsSharedLinksHeader": {
           "back": "Back to skills",

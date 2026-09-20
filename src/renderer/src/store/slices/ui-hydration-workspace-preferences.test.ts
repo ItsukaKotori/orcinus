@@ -179,15 +179,8 @@ describe('createUISlice hydratePersistedUI', () => {
     expect(setUI).not.toHaveBeenCalled()
   })
 
-  it('persists and hydrates the usage percentage display preference', () => {
-    const setUI = vi.fn().mockResolvedValue(undefined)
-    vi.stubGlobal('window', { api: { ui: { set: setUI } } })
+  it('hydrates the usage percentage display preference as read-only', () => {
     const store = createUIStore()
-
-    store.getState().setUsagePercentageDisplay('used')
-
-    expect(store.getState().usagePercentageDisplay).toBe('used')
-    expect(setUI).toHaveBeenCalledWith({ usagePercentageDisplay: 'used' })
 
     store.getState().hydratePersistedUI(makePersistedUI({ usagePercentageDisplay: 'remaining' }))
     expect(store.getState().usagePercentageDisplay).toBe('remaining')

@@ -73,7 +73,6 @@ export type UISlicePreferences = {
   statusBarVisible: boolean
   setStatusBarVisible: (v: boolean) => void
   usagePercentageDisplay: UsagePercentageDisplay
-  setUsagePercentageDisplay: (display: UsagePercentageDisplay) => void
   statusBarUsageMode: StatusBarUsageMode
   setStatusBarUsageMode: (mode: StatusBarUsageMode) => void
 }
