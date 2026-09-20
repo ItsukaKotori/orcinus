@@ -146,7 +146,6 @@ export async function loadIpcEventsHarness(
         ui: createApiNamespaceStub({
           getZoomLevel: () => 0,
           consumePendingOpenSettings: () => Promise.resolve(false),
-          consumePendingSkillShare: () => Promise.resolve(null),
           set: vi.fn(),
           replyTabCreate: vi.fn(),
           replyTabClose: vi.fn(),

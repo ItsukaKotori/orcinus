@@ -56,7 +56,6 @@ const EXPECTED_DIRECT_CALLBACK_METHODS = [
   'ui.onOpenNewWorkspace',
   'ui.onOpenQuickOpen',
   'ui.onOpenSettings',
-  'ui.onOpenSkillShare',
   'ui.onOpenTasks',
   'ui.onRenameTerminal',
   'ui.onRequestTabClose',
@@ -107,8 +106,6 @@ const EXPECTED_CALLBACK_REGISTRATION_SEQUENCE = [
   'worktrees.onCreateProgress',
   'gh.onPRRefreshEvent',
   'ui.onOpenSettings',
-  'ui.onOpenSkillShare',
-  'mobile.onUnpairedDeviceAuthFailure',
   'settings.onChanged',
   'ui.onStateChanged',
   'keybindings.onChanged',
@@ -372,18 +369,9 @@ describe('useIpcEvents App-lifetime lifecycle', () => {
     ])
     const groupOrder = (names: readonly string[]): string[] =>
       registrationOrder.filter((entry) => names.includes(entry))
-    expect(
-      groupOrder([
-        'ui.onOpenSettings',
-        'ui.onOpenSkillShare',
-        'ui.consumePendingOpenSettings',
-        'ui.consumePendingSkillShare'
-      ])
-    ).toEqual([
+    expect(groupOrder(['ui.onOpenSettings', 'ui.consumePendingOpenSettings'])).toEqual([
       'ui.onOpenSettings',
-      'ui.onOpenSkillShare',
-      'ui.consumePendingOpenSettings',
-      'ui.consumePendingSkillShare'
+      'ui.consumePendingOpenSettings'
     ])
     expect(
       groupOrder([

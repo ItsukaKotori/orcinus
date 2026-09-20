@@ -148,8 +148,6 @@ export function createWebUiApi(): NonNullable<Partial<PreloadApi>['ui']> {
     onOpenSettings: () => noopUnsubscribe,
     // Why: the web client has no native tray/menu bar, so there's never a queued open-settings intent to consume.
     consumePendingOpenSettings: () => Promise.resolve(false),
-    onOpenSkillShare: () => noopUnsubscribe,
-    consumePendingSkillShare: () => Promise.resolve(null),
     // Why: the web client has no OS shell handing it files, so there is never a queued open.
     onOpenMarkdownFiles: () => noopUnsubscribe,
     consumePendingMarkdownFileOpens: () => Promise.resolve([]),

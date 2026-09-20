@@ -147,10 +147,6 @@ export function useAiVaultSessionLaunchActions({
     [activeWorktree?.id, activeWorktreeId, buildResumeStartup, targetState]
   )
 
-  const handleResumeInNewChat = useCallback((): void => {
-    // Native chat removal retires resuming a vault session into a chat.
-  }, [])
-
   const handleContinueInNewSession = useCallback(
     (session: AiVaultSession, targetWorktreeId: string): void => {
       const targetId = resolveAiVaultSessionLaunchTargetOrNotify({
@@ -198,7 +194,6 @@ export function useAiVaultSessionLaunchActions({
     buildResumeStartup,
     copyResumeCommand,
     handleResume,
-    handleResumeInNewChat,
     handleContinueInNewSession,
     continuationRequest,
     handleContinuationDialogOpenChange

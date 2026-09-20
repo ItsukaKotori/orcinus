@@ -30,7 +30,6 @@ import {
   resolveAiVaultSessionResumeState
 } from './ai-vault-session-resume'
 import { useAiVaultSessionLaunchActions } from './ai-vault-session-launch-actions'
-import type { AiVaultResumeInChatEligibility } from './ai-vault-session-resume-in-chat'
 import {
   useAiVaultSessionWorktreeMap,
   withAiVaultCurrentWorktreeStatus
@@ -288,15 +287,6 @@ export default function AiVaultPanel(): React.JSX.Element {
     [allWorktrees, effectiveActiveWorktreeId, getSessionWorktreeInfo, repos, resumeTargetState]
   )
 
-  // Native chat removal retires "resume in chat"; the vault only resumes into a terminal.
-  const getSessionResumeInChat = useCallback(
-    (_session: AiVaultSession): AiVaultResumeInChatEligibility => ({
-      available: false,
-      reason: 'agent'
-    }),
-    []
-  )
-
   const handleScopeChange = useCallback((nextScope: AiVaultScope) => {
     preferredScopeRef.current = nextScope
     userChangedScopeRef.current = nextScope !== DEFAULT_AI_VAULT_SCOPE
@@ -376,9 +366,7 @@ export default function AiVaultPanel(): React.JSX.Element {
         onJumpToOriginalPane={jumpToOriginalPane}
         onJumpToWorktree={jumpToWorktree}
         onResume={launchActions.handleResume}
-        getSessionResumeInChat={getSessionResumeInChat}
         onContinueInNewSession={launchActions.handleContinueInNewSession}
-        onResumeInNewChat={launchActions.handleResumeInNewChat}
         onCopyResume={(session, worktreeId) =>
           void launchActions.copyResumeCommand(session, worktreeId)
         }

@@ -1,5 +1,4 @@
 export type FeatureInteractionId =
-  | 'workspace-agent-sessions'
   | 'cmd-j'
   | 'cmd-j-workspace-open'
   | 'cmd-j-browser-page-open'
@@ -7,7 +6,6 @@ export type FeatureInteractionId =
   | 'cmd-j-quick-action'
   | 'cmd-j-create-workspace'
   | 'browser'
-  | 'client-hosted-browser'
   | 'browser-tab-created'
   | 'tasks'
   | 'github-tasks'
@@ -23,20 +21,15 @@ export type FeatureInteractionId =
   | 'markdown-file-created'
   | 'workspace-creation'
   | 'agent-browser-setup'
-  | 'agent-browser-use'
   | 'agent-orchestration-setup'
-  | 'agent-orchestration'
-  | 'ephemeral-vm-setup'
   | 'ai-commit-generation'
   | 'ai-pr-generation'
   | 'claude-account-switching'
   | 'computer-use-setup'
-  | 'computer-use'
   | 'codex-account-switching'
   | 'cookie-import'
   | 'floating-workspace'
   | 'floating-workspace-hidden'
-  | 'mobile-pairing'
   | 'notifications'
   | 'ports'
   | 'quick-commands'
@@ -59,10 +52,6 @@ export type FeatureInteractionDefinition = {
 // Why: these ids become persisted product state; changing them breaks
 // feature-discovery interaction tracking.
 export const FEATURE_INTERACTIONS = [
-  {
-    id: 'workspace-agent-sessions',
-    interaction: 'workspace agent-session surface opened'
-  },
   { id: 'cmd-j', interaction: 'Cmd+J palette opened' },
   { id: 'cmd-j-workspace-open', interaction: 'workspace opened from Cmd+J' },
   { id: 'cmd-j-browser-page-open', interaction: 'browser page opened from Cmd+J' },
@@ -70,7 +59,6 @@ export const FEATURE_INTERACTIONS = [
   { id: 'cmd-j-quick-action', interaction: 'quick action run from Cmd+J' },
   { id: 'cmd-j-create-workspace', interaction: 'workspace creation started from Cmd+J' },
   { id: 'browser', interaction: 'in-app browser opened' },
-  { id: 'client-hosted-browser', interaction: 'client-hosted remote browser page opened' },
   { id: 'browser-tab-created', interaction: 'browser tab explicitly created' },
   { id: 'tasks', interaction: 'Tasks page opened' },
   { id: 'github-tasks', interaction: 'GitHub task item workflow used' },
@@ -89,13 +77,10 @@ export const FEATURE_INTERACTIONS = [
   { id: 'markdown-file-created', interaction: 'untitled markdown file explicitly created' },
   { id: 'workspace-creation', interaction: 'workspace creation flow opened' },
   { id: 'agent-browser-setup', interaction: 'Agent Browser Use setup enabled or opened' },
-  { id: 'agent-browser-use', interaction: 'agent browser runtime method used' },
-  { id: 'ephemeral-vm-setup', interaction: 'Ephemeral VMs setup opened or scaffold prompt copied' },
   {
     id: 'agent-orchestration-setup',
     interaction: 'Agent Orchestration setup enabled or opened'
   },
-  { id: 'agent-orchestration', interaction: 'agent orchestration runtime method used' },
   {
     id: 'ai-commit-generation',
     interaction: 'AI commit message generation enabled or used'
@@ -109,7 +94,6 @@ export const FEATURE_INTERACTIONS = [
     id: 'computer-use-setup',
     interaction: 'Computer Use setup or permission flow opened'
   },
-  { id: 'computer-use', interaction: 'computer-use runtime method used' },
   {
     id: 'codex-account-switching',
     interaction: 'Codex managed account added, selected, reauthenticated, or removed'
@@ -120,7 +104,6 @@ export const FEATURE_INTERACTIONS = [
     id: 'floating-workspace-hidden',
     interaction: 'Floating Workspace explicitly hidden or disabled'
   },
-  { id: 'mobile-pairing', interaction: 'mobile pairing enabled or QR code generated' },
   { id: 'notifications', interaction: 'desktop notifications enabled or tested' },
   { id: 'ports', interaction: 'Ports popover opened, configured, or port action used' },
   { id: 'quick-commands', interaction: 'terminal quick command created or edited' },

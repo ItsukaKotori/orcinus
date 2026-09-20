@@ -53,7 +53,6 @@ export function SessionRowTrailingActions({
   onJumpToWorktree,
   onResume,
   onContinueInNewSession,
-  onResumeInNewChat,
   onCopyResume,
   onCopyId,
   onCopyPath,
@@ -76,8 +75,6 @@ export function SessionRowTrailingActions({
   onJumpToWorktree?: () => void
   onResume: () => void
   onContinueInNewSession?: () => void
-  /** Passed through to the overflow menu only; the resting row keeps its two-icon budget. */
-  onResumeInNewChat?: () => void
   onCopyResume?: () => void
   onCopyId: () => void
   onCopyPath: () => void
@@ -259,7 +256,6 @@ export function SessionRowTrailingActions({
             resumeLabel={resumeLabel}
             onResume={onResume}
             onContinueInNewSession={onContinueInNewSession}
-            onResumeInNewChat={onResumeInNewChat}
             onJumpToOriginalPane={onJumpToOriginalPane}
             showJumpToWorktree={showJumpToWorktree}
             onJumpToWorktree={onJumpToWorktree}

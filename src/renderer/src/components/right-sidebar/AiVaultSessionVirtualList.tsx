@@ -19,7 +19,6 @@ import {
   VAULT_GROUP_HEADER_ROW_HEIGHT,
   VAULT_SESSION_ROW_HEIGHT
 } from './ai-vault-virtual-rows'
-import type { AiVaultResumeInChatEligibility } from './ai-vault-session-resume-in-chat'
 import { AiVaultVirtualRow, type AiVaultListRow } from './AiVaultVirtualRow'
 
 const VAULT_ROW_OVERSCAN = 8
@@ -40,13 +39,11 @@ export function AiVaultSessionVirtualList({
   getWorktreeInfo,
   getSessionResumeState,
   getSessionResumeActions,
-  getSessionResumeInChat,
   onToggleGroup,
   onJumpToOriginalPane,
   onJumpToWorktree,
   onResume,
   onContinueInNewSession,
-  onResumeInNewChat,
   onCopyResume,
   onCopyId,
   onCopyPath,
@@ -69,13 +66,11 @@ export function AiVaultSessionVirtualList({
   getWorktreeInfo: (session: AiVaultSession) => AiVaultSessionWorktreeInfo | null
   getSessionResumeState: (session: AiVaultSession) => AiVaultSessionResumeState
   getSessionResumeActions: (session: AiVaultSession) => AiVaultSessionResumeActions
-  getSessionResumeInChat: (session: AiVaultSession) => AiVaultResumeInChatEligibility
   onToggleGroup: (key: string) => void
   onJumpToOriginalPane: (session: AiVaultSession) => void
   onJumpToWorktree: (worktreeId: string) => void
   onResume: (session: AiVaultSession, worktreeId: string) => void
   onContinueInNewSession: (session: AiVaultSession, worktreeId: string) => void
-  onResumeInNewChat: (session: AiVaultSession, worktreeId: string) => void
   onCopyResume: (session: AiVaultSession, worktreeId?: string | null) => void
   onCopyId: (session: AiVaultSession) => void
   onCopyPath: (session: AiVaultSession) => void
@@ -207,14 +202,12 @@ export function AiVaultSessionVirtualList({
               getWorktreeInfo={getWorktreeInfo}
               getSessionResumeState={getSessionResumeState}
               getSessionResumeActions={getSessionResumeActions}
-              getSessionResumeInChat={getSessionResumeInChat}
               onToggleGroup={onToggleGroup}
               onToggleSessionDetails={toggleSessionDetails}
               onJumpToOriginalPane={onJumpToOriginalPane}
               onJumpToWorktree={onJumpToWorktree}
               onResume={onResume}
               onContinueInNewSession={onContinueInNewSession}
-              onResumeInNewChat={onResumeInNewChat}
               onCopyResume={onCopyResume}
               onCopyId={onCopyId}
               onCopyPath={onCopyPath}

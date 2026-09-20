@@ -22,7 +22,6 @@ import {
   canUseLocalAiVaultSessionPathActions
 } from './ai-vault-session-path-actions'
 import { canContinueAiVaultSessionInNewSession } from './ai-vault-session-continuation'
-import type { AiVaultResumeInChatEligibility } from './ai-vault-session-resume-in-chat'
 
 export type AiVaultListRow =
   | { type: 'group'; group: AiVaultSessionGroup }
@@ -43,14 +42,12 @@ export function AiVaultVirtualRow({
   getWorktreeInfo,
   getSessionResumeState,
   getSessionResumeActions,
-  getSessionResumeInChat,
   onToggleGroup,
   onToggleSessionDetails,
   onJumpToOriginalPane,
   onJumpToWorktree,
   onResume,
   onContinueInNewSession,
-  onResumeInNewChat,
   onCopyResume,
   onCopyId,
   onCopyPath,
@@ -73,14 +70,12 @@ export function AiVaultVirtualRow({
   getWorktreeInfo: (session: AiVaultSession) => AiVaultSessionWorktreeInfo | null
   getSessionResumeState: (session: AiVaultSession) => AiVaultSessionResumeState
   getSessionResumeActions: (session: AiVaultSession) => AiVaultSessionResumeActions
-  getSessionResumeInChat: (session: AiVaultSession) => AiVaultResumeInChatEligibility
   onToggleGroup: (key: string) => void
   onToggleSessionDetails: (sessionId: string) => void
   onJumpToOriginalPane: (session: AiVaultSession) => void
   onJumpToWorktree: (worktreeId: string) => void
   onResume: (session: AiVaultSession, worktreeId: string) => void
   onContinueInNewSession: (session: AiVaultSession, worktreeId: string) => void
-  onResumeInNewChat: (session: AiVaultSession, worktreeId: string) => void
   onCopyResume: (session: AiVaultSession, worktreeId?: string | null) => void
   onCopyId: (session: AiVaultSession) => void
   onCopyPath: (session: AiVaultSession) => void
@@ -105,7 +100,6 @@ export function AiVaultVirtualRow({
       : null
   const resumeState = row.type === 'session' ? getSessionResumeState(row.session) : null
   const resumeActions = row.type === 'session' ? getSessionResumeActions(row.session) : null
-  const resumeInChat = row.type === 'session' ? getSessionResumeInChat(row.session) : null
   const continuationWorktreeId =
     row.type === 'session' &&
     canContinueAiVaultSessionInNewSession(row.session, resumeState?.worktreeId)
@@ -175,11 +169,6 @@ export function AiVaultVirtualRow({
           onContinueInNewSession={
             continuationWorktreeId
               ? () => onContinueInNewSession(row.session, continuationWorktreeId)
-              : undefined
-          }
-          onResumeInNewChat={
-            resumeInChat?.available
-              ? () => onResumeInNewChat(row.session, resumeInChat.workspaceId)
               : undefined
           }
           onResumeInWorktree={() => {
