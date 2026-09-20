@@ -1,12 +1,13 @@
 // Phase 0 mock; replaced by Tauri IPC per view.
 import type { PreloadApi } from '../../preload/api-types'
 import { getDefaultOnboardingState } from '../../shared/constants'
-import { withUnimplementedFallback } from '../unimplemented-fallback'
+import { withMethodFallback } from '../unimplemented-fallback'
+import { cloneMockValue } from './clone-mock-value'
 
 export function createOnboardingApi(): PreloadApi['onboarding'] {
   let state = getDefaultOnboardingState()
-  return withUnimplementedFallback<PreloadApi['onboarding']>({
-    get: async () => state,
+  return withMethodFallback<PreloadApi['onboarding']>('onboarding', {
+    get: async () => cloneMockValue(state),
     update: async (updates) => {
       state = {
         ...state,
@@ -14,7 +15,7 @@ export function createOnboardingApi(): PreloadApi['onboarding'] {
         // Why: a partial checklist must not wipe flags the UI already observed.
         checklist: { ...state.checklist, ...updates.checklist }
       }
-      return state
+      return cloneMockValue(state)
     }
   })
 }

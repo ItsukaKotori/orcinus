@@ -2,6 +2,7 @@
 import type { SettingsApi } from '../../preload/api/settings-api'
 import { getDefaultSettings } from '../../shared/constants'
 import type { GlobalSettings } from '../../shared/global-settings-types'
+import { cloneMockValue } from './clone-mock-value'
 
 const MOCK_HOME = 'C:\\Users\\orcinus'
 
@@ -12,15 +13,15 @@ export function createSettingsApi(): SettingsApi {
     pluginSystemEnabled: true
   }
   return {
-    get: async () => state,
-    getSync: () => state,
+    get: async () => cloneMockValue(state),
+    getSync: () => cloneMockValue(state),
     set: async (args) => {
       state = { ...state, ...args }
-      return state
+      return cloneMockValue(state)
     },
     setActiveRuntimeEnvironmentPreference: async ({ environmentId }) => {
       state = { ...state, activeRuntimeEnvironmentId: environmentId }
-      return state
+      return cloneMockValue(state)
     },
     updatePRBotAuthorOverride: async ({ author, isBot }) => {
       const normalized = author.trim().toLowerCase()
@@ -29,7 +30,7 @@ export function createSettingsApi(): SettingsApi {
         ...state,
         prBotAuthorOverrides: isBot ? [...others, normalized] : others
       }
-      return state
+      return cloneMockValue(state)
     },
     listFonts: async () => [
       'Cascadia Mono',

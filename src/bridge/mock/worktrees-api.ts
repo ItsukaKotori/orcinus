@@ -3,6 +3,7 @@ import type { WorktreeApi } from '../../preload/api/worktree-api'
 import type { DetectedWorktreeListResult, Worktree } from '../../shared/worktree/types'
 import { EMPTY_RETIRED_NAME_REGISTRY } from '../../shared/worktree/retired-name-registry'
 import { UnimplementedBridgeError } from '../unimplemented-fallback'
+import { cloneMockValue } from './clone-mock-value'
 
 const MOCK_REPO_ID = 'mock-repo-1'
 const MOCK_WORKSPACE_ROOT = 'C:\\Users\\ade\\orca\\workspaces\\ade'
@@ -61,15 +62,15 @@ function unimplemented(path: string): never {
 
 export function createWorktreesApi(): WorktreeApi {
   return {
-    list: async () => MOCK_WORKTREES,
+    list: async () => cloneMockValue(MOCK_WORKTREES),
     listRetiredNames: async () => EMPTY_RETIRED_NAME_REGISTRY,
     listDetected: async (args: { repoId: string }): Promise<DetectedWorktreeListResult> => ({
       repoId: args.repoId,
       authoritative: true,
       source: 'git',
-      worktrees: MOCK_DETECTED
+      worktrees: cloneMockValue(MOCK_DETECTED)
     }),
-    listAll: async () => MOCK_WORKTREES,
+    listAll: async () => cloneMockValue(MOCK_WORKTREES),
     create: async () => unimplemented('worktrees.create'),
     adoptProvisionedRoot: async () => unimplemented('worktrees.adoptProvisionedRoot'),
     onCreateProgress: (_callback) => () => {},

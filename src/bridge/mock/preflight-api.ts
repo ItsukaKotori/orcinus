@@ -2,6 +2,7 @@
 import type { PreloadApi } from '../../preload/api-types'
 import type { PreflightStatus, RefreshAgentsResult } from '../../preload/api/preflight-api'
 import { withMethodFallback } from '../unimplemented-fallback'
+import { cloneMockValue } from './clone-mock-value'
 
 // Why all-negative: the Phase 0 shell has not probed the machine, and "not installed" is the
 // status the UI already handles by advertising setup steps instead of claiming tooling exists.
@@ -20,7 +21,7 @@ const NO_AGENTS: RefreshAgentsResult = {
 
 export function createPreflightApi(): PreloadApi['preflight'] {
   return withMethodFallback<PreloadApi['preflight']>('preflight', {
-    check: async () => NOT_PROBED,
-    refreshAgents: async () => NO_AGENTS
+    check: async () => cloneMockValue(NOT_PROBED),
+    refreshAgents: async () => cloneMockValue(NO_AGENTS)
   })
 }

@@ -3,6 +3,7 @@ import type { PreloadApi } from '../../preload/api-types'
 import type { RuntimeStatus } from '../../shared/runtime-types'
 import { withMethodFallback } from '../unimplemented-fallback'
 import { noopUnsubscribe } from './noop-unsubscribe'
+import { cloneMockValue } from './clone-mock-value'
 
 // Why a local runtime id: Phase 0 has no Rust runtime host; the renderer graph reads this as its
 // own in-process identity, with a ready graph and no live panes.
@@ -17,8 +18,8 @@ const LOCAL_RUNTIME_STATUS: RuntimeStatus = {
 
 export function createRuntimeApi(): PreloadApi['runtime'] {
   return withMethodFallback<PreloadApi['runtime']>('runtime', {
-    getStatus: async () => LOCAL_RUNTIME_STATUS,
-    syncWindowGraph: async () => LOCAL_RUNTIME_STATUS,
+    getStatus: async () => cloneMockValue(LOCAL_RUNTIME_STATUS),
+    syncWindowGraph: async () => cloneMockValue(LOCAL_RUNTIME_STATUS),
     getTerminalFitOverrides: async () => [],
     getTerminalDrivers: async () => [],
     getBrowserDrivers: async () => [],

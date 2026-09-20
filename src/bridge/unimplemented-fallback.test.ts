@@ -4,6 +4,11 @@ import {
   withUnimplementedFallback,
   UnimplementedBridgeError
 } from './unimplemented-fallback'
+import { createCliApi } from './mock/cli-api'
+import { createOnboardingApi } from './mock/onboarding-api'
+import { createReposApi } from './mock/repos-api'
+import { createRuntimeEnvironmentsApi } from './mock/runtime-environments-api'
+import { createRemoteWorkspaceApi, createSessionApi } from './mock/workspace-session-api'
 
 describe('withUnimplementedFallback', () => {
   it('passes through implemented namespaces', async () => {
@@ -45,5 +50,34 @@ describe('withMethodFallback', () => {
     const api = withMethodFallback('browser', { onRequest: () => () => {} })
     await expect(Promise.resolve(api)).resolves.toBe(api)
     expect(Reflect.get(api, Symbol.iterator)).toBeUndefined()
+  })
+})
+
+describe('mock namespaces reject missing methods through the method-level fallback', () => {
+  it('tags each rejection with the namespace path instead of a sync TypeError', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    // onboarding implements its whole type, so the missing-method probe is not on the declared type.
+    const onboarding = createOnboardingApi() as unknown as {
+      forceComplete: () => Promise<unknown>
+    }
+    const cases: Array<{ path: string; call: () => Promise<unknown> }> = [
+      { path: 'onboarding.forceComplete', call: () => onboarding.forceComplete() },
+      { path: 'cli.install', call: () => createCliApi().install() },
+      { path: 'repos.add', call: () => createReposApi().add({ path: '/tmp/repo' }) },
+      {
+        path: 'runtimeEnvironments.resolve',
+        call: () => createRuntimeEnvironmentsApi().resolve({ selector: 'env-1' })
+      },
+      { path: 'session.flush', call: () => createSessionApi().flush() },
+      {
+        path: 'remoteWorkspace.get',
+        call: () => createRemoteWorkspaceApi().get({ targetId: 'target-1' })
+      }
+    ]
+
+    for (const { path, call } of cases) {
+      await expect(call()).rejects.toBeInstanceOf(UnimplementedBridgeError)
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining(path))
+    }
   })
 })

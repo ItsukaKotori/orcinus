@@ -22,4 +22,23 @@ describe('Phase 0 onboarding mock', () => {
       checklist: { choseAgent: true, dismissed: true, addedRepo: false }
     })
   })
+
+  it('does not leak closure state through the objects get and update return', async () => {
+    const onboarding = createOnboardingApi()
+
+    const read = await onboarding.get()
+    read.lastCompletedStep = 99
+    read.checklist.choseAgent = true
+    await expect(onboarding.get()).resolves.toMatchObject({
+      lastCompletedStep: -1,
+      checklist: { choseAgent: false }
+    })
+
+    const updated = await onboarding.update({ lastCompletedStep: 2 })
+    updated.checklist.dismissed = true
+    await expect(onboarding.get()).resolves.toMatchObject({
+      lastCompletedStep: 2,
+      checklist: { dismissed: false }
+    })
+  })
 })

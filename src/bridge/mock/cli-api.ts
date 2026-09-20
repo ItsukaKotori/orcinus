@@ -1,7 +1,8 @@
 // Phase 0 mock; replaced by Tauri IPC per view.
 import type { PreloadApi } from '../../preload/api-types'
 import type { CliInstallStatus } from '../../shared/cli-install-types'
-import { withUnimplementedFallback } from '../unimplemented-fallback'
+import { withMethodFallback } from '../unimplemented-fallback'
+import { cloneMockValue } from './clone-mock-value'
 
 const MOCK_CLI_STATUS: CliInstallStatus = {
   platform: 'win32',
@@ -19,7 +20,7 @@ const MOCK_CLI_STATUS: CliInstallStatus = {
 }
 
 export function createCliApi(): PreloadApi['cli'] {
-  return withUnimplementedFallback<PreloadApi['cli']>({
-    getInstallStatus: async () => MOCK_CLI_STATUS
+  return withMethodFallback<PreloadApi['cli']>('cli', {
+    getInstallStatus: async () => cloneMockValue(MOCK_CLI_STATUS)
   })
 }

@@ -10,7 +10,13 @@ import { detectBrowserPlatform } from './platform-api'
 function createEmptyMemorySnapshot(): MemorySnapshot {
   const emptyUsage = { cpu: 0, memory: 0 }
   return {
-    app: { ...emptyUsage, main: emptyUsage, renderer: emptyUsage, other: emptyUsage, history: [] },
+    app: {
+      ...emptyUsage,
+      main: { ...emptyUsage },
+      renderer: { ...emptyUsage },
+      other: { ...emptyUsage },
+      history: []
+    },
     worktrees: [],
     host: {
       totalMemory: 0,

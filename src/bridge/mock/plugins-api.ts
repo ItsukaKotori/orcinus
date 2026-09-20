@@ -1,6 +1,7 @@
 import type { PluginsApi } from '../../preload/api/plugin-host-api'
 import { UnimplementedBridgeError } from '../unimplemented-fallback'
 import { MOCK_GLOBAL_PLUGINS, MOCK_PROJECT_PLUGINS, type PluginCenterEntry } from './fixtures'
+import { cloneMockValue } from './clone-mock-value'
 
 function unimplemented(path: string): never {
   throw new UnimplementedBridgeError(path)
@@ -9,16 +10,16 @@ function unimplemented(path: string): never {
 export function createPluginsApi(): PluginsApi {
   let state: PluginCenterEntry[] = [...MOCK_GLOBAL_PLUGINS, ...MOCK_PROJECT_PLUGINS]
   return {
-    list: async () => state,
+    list: async () => cloneMockValue(state),
     listLanguagePacks: async () => [],
-    consent: async () => state,
+    consent: async () => cloneMockValue(state),
     setEnabled: async ({ pluginKey, enabled }) => {
       state = state.map((entry) =>
         entry.pluginKey === pluginKey
           ? { ...entry, status: enabled ? 'idle' : 'disabled' }
           : entry
       )
-      return state
+      return cloneMockValue(state)
     },
     readPanelEntry: async () => null,
     invokeCommand: async () => undefined,
@@ -58,10 +59,10 @@ export function createPluginsApi(): PluginsApi {
     }),
     remove: async ({ pluginKey }) => {
       state = state.filter((entry) => entry.pluginKey !== pluginKey)
-      return state
+      return cloneMockValue(state)
     },
     getLogs: async () => [{ ts: Date.now(), level: 'info', line: 'mock log line' }],
-    refresh: async () => state,
+    refresh: async () => cloneMockValue(state),
     onChanged: () => () => {}
   }
 }

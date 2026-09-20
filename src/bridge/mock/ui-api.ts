@@ -2,6 +2,7 @@
 import type { PreloadApi } from '../../preload/api-types'
 import { getDefaultUIState } from '../../shared/constants'
 import type { PersistedUIState } from '../../shared/persisted-ui-state-types'
+import { cloneMockValue } from './clone-mock-value'
 
 const noop = (): void => {}
 const asyncNoop = async (): Promise<void> => {}
@@ -10,14 +11,14 @@ const noopUnsubscribe = (): (() => void) => () => {}
 export function createUiApi(): PreloadApi['ui'] {
   let state: PersistedUIState = getDefaultUIState()
   return {
-    get: async () => state,
+    get: async () => cloneMockValue(state),
     set: async (args) => {
       state = { ...state, ...args }
     },
     setWithAck: async (args) => {
       state = { ...state, ...args }
     },
-    recordFeatureInteraction: async () => state,
+    recordFeatureInteraction: async () => cloneMockValue(state),
     onStateChanged: noopUnsubscribe,
     onOpenSettings: noopUnsubscribe,
     consumePendingOpenSettings: async () => false,
