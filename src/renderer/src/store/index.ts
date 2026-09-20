@@ -42,7 +42,6 @@ import { createRecentlyClosedTabsSlice } from './slices/recently-closed-tabs'
 import { createOrcaProfilesSlice } from './slices/orca-profiles'
 import { createNewIssueDraftSlice } from './slices/new-issue-draft'
 import { createTaskCreationDraftsSlice } from './slices/task-creation-drafts'
-import { createRemoteServerUpdatesSlice } from './slices/remote-server-updates'
 import { createTerminalQuickCommandHostsSlice } from './slices/terminal-quick-command-hosts'
 import { createPluginCenterSlice } from './slices/plugin-center/plugin-center-slice'
 import { e2eConfig } from '@/lib/e2e-config'
@@ -106,7 +105,6 @@ export const useAppStore = create<AppState>()(
       ...createOrcaProfilesSlice(...a),
       ...createNewIssueDraftSlice(...a),
       ...createTaskCreationDraftsSlice(...a),
-      ...createRemoteServerUpdatesSlice(...a),
       ...createTerminalQuickCommandHostsSlice(...a),
       ...createPluginCenterSlice(...a)
     }
