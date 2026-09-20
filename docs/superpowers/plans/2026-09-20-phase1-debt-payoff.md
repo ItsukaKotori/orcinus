@@ -709,7 +709,8 @@ mod tests {
         let mut sink = Sink::default();
         reply_to_cursor_query(&mut tail, b"output\x1b[", &mut sink).unwrap();
         assert!(sink.0.is_empty());
-        assert_eq!(tail, b"\x1b[");
+        // CPR 查询是 4 字节；实现保留末尾至多 3 字节覆盖分块边界。
+        assert_eq!(tail, b"t\x1b[");
     }
 }
 ```
@@ -724,12 +725,19 @@ cargo test -p orcinus-pty
 
 `pnpm-workspace.yaml`：`node-pty: false` → `node-pty: true`（注释同步为「补丁已移植，渲染层 parity 测试需要本地构建」）。
 
-```bash
-pnpm install
-pnpm test src/renderer/src/components/terminal-pane/fish-color-scheme-child-stdin.node-pty.test.ts
+上游 prebuilt tarball 的 `spawn-helper` 权限为 644，直接安装后 spawn 会失败且补丁源码不会编译；需要强制源码构建。在 `package.json` 的 scripts 增加（对齐 orca 的 `rebuild:node` 命名）：
+
+```json
+"rebuild:node": "npm_config_build_from_source=true pnpm rebuild node-pty"
 ```
 
-预期：PASS（基线中该簇因 native 未构建而红）。
+```bash
+pnpm install
+pnpm run rebuild:node
+pnpm test src/renderer/src/components/terminal-pane/fish-color-scheme-child-stdin.node-pty.test.ts src/shared/fish-query-reply-child-stdin.node-pty.test.ts src/shared/pty-reply-echo-shapes.node-pty.test.ts
+```
+
+预期：三文件全部 PASS（基线中 `pty-reply-echo-shapes.node-pty` 4 项红；2026-09-20 实测源码构建后转绿）。若 `pnpm run rebuild:node` 失败，报告 BLOCKED 并附完整错误。
 
 - [ ] **Step 3: 固化 Phase 1 PTY 宿主实现要求**
 
