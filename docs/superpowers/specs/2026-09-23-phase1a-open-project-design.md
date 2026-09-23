@@ -117,7 +117,7 @@ A 不建 ade-store 的 SQLite 面（Phase 2）、不建 ade-pty/agents/browser/p
 **路径授权**：allowed roots = 所有 repo.path（git/folder）∪ folderWorkspace.folderPath ∪ `authorizeExternalPath` 显式登记（canonicalize 后前缀匹配，段边界）；拒绝时错误文案逐字：
 `Access denied: path resolves outside allowed directories. If this blocks a legitimate workflow, please file a GitHub issue.`
 
-**读取**：`readFile → {content, isBinary, isImage?, mimeType?}`（二进制检测 NUL、图片按扩展名/MIME）；`readDir → DirEntry[]`（`{name,isDirectory,isSymlink}`，**目录在前、自然序**，与 shared `sortDirEntries`（`src/shared/file-name-sort.ts`）一致；渲染端亦会再排序）；`stat → {size,isDirectory,mtime}`；`pathExists/pathsExist`（批量上限 128，逐项 `{exists}|{error}`）。
+**读取**：`readFile → {content, isBinary, isImage?, mimeType?}`（二进制检测 NUL、图片按扩展名/MIME）；`readDir → DirEntry[]`（`{name,isDirectory,isSymlink}`，**目录在前、自然序**，与 shared `sortDirEntries`（`src/shared/file-name-sort.ts`）一致；Rust 比较器为近似实现——大小写顺序与 ICU 一致（同 base 文本小写在前），标点权重近似 `Intl.Collator('en',{numeric:true})`，差异由渲染端 `sortDirEntries` 重排兜底）；`stat → {size,isDirectory,mtime}`；`pathExists/pathsExist`（批量上限 128，逐项 `{exists}|{error}`）。
 
 **写入**：`writeFile/createFile/createDir/rename/copy/deletePath` 原子写 + 授权校验；`deletePath` 走**系统回收站**（对齐 oracle 的 `shell.trashItem`；Rust 用 `trash` crate，删除 root 自身拒绝）。
 

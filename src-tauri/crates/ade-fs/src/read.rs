@@ -211,8 +211,9 @@ fn previewable_mime_type(path: &Path) -> Option<&'static str> {
 /// `src/shared/file-name-sort.ts`.
 ///
 /// Non-digit runs compare case-insensitively (ICU primary strength), digit runs
-/// compare numerically, and any remaining tie falls back to code units so the
-/// order is total and stable.
+/// compare numerically, and any remaining tie falls back to code units with
+/// ICU's tertiary case order (lowercase first) so the order is total and
+/// stable.
 pub fn compare_file_names(a: &str, b: &str) -> Ordering {
     let a_runs = name_runs(a);
     let b_runs = name_runs(b);
@@ -235,7 +236,37 @@ pub fn compare_file_names(a: &str, b: &str) -> Ordering {
     if a_runs.len() != b_runs.len() && (a.starts_with(b) || b.starts_with(a)) {
         return a_runs.len().cmp(&b_runs.len());
     }
-    a.cmp(b)
+    compare_code_units_with_case_fallback(a, b)
+}
+
+/// Code-unit fallback with ICU's tertiary case order: when two characters
+/// differ only by case, lowercase sorts first (`a.md` < `A.md`); every other
+/// difference keeps code-unit order (e.g. the numeric tie `02.txt` < `2.txt`).
+fn compare_code_units_with_case_fallback(a: &str, b: &str) -> Ordering {
+    let mut a_chars = a.chars();
+    let mut b_chars = b.chars();
+    loop {
+        match (a_chars.next(), b_chars.next()) {
+            (None, None) => return Ordering::Equal,
+            (None, Some(_)) => return Ordering::Less,
+            (Some(_), None) => return Ordering::Greater,
+            (Some(a_char), Some(b_char)) => {
+                if a_char == b_char {
+                    continue;
+                }
+                let a_lower: String = a_char.to_lowercase().collect();
+                let b_lower: String = b_char.to_lowercase().collect();
+                if a_lower == b_lower {
+                    return if a_char.is_lowercase() {
+                        Ordering::Less
+                    } else {
+                        Ordering::Greater
+                    };
+                }
+                return a_char.cmp(&b_char);
+            }
+        }
+    }
 }
 
 /// Directories first, then natural name order — the File Explorer listing contract.
@@ -346,10 +377,11 @@ mod tests {
     }
 
     #[test]
-    fn compares_text_case_insensitively_with_code_unit_fallback() {
+    fn matches_icu_case_order_on_equal_base_text() {
         assert_eq!(compare("a.txt", "B.txt"), -1);
         assert_eq!(compare("B.txt", "a.txt"), 1);
-        assert_eq!(compare("A.md", "a.md"), -1);
+        assert_eq!(compare("A.md", "a.md"), 1);
+        assert_eq!(compare("a.md", "A.md"), -1);
         assert_eq!(compare("a", "a1"), -1);
         assert_eq!(compare("a1", "a"), 1);
         assert_eq!(compare("1a", "a1"), -1);

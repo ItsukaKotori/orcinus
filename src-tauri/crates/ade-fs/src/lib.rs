@@ -43,13 +43,13 @@ impl FsService {
     }
 
     /// Register a repo/folder-workspace root; called when one is added.
-    pub fn authorize_root(&self, path: &str) {
-        self.auth.authorize_root(path);
+    pub fn authorize_root(&self, path: &str) -> Result<(), FsError> {
+        self.auth.authorize_root(path)
     }
 
     /// Drop a previously registered root; called when one is removed.
-    pub fn revoke_root(&self, path: &str) {
-        self.auth.revoke_root(path);
+    pub fn revoke_root(&self, path: &str) -> Result<(), FsError> {
+        self.auth.revoke_root(path)
     }
 
     /// Grant access to a path outside registered roots (`authorizeExternalPath`).

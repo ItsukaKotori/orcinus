@@ -21,24 +21,26 @@ pub struct PathAuthRegistry {
 }
 
 impl PathAuthRegistry {
-    pub fn authorize_root(&self, path: &str) {
-        let forms = normalized_forms(path);
+    pub fn authorize_root(&self, path: &str) -> Result<(), FsError> {
+        let forms = normalized_forms(path)?;
         let mut roots = lock(&self.roots);
         for form in forms {
             if !roots.contains(&form) {
                 roots.push(form);
             }
         }
+        Ok(())
     }
 
-    pub fn revoke_root(&self, path: &str) {
-        let forms = normalized_forms(path);
+    pub fn revoke_root(&self, path: &str) -> Result<(), FsError> {
+        let forms = normalized_forms(path)?;
         let mut roots = lock(&self.roots);
         roots.retain(|root| !forms.contains(root));
+        Ok(())
     }
 
     pub fn authorize_external(&self, path: &str) -> Result<(), FsError> {
-        let forms = normalized_forms(path);
+        let forms = normalized_forms(path)?;
         let mut external = lock(&self.external);
         for form in forms {
             external.retain(|existing| existing != &form);
@@ -102,8 +104,8 @@ fn comparison_form(path: &Path) -> String {
     normalize_for_comparison(&path.to_string_lossy())
 }
 
-fn normalized_forms(path: &str) -> Vec<String> {
-    let absolute = lexical_absolute(path).unwrap_or_else(|_| PathBuf::from(path));
+fn normalized_forms(path: &str) -> Result<Vec<String>, FsError> {
+    let absolute = lexical_absolute(path)?;
     let mut forms = vec![comparison_form(&absolute)];
     if let Ok(real) = absolute.canonicalize() {
         let form = comparison_form(&real);
@@ -111,10 +113,13 @@ fn normalized_forms(path: &str) -> Vec<String> {
             forms.push(form);
         }
     }
-    forms
+    Ok(forms)
 }
 
 fn is_segment_prefix(candidate: &str, root: &str) -> bool {
+    if root.is_empty() {
+        return false;
+    }
     if candidate == root {
         return true;
     }
@@ -126,6 +131,9 @@ fn is_segment_prefix(candidate: &str, root: &str) -> bool {
 }
 
 fn lexical_absolute(path: &str) -> Result<PathBuf, FsError> {
+    if path.is_empty() {
+        return Err(FsError::InvalidInput("Path must not be empty".to_string()));
+    }
     let absolute = std::path::absolute(Path::new(path)).map_err(FsError::Io)?;
     Ok(normalize_lexical(&absolute))
 }
@@ -207,6 +215,26 @@ mod tests {
             normalize_lexical(Path::new("/../file")),
             PathBuf::from("/file")
         );
+    }
+
+    #[test]
+    fn rejects_empty_path_grants() {
+        let registry = PathAuthRegistry::default();
+        assert!(matches!(
+            registry.authorize_root(""),
+            Err(FsError::InvalidInput(_))
+        ));
+        assert!(matches!(
+            registry.authorize_external(""),
+            Err(FsError::InvalidInput(_))
+        ));
+        assert!(matches!(
+            registry.revoke_root(""),
+            Err(FsError::InvalidInput(_))
+        ));
+        assert!(!registry.is_allowed(Path::new("/")));
+        assert!(!registry.is_allowed(Path::new("/tmp")));
+        assert!(!is_segment_prefix("/tmp", ""));
     }
 
     #[test]

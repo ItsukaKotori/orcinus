@@ -66,6 +66,12 @@ impl FsService {
     pub fn copy(&self, source_path: &str, destination_path: &str) -> Result<(), FsError> {
         let source = self.resolve_preserving_symlink(source_path)?;
         let destination = self.resolve_preserving_symlink(destination_path)?;
+        if destination.starts_with(&source) {
+            return Err(FsError::InvalidInput(format!(
+                "Cannot copy a path into itself: {}",
+                destination.display()
+            )));
+        }
         match fs::symlink_metadata(&destination) {
             Ok(_) => return Err(already_exists(&destination)),
             Err(error) if error.kind() == io::ErrorKind::NotFound => {}
@@ -102,28 +108,57 @@ fn write_atomic(temp_path: &Path, target: &Path, content: &str) -> io::Result<()
 }
 
 fn assert_no_clobber(old: &Path, new: &Path) -> Result<(), FsError> {
-    match fs::symlink_metadata(new) {
+    let new_metadata = match fs::symlink_metadata(new) {
+        Ok(metadata) => metadata,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
         Err(error) => return Err(FsError::Io(error)),
-        Ok(_) => {}
-    }
-    if same_directory_entry(old, new) {
+    };
+    let old_metadata = fs::symlink_metadata(old)?;
+    if same_directory_entry(old, new, &old_metadata, &new_metadata) {
         return Ok(());
     }
     Err(already_exists(new))
 }
 
-fn same_directory_entry(old: &Path, new: &Path) -> bool {
+/// Same directory entry, mirroring oracle `isSameDirectoryEntryRename`.
+/// dev+ino identity is required first: canonical equality alone conflates a
+/// symlink with its target and would let a rename destroy the target's
+/// content. The basename fallback applies only when realpath fails (dangling
+/// symlinks), keeping case-only renames of such links working.
+fn same_directory_entry(
+    old: &Path,
+    new: &Path,
+    old_metadata: &fs::Metadata,
+    new_metadata: &fs::Metadata,
+) -> bool {
+    if old.parent() != new.parent() || !same_file_identity(old_metadata, new_metadata) {
+        return false;
+    }
     if old == new {
         return true;
     }
-    if old.parent() != new.parent() {
-        return false;
-    }
     match (old.canonicalize(), new.canonicalize()) {
         (Ok(old_real), Ok(new_real)) => old_real == new_real,
-        _ => folded_basename(old) == folded_basename(new),
+        _ => {
+            let old_name = file_name(old);
+            let new_name = file_name(new);
+            old_name != new_name && folded_basename(old) == folded_basename(new)
+        }
     }
+}
+
+#[cfg(unix)]
+fn same_file_identity(a: &fs::Metadata, b: &fs::Metadata) -> bool {
+    use std::os::unix::fs::MetadataExt;
+    a.dev() == b.dev() && a.ino() == b.ino()
+}
+
+/// Windows identity accessors (`volume_serial_number`/`file_index`) are still
+/// unstable in std, so fail closed there: never allow a clobber. Windows is
+/// outside this phase's verification scope.
+#[cfg(not(unix))]
+fn same_file_identity(_a: &fs::Metadata, _b: &fs::Metadata) -> bool {
+    false
 }
 
 fn folded_basename(path: &Path) -> String {

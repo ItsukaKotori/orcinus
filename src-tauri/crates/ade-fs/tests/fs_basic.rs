@@ -55,7 +55,7 @@ fn authorizes_registered_root_and_descendants() {
     fs::write(&file, "hello").unwrap();
 
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
 
     assert_eq!(service.resolve(root.str()).unwrap(), root.canonical());
     assert_eq!(
@@ -76,7 +76,7 @@ fn denies_sibling_with_shared_prefix() {
     fs::write(sibling.join("f.txt"), "nope").unwrap();
 
     let service = FsService::new();
-    service.authorize_root(path_str(&root));
+    service.authorize_root(path_str(&root)).unwrap();
 
     let error = service.resolve(path_str(&sibling)).unwrap_err();
     assert!(matches!(&error, FsError::PathAccessDenied));
@@ -98,7 +98,7 @@ fn denies_lexical_parent_escape() {
     fs::write(&outside, "outside").unwrap();
 
     let service = FsService::new();
-    service.authorize_root(path_str(&root));
+    service.authorize_root(path_str(&root)).unwrap();
 
     let escape = root.join("..").join("outside.txt");
     let error = service.resolve(path_str(&escape)).unwrap_err();
@@ -117,7 +117,7 @@ fn denies_symlink_escape() {
     std::os::unix::fs::symlink(outside.path(), root.join("escape")).unwrap();
 
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
 
     let escaped = root.join("escape").join("secret.txt");
     let error = service.resolve(path_str(&escaped)).unwrap_err();
@@ -161,12 +161,33 @@ fn revoking_a_root_denies_access() {
     fs::write(root.join("a.txt"), "a").unwrap();
 
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
     assert!(service.resolve(root.str()).is_ok());
 
-    service.revoke_root(root.str());
+    service.revoke_root(root.str()).unwrap();
     assert!(matches!(
         service.resolve(root.str()).unwrap_err(),
+        FsError::PathAccessDenied
+    ));
+}
+
+#[test]
+fn rejects_empty_path_grants() {
+    let service = FsService::new();
+    assert!(matches!(
+        service.authorize_root(""),
+        Err(FsError::InvalidInput(_))
+    ));
+    assert!(matches!(
+        service.authorize_external(""),
+        Err(FsError::InvalidInput(_))
+    ));
+    assert!(matches!(
+        service.revoke_root(""),
+        Err(FsError::InvalidInput(_))
+    ));
+    assert!(matches!(
+        service.resolve("/").unwrap_err(),
         FsError::PathAccessDenied
     ));
 }
@@ -190,7 +211,7 @@ fn read_dir_sorts_directories_first_and_naturally() {
     std::os::unix::fs::symlink(root.join("a.txt"), root.join("link.txt")).unwrap();
 
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
     let entries = service.read_dir(root.str()).unwrap();
     let names: Vec<&str> = entries.iter().map(|entry| entry.name.as_str()).collect();
 
@@ -236,7 +257,7 @@ fn read_dir_sorts_directories_first_and_naturally() {
 fn read_file_reports_text_binary_and_image_content() {
     let root = TempDir::new("read-file");
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
 
     let text = root.join("note.txt");
     fs::write(&text, "hello").unwrap();
@@ -284,7 +305,7 @@ fn read_file_reports_text_binary_and_image_content() {
 fn read_file_rejects_files_over_the_text_limit() {
     let root = TempDir::new("too-large");
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
 
     let large = root.join("large.txt");
     let file = fs::File::create(&large).unwrap();
@@ -301,7 +322,7 @@ fn read_file_rejects_files_over_the_text_limit() {
 fn stat_and_path_existence() {
     let root = TempDir::new("stat");
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
 
     let file = root.join("data.txt");
     fs::write(&file, "12345").unwrap();
@@ -353,7 +374,7 @@ fn stat_and_path_existence() {
 fn write_file_is_atomic_and_replaces_content() {
     let root = TempDir::new("write");
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
 
     let file = root.join("note.txt");
     service.write_file(path_str(&file), "first").unwrap();
@@ -382,7 +403,7 @@ fn write_file_is_atomic_and_replaces_content() {
 fn create_file_requires_an_existing_parent_and_never_overwrites() {
     let root = TempDir::new("create-file");
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
 
     let file = root.join("new.txt");
     service.create_file(path_str(&file)).unwrap();
@@ -405,7 +426,7 @@ fn create_file_requires_an_existing_parent_and_never_overwrites() {
 fn create_dir_is_recursive_and_rejects_existing_paths() {
     let root = TempDir::new("create-dir");
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
 
     let nested = root.join("a").join("b").join("c");
     service.create_dir(path_str(&nested)).unwrap();
@@ -419,7 +440,7 @@ fn create_dir_is_recursive_and_rejects_existing_paths() {
 fn rename_moves_across_directories_and_refuses_to_clobber() {
     let root = TempDir::new("rename");
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
 
     let source = root.join("src.txt");
     fs::write(&source, "content").unwrap();
@@ -443,10 +464,68 @@ fn rename_moves_across_directories_and_refuses_to_clobber() {
 }
 
 #[test]
+fn rename_allows_case_only_rename_of_the_same_entry() {
+    let root = TempDir::new("rename-case");
+    let service = FsService::new();
+    service.authorize_root(root.str()).unwrap();
+
+    let source = root.join("case.txt");
+    fs::write(&source, "content").unwrap();
+    let destination = root.join("CASE.txt");
+
+    service
+        .rename(path_str(&source), path_str(&destination))
+        .unwrap();
+    assert_eq!(fs::read_to_string(&destination).unwrap(), "content");
+}
+
+#[cfg(unix)]
+#[test]
+fn rename_refuses_to_clobber_a_symlink_target() {
+    let root = TempDir::new("rename-symlink");
+    let service = FsService::new();
+    service.authorize_root(root.str()).unwrap();
+
+    let target = root.join("a.txt");
+    fs::write(&target, "original").unwrap();
+    let link = root.join("link.txt");
+    std::os::unix::fs::symlink("a.txt", &link).unwrap();
+
+    let error = service
+        .rename(path_str(&link), path_str(&target))
+        .unwrap_err();
+    assert!(matches!(&error, FsError::AlreadyExists(name) if name == "a.txt"));
+    assert_eq!(fs::read_to_string(&target).unwrap(), "original");
+    assert!(fs::symlink_metadata(&link).unwrap().is_symlink());
+}
+
+#[cfg(unix)]
+#[test]
+fn rename_refuses_two_symlinks_aliasing_the_same_target() {
+    let root = TempDir::new("rename-alias");
+    let service = FsService::new();
+    service.authorize_root(root.str()).unwrap();
+
+    fs::write(root.join("a.txt"), "original").unwrap();
+    let first = root.join("link1.txt");
+    let second = root.join("link2.txt");
+    std::os::unix::fs::symlink("a.txt", &first).unwrap();
+    std::os::unix::fs::symlink("a.txt", &second).unwrap();
+
+    let error = service
+        .rename(path_str(&first), path_str(&second))
+        .unwrap_err();
+    assert!(matches!(&error, FsError::AlreadyExists(name) if name == "link2.txt"));
+    assert!(fs::symlink_metadata(&first).unwrap().is_symlink());
+    assert!(fs::symlink_metadata(&second).unwrap().is_symlink());
+    assert_eq!(fs::read_to_string(root.join("a.txt")).unwrap(), "original");
+}
+
+#[test]
 fn copy_handles_files_and_directories_recursively() {
     let root = TempDir::new("copy");
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
 
     let source_dir = root.join("src");
     fs::create_dir_all(source_dir.join("nested")).unwrap();
@@ -486,10 +565,28 @@ fn copy_handles_files_and_directories_recursively() {
 }
 
 #[test]
+fn copy_refuses_destination_inside_source() {
+    let root = TempDir::new("copy-self");
+    let service = FsService::new();
+    service.authorize_root(root.str()).unwrap();
+
+    let source = root.join("tree");
+    fs::create_dir_all(&source).unwrap();
+    fs::write(source.join("file.txt"), "content").unwrap();
+    let nested = source.join("nested");
+
+    let error = service
+        .copy(path_str(&source), path_str(&nested))
+        .unwrap_err();
+    assert!(matches!(&error, FsError::InvalidInput(_)));
+    assert!(!nested.exists());
+}
+
+#[test]
 fn delete_refuses_authorized_roots() {
     let root = TempDir::new("delete-root");
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
 
     let error = service.delete_path(root.str()).unwrap_err();
     assert!(matches!(&error, FsError::InvalidInput(_)));
@@ -497,7 +594,7 @@ fn delete_refuses_authorized_roots() {
 
     let nested = root.join("nested");
     fs::create_dir_all(&nested).unwrap();
-    service.authorize_root(path_str(&nested));
+    service.authorize_root(path_str(&nested)).unwrap();
     assert!(service.delete_path(path_str(&nested)).is_err());
     assert!(nested.exists());
 }
@@ -506,7 +603,7 @@ fn delete_refuses_authorized_roots() {
 fn delete_of_a_missing_path_is_idempotent() {
     let root = TempDir::new("delete-missing");
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
 
     service
         .delete_path(path_str(&root.join("missing.txt")))
@@ -518,7 +615,7 @@ fn delete_of_a_missing_path_is_idempotent() {
 fn delete_moves_files_to_trash() {
     let root = TempDir::new("trash");
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
 
     let file = root.join("trash-me.txt");
     fs::write(&file, "trash").unwrap();
@@ -534,7 +631,7 @@ fn delete_moves_files_to_trash() {
 fn delete_moves_files_to_trash_when_available() {
     let root = TempDir::new("trash");
     let service = FsService::new();
-    service.authorize_root(root.str());
+    service.authorize_root(root.str()).unwrap();
 
     let file = root.join("trash-me.txt");
     fs::write(&file, "trash").unwrap();
