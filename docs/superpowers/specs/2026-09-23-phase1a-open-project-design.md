@@ -135,9 +135,9 @@ A 不建 ade-store 的 SQLite 面（Phase 2）、不建 ade-pty/agents/browser/p
 ### 5.2 repos / projects / projectGroups / folderWorkspaces
 
 - `repos.add({path,kind?,displayName?})`：kind 默认 `git`；git kind 以 `git rev-parse --show-toplevel` 解析根（失败→`{error:'Not a valid git repository: <path>'}`）；folder kind **不做 realpath**；`displayName = trim || basename(去 .git)`；新 Repo：`badgeColor=默认色、addedAt=now、kind`、其余可选字段缺省。重复 add 返回 `{repo, alreadyExisted:true}`。
-- `repos.update`：允许字段同契约 Pick 列表（A 覆盖 `displayName/badgeColor/repoIcon/worktreeBaseRef/worktreeBasePath/kind/issueSourcePreference/projectGroupId/projectGroupOrder/sourceControlAi/externalWorktree*` 等；SSH 专属字段忽略）。`remove` 删 repo 并级联删除其 folderWorkspaces？——**不级联**（对齐 oracle：repo 删除不影响分组/文件夹工作区；由渲染端决定）。
+- `repos.update`：允许字段同契约 Pick 列表（A 覆盖 `displayName/badgeColor/repoIcon/worktreeBaseRef/worktreeBasePath/kind/issueSourcePreference/projectGroupId/projectGroupOrder/sourceControlAi/externalWorktree*` 等；SSH 专属字段忽略）。`remove` 删 repo，**不级联**删除分组/文件夹工作区（对齐 oracle：由渲染端决定后续）。
 - `reorderForHost({orderedIds,hostId})`：写 `projectGroupOrder`/manual order 并返回 `{status:'applied'}`。
-- `pickFolder/pickFolders/pickDirectory`：系统目录选择对话框（tauri dialog plugin 或 Rust 侧 `rfd`——实现选型在计划中定，优先 Tauri 官方 dialog 插件）；取消返回 `null`/`[]`。
+- `pickFolder/pickFolders/pickDirectory`：Rust 侧用 `rfd` crate 弹系统目录选择（不经 JS dialog 插件，命令直接返回路径）；取消返回 `null`/`[]`。
 - `isGitAvailable`：`git --version`，1.5s 超时。
 - `getDefaultCreateProjectParent`：`settings.defaultWorktreeLocation` 未改默认时回 `{{HOME}}/orcinus/projects`，否则返回 configured（照抄 oracle 语义，品牌名替换）。
 - `projects.list`：TS 侧调 `repos_list` 后 `projectHostSetupProjectionFromRepos(repos)` 投影；`listHostSetups` 同源；`update` 仅接受 `localWindowsRuntimePreference`，返回应用后的投影对象（不落盘，Windows 后置项，记录在案）。
