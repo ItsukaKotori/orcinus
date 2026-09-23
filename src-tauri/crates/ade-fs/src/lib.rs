@@ -1,6 +1,7 @@
 pub mod auth;
 pub mod mutate;
 pub mod read;
+pub mod search;
 pub mod walk;
 
 use std::path::{Path, PathBuf};
@@ -12,6 +13,11 @@ pub use read::{
     compare_file_names, sort_dir_entries, DirEntry, FileContent, FileStat, PathExistence,
     BINARY_PROBE_BYTES, MAX_PREVIEWABLE_BINARY_SIZE, MAX_TEXT_FILE_SIZE, PATH_EXISTENCE_BATCH_MAX,
     PREVIEWABLE_BINARY_MIME_TYPES,
+};
+pub use search::{
+    clamp_max_results, split_search_glob_patterns, to_glob_pattern, SearchFileResult, SearchMatch,
+    SearchOptions, SearchResult, MAX_FILE_SIZE, MAX_LINE_CONTENT_CHARS, MAX_RESULTS_CAP,
+    MAX_RESULTS_DEFAULT, PER_FILE_MAX_MATCHES, SEARCH_TIMEOUT_MS,
 };
 pub use walk::{
     build_exclude_path_prefixes, is_markdown_document_path, should_exclude_quick_open_rel_path,
