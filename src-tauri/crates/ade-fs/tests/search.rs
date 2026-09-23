@@ -1,8 +1,9 @@
+use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, MutexGuard, Once};
 use std::thread;
 
 use ade_fs::{
@@ -91,8 +92,70 @@ fn relative_paths(result: &SearchResult) -> Vec<&str> {
         .collect()
 }
 
+fn slice_utf16(text: &str, column: usize, length: usize) -> String {
+    String::from_utf16(
+        &text
+            .encode_utf16()
+            .skip(column - 1)
+            .take(length)
+            .collect::<Vec<u16>>(),
+    )
+    .expect("display slice stays on UTF-16 boundaries")
+}
+
+static ENV_LOCK: Mutex<()> = Mutex::new(());
+static ENV_INIT: Once = Once::new();
+
+fn sandbox_home() -> PathBuf {
+    std::env::temp_dir().join(format!("ade-fs-search-home-{}", std::process::id()))
+}
+
+/// Serializes the search tests and points the process at a sandbox HOME.
+/// `git_global(true)` is oracle semantics and stays enabled, so the
+/// developer's real global gitignore / git config must be unreachable; the
+/// guard is held for the whole test because the sandbox global ignore file is
+/// only mutated under this lock.
+fn hermetic_env() -> MutexGuard<'static, ()> {
+    let guard = ENV_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    ENV_INIT.call_once(|| {
+        let home = sandbox_home();
+        fs::create_dir_all(home.join(".config/git")).expect("create sandbox home");
+        std::env::set_var("HOME", &home);
+        std::env::set_var("XDG_CONFIG_HOME", home.join(".config"));
+        std::env::set_var("GIT_CONFIG_GLOBAL", "/dev/null");
+        std::env::set_var("GIT_CONFIG_SYSTEM", "/dev/null");
+    });
+    guard
+}
+
+/// Plants a global gitignore inside the sandbox HOME only; removed on drop so
+/// no other serialized test can observe it.
+struct GlobalIgnorePoison {
+    path: PathBuf,
+}
+
+impl GlobalIgnorePoison {
+    fn plant(pattern: &str) -> Self {
+        let path = sandbox_home().join(".config/git/ignore");
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).expect("create sandbox git config dir");
+        }
+        fs::write(&path, pattern).expect("write sandbox global gitignore");
+        Self { path }
+    }
+}
+
+impl Drop for GlobalIgnorePoison {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.path);
+    }
+}
+
 #[test]
 fn finds_matches_with_line_column_length_and_content() {
+    let _env = hermetic_env();
     let root = TempDir::new("basic");
     write(
         &root.join("src/app.ts"),
@@ -137,6 +200,7 @@ fn finds_matches_with_line_column_length_and_content() {
 
 #[test]
 fn reports_every_match_on_a_line_in_column_order() {
+    let _env = hermetic_env();
     let root = TempDir::new("same-line");
     write(&root.join("a.txt"), "needle and needle\n");
 
@@ -155,6 +219,7 @@ fn reports_every_match_on_a_line_in_column_order() {
 
 #[test]
 fn splits_comma_separated_globs_and_applies_include_and_exclude() {
+    let _env = hermetic_env();
     let root = TempDir::new("globs");
     git_init(root.path());
     write(&root.join("keep.ts"), "needle\n");
@@ -201,6 +266,7 @@ fn splits_comma_separated_globs_and_applies_include_and_exclude() {
 
 #[test]
 fn keeps_escaped_commas_inside_a_single_glob() {
+    let _env = hermetic_env();
     let root = TempDir::new("glob-escape");
     git_init(root.path());
     write(&root.join("foo,bar/x.ts"), "needle\n");
@@ -218,6 +284,7 @@ fn keeps_escaped_commas_inside_a_single_glob() {
 
 #[test]
 fn honors_case_sensitivity_whole_word_and_regex_options() {
+    let _env = hermetic_env();
     let root = TempDir::new("flags");
     write(&root.join("a.txt"), "Needle needle needled\n");
 
@@ -256,6 +323,7 @@ fn honors_case_sensitivity_whole_word_and_regex_options() {
 
 #[test]
 fn respects_gitignore_dot_ignore_and_rgignore_files() {
+    let _env = hermetic_env();
     let root = TempDir::new("ignore-files");
     git_init(root.path());
     write(&root.join(".gitignore"), "ignored.txt\n");
@@ -274,7 +342,57 @@ fn respects_gitignore_dot_ignore_and_rgignore_files() {
 }
 
 #[test]
+fn test_process_home_is_sandboxed_for_hermetic_global_git_config() {
+    let _env = hermetic_env();
+    assert_eq!(
+        PathBuf::from(std::env::var_os("HOME").expect("HOME is set")),
+        sandbox_home(),
+        "the developer's real HOME (and global gitignore) must be unreachable"
+    );
+    assert_eq!(
+        PathBuf::from(std::env::var_os("XDG_CONFIG_HOME").expect("XDG_CONFIG_HOME is set")),
+        sandbox_home().join(".config")
+    );
+    assert_eq!(
+        std::env::var_os("GIT_CONFIG_GLOBAL").as_deref(),
+        Some(OsStr::new("/dev/null"))
+    );
+    assert!(
+        !sandbox_home().join(".gitconfig").exists(),
+        "no stray global git config in the sandbox"
+    );
+}
+
+#[test]
+fn honors_global_gitignore_from_the_sandboxed_home() {
+    let _env = hermetic_env();
+    let root = TempDir::new("global-ignore");
+    git_init(root.path());
+    write(&root.join("globally-ignored.txt"), "needle\n");
+    write(&root.join("kept.txt"), "needle\n");
+
+    let service = FsService::new();
+    service.authorize_root(root.str()).unwrap();
+
+    let result = search(&service, options(root.path(), "needle")).unwrap();
+    let mut paths = relative_paths(&result);
+    paths.sort_unstable();
+    assert_eq!(paths, vec!["globally-ignored.txt", "kept.txt"]);
+
+    // Poison only the sandbox HOME. If the process still read the developer's
+    // real global gitignore (or ignored global config entirely), this fails.
+    let _poison = GlobalIgnorePoison::plant("globally-ignored.txt\n");
+    let result = search(&service, options(root.path(), "needle")).unwrap();
+    assert_eq!(
+        relative_paths(&result),
+        vec!["kept.txt"],
+        "git_global(true): the sandbox global gitignore must apply (oracle parity)"
+    );
+}
+
+#[test]
 fn includes_hidden_files_but_never_the_git_directory() {
+    let _env = hermetic_env();
     let root = TempDir::new("hidden");
     git_init(root.path());
     write(&root.join(".hidden/config.txt"), "needle\n");
@@ -296,6 +414,7 @@ fn includes_hidden_files_but_never_the_git_directory() {
 
 #[test]
 fn skips_binary_files_with_nul_bytes() {
+    let _env = hermetic_env();
     let root = TempDir::new("binary");
     fs::write(root.join("binary.dat"), b"\x00needle\n").unwrap();
     write(&root.join("text.txt"), "needle\n");
@@ -310,6 +429,7 @@ fn skips_binary_files_with_nul_bytes() {
 #[cfg(unix)]
 #[test]
 fn does_not_follow_or_search_symlinks() {
+    let _env = hermetic_env();
     let root = TempDir::new("symlink");
     write(&root.join("real/inner.txt"), "needle\n");
     std::os::unix::fs::symlink(root.join("real"), root.join("link-dir")).unwrap();
@@ -324,6 +444,7 @@ fn does_not_follow_or_search_symlinks() {
 
 #[test]
 fn include_globs_override_gitignore_rules() {
+    let _env = hermetic_env();
     let root = TempDir::new("include-over-ignore");
     git_init(root.path());
     write(&root.join(".gitignore"), "generated.ts\n");
@@ -350,6 +471,7 @@ fn include_globs_override_gitignore_rules() {
 
 #[test]
 fn skips_files_larger_than_five_mib() {
+    let _env = hermetic_env();
     let root = TempDir::new("file-size");
     let mut oversized = vec![b'a'; 5 * 1024 * 1024 + 1];
     oversized[..6].copy_from_slice(b"needle");
@@ -375,6 +497,7 @@ fn skips_files_larger_than_five_mib() {
 
 #[test]
 fn caps_matches_per_file_at_one_hundred() {
+    let _env = hermetic_env();
     let root = TempDir::new("per-file-cap");
     let content: String = (0..150).map(|index| format!("needle {index}\n")).collect();
     write(&root.join("many.txt"), &content);
@@ -396,6 +519,7 @@ fn caps_matches_per_file_at_one_hundred() {
 
 #[test]
 fn marks_truncated_when_total_reaches_max_results_including_exactly() {
+    let _env = hermetic_env();
     let root = TempDir::new("total-cap");
     for index in 0..5 {
         write(&root.join(format!("f{index}.txt")), "needle\n");
@@ -434,6 +558,7 @@ fn marks_truncated_when_total_reaches_max_results_including_exactly() {
 
 #[test]
 fn clamps_max_results_to_the_two_thousand_cap() {
+    let _env = hermetic_env();
     let root = TempDir::new("cap-clamp");
     for file_index in 0..21 {
         let content: String = (0..100).map(|index| format!("needle {index}\n")).collect();
@@ -458,10 +583,13 @@ fn clamps_max_results_to_the_two_thousand_cap() {
 
 #[test]
 fn reports_utf8_byte_columns_and_clamped_line_content() {
+    let _env = hermetic_env();
     let root = TempDir::new("byte-columns");
     write(&root.join("unicode.txt"), "日本語needle\n");
     let long_line = format!("{}needle{}", "x".repeat(600), "y".repeat(600));
     write(&root.join("long.txt"), &format!("{long_line}\n"));
+    let astral_line = format!("{}👍needle{}", "x".repeat(600), "y".repeat(600));
+    write(&root.join("astral.txt"), &format!("{astral_line}\n"));
 
     let service = FsService::new();
     service.authorize_root(root.str()).unwrap();
@@ -496,17 +624,68 @@ fn reports_utf8_byte_columns_and_clamped_line_content() {
     let display_match_length = m
         .display_match_length
         .expect("display match length for clamped content");
-    let snippet: String = m
-        .line_content
-        .chars()
-        .skip(display_column - 1)
-        .take(display_match_length)
-        .collect();
-    assert_eq!(snippet, "needle");
+    assert_eq!(
+        slice_utf16(&m.line_content, display_column, display_match_length),
+        "needle"
+    );
+
+    let astral = result
+        .files
+        .iter()
+        .find(|file| file.relative_path == "astral.txt")
+        .expect("astral file result");
+    let m = &astral.matches[0];
+    assert_eq!(m.line, 1);
+    assert_eq!(m.column, 605, "600 x + 👍 (4 bytes) starts the match at byte 604");
+    assert_eq!(m.match_length, 6);
+    let display_column = m
+        .display_column
+        .expect("display column for the astral clamped content");
+    let display_match_length = m
+        .display_match_length
+        .expect("display match length for the astral clamped content");
+    assert_eq!(
+        slice_utf16(&m.line_content, display_column, display_match_length),
+        "needle",
+        "display offsets are UTF-16 code units (👍 counts as two)"
+    );
+}
+
+#[test]
+fn counts_astral_matches_in_utf16_display_units() {
+    let _env = hermetic_env();
+    let root = TempDir::new("astral-match");
+    write(
+        &root.join("a.txt"),
+        &format!("{}👍{}\n", "x".repeat(600), "y".repeat(600)),
+    );
+
+    let service = FsService::new();
+    service.authorize_root(root.str()).unwrap();
+    let result = search(&service, options(root.path(), "👍")).unwrap();
+
+    assert_eq!(result.total_matches, 1);
+    let m = &result.files[0].matches[0];
+    assert_eq!(m.column, 601, "byte column of the astral match");
+    assert_eq!(m.match_length, 4, "byte length of the astral match");
+    assert_eq!(
+        m.display_match_length,
+        Some(2),
+        "👍 is two UTF-16 code units for the display window"
+    );
+    assert_eq!(
+        slice_utf16(
+            &m.line_content,
+            m.display_column.expect("clamped display column"),
+            2
+        ),
+        "👍"
+    );
 }
 
 #[test]
 fn returns_empty_line_content_for_non_utf8_lines() {
+    let _env = hermetic_env();
     let root = TempDir::new("non-utf8");
     fs::write(root.join("invalid.txt"), b"needle \xFF\xFE rest\n").unwrap();
 
@@ -526,6 +705,7 @@ fn returns_empty_line_content_for_non_utf8_lines() {
 
 #[test]
 fn empty_query_matches_every_line_with_a_navigable_fallback() {
+    let _env = hermetic_env();
     let root = TempDir::new("empty-query");
     write(&root.join("a.txt"), "alpha\nbeta\n");
 
@@ -542,6 +722,7 @@ fn empty_query_matches_every_line_with_a_navigable_fallback() {
 
 #[test]
 fn a_new_search_for_the_same_root_cancels_the_previous_run() {
+    let _env = hermetic_env();
     let root = TempDir::new("cancel");
     let service = Arc::new(FsService::new());
     service.authorize_root(root.str()).unwrap();
@@ -576,6 +757,7 @@ fn a_new_search_for_the_same_root_cancels_the_previous_run() {
 
 #[test]
 fn rejects_invalid_regex_and_glob_patterns() {
+    let _env = hermetic_env();
     let root = TempDir::new("invalid-patterns");
     write(&root.join("a.txt"), "needle\n");
 
@@ -599,6 +781,7 @@ fn rejects_invalid_regex_and_glob_patterns() {
 
 #[test]
 fn rejects_unauthorized_roots() {
+    let _env = hermetic_env();
     let root = TempDir::new("unauthorized");
     write(&root.join("a.txt"), "needle\n");
 
@@ -611,6 +794,7 @@ fn rejects_unauthorized_roots() {
 
 #[test]
 fn serializes_results_with_camel_case_contract_fields() {
+    let _env = hermetic_env();
     let result = SearchResult {
         files: vec![ade_fs::SearchFileResult {
             file_path: "/r/a.ts".to_string(),

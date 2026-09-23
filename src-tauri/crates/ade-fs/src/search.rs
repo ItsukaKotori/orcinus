@@ -53,7 +53,8 @@ pub struct SearchMatch {
     pub match_length: usize,
     pub line_content: String,
     /// Present only when `line_content` was window-truncated; offsets into the
-    /// truncated snippet (characters), so the UI can highlight it.
+    /// truncated snippet in UTF-16 code units, matching the JS `slice` the
+    /// renderer uses (`text-search-match-accumulator.ts`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display_column: Option<usize>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -180,9 +181,10 @@ fn search_resolved(
         .parents(true)
         .follow_links(false)
         .git_ignore(true)
-        // Why: the spec enumerates `.gitignore`/`.ignore`/`.rgignore`; keeping
-        // the user's global gitignore out makes searches deterministic.
-        .git_global(false)
+        // Oracle parity: rg honors the user's global gitignore. Tests redirect
+        // `HOME`/`XDG_CONFIG_HOME` to a sandbox so a developer's global config
+        // cannot leak into results.
+        .git_global(true)
         .git_exclude(true)
         .ignore(true)
         .require_git(true)
@@ -428,43 +430,89 @@ fn strip_line_terminator(bytes: &[u8]) -> &[u8] {
     }
 }
 
-/// Clamp the line context around a match to `MAX_LINE_CONTENT_CHARS`,
-/// mirroring `clampLineContext` in `text-search-match-accumulator.ts` with
-/// character windows (the primary `column`/`matchLength` stay byte-based).
+/// Clamp the line context around a match to `MAX_LINE_CONTENT_CHARS` UTF-16
+/// code units, mirroring `clampLineContext` in
+/// `text-search-match-accumulator.ts`: the renderer slices `lineContent` with
+/// JS `slice`, so both the window threshold and the display offsets are UTF-16
+/// units. The primary `column`/`matchLength` stay byte-based.
 fn clamp_line_context(
     text: &str,
     match_start: usize,
     match_length: usize,
 ) -> (String, Option<usize>, Option<usize>) {
-    let total_chars = text.chars().count();
-    if total_chars <= MAX_LINE_CONTENT_CHARS {
+    if text.len() <= MAX_LINE_CONTENT_CHARS {
         return (text.to_string(), None, None);
     }
     let match_start = floor_char_boundary(text, match_start);
     let match_end = floor_char_boundary(text, match_start.saturating_add(match_length));
-    let match_start_chars = text[..match_start].chars().count();
-    let match_length_chars = text[match_start..match_end].chars().count();
-    let clamped_match_length = match_length_chars.min(MAX_LINE_CONTENT_CHARS);
-    let remaining = MAX_LINE_CONTENT_CHARS - clamped_match_length;
+    let match_units = utf16_len(&text[match_start..match_end]);
+    let (total_units, match_start_units) = if text.is_ascii() {
+        (text.len(), match_start)
+    } else {
+        (utf16_len(text), utf16_len(&text[..match_start]))
+    };
+    if total_units <= MAX_LINE_CONTENT_CHARS {
+        return (text.to_string(), None, None);
+    }
+    let clamped_match_units = match_units.min(MAX_LINE_CONTENT_CHARS);
+    let remaining = MAX_LINE_CONTENT_CHARS - clamped_match_units;
     let left_budget = remaining / 2;
-    let mut window_start = match_start_chars.saturating_sub(left_budget);
-    let window_end = (window_start + MAX_LINE_CONTENT_CHARS).min(total_chars);
-    window_start = window_end.saturating_sub(MAX_LINE_CONTENT_CHARS);
+    let naive_start = match_start_units.saturating_sub(left_budget);
+    let window_end_units = (naive_start + MAX_LINE_CONTENT_CHARS).min(total_units);
+    let window_start_units = window_end_units.saturating_sub(MAX_LINE_CONTENT_CHARS);
 
-    let mut snippet: String = text
-        .chars()
-        .skip(window_start)
-        .take(window_end - window_start)
-        .collect();
-    let mut display_column = match_start_chars - window_start + 1;
+    let before_units = match_start_units - window_start_units;
+    let after_units = window_end_units.saturating_sub(match_start_units + match_units);
+    let (window_start, back_units) = retreat_units(text, match_start, before_units);
+    let (window_end, _) = advance_units(text, match_end, after_units);
+
+    let mut snippet = String::with_capacity(window_end - window_start + 2);
+    let mut display_column = back_units + 1;
     if window_start > 0 {
-        snippet.insert(0, TRUNCATION_MARKER);
+        snippet.push(TRUNCATION_MARKER);
         display_column += 1;
     }
-    if window_end < total_chars {
+    snippet.push_str(&text[window_start..window_end]);
+    if window_end < text.len() {
         snippet.push(TRUNCATION_MARKER);
     }
-    (snippet, Some(display_column), Some(clamped_match_length))
+    (snippet, Some(display_column), Some(clamped_match_units))
+}
+
+fn utf16_len(text: &str) -> usize {
+    text.encode_utf16().count()
+}
+
+/// Walk backwards from `end_byte`, taking whole characters until at least
+/// `target_units` UTF-16 code units are covered. Returns the byte offset and
+/// the units actually covered (one more than the target when the boundary
+/// falls inside an astral character; Rust cannot slice a lone surrogate).
+fn retreat_units(text: &str, end_byte: usize, target_units: usize) -> (usize, usize) {
+    let mut units = 0;
+    let mut boundary = end_byte;
+    for (offset, character) in text[..end_byte].char_indices().rev() {
+        if units >= target_units {
+            break;
+        }
+        units += character.len_utf16();
+        boundary = offset;
+    }
+    (boundary, units)
+}
+
+/// Walk forwards from `start_byte`, taking whole characters until at least
+/// `target_units` UTF-16 code units are covered.
+fn advance_units(text: &str, start_byte: usize, target_units: usize) -> (usize, usize) {
+    let mut units = 0;
+    let mut boundary = start_byte;
+    for (offset, character) in text[start_byte..].char_indices() {
+        if units >= target_units {
+            break;
+        }
+        units += character.len_utf16();
+        boundary = start_byte + offset + character.len_utf8();
+    }
+    (boundary, units)
 }
 
 fn floor_char_boundary(text: &str, mut offset: usize) -> usize {
@@ -563,22 +611,28 @@ mod tests {
         assert!(!compile("foo\\,bar/**").is_match("foo/x.ts"));
     }
 
+    fn slice_utf16(text: &str, column: usize, length: usize) -> String {
+        String::from_utf16(
+            &text
+                .encode_utf16()
+                .skip(column - 1)
+                .take(length)
+                .collect::<Vec<u16>>(),
+        )
+        .expect("display slice stays on UTF-16 boundaries")
+    }
+
     #[test]
     fn clamps_long_lines_around_the_match_with_display_offsets() {
         let text = format!("{}needle{}", "x".repeat(600), "y".repeat(600));
         let (snippet, display_column, display_match_length) = clamp_line_context(&text, 600, 6);
-        assert_eq!(snippet.chars().count(), MAX_LINE_CONTENT_CHARS + 2);
+        assert_eq!(snippet.encode_utf16().count(), MAX_LINE_CONTENT_CHARS + 2);
         assert!(snippet.starts_with('…'));
         assert!(snippet.ends_with('…'));
         let display_column = display_column.unwrap();
         let display_match_length = display_match_length.unwrap();
         assert_eq!(display_match_length, 6);
-        let sliced: String = snippet
-            .chars()
-            .skip(display_column - 1)
-            .take(display_match_length)
-            .collect();
-        assert_eq!(sliced, "needle");
+        assert_eq!(slice_utf16(&snippet, display_column, display_match_length), "needle");
     }
 
     #[test]
@@ -591,18 +645,55 @@ mod tests {
     }
 
     #[test]
-    fn truncates_on_a_character_window_for_multibyte_lines() {
+    fn truncates_on_a_utf16_window_for_multibyte_lines() {
         let text = format!("{}needle{}", "日".repeat(600), "本".repeat(600));
         let (snippet, display_column, display_match_length) = clamp_line_context(&text, 1800, 6);
-        assert!(snippet.chars().count() <= MAX_LINE_CONTENT_CHARS + 2);
+        assert!(snippet.encode_utf16().count() <= MAX_LINE_CONTENT_CHARS + 2);
         let display_column = display_column.unwrap();
         let display_match_length = display_match_length.unwrap();
-        let sliced: String = snippet
-            .chars()
-            .skip(display_column - 1)
-            .take(display_match_length)
-            .collect();
-        assert_eq!(sliced, "needle");
+        assert_eq!(
+            slice_utf16(&snippet, display_column, display_match_length),
+            "needle"
+        );
+    }
+
+    #[test]
+    fn counts_astral_characters_as_two_utf16_units() {
+        // 240 astral chars = 480 units + 6 units of match: verbatim.
+        let short = format!("{}needle", "👍".repeat(240));
+        let (snippet, display_column, display_match_length) =
+            clamp_line_context(&short, 240 * 4, 6);
+        assert_eq!(snippet, short);
+        assert_eq!(display_column, None);
+        assert_eq!(display_match_length, None);
+
+        // 300 astral chars = 600 units but only 306 scalar values, so the line
+        // must be truncated: the window threshold is UTF-16 units.
+        let long = format!("{}needle", "👍".repeat(300));
+        let (snippet, display_column, display_match_length) =
+            clamp_line_context(&long, 300 * 4, 6);
+        let display_column =
+            display_column.expect("600 UTF-16 units exceed the 500-unit window");
+        assert_eq!(display_match_length, Some(6));
+        assert_eq!(slice_utf16(&snippet, display_column, 6), "needle");
+
+        // Astral character immediately before the match with the match near the
+        // line end: the oracle shifts the window back to end at the line end,
+        // and the display column depends on UTF-16 counting (491 x + 👍 = 493
+        // units of context, +1 for the marker).
+        let mixed = format!("{}👍needle{}", "x".repeat(600), "y");
+        let (snippet, display_column, display_match_length) = clamp_line_context(&mixed, 604, 6);
+        assert_eq!(display_match_length, Some(6));
+        let display_column = display_column.unwrap();
+        assert_eq!(display_column, 495);
+        assert_eq!(slice_utf16(&snippet, display_column, 6), "needle");
+
+        // A match that contains an astral char is two units long for display.
+        let astral_match = format!("{}👍{}", "x".repeat(600), "y".repeat(600));
+        let (snippet, display_column, display_match_length) =
+            clamp_line_context(&astral_match, 600, 4);
+        assert_eq!(display_match_length, Some(2));
+        assert_eq!(slice_utf16(&snippet, display_column.unwrap(), 2), "👍");
     }
 
     #[test]
