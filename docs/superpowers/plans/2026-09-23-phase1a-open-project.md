@@ -625,6 +625,7 @@ pub fn run() {
 - [ ] **Step 3: settings/ui/platform/app 命令**
 
 - `settings_get` → `{defaults ∪ stored}`；`settings_set(partial)` → 合并 + save + `emit("settings:changed", changed_keys)`（只含变更键）+ 返回完整对象；同时更新内存快照供 bootstrap。
+- **写盘节流（spec §4.1）**：`AppState` 内实现 1000ms 防抖 + 5000ms 最大等待的写调度（settings 与 ui-state 各一），命令返回前保证内存态已更新、落盘异步；`ui_set` 高频调用（resize/筛选）不逐次 fsync。为 main-owned 写预留 `set_main_owned`（pluginConsents 等只读键的内部写路径）。
 - `ui_get` → defaults ∪ stored；`ui_set(partial)` → 例外合并 + save + `emit("ui:stateChanged", full)`；`ui_record_feature_interaction(id)` → 返回完整对象。
 - `platform_get`：`{platform, osRelease, arch, shell, displayServer}`（macOS/Linux 用 `std::env::consts::OS` + `uname` 或 `sysinfo`？——用 `std::process::Command("uname")` 读 `-sr` 与 `$SHELL`；`displayServer` 非 Linux 返回 null）。
 - `app_get_identity`：`{name:"Orcinus", version: env!("CARGO_PKG_VERSION")}`。
@@ -837,6 +838,6 @@ git add -A && git commit -m "docs: Phase 1 子项目 A 收尾记录"
 
 ## 自检记录
 
-- **Spec 覆盖**：spec §2.1 方法表逐项映射到 Task 8–11；§4 持久化→Task 2；§5.1 fs 四条→Task 4/5/6/7；§5.2/5.3 注册表与投影→Task 9/10；§5.4→Task 2/8；§5.5→Task 8/11；§7 测试策略→各任务测试步骤；§10 偏差→Task 1/2/8/11 实现方式。
+- **Spec 覆盖**：spec §2.1 方法表逐项映射到 Task 8–11；§4 持久化→Task 2（节流与 main-owned 写路径→Task 8）；§5.1 fs 四条→Task 4/5/6/7；§5.2/5.3 注册表与投影→Task 9/10；§5.4→Task 2/8；§5.5→Task 8/11；§7 测试策略→各任务测试步骤；§10 偏差→Task 1/2/8/11 实现方式。
 - **占位符扫描**：无 TBD/TODO；易漂移常量（默认色 `#737373`、scanNested 默认 3/100/null 与跳过目录）均给逐字值或精确 oracle 文件:行；命令名/常量/文案逐字给出。
 - **类型一致性**：`FsService` 方法名跨 Task 4–7 一致；`CancelRegistry` 在 Task 5/6 共用；`AppState` 字段在 Task 8–10 一致；TS 适配层统一 `{ args }` 包裹约定与 Rust 命令签名 `fn x(args: T)` 对应。

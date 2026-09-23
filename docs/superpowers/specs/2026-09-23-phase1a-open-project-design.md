@@ -93,9 +93,10 @@ A 不建 ade-store 的 SQLite 面（Phase 2）、不建 ade-pty/agents/browser/p
 | `ui-state.json` | `PersistedUIState`（整对象） | Rust（整对象 set） |
 | `projects.json` | `{ schemaVersion, repos, projectGroups, folderWorkspaces }` | Rust（注册表变更） |
 
-- 三文件均 `{ "schemaVersion": 1, ... }`；加载期归一（缺字段回默认、类型不符丢弃并记录），未知字段保留（前向兼容）。
+- `projects.json` 顶层带 `schemaVersion: 1`；`settings.json`/`ui-state.json` 为**纯领域对象**（与 TS 契约 `GlobalSettings`/`PersistedUIState` 逐字一致，不额外包裹），版本演进靠加载期字段归一。
+- 所有文件加载期归一（缺字段回默认、类型不符丢弃并记录），未知字段保留（前向兼容）。
 - 原子写：同目录 temp 文件 + `fsync` + `rename`；写入前轮换备份（`<file>.bak1/.bak2`），损坏时按备份顺序回退。
-- 写盘节流：settings/ui-state 1000ms 防抖 + 5000ms 最大等待（对齐 orca 的写调度）。
+- 写盘节流（1000ms 防抖 + 5000ms 最大等待，对齐 orca 的写调度）由 `ade-bridge` 的写调度层实现（Task 8）；`ade-store` 保持同步落盘原语。
 
 ### 4.2 默认值（单一源 + 生成）
 
