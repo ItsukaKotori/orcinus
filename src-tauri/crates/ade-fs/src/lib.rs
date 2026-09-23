@@ -1,0 +1,74 @@
+pub mod auth;
+pub mod mutate;
+pub mod read;
+
+use std::path::{Path, PathBuf};
+
+use thiserror::Error;
+
+pub use auth::PathAuthRegistry;
+pub use read::{
+    compare_file_names, sort_dir_entries, DirEntry, FileContent, FileStat, PathExistence,
+    BINARY_PROBE_BYTES, MAX_PREVIEWABLE_BINARY_SIZE, MAX_TEXT_FILE_SIZE, PATH_EXISTENCE_BATCH_MAX,
+    PREVIEWABLE_BINARY_MIME_TYPES,
+};
+
+pub const PATH_ACCESS_DENIED_MESSAGE: &str =
+    "Access denied: path resolves outside allowed directories. If this blocks a legitimate workflow, please file a GitHub issue.";
+
+#[derive(Debug, Error)]
+pub enum FsError {
+    #[error("{}", PATH_ACCESS_DENIED_MESSAGE)]
+    PathAccessDenied,
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
+    #[error("A file or folder named '{0}' already exists in this location")]
+    AlreadyExists(String),
+    #[error("File too large: {size_mb:.1}MB exceeds {limit_mb}MB limit")]
+    FileTooLarge { size_mb: f64, limit_mb: u64 },
+    #[error("Failed to move to trash: {0}")]
+    Trash(String),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+}
+
+#[derive(Debug, Default)]
+pub struct FsService {
+    auth: PathAuthRegistry,
+}
+
+impl FsService {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Register a repo/folder-workspace root; called when one is added.
+    pub fn authorize_root(&self, path: &str) {
+        self.auth.authorize_root(path);
+    }
+
+    /// Drop a previously registered root; called when one is removed.
+    pub fn revoke_root(&self, path: &str) {
+        self.auth.revoke_root(path);
+    }
+
+    /// Grant access to a path outside registered roots (`authorizeExternalPath`).
+    pub fn authorize_external(&self, path: &str) -> Result<(), FsError> {
+        self.auth.authorize_external(path)
+    }
+
+    /// Canonicalize and authorize a path, following symlinks.
+    pub fn resolve(&self, path: &str) -> Result<PathBuf, FsError> {
+        self.auth.resolve(path)
+    }
+
+    /// Canonicalize the parent but keep the leaf so delete/rename/copy act on a
+    /// symlink itself instead of its destination.
+    pub fn resolve_preserving_symlink(&self, path: &str) -> Result<PathBuf, FsError> {
+        self.auth.resolve_preserving_symlink(path)
+    }
+
+    pub fn is_authorized_root(&self, path: &Path) -> bool {
+        self.auth.is_authorized_root(path)
+    }
+}

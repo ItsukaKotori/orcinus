@@ -1,0 +1,11 @@
+[package]
+name = "ade-fs"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+ade-core = { path = "../ade-core" }
+base64 = "0.22"
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+trash = "5"
