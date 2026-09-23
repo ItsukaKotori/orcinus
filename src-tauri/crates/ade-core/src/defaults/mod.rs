@@ -73,6 +73,40 @@ mod tests {
         assert!(!text.contains("{{HOME}}"));
     }
 
+    #[test]
+    fn substitute_home_replaces_every_occurrence() {
+        let mut value = serde_json::json!({
+            "a": "{{HOME}}/x",
+            "b": ["{{HOME}}"],
+            "c": { "d": "{{HOME}}" }
+        });
+        substitute_home(&mut value, "/Users/tester");
+        assert_eq!(
+            value,
+            serde_json::json!({
+                "a": "/Users/tester/x",
+                "b": ["/Users/tester"],
+                "c": { "d": "/Users/tester" }
+            })
+        );
+    }
+
+    #[test]
+    fn settings_defaults_follow_host_platform_and_home() {
+        let home = "/Users/tester/";
+        let settings = settings_defaults(home);
+        let expected_font = if cfg!(windows) {
+            "Cascadia Mono"
+        } else if cfg!(target_os = "linux") {
+            "DejaVu Sans Mono"
+        } else {
+            "SF Mono"
+        };
+        assert_eq!(settings["terminalFontFamily"], expected_font);
+        assert_eq!(settings["workspaceDir"], "/Users/tester/orca/workspaces");
+        assert!(settings["workspaceDir"].as_str().unwrap().starts_with("/Users/tester"));
+    }
+
     fn platform_settings(home: &str, platform: &str) -> Value {
         let mut settings = settings_defaults(home);
         apply_platform_defaults(&mut settings, home, platform);
