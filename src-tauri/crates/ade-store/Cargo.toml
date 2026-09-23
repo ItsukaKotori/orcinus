@@ -1,0 +1,8 @@
+[package]
+name = "ade-store"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+serde_json = "1"
+thiserror = "2"
