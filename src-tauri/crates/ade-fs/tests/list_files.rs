@@ -262,7 +262,7 @@ fn escapes_glob_metacharacters_in_exclude_paths() {
 
 #[cfg(unix)]
 #[test]
-fn never_follows_symlinked_directories() {
+fn lists_file_symlinks_but_not_directory_symlinks() {
     let root = TempDir::new("symlink");
     write(&root.join("real/inner.txt"), "x");
     std::os::unix::fs::symlink(root.join("real"), root.join("link-dir")).unwrap();
@@ -272,9 +272,16 @@ fn never_follows_symlinked_directories() {
     service.authorize_root(root.str()).unwrap();
     let files = list_files(&service, root.path(), &[], 1000).unwrap();
 
-    assert!(files.iter().any(|path| path == "real/inner.txt"), "{files:?}");
     assert!(
-        !files.iter().any(|path| path == "link-dir/inner.txt"),
+        files.iter().any(|path| path == "real/inner.txt"),
+        "{files:?}"
+    );
+    assert!(
+        !files.iter().any(|path| path == "link-dir"),
+        "symlinked directories must not be listed: {files:?}"
+    );
+    assert!(
+        !files.iter().any(|path| path.starts_with("link-dir/")),
         "symlinked directories must not be traversed: {files:?}"
     );
     assert!(

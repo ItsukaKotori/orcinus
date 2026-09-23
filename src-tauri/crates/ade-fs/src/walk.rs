@@ -154,6 +154,11 @@ impl FsService {
     /// root-relative prefixes and matched on segment boundaries; malformed or
     /// outside-root values are silently dropped. `max_results` bounds the
     /// result (the caller reads a full page as truncated).
+    ///
+    /// `cancel` must share state with this service's registry (pass
+    /// [`FsService::cancel_registry`]); only then does
+    /// [`FsService::cancel_list_files`] reach the running scan. A foreign
+    /// registry is still cancellable through its own [`CancelRegistry::cancel`].
     pub fn list_files(
         &self,
         root: &str,
@@ -356,11 +361,14 @@ fn collect_quick_open_paths(
             let Ok(entry) = entry else {
                 continue;
             };
-            if entry.depth() == 0
-                || entry
-                    .file_type()
-                    .is_some_and(|file_type| file_type.is_dir())
-            {
+            let file_type = entry.file_type();
+            if entry.depth() == 0 || file_type.is_some_and(|file_type| file_type.is_dir()) {
+                continue;
+            }
+            // Symlinked directories are neither traversed nor listed: a Quick
+            // Open entry must be openable as a file, and a directory symlink
+            // would resolve to a directory. Symlinked files stay listed.
+            if file_type.is_some_and(|file_type| file_type.is_symlink()) && entry.path().is_dir() {
                 continue;
             }
             let Ok(relative) = entry.path().strip_prefix(root) else {
@@ -598,6 +606,25 @@ mod tests {
             registry.tokens.lock().unwrap().is_empty(),
             "finished runs must unregister"
         );
+    }
+
+    #[test]
+    fn cancel_list_files_latches_a_run_started_from_the_service_registry() {
+        let service = FsService::new();
+        let guard = CancelGuard::new(service.cancel_registry(), "request-token");
+        assert!(!guard.flag().load(Ordering::SeqCst));
+
+        service.cancel_list_files("request-token");
+        assert!(
+            guard.flag().load(Ordering::SeqCst),
+            "cancel_list_files must latch the flag list_files is scanning"
+        );
+
+        // Isolation contract: a registry not sourced from the service is only
+        // cancellable through itself, never through cancel_list_files.
+        let foreign_guard = CancelGuard::new(CancelRegistry::default(), "request-token");
+        service.cancel_list_files("request-token");
+        assert!(!foreign_guard.flag().load(Ordering::SeqCst));
     }
 
     #[test]
