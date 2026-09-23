@@ -838,5 +838,5 @@ git add -A && git commit -m "docs: Phase 1 子项目 A 收尾记录"
 ## 自检记录
 
 - **Spec 覆盖**：spec §2.1 方法表逐项映射到 Task 8–11；§4 持久化→Task 2；§5.1 fs 四条→Task 4/5/6/7；§5.2/5.3 注册表与投影→Task 9/10；§5.4→Task 2/8；§5.5→Task 8/11；§7 测试策略→各任务测试步骤；§10 偏差→Task 1/2/8/11 实现方式。
-- **占位符扫描**：无 TBD/TODO；未定值（oracle 默认色、scanNested 默认上限）均给出「执行时从 oracle 取值」的精确来源与文件指引；命令名/常量/文案逐字给出。
+- **占位符扫描**：无 TBD/TODO；易漂移常量（默认色 `#737373`、scanNested 默认 3/100/null 与跳过目录）均给逐字值或精确 oracle 文件:行；命令名/常量/文案逐字给出。
 - **类型一致性**：`FsService` 方法名跨 Task 4–7 一致；`CancelRegistry` 在 Task 5/6 共用；`AppState` 字段在 Task 8–10 一致；TS 适配层统一 `{ args }` 包裹约定与 Rust 命令签名 `fn x(args: T)` 对应。
