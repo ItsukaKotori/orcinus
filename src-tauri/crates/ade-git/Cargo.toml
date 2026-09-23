@@ -1,0 +1,7 @@
+[package]
+name = "ade-git"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+ade-core = { path = "../ade-core" }
