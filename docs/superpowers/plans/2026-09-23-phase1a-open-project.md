@@ -14,7 +14,7 @@
 
 - 分支 `phase1a-open-project`（Task 0 创建），base `main@103776a`；不 push；完成后由 finishing-a-development-branch 交用户决定。
 - 行为 oracle：`/Users/itsuka/CodeSpace/orca`（只读）；语义基准 shared 模块见 spec §5.6，其测试保持全绿。
-- 门禁：每个 Rust 任务 `cargo test --manifest-path src-tauri/Cargo.toml` 相关包全绿；每个 TS 任务 `rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm build:web` exit 0；最终 `pnpm test`（既有 3825 文件）全绿。
+- 门禁：每个 Rust 任务 `cargo test --manifest-path src-tauri/Cargo.toml --workspace` 相关包全绿；每个 TS 任务 `rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm build:web` exit 0；最终 `pnpm test`（既有 3825 文件）全绿。
 - 命令名契约：`<域>_<方法 snake_case>`（`fs_read_dir`、`repos_add`…）；Rust 结构体 `#[serde(rename_all = "camelCase")]` 与 `src/shared/preload-api/api/*.ts` 形状逐字对齐。
 - 未接真方法必须抛 `UnimplementedBridgeError('<域>.<方法>')`，禁止静默成功。
 - 拒绝访问文案逐字：`Access denied: path resolves outside allowed directories. If this blocks a legitimate workflow, please file a GitHub issue.`
@@ -81,7 +81,7 @@ cargo search trash --limit 1
 - [ ] **Step 4: 记录基线**
 
 ```bash
-cargo test --manifest-path src-tauri/Cargo.toml 2>&1 | tail -5
+cargo test --manifest-path src-tauri/Cargo.toml --workspace 2>&1 | tail -5
 rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm build:web
 git status -sb
 ```
@@ -271,7 +271,7 @@ pub enum CoreError {
 - [ ] **Step 5: 门禁 + 提交**
 
 ```bash
-cargo test --manifest-path src-tauri/Cargo.toml -p ade-core
+cargo test --manifest-path src-tauri/Cargo.toml --workspace -p ade-core
 pnpm vitest run config/scripts/generate-ade-defaults.test.mjs
 git add -A && git commit -m "feat(core): ade-core 骨架（id/路径归一/错误/默认值生成）"
 ```
@@ -353,7 +353,7 @@ const RENDERER_READONLY_KEYS: &[&str] =
 - [ ] **Step 5: 门禁 + 提交**
 
 ```bash
-cargo test --manifest-path src-tauri/Cargo.toml -p ade-store
+cargo test --manifest-path src-tauri/Cargo.toml --workspace -p ade-store
 git add -A && git commit -m "feat(store): JSON 原子持久化与三存储（settings/ui/projects）"
 ```
 
@@ -400,7 +400,7 @@ pub fn worktree_list(path: &str) -> Result<Vec<GitWorktreeEntry>, CoreError> { /
 - [ ] **Step 3: 门禁 + 提交**
 
 ```bash
-cargo test --manifest-path src-tauri/Cargo.toml -p ade-git
+cargo test --manifest-path src-tauri/Cargo.toml --workspace -p ade-git
 git add -A && git commit -m "feat(git): 最小 git CLI 封装与 worktree porcelain 解析"
 ```
 
@@ -438,7 +438,7 @@ git add -A && git commit -m "feat(git): 最小 git CLI 封装与 worktree porcel
 - [ ] **Step 4: 门禁 + 提交**
 
 ```bash
-cargo test --manifest-path src-tauri/Cargo.toml -p ade-fs
+cargo test --manifest-path src-tauri/Cargo.toml --workspace -p ade-fs
 git add -A && git commit -m "feat(fs): 路径授权、读写与回收站删除"
 ```
 
@@ -475,7 +475,7 @@ const HIDDEN_DIR_BLOCKLIST: &[&str] = &[
 - [ ] **Step 3: 门禁 + 提交**
 
 ```bash
-cargo test --manifest-path src-tauri/Cargo.toml -p ade-fs
+cargo test --manifest-path src-tauri/Cargo.toml --workspace -p ade-fs
 git add -A && git commit -m "feat(fs): listFiles 与 markdown 文档遍历（ignore 语义）"
 ```
 
@@ -514,7 +514,7 @@ const SEARCH_TIMEOUT_MS: u64 = 15_000;
 - [ ] **Step 2: 门禁 + 提交**
 
 ```bash
-cargo test --manifest-path src-tauri/Cargo.toml -p ade-fs
+cargo test --manifest-path src-tauri/Cargo.toml --workspace -p ade-fs
 git add -A && git commit -m "feat(fs): 内嵌搜索（rg 语义对齐）"
 ```
 
@@ -558,7 +558,7 @@ pub const WATCHER_IGNORE_DIRS: &[&str] = &[".git", "node_modules", "dist", "buil
 - [ ] **Step 4: 门禁 + 提交**
 
 ```bash
-cargo test --manifest-path src-tauri/Cargo.toml -p ade-fs
+cargo test --manifest-path src-tauri/Cargo.toml --workspace -p ade-fs
 git add -A && git commit -m "feat(fs): 文件监听（聚合/引用计数/overflow 语义）"
 ```
 
@@ -637,7 +637,7 @@ pub fn run() {
 
 ```bash
 pnpm vitest run src/bridge/real
-cargo test --manifest-path src-tauri/Cargo.toml -p ade-bridge
+cargo test --manifest-path src-tauri/Cargo.toml --workspace -p ade-bridge
 pnpm dev   # 启动冒烟：窗口打开、无 bootstrap 报错；Ctrl-C 退出
 git add -A && git commit -m "feat(bridge): Tauri 命令骨架、bootstrap 注入与 settings/ui/platform 域"
 ```
@@ -675,7 +675,7 @@ git add -A && git commit -m "feat(bridge): Tauri 命令骨架、bootstrap 注入
 - [ ] **Step 3: 门禁 + 提交**
 
 ```bash
-cargo test --manifest-path src-tauri/Cargo.toml -p ade-bridge
+cargo test --manifest-path src-tauri/Cargo.toml --workspace -p ade-bridge
 git add -A && git commit -m "feat(bridge): repos 注册表与最小 worktree 投影"
 ```
 
@@ -708,7 +708,7 @@ git add -A && git commit -m "feat(bridge): repos 注册表与最小 worktree 投
 - [ ] **Step 3: 门禁 + 提交**
 
 ```bash
-cargo test --manifest-path src-tauri/Cargo.toml -p ade-bridge
+cargo test --manifest-path src-tauri/Cargo.toml --workspace -p ade-bridge
 git add -A && git commit -m "feat(bridge): projectGroups 与 folderWorkspaces 注册表"
 ```
 
@@ -802,7 +802,7 @@ git add -A && git commit -m "feat(bridge): 真实 IPC 适配层与按域组装�
 - [ ] **Step 1: 全量门禁**
 
 ```bash
-cargo test --manifest-path src-tauri/Cargo.toml
+cargo test --manifest-path src-tauri/Cargo.toml --workspace
 rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm build:web
 pnpm test
 ```
