@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 ade-core = { path = "../ade-core" }
 base64 = "0.22"
+ignore = "0.4"
 serde = { version = "1", features = ["derive"] }
 thiserror = "2"
 trash = "5"

@@ -130,7 +130,7 @@ fn is_segment_prefix(candidate: &str, root: &str) -> bool {
     }
 }
 
-fn lexical_absolute(path: &str) -> Result<PathBuf, FsError> {
+pub(crate) fn lexical_absolute(path: &str) -> Result<PathBuf, FsError> {
     if path.is_empty() {
         return Err(FsError::InvalidInput("Path must not be empty".to_string()));
     }

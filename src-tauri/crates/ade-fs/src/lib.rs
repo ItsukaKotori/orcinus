@@ -1,6 +1,7 @@
 pub mod auth;
 pub mod mutate;
 pub mod read;
+pub mod walk;
 
 use std::path::{Path, PathBuf};
 
@@ -11,6 +12,11 @@ pub use read::{
     compare_file_names, sort_dir_entries, DirEntry, FileContent, FileStat, PathExistence,
     BINARY_PROBE_BYTES, MAX_PREVIEWABLE_BINARY_SIZE, MAX_TEXT_FILE_SIZE, PATH_EXISTENCE_BATCH_MAX,
     PREVIEWABLE_BINARY_MIME_TYPES,
+};
+pub use walk::{
+    build_exclude_path_prefixes, is_markdown_document_path, should_exclude_quick_open_rel_path,
+    should_include_quick_open_path, CancelRegistry, MarkdownDocument,
+    FILE_LISTING_CANCELLED_MESSAGE, HIDDEN_DIR_BLOCKLIST,
 };
 
 pub const PATH_ACCESS_DENIED_MESSAGE: &str =
@@ -28,6 +34,8 @@ pub enum FsError {
     FileTooLarge { size_mb: f64, limit_mb: u64 },
     #[error("Failed to move to trash: {0}")]
     Trash(String),
+    #[error("{0}")]
+    Cancelled(String),
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }
@@ -35,6 +43,7 @@ pub enum FsError {
 #[derive(Debug, Default)]
 pub struct FsService {
     auth: PathAuthRegistry,
+    cancel: CancelRegistry,
 }
 
 impl FsService {
