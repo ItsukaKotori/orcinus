@@ -39,6 +39,15 @@ impl SettingsStore {
     }
 
     pub fn set_partial(&mut self, updates: Value) -> Result<Value, StoreError> {
+        let merged = self.merge_partial(updates)?;
+        self.persist()?;
+        Ok(merged)
+    }
+
+    /// Merge a renderer partial into the in-memory snapshot **without persisting**,
+    /// so the bridge write scheduler can debounce the disk write (spec §4.1).
+    /// Renderer-readonly keys are stripped exactly like [`SettingsStore::set_partial`].
+    pub fn merge_partial(&mut self, updates: Value) -> Result<Value, StoreError> {
         if !updates.is_object() {
             return Err(StoreError::InvalidInput(
                 "settings updates must be a JSON object".into(),
@@ -46,8 +55,27 @@ impl SettingsStore {
         }
         let sanitized = strip_renderer_readonly_keys(&updates);
         self.current = crate::shallow_merge(&self.current, &sanitized, DEEP_MERGE_KEYS);
-        self.file.save(&self.current)?;
         Ok(self.current.clone())
+    }
+
+    /// Main-owned write path (pluginConsents, disabledPlugins, …): merges the
+    /// updates **without** the renderer-readonly stripping and persists
+    /// synchronously. Not reachable from the renderer command surface.
+    pub fn set_main_owned(&mut self, updates: Value) -> Result<Value, StoreError> {
+        if !updates.is_object() {
+            return Err(StoreError::InvalidInput(
+                "settings updates must be a JSON object".into(),
+            ));
+        }
+        self.current = crate::shallow_merge(&self.current, &updates, DEEP_MERGE_KEYS);
+        self.persist()?;
+        Ok(self.current.clone())
+    }
+
+    /// Persist the current in-memory snapshot atomically.
+    pub fn persist(&self) -> Result<(), StoreError> {
+        self.file.save(&self.current)?;
+        Ok(())
     }
 }
 
@@ -213,6 +241,58 @@ mod tests {
         let mut store = load_store(&dir);
         assert!(matches!(
             store.set_partial(json!(["nope"])),
+            Err(StoreError::InvalidInput(_))
+        ));
+    }
+
+    #[test]
+    fn merge_partial_does_not_persist() {
+        let dir = TestDir::new("settings-merge-no-persist");
+        let mut store = load_store(&dir);
+        store
+            .merge_partial(json!({ "theme": "dark", "pluginConsents": { "forged": true } }))
+            .unwrap();
+        assert_eq!(store.get()["theme"], "dark");
+        assert!(!dir.file("settings.json").exists());
+        assert_eq!(load_store(&dir).get()["theme"], "system");
+    }
+
+    #[test]
+    fn set_main_owned_keeps_readonly_keys_and_persists() {
+        let dir = TestDir::new("settings-main-owned");
+        let mut store = load_store(&dir);
+        store
+            .set_main_owned(json!({
+                "pluginConsents": { "orca-samples.demo": "granted" },
+                "disabledPlugins": ["demo"],
+                "activeRuntimeEnvironmentId": "env-1",
+                "theme": "dark"
+            }))
+            .unwrap();
+        let settings = store.get();
+        assert_eq!(
+            settings["pluginConsents"],
+            json!({ "orca-samples.demo": "granted" })
+        );
+        assert_eq!(settings["disabledPlugins"], json!(["demo"]));
+        assert_eq!(settings["activeRuntimeEnvironmentId"], "env-1");
+        assert_eq!(settings["theme"], "dark");
+
+        let reloaded = load_store(&dir).get();
+        assert_eq!(
+            reloaded["pluginConsents"],
+            json!({ "orca-samples.demo": "granted" })
+        );
+        assert_eq!(reloaded["disabledPlugins"], json!(["demo"]));
+        assert_eq!(reloaded["activeRuntimeEnvironmentId"], "env-1");
+    }
+
+    #[test]
+    fn set_main_owned_rejects_non_object_payload() {
+        let dir = TestDir::new("settings-main-owned-invalid");
+        let mut store = load_store(&dir);
+        assert!(matches!(
+            store.set_main_owned(json!("nope")),
             Err(StoreError::InvalidInput(_))
         ));
     }

@@ -42,6 +42,7 @@ pub const DIRECTORY_STAT_CONCURRENCY: usize = 8;
 /// Event kind union mirrored from the renderer contract
 /// (`src/shared/filesystem-entry-types.ts`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "lowercase")]
 pub enum FsChangeKind {
     Create,
@@ -53,6 +54,7 @@ pub enum FsChangeKind {
 
 /// One filesystem change delivered downstream.
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct FsChangeEvent {
     pub kind: FsChangeKind,
@@ -65,6 +67,7 @@ pub struct FsChangeEvent {
 
 /// Batch payload delivered to the downstream emitter callback.
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct FsChangedPayload {
     pub worktree_path: String,

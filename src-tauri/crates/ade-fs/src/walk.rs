@@ -124,6 +124,7 @@ impl Drop for CancelGuard {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct MarkdownDocument {
     pub file_path: String,

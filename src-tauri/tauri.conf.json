@@ -10,7 +10,6 @@
     "frontendDist": "../dist"
   },
   "app": {
-    "windows": [{ "title": "Orcinus", "width": 1440, "height": 900 }],
     "security": { "csp": null }
   },
   "bundle": {

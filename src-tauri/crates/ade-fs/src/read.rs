@@ -30,6 +30,7 @@ pub const PREVIEWABLE_BINARY_MIME_TYPES: &[(&str, &str)] = &[
 ];
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct DirEntry {
     pub name: String,
@@ -38,6 +39,7 @@ pub struct DirEntry {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct FileContent {
     pub content: String,
@@ -51,6 +53,7 @@ pub struct FileContent {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct FileStat {
     pub size: u64,
@@ -59,6 +62,7 @@ pub struct FileStat {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(untagged)]
 pub enum PathExistence {
     Exists { exists: bool },

@@ -31,14 +31,27 @@ impl UiStateStore {
     }
 
     pub fn set(&mut self, updates: Value) -> Result<Value, StoreError> {
+        let merged = self.merge(updates)?;
+        self.persist()?;
+        Ok(merged)
+    }
+
+    /// Merge updates into the in-memory snapshot **without persisting**, so the
+    /// bridge write scheduler can debounce the disk write (spec §4.1).
+    pub fn merge(&mut self, updates: Value) -> Result<Value, StoreError> {
         if !updates.is_object() {
             return Err(StoreError::InvalidInput(
                 "ui-state updates must be a JSON object".into(),
             ));
         }
         self.current = merge_ui_state(&self.current, &updates);
-        self.file.save(&self.current)?;
         Ok(self.current.clone())
+    }
+
+    /// Persist the current in-memory snapshot atomically.
+    pub fn persist(&self) -> Result<(), StoreError> {
+        self.file.save(&self.current)?;
+        Ok(())
     }
 
     pub fn record_feature_interaction(&mut self, id: &str) -> Result<Value, StoreError> {
@@ -46,6 +59,22 @@ impl UiStateStore {
     }
 
     pub fn record_feature_interaction_at(
+        &mut self,
+        id: &str,
+        now_ms: u64,
+    ) -> Result<Value, StoreError> {
+        let state = self.record_feature_interaction_in_memory_at(id, now_ms)?;
+        self.persist()?;
+        Ok(state)
+    }
+
+    /// Record an interaction in memory only; the caller persists on its own
+    /// schedule. Returns the complete merged state.
+    pub fn record_feature_interaction_in_memory(&mut self, id: &str) -> Result<Value, StoreError> {
+        self.record_feature_interaction_in_memory_at(id, now_millis())
+    }
+
+    pub fn record_feature_interaction_in_memory_at(
         &mut self,
         id: &str,
         now_ms: u64,
@@ -69,7 +98,7 @@ impl UiStateStore {
             FEATURE_INTERACTIONS.to_string(),
             Value::Object(interactions),
         );
-        self.set(Value::Object(updates))
+        self.merge(Value::Object(updates))
     }
 }
 
@@ -348,6 +377,36 @@ mod tests {
         assert_eq!(
             state["featureInteractions"]["tasks"],
             json!({ "firstInteractedAt": 50, "interactionCount": 3 })
+        );
+    }
+
+    #[test]
+    fn merge_does_not_persist_and_persist_writes_snapshot() {
+        let dir = TestDir::new("ui-merge-no-persist");
+        let mut store = load_store(&dir);
+        store.merge(json!({ "sidebarWidth": 300 })).unwrap();
+        assert_eq!(store.get()["sidebarWidth"], 300);
+        assert!(!dir.file("ui-state.json").exists());
+        store.persist().unwrap();
+        assert_eq!(load_store(&dir).get()["sidebarWidth"], 300);
+    }
+
+    #[test]
+    fn record_feature_interaction_in_memory_defers_persistence() {
+        let dir = TestDir::new("ui-record-in-memory");
+        let mut store = load_store(&dir);
+        let state = store
+            .record_feature_interaction_in_memory_at("ports", 500)
+            .unwrap();
+        assert_eq!(
+            state["featureInteractions"]["ports"],
+            json!({ "firstInteractedAt": 500, "interactionCount": 1 })
+        );
+        assert!(!dir.file("ui-state.json").exists());
+        store.persist().unwrap();
+        assert_eq!(
+            load_store(&dir).get()["featureInteractions"]["ports"],
+            json!({ "firstInteractedAt": 500, "interactionCount": 1 })
         );
     }
 

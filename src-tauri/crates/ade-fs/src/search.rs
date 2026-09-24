@@ -24,6 +24,7 @@ const TRUNCATION_MARKER: char = '…';
 /// Search request from the renderer. Mirrors the oracle `SearchOptions`
 /// contract (`src/shared/code-search-types.ts`) with camelCase serialization.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct SearchOptions {
     pub query: String,
@@ -43,6 +44,7 @@ pub struct SearchOptions {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct SearchMatch {
     pub line: usize,
@@ -62,6 +64,7 @@ pub struct SearchMatch {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct SearchFileResult {
     pub file_path: String,
@@ -71,6 +74,7 @@ pub struct SearchFileResult {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct SearchResult {
     pub files: Vec<SearchFileResult>,
