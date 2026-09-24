@@ -567,7 +567,7 @@ git add -A && git commit -m "feat(fs): 文件监听（聚合/引用计数/overfl
 ## Task 8: ade-bridge + orcinus-app（bootstrap 与 settings/ui/platform 域）
 
 **Files:**
-- Create: `src-tauri/crates/ade-bridge/Cargo.toml`、`src/lib.rs`、`src/state.rs`、`src/errors.rs`、`src/events.rs`、`src/commands/{mod.rs,settings.rs,ui.rs,platform.rs,app.rs}`、`src/specta_export.rs`
+- Create: `src-tauri/crates/ade-bridge/Cargo.toml`、`src/lib.rs`、`src/state.rs`、`src/errors.rs`、`src/events.rs`、`src/commands/{mod.rs,fs.rs,settings.rs,ui.rs,platform.rs,app.rs}`、`src/specta_export.rs`
 - Create: `src/bridge/real/generated/tauri-bindings.ts`（生成物，checked in）
 - Modify: `src-tauri/Cargo.toml`（orcinus-app 依赖 ade-bridge 等）、`src-tauri/src/lib.rs`、`src-tauri/tauri.conf.json`（移除声明式窗口）、`package.json`（无新依赖）
 
@@ -622,8 +622,9 @@ pub fn run() {
 
 `tauri.conf.json` 删除 `app.windows` 声明（窗口改由 Rust 建）。
 
-- [ ] **Step 3: settings/ui/platform/app 命令**
+- [ ] **Step 3: fs/settings/ui/platform/app 命令**
 
+- **fs 命令（Task 4–7 的接线）**：`fs_read_dir/read_file/write_file/create_file/create_dir/rename/copy/delete_path/stat/path_exists/paths_exist/list_files/cancel_list_files/search/watch_worktree/unwatch_worktree/list_markdown_documents/authorize_external_path`，逐一直通 `FsService`；`watch_worktree/unwatch_worktree` 以 `subscriber_id`（窗口 label）注册；`FsWatcher` 回调把 `FsChangedPayload` 经 `emit("fs:changed", payload)` 送出。
 - `settings_get` → `{defaults ∪ stored}`；`settings_set(partial)` → 合并 + save + `emit("settings:changed", changed_keys)`（只含变更键）+ 返回完整对象；同时更新内存快照供 bootstrap。
 - **写盘节流（spec §4.1）**：`AppState` 内实现 1000ms 防抖 + 5000ms 最大等待的写调度（settings 与 ui-state 各一），命令返回前保证内存态已更新、落盘异步；`ui_set` 高频调用（resize/筛选）不逐次 fsync。为 main-owned 写预留 `set_main_owned`（pluginConsents 等只读键的内部写路径）。
 - `ui_get` → defaults ∪ stored；`ui_set(partial)` → 例外合并 + save + `emit("ui:stateChanged", full)`；`ui_record_feature_interaction(id)` → 返回完整对象。
