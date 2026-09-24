@@ -292,7 +292,7 @@ pub fn sanitize_repo_updates(updates: &Value) -> Map<String, Value> {
         let accepted = match *field {
             "displayName" => non_empty_trimmed(value),
             "badgeColor" => normalize_badge_color(value),
-            "worktreeBaseRef" | "worktreeBasePath" => non_empty_trimmed(value),
+            "worktreeBaseRef" | "worktreeBasePath" => clearable_trimmed(value),
             "kind" => value
                 .as_str()
                 .and_then(RepoKind::parse)
@@ -380,6 +380,23 @@ fn non_empty_trimmed(value: &Value) -> Option<Value> {
         .map(str::trim)
         .filter(|trimmed| !trimmed.is_empty())
         .map(|trimmed| Value::String(trimmed.to_string()))
+}
+
+/// Trimmed string, or the `null` removal sentinel for `null`/blank input. Tauri
+/// IPC strips `undefined`, so the renderer maps its "Use Global"/"Use primary"
+/// clears to `null` (or `''`) and both must clear the field here.
+fn clearable_trimmed(value: &Value) -> Option<Value> {
+    if value.is_null() {
+        return Some(Value::Null);
+    }
+    value.as_str().map(|raw| {
+        let trimmed = raw.trim();
+        if trimmed.is_empty() {
+            Value::Null
+        } else {
+            Value::String(trimmed.to_string())
+        }
+    })
 }
 
 fn enum_value(value: &Value, allowed: &[&str]) -> Option<Value> {
@@ -676,7 +693,6 @@ mod tests {
             "kind": "folder",
             "externalWorktreeVisibility": "hide",
             "agentWorktreeVisibility": "sometimes",
-            "worktreeBasePath": "   ",
             "worktreeBaseRef": " main "
         }));
         assert_eq!(sanitized.get("badgeColor"), Some(&json!("#aabbcc")));
@@ -689,7 +705,39 @@ mod tests {
         assert_eq!(sanitized.get("worktreeBaseRef"), Some(&json!("main")));
         assert_eq!(sanitized.get("issueSourcePreference"), None);
         assert_eq!(sanitized.get("agentWorktreeVisibility"), None);
-        assert_eq!(sanitized.get("worktreeBasePath"), None);
+    }
+
+    #[test]
+    fn worktree_base_fields_accept_null_and_blank_as_clear_sentinels() {
+        let sanitized = sanitize_repo_updates(&json!({
+            "worktreeBasePath": null,
+            "worktreeBaseRef": "   "
+        }));
+        assert_eq!(sanitized.get("worktreeBasePath"), Some(&Value::Null));
+        assert_eq!(sanitized.get("worktreeBaseRef"), Some(&Value::Null));
+
+        let invalid = sanitize_repo_updates(&json!({
+            "worktreeBasePath": 42,
+            "worktreeBaseRef": { "not": "a string" }
+        }));
+        assert_eq!(invalid.get("worktreeBasePath"), None);
+        assert_eq!(invalid.get("worktreeBaseRef"), None);
+    }
+
+    #[test]
+    fn clearing_worktree_base_fields_removes_them_from_the_row() {
+        let mut repo = json!({
+            "id": "r1",
+            "worktreeBasePath": "/custom/worktrees",
+            "worktreeBaseRef": "main"
+        });
+        let updates = sanitize_repo_updates(&json!({
+            "worktreeBasePath": null,
+            "worktreeBaseRef": ""
+        }));
+        assert!(apply_repo_updates(&mut repo, &updates));
+        assert!(repo.get("worktreeBasePath").is_none());
+        assert!(repo.get("worktreeBaseRef").is_none());
     }
 
     #[test]

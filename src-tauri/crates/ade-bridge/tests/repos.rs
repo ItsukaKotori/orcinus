@@ -228,7 +228,8 @@ fn folder_workspaces_append_after_main_by_last_activity() {
         2,
     )
     .unwrap();
-    let repo = outcome.repo;
+    let mut repo = outcome.repo;
+    repo["projectGroupId"] = json!("g1");
     let workspaces = vec![
         json!({
             "id": "w1",
@@ -260,6 +261,177 @@ fn folder_workspaces_append_after_main_by_last_activity() {
     assert!(worktrees[1].is_pinned);
     assert_eq!(worktrees[1].head, "");
     assert_eq!(worktrees[1].branch, "");
+}
+
+#[test]
+fn folder_workspaces_are_scoped_to_their_repo_group() {
+    let dir = TestDir::new("folder-scope");
+    let first_folder = dir.dir("first");
+    let second_folder = dir.dir("second");
+    let fs = FsService::new();
+    let mut projects = store(&dir);
+    let mut first = add_repo(
+        &mut projects,
+        &fs,
+        first_folder.to_str().unwrap(),
+        RepoKind::Folder,
+        None,
+        1,
+    )
+    .unwrap()
+    .repo;
+    let mut second = add_repo(
+        &mut projects,
+        &fs,
+        second_folder.to_str().unwrap(),
+        RepoKind::Folder,
+        None,
+        2,
+    )
+    .unwrap()
+    .repo;
+    first["projectGroupId"] = json!("g1");
+    second["projectGroupId"] = json!("g2");
+    let first_id = repo_id(&first).to_string();
+    let second_id = repo_id(&second).to_string();
+    projects
+        .mutate_repos(|repos| {
+            for repo in repos.iter_mut() {
+                if repo["id"] == first_id.as_str() {
+                    repo["projectGroupId"] = json!("g1");
+                } else if repo["id"] == second_id.as_str() {
+                    repo["projectGroupId"] = json!("g2");
+                }
+            }
+        })
+        .unwrap();
+
+    let workspaces = vec![
+        json!({
+            "id": "w1",
+            "projectGroupId": "g1",
+            "name": "First Workspace",
+            "folderPath": dir.dir("first/one").to_str().unwrap(),
+            "lastActivityAt": 1
+        }),
+        json!({
+            "id": "w2",
+            "projectGroupId": "g2",
+            "name": "Second Workspace",
+            "folderPath": dir.dir("second/two").to_str().unwrap(),
+            "lastActivityAt": 2
+        }),
+        json!({
+            "id": "w3",
+            "projectGroupId": null,
+            "name": "Orphan",
+            "folderPath": dir.dir("orphan").to_str().unwrap(),
+            "lastActivityAt": 3
+        }),
+    ];
+
+    let first_worktrees = list_worktrees(&first, &workspaces).unwrap();
+    assert_eq!(
+        first_worktrees
+            .iter()
+            .map(|worktree| worktree.path.as_str())
+            .collect::<Vec<_>>(),
+        vec![first_folder.to_str().unwrap(), dir.dir("first/one").to_str().unwrap()]
+    );
+
+    let second_worktrees = list_worktrees(&second, &workspaces).unwrap();
+    assert_eq!(
+        second_worktrees
+            .iter()
+            .map(|worktree| worktree.path.as_str())
+            .collect::<Vec<_>>(),
+        vec![
+            second_folder.to_str().unwrap(),
+            dir.dir("second/two").to_str().unwrap()
+        ]
+    );
+
+    let all = list_all_worktrees(&projects.repos(), &workspaces).unwrap();
+    assert_eq!(
+        all.iter().map(|worktree| worktree.id.as_str()).collect::<Vec<_>>(),
+        vec![
+            format!("{}::{}", repo_id(&first), first_folder.to_str().unwrap()),
+            format!("{}::{}", repo_id(&first), dir.dir("first/one").to_str().unwrap()),
+            format!("{}::{}", repo_id(&second), second_folder.to_str().unwrap()),
+            format!("{}::{}", repo_id(&second), dir.dir("second/two").to_str().unwrap()),
+        ]
+    );
+}
+
+#[test]
+fn ungrouped_folder_repo_projects_only_its_root() {
+    let dir = TestDir::new("folder-ungrouped");
+    let folder = dir.dir("notes");
+    let fs = FsService::new();
+    let mut projects = store(&dir);
+    let repo = add_repo(
+        &mut projects,
+        &fs,
+        folder.to_str().unwrap(),
+        RepoKind::Folder,
+        None,
+        1,
+    )
+    .unwrap()
+    .repo;
+    let workspaces = vec![
+        json!({
+            "id": "w1",
+            "projectGroupId": null,
+            "name": "Null Group",
+            "folderPath": dir.dir("notes/one").to_str().unwrap(),
+            "lastActivityAt": 1
+        }),
+        json!({
+            "id": "w2",
+            "projectGroupId": "g1",
+            "name": "Other Group",
+            "folderPath": dir.dir("notes/two").to_str().unwrap(),
+            "lastActivityAt": 2
+        }),
+    ];
+
+    let worktrees = list_worktrees(&repo, &workspaces).unwrap();
+    assert_eq!(worktrees.len(), 1);
+    assert_eq!(worktrees[0].id, format!("{}::{}", repo_id(&repo), folder.to_str().unwrap()));
+    assert!(worktrees[0].is_main_worktree);
+}
+
+#[test]
+fn folder_root_spelling_does_not_duplicate_the_root_row() {
+    let dir = TestDir::new("folder-root-spelling");
+    let folder = dir.dir("notes");
+    let fs = FsService::new();
+    let mut projects = store(&dir);
+    let with_slash = format!("{}/", folder.to_str().unwrap());
+    let mut repo = add_repo(
+        &mut projects,
+        &fs,
+        &with_slash,
+        RepoKind::Folder,
+        None,
+        1,
+    )
+    .unwrap()
+    .repo;
+    repo["projectGroupId"] = json!("g1");
+    let workspaces = vec![json!({
+        "id": "w1",
+        "projectGroupId": "g1",
+        "name": "Root Again",
+        "folderPath": folder.to_str().unwrap(),
+        "lastActivityAt": 1
+    })];
+
+    let worktrees = list_worktrees(&repo, &workspaces).unwrap();
+    assert_eq!(worktrees.len(), 1);
+    assert_eq!(worktrees[0].display_name, "notes");
+    assert!(worktrees[0].is_main_worktree);
 }
 
 #[test]

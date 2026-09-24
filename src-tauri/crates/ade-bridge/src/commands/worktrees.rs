@@ -1,5 +1,6 @@
 use ade_core::models::repo::RepoKind;
 use ade_core::models::worktree::Worktree;
+use ade_core::path_compare::normalize_for_comparison;
 use serde::Deserialize;
 use serde_json::Value;
 use tauri::State;
@@ -50,7 +51,17 @@ pub fn git_worktree(repo: &Value, entry: &ade_git::GitWorktreeEntry) -> Worktree
     )
 }
 
-fn folder_worktree(repo_id_value: &str, workspace: &Value) -> Worktree {
+/// A folder workspace belongs to a repo only when both carry the same project
+/// group. An ungrouped repo (absent/null `projectGroupId`) owns just its root
+/// workspace, so a null group never pulls in other repos' workspaces.
+fn folder_workspace_in_scope(repo: &Value, workspace: &Value) -> bool {
+    match repo.get("projectGroupId").and_then(Value::as_str) {
+        Some(group) => workspace.get("projectGroupId").and_then(Value::as_str) == Some(group),
+        None => false,
+    }
+}
+
+fn folder_worktree(repo: &Value, workspace: &Value) -> Worktree {
     let path = workspace
         .get("folderPath")
         .and_then(Value::as_str)
@@ -58,8 +69,16 @@ fn folder_worktree(repo_id_value: &str, workspace: &Value) -> Worktree {
     let name = workspace
         .get("name")
         .and_then(Value::as_str)
-        .unwrap_or_default();
-    let mut worktree = Worktree::for_folder_workspace(repo_id_value, name, path, false);
+        .unwrap_or_default()
+        .trim();
+    // Why: a blank name falls back to the repo label, matching
+    // `mergeFolderWorkspace`'s `meta.displayName || repo.displayName`.
+    let display_name = if name.is_empty() {
+        repo_display_name(repo)
+    } else {
+        name
+    };
+    let mut worktree = Worktree::for_folder_workspace(repo_id(repo), display_name, path, false);
     if let Some(comment) = workspace.get("comment").and_then(Value::as_str) {
         worktree.comment = comment.to_string();
     }
@@ -86,20 +105,26 @@ fn folder_worktree(repo_id_value: &str, workspace: &Value) -> Worktree {
     worktree
 }
 
-/// Folder repos project their own root workspace first, then the repo's folder
-/// workspaces by `lastActivityAt` descending (spec §5.3).
+/// Folder repos project their own root workspace first, then the repo's own
+/// folder workspaces by `lastActivityAt` descending (spec §5.3).
 fn folder_worktrees(repo: &Value, folder_workspaces: &[Value]) -> Vec<Worktree> {
-    let repo_id_value = repo_id(repo);
     let main = Worktree::for_folder_workspace(
-        repo_id_value,
+        repo_id(repo),
         repo_display_name(repo),
         repo_path(repo),
         true,
     );
+    // Why normalized: the repo path may keep a `/folder/` spelling while a
+    // folder workspace points at the same directory; raw id comparison would
+    // then emit the root row twice.
+    let main_path_key = normalize_for_comparison(&main.path);
     let mut extras: Vec<Worktree> = folder_workspaces
         .iter()
-        .map(|workspace| folder_worktree(repo_id_value, workspace))
-        .filter(|worktree| worktree.id != main.id && !worktree.path.is_empty())
+        .filter(|workspace| folder_workspace_in_scope(repo, workspace))
+        .map(|workspace| folder_worktree(repo, workspace))
+        .filter(|worktree| {
+            !worktree.path.is_empty() && normalize_for_comparison(&worktree.path) != main_path_key
+        })
         .collect();
     extras.sort_by_key(|worktree| std::cmp::Reverse(worktree.last_activity_at));
     let mut worktrees = Vec::with_capacity(extras.len() + 1);
@@ -187,6 +212,16 @@ mod tests {
         json!({ "id": "f1", "path": "/folder", "displayName": "Folder", "kind": "folder" })
     }
 
+    fn grouped_folder_repo(group: &str) -> Value {
+        json!({
+            "id": "f1",
+            "path": "/folder",
+            "displayName": "Folder",
+            "kind": "folder",
+            "projectGroupId": group
+        })
+    }
+
     #[test]
     fn kind_defaults_to_git_for_absent_or_unknown_values() {
         assert_eq!(repo_kind(&json!({ "id": "r" })), RepoKind::Git);
@@ -247,9 +282,16 @@ mod tests {
     #[test]
     fn folder_workspaces_follow_main_sorted_by_last_activity_desc() {
         let workspaces = vec![
-            json!({ "id": "w1", "folderPath": "/folder/one", "name": "One", "lastActivityAt": 5 }),
+            json!({
+                "id": "w1",
+                "projectGroupId": "g1",
+                "folderPath": "/folder/one",
+                "name": "One",
+                "lastActivityAt": 5
+            }),
             json!({
                 "id": "w2",
+                "projectGroupId": "g1",
                 "folderPath": "/folder/two",
                 "name": "Two",
                 "lastActivityAt": 10,
@@ -258,7 +300,7 @@ mod tests {
                 "workspaceStatus": "done"
             }),
         ];
-        let worktrees = folder_worktrees(&folder_repo(), &workspaces);
+        let worktrees = folder_worktrees(&grouped_folder_repo("g1"), &workspaces);
         assert_eq!(
             worktrees.iter().map(|w| w.id.as_str()).collect::<Vec<_>>(),
             vec!["f1::/folder", "f1::/folder/two", "f1::/folder/one"]
@@ -275,13 +317,109 @@ mod tests {
     }
 
     #[test]
-    fn folder_workspace_at_the_repo_root_is_not_duplicated() {
+    fn folder_workspaces_are_scoped_to_the_repo_group() {
         let workspaces = vec![
-            json!({ "id": "w1", "folderPath": "/folder", "name": "Root", "lastActivityAt": 1 }),
+            json!({
+                "id": "w1",
+                "projectGroupId": "g1",
+                "folderPath": "/folder/one",
+                "name": "One",
+                "lastActivityAt": 1
+            }),
+            json!({
+                "id": "w2",
+                "projectGroupId": "g2",
+                "folderPath": "/folder/two",
+                "name": "Two",
+                "lastActivityAt": 2
+            }),
+            json!({
+                "id": "w3",
+                "projectGroupId": null,
+                "folderPath": "/folder/three",
+                "name": "Three",
+                "lastActivityAt": 3
+            }),
+        ];
+
+        let first = folder_worktrees(&grouped_folder_repo("g1"), &workspaces);
+        assert_eq!(
+            first.iter().map(|w| w.path.as_str()).collect::<Vec<_>>(),
+            vec!["/folder", "/folder/one"]
+        );
+
+        let mut second_repo = grouped_folder_repo("g2");
+        second_repo["id"] = json!("f2");
+        second_repo["path"] = json!("/other");
+        let second = folder_worktrees(&second_repo, &workspaces);
+        assert_eq!(
+            second.iter().map(|w| w.path.as_str()).collect::<Vec<_>>(),
+            vec!["/other", "/folder/two"]
+        );
+    }
+
+    #[test]
+    fn ungrouped_folder_repo_sees_only_its_root() {
+        let workspaces = vec![
+            json!({
+                "id": "w1",
+                "projectGroupId": null,
+                "folderPath": "/folder/one",
+                "name": "One",
+                "lastActivityAt": 1
+            }),
+            json!({
+                "id": "w2",
+                "projectGroupId": "g1",
+                "folderPath": "/folder/two",
+                "name": "Two",
+                "lastActivityAt": 2
+            }),
         ];
         let worktrees = folder_worktrees(&folder_repo(), &workspaces);
         assert_eq!(worktrees.len(), 1);
+        assert_eq!(worktrees[0].id, "f1::/folder");
+        assert!(worktrees[0].is_main_worktree);
+    }
+
+    #[test]
+    fn folder_workspace_at_the_repo_root_is_not_duplicated() {
+        let workspaces = vec![
+            // Same directory as the root, spelled with a trailing separator.
+            json!({
+                "id": "w1",
+                "projectGroupId": "g1",
+                "folderPath": "/folder/",
+                "name": "Root",
+                "lastActivityAt": 1
+            }),
+            json!({
+                "id": "w2",
+                "projectGroupId": "g1",
+                "folderPath": "/folder/child",
+                "name": "Child",
+                "lastActivityAt": 2
+            }),
+        ];
+        let worktrees = folder_worktrees(&grouped_folder_repo("g1"), &workspaces);
+        assert_eq!(
+            worktrees.iter().map(|w| w.id.as_str()).collect::<Vec<_>>(),
+            vec!["f1::/folder", "f1::/folder/child"]
+        );
         assert_eq!(worktrees[0].display_name, "Folder");
+    }
+
+    #[test]
+    fn blank_folder_workspace_name_falls_back_to_repo_display_name() {
+        let workspaces = vec![json!({
+            "id": "w1",
+            "projectGroupId": "g1",
+            "folderPath": "/folder/one",
+            "name": "   ",
+            "lastActivityAt": 1
+        })];
+        let worktrees = folder_worktrees(&grouped_folder_repo("g1"), &workspaces);
+        assert_eq!(worktrees[1].display_name, "Folder");
     }
 
     #[test]
