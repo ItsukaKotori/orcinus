@@ -3,6 +3,7 @@ pub mod mutate;
 pub mod read;
 pub mod search;
 pub mod walk;
+pub mod watch;
 
 use std::path::{Path, PathBuf};
 
@@ -23,6 +24,12 @@ pub use walk::{
     build_exclude_path_prefixes, is_markdown_document_path, should_exclude_quick_open_rel_path,
     should_include_quick_open_path, CancelRegistry, MarkdownDocument,
     FILE_LISTING_CANCELLED_MESSAGE, HIDDEN_DIR_BLOCKLIST,
+};
+pub use watch::{
+    coalesce_events, FsChangeEvent, FsChangeKind, FsChangedPayload, FsWatcher, ManualWatchClock,
+    RawEvent, SystemWatchClock, WatchClock, DIRECTORY_STAT_CONCURRENCY, MAX_BATCHED_WATCHER_EVENTS,
+    WATCHER_IGNORE_DIRS, WATCHER_TEARDOWN_GRACE_MS, WATCH_BATCH_MAX_WAIT_MS,
+    WATCH_BATCH_TRAILING_MS,
 };
 
 pub const PATH_ACCESS_DENIED_MESSAGE: &str =
