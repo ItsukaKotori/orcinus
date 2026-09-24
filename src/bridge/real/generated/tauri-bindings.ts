@@ -37,6 +37,12 @@ export const commands = {
 	 */
 	uiSet: (args: Json) => typedError<null, BridgeError>(__TAURI_INVOKE("ui_set", { args })),
 	/**
+	 *  `setWithAck`: same in-memory merge as `ui_set`, but the write is forced
+	 *  before returning and a persist failure rejects instead of being logged
+	 *  (spec §5.4).
+	 */
+	uiSetWithAck: (args: Json) => typedError<null, BridgeError>(__TAURI_INVOKE("ui_set_with_ack", { args })),
+	/**
 	 *  Record one feature interaction (`interactionCount + 1`, earliest timestamp
 	 *  kept) and return the complete object.
 	 */

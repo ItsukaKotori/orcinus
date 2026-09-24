@@ -11,7 +11,7 @@ export function createUiRealApi(): PreloadApi['ui'] {
   return withMethodFallback<PreloadApi['ui']>('ui', {
     get: () => invokeCommand('ui_get'),
     set: (args) => invokeCommand('ui_set', { args }),
-    setWithAck: (args) => invokeCommand('ui_set', { args }),
+    setWithAck: (args) => invokeCommand('ui_set_with_ack', { args }),
     recordFeatureInteraction: (id) =>
       invokeCommand('ui_record_feature_interaction', { args: { id } }),
     onStateChanged: (callback) => subscribeToEvent('ui:stateChanged', callback)

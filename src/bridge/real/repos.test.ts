@@ -70,6 +70,12 @@ describe('repos real adapter commands', () => {
     expect(invokeMock).toHaveBeenCalledWith(command)
   })
 
+  it('passes the {error} contract union through without throwing', async () => {
+    const errorResult = { error: 'Not a valid git repository: /tmp/x' }
+    invokeMock.mockResolvedValueOnce(errorResult)
+    await expect(createReposRealApi().add({ path: '/tmp/x' })).resolves.toEqual(errorResult)
+  })
+
   it('maps a {message} rejection to a normal Error', async () => {
     invokeMock.mockRejectedValueOnce({ message: 'Repo not found: r1' })
     const rejection = createReposRealApi().update({ repoId: 'r1', updates: {} })

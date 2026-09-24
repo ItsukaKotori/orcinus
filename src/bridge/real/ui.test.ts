@@ -31,10 +31,19 @@ describe('ui real adapter commands', () => {
     expect(invokeMock).toHaveBeenCalledWith('ui_set', { args: { activeView: 'settings' } })
   })
 
-  it('maps setWithAck to ui_set with the { args } envelope', async () => {
+  it('maps setWithAck to ui_set_with_ack with the { args } envelope', async () => {
     invokeMock.mockResolvedValueOnce(null)
     await createUiRealApi().setWithAck?.({ activeView: 'settings' })
-    expect(invokeMock).toHaveBeenCalledWith('ui_set', { args: { activeView: 'settings' } })
+    expect(invokeMock).toHaveBeenCalledWith('ui_set_with_ack', {
+      args: { activeView: 'settings' }
+    })
+  })
+
+  it('maps a setWithAck {message} rejection to a normal Error', async () => {
+    invokeMock.mockRejectedValueOnce({ message: 'ui state persist failed' })
+    const rejection = createUiRealApi().setWithAck!({ activeView: 'settings' })
+    await expect(rejection).rejects.toBeInstanceOf(Error)
+    await expect(rejection).rejects.toThrow('ui state persist failed')
   })
 
   it('maps recordFeatureInteraction to ui_record_feature_interaction with { id }', async () => {

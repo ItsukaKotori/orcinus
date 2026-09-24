@@ -354,12 +354,24 @@ impl AppState {
         self.ui_writer.schedule();
     }
 
+    /// Force any pending ui-state write and surface its result, so
+    /// `ui_set_with_ack` can reject when persistence fails (spec §5.4).
+    pub(crate) fn flush_ui_state_write(&self) -> Result<(), String> {
+        self.ui_writer.flush()
+    }
+
+    /// `ui_set_with_ack`: merge the partial in memory, then persist
+    /// synchronously before returning.
+    pub(crate) fn merge_ui_state_with_ack(&self, partial: Value) -> Result<Value, BridgeError> {
+        crate::commands::ui::merge_ui_state_and_flush(&self.ui, &self.ui_writer, partial)
+    }
+
     /// Persist debounced settings/ui updates; called on app exit so a quit
     /// shortly after a change cannot drop it.
     pub fn flush_pending_writes(&self) {
         for (label, result) in [
             ("settings", self.settings_writer.flush()),
-            ("ui-state", self.ui_writer.flush()),
+            ("ui-state", self.flush_ui_state_write()),
         ] {
             if let Err(error) = result {
                 eprintln!("[ade-bridge] failed to flush {label} on exit: {error}");

@@ -1,12 +1,16 @@
 // @vitest-environment happy-dom
 import { invoke } from '@tauri-apps/api/core'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { installAdeBridge } from './install'
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn() }))
 
 const invokeMock = vi.mocked(invoke)
+
+beforeEach(() => {
+  invokeMock.mockReset()
+})
 
 afterEach(() => {
   vi.unstubAllEnvs()
