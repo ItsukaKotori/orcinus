@@ -1,8 +1,10 @@
 pub mod app;
 pub mod fs;
 pub mod platform;
+pub mod repos;
 pub mod settings;
 pub mod ui;
+pub mod worktrees;
 
 use crate::errors::BridgeError;
 

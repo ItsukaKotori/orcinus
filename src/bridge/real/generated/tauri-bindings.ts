@@ -43,6 +43,36 @@ export const commands = {
 	uiRecordFeatureInteraction: (args: UiRecordFeatureInteractionArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("ui_record_feature_interaction", { args })),
 	platformGet: () => typedError<PlatformInfo, BridgeError>(__TAURI_INVOKE("platform_get")),
 	appGetIdentity: () => typedError<AppIdentityInfo, BridgeError>(__TAURI_INVOKE("app_get_identity")),
+	/**  Read the projects registry (spec §5.2). */
+	reposList: () => typedError<Json, BridgeError>(__TAURI_INVOKE("repos_list")),
+	/**
+	 *  Add a repo; invalid git paths answer the `{error}` contract union instead of
+	 *  rejecting, and duplicates answer the existing repo with `alreadyExisted`.
+	 */
+	reposAdd: (args: ReposAddArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("repos_add", { args })),
+	/**  Update the contract-allowed fields of one repo and return the updated row. */
+	reposUpdate: (args: ReposUpdateArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("repos_update", { args })),
+	/**  Remove a repo and revoke its fs root; no cascade (spec §5.2). */
+	reposRemove: (args: ReposRemoveArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("repos_remove", { args })),
+	/**  Persist one host's repo order; non-local hosts are rejected in A. */
+	reposReorderForHost: (args: ReposReorderForHostArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("repos_reorder_for_host", { args })),
+	/**  Pick one folder for the add-project flow (system dialog, no JS dialog plugin). */
+	reposPickFolder: () => typedError<string | null, BridgeError>(__TAURI_INVOKE("repos_pick_folder")),
+	/**  Pick several folders for the add-project flow. */
+	reposPickFolders: () => typedError<string[], BridgeError>(__TAURI_INVOKE("repos_pick_folders")),
+	/**
+	 *  Pick a clone/create destination (same dialog as `pick_folder`, separate
+	 *  renderer entry point).
+	 */
+	reposPickDirectory: () => typedError<string | null, BridgeError>(__TAURI_INVOKE("repos_pick_directory")),
+	/**  `git --version` with the 1.5s budget from `ade_git`. */
+	reposIsGitAvailable: () => typedError<boolean, BridgeError>(__TAURI_INVOKE("repos_is_git_available")),
+	/**  Effective local default parent for "Create new project". */
+	reposGetDefaultCreateProjectParent: () => typedError<string, BridgeError>(__TAURI_INVOKE("repos_get_default_create_project_parent")),
+	/**  Project the worktrees of one repo. */
+	worktreesList: (args: WorktreesListArgs) => typedError<Worktree[], BridgeError>(__TAURI_INVOKE("worktrees_list", { args })),
+	/**  Project every repo's worktrees, merged in registry order. */
+	worktreesListAll: () => typedError<Worktree[], BridgeError>(__TAURI_INVOKE("worktrees_list_all")),
 };
 
 /* Types */
@@ -237,6 +267,30 @@ export type PlatformInfo = {
 	displayServer: string | null,
 };
 
+export type RepoKind = "git" | "folder";
+
+export type ReposAddArgs = {
+	path: string,
+	kind?: RepoKind | null,
+	displayName?: string | null,
+};
+
+export type ReposRemoveArgs = {
+	repoId: string,
+};
+
+export type ReposReorderForHostArgs = {
+	orderedIds: string[],
+	hostId: string,
+};
+
+export type ReposUpdateArgs = {
+	repoId: string,
+	/**  Accepted for contract parity; A has only local repos, so it is ignored. */
+	hostId?: string | null,
+	updates: Json,
+};
+
 export type SearchFileResult = SearchFileResult_Serialize | SearchFileResult_Deserialize;
 
 export type SearchFileResult_Deserialize = {
@@ -345,6 +399,41 @@ export type SearchResult_Serialize = {
 
 export type UiRecordFeatureInteractionArgs = {
 	id: string,
+};
+
+/**
+ *  Minimal worktree projection (spec §5.3): the fields the renderer contract
+ *  requires, with the oracle defaults for everything A does not persist.
+ */
+export type Worktree = {
+	id: string,
+	repoId: string,
+	displayName: string,
+	displayNameMode: string,
+	comment: string,
+	linkedIssue: number | null,
+	linkedPR: number | null,
+	linkedLinearIssue: string | null,
+	isArchived: boolean,
+	isUnread: boolean,
+	isPinned: boolean,
+	sortOrder: number,
+	lastActivityAt: number,
+	path: string,
+	head: string,
+	branch: string,
+	isBare: boolean,
+	isMainWorktree: boolean,
+	workspaceStatus: string,
+};
+
+/**  Payload for [`WORKTREES_CHANGED`] (spec §5.3). */
+export type WorktreeChangedPayload = {
+	repoId: string,
+};
+
+export type WorktreesListArgs = {
+	repoId: string,
 };
 
 /* Tauri Specta runtime */

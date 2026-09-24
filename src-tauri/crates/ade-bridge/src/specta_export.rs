@@ -41,9 +41,22 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::ui::ui_record_feature_interaction,
                 commands::platform::platform_get,
                 commands::app::app_get_identity,
+                commands::repos::repos_list,
+                commands::repos::repos_add,
+                commands::repos::repos_update,
+                commands::repos::repos_remove,
+                commands::repos::repos_reorder_for_host,
+                commands::repos::repos_pick_folder,
+                commands::repos::repos_pick_folders,
+                commands::repos::repos_pick_directory,
+                commands::repos::repos_is_git_available,
+                commands::repos::repos_get_default_create_project_parent,
+                commands::worktrees::worktrees_list,
+                commands::worktrees::worktrees_list_all,
             ])
             .typ::<crate::state::BootstrapPayload>()
             .typ::<ade_fs::FsChangedPayload>()
+            .typ::<crate::events::WorktreeChangedPayload>()
     })
 }
 
@@ -110,6 +123,18 @@ mod tests {
             "ui_record_feature_interaction",
             "platform_get",
             "app_get_identity",
+            "repos_list",
+            "repos_add",
+            "repos_update",
+            "repos_remove",
+            "repos_reorder_for_host",
+            "repos_pick_folder",
+            "repos_pick_folders",
+            "repos_pick_directory",
+            "repos_is_git_available",
+            "repos_get_default_create_project_parent",
+            "worktrees_list",
+            "worktrees_list_all",
         ] {
             assert!(
                 bindings.contains(&format!("\"{command}\"")),

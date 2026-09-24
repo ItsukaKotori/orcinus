@@ -15,6 +15,14 @@ fn substitute_home(value: &mut Value, home: &str) {
     }
 }
 
+/// The stock workspace directory (`getDefaultWorkspaceDir`): `{{HOME}}/orca/workspaces`
+/// with the host separator, trailing separators on `home` trimmed.
+pub fn default_workspace_dir(home: &str) -> String {
+    let separator = if home.contains('\\') { '\\' } else { '/' };
+    let trimmed = home.trim_end_matches(['\\', '/']);
+    format!("{trimmed}{separator}orca{separator}workspaces")
+}
+
 fn apply_platform_defaults(settings: &mut Value, home: &str, platform: &str) {
     let Some(map) = settings.as_object_mut() else {
         return;
@@ -41,11 +49,9 @@ fn apply_platform_defaults(settings: &mut Value, home: &str, platform: &str) {
     );
     map.insert("terminalFontFamily".into(), Value::String(font_family.into()));
     map.insert("terminalRightClickToPaste".into(), Value::Bool(is_windows));
-    let separator = if home.contains('\\') { '\\' } else { '/' };
-    let trimmed = home.trim_end_matches(['\\', '/']);
     map.insert(
         "workspaceDir".into(),
-        Value::String(format!("{trimmed}{separator}orca{separator}workspaces")),
+        Value::String(default_workspace_dir(home)),
     );
 }
 
@@ -144,6 +150,18 @@ mod tests {
         assert_eq!(settings["terminalFontFamily"], "Cascadia Mono");
         assert_eq!(settings["terminalRightClickToPaste"], true);
         assert_eq!(settings["workspaceDir"], "C:\\Users\\alice\\orca\\workspaces");
+    }
+
+    #[test]
+    fn default_workspace_dir_matches_generated_default() {
+        let home = "/Users/tester";
+        let settings = settings_defaults(home);
+        assert_eq!(settings["workspaceDir"], default_workspace_dir(home));
+        assert_eq!(default_workspace_dir("/Users/tester/"), default_workspace_dir(home));
+        assert_eq!(
+            default_workspace_dir("C:\\Users\\tester\\"),
+            "C:\\Users\\tester\\orca\\workspaces"
+        );
     }
 
     #[test]

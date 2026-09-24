@@ -4,9 +4,11 @@ version = "0.0.1"
 edition = "2021"
 
 [dependencies]
-ade-core = { path = "../ade-core" }
+ade-core = { path = "../ade-core", features = ["specta"] }
 ade-fs = { path = "../ade-fs", features = ["specta"] }
+ade-git = { path = "../ade-git" }
 ade-store = { path = "../ade-store" }
+rfd = "0.16"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 specta = { version = "=2.0.0-rc.25", features = ["derive", "serde_json"] }

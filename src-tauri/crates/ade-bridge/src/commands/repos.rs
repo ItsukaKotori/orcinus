@@ -1,0 +1,882 @@
+use std::collections::HashSet;
+
+use ade_core::models::repo::{new_repo, now_ms, RepoKind};
+use ade_core::path_compare::normalize_for_comparison;
+use ade_fs::FsService;
+use ade_store::projects_store::ProjectsStore;
+use serde::Deserialize;
+use serde_json::{json, Map, Value};
+use tauri::{Manager, State};
+
+use crate::commands::run_blocking;
+use crate::errors::BridgeError;
+use crate::events;
+use crate::json::Json;
+use crate::state::{lock, AppState};
+
+/// Fields `repos_update` accepts (the renderer contract Pick list). Everything
+/// else — including the SSH-only fields — is dropped.
+pub const REPO_UPDATE_FIELDS: &[&str] = &[
+    "displayName",
+    "badgeColor",
+    "repoIcon",
+    "upstream",
+    "hookSettings",
+    "worktreeBaseRef",
+    "worktreeBasePath",
+    "kind",
+    "issueSourcePreference",
+    "forkSyncMode",
+    "externalWorktreeVisibilityPromptDismissedAt",
+    "externalWorktreeInboxBaselinePaths",
+    "importedExternalWorktreePaths",
+    "customWorktreeVisibilitySources",
+    "worktreeVisibilitySourcePreferences",
+    "projectGroupId",
+    "projectGroupOrder",
+    "externalWorktreeVisibility",
+    "agentWorktreeVisibility",
+    "sourceControlAi",
+    "externalWorktreeDiscoverySuppressedAt",
+];
+
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ReposAddArgs {
+    pub path: String,
+    #[serde(default)]
+    pub kind: Option<RepoKind>,
+    #[serde(default)]
+    pub display_name: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ReposUpdateArgs {
+    pub repo_id: String,
+    /// Accepted for contract parity; A has only local repos, so it is ignored.
+    #[serde(default)]
+    pub host_id: Option<String>,
+    pub updates: Json,
+}
+
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ReposRemoveArgs {
+    pub repo_id: String,
+}
+
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ReposReorderForHostArgs {
+    pub ordered_ids: Vec<String>,
+    pub host_id: String,
+}
+
+/// Outcome of a successful `repos_add` (spec §5.2).
+#[derive(Debug, Clone, PartialEq)]
+pub struct AddRepoOutcome {
+    pub repo: Value,
+    pub already_existed: bool,
+}
+
+fn repo_id(repo: &Value) -> &str {
+    repo.get("id").and_then(Value::as_str).unwrap_or_default()
+}
+
+fn repo_path(repo: &Value) -> Option<&str> {
+    repo.get("path").and_then(Value::as_str)
+}
+
+fn find_repo(store: &ProjectsStore, repo_id_value: &str) -> Option<Value> {
+    store
+        .repos()
+        .into_iter()
+        .find(|repo| repo_id(repo) == repo_id_value)
+}
+
+/// Resolve the registry path for `repos_add`: git roots come from
+/// `git rev-parse --show-toplevel` (canonical, so `/repo/` and a subdirectory
+/// both resolve to `/repo`); folder kinds use the path exactly as picked
+/// (spec §5.2 — no realpath).
+pub fn resolve_add_path(path: &str, kind: RepoKind) -> Result<String, BridgeError> {
+    match kind {
+        RepoKind::Folder => Ok(path.to_string()),
+        RepoKind::Git => Ok(ade_git::rev_parse_toplevel(path)?),
+    }
+}
+
+/// Register a repo already resolved by [`resolve_add_path`]. Dedup compares
+/// `normalize_for_comparison(path)` against every persisted repo, so a trailing
+/// separator cannot produce a duplicate row; a duplicate returns the existing
+/// repo with `already_existed=true` instead of an error (spec §4.3).
+pub fn add_repo(
+    store: &mut ProjectsStore,
+    fs: &FsService,
+    path: &str,
+    kind: RepoKind,
+    display_name: Option<&str>,
+    added_at_ms: u64,
+) -> Result<AddRepoOutcome, BridgeError> {
+    let key = normalize_for_comparison(path);
+    if let Some(existing) = store
+        .repos()
+        .into_iter()
+        .find(|repo| repo_path(repo).is_some_and(|path| normalize_for_comparison(path) == key))
+    {
+        authorize_repo_root(fs, repo_path(&existing).unwrap_or(path));
+        return Ok(AddRepoOutcome {
+            repo: existing,
+            already_existed: true,
+        });
+    }
+
+    let repo = new_repo(
+        &ade_core::ids::new_uuid(),
+        path,
+        display_name,
+        kind,
+        added_at_ms,
+    );
+    store.mutate_repos(|repos| repos.push(repo.clone()))?;
+    authorize_repo_root(fs, path);
+    Ok(AddRepoOutcome {
+        repo,
+        already_existed: false,
+    })
+}
+
+/// A failed grant is logged, not fatal: startup re-authorizes every persisted
+/// root, so one bad entry cannot strand the whole registry (spec §5.1).
+fn authorize_repo_root(fs: &FsService, path: &str) {
+    if let Err(error) = fs.authorize_root(path) {
+        eprintln!("[ade-bridge] failed to authorize repo root '{path}': {error}");
+    }
+}
+
+fn revoke_repo_root(fs: &FsService, path: &str) {
+    if let Err(error) = fs.revoke_root(path) {
+        eprintln!("[ade-bridge] failed to revoke repo root '{path}': {error}");
+    }
+}
+
+pub fn list_repos(store: &ProjectsStore) -> Vec<Value> {
+    store.repos()
+}
+
+/// Apply a renderer partial to one repo. Returns `None` when the repo is gone.
+pub fn update_repo(
+    store: &mut ProjectsStore,
+    repo_id_value: &str,
+    updates: &Value,
+) -> Result<Option<Value>, BridgeError> {
+    if find_repo(store, repo_id_value).is_none() {
+        return Ok(None);
+    }
+    let sanitized = sanitize_repo_updates(updates);
+    let repos = store.mutate_repos(|repos| {
+        if let Some(repo) = repos
+            .iter_mut()
+            .find(|repo| repo_id(repo) == repo_id_value)
+        {
+            apply_repo_updates(repo, &sanitized);
+        }
+    })?;
+    Ok(repos
+        .into_iter()
+        .find(|repo| repo_id(repo) == repo_id_value))
+}
+
+/// Remove one repo and revoke its fs root. Does **not** cascade to project
+/// groups or folder workspaces (spec §5.2); the renderer decides follow-ups.
+pub fn remove_repo(
+    store: &mut ProjectsStore,
+    fs: &FsService,
+    repo_id_value: &str,
+) -> Result<Option<Value>, BridgeError> {
+    let Some(repo) = find_repo(store, repo_id_value) else {
+        return Ok(None);
+    };
+    store.mutate_repos(|repos| repos.retain(|repo| repo_id(repo) != repo_id_value))?;
+    if let Some(path) = repo_path(&repo) {
+        revoke_repo_root(fs, path);
+    }
+    Ok(Some(repo))
+}
+
+/// Persist `projectGroupOrder = index` for the given permutation. Only the
+/// local host is supported in A: any other `host_id`, a stale/non-permutation
+/// ordering, or duplicate ids is rejected without touching the store.
+pub fn reorder_repos_for_host(
+    store: &mut ProjectsStore,
+    ordered_ids: &[String],
+    host_id: &str,
+) -> Result<bool, BridgeError> {
+    if host_id != "local" {
+        return Ok(false);
+    }
+    let repos = store.repos();
+    if ordered_ids.len() != repos.len() {
+        return Ok(false);
+    }
+    let mut seen = HashSet::new();
+    for id in ordered_ids {
+        if !seen.insert(id.as_str()) {
+            return Ok(false);
+        }
+    }
+    if !ordered_ids
+        .iter()
+        .all(|id| repos.iter().any(|repo| repo_id(repo) == id.as_str()))
+    {
+        return Ok(false);
+    }
+    store.mutate_repos(|repos| {
+        for (index, id) in ordered_ids.iter().enumerate() {
+            if let Some(repo) = repos.iter_mut().find(|repo| repo_id(repo) == id.as_str()) {
+                if let Some(map) = repo.as_object_mut() {
+                    map.insert("projectGroupOrder".to_string(), Value::from(index as u64));
+                }
+            }
+        }
+    })?;
+    Ok(true)
+}
+
+/// Where the "Create new project" Location field starts (oracle semantics,
+/// Orcinus branding): the effective local `defaultWorktreeLocation` when the
+/// user changed it, otherwise `{{HOME}}/orcinus/projects`. An untouched
+/// `workspaceDir` is not a choice — treating it as one would relocate projects
+/// into the worktree root.
+pub fn default_create_project_parent(settings: &Value, home: &str) -> String {
+    let configured = settings
+        .get("hostSettingOverrides")
+        .and_then(|overrides| overrides.get("local"))
+        .and_then(|local| local.get("defaultWorktreeLocation"))
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_string)
+        .or_else(|| {
+            settings
+                .get("workspaceDir")
+                .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+                .map(str::to_string)
+        })
+        .unwrap_or_default();
+    let untouched_default =
+        normalize_for_comparison(&configured)
+            == normalize_for_comparison(&ade_core::defaults::default_workspace_dir(home));
+    if !configured.is_empty() && !untouched_default {
+        return configured;
+    }
+    let separator = if home.contains('\\') { '\\' } else { '/' };
+    let trimmed_home = home.trim_end_matches(['\\', '/']);
+    format!("{trimmed_home}{separator}orcinus{separator}projects")
+}
+
+/// Keep only contract fields with a plausible value. `null` survives only where
+/// the renderer uses it as a clearing sentinel or as a real value
+/// (`projectGroupId`); [`apply_repo_updates`] turns the rest into removals.
+pub fn sanitize_repo_updates(updates: &Value) -> Map<String, Value> {
+    let mut sanitized = Map::new();
+    let Some(input) = updates.as_object() else {
+        return sanitized;
+    };
+    for field in REPO_UPDATE_FIELDS {
+        let Some(value) = input.get(*field) else {
+            continue;
+        };
+        let accepted = match *field {
+            "displayName" => non_empty_trimmed(value),
+            "badgeColor" => normalize_badge_color(value),
+            "worktreeBaseRef" | "worktreeBasePath" => non_empty_trimmed(value),
+            "kind" => value
+                .as_str()
+                .and_then(RepoKind::parse)
+                .map(|kind| Value::String(kind.as_str().to_string())),
+            "issueSourcePreference" => enum_value(value, &["upstream", "origin", "auto"]),
+            "forkSyncMode" => enum_value(value, &["ask", "safe-auto", "off"]),
+            "externalWorktreeVisibility" | "agentWorktreeVisibility" => {
+                if value.is_null() {
+                    Some(Value::Null)
+                } else {
+                    enum_value(value, &["hide", "show"])
+                }
+            }
+            "sourceControlAi" => {
+                if value.is_null() || value.is_object() {
+                    Some(value.clone())
+                } else {
+                    None
+                }
+            }
+            "externalWorktreeDiscoverySuppressedAt"
+            | "externalWorktreeVisibilityPromptDismissedAt" => {
+                if value.is_null() && *field == "externalWorktreeDiscoverySuppressedAt" {
+                    Some(Value::Null)
+                } else if value.is_number() {
+                    Some(value.clone())
+                } else {
+                    None
+                }
+            }
+            "externalWorktreeInboxBaselinePaths" | "importedExternalWorktreePaths" => {
+                if string_array(value) {
+                    Some(value.clone())
+                } else {
+                    None
+                }
+            }
+            "customWorktreeVisibilitySources" => {
+                if value.is_array() {
+                    Some(value.clone())
+                } else {
+                    None
+                }
+            }
+            "worktreeVisibilitySourcePreferences" => {
+                if value.is_object() {
+                    Some(value.clone())
+                } else {
+                    None
+                }
+            }
+            "projectGroupId" => {
+                if value.is_null() || value.is_string() {
+                    Some(value.clone())
+                } else {
+                    None
+                }
+            }
+            "projectGroupOrder" => {
+                if value.is_number() {
+                    Some(value.clone())
+                } else {
+                    None
+                }
+            }
+            "repoIcon" | "upstream" | "hookSettings" => {
+                if value.is_null() || value.is_object() {
+                    Some(value.clone())
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        };
+        if let Some(accepted) = accepted {
+            sanitized.insert((*field).to_string(), accepted);
+        }
+    }
+    sanitized
+}
+
+fn non_empty_trimmed(value: &Value) -> Option<Value> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|trimmed| !trimmed.is_empty())
+        .map(|trimmed| Value::String(trimmed.to_string()))
+}
+
+fn enum_value(value: &Value, allowed: &[&str]) -> Option<Value> {
+    value
+        .as_str()
+        .filter(|candidate| allowed.contains(candidate))
+        .map(|candidate| Value::String(candidate.to_string()))
+}
+
+fn string_array(value: &Value) -> bool {
+    value
+        .as_array()
+        .is_some_and(|items| items.iter().all(Value::is_string))
+}
+
+/// Normalize a badge color to `#rrggbb`; invalid values are dropped (oracle
+/// `normalizeRepoBadgeColor`).
+fn normalize_badge_color(value: &Value) -> Option<Value> {
+    let raw = value.as_str()?.trim().trim_start_matches('#');
+    if !matches!(raw.len(), 3 | 6) || !raw.chars().all(|c| c.is_ascii_hexdigit()) {
+        return None;
+    }
+    let expanded = if raw.len() == 3 {
+        raw.chars()
+            .flat_map(|c| [c, c])
+            .collect::<String>()
+    } else {
+        raw.to_string()
+    };
+    Some(Value::String(format!("#{}", expanded.to_lowercase())))
+}
+
+/// Merge sanitized updates into a repo row. A `null` value removes the field
+/// except for `projectGroupId`, where null is the real "ungrouped" value.
+pub fn apply_repo_updates(repo: &mut Value, updates: &Map<String, Value>) -> bool {
+    let Some(map) = repo.as_object_mut() else {
+        return false;
+    };
+    let mut changed = false;
+    for (key, value) in updates {
+        if value.is_null() && key != "projectGroupId" {
+            changed |= map.remove(key).is_some();
+        } else if map.get(key) != Some(value) {
+            map.insert(key.clone(), value.clone());
+            changed = true;
+        }
+    }
+    changed
+}
+
+/// Shared command epilogue: registry mutations broadcast `repos:changed` plus
+/// one `worktrees:changed` per affected repo (spec §5.2/§5.3).
+fn emit_repo_mutation(app: &tauri::AppHandle, repo_id_value: &str) {
+    events::emit_repos_changed(app);
+    events::emit_worktrees_changed(app, repo_id_value);
+}
+
+/// Read the projects registry (spec §5.2).
+#[tauri::command]
+#[specta::specta]
+pub async fn repos_list(state: State<'_, AppState>) -> Result<Json, BridgeError> {
+    Ok(Json::new(Value::Array(list_repos(&lock(&state.projects)))))
+}
+
+/// Add a repo; invalid git paths answer the `{error}` contract union instead of
+/// rejecting, and duplicates answer the existing repo with `alreadyExisted`.
+#[tauri::command]
+#[specta::specta]
+pub async fn repos_add(
+    state: State<'_, AppState>,
+    args: ReposAddArgs,
+) -> Result<Json, BridgeError> {
+    let kind = args.kind.unwrap_or(RepoKind::Git);
+    let path = args.path.clone();
+    let resolved = match run_blocking(move || resolve_add_path(&path, kind)).await {
+        Ok(resolved) => resolved,
+        Err(BridgeError::Core(error @ ade_core::errors::CoreError::NotAGitRepository(_))) => {
+            return Ok(Json::new(json!({ "error": error.to_string() })));
+        }
+        Err(error) => return Err(error),
+    };
+
+    let outcome = {
+        let mut projects = lock(&state.projects);
+        add_repo(
+            &mut projects,
+            &state.fs,
+            &resolved,
+            kind,
+            args.display_name.as_deref(),
+            now_ms(),
+        )?
+    };
+    emit_repo_mutation(&state.app, repo_id(&outcome.repo));
+    Ok(Json::new(json!({
+        "repo": outcome.repo,
+        "alreadyExisted": outcome.already_existed,
+    })))
+}
+
+/// Update the contract-allowed fields of one repo and return the updated row.
+#[tauri::command]
+#[specta::specta]
+pub async fn repos_update(
+    state: State<'_, AppState>,
+    args: ReposUpdateArgs,
+) -> Result<Json, BridgeError> {
+    let updated = {
+        let mut projects = lock(&state.projects);
+        update_repo(&mut projects, &args.repo_id, &args.updates.into_inner())?
+    };
+    let Some(repo) = updated else {
+        return Err(BridgeError::message(format!(
+            "Repo not found: {}",
+            args.repo_id
+        )));
+    };
+    emit_repo_mutation(&state.app, &args.repo_id);
+    Ok(Json::new(repo))
+}
+
+/// Remove a repo and revoke its fs root; no cascade (spec §5.2).
+#[tauri::command]
+#[specta::specta]
+pub async fn repos_remove(
+    state: State<'_, AppState>,
+    args: ReposRemoveArgs,
+) -> Result<(), BridgeError> {
+    let removed = {
+        let mut projects = lock(&state.projects);
+        remove_repo(&mut projects, &state.fs, &args.repo_id)?
+    };
+    if let Some(repo) = removed {
+        emit_repo_mutation(&state.app, repo_id(&repo));
+    }
+    Ok(())
+}
+
+/// Persist one host's repo order; non-local hosts are rejected in A.
+#[tauri::command]
+#[specta::specta]
+pub async fn repos_reorder_for_host(
+    state: State<'_, AppState>,
+    args: ReposReorderForHostArgs,
+) -> Result<Json, BridgeError> {
+    let applied = {
+        let mut projects = lock(&state.projects);
+        reorder_repos_for_host(&mut projects, &args.ordered_ids, &args.host_id)?
+    };
+    if applied {
+        events::emit_repos_changed(&state.app);
+        for repo_id_value in &args.ordered_ids {
+            events::emit_worktrees_changed(&state.app, repo_id_value);
+        }
+    }
+    Ok(Json::new(json!({
+        "status": if applied { "applied" } else { "rejected" },
+    })))
+}
+
+/// First selected path of a single-selection picker; cancel is `None`.
+pub fn first_selected_path(selection: Option<std::path::PathBuf>) -> Option<String> {
+    selection.map(|path| path.to_string_lossy().into_owned())
+}
+
+/// Every selected path of a multi-selection picker; cancel is `[]`.
+pub fn selected_paths(selection: Option<Vec<std::path::PathBuf>>) -> Vec<String> {
+    selection
+        .unwrap_or_default()
+        .into_iter()
+        .map(|path| path.to_string_lossy().into_owned())
+        .collect()
+}
+
+/// Pick one folder for the add-project flow (system dialog, no JS dialog plugin).
+#[tauri::command]
+#[specta::specta]
+pub async fn repos_pick_folder() -> Result<Option<String>, BridgeError> {
+    let selection = rfd::AsyncFileDialog::new().pick_folder().await;
+    Ok(first_selected_path(selection.map(|handle| handle.path().to_path_buf())))
+}
+
+/// Pick several folders for the add-project flow.
+#[tauri::command]
+#[specta::specta]
+pub async fn repos_pick_folders() -> Result<Vec<String>, BridgeError> {
+    let selection = rfd::AsyncFileDialog::new().pick_folders().await;
+    Ok(selected_paths(selection.map(|handles| {
+        handles
+            .into_iter()
+            .map(|handle| handle.path().to_path_buf())
+            .collect()
+    })))
+}
+
+/// Pick a clone/create destination (same dialog as `pick_folder`, separate
+/// renderer entry point).
+#[tauri::command]
+#[specta::specta]
+pub async fn repos_pick_directory() -> Result<Option<String>, BridgeError> {
+    let selection = rfd::AsyncFileDialog::new().pick_folder().await;
+    Ok(first_selected_path(selection.map(|handle| handle.path().to_path_buf())))
+}
+
+/// `git --version` with the 1.5s budget from `ade_git`.
+#[tauri::command]
+#[specta::specta]
+pub async fn repos_is_git_available() -> Result<bool, BridgeError> {
+    run_blocking(|| Ok(ade_git::is_available())).await
+}
+
+/// Effective local default parent for "Create new project".
+#[tauri::command]
+#[specta::specta]
+pub async fn repos_get_default_create_project_parent(
+    state: State<'_, AppState>,
+) -> Result<String, BridgeError> {
+    let settings = state.settings_store().get();
+    let home = state
+        .app
+        .path()
+        .home_dir()
+        .map(|path| path.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    Ok(default_create_project_parent(&settings, &home))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ade_store::projects_store::ProjectsStore;
+    use serde_json::json;
+
+    struct TestDir {
+        path: std::path::PathBuf,
+    }
+
+    impl TestDir {
+        fn new(name: &str) -> Self {
+            let path = std::env::temp_dir().join(format!(
+                "ade-bridge-repos-{name}-{}",
+                std::process::id()
+            ));
+            let _ = std::fs::remove_dir_all(&path);
+            std::fs::create_dir_all(&path).expect("create test dir");
+            Self { path }
+        }
+    }
+
+    impl Drop for TestDir {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.path);
+        }
+    }
+
+    fn store(dir: &TestDir) -> ProjectsStore {
+        ProjectsStore::load(dir.path.join("projects.json"))
+    }
+
+    #[test]
+    fn kind_defaults_to_git_and_parses_known_values() {
+        assert_eq!(RepoKind::parse("folder"), Some(RepoKind::Folder));
+        assert_eq!(RepoKind::parse("nonsense").unwrap_or(RepoKind::Git), RepoKind::Git);
+    }
+
+    #[test]
+    fn resolve_add_path_keeps_folder_paths_verbatim() {
+        assert_eq!(
+            resolve_add_path("/some/folder/", RepoKind::Folder).unwrap(),
+            "/some/folder/"
+        );
+    }
+
+    #[test]
+    fn sanitize_drops_unknown_and_ssh_only_fields() {
+        let sanitized = sanitize_repo_updates(&json!({
+            "displayName": "  Renamed  ",
+            "connectionId": "ssh:box",
+            "executionHostId": "ssh:box",
+            "projectGroupOrder": 3,
+            "totallyUnknown": true
+        }));
+        assert_eq!(sanitized.get("displayName"), Some(&json!("Renamed")));
+        assert_eq!(sanitized.get("projectGroupOrder"), Some(&json!(3)));
+        assert_eq!(sanitized.len(), 2);
+    }
+
+    #[test]
+    fn sanitize_validates_enums_and_normalizes_badge_color() {
+        let sanitized = sanitize_repo_updates(&json!({
+            "badgeColor": "  #ABC ",
+            "issueSourcePreference": "elsewhere",
+            "forkSyncMode": "safe-auto",
+            "kind": "folder",
+            "externalWorktreeVisibility": "hide",
+            "agentWorktreeVisibility": "sometimes",
+            "worktreeBasePath": "   ",
+            "worktreeBaseRef": " main "
+        }));
+        assert_eq!(sanitized.get("badgeColor"), Some(&json!("#aabbcc")));
+        assert_eq!(sanitized.get("forkSyncMode"), Some(&json!("safe-auto")));
+        assert_eq!(sanitized.get("kind"), Some(&json!("folder")));
+        assert_eq!(
+            sanitized.get("externalWorktreeVisibility"),
+            Some(&json!("hide"))
+        );
+        assert_eq!(sanitized.get("worktreeBaseRef"), Some(&json!("main")));
+        assert_eq!(sanitized.get("issueSourcePreference"), None);
+        assert_eq!(sanitized.get("agentWorktreeVisibility"), None);
+        assert_eq!(sanitized.get("worktreeBasePath"), None);
+    }
+
+    #[test]
+    fn apply_treats_null_as_clear_except_for_project_group() {
+        let mut repo = json!({
+            "id": "r1",
+            "repoIcon": { "type": "emoji", "emoji": "x" },
+            "projectGroupId": "g1"
+        });
+        let updates = sanitize_repo_updates(&json!({
+            "repoIcon": null,
+            "projectGroupId": null
+        }));
+        assert!(apply_repo_updates(&mut repo, &updates));
+        assert!(repo.get("repoIcon").is_none());
+        assert_eq!(repo["projectGroupId"], Value::Null);
+    }
+
+    #[test]
+    fn update_repo_reports_missing_ids() {
+        let dir = TestDir::new("update-missing");
+        let mut store = store(&dir);
+        let updated = update_repo(&mut store, "nope", &json!({ "displayName": "x" })).unwrap();
+        assert!(updated.is_none());
+    }
+
+    #[test]
+    fn update_repo_persists_only_sanitized_fields() {
+        let dir = TestDir::new("update-persist");
+        let mut store = store(&dir);
+        store
+            .mutate_repos(|repos| {
+                repos.push(json!({ "id": "r1", "path": "/repo", "displayName": "Old" }))
+            })
+            .unwrap();
+        let updated = update_repo(
+            &mut store,
+            "r1",
+            &json!({
+                "displayName": "New",
+                "connectionId": "ssh:box",
+                "badgeColor": "not-a-color"
+            }),
+        )
+        .unwrap()
+        .expect("repo exists");
+        assert_eq!(updated["displayName"], "New");
+        assert!(updated.get("connectionId").is_none());
+        assert_eq!(store.repos()[0]["displayName"], "New");
+    }
+
+    #[test]
+    fn reorder_rejects_non_local_hosts_and_non_permutations() {
+        let dir = TestDir::new("reorder-reject");
+        let mut store = store(&dir);
+        store
+            .mutate_repos(|repos| {
+                repos.push(json!({ "id": "r1", "path": "/a" }));
+                repos.push(json!({ "id": "r2", "path": "/b" }));
+            })
+            .unwrap();
+
+        assert!(!reorder_repos_for_host(
+            &mut store,
+            &["r2".to_string(), "r1".to_string()],
+            "ssh:box"
+        )
+        .unwrap());
+        assert!(!reorder_repos_for_host(&mut store, &["r1".to_string()], "local").unwrap());
+        assert!(!reorder_repos_for_host(
+            &mut store,
+            &["r1".to_string(), "r1".to_string()],
+            "local"
+        )
+        .unwrap());
+        assert!(store.repos()[0].get("projectGroupOrder").is_none());
+    }
+
+    #[test]
+    fn reorder_writes_project_group_order_for_local() {
+        let dir = TestDir::new("reorder-apply");
+        let mut store = store(&dir);
+        store
+            .mutate_repos(|repos| {
+                repos.push(json!({ "id": "r1", "path": "/a" }));
+                repos.push(json!({ "id": "r2", "path": "/b" }));
+            })
+            .unwrap();
+        assert!(reorder_repos_for_host(
+            &mut store,
+            &["r2".to_string(), "r1".to_string()],
+            "local"
+        )
+        .unwrap());
+        let repos = store.repos();
+        let r1 = repos.iter().find(|repo| repo["id"] == "r1").unwrap();
+        let r2 = repos.iter().find(|repo| repo["id"] == "r2").unwrap();
+        assert_eq!(r1["projectGroupOrder"], 1);
+        assert_eq!(r2["projectGroupOrder"], 0);
+    }
+
+    #[test]
+    fn default_parent_uses_untouched_default_check() {
+        let home = "/Users/tester";
+        let default_workspace = ade_core::defaults::default_workspace_dir(home);
+        let untouched = json!({ "workspaceDir": default_workspace });
+        assert_eq!(
+            default_create_project_parent(&untouched, home),
+            "/Users/tester/orcinus/projects"
+        );
+
+        let configured = json!({ "workspaceDir": "/custom/worktrees" });
+        assert_eq!(
+            default_create_project_parent(&configured, home),
+            "/custom/worktrees"
+        );
+
+        let override_settings = json!({
+            "workspaceDir": default_workspace,
+            "hostSettingOverrides": { "local": { "defaultWorktreeLocation": "/override" } }
+        });
+        assert_eq!(
+            default_create_project_parent(&override_settings, home),
+            "/override"
+        );
+
+        let blank_override = json!({
+            "workspaceDir": "/custom/worktrees",
+            "hostSettingOverrides": { "local": { "defaultWorktreeLocation": "   " } }
+        });
+        assert_eq!(
+            default_create_project_parent(&blank_override, home),
+            "/custom/worktrees"
+        );
+    }
+
+    #[test]
+    fn default_parent_ignores_trailing_separator_spelling_of_the_default() {
+        let home = "/Users/tester";
+        let settings = json!({ "workspaceDir": "/Users/tester/orca/workspaces/" });
+        assert_eq!(
+            default_create_project_parent(&settings, home),
+            "/Users/tester/orcinus/projects"
+        );
+    }
+
+    #[test]
+    fn default_parent_joins_with_the_host_separator() {
+        let home = "C:\\Users\\tester\\";
+        let settings = json!({ "workspaceDir": ade_core::defaults::default_workspace_dir(home) });
+        assert_eq!(
+            default_create_project_parent(&settings, home),
+            "C:\\Users\\tester\\orcinus\\projects"
+        );
+    }
+
+    #[test]
+    fn picker_helpers_map_cancel_and_selection() {
+        assert_eq!(first_selected_path(None), None);
+        assert_eq!(
+            first_selected_path(Some(std::path::PathBuf::from("/a"))),
+            Some("/a".to_string())
+        );
+        assert_eq!(selected_paths(None), Vec::<String>::new());
+        assert_eq!(
+            selected_paths(Some(vec![
+                std::path::PathBuf::from("/a"),
+                std::path::PathBuf::from("/b")
+            ])),
+            vec!["/a".to_string(), "/b".to_string()]
+        );
+    }
+
+    #[test]
+    fn list_repos_reads_the_store() {
+        let dir = TestDir::new("list");
+        let mut store = store(&dir);
+        store
+            .mutate_repos(|repos| repos.push(json!({ "id": "r1", "path": "/a" })))
+            .unwrap();
+        assert_eq!(list_repos(&store), store.repos());
+        assert_eq!(list_repos(&store).len(), 1);
+    }
+
+    #[test]
+    fn is_git_available_matches_the_host() {
+        // The integration suite shells out to git, so the host must have it.
+        assert!(ade_git::is_available());
+    }
+}
