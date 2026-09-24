@@ -8,6 +8,7 @@ use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use tauri::{Manager, State};
 
+use crate::commands::project_groups::revoke_root_if_unused;
 use crate::commands::run_blocking;
 use crate::errors::BridgeError;
 use crate::events;
@@ -154,12 +155,6 @@ fn authorize_repo_root(fs: &FsService, path: &str) {
     }
 }
 
-fn revoke_repo_root(fs: &FsService, path: &str) {
-    if let Err(error) = fs.revoke_root(path) {
-        eprintln!("[ade-bridge] failed to revoke repo root '{path}': {error}");
-    }
-}
-
 pub fn list_repos(store: &ProjectsStore) -> Vec<Value> {
     store.repos()
 }
@@ -187,8 +182,9 @@ pub fn update_repo(
         .find(|repo| repo_id(repo) == repo_id_value))
 }
 
-/// Remove one repo and revoke its fs root. Does **not** cascade to project
-/// groups or folder workspaces (spec §5.2); the renderer decides follow-ups.
+/// Remove one repo and revoke its fs root when no other repo or folder
+/// workspace still points at it. Does **not** cascade to project groups or
+/// folder workspaces (spec §5.2); the renderer decides follow-ups.
 pub fn remove_repo(
     store: &mut ProjectsStore,
     fs: &FsService,
@@ -199,7 +195,7 @@ pub fn remove_repo(
     };
     store.mutate_repos(|repos| repos.retain(|repo| repo_id(repo) != repo_id_value))?;
     if let Some(path) = repo_path(&repo) {
-        revoke_repo_root(fs, path);
+        revoke_root_if_unused(store, fs, path);
     }
     Ok(Some(repo))
 }
@@ -908,6 +904,47 @@ mod tests {
                 std::path::PathBuf::from("/b")
             ])),
             vec!["/a".to_string(), "/b".to_string()]
+        );
+    }
+
+    #[test]
+    fn remove_repo_revokes_a_root_no_other_row_uses() {
+        let dir = TestDir::new("remove-unused-root");
+        let fs = FsService::new();
+        let mut store = store(&dir);
+        let repo_dir = dir.path.join("only");
+        std::fs::create_dir_all(&repo_dir).unwrap();
+        let path = repo_dir.to_str().unwrap();
+        store
+            .mutate_repos(|repos| repos.push(json!({ "id": "r1", "path": path })))
+            .unwrap();
+        fs.authorize_root(path).unwrap();
+
+        assert!(remove_repo(&mut store, &fs, "r1").unwrap().is_some());
+        assert!(store.repos().is_empty());
+        assert!(fs.resolve(path).is_err());
+    }
+
+    #[test]
+    fn remove_repo_keeps_a_root_another_row_still_uses() {
+        let dir = TestDir::new("remove-shared-root");
+        let fs = FsService::new();
+        let mut store = store(&dir);
+        let repo_dir = dir.path.join("shared");
+        std::fs::create_dir_all(&repo_dir).unwrap();
+        let path = repo_dir.to_str().unwrap();
+        store
+            .mutate_repos(|repos| {
+                repos.push(json!({ "id": "r1", "path": path }));
+                repos.push(json!({ "id": "r2", "path": path }));
+            })
+            .unwrap();
+        fs.authorize_root(path).unwrap();
+
+        assert!(remove_repo(&mut store, &fs, "r1").unwrap().is_some());
+        assert!(
+            fs.resolve(path).is_ok(),
+            "a root still referenced by another repo must stay authorized"
         );
     }
 

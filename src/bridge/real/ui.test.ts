@@ -3,7 +3,7 @@ import { listen } from '@tauri-apps/api/event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PreloadApi } from '../../shared/preload-api/api-types'
 import { UnimplementedBridgeError } from '../unimplemented-fallback'
-import { createUiRealApi } from './ui'
+import { createUiRealApi, UI_NOOP_SUBSCRIPTION_METHODS } from './ui'
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn() }))
@@ -83,12 +83,29 @@ describe('ui real adapter events', () => {
     await Promise.resolve()
     expect(unlisten).toHaveBeenCalledTimes(1)
   })
+
+  it.each(UI_NOOP_SUBSCRIPTION_METHODS)(
+    '%s hands back a no-op unsubscriber without listening',
+    (method) => {
+      const subscribe = createUiRealApi() as unknown as Record<
+        string,
+        (callback: () => void) => () => void
+      >
+      const unsubscribe = subscribe[method](() => {})
+      expect(typeof unsubscribe).toBe('function')
+      expect(listenMock).not.toHaveBeenCalled()
+      expect(() => unsubscribe()).not.toThrow()
+    }
+  )
 })
 
 describe('ui real adapter unimplemented surface', () => {
-  it.each(['onOpenSettings', 'onToggleLeftSidebar', 'onRequestTabCreate'] satisfies Array<
-    keyof UiApi
-  >)('rejects %s with UnimplementedBridgeError', async (method) => {
+  it.each([
+    'onOpenCrashReport',
+    'onExportPdfRequested',
+    'readClipboardText',
+    'popupMenu'
+  ] satisfies Array<keyof UiApi>)('rejects %s with UnimplementedBridgeError', async (method) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const ui = createUiRealApi() as unknown as Record<
       string,

@@ -199,7 +199,7 @@ pub fn create_folder_workspace(
         .as_deref()
         .map(str::trim)
         .filter(|value| !value.is_empty())
-        .map(|_| args.folder_path.clone().unwrap_or_default())
+        .map(str::to_string)
         .or_else(|| {
             group
                 .get("parentPath")
@@ -803,6 +803,26 @@ mod tests {
         )
         .unwrap();
         assert_eq!(named["name"], "Custom");
+    }
+
+    #[test]
+    fn create_stores_the_trimmed_folder_path() {
+        let dir = TestDir::new("create-trimmed-path");
+        let fs = FsService::new();
+        let mut store = store(&dir);
+        let group_id_value = add_group(&mut store, None);
+        let parent = dir.dir("parent");
+        let padded = format!("  {}  ", parent.to_str().unwrap());
+
+        let workspace = create_folder_workspace(
+            &mut store,
+            &fs,
+            &create_args(&group_id_value, Some(&padded)),
+            1,
+        )
+        .unwrap();
+
+        assert_eq!(workspace["folderPath"], parent.to_str().unwrap());
     }
 
     #[test]

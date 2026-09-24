@@ -327,7 +327,8 @@ pub fn is_ignored_nested_repo_directory(
             ignored = !rule.negate;
         }
     }
-    ignored || should_skip_nested_repo_directory(name, segments.len() as u64 - 1)
+    ignored
+        || should_skip_nested_repo_directory(name, (segments.len() as u64).saturating_sub(1))
 }
 
 /// Glob match for one path segment: only `*` and `?` are wildcards, everything
@@ -643,6 +644,12 @@ mod tests {
             &segments(&["active", "ignored"]),
             &rules
         ));
+    }
+
+    #[test]
+    fn empty_segments_do_not_underflow_ignored_directory_depth() {
+        let rules = parse_nested_repo_gitignore_rules("ignored\n", &[]);
+        assert!(!is_ignored_nested_repo_directory("ignored", &[], &rules));
     }
 
     #[test]

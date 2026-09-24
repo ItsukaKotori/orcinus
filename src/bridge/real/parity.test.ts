@@ -93,33 +93,322 @@ afterEach(() => {
 
 type SurfaceCase = {
   domain: keyof PreloadApi
-  methods: string[]
+  /** Methods the renderer probes with `typeof` or calls/subscribes unconditionally. */
+  explicit: string[]
+  /** Methods the A host does not back; they must stay on the rejecting fallback. */
+  missing: string[]
 }
 
+const uiNoopSubscriptions = [
+  'onActivateWorktree',
+  'onAppMenuPaste',
+  'onAppMenuSelectionAction',
+  'onBrowserHistoryNavigate',
+  'onCloseActiveTab',
+  'onCloseFloatingItem',
+  'onCloseSessionTab',
+  'onCloseTerminal',
+  'onCreateTerminal',
+  'onCtrlTabKeyDown',
+  'onCtrlTabKeyUp',
+  'onDeleteCurrentWorkspace',
+  'onEditableContextPaste',
+  'onFileDrop',
+  'onFindInBrowserPage',
+  'onFocusBrowserAddressBar',
+  'onFocusEditorTab',
+  'onFocusTerminal',
+  'onFullscreenChanged',
+  'onHardReloadBrowserPage',
+  'onJumpToTabIndex',
+  'onJumpToWorktreeIndex',
+  'onMaximizeChanged',
+  'onMobileMarkdownRequest',
+  'onMoveSessionTab',
+  'onNewBrowserTab',
+  'onNewMarkdownTab',
+  'onNewTerminalTab',
+  'onOpenDiffFromMobile',
+  'onOpenFileFromMobile',
+  'onOpenMarkdownFiles',
+  'onOpenNewWorkspace',
+  'onOpenQuickOpen',
+  'onOpenSettings',
+  'onOpenTasks',
+  'onReloadBrowserPage',
+  'onRenameTerminal',
+  'onRequestTabClose',
+  'onRequestTabCreate',
+  'onRequestTabSetProfile',
+  'onRequestTerminalCreate',
+  'onRequestTerminalTabMount',
+  'onResumeSleepingAgents',
+  'onRichMarkdownContextCommand',
+  'onScrollBrowserPage',
+  'onSelectFloatingIndex',
+  'onSessionTabCloseRequest',
+  'onSleepWorktree',
+  'onSplitTerminal',
+  'onSwitchRecentTab',
+  'onSwitchTab',
+  'onSwitchTabAcrossAllTypes',
+  'onSwitchTerminalTab',
+  'onSystemResumed',
+  'onTerminalShortcutCaptured',
+  'onTerminalTabCloseRequest',
+  'onTerminalZoom',
+  'onToggleFloatingTerminal',
+  'onToggleLeftSidebar',
+  'onToggleQuickCommandsMenu',
+  'onToggleRightSidebar',
+  'onToggleStatusBar',
+  'onToggleWorktreePalette',
+  'onWindowCloseRequested',
+  'onWorktreeHistoryNavigate',
+  'onZoomBrowserPage'
+]
+
+const surfaceCases: SurfaceCase[] = [
+  {
+    domain: 'repos',
+    explicit: [
+      'list',
+      'add',
+      'update',
+      'remove',
+      'reorderForHost',
+      'pickFolder',
+      'pickFolders',
+      'pickDirectory',
+      'isGitAvailable',
+      'getDefaultCreateProjectParent',
+      'onChanged',
+      'onCloneProgress'
+    ],
+    missing: [
+      'clone',
+      'cloneRemote',
+      'createRemote',
+      'addRemote',
+      'create',
+      'cloneAbort',
+      'getGitUsername',
+      'getBaseRefDefault',
+      'searchBaseRefs',
+      'searchBaseRefDetails',
+      'reorder',
+      'removeForHost'
+    ]
+  },
+  {
+    domain: 'fs',
+    explicit: [
+      'readDir',
+      'readFile',
+      'writeFile',
+      'createFile',
+      'createDir',
+      'rename',
+      'copy',
+      'deletePath',
+      'stat',
+      'pathExists',
+      'pathsExist',
+      'listFiles',
+      'cancelListFiles',
+      'search',
+      'watchWorktree',
+      'unwatchWorktree',
+      'listMarkdownDocuments',
+      'authorizeExternalPath',
+      'onFsChanged',
+      'onLocalLogTailChanged'
+    ],
+    missing: [
+      'downloadFile',
+      'downloadFolder',
+      'saveDownloadedFile',
+      'startDownloadedFile',
+      'appendDownloadedFileChunk',
+      'finishDownloadedFile',
+      'cancelDownloadedFile',
+      'readLocalLogTail',
+      'startLocalLogTail',
+      'stopLocalLogTail',
+      'importExternalPaths',
+      'stageExternalPathsForRuntimeUpload',
+      'resolveDroppedPathsForAgent',
+      'runPythonCell'
+    ]
+  },
+  {
+    domain: 'projects',
+    explicit: ['list', 'listHostSetups', 'update'],
+    missing: ['createHostSetup', 'setupExistingFolder', 'updateHostSetup', 'deleteHostSetup']
+  },
+  {
+    domain: 'worktrees',
+    explicit: [
+      'list',
+      'listAll',
+      'listDetected',
+      'listKnownForExecutionHost',
+      'forgetRemovedForExecutionHost',
+      'cancelListDetected',
+      'onChanged',
+      'onHeadIdentitiesChanged',
+      'onBaseStatus',
+      'onRemoteBranchConflict',
+      'onCreateProgress',
+      'onGitStatusMetadataChanged'
+    ],
+    missing: [
+      'create',
+      'remove',
+      'adoptProvisionedRoot',
+      'prefetchCreateBase',
+      'resolvePrBase',
+      'resolveMrBase',
+      'forgetLocal',
+      'forceDeletePreservedBranch',
+      'updateMeta',
+      'listLineage',
+      'listLineageForHost',
+      'updateLineage',
+      'persistSortOrder',
+      'getBranchRenameFailureOutput',
+      'listRetiredNames'
+    ]
+  },
+  {
+    domain: 'settings',
+    explicit: ['get', 'getSync', 'set', 'onChanged'],
+    missing: [
+      'setActiveRuntimeEnvironmentPreference',
+      'updatePRBotAuthorOverride',
+      'listFonts',
+      'previewGhosttyImport',
+      'previewWarpThemeImport'
+    ]
+  },
+  {
+    domain: 'ui',
+    explicit: [
+      'get',
+      'set',
+      'setWithAck',
+      'recordFeatureInteraction',
+      'onStateChanged',
+      ...uiNoopSubscriptions
+    ],
+    missing: [
+      'consumePendingOpenSettings',
+      'consumePendingMarkdownFileOpens',
+      'onOpenCrashReport',
+      'onExportPdfRequested',
+      'replyTabCreate',
+      'replyTabSetProfile',
+      'replyTabClose',
+      'replyTerminalCreate',
+      'respondSessionTabClose',
+      'respondMobileMarkdownRequest',
+      'respondTerminalTabClose',
+      'readClipboardText',
+      'readSelectionClipboardText',
+      'saveClipboardImageAsTempFile',
+      'readClipboardImageThumbnail',
+      'writeClipboardText',
+      'writeTerminalClipboardText',
+      'writeSelectionClipboardText',
+      'writeClipboardImage',
+      'performNativePaste',
+      'performNativeSelectionAction',
+      'writeClipboardFile',
+      'getZoomLevel',
+      'setZoomLevel',
+      'syncTrafficLights',
+      'setMarkdownEditorFocused',
+      'setRichMarkdownContextMenuTarget',
+      'setTerminalInputFocused',
+      'setFloatingFocus',
+      'setShortcutRecorderFocused',
+      'minimize',
+      'maximize',
+      'isMaximized',
+      'requestClose',
+      'popupMenu',
+      'confirmWindowClose',
+      'notifyWindowRevealed'
+    ]
+  },
+  {
+    domain: 'app',
+    explicit: ['getIdentity'],
+    missing: [
+      'relaunch',
+      'restart',
+      'reload',
+      'stageBeforeUnloadSync',
+      'awaitBeforeUnloadCheckpoint',
+      'awaitFirstWindowStartupServices',
+      'awaitGitEnvironmentStartupBarrier',
+      'prepareTerminalStartupRestoration',
+      'recoverLegacyWorkerTerminalsForRendererStartup',
+      'startupDiagnostic',
+      'getKeyboardInputSourceId',
+      'getMacCapturedDigitRowChords',
+      'getKeyboardLayoutSnapshot',
+      'onKeyboardLayoutChanged',
+      'setUnreadDockBadgeCount',
+      'getFloatingTerminalCwd',
+      'getFloatingMarkdownDirectory',
+      'pickFloatingMarkdownDocument',
+      'pickFloatingWorkspaceDirectory',
+      'writeTerminalRenderDesyncEvidence'
+    ]
+  },
+  { domain: 'platform', explicit: ['get'], missing: [] }
+]
+
 describe('mock/real parity: method surface', () => {
-  it.each<SurfaceCase>([
-    {
-      domain: 'repos',
-      methods: ['list', 'add', 'update', 'remove', 'reorderForHost', 'pickFolder', 'onChanged']
-    },
-    { domain: 'fs', methods: ['readDir', 'readFile', 'writeFile', 'onFsChanged', 'downloadFile'] },
-    { domain: 'projects', methods: ['list', 'listHostSetups', 'update'] },
-    {
-      domain: 'worktrees',
-      methods: ['list', 'listAll', 'onChanged', 'create', 'listDetected']
-    },
-    { domain: 'settings', methods: ['get', 'getSync', 'set', 'onChanged'] },
-    { domain: 'ui', methods: ['get', 'set', 'recordFeatureInteraction', 'onStateChanged'] },
-    { domain: 'app', methods: ['getIdentity', 'relaunch'] },
-    { domain: 'platform', methods: ['get'] }
-  ])('$domain exposes every contract method in both modes', ({ domain, methods }) => {
+  it.each(surfaceCases)('$domain explicitly implements every renderer-probed method', ({
+    domain,
+    explicit
+  }) => {
     const mock = createMockAdeApi()[domain] as unknown as Record<string, unknown>
     const real = realApiFor(domain) as unknown as Record<string, unknown>
-    for (const method of methods) {
-      expect(typeof mock[method]).toBe('function')
-      expect(typeof real[method]).toBe('function')
+    for (const method of explicit) {
+      expect(
+        Object.prototype.hasOwnProperty.call(real, method),
+        `${domain}.${method} must be explicitly implemented in real mode`
+      ).toBe(true)
+      expect(typeof real[method], `${domain}.${method} must be a function`).toBe('function')
+      // Optional contract methods may be absent from the mock inventory; when
+      // the mock does define one, both modes must agree it is a function.
+      if (mock[method] !== undefined) {
+        expect(typeof mock[method], `${domain}.${method} in mock mode`).toBe('function')
+      }
     }
   })
+
+  it.each(surfaceCases.filter((surfaceCase) => surfaceCase.missing.length > 0))(
+    '$domain rejects methods the host does not back with UnimplementedBridgeError',
+    async ({ domain, explicit, missing }) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const real = realApiFor(domain) as unknown as Record<string, (...args: unknown[]) => unknown>
+      for (const method of missing) {
+        expect(explicit).not.toContain(method)
+        expect(
+          Object.prototype.hasOwnProperty.call(real, method),
+          `${domain}.${method} must stay on the fallback`
+        ).toBe(false)
+        await expect(Promise.resolve(real[method]())).rejects.toBeInstanceOf(
+          UnimplementedBridgeError
+        )
+      }
+      warn.mockRestore()
+    }
+  )
 })
 
 type ShapeCase = {

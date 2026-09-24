@@ -19,6 +19,9 @@ export function createReposRealApi(): RepositoryApi {
     pickDirectory: () => invokeCommand('repos_pick_directory'),
     isGitAvailable: () => invokeCommand('repos_is_git_available'),
     getDefaultCreateProjectParent: () => invokeCommand('repos_get_default_create_project_parent'),
-    onChanged: (callback) => subscribeToEvent('repos:changed', () => callback())
+    onChanged: (callback) => subscribeToEvent('repos:changed', () => callback()),
+    // Why: the renderer subscribes unconditionally, but A never clones, so the
+    // subscription must still hand back a working unsubscribe handle.
+    onCloneProgress: () => () => {}
   })
 }

@@ -104,6 +104,13 @@ describe('repos real adapter events', () => {
     await Promise.resolve()
     expect(unlisten).toHaveBeenCalledTimes(1)
   })
+
+  it('treats onCloneProgress as a no-op subscription without listening', () => {
+    const unsubscribe = createReposRealApi().onCloneProgress(() => {})
+    expect(typeof unsubscribe).toBe('function')
+    expect(listenMock).not.toHaveBeenCalled()
+    expect(() => unsubscribe()).not.toThrow()
+  })
 })
 
 describe('repos real adapter unimplemented surface', () => {

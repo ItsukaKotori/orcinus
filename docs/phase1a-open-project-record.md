@@ -88,6 +88,7 @@
 | `ui.setWithAck` 失败语义 | 写盘失败 reject 且不广播 `ui:stateChanged`（内存已合并；后续变更会再次触发写与广播）；flush 在命令线程同步阻塞；调度器 `last_error` 为全局 | `ade-bridge` 失败注入测试；Task 11 report |
 | `workspaceCleanup` 合并深度 | 实现按绑定 spec §5.4 深合并 `workspaceCleanup`（`ade-store` `DEEP_MERGE_KEYS`）；oracle 为顶层浅合并 `{ ...current, ...incoming }`（`orca/src/shared/workspace-cleanup-ui-state.ts` 的 `mergeWorkspaceCleanupUIState`，调用点 `orca/src/main/persistence/applying-settings/ui-state-update.ts:101`）。spec 为准，差异记录 | `ade-store` `set_deep_merges_workspace_cleanup` |
 | `projects.update` 不落盘 | 仅回显 Windows 运行偏好字段（spec §10.4） | `src/bridge/real/projects.ts` |
+| 项目默认父目录 ≠ `workspaceDir` | `workspaceDir` 默认仍为 `{{HOME}}/orca/workspaces`（TS 默认源 `src/shared/constants.ts`），而 `repos_get_default_create_project_parent` 在未改默认时返回 `{{HOME}}/orcinus/projects`（Orcinus 品牌，spec §10.3）。二者有意不同且用户可见：新建项目默认落在 `orcinus/projects`，工作区仍在 `orca/workspaces` | `ade-bridge` `default_parent_*` 测试；`src/bridge/real/repos.ts` |
 | `platform.osRelease` 前缀 | `uname -sr` 结果带 `Darwin ` 前缀；Windows osRelease 为空字符串；arch 为 Rust 词表 | Task 8 report；`ade-bridge` platform 测试 |
 | `app.getIdentity` 超集 | 契约 7 字段外多一个 `version`（`CARGO_PKG_VERSION`），TS 结构类型无害 | `app.test.ts` 以 `toMatchObject` 断言 |
 | `schemaVersion` 口径 | 仅 `projects.json` 顶层；settings/ui 为纯领域对象（Ruling 8） | spec §4.1 |
@@ -156,6 +157,10 @@ Running `target/debug/orcinus-app`
 | 7 | 重启后项目/分组/文件夹工作区/选中与布局恢复 | 启动加载 + 持久化 repo 预授权测试 | **待用户复核** |
 | 8 | `authorizeExternalPath` 之外路径读取被拒（文案正确） | `PathAccessDenied` `{message}` 单测/集成 | **待用户复核** |
 | 9 | `VITE_ADE_BRIDGE=mock pnpm dev` 回退 mock 行为正常 | `create-api.test.ts`（默认 real / env mock / 显式 mode）+ 本次 mock 启动冒烟 | **启动已验证；交互行为待用户复核** |
+
+补充待复核项（终审记录，用户交互验收时执行）：
+
+- 大 payload `fs.read_file` 经真实 Tauri IPC 的往返：文本至 ~50 MiB、图片 base64（大文件/大图在 WebView 与命令线程间的序列化/内存表现）；自动化目前只覆盖小文件与契约层。
 
 ## 6. 延后项
 

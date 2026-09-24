@@ -111,6 +111,13 @@ describe('fs real adapter events', () => {
     await Promise.resolve()
     expect(unlisten).toHaveBeenCalledTimes(1)
   })
+
+  it('treats onLocalLogTailChanged as a no-op subscription without listening', () => {
+    const unsubscribe = createFsRealApi().onLocalLogTailChanged(() => {})
+    expect(typeof unsubscribe).toBe('function')
+    expect(listenMock).not.toHaveBeenCalled()
+    expect(() => unsubscribe()).not.toThrow()
+  })
 })
 
 describe('fs real adapter unimplemented surface', () => {

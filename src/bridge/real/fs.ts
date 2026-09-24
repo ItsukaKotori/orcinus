@@ -27,6 +27,9 @@ export function createFsRealApi(): FilesystemApi['fs'] {
     unwatchWorktree: (args) => invokeCommand('fs_unwatch_worktree', { args }),
     listMarkdownDocuments: (args) => invokeCommand('fs_list_markdown_documents', { args }),
     authorizeExternalPath: (args) => invokeCommand('fs_authorize_external_path', { args }),
-    onFsChanged: (callback) => subscribeToEvent('fs:changed', callback)
+    onFsChanged: (callback) => subscribeToEvent('fs:changed', callback),
+    // Why: the renderer subscribes unconditionally, but A has no log-tail
+    // surface yet, so the subscription must still hand back an unsubscriber.
+    onLocalLogTailChanged: () => () => {}
   })
 }
