@@ -1,9 +1,10 @@
 use std::collections::{HashMap, HashSet};
 use std::ffi::OsStr;
 use std::fs;
+use std::io;
 use std::path::{Component, Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
+use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 use std::sync::{Arc, Mutex, MutexGuard, Weak};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -19,8 +20,9 @@ pub const WATCH_BATCH_TRAILING_MS: u64 = 150;
 pub const WATCH_BATCH_MAX_WAIT_MS: u64 = 500;
 /// Raw events beyond this count in one batch collapse to a single `overflow`.
 pub const MAX_BATCHED_WATCHER_EVENTS: usize = 5000;
-/// High-churn directories suppressed at the watcher level, mirroring the
-/// oracle `WATCHER_IGNORE_DIRS`.
+/// High-churn directories filtered out before batching (notify offers no
+/// daemon-side exclusion), so their events never count toward the batch cap
+/// nor reach the renderer; mirrors the oracle `WATCHER_IGNORE_DIRS`.
 pub const WATCHER_IGNORE_DIRS: &[&str] = &[
     ".git",
     "node_modules",
@@ -226,7 +228,8 @@ impl FsChangeEvent {
 
 /// Insertion-ordered map of path -> last observed event kind. Rust's
 /// `HashMap` has no stable iteration order, and the oracle emits paths in the
-/// order they were last inserted, so slots plus an index keep that contract.
+/// order of their first insertion (a JS `Map` keeps the original position when
+/// a key is set again), so slots plus an index keep that contract.
 #[derive(Default)]
 struct OrderedLastEvents {
     slots: Vec<Option<(PathBuf, FsChangeKind)>>,
@@ -383,10 +386,37 @@ where
         .collect()
 }
 
-/// `stat` the path, following symlinks; failures (vanished file, permission
-/// error) fall back to `None`, which the renderer treats as "file".
-fn probe_is_directory(path: &Path) -> Option<bool> {
-    fs::metadata(path).map(|metadata| metadata.is_dir()).ok()
+/// Outcome of stat-ing an event path at flush time.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PathProbe {
+    Directory,
+    File,
+    /// The path no longer exists; a surviving create/update for it is stale.
+    Missing,
+    /// The path could not be classified (dangling symlink, permission error,
+    /// fd exhaustion): keep the reported kind and leave `isDirectory` unset.
+    Unknown,
+}
+
+/// Classify the path, following symlinks for the file/directory answer.
+fn probe_path(path: &Path) -> PathProbe {
+    match fs::metadata(path) {
+        Ok(metadata) => {
+            if metadata.is_dir() {
+                PathProbe::Directory
+            } else {
+                PathProbe::File
+            }
+        }
+        Err(_) => match fs::symlink_metadata(path) {
+            // Why: only NotFound means the path is gone. A dangling symlink is
+            // still a directory entry (parcel's O_SYMLINK existence probe), and
+            // EACCES/EPERM/EMFILE/EIO must not turn a create/update into a
+            // delete.
+            Err(error) if error.kind() == io::ErrorKind::NotFound => PathProbe::Missing,
+            _ => PathProbe::Unknown,
+        },
+    }
 }
 
 // ── Clock ────────────────────────────────────────────────────────────
@@ -512,12 +542,12 @@ impl FsWatcher {
             return;
         }
 
-        match install_root_watch(&key) {
+        let ignore_roots = ignore_roots_for(&key);
+        match install_root_watch(&key, &ignore_roots) {
             Ok((mut root_watch, receiver)) => {
                 root_watch.subscribers.insert(subscriber_id.to_string());
                 roots.insert(key.clone(), root_watch);
                 drop(roots);
-                let ignore_roots = ignore_roots_for(&key);
                 let state = Arc::downgrade(&self.inner);
                 thread::spawn(move || run_flush_worker(key, ignore_roots, state, receiver));
             }
@@ -605,8 +635,12 @@ impl WatcherState {
     }
 }
 
-fn install_root_watch(root: &Path) -> notify::Result<(RootWatch, Receiver<WatchMsg>)> {
+fn install_root_watch(
+    root: &Path,
+    ignore_roots: &[PathBuf],
+) -> notify::Result<(RootWatch, Receiver<WatchMsg>)> {
     let (sender, receiver) = mpsc::channel();
+    let filter_roots = ignore_roots.to_vec();
     let mut watcher = notify::recommended_watcher(move |result: notify::Result<Event>| {
         match result {
             Ok(event) => {
@@ -617,7 +651,7 @@ fn install_root_watch(root: &Path) -> notify::Result<(RootWatch, Receiver<WatchM
                     return;
                 }
                 for raw in raw_events_from_notify(event) {
-                    let _ = sender.send(WatchMsg::Raw(raw));
+                    forward_raw_event(&filter_roots, &sender, raw);
                 }
             }
             Err(_) => {
@@ -727,13 +761,15 @@ fn flush_batch(
             if event.kind == FsChangeKind::Delete {
                 return (FsChangeKind::Delete, None);
             }
-            match probe_is_directory(Path::new(&event.absolute_path)) {
-                Some(is_directory) => (event.kind, Some(is_directory)),
+            match probe_path(Path::new(&event.absolute_path)) {
+                PathProbe::Directory => (event.kind, Some(true)),
+                PathProbe::File => (event.kind, Some(false)),
                 // Why: FSEvents coalesces a delete's flags with create/modify
                 // bits, so the surviving last event can be a create/update for
-                // a path that no longer exists; a failed stat downgrades it to
-                // delete (parcel's ambiguous-flag stat does the same).
-                None => (FsChangeKind::Delete, None),
+                // a path that no longer exists; only a NotFound stat downgrades
+                // it to delete (parcel's ambiguous-flag stat does the same).
+                PathProbe::Missing => (FsChangeKind::Delete, None),
+                PathProbe::Unknown => (event.kind, None),
             }
         });
         coalesced
@@ -785,6 +821,28 @@ fn resolve_ambiguous_rename(path: PathBuf) -> RawEvent {
         RawEvent::Create(path)
     } else {
         RawEvent::Delete(path)
+    }
+}
+
+/// Drop ignored-directory events before they reach the batch counter, so a
+/// `node_modules`/`.git` storm can neither fill the 5000-event cap nor emit a
+/// spurious overflow. A rename is dropped only when both sides are ignored;
+/// coalesce later discards whichever side is ignored.
+fn forward_raw_event(ignore_roots: &[PathBuf], sender: &Sender<WatchMsg>, event: RawEvent) {
+    if raw_event_is_ignored(ignore_roots, &event) {
+        return;
+    }
+    let _ = sender.send(WatchMsg::Raw(event));
+}
+
+fn raw_event_is_ignored(ignore_roots: &[PathBuf], event: &RawEvent) -> bool {
+    match event {
+        RawEvent::Create(path) | RawEvent::Update(path) | RawEvent::Delete(path) => {
+            is_ignored_path(ignore_roots, path)
+        }
+        RawEvent::Rename { from, to } => {
+            is_ignored_path(ignore_roots, from) && is_ignored_path(ignore_roots, to)
+        }
     }
 }
 
@@ -1065,16 +1123,34 @@ mod tests {
     }
 
     #[test]
-    fn probe_is_directory_distinguishes_file_directory_and_missing() {
+    fn probe_path_classifies_existing_missing_and_unstatable() {
         let dir = TempDir::new("probe");
         let file = dir.join("file.txt");
         fs::write(&file, "x").expect("write file");
         let sub = dir.join("sub");
         fs::create_dir(&sub).expect("create dir");
 
-        assert_eq!(probe_is_directory(&file), Some(false));
-        assert_eq!(probe_is_directory(&sub), Some(true));
-        assert_eq!(probe_is_directory(&dir.join("missing.txt")), None);
+        assert_eq!(probe_path(&file), PathProbe::File);
+        assert_eq!(probe_path(&sub), PathProbe::Directory);
+        assert_eq!(probe_path(&dir.join("missing.txt")), PathProbe::Missing);
+        // ENOTDIR: a non-NotFound stat error must stay Unknown, not Missing.
+        assert_eq!(
+            probe_path(&file.join("child")),
+            PathProbe::Unknown,
+            "a non-NotFound stat failure must not be treated as a deletion"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn probe_path_treats_dangling_symlink_as_unknown() {
+        let dir = TempDir::new("probe-symlink");
+        let dangling = dir.join("dangling-link");
+        std::os::unix::fs::symlink(dir.join("missing-target"), &dangling).expect("create symlink");
+
+        // Why: a dangling symlink is still a directory entry (parcel's
+        // O_SYMLINK probe), so it must not downgrade a create/update.
+        assert_eq!(probe_path(&dangling), PathProbe::Unknown);
     }
 
     #[test]
@@ -1148,6 +1224,81 @@ mod tests {
         assert_eq!(payloads[0].events.len(), 1);
         assert_eq!(payloads[0].events[0].kind, FsChangeKind::Delete);
         assert_eq!(payloads[0].events[0].is_directory, None);
+    }
+
+    #[test]
+    fn flush_keeps_kind_for_unstatable_path() {
+        let dir = TempDir::new("flush-unstatable");
+        let file = dir.join("file.txt");
+        fs::write(&file, "x").expect("write file");
+        // ENOTDIR makes stat fail with a non-NotFound error.
+        let unstatable = file.join("child");
+
+        let watcher = FsWatcher::new();
+        let (payloads, callback) = payload_sink();
+        watcher.subscribe(callback);
+        watcher.watch(dir.str(), "subscriber");
+
+        let mut buffer = BatchBuffer::default();
+        buffer.push(RawEvent::Create(unstatable.clone()));
+        flush_batch(
+            dir.path(),
+            &[dir.path().to_path_buf()],
+            &watcher.inner,
+            &mut buffer,
+        );
+
+        let payloads = lock(&payloads);
+        assert_eq!(payloads.len(), 1);
+        assert_eq!(payloads[0].events.len(), 1);
+        assert_eq!(payloads[0].events[0].kind, FsChangeKind::Create);
+        assert_eq!(payloads[0].events[0].is_directory, None);
+    }
+
+    #[test]
+    fn ignored_directory_events_are_dropped_before_batching() {
+        let ignore_roots = vec![PathBuf::from(ROOT)];
+        let (sender, receiver) = mpsc::channel();
+        for index in 0..(MAX_BATCHED_WATCHER_EVENTS + 10) {
+            forward_raw_event(
+                &ignore_roots,
+                &sender,
+                create(&format!("/work/node_modules/pkg-{index}.js")),
+            );
+        }
+        assert!(
+            receiver.try_recv().is_err(),
+            "an ignored-directory storm must not reach the batch counter"
+        );
+
+        forward_raw_event(&ignore_roots, &sender, create("/work/src/main.rs"));
+        assert!(matches!(
+            receiver.try_recv(),
+            Ok(WatchMsg::Raw(RawEvent::Create(path))) if path == Path::new("/work/src/main.rs")
+        ));
+    }
+
+    #[test]
+    fn ignored_rename_is_dropped_only_when_both_sides_are_ignored() {
+        let ignore_roots = vec![PathBuf::from(ROOT)];
+        let (sender, receiver) = mpsc::channel();
+
+        forward_raw_event(
+            &ignore_roots,
+            &sender,
+            rename("/work/node_modules/a.js", "/work/node_modules/b.js"),
+        );
+        assert!(receiver.try_recv().is_err());
+
+        forward_raw_event(
+            &ignore_roots,
+            &sender,
+            rename("/work/src/a.rs", "/work/node_modules/a.rs"),
+        );
+        assert!(matches!(
+            receiver.try_recv(),
+            Ok(WatchMsg::Raw(RawEvent::Rename { .. }))
+        ));
     }
 
     #[test]
