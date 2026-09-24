@@ -96,3 +96,4 @@
 6. **PTY spike minor**：宿主设计前处理 CPR 扫描尾部、约 9% 字节盲区、detached reader thread（见 `docs/spikes/2026-09-14-pty-throughput.md`）。
 7. **清单剩余项**：rpc-contract / CLI / relay 死树、i18n 键、store 切片、composer 运行目标决策（见上文「Phase 1 建议」1–9）。
 8. **披露的未验证残留**：GUI 交互检查、Windows 补丁/构建验证、CEF no-go 用户确认 + spec §10.1 回写。
+9. **子项目 A 接真状态**（2026-09-24）：fs/repos/projects（TS 投影）/projectGroups/folderWorkspaces/settings/ui/worktrees（最小）/platform/app 已由真实 IPC 承接（命令面 51，`src/bridge/real/*`）；其余命名空间按 spec §2.2 保持 mock 响亮未实现；mock 残渣清理仍延后（spec §9，Phase 4）。记录见 `docs/phase1a-open-project-record.md`。
