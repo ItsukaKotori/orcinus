@@ -37,7 +37,7 @@
 | 11 | `301f078` | `ui_set_with_ack` 与契约测试（审查修复） |
 | 12 | 本提交 | 全绿门禁、手工验收（自动化部分）与收尾记录 |
 
-截至 Task 11：分支 diff 93 文件，+21925/−54（`git diff --shortstat main...301f078`）。每个任务均经独立审查（16 份 review diff 存于证据目录）；fix round 提交即上表「审查修复」行。
+截至 Task 11：分支 diff 93 文件，+21925/−54（`git diff --shortstat main...301f078`）。Task 1–11 均经独立审查，共 **19 份** review 包（`review-*.diff` 存于证据目录，`review-c01bb4c..7705338.diff` … `review-a1ebc74..301f078.diff`）；Task 0 为纯 setup、按 Ruling 6 不派任务审查；本记录提交时 Task 12 审查尚未开始（其后生成 `review-301f078..cec2ab4.diff`）。fix round 提交即上表「审查修复」行。
 
 ## 2. Crate 与命令面
 
@@ -86,6 +86,7 @@
 | 搜索每文件上限语义 | 按「匹配条目」100 计，而非 `rg --max-count` 的「行」100；单行大量命中比 oracle 少报（更保守） | `PER_FILE_MAX_MATCHES`；Task 6 report |
 | FsWatcher macOS 注记 | FSEvents 会把 delete 与 create/modify 位合并，flush 时对 create/update 做 stat 探测、`NotFound` 降级 delete（对齐 parcel）；FSEvents 上报 canonical 路径（`/private/var/...`）不重写；忽略过滤前置于 notify 回调，`node_modules` 风暴不打爆 5000 overflow 上限 | Task 7 report；`ade-fs/tests/watch.rs` |
 | `ui.setWithAck` 失败语义 | 写盘失败 reject 且不广播 `ui:stateChanged`（内存已合并；后续变更会再次触发写与广播）；flush 在命令线程同步阻塞；调度器 `last_error` 为全局 | `ade-bridge` 失败注入测试；Task 11 report |
+| `workspaceCleanup` 合并深度 | 实现按绑定 spec §5.4 深合并 `workspaceCleanup`（`ade-store` `DEEP_MERGE_KEYS`）；oracle 为顶层浅合并 `{ ...current, ...incoming }`（`orca/src/shared/workspace-cleanup-ui-state.ts` 的 `mergeWorkspaceCleanupUIState`，调用点 `orca/src/main/persistence/applying-settings/ui-state-update.ts:101`）。spec 为准，差异记录 | `ade-store` `set_deep_merges_workspace_cleanup` |
 | `projects.update` 不落盘 | 仅回显 Windows 运行偏好字段（spec §10.4） | `src/bridge/real/projects.ts` |
 | `platform.osRelease` 前缀 | `uname -sr` 结果带 `Darwin ` 前缀；Windows osRelease 为空字符串；arch 为 Rust 词表 | Task 8 report；`ade-bridge` platform 测试 |
 | `app.getIdentity` 超集 | 契约 7 字段外多一个 `version`（`CARGO_PKG_VERSION`），TS 结构类型无害 | `app.test.ts` 以 `toMatchObject` 断言 |
@@ -187,6 +188,13 @@ Running `target/debug/orcinus-app`
 | 12 | （本次）无新增 minor |
 
 完整条目与理由见证据目录 `progress.md` 与各任务报告。
+
+**子项目 B 对接需知（从仅存于 gitignored 任务报告的偏差升格，一行一项）：**
+
+- **T9 worktree git 失败**：`worktrees_list/list_all` fail-fast（reject），oracle 降级返回 `[]`——B 接入前需决定保持或改降级。
+- **T6 每文件搜索上限**：按匹配条目计 100（`PER_FILE_MAX_MATCHES`），rg `--max-count` 按行计；单行多命中会少报。
+- **T7 macOS FSEvents**：delete 位与 create/modify 合并时按 stat 探测降级 delete；事件路径为 canonical 路径（如 `/private/var/...`）不重写。
+- **T10 import/NestedRepo**：`project_groups_import_nested` 在 async runtime 与 projects 锁内跑 git 子进程（阻塞 IO，有界非死锁）；zod 校验存在宽松点（`repoIcon` 等未深校验、空 id 口径不一致）。
 
 ## 7. 收尾状态
 
