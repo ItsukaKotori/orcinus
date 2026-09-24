@@ -13,6 +13,32 @@ pub fn normalize_for_comparison(path: &str) -> String {
     }
 }
 
+/// Whether `candidate` is `root` itself or sits below it at a segment boundary
+/// (oracle `isPathInsideOrEqual`): `/root-other` is not inside `/root`.
+pub fn is_path_inside_or_equal(root: &str, candidate: &str) -> bool {
+    let root = normalize_for_comparison(root);
+    let candidate = normalize_for_comparison(candidate);
+    if candidate == root {
+        return true;
+    }
+    let root_with_boundary = if root == "/" || is_windows_drive_root(&root) {
+        root
+    } else {
+        format!("{root}/")
+    };
+    candidate.starts_with(&root_with_boundary)
+}
+
+fn is_windows_drive_root(path: &str) -> bool {
+    let bytes = path.as_bytes();
+    let drive = bytes.len() >= 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':';
+    match bytes.len() {
+        2 => drive,
+        3 => drive && bytes[2] == b'/',
+        _ => false,
+    }
+}
+
 /// Trailing separators are dropped so `/repo/` and `/repo` compare equal; the
 /// POSIX root `/` and Windows drive roots (`C:/`) are preserved (oracle
 /// `trimRuntimePathTrailingSlash`).
@@ -65,5 +91,16 @@ mod tests {
         assert_eq!(normalize_for_comparison("/"), "/");
         assert_eq!(normalize_for_comparison("///"), "/");
         assert_eq!(normalize_for_comparison("C:/"), if cfg!(windows) { "c:/" } else { "C:/" });
+    }
+
+    #[test]
+    fn path_inside_requires_a_segment_boundary() {
+        assert!(is_path_inside_or_equal("/root", "/root"));
+        assert!(is_path_inside_or_equal("/root/", "/root"));
+        assert!(is_path_inside_or_equal("/root", "/root/a/b"));
+        assert!(!is_path_inside_or_equal("/root", "/root-other"));
+        assert!(!is_path_inside_or_equal("/root", "/other"));
+        assert!(is_path_inside_or_equal("/", "/anything"));
+        assert!(!is_path_inside_or_equal("/root", "/"));
     }
 }

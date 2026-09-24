@@ -73,6 +73,35 @@ export const commands = {
 	worktreesList: (args: WorktreesListArgs) => typedError<Worktree[], BridgeError>(__TAURI_INVOKE("worktrees_list", { args })),
 	/**  Project every repo's worktrees, merged in registry order. */
 	worktreesListAll: () => typedError<Worktree[], BridgeError>(__TAURI_INVOKE("worktrees_list_all")),
+	/**  Read the projects registry's project groups (spec §5.2). */
+	projectGroupsList: () => typedError<Json, BridgeError>(__TAURI_INVOKE("project_groups_list")),
+	/**  Create one project group; blank names normalize to `Untitled group`. */
+	projectGroupsCreate: (args: ProjectGroupsCreateArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("project_groups_create", { args })),
+	/**  Update the contract-allowed fields of one group. */
+	projectGroupsUpdate: (args: ProjectGroupsUpdateArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("project_groups_update", { args })),
+	/**  Delete one group and its subtree; its repos survive ungrouped. */
+	projectGroupsDelete: (args: ProjectGroupsDeleteArgs) => typedError<boolean, BridgeError>(__TAURI_INVOKE("project_groups_delete", { args })),
+	/**  Move one repo into (or out of) a group. */
+	projectGroupsMoveProject: (args: ProjectGroupsMoveProjectArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("project_groups_move_project", { args })),
+	/**  Bounded nested-repo scan with optional progress events and cancellation. */
+	projectGroupsScanNested: (args: ProjectGroupsScanNestedArgs) => typedError<NestedRepoScanResult, BridgeError>(__TAURI_INVOKE("project_groups_scan_nested", { args })),
+	/**  Cancel an in-flight scan; `false` when it already finished. */
+	projectGroupsCancelNestedScan: (args: ProjectGroupsCancelNestedScanArgs) => typedError<boolean, BridgeError>(__TAURI_INVOKE("project_groups_cancel_nested_scan", { args })),
+	/**  Import scanned nested repos as repos plus one root group in `group` mode. */
+	projectGroupsImportNested: (args: ProjectGroupsImportNestedArgs) => typedError<NestedRepoImportResult_Serialize, BridgeError>(__TAURI_INVOKE("project_groups_import_nested", { args })),
+	/**  Read the projects registry's folder workspaces (spec §5.2). */
+	folderWorkspacesList: () => typedError<Json, BridgeError>(__TAURI_INVOKE("folder_workspaces_list")),
+	/**  Create one folder workspace; requires a usable folder path. */
+	folderWorkspacesCreate: (args: FolderWorkspacesCreateArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("folder_workspaces_create", { args })),
+	/**  Update the contract-allowed fields of one folder workspace. */
+	folderWorkspacesUpdate: (args: FolderWorkspacesUpdateArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("folder_workspaces_update", { args })),
+	/**  Delete one folder workspace; revokes its folder root. */
+	folderWorkspacesDelete: (args: FolderWorkspacesDeleteArgs) => typedError<boolean, BridgeError>(__TAURI_INVOKE("folder_workspaces_delete", { args })),
+	/**
+	 *  Stat one folder path for the three contract scopes; TTL caching is the
+	 *  renderer's job (spec §5.2).
+	 */
+	folderWorkspacesGetPathStatus: (args: FolderWorkspacesGetPathStatusArgs) => typedError<FolderWorkspacePathStatus_Serialize, BridgeError>(__TAURI_INVOKE("folder_workspaces_get_path_status", { args })),
 };
 
 /* Types */
@@ -130,6 +159,57 @@ export type FileStat = {
 	size: number,
 	isDirectory: boolean,
 	mtime: number | null,
+};
+
+/**  `getPathStatus` payload (oracle `FolderWorkspacePathStatus`). */
+export type FolderWorkspacePathStatus = FolderWorkspacePathStatus_Serialize | FolderWorkspacePathStatus_Deserialize;
+
+/**
+ *  Why a folder workspace path is unusable (oracle
+ *  `FolderWorkspacePathStatusReason`).
+ */
+export type FolderWorkspacePathStatusReason = "missing" | "not-directory" | "unavailable" | "ambiguous-connection";
+
+/**  `getPathStatus` payload (oracle `FolderWorkspacePathStatus`). */
+export type FolderWorkspacePathStatus_Deserialize = {
+	path: string,
+	exists: boolean,
+	reason: FolderWorkspacePathStatusReason | null,
+};
+
+/**  `getPathStatus` payload (oracle `FolderWorkspacePathStatus`). */
+export type FolderWorkspacePathStatus_Serialize = {
+	path: string,
+	exists: boolean,
+	reason?: FolderWorkspacePathStatusReason | null,
+};
+
+export type FolderWorkspacesCreateArgs = {
+	projectGroupId: string,
+	name?: string | null,
+	folderPath?: string | null,
+	connectionId?: string | null,
+	linkedTask?: Json | null,
+	linkedTaskSourceContext?: Json | null,
+	createdWithAgent?: string | null,
+	pendingFirstAgentMessageRename?: boolean | null,
+};
+
+export type FolderWorkspacesDeleteArgs = {
+	folderWorkspaceId: string,
+};
+
+export type FolderWorkspacesGetPathStatusArgs = {
+	scope: string,
+	folderWorkspaceId?: string | null,
+	projectGroupId?: string | null,
+	path?: string | null,
+	connectionId?: string | null,
+};
+
+export type FolderWorkspacesUpdateArgs = {
+	folderWorkspaceId: string,
+	updates: Json,
 };
 
 export type FsAuthorizeExternalPathArgs = {
@@ -256,6 +336,91 @@ export type MarkdownDocument = {
 	name: string,
 };
 
+/**
+ *  One repository discovered by the nested scan (oracle
+ *  `NestedRepoCandidate`).
+ */
+export type NestedRepoCandidate = {
+	path: string,
+	displayName: string,
+	depth: number,
+};
+
+/**  One imported nested repo (oracle `ProjectGroupImportProjectResult`). */
+export type NestedRepoImportProjectResult = NestedRepoImportProjectResult_Serialize | NestedRepoImportProjectResult_Deserialize;
+
+/**  One imported nested repo (oracle `ProjectGroupImportProjectResult`). */
+export type NestedRepoImportProjectResult_Deserialize = {
+	path: string,
+	projectId?: string | null,
+	status: NestedRepoImportStatus,
+	error?: string | null,
+};
+
+/**  One imported nested repo (oracle `ProjectGroupImportProjectResult`). */
+export type NestedRepoImportProjectResult_Serialize = {
+	path: string,
+	projectId?: string | null,
+	status: NestedRepoImportStatus,
+	error?: string | null,
+};
+
+/**
+ *  `project_groups_import_nested` result (oracle
+ *  `ProjectGroupImportResult`).
+ */
+export type NestedRepoImportResult = NestedRepoImportResult_Serialize | NestedRepoImportResult_Deserialize;
+
+/**
+ *  `project_groups_import_nested` result (oracle
+ *  `ProjectGroupImportResult`).
+ */
+export type NestedRepoImportResult_Deserialize = {
+	group?: Json | null,
+	projects: NestedRepoImportProjectResult_Deserialize[],
+	importedCount: number,
+	alreadyKnownCount: number,
+	failedCount: number,
+};
+
+/**
+ *  `project_groups_import_nested` result (oracle
+ *  `ProjectGroupImportResult`).
+ */
+export type NestedRepoImportResult_Serialize = {
+	group?: Json | null,
+	projects: NestedRepoImportProjectResult_Serialize[],
+	importedCount: number,
+	alreadyKnownCount: number,
+	failedCount: number,
+};
+
+/**
+ *  Outcome status of one imported nested repo (oracle
+ *  `ProjectGroupImportProjectResult`).
+ */
+export type NestedRepoImportStatus = "imported" | "already-known" | "failed";
+
+/**  Bounded nested-repo scan result (oracle `NestedRepoScanResult`). */
+export type NestedRepoScanResult = {
+	selectedPath: string,
+	selectedPathKind: NestedRepoSelectedPathKind,
+	repos: NestedRepoCandidate[],
+	truncated: boolean,
+	timedOut: boolean,
+	stopped: boolean,
+	durationMs: number,
+	maxDepth: number,
+	maxRepos: number,
+	timeoutMs: number | null,
+};
+
+/**
+ *  Whether the scan root itself is a repository (oracle
+ *  `NestedRepoScanResult['selectedPathKind']`).
+ */
+export type NestedRepoSelectedPathKind = "git_repo" | "non_git_folder";
+
 export type PathExistence = ({ exists: boolean }) & { error?: never } | ({ error: string }) & { exists?: never };
 
 /**  Platform contract (`src/shared/preload-api/api/app-api.ts` `PlatformApi.get`). */
@@ -265,6 +430,52 @@ export type PlatformInfo = {
 	arch: string,
 	shell: string,
 	displayServer: string | null,
+};
+
+/**  `ProjectGroup.createdFrom` (oracle `ProjectGroupCreatedFrom`). */
+export type ProjectGroupCreatedFrom = "manual" | "folder-scan" | "migration";
+
+export type ProjectGroupsCancelNestedScanArgs = {
+	scanId: string,
+};
+
+export type ProjectGroupsCreateArgs = {
+	name: string,
+	parentPath?: string | null,
+	connectionId?: string | null,
+	parentGroupId?: string | null,
+	createdFrom?: ProjectGroupCreatedFrom | null,
+};
+
+export type ProjectGroupsDeleteArgs = {
+	groupId: string,
+};
+
+export type ProjectGroupsImportNestedArgs = {
+	parentPath: string,
+	groupName?: string | null,
+	projectPaths: string[],
+	connectionId?: string | null,
+	scanId?: string | null,
+	mode: string,
+};
+
+export type ProjectGroupsMoveProjectArgs = {
+	projectId: string,
+	groupId: string | null,
+	order?: number | null,
+};
+
+export type ProjectGroupsScanNestedArgs = {
+	path: string,
+	connectionId?: string | null,
+	scanId?: string | null,
+	options?: Json | null,
+};
+
+export type ProjectGroupsUpdateArgs = {
+	groupId: string,
+	updates: Json,
 };
 
 export type RepoKind = "git" | "folder";
@@ -289,6 +500,18 @@ export type ReposUpdateArgs = {
 	/**  Accepted for contract parity; A has only local repos, so it is ignored. */
 	hostId?: string | null,
 	updates: Json,
+};
+
+/**
+ *  Payload for [`PROJECT_GROUPS_SCAN_NESTED_PROGRESS`]: the task's
+ *  `{scanId, scanned, found}` fields plus the full snapshot, which the TS
+ *  contract's `onNestedScanProgress` callback consumes as `{scanId, scan}`.
+ */
+export type ScanNestedProgressPayload = {
+	scanId: string,
+	scanned: number,
+	found: number,
+	scan: NestedRepoScanResult,
 };
 
 export type SearchFileResult = SearchFileResult_Serialize | SearchFileResult_Deserialize;

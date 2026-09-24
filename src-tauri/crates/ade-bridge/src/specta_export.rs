@@ -53,10 +53,27 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::repos::repos_get_default_create_project_parent,
                 commands::worktrees::worktrees_list,
                 commands::worktrees::worktrees_list_all,
+                commands::project_groups::project_groups_list,
+                commands::project_groups::project_groups_create,
+                commands::project_groups::project_groups_update,
+                commands::project_groups::project_groups_delete,
+                commands::project_groups::project_groups_move_project,
+                commands::project_groups::project_groups_scan_nested,
+                commands::project_groups::project_groups_cancel_nested_scan,
+                commands::project_groups::project_groups_import_nested,
+                commands::folder_workspaces::folder_workspaces_list,
+                commands::folder_workspaces::folder_workspaces_create,
+                commands::folder_workspaces::folder_workspaces_update,
+                commands::folder_workspaces::folder_workspaces_delete,
+                commands::folder_workspaces::folder_workspaces_get_path_status,
             ])
             .typ::<crate::state::BootstrapPayload>()
             .typ::<ade_fs::FsChangedPayload>()
             .typ::<crate::events::WorktreeChangedPayload>()
+            .typ::<crate::events::ScanNestedProgressPayload>()
+            .typ::<commands::project_groups::NestedRepoImportResult>()
+            .typ::<ade_core::models::folder_workspace::FolderWorkspacePathStatus>()
+            .typ::<ade_core::models::project_group::NestedRepoScanResult>()
     })
 }
 
@@ -135,6 +152,19 @@ mod tests {
             "repos_get_default_create_project_parent",
             "worktrees_list",
             "worktrees_list_all",
+            "project_groups_list",
+            "project_groups_create",
+            "project_groups_update",
+            "project_groups_delete",
+            "project_groups_move_project",
+            "project_groups_scan_nested",
+            "project_groups_cancel_nested_scan",
+            "project_groups_import_nested",
+            "folder_workspaces_list",
+            "folder_workspaces_create",
+            "folder_workspaces_update",
+            "folder_workspaces_delete",
+            "folder_workspaces_get_path_status",
         ] {
             assert!(
                 bindings.contains(&format!("\"{command}\"")),
