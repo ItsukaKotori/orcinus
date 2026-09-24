@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
@@ -9,6 +10,7 @@ use ade_store::settings_store::SettingsStore;
 use ade_store::ui_state_store::UiStateStore;
 use ade_store::SCHEMA_VERSION;
 use serde::Serialize;
+use serde_json::Value;
 use tauri::{AppHandle, Manager};
 
 use crate::commands::platform::{platform_info, PlatformInfo};
@@ -181,18 +183,24 @@ fn run_worker(shared: &SchedulerShared) {
         state.writing = true;
         drop(state);
 
-        let result = (shared.persist)();
+        // Why: a panicking persist must not leave `writing` latched, or every
+        // later `flush()` (including the exit flush) would hang forever.
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| (shared.persist)()));
 
         let mut state = lock(&shared.state);
         state.writing = false;
         match result {
-            Ok(()) => {
+            Ok(Ok(())) => {
                 state.writes += 1;
                 state.last_error = None;
             }
-            Err(error) => {
+            Ok(Err(error)) => {
                 state.last_error = Some(error.to_string());
                 eprintln!("[ade-bridge] failed to persist store: {error}");
+            }
+            Err(_) => {
+                state.last_error = Some("persist task panicked".to_string());
+                eprintln!("[ade-bridge] persist task panicked");
             }
         }
         shared.wake.notify_all();
@@ -221,6 +229,56 @@ pub fn bootstrap_payload(settings: serde_json::Value, platform: PlatformInfo) ->
     }
 }
 
+/// Stores loaded from the app data directory, with fs roots already authorized.
+pub struct PersistedState {
+    pub settings: SettingsStore,
+    pub ui: UiStateStore,
+    pub projects: ProjectsStore,
+    pub fs: FsService,
+}
+
+/// Load `settings.json`/`ui-state.json`/`projects.json` and re-grant fs access
+/// to every persisted repo and folder-workspace root, so a restart does not
+/// leave existing repos failing access-denied.
+pub fn load_persisted_state(data_dir: &Path, home: &str) -> PersistedState {
+    let settings = SettingsStore::load(data_dir.join("settings.json"), settings_defaults(home));
+    let ui = UiStateStore::load(data_dir.join("ui-state.json"), ui_state_defaults());
+    let projects = ProjectsStore::load(data_dir.join("projects.json"));
+    let fs = FsService::new();
+    authorize_persisted_roots(&fs, &projects);
+    PersistedState {
+        settings,
+        ui,
+        projects,
+        fs,
+    }
+}
+
+/// Authorize every persisted root; a failing path is logged and skipped so one
+/// bad entry cannot abort startup.
+pub fn authorize_persisted_roots(fs: &FsService, projects: &ProjectsStore) {
+    for path in persisted_root_paths(projects) {
+        if let Err(error) = fs.authorize_root(&path) {
+            eprintln!("[ade-bridge] failed to authorize persisted root '{path}': {error}");
+        }
+    }
+}
+
+fn persisted_root_paths(projects: &ProjectsStore) -> Vec<String> {
+    let mut paths = Vec::new();
+    for repo in projects.repos() {
+        if let Some(path) = repo.get("path").and_then(Value::as_str) {
+            paths.push(path.to_string());
+        }
+    }
+    for workspace in projects.folder_workspaces() {
+        if let Some(path) = workspace.get("folderPath").and_then(Value::as_str) {
+            paths.push(path.to_string());
+        }
+    }
+    paths
+}
+
 /// Shared backend state for every command. Initialized once in `setup` with the
 /// app data directory before the main window is built.
 pub struct AppState {
@@ -247,15 +305,9 @@ impl AppState {
             .to_string_lossy()
             .into_owned();
 
-        let settings = Arc::new(Mutex::new(SettingsStore::load(
-            data_dir.join("settings.json"),
-            settings_defaults(&home),
-        )));
-        let ui = Arc::new(Mutex::new(UiStateStore::load(
-            data_dir.join("ui-state.json"),
-            ui_state_defaults(),
-        )));
-        let projects = ProjectsStore::load(data_dir.join("projects.json"));
+        let persisted = load_persisted_state(&data_dir, &home);
+        let settings = Arc::new(Mutex::new(persisted.settings));
+        let ui = Arc::new(Mutex::new(persisted.ui));
 
         let settings_writer = WriteScheduler::new(WRITE_DEBOUNCE, WRITE_MAX_WAIT, {
             let store = Arc::clone(&settings);
@@ -277,8 +329,8 @@ impl AppState {
         Ok(Self {
             settings,
             ui,
-            projects: Mutex::new(projects),
-            fs: Arc::new(FsService::new()),
+            projects: Mutex::new(persisted.projects),
+            fs: Arc::new(persisted.fs),
             watchers,
             app: app.clone(),
             settings_writer,
@@ -400,6 +452,71 @@ mod tests {
             value["platform"]["platform"],
             crate::commands::platform::map_platform(std::env::consts::OS)
         );
+    }
+
+    #[test]
+    fn persisted_repo_and_folder_roots_are_authorized_at_startup() {
+        let dir = TestDir::new("persisted-roots");
+        let repo_path = dir.path.join("repo");
+        let folder_path = dir.path.join("folder-workspace");
+        std::fs::create_dir_all(&repo_path).unwrap();
+        std::fs::create_dir_all(&folder_path).unwrap();
+        std::fs::write(
+            dir.file("projects.json"),
+            json!({
+                "schemaVersion": 1,
+                "repos": [{ "id": "r1", "path": repo_path.to_str().unwrap(), "kind": "git" }],
+                "projectGroups": [],
+                "folderWorkspaces": [{
+                    "id": "f1",
+                    "folderPath": folder_path.to_str().unwrap()
+                }]
+            })
+            .to_string(),
+        )
+        .unwrap();
+
+        let state = load_persisted_state(&dir.path, "/home/tester");
+
+        assert!(state.fs.resolve(repo_path.to_str().unwrap()).is_ok());
+        assert!(state.fs.resolve(folder_path.to_str().unwrap()).is_ok());
+        let outside = dir.path.join("elsewhere");
+        assert!(matches!(
+            state.fs.resolve(outside.to_str().unwrap()),
+            Err(ade_fs::FsError::PathAccessDenied)
+        ));
+    }
+
+    #[test]
+    fn persist_panic_does_not_hang_flush_and_recovers() {
+        let dir = TestDir::new("persist-panic");
+        let store = store_in(&dir);
+        let panicking = Arc::new(std::sync::atomic::AtomicBool::new(true));
+        let scheduler =
+            WriteScheduler::new(Duration::from_millis(10), Duration::from_millis(10), {
+                let store = Arc::clone(&store);
+                let panicking = Arc::clone(&panicking);
+                move || {
+                    if panicking.load(std::sync::atomic::Ordering::SeqCst) {
+                        panic!("persist exploded");
+                    }
+                    lock(&store).persist()
+                }
+            });
+
+        lock(&store)
+            .merge_partial(json!({ "theme": "dark" }))
+            .unwrap();
+        scheduler.schedule();
+        assert!(
+            scheduler.flush().is_err(),
+            "panic surfaces as a write error"
+        );
+
+        panicking.store(false, std::sync::atomic::Ordering::SeqCst);
+        scheduler.schedule();
+        scheduler.flush().expect("scheduler recovers after a panic");
+        assert_eq!(read_settings(&dir.file("settings.json"))["theme"], "dark");
     }
 
     #[test]

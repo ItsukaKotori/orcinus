@@ -4,7 +4,6 @@ use ade_fs::{
     DirEntry, FileContent, FileStat, MarkdownDocument, PathExistence, SearchOptions, SearchResult,
 };
 use serde::Deserialize;
-use serde_json::Value;
 use tauri::{State, Window};
 
 use crate::commands::run_blocking;
@@ -287,8 +286,17 @@ pub async fn fs_watch_worktree(
     window: Window,
     args: FsWatchWorktreeArgs,
 ) -> Result<(), BridgeError> {
-    state.watchers.watch(&args.worktree_path, window.label());
-    Ok(())
+    let fs = Arc::clone(&state.fs);
+    let watchers = state.watchers.clone();
+    let subscriber_id = window.label().to_string();
+    run_blocking(move || {
+        // Why: watching is a path-scoped capability; the renderer may only
+        // observe roots it is already authorized to read.
+        fs.resolve(&args.worktree_path)?;
+        watchers.watch(&args.worktree_path, &subscriber_id);
+        Ok(())
+    })
+    .await
 }
 
 #[tauri::command]
@@ -298,8 +306,13 @@ pub async fn fs_unwatch_worktree(
     window: Window,
     args: FsWatchWorktreeArgs,
 ) -> Result<(), BridgeError> {
-    state.watchers.unwatch(&args.worktree_path, window.label());
-    Ok(())
+    let watchers = state.watchers.clone();
+    let subscriber_id = window.label().to_string();
+    run_blocking(move || {
+        watchers.unwatch(&args.worktree_path, &subscriber_id);
+        Ok(())
+    })
+    .await
 }
 
 #[tauri::command]
@@ -322,17 +335,16 @@ pub async fn fs_authorize_external_path(
     run_blocking(move || Ok(fs.authorize_external(&args.target_path)?)).await
 }
 
-/// Serialize the watcher payload exactly as the renderer contract expects; kept
-/// as a value-level guard for the event payload shape.
-#[allow(dead_code)]
-pub(crate) fn fs_changed_payload_json(payload: &ade_fs::FsChangedPayload) -> Value {
-    serde_json::to_value(payload).expect("FsChangedPayload serializes")
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use ade_fs::{FsChangeEvent, FsChangeKind, FsChangedPayload};
+    use serde_json::Value;
+
+    /// Value-level guard for the `fs:changed` event payload shape.
+    fn fs_changed_payload_json(payload: &FsChangedPayload) -> Value {
+        serde_json::to_value(payload).expect("FsChangedPayload serializes")
+    }
 
     #[test]
     fn list_files_token_prefers_renderer_token() {

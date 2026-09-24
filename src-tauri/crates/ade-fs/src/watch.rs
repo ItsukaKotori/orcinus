@@ -501,6 +501,7 @@ struct WatcherState {
 /// later, so rapid worktree switches reuse the native stream. Install
 /// failures are negatively cached and surface downstream as a single
 /// `overflow`.
+#[derive(Clone)]
 pub struct FsWatcher {
     inner: Arc<WatcherState>,
 }
@@ -1425,6 +1426,25 @@ mod tests {
         clock.advance(Duration::from_millis(1));
         watcher.inner.sweep_expired_roots();
         assert_eq!(watcher.watched_root_count(), 0);
+    }
+
+    #[test]
+    fn clone_shares_the_root_registry() {
+        let dir = TempDir::new("clone");
+        let clock = Arc::new(ManualWatchClock::new());
+        let watcher = FsWatcher::with_clock(clock);
+        let clone = watcher.clone();
+
+        watcher.watch(dir.str(), "a");
+        assert_eq!(clone.watched_root_count(), 1);
+
+        clone.unwatch(dir.str(), "a");
+        let roots = lock(&clone.inner.roots);
+        assert!(roots
+            .get(dir.path())
+            .expect("root still installed")
+            .pending_drop_at
+            .is_some());
     }
 
     #[test]

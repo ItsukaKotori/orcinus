@@ -3,7 +3,7 @@ import { listen } from '@tauri-apps/api/event'
 import type { SettingsApi } from '../../shared/preload-api/api/settings-api'
 import type { GlobalSettings } from '../../shared/global-settings-types'
 import { withMethodFallback } from '../unimplemented-fallback'
-import { getBootstrap } from './bootstrap'
+import { getBootstrap, updateBootstrapSettings } from './bootstrap'
 
 /** Subscribe to a Tauri event and return an idempotent unsubscriber. */
 export function subscribeToEvent<T>(
@@ -32,7 +32,11 @@ export function createSettingsRealApi(): SettingsApi {
   return withMethodFallback<SettingsApi>('settings', {
     get: () => invoke<GlobalSettings>('settings_get'),
     getSync: () => getBootstrap()?.settings ?? null,
-    set: (args) => invoke<GlobalSettings>('settings_set', { args }),
+    set: async (args) => {
+      const settings = await invoke<GlobalSettings>('settings_set', { args })
+      updateBootstrapSettings(settings)
+      return settings
+    },
     onChanged: (callback) =>
       subscribeToEvent<Partial<GlobalSettings>>('settings:changed', callback)
   })
