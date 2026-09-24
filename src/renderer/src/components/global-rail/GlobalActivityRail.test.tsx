@@ -8,7 +8,7 @@ import { installAdeBridge } from '../../../../bridge/install'
 
 describe('GlobalActivityRail', () => {
   beforeAll(() => {
-    installAdeBridge()
+    installAdeBridge({ mode: 'mock' })
   })
 
   afterEach(cleanup)

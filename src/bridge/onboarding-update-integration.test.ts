@@ -5,7 +5,7 @@ import { createAdeApi } from './create-api'
 
 describe('onboarding update through the installed mock bridge', () => {
   it('persistStep(1) resolves and get() reflects the step', async () => {
-    window.api = createAdeApi()
+    window.api = createAdeApi({ mode: 'mock' })
 
     const state = await persistStep(1)
 

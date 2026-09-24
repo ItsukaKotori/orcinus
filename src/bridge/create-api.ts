@@ -37,12 +37,44 @@ import { createRemoteWorkspaceApi, createSessionApi } from './mock/workspace-ses
 import { createWorkspacePortsApi } from './mock/workspace-ports-api'
 import { createWorkspaceSpaceApi } from './mock/workspace-space-api'
 import { createWorktreesApi } from './mock/worktrees-api'
+import { createAppRealApi } from './real/app'
+import { createFolderWorkspacesRealApi } from './real/folder-workspaces'
+import { createFsRealApi } from './real/fs'
+import { createPlatformRealApi } from './real/platform'
+import { createProjectGroupsRealApi } from './real/project-groups'
+import { createProjectsRealApi } from './real/projects'
+import { createReposRealApi } from './real/repos'
+import { createSettingsRealApi } from './real/settings'
+import { createUiRealApi } from './real/ui'
+import { createWorktreesRealApi } from './real/worktrees'
 import { withUnimplementedFallback } from './unimplemented-fallback'
 
-export function createAdeApi(): PreloadApi {
-  // SAFETY: mock 域覆盖 Phase 0 启动与 UI 所需命名空间；其余经 Proxy 兜底为“未实现”拒绝，
-  // 因此断言为 PreloadApi 在运行期仍保持“调用必为函数”的契约。
-  const partial: Partial<PreloadApi> = {
+export type AdeApiMode = 'real' | 'mock'
+
+export type AdeApiOptions = {
+  mode?: AdeApiMode
+}
+
+type RealDomains = Pick<
+  PreloadApi,
+  | 'app'
+  | 'folderWorkspaces'
+  | 'fs'
+  | 'platform'
+  | 'projectGroups'
+  | 'projects'
+  | 'repos'
+  | 'settings'
+  | 'ui'
+  | 'worktrees'
+>
+
+/**
+ * The Phase 0 mock inventory. Real mode starts from this map and replaces the
+ * ten ported domains, so both modes share one namespace list and cannot drift.
+ */
+function createMockDomains(): Partial<PreloadApi> {
+  return {
     agentAwake: createAgentAwakeApi(),
     agentStatus: createAgentStatusApi(),
     app: createAppApi(),
@@ -83,5 +115,40 @@ export function createAdeApi(): PreloadApi {
     workspaceSpace: createWorkspaceSpaceApi(),
     worktrees: createWorktreesApi()
   }
+}
+
+function createRealDomains(): RealDomains {
+  return {
+    app: createAppRealApi(),
+    folderWorkspaces: createFolderWorkspacesRealApi(),
+    fs: createFsRealApi(),
+    platform: createPlatformRealApi(),
+    projectGroups: createProjectGroupsRealApi(),
+    projects: createProjectsRealApi(),
+    repos: createReposRealApi(),
+    settings: createSettingsRealApi(),
+    ui: createUiRealApi(),
+    worktrees: createWorktreesRealApi()
+  }
+}
+
+function resolveMode(options?: AdeApiOptions): AdeApiMode {
+  return options?.mode ?? (import.meta.env.VITE_ADE_BRIDGE === 'mock' ? 'mock' : 'real')
+}
+
+/** Full mock bridge for `VITE_ADE_BRIDGE=mock`, browser dev, and mock-expecting tests. */
+export function createMockAdeApi(): PreloadApi {
+  // SAFETY: the mock inventory plus the Proxy fallback covers every namespace, so
+  // the partial behaves as a full PreloadApi at call sites.
+  return withUnimplementedFallback(createMockDomains())
+}
+
+export function createAdeApi(options?: AdeApiOptions): PreloadApi {
+  if (resolveMode(options) === 'mock') {
+    return createMockAdeApi()
+  }
+  // SAFETY: the ten ported domains plus the mock inventory cover every namespace;
+  // the Proxy fallback keeps unlisted names rejecting as unimplemented.
+  const partial: Partial<PreloadApi> = { ...createMockDomains(), ...createRealDomains() }
   return withUnimplementedFallback(partial)
 }
