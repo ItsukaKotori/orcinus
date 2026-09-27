@@ -9,6 +9,7 @@ import { createOnboardingApi } from './mock/onboarding-api'
 import { createReposApi } from './mock/repos-api'
 import { createRuntimeEnvironmentsApi } from './mock/runtime-environments-api'
 import { createRemoteWorkspaceApi, createSessionApi } from './mock/workspace-session-api'
+import { createPtyApi } from './mock/pty-api'
 
 describe('withUnimplementedFallback', () => {
   it('passes through implemented namespaces', async () => {
@@ -28,6 +29,29 @@ describe('withUnimplementedFallback', () => {
     const api = withUnimplementedFallback<Namespace>({})
     await expect(Promise.resolve(api.files)).resolves.toBe(api.files)
     expect(Reflect.get(api.files, Symbol.iterator)).toBeUndefined()
+  })
+
+  it('answers subscription-shaped methods with a no-op unsubscriber', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const api = withUnimplementedFallback<{
+      files: { onChanged: (cb: () => void) => () => void }
+    }>({})
+    const unsubscribe = api.files.onChanged(() => {})
+    expect(typeof unsubscribe).toBe('function')
+    expect(() => unsubscribe()).not.toThrow()
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('files.onChanged'))
+    warn.mockRestore()
+  })
+
+  it('keeps the action-shaped onClientPageRendererRequest rejecting', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const api = withUnimplementedFallback<{
+      browser: { onClientPageRendererRequest: () => Promise<unknown> }
+    }>({})
+    await expect(api.browser.onClientPageRendererRequest()).rejects.toBeInstanceOf(
+      UnimplementedBridgeError
+    )
+    warn.mockRestore()
   })
 })
 
@@ -50,6 +74,34 @@ describe('withMethodFallback', () => {
     const api = withMethodFallback('browser', { onRequest: () => () => {} })
     await expect(Promise.resolve(api)).resolves.toBe(api)
     expect(Reflect.get(api, Symbol.iterator)).toBeUndefined()
+  })
+
+  it('answers missing subscription-shaped methods with a no-op unsubscriber', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const api = withMethodFallback<{ onThing?: (cb: () => void) => () => void }>('pty', {})
+    const unsubscribe = api.onThing?.(() => {})
+    expect(typeof unsubscribe).toBe('function')
+    expect(() => unsubscribe?.()).not.toThrow()
+    warn.mockRestore()
+  })
+})
+
+describe('pty mock subscriptions keep effect cleanup safe', () => {
+  it('returns unsubscribers instead of promises for every mounted listener', () => {
+    const api = createPtyApi()
+    for (const method of [
+      'onData',
+      'onReplay',
+      'onWriteUnavailable',
+      'onClearBufferRequest',
+      'onSerializeBufferRequest',
+      'onExit',
+      'onSpawned'
+    ] as const) {
+      const unsubscribe = (api[method] as (cb: () => void) => unknown)(() => {})
+      expect(typeof unsubscribe, method).toBe('function')
+    }
+    expect(() => api.resize('pty-1', 80, 24)).not.toThrow()
   })
 })
 

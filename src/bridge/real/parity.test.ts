@@ -403,6 +403,15 @@ describe('mock/real parity: method surface', () => {
           Object.prototype.hasOwnProperty.call(real, method),
           `${domain}.${method} must stay on the fallback`
         ).toBe(false)
+        if (/^on[A-Z]/.test(method)) {
+          // Why: the fallback answers subscription-shaped methods with a no-op
+          // unsubscriber (no host events on this host); renderers push the return
+          // value into cleanup lists, so a rejection here would crash effects.
+          expect(typeof real[method](() => {}), `${domain}.${method} no-op subscription`).toBe(
+            'function'
+          )
+          continue
+        }
         await expect(Promise.resolve(real[method]())).rejects.toBeInstanceOf(
           UnimplementedBridgeError
         )

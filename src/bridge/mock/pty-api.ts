@@ -8,6 +8,15 @@ export function createPtyApi(): PreloadApi['pty'] {
     listSessions: async () => [],
     onSpawned: () => noopUnsubscribe,
     onExit: () => noopUnsubscribe,
+    // The terminal pane mounts these listeners and stores the return value in an
+    // unsubscribe list; on this host no PTY ever streams, so they stay no-ops.
+    onData: () => noopUnsubscribe,
+    onReplay: () => noopUnsubscribe,
+    onWriteUnavailable: () => noopUnsubscribe,
+    onClearBufferRequest: () => noopUnsubscribe,
+    onSerializeBufferRequest: () => noopUnsubscribe,
+    resize: () => {},
+    sendSerializedBuffer: () => {},
     publishTerminalViewAttributes: () => {}
   })
 }

@@ -100,19 +100,33 @@ describe('ui real adapter events', () => {
 })
 
 describe('ui real adapter unimplemented surface', () => {
-  it.each([
-    'onOpenCrashReport',
-    'onExportPdfRequested',
-    'readClipboardText',
-    'popupMenu'
-  ] satisfies Array<keyof UiApi>)('rejects %s with UnimplementedBridgeError', async (method) => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const ui = createUiRealApi() as unknown as Record<
-      string,
-      (callArgs?: unknown) => Promise<unknown>
-    >
-    await expect(ui[method](() => {})).rejects.toBeInstanceOf(UnimplementedBridgeError)
-    expect(invokeMock).not.toHaveBeenCalled()
-    warn.mockRestore()
-  })
+  it.each(['readClipboardText', 'popupMenu'] satisfies Array<keyof UiApi>)(
+    'rejects %s with UnimplementedBridgeError',
+    async (method) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const ui = createUiRealApi() as unknown as Record<
+        string,
+        (callArgs?: unknown) => Promise<unknown>
+      >
+      await expect(ui[method](() => {})).rejects.toBeInstanceOf(UnimplementedBridgeError)
+      expect(invokeMock).not.toHaveBeenCalled()
+      warn.mockRestore()
+    }
+  )
+
+  it.each(['onOpenCrashReport', 'onExportPdfRequested'] satisfies Array<keyof UiApi>)(
+    'answers %s with a no-op unsubscriber',
+    (method) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const ui = createUiRealApi() as unknown as Record<
+        string,
+        (callArgs?: unknown) => unknown
+      >
+      const unsubscribe = ui[method](() => {})
+      expect(typeof unsubscribe).toBe('function')
+      expect(() => (unsubscribe as () => void)()).not.toThrow()
+      expect(invokeMock).not.toHaveBeenCalled()
+      warn.mockRestore()
+    }
+  )
 })
