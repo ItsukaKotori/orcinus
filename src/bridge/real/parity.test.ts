@@ -9,6 +9,7 @@ import { UnimplementedBridgeError } from '../unimplemented-fallback'
 import { createAppRealApi } from './app'
 import { createFsRealApi } from './fs'
 import { createPlatformRealApi } from './platform'
+import { createPreflightRealApi } from './preflight'
 import { createProjectsRealApi } from './projects'
 import { createReposRealApi } from './repos'
 import { createSettingsRealApi } from './settings'
@@ -255,6 +256,7 @@ const surfaceCases: SurfaceCase[] = [
       'listKnownForExecutionHost',
       'forgetRemovedForExecutionHost',
       'cancelListDetected',
+      'listLineage',
       'onChanged',
       'onHeadIdentitiesChanged',
       'onBaseStatus',
@@ -272,7 +274,6 @@ const surfaceCases: SurfaceCase[] = [
       'forgetLocal',
       'forceDeletePreservedBranch',
       'updateMeta',
-      'listLineage',
       'listLineageForHost',
       'updateLineage',
       'persistSortOrder',
@@ -299,11 +300,17 @@ const surfaceCases: SurfaceCase[] = [
       'setWithAck',
       'recordFeatureInteraction',
       'onStateChanged',
+      'consumePendingOpenSettings',
+      'consumePendingMarkdownFileOpens',
+      'getZoomLevel',
+      'setZoomLevel',
+      'syncTrafficLights',
+      'setMarkdownEditorFocused',
+      'setRichMarkdownContextMenuTarget',
+      'notifyWindowRevealed',
       ...uiNoopSubscriptions
     ],
     missing: [
-      'consumePendingOpenSettings',
-      'consumePendingMarkdownFileOpens',
       'onOpenCrashReport',
       'onExportPdfRequested',
       'replyTabCreate',
@@ -324,11 +331,6 @@ const surfaceCases: SurfaceCase[] = [
       'performNativePaste',
       'performNativeSelectionAction',
       'writeClipboardFile',
-      'getZoomLevel',
-      'setZoomLevel',
-      'syncTrafficLights',
-      'setMarkdownEditorFocused',
-      'setRichMarkdownContextMenuTarget',
       'setTerminalInputFocused',
       'setFloatingFocus',
       'setShortcutRecorderFocused',
@@ -337,8 +339,7 @@ const surfaceCases: SurfaceCase[] = [
       'isMaximized',
       'requestClose',
       'popupMenu',
-      'confirmWindowClose',
-      'notifyWindowRevealed'
+      'confirmWindowClose'
     ]
   },
   {
@@ -367,6 +368,11 @@ const surfaceCases: SurfaceCase[] = [
       'writeTerminalRenderDesyncEvidence'
     ],
     missing: []
+  },
+  {
+    domain: 'preflight',
+    explicit: ['check'],
+    missing: ['refreshAgents']
   },
   { domain: 'platform', explicit: ['get'], missing: [] }
 ]
@@ -603,6 +609,8 @@ function realApiFor(domain: keyof PreloadApi): unknown {
       return createUiRealApi()
     case 'app':
       return createAppRealApi()
+    case 'preflight':
+      return createPreflightRealApi()
     case 'platform':
       return createPlatformRealApi()
     default:

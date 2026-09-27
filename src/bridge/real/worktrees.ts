@@ -58,6 +58,9 @@ export function createWorktreesRealApi(): WorktreeApi {
       executionHostId
     }),
     forgetRemovedForExecutionHost: async () => ({ forgottenWorktreeIds: [] }),
+    // Why: the renderer renders the lineage view at startup; A owns no lineage
+    // metadata yet, so it answers the empty map instead of a fabricated rejection.
+    listLineage: async () => ({ lineage: {} }),
     cancelListDetected: async () => {},
     onChanged: (callback) => subscribeToEvent('worktrees:changed', callback),
     onGitStatusMetadataChanged: noopSubscription,

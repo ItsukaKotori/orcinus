@@ -62,6 +62,34 @@ describe('ui real adapter commands', () => {
   })
 })
 
+describe('ui real adapter host-backed window surface', () => {
+  it('answers getZoomLevel synchronously with the default level', () => {
+    const ui = createUiRealApi()
+    expect(ui.getZoomLevel()).toBe(1)
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it('treats the synchronous window writes as no-ops without invoking', () => {
+    const ui = createUiRealApi()
+    expect(() => ui.setZoomLevel(1.25)).not.toThrow()
+    expect(() => ui.syncTrafficLights(1.25)).not.toThrow()
+    expect(() => ui.setMarkdownEditorFocused(true)).not.toThrow()
+    expect(() => ui.setRichMarkdownContextMenuTarget(null)).not.toThrow()
+    expect(() => ui.notifyWindowRevealed()).not.toThrow()
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it('answers consumePendingOpenSettings with false without invoking', async () => {
+    await expect(createUiRealApi().consumePendingOpenSettings()).resolves.toBe(false)
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it('answers consumePendingMarkdownFileOpens with an empty list without invoking', async () => {
+    await expect(createUiRealApi().consumePendingMarkdownFileOpens()).resolves.toEqual([])
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+})
+
 describe('ui real adapter events', () => {
   it('subscribes to ui:stateChanged with the payload and returns an unsubscriber', async () => {
     const unlisten = vi.fn()

@@ -103,6 +103,17 @@ export function createUiRealApi(): PreloadApi['ui'] {
     recordFeatureInteraction: (id) =>
       invokeCommand('ui_record_feature_interaction', { args: { id } }),
     onStateChanged: (callback) => subscribeToEvent('ui:stateChanged', callback),
+    // Why: startup probes and writes these window/OS-open surfaces unconditionally
+    // (spec §5.4), but A has no window chrome or pre-mount open queue in this build,
+    // so they answer benignly instead of fabricating rejections.
+    getZoomLevel: () => 1,
+    setZoomLevel: () => {},
+    syncTrafficLights: () => {},
+    setMarkdownEditorFocused: () => {},
+    setRichMarkdownContextMenuTarget: () => {},
+    notifyWindowRevealed: () => {},
+    consumePendingOpenSettings: async () => false,
+    consumePendingMarkdownFileOpens: async () => [],
     ...createNoopSubscriptions()
   })
 }

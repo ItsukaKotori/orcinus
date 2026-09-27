@@ -133,6 +133,13 @@ describe('worktrees real adapter detected listing', () => {
   })
 })
 
+describe('worktrees real adapter lineage', () => {
+  it('answers listLineage with an empty local lineage map without invoking', async () => {
+    await expect(createWorktreesRealApi().listLineage()).resolves.toEqual({ lineage: {} })
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+})
+
 describe('worktrees real adapter events', () => {
   it('subscribes to worktrees:changed with { repoId } and returns an unsubscriber', async () => {
     const unlisten = vi.fn()
@@ -181,7 +188,6 @@ describe('worktrees real adapter unimplemented surface', () => {
     'create',
     'remove',
     'prefetchCreateBase',
-    'listLineage',
     'updateMeta',
     'resolvePrBase'
   ] satisfies WorktreesMethod[])('rejects %s with UnimplementedBridgeError', async (method) => {
