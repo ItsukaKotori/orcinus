@@ -68,9 +68,25 @@ pub fn ui_state_defaults() -> Value {
     payload["uiState"].take()
 }
 
+pub fn onboarding_defaults() -> Value {
+    let mut payload: Value = serde_json::from_str(GENERATED).expect("generated defaults are valid JSON");
+    payload["onboarding"].take()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn onboarding_defaults_returns_generated_defaults() {
+        let defaults = onboarding_defaults();
+        assert_eq!(defaults["flowVersion"], 4);
+        assert_eq!(defaults["lastCompletedStep"], -1);
+        assert_eq!(defaults["closedAt"], Value::Null);
+        assert_eq!(defaults["outcome"], Value::Null);
+        assert_eq!(defaults["checklist"]["addedRepo"], false);
+        assert_eq!(defaults["checklist"]["dismissed"], false);
+    }
 
     #[test]
     fn substitutes_home_placeholder() {

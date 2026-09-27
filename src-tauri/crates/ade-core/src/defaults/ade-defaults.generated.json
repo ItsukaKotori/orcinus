@@ -411,5 +411,25 @@
     },
     "featureInteractions": {},
     "browserDefaultZoomLevel": 0
+  },
+  "onboarding": {
+    "flowVersion": 4,
+    "closedAt": null,
+    "outcome": null,
+    "lastCompletedStep": -1,
+    "checklist": {
+      "addedRepo": false,
+      "choseAgent": false,
+      "ranFirstAgent": false,
+      "ranSecondAgentOnSameTask": false,
+      "triedCmdJ": false,
+      "shapedSidebar": false,
+      "reviewedDiff": false,
+      "openedPr": false,
+      "addedFolder": false,
+      "openedFile": false,
+      "ranAgentOnFile": false,
+      "dismissed": false
+    }
   }
 }

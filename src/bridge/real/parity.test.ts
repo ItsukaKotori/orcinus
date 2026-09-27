@@ -8,6 +8,7 @@ import { createMockAdeApi } from '../create-api'
 import { UnimplementedBridgeError } from '../unimplemented-fallback'
 import { createAppRealApi } from './app'
 import { createFsRealApi } from './fs'
+import { createOnboardingRealApi } from './onboarding'
 import { createPlatformRealApi } from './platform'
 import { createPreflightRealApi } from './preflight'
 import { createProjectsRealApi } from './projects'
@@ -374,6 +375,7 @@ const surfaceCases: SurfaceCase[] = [
     explicit: ['check'],
     missing: ['refreshAgents']
   },
+  { domain: 'onboarding', explicit: ['get', 'update'], missing: [] },
   { domain: 'platform', explicit: ['get'], missing: [] }
 ]
 
@@ -599,6 +601,8 @@ function realApiFor(domain: keyof PreloadApi): unknown {
       return createReposRealApi()
     case 'fs':
       return createFsRealApi()
+    case 'onboarding':
+      return createOnboardingRealApi()
     case 'projects':
       return createProjectsRealApi()
     case 'worktrees':

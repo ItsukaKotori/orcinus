@@ -1,4 +1,5 @@
 pub mod json_file;
+pub mod onboarding_store;
 pub mod projects_store;
 pub mod settings_store;
 pub mod ui_state_store;

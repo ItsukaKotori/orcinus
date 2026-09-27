@@ -47,6 +47,10 @@ export const commands = {
 	 *  kept) and return the complete object.
 	 */
 	uiRecordFeatureInteraction: (args: UiRecordFeatureInteractionArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("ui_record_feature_interaction", { args })),
+	/**  Read the full effective onboarding state (`defaults ∪ stored`). */
+	onboardingGet: () => typedError<Json, BridgeError>(__TAURI_INVOKE("onboarding_get")),
+	/**  Merge a renderer partial into the snapshot and persist it synchronously. */
+	onboardingUpdate: (args: Json) => typedError<Json, BridgeError>(__TAURI_INVOKE("onboarding_update", { args })),
 	platformGet: () => typedError<PlatformInfo, BridgeError>(__TAURI_INVOKE("platform_get")),
 	appGetIdentity: () => typedError<AppIdentityInfo, BridgeError>(__TAURI_INVOKE("app_get_identity")),
 	/**  Read the projects registry (spec §5.2). */

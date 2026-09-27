@@ -3,8 +3,9 @@ use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
-use ade_core::defaults::{settings_defaults, ui_state_defaults};
+use ade_core::defaults::{onboarding_defaults, settings_defaults, ui_state_defaults};
 use ade_fs::{FsService, FsWatcher};
+use ade_store::onboarding_store::OnboardingStore;
 use ade_store::projects_store::ProjectsStore;
 use ade_store::settings_store::SettingsStore;
 use ade_store::ui_state_store::UiStateStore;
@@ -233,22 +234,26 @@ pub fn bootstrap_payload(settings: serde_json::Value, platform: PlatformInfo) ->
 pub struct PersistedState {
     pub settings: SettingsStore,
     pub ui: UiStateStore,
+    pub onboarding: OnboardingStore,
     pub projects: ProjectsStore,
     pub fs: FsService,
 }
 
-/// Load `settings.json`/`ui-state.json`/`projects.json` and re-grant fs access
-/// to every persisted repo and folder-workspace root, so a restart does not
-/// leave existing repos failing access-denied.
+/// Load `settings.json`/`ui-state.json`/`onboarding.json`/`projects.json` and
+/// re-grant fs access to every persisted repo and folder-workspace root, so a
+/// restart does not leave existing repos failing access-denied.
 pub fn load_persisted_state(data_dir: &Path, home: &str) -> PersistedState {
     let settings = SettingsStore::load(data_dir.join("settings.json"), settings_defaults(home));
     let ui = UiStateStore::load(data_dir.join("ui-state.json"), ui_state_defaults());
+    let onboarding =
+        OnboardingStore::load(data_dir.join("onboarding.json"), onboarding_defaults());
     let projects = ProjectsStore::load(data_dir.join("projects.json"));
     let fs = FsService::new();
     authorize_persisted_roots(&fs, &projects);
     PersistedState {
         settings,
         ui,
+        onboarding,
         projects,
         fs,
     }
@@ -284,6 +289,7 @@ fn persisted_root_paths(projects: &ProjectsStore) -> Vec<String> {
 pub struct AppState {
     pub settings: Arc<Mutex<SettingsStore>>,
     pub ui: Arc<Mutex<UiStateStore>>,
+    pub onboarding: Arc<Mutex<OnboardingStore>>,
     pub projects: Mutex<ProjectsStore>,
     pub fs: Arc<FsService>,
     pub watchers: FsWatcher,
@@ -308,6 +314,7 @@ impl AppState {
         let persisted = load_persisted_state(&data_dir, &home);
         let settings = Arc::new(Mutex::new(persisted.settings));
         let ui = Arc::new(Mutex::new(persisted.ui));
+        let onboarding = Arc::new(Mutex::new(persisted.onboarding));
 
         let settings_writer = WriteScheduler::new(WRITE_DEBOUNCE, WRITE_MAX_WAIT, {
             let store = Arc::clone(&settings);
@@ -329,6 +336,7 @@ impl AppState {
         Ok(Self {
             settings,
             ui,
+            onboarding,
             projects: Mutex::new(persisted.projects),
             fs: Arc::new(persisted.fs),
             watchers,

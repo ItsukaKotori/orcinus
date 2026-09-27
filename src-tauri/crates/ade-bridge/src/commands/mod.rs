@@ -1,6 +1,7 @@
 pub mod app;
 pub mod folder_workspaces;
 pub mod fs;
+pub mod onboarding;
 pub mod platform;
 pub mod project_groups;
 pub mod repos;
