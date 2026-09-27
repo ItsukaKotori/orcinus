@@ -1,5 +1,4 @@
 import { TOGGLE_QUICK_COMMANDS_MENU_EVENT } from '@/lib/quick-commands-menu-events'
-import { registerHostShortcutFallback } from '@/lib/host-shortcut-fallback'
 import { activateTabNumberShortcut } from '@/lib/tab-number-shortcuts'
 import { emitCmdJRowIndexJump } from '@/lib/cmd-j-row-index-jump'
 import { getVisibleWorktreeShortcutTargets } from '@/components/sidebar/visible-worktrees'
@@ -11,7 +10,6 @@ import { useAppStore } from '../../store'
 import { openNewWorkspaceFromShortcut } from './new-workspace-command'
 
 export function registerWorkspaceShortcutIpcBridge(unsubs: (() => void)[]): void {
-  unsubs.push(registerHostShortcutFallback())
   unsubs.push(
     window.api.ui.onOpenQuickOpen(() => {
       const store = useAppStore.getState()

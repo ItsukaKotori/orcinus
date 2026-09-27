@@ -3,9 +3,12 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { registerHostShortcutFallback } from './host-shortcut-fallback'
 import { useAppStore } from '@/store'
 
+const CODES: Record<string, string> = { p: 'KeyP', j: 'KeyJ', ',': 'Comma' }
+
 function dispatchShortcut(key: string): KeyboardEvent {
   const event = new KeyboardEvent('keydown', {
     key,
+    code: CODES[key] ?? '',
     metaKey: true,
     ctrlKey: true,
     bubbles: true,

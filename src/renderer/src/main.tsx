@@ -18,10 +18,19 @@ import { getOrCreateRendererRoot } from './lib/react-renderer-root'
 import { primeTerminalWebglAddon } from './lib/pane-manager/pane-webgl-renderer'
 import { installBrowserClientPageRenderer } from './components/browser-pane/browser-client-page-renderer-installation'
 import { installAdeBridge } from '../../bridge/install'
+import { registerHostShortcutFallback } from './lib/host-shortcut-fallback'
 
 // Why first: boot-path hooks read window.api as soon as effects run, and there is no Electron
 // preload in this shell, so the Phase 0 mock bridge must be in place before the first render.
 installAdeBridge()
+
+// Why at module scope: the shortcut fallback must not depend on the IPC bridge
+// installation path, which can be short-circuited by an unrelated registration.
+if (!(globalThis as { __adeHostShortcutFallbackInstalled?: boolean }).__adeHostShortcutFallbackInstalled) {
+  ;(globalThis as { __adeHostShortcutFallbackInstalled?: boolean }).__adeHostShortcutFallbackInstalled =
+    true
+  registerHostShortcutFallback()
+}
 
 installTypingLatencyDiagnostic()
 installAutomationHostDiagnostic()
