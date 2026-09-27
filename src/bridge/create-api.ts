@@ -7,6 +7,7 @@ import { createBrowserApi } from './mock/browser-api'
 import { createCacheApi } from './mock/cache-api'
 import { createCliApi } from './mock/cli-api'
 import { createDocPreviewApi } from './mock/doc-preview-api'
+import { createEphemeralVmApi } from './mock/ephemeral-vm-api'
 import { createFolderWorkspacesApi } from './mock/folder-workspaces-api'
 import { createFsApi } from './mock/fs-api'
 import { createGhApi } from './mock/gh-api'
@@ -83,6 +84,7 @@ function createMockDomains(): Partial<PreloadApi> {
     cache: createCacheApi(),
     cli: createCliApi(),
     docPreview: createDocPreviewApi(),
+    ephemeralVm: createEphemeralVmApi(),
     folderWorkspaces: createFolderWorkspacesApi(),
     fs: createFsApi(),
     gh: createGhApi(),

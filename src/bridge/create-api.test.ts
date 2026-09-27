@@ -108,6 +108,32 @@ describe('createAdeApi real assembly', () => {
     expect(invokeMock).not.toHaveBeenCalled()
   })
 
+  it('answers the optional ephemeral-VM wake probe without rejecting', async () => {
+    // Regression: with only the namespace-level fallback, `typeof resumeWorkspace`
+    // was a fabricated function whose call rejected, so every worktree click showed
+    // a spurious "Failed to wake ephemeral VM workspace" toast.
+    const api = createAdeApi()
+    expect(typeof api.ephemeralVm.resumeWorkspace).toBe('function')
+    await expect(api.ephemeralVm.resumeWorkspace({ workspaceId: 'repo::/x' })).resolves.toBeNull()
+    await expect(api.ephemeralVm.suspendWorkspace({ workspaceId: 'repo::/x' })).resolves.toBeNull()
+    await expect(api.ephemeralVm.listRuntimes()).resolves.toEqual([])
+    await expect(api.ephemeralVm.listRecipes({ repoId: 'repo-1' })).resolves.toMatchObject({
+      status: 'ok',
+      recipes: [],
+      diagnostics: []
+    })
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it('keeps the rest of the ephemeral-VM surface loudly unimplemented', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const api = createAdeApi()
+    await expect(api.ephemeralVm.doctor({ repoId: 'r', recipeId: 'x' })).rejects.toMatchObject({
+      name: 'UnimplementedBridgeError'
+    })
+    warn.mockRestore()
+  })
+
   it('rejects unknown namespaces with the unimplemented fallback', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const api = createAdeApi() as unknown as { notADomain: { ping: () => Promise<unknown> } }
