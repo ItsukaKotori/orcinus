@@ -1,6 +1,7 @@
 use ade_core::models::repo::RepoKind;
 use ade_core::models::worktree::Worktree;
 use ade_core::path_compare::normalize_for_comparison;
+use ade_fs::FsService;
 use serde::Deserialize;
 use serde_json::Value;
 use tauri::State;
@@ -133,33 +134,51 @@ fn folder_worktrees(repo: &Value, folder_workspaces: &[Value]) -> Vec<Worktree> 
     worktrees
 }
 
+/// Authorize every returned worktree path so linked worktrees (siblings of the
+/// repo root) are reachable in the file tree. A failed grant is logged, not
+/// fatal, mirroring the persisted-root re-authorization at startup.
+fn authorize_worktree_paths(fs: &FsService, worktrees: &[Worktree]) {
+    for worktree in worktrees {
+        if let Err(error) = fs.authorize_root(&worktree.path) {
+            eprintln!(
+                "[ade-bridge] failed to authorize worktree root '{}': {error}",
+                worktree.path
+            );
+        }
+    }
+}
+
 /// `worktrees.list({repoId})`: git repos shell out to `git worktree list`
 /// (prunable entries are already dropped by the porcelain parser); folder repos
 /// project their workspaces. An unknown repo lists nothing.
 pub fn list_worktrees(
     repo: &Value,
     folder_workspaces: &[Value],
+    fs: &FsService,
 ) -> Result<Vec<Worktree>, BridgeError> {
-    match repo_kind(repo) {
-        RepoKind::Folder => Ok(folder_worktrees(repo, folder_workspaces)),
+    let worktrees = match repo_kind(repo) {
+        RepoKind::Folder => folder_worktrees(repo, folder_workspaces),
         RepoKind::Git => {
             let entries = ade_git::worktree_list(repo_path(repo))?;
-            Ok(entries
+            entries
                 .iter()
                 .map(|entry| git_worktree(repo, entry))
-                .collect())
+                .collect()
         }
-    }
+    };
+    authorize_worktree_paths(fs, &worktrees);
+    Ok(worktrees)
 }
 
 /// `worktrees.listAll()`: every repo's projection, in registry order.
 pub fn list_all_worktrees(
     repos: &[Value],
     folder_workspaces: &[Value],
+    fs: &FsService,
 ) -> Result<Vec<Worktree>, BridgeError> {
     let mut worktrees = Vec::new();
     for repo in repos {
-        worktrees.extend(list_worktrees(repo, folder_workspaces)?);
+        worktrees.extend(list_worktrees(repo, folder_workspaces, fs)?);
     }
     Ok(worktrees)
 }
@@ -182,7 +201,8 @@ pub async fn worktrees_list(
     let Some(repo) = repo else {
         return Ok(Vec::new());
     };
-    run_blocking(move || list_worktrees(&repo, &folder_workspaces)).await
+    let fs = state.fs.clone();
+    run_blocking(move || list_worktrees(&repo, &folder_workspaces, &fs)).await
 }
 
 /// Project every repo's worktrees, merged in registry order.
@@ -195,7 +215,8 @@ pub async fn worktrees_list_all(
         let projects = lock(&state.projects);
         (projects.repos(), projects.folder_workspaces())
     };
-    run_blocking(move || list_all_worktrees(&repos, &folder_workspaces)).await
+    let fs = state.fs.clone();
+    run_blocking(move || list_all_worktrees(&repos, &folder_workspaces, &fs)).await
 }
 
 #[cfg(test)]
@@ -428,7 +449,7 @@ mod tests {
             folder_repo(),
             json!({ "id": "f2", "path": "/other", "displayName": "Other", "kind": "folder" }),
         ];
-        let worktrees = list_all_worktrees(&repos, &[]).unwrap();
+        let worktrees = list_all_worktrees(&repos, &[], &FsService::new()).unwrap();
         assert_eq!(
             worktrees.iter().map(|w| w.id.as_str()).collect::<Vec<_>>(),
             vec!["f1::/folder", "f2::/other"]

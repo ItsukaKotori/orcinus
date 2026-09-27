@@ -115,7 +115,7 @@ fn git_repo_add_projects_main_worktree() {
         "a successful add authorizes its root"
     );
 
-    let worktrees = list_worktrees(&repo, &[]).expect("git worktree list");
+    let worktrees = list_worktrees(&repo, &[], &fs).expect("git worktree list");
     assert_eq!(worktrees.len(), 1, "fresh repo has one worktree");
     let main = &worktrees[0];
     assert_eq!(main.id, format!("{}::{}", repo_id(&repo), resolved));
@@ -166,13 +166,66 @@ fn linked_worktrees_follow_the_main_entry() {
     )
     .unwrap();
 
-    let worktrees = list_worktrees(&outcome.repo, &[]).unwrap();
+    let worktrees = list_worktrees(&outcome.repo, &[], &fs).unwrap();
     assert_eq!(worktrees.len(), 2);
     assert!(worktrees[0].is_main_worktree);
     assert_eq!(worktrees[0].display_name, "main");
     assert!(!worktrees[1].is_main_worktree);
     assert_eq!(worktrees[1].branch, "refs/heads/feature/login");
     assert_eq!(worktrees[1].display_name, "feature/login");
+}
+
+#[test]
+fn list_worktrees_authorizes_linked_worktree_paths() {
+    let dir = TestDir::new("git-authorize-linked");
+    let repo_path = init_git_repo(&dir.path, "demo");
+    let linked = dir.path.join("demo-feature");
+    git(
+        &repo_path,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            "feature/login",
+            linked.to_str().unwrap(),
+        ],
+    );
+    let fs = FsService::new();
+    let mut projects = store(&dir);
+    let outcome = add_repo(
+        &mut projects,
+        &fs,
+        repo_path.to_str().unwrap(),
+        RepoKind::Git,
+        None,
+        1,
+    )
+    .unwrap();
+
+    // Adding the repo grants only the repo root; the linked worktree is a
+    // sibling directory and stays unreachable until a listing authorizes it.
+    assert!(matches!(
+        fs.resolve(linked.to_str().unwrap()),
+        Err(ade_fs::FsError::PathAccessDenied)
+    ));
+
+    let worktrees = list_worktrees(&outcome.repo, &[], &fs).unwrap();
+    assert!(
+        worktrees
+            .iter()
+            .any(|worktree| worktree.path == linked.to_str().unwrap()),
+        "the linked worktree is listed"
+    );
+
+    assert!(
+        fs.resolve(linked.to_str().unwrap()).is_ok(),
+        "listing authorizes every returned worktree path"
+    );
+    let unrelated = dir.dir("unrelated");
+    assert!(matches!(
+        fs.resolve(unrelated.to_str().unwrap()),
+        Err(ade_fs::FsError::PathAccessDenied)
+    ));
 }
 
 #[test]
@@ -200,7 +253,7 @@ fn folder_kind_add_projects_its_main_workspace() {
     assert!(repo.get("externalWorktreeVisibilityLegacy").is_none());
     assert!(fs.resolve(&resolved).is_ok());
 
-    let worktrees = list_worktrees(&repo, &[]).unwrap();
+    let worktrees = list_worktrees(&repo, &[], &fs).unwrap();
     assert_eq!(worktrees.len(), 1);
     let main = &worktrees[0];
     assert_eq!(main.id, format!("{}::{}", repo_id(&repo), resolved));
@@ -248,7 +301,7 @@ fn folder_workspaces_append_after_main_by_last_activity() {
         }),
     ];
 
-    let worktrees = list_worktrees(&repo, &workspaces).unwrap();
+    let worktrees = list_worktrees(&repo, &workspaces, &fs).unwrap();
     assert_eq!(
         worktrees
             .iter()
@@ -330,7 +383,7 @@ fn folder_workspaces_are_scoped_to_their_repo_group() {
         }),
     ];
 
-    let first_worktrees = list_worktrees(&first, &workspaces).unwrap();
+    let first_worktrees = list_worktrees(&first, &workspaces, &fs).unwrap();
     assert_eq!(
         first_worktrees
             .iter()
@@ -339,7 +392,7 @@ fn folder_workspaces_are_scoped_to_their_repo_group() {
         vec![first_folder.to_str().unwrap(), dir.dir("first/one").to_str().unwrap()]
     );
 
-    let second_worktrees = list_worktrees(&second, &workspaces).unwrap();
+    let second_worktrees = list_worktrees(&second, &workspaces, &fs).unwrap();
     assert_eq!(
         second_worktrees
             .iter()
@@ -351,7 +404,7 @@ fn folder_workspaces_are_scoped_to_their_repo_group() {
         ]
     );
 
-    let all = list_all_worktrees(&projects.repos(), &workspaces).unwrap();
+    let all = list_all_worktrees(&projects.repos(), &workspaces, &fs).unwrap();
     assert_eq!(
         all.iter().map(|worktree| worktree.id.as_str()).collect::<Vec<_>>(),
         vec![
@@ -396,7 +449,7 @@ fn ungrouped_folder_repo_projects_only_its_root() {
         }),
     ];
 
-    let worktrees = list_worktrees(&repo, &workspaces).unwrap();
+    let worktrees = list_worktrees(&repo, &workspaces, &fs).unwrap();
     assert_eq!(worktrees.len(), 1);
     assert_eq!(worktrees[0].id, format!("{}::{}", repo_id(&repo), folder.to_str().unwrap()));
     assert!(worktrees[0].is_main_worktree);
@@ -428,7 +481,7 @@ fn folder_root_spelling_does_not_duplicate_the_root_row() {
         "lastActivityAt": 1
     })];
 
-    let worktrees = list_worktrees(&repo, &workspaces).unwrap();
+    let worktrees = list_worktrees(&repo, &workspaces, &fs).unwrap();
     assert_eq!(worktrees.len(), 1);
     assert_eq!(worktrees[0].display_name, "notes");
     assert!(worktrees[0].is_main_worktree);
@@ -649,7 +702,8 @@ fn worktrees_list_all_merges_every_repo() {
     .unwrap()
     .repo;
 
-    let worktrees = list_all_worktrees(&projects.repos(), &projects.folder_workspaces()).unwrap();
+    let worktrees =
+        list_all_worktrees(&projects.repos(), &projects.folder_workspaces(), &fs).unwrap();
     assert_eq!(worktrees.len(), 2);
     assert_eq!(
         worktrees

@@ -1,14 +1,10 @@
 import { invoke } from '@tauri-apps/api/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { AppApi } from '../../shared/preload-api/api/app-api'
-import { UnimplementedBridgeError } from '../unimplemented-fallback'
 import { createAppRealApi } from './app'
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
 
 const invokeMock = vi.mocked(invoke)
-
-type AppMethod = keyof AppApi
 
 beforeEach(() => {
   invokeMock.mockReset()
@@ -43,22 +39,25 @@ describe('app real adapter commands', () => {
   })
 })
 
-describe('app real adapter unimplemented surface', () => {
-  it.each([
-    'relaunch',
-    'restart',
-    'reload',
-    'awaitFirstWindowStartupServices',
-    'getFloatingTerminalCwd',
-    'onKeyboardLayoutChanged'
-  ] satisfies AppMethod[])('rejects %s with UnimplementedBridgeError', async (method) => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const app = createAppRealApi() as unknown as Record<
-      string,
-      (callArgs?: unknown) => Promise<unknown>
-    >
-    await expect(app[method]({})).rejects.toBeInstanceOf(UnimplementedBridgeError)
+describe('app real adapter host semantics', () => {
+  it('resolves the startup barriers without a ported host service', async () => {
+    // Regression: an unguarded `awaitGitEnvironmentStartupBarrier()` rejection
+    // aborted the whole renderer hydration chain, so real mode restored no
+    // worktrees and no session.
+    const app = createAppRealApi()
+    await expect(app.awaitGitEnvironmentStartupBarrier()).resolves.toBeUndefined()
+    await expect(app.awaitFirstWindowStartupServices()).resolves.toBeUndefined()
+    await expect(app.prepareTerminalStartupRestoration()).resolves.toBeUndefined()
+    await expect(app.recoverLegacyWorkerTerminalsForRendererStartup()).resolves.toBeUndefined()
+    expect(app.stageBeforeUnloadSync({ sessions: [], ui: {} })).toBeUndefined()
     expect(invokeMock).not.toHaveBeenCalled()
-    warn.mockRestore()
+  })
+
+  it('keeps the remaining unported methods benign instead of fabricating rejections', async () => {
+    const app = createAppRealApi()
+    await expect(app.relaunch()).resolves.toBeUndefined()
+    await expect(app.getFloatingTerminalCwd()).resolves.toEqual(expect.any(String))
+    expect(typeof app.onKeyboardLayoutChanged(() => {})).toBe('function')
+    expect(invokeMock).not.toHaveBeenCalled()
   })
 })

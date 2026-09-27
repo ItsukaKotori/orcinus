@@ -1,5 +1,6 @@
 import type { PreloadApi } from '../preload/api-types'
 import { createAgentAwakeApi } from './mock/agent-awake-api'
+import { createHooksApi } from './mock/agent-hook-api'
 import { createAgentStatusApi } from './mock/agent-status-api'
 import { createAppApi } from './mock/app-api'
 import { createAutomationsApi } from './mock/automations-api'
@@ -11,6 +12,8 @@ import { createEphemeralVmApi } from './mock/ephemeral-vm-api'
 import { createFolderWorkspacesApi } from './mock/folder-workspaces-api'
 import { createFsApi } from './mock/fs-api'
 import { createGhApi } from './mock/gh-api'
+import { createGitApi } from './mock/git-api'
+import { createHostedReviewApi } from './mock/hosted-review-api'
 import { createJiraApi } from './mock/jira-api'
 import { createKeybindingsApi } from './mock/keybindings-api'
 import { createLinearApi } from './mock/linear-api'
@@ -88,6 +91,9 @@ function createMockDomains(): Partial<PreloadApi> {
     folderWorkspaces: createFolderWorkspacesApi(),
     fs: createFsApi(),
     gh: createGhApi(),
+    git: createGitApi(),
+    hooks: createHooksApi(),
+    hostedReview: createHostedReviewApi(),
     jira: createJiraApi(),
     keybindings: createKeybindingsApi(),
     linear: createLinearApi(),

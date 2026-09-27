@@ -343,8 +343,8 @@ const surfaceCases: SurfaceCase[] = [
   },
   {
     domain: 'app',
-    explicit: ['getIdentity'],
-    missing: [
+    explicit: [
+      'getIdentity',
       'relaunch',
       'restart',
       'reload',
@@ -365,7 +365,8 @@ const surfaceCases: SurfaceCase[] = [
       'pickFloatingMarkdownDocument',
       'pickFloatingWorkspaceDirectory',
       'writeTerminalRenderDesyncEvidence'
-    ]
+    ],
+    missing: []
   },
   { domain: 'platform', explicit: ['get'], missing: [] }
 ]

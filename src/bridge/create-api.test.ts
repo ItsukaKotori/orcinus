@@ -108,6 +108,48 @@ describe('createAdeApi real assembly', () => {
     expect(invokeMock).not.toHaveBeenCalled()
   })
 
+  it('keeps the app startup barriers benign in real mode', async () => {
+    // Regression: the hydration chain awaits these unguarded; fabricated
+    // rejections degraded startup (no worktrees, no session restore).
+    const api = createAdeApi()
+    expect(typeof api.app.awaitGitEnvironmentStartupBarrier).toBe('function')
+    await expect(api.app.awaitGitEnvironmentStartupBarrier()).resolves.toBeUndefined()
+    await expect(api.app.awaitFirstWindowStartupServices()).resolves.toBeUndefined()
+    await expect(api.app.prepareTerminalStartupRestoration()).resolves.toBeUndefined()
+    await expect(api.app.recoverLegacyWorkerTerminalsForRendererStartup()).resolves.toBeUndefined()
+    expect(api.app.stageBeforeUnloadSync({ sessions: [], ui: {} })).toBeUndefined()
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it('keeps the unported acceptance namespaces benign in real mode', async () => {
+    // Regression: namespace-level fabricated rejections produced the false
+    // "check failed" setup card, empty hosted badges, and SCM console errors.
+    const api = createAdeApi()
+    await expect(api.hooks.check({ repoId: 'repo-1' })).resolves.toEqual({
+      status: 'ok',
+      hasHooks: false,
+      hooks: null,
+      mayNeedUpdate: false
+    })
+    await expect(api.hooks.inspectSetupScriptImports({ repoId: 'repo-1' })).resolves.toEqual([])
+    await expect(
+      api.hostedReview.forBranch({ repoPath: '/repo', branch: 'main' })
+    ).resolves.toBeNull()
+    await expect(api.git.status({ worktreePath: '/repo' })).resolves.toEqual({
+      entries: [],
+      conflictOperation: 'unknown'
+    })
+    await expect(api.git.cancelStatus({ requestToken: 'token-1' })).resolves.toBeUndefined()
+    await expect(
+      api.git.setStatusUpstreamRefWatch({
+        worktreeId: 'repo::/repo',
+        worktreePath: '/repo',
+        executionHostId: 'local'
+      })
+    ).resolves.toBeUndefined()
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
   it('answers the optional ephemeral-VM wake probe without rejecting', async () => {
     // Regression: with only the namespace-level fallback, `typeof resumeWorkspace`
     // was a fabricated function whose call rejected, so every worktree click showed
