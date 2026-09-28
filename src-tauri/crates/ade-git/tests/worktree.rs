@@ -530,6 +530,46 @@ fn delete_branch_skips_non_local_branch_refs() {
 }
 
 #[test]
+fn delete_branch_skips_branch_checked_out_in_worktree() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("branch-checked-out");
+    let repo = init_repo_with_commit(&dir);
+    let linked = linked_path(&dir);
+    add_feature_worktree(&repo, &linked);
+
+    let outcome = delete_branch(repo_path(&repo), "refs/heads/feature/x", false)
+        .expect("a checked-out branch is skipped, not an error");
+    assert_eq!(outcome, BranchDeleteOutcome::Skipped);
+    assert!(
+        try_git(&repo, &["rev-parse", "--verify", "refs/heads/feature/x"])
+            .status
+            .success()
+    );
+}
+
+#[test]
+fn delete_branch_prunes_stale_registration_and_retries() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("branch-stale");
+    let repo = init_repo_with_commit(&dir);
+    let linked = linked_path(&dir);
+    add_feature_worktree(&repo, &linked);
+    // A manually deleted worktree keeps a stale registration that still pins
+    // the branch; the checked-out refusal must trigger prune + one retry.
+    std::fs::remove_dir_all(&linked).expect("delete linked directory by hand");
+
+    let outcome = delete_branch(repo_path(&repo), "refs/heads/feature/x", false)
+        .expect("a stale registration is reclaimed");
+
+    assert_eq!(outcome, BranchDeleteOutcome::Deleted);
+    assert!(
+        !try_git(&repo, &["rev-parse", "--verify", "refs/heads/feature/x"])
+            .status
+            .success()
+    );
+}
+
+#[test]
 fn force_delete_branch_enforces_cas() {
     let _env = hermetic_env();
     let dir = TempDir::new("branch-force-delete");
@@ -575,6 +615,54 @@ fn force_delete_branch_enforces_cas() {
     )
     .status
     .success());
+}
+
+#[test]
+fn force_delete_branch_rejects_checked_out_branch() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("branch-force-checked-out");
+    let repo = init_repo_with_commit(&dir);
+    let linked = linked_path(&dir);
+    add_feature_worktree(&repo, &linked);
+    let feature_head = output_text(&git(&repo, &["rev-parse", "refs/heads/feature/x"]));
+
+    let error = force_delete_branch(repo_path(&repo), "feature/x", &feature_head).unwrap_err();
+    assert_eq!(
+        invalid_input_message(error),
+        "Local branch \"feature/x\" is checked out in another worktree."
+    );
+    assert!(
+        try_git(&repo, &["rev-parse", "--verify", "refs/heads/feature/x"])
+            .status
+            .success()
+    );
+}
+
+#[test]
+fn force_delete_branch_rejects_invalid_arguments() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("branch-force-invalid");
+    let repo = init_repo_with_commit(&dir);
+    let linked = linked_path(&dir);
+    add_feature_worktree(&repo, &linked);
+    let feature_head = output_text(&git(&repo, &["rev-parse", "refs/heads/feature/x"]));
+
+    assert_eq!(
+        invalid_input_message(
+            force_delete_branch(repo_path(&repo), "", &feature_head).unwrap_err()
+        ),
+        "Invalid branch name"
+    );
+    assert_eq!(
+        invalid_input_message(
+            force_delete_branch(repo_path(&repo), "feature\0x", &feature_head).unwrap_err()
+        ),
+        "Invalid branch name"
+    );
+    assert_eq!(
+        invalid_input_message(force_delete_branch(repo_path(&repo), "feature/x", "").unwrap_err()),
+        "Cannot force-delete local branch \"feature/x\" without the commit Git preserved."
+    );
 }
 
 #[test]

@@ -120,11 +120,15 @@ pub fn worktree_remove(repo_path: &str, worktree_path: &str, force: bool) -> Res
 
 /// Delete the worktree's local branch after removal.
 ///
-/// Mirrors `deleteLocalBranchAfterWorktreeRemoval`
-/// (`orca:src/main/git/worktree-branch-removal.ts:63-102`) minus the
-/// checked-out prune-and-retry and squash-merged force cleanup: `-d` preserves
-/// a branch Git calls "not fully merged", every other failure surfaces. A ref
-/// that is not `refs/heads/<name>` is skipped, mirroring the oracle's
+/// Mirrors `deleteBranchAfterWorktreeRemoval`
+/// (`orca:src/main/git/worktree-branch-removal.ts:14-102`): the branch cleanup
+/// never rejects after the worktree is gone — a failure keeps the branch
+/// (`Preserved`) instead of discarding work or failing the removal. A
+/// checked-out refusal may come from a stale registration, so it prunes and
+/// retries once; a still-checked-out branch is left alone (`Skipped`). The
+/// oracle's squash-merge tree-equivalence cleanup is out of this port's scope,
+/// and preserving is the safe direction there too. A ref that is not
+/// `refs/heads/<name>` is skipped, mirroring the oracle's
 /// `normalizeLocalBranchRef` producing an empty branch name for detached
 /// worktrees.
 pub fn delete_branch(
@@ -141,43 +145,71 @@ pub fn delete_branch(
 
     let flag = if force { "-D" } else { "-d" };
     let args = ["branch", flag, "--", branch_name];
-    let output = run_git_in(repo_path, &args, REGISTRATION_TIMEOUT, None)?;
-    if output.status.success() {
-        return Ok(BranchDeleteOutcome::Deleted);
+    if let Ok(output) = run_git_in(repo_path, &args, REGISTRATION_TIMEOUT, None) {
+        if output.status.success() {
+            return Ok(BranchDeleteOutcome::Deleted);
+        }
+
+        if is_checked_out_refusal(&output.stderr) {
+            // Why: only pay for `worktree prune` when a stale admin record may
+            // be blocking `branch -d`. If prune itself fails, the oracle reads
+            // the branch as checked out and leaves it.
+            let pruned = matches!(
+                run_git_in(
+                    repo_path,
+                    &["worktree", "prune"],
+                    REGISTRATION_TIMEOUT,
+                    None
+                ),
+                Ok(output) if output.status.success()
+            );
+            if !pruned {
+                return Ok(BranchDeleteOutcome::Skipped);
+            }
+
+            match run_git_in(repo_path, &args, REGISTRATION_TIMEOUT, None) {
+                Ok(output) if output.status.success() => return Ok(BranchDeleteOutcome::Deleted),
+                Ok(output) if is_checked_out_refusal(&output.stderr) => {
+                    return Ok(BranchDeleteOutcome::Skipped)
+                }
+                // Any other retry outcome keeps the branch below.
+                _ => {}
+            }
+        }
     }
 
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    if !force && stderr.contains("not fully merged") {
-        let head = run_git_in(
-            repo_path,
-            &["rev-parse", branch_ref],
-            REGISTRATION_TIMEOUT,
-            None,
-        )
-        .ok()
-        .filter(|output| output.status.success())
-        .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
-        .filter(|head| !head.is_empty());
-        return Ok(BranchDeleteOutcome::Preserved {
-            branch_name: branch_name.to_string(),
-            head,
-        });
-    }
-    Err(git_command_failed(&args, &output))
+    Ok(BranchDeleteOutcome::Preserved {
+        branch_name: branch_name.to_string(),
+        head: branch_head(repo_path, branch_ref),
+    })
 }
 
-/// Force-delete a preserved branch with a compare-and-swap guard.
+/// Force-delete a preserved branch with compare-and-swap and checkout guards.
 ///
-/// Mirrors `forceDeleteLocalBranch`'s `update-ref -d` contract
-/// (`orca:src/main/git/worktree-branch-removal.ts:151-179`): the ref is
-/// deleted only while it still points at the commit the removal preserved, so
-/// a stale recovery action can never discard newer work. The
-/// `branch.<name>` config section cleanup that follows is best-effort.
+/// Mirrors `forceDeleteLocalBranch`
+/// (`orca:src/main/git/worktree-branch-removal.ts:131-179`): a branch that any
+/// registered worktree still checks out is refused, the ref is deleted only
+/// while it still points at the commit the removal preserved (so a stale
+/// recovery action can never discard newer work), and a checkout that appears
+/// concurrently is recovered by restoring the ref. The `branch.<name>` config
+/// section cleanup that follows is best-effort.
 pub fn force_delete_branch(
     repo_path: &str,
     branch_name: &str,
     expected_head: &str,
 ) -> Result<(), CoreError> {
+    if branch_name.is_empty() || branch_name.contains('\0') {
+        return Err(CoreError::InvalidInput("Invalid branch name".to_string()));
+    }
+    if expected_head.is_empty() {
+        return Err(CoreError::InvalidInput(format!(
+            "Cannot force-delete local branch \"{branch_name}\" without the commit Git preserved."
+        )));
+    }
+    if is_branch_checked_out(repo_path, branch_name)? {
+        return Err(checked_out_error(branch_name));
+    }
+
     let ref_name = format!("refs/heads/{branch_name}");
     let args = ["update-ref", "-d", ref_name.as_str(), expected_head];
     let output = run_git_in(repo_path, &args, REGISTRATION_TIMEOUT, None)?;
@@ -185,6 +217,13 @@ pub fn force_delete_branch(
         return Err(CoreError::InvalidInput(format!(
             "Local branch \"{branch_name}\" changed after the workspace was deleted. Review it before deleting it."
         )));
+    }
+
+    if is_branch_checked_out(repo_path, branch_name)? {
+        // Why: a concurrent checkout must get its ref back exactly where it was.
+        let restore = ["update-ref", ref_name.as_str(), expected_head, ""];
+        let _ = run_git_in(repo_path, &restore, REGISTRATION_TIMEOUT, None);
+        return Err(checked_out_error(branch_name));
     }
 
     let section = format!("branch.{branch_name}");
@@ -195,6 +234,49 @@ pub fn force_delete_branch(
         None,
     );
     Ok(())
+}
+
+/// Mirrors `isLocalBranchCheckedOut`
+/// (`orca:src/main/git/worktree-branch-removal.ts:181-189`): any registered
+/// worktree whose branch ref is `refs/heads/<branch_name>`.
+fn is_branch_checked_out(repo_path: &str, branch_name: &str) -> Result<bool, CoreError> {
+    Ok(worktree_list(repo_path)?.iter().any(|entry| {
+        entry
+            .branch
+            .as_deref()
+            .and_then(|branch| branch.strip_prefix("refs/heads/"))
+            == Some(branch_name)
+    }))
+}
+
+/// Mirrors `isBranchCheckedOutInWorktreeError`
+/// (`orca:src/shared/git-branch-delete-refusal.ts:12-16`): Git through 2.40
+/// says "Cannot delete branch 'x' checked out at '<path>'", 2.43+ says "cannot
+/// delete branch 'x' used by worktree at '<path>'", both on stderr.
+fn is_checked_out_refusal(stderr: &[u8]) -> bool {
+    let text = String::from_utf8_lossy(stderr).to_lowercase();
+    (text.contains("cannot delete branch")
+        && (text.contains("used by worktree") || text.contains("checked out")))
+        || (text.contains("branch") && text.contains("is checked out"))
+}
+
+fn checked_out_error(branch_name: &str) -> CoreError {
+    CoreError::InvalidInput(format!(
+        "Local branch \"{branch_name}\" is checked out in another worktree."
+    ))
+}
+
+fn branch_head(repo_path: &str, branch_ref: &str) -> Option<String> {
+    run_git_in(
+        repo_path,
+        &["rev-parse", branch_ref],
+        REGISTRATION_TIMEOUT,
+        None,
+    )
+    .ok()
+    .filter(|output| output.status.success())
+    .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
+    .filter(|head| !head.is_empty())
 }
 
 fn is_registered(repo_path: &str, worktree_path: &str) -> Result<bool, CoreError> {
