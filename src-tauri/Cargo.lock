@@ -63,6 +63,8 @@ name = "ade-git"
 version = "0.0.1"
 dependencies = [
  "ade-core",
+ "serde",
+ "specta",
 ]
 
 [[package]]

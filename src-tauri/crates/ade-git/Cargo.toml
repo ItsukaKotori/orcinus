@@ -3,5 +3,10 @@ name = "ade-git"
 version = "0.0.1"
 edition = "2021"
 
+[features]
+specta = ["dep:specta"]
+
 [dependencies]
 ade-core = { path = "../ade-core" }
+serde = { version = "1", features = ["derive"] }
+specta = { version = "=2.0.0-rc.25", features = ["derive"], optional = true }

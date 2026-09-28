@@ -1,11 +1,12 @@
 pub mod porcelain;
+pub mod runner;
 
 pub use porcelain::{parse_worktree_list, GitWorktreeEntry};
+pub use runner::{run_git_in, CancelToken, GitOutput};
 
 use ade_core::errors::CoreError;
-use std::io::Read;
-use std::process::{Child, Command, ExitStatus, Output, Stdio};
-use std::time::{Duration, Instant};
+use std::process::{Command, Output};
+use std::time::Duration;
 
 const VERSION_TIMEOUT: Duration = Duration::from_millis(1500);
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(10);
@@ -48,68 +49,13 @@ fn run_git(path: &str, args: &[&str]) -> Result<Output, CoreError> {
 }
 
 fn output_with_timeout(command: &mut Command, timeout: Duration) -> std::io::Result<Output> {
-    let mut child = command
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()?;
-    let stdout = child.stdout.take().expect("stdout is piped");
-    let stderr = child.stderr.take().expect("stderr is piped");
-    let stdout_reader = std::thread::spawn(move || read_all(stdout));
-    let stderr_reader = std::thread::spawn(move || read_all(stderr));
-
-    let status = match wait_with_timeout(&mut child, timeout) {
-        Ok(Some(status)) => status,
-        Ok(None) => {
-            reap(&mut child);
-            let _ = stdout_reader.join();
-            let _ = stderr_reader.join();
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::TimedOut,
-                "git command timed out",
-            ));
-        }
-        Err(error) => {
-            reap(&mut child);
-            let _ = stdout_reader.join();
-            let _ = stderr_reader.join();
-            return Err(error);
-        }
-    };
-
-    Ok(Output {
-        status,
-        stdout: stdout_reader.join().expect("stdout reader panicked")?,
-        stderr: stderr_reader.join().expect("stderr reader panicked")?,
-    })
-}
-
-fn wait_with_timeout(child: &mut Child, timeout: Duration) -> std::io::Result<Option<ExitStatus>> {
-    let deadline = Instant::now() + timeout;
-    loop {
-        if let Some(status) = child.try_wait()? {
-            return Ok(Some(status));
-        }
-        if Instant::now() >= deadline {
-            return Ok(None);
-        }
-        std::thread::sleep(Duration::from_millis(10));
-    }
-}
-
-fn reap(child: &mut Child) {
-    let _ = child.kill();
-    let _ = child.wait();
-}
-
-fn read_all(mut reader: impl Read) -> std::io::Result<Vec<u8>> {
-    let mut buffer = Vec::new();
-    reader.read_to_end(&mut buffer)?;
-    Ok(buffer)
+    runner::run_process(command, timeout, None)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Instant;
 
     #[cfg(unix)]
     #[test]
