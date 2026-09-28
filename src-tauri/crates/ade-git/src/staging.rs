@@ -121,21 +121,27 @@ pub fn bulk_discard(worktree_path: &str, file_paths: &[String]) -> Result<(), Co
     Ok(())
 }
 
-/// `git commit -m <message>` only. A rejected commit (hook, identity, nothing
-/// staged) resolves as `{success:false,error}` with the first non-empty of
-/// stderr → stdout → `"Commit failed"`, matching `commit-changes.ts`.
+/// `git commit -m <message>` only. Every git failure — a rejected commit
+/// (hook, identity, nothing staged) or a runner-level failure (spawn, timeout,
+/// cancellation) — resolves as `{success:false,error}` instead of rejecting,
+/// matching the oracle's catch-all. Git's own text is preferred in the order
+/// stderr → stdout → `"Commit failed"`; an empty message is the one input
+/// validation that still rejects.
 pub fn commit(worktree_path: &str, message: &str) -> Result<CommitOutcome, CoreError> {
     if message.trim().is_empty() {
         return Err(CoreError::InvalidInput(
             "Commit message is required".to_string(),
         ));
     }
-    let output = run_git_in(
+    let output = match run_git_in(
         worktree_path,
         &["commit", "-m", message],
         COMMAND_TIMEOUT,
         None,
-    )?;
+    ) {
+        Ok(output) => output,
+        Err(error) => return Ok(outcome_from_error(error.to_string())),
+    };
     if output.status.success() {
         return Ok(CommitOutcome {
             success: true,
@@ -151,10 +157,14 @@ pub fn commit(worktree_path: &str, message: &str) -> Result<CommitOutcome, CoreE
     } else {
         "Commit failed".to_string()
     };
-    Ok(CommitOutcome {
+    Ok(outcome_from_error(error))
+}
+
+fn outcome_from_error(error: String) -> CommitOutcome {
+    CommitOutcome {
         success: false,
         error: Some(error),
-    })
+    }
 }
 
 /// Ahead/behind for the configured `@{upstream}`. A branch without one

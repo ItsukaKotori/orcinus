@@ -385,6 +385,21 @@ fn commit_returns_success_and_commit_visible_in_log() {
     assert!(status_entries(&repo).is_empty());
 }
 
+#[test]
+fn commit_folds_spawn_failures_into_the_outcome() {
+    let dir = TempDir::new("commit-spawn-failure");
+    let repo = init_repo_with_commit(&dir);
+    // A NUL byte cannot reach execve, so spawn fails before git runs: this is
+    // the `run_git_in` Err path that must not escape as a rejected command.
+    let invalid_path = format!("{}\0", repo_str(&repo));
+
+    let outcome = commit(&invalid_path, "x").unwrap();
+
+    assert!(!outcome.success);
+    let error = outcome.error.expect("spawn failure carries an error");
+    assert!(!error.trim().is_empty(), "error text should be surfaced");
+}
+
 #[cfg(unix)]
 #[test]
 fn commit_reports_hook_failure_via_success_false() {
