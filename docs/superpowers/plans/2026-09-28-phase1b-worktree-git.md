@@ -1120,7 +1120,7 @@ fn cancel_registry_cancels_registered_token_once() {
 #[test]
 fn status_impl_returns_empty_entries_for_non_repo() {
     let dir = tempdir();
-    let result = status_impl(dir.path().to_str().unwrap(), &StatusOptions::default(), None).unwrap();
+    let result = ade_git::status_read::status(dir.path().to_str().unwrap(), &StatusOptions::default(), None).unwrap();
     assert!(result.entries.is_empty());
 }
 ```
