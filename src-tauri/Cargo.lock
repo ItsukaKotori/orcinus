@@ -66,6 +66,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "ade-pty"
+version = "0.0.1"
+dependencies = [
+ "portable-pty",
+]
+
+[[package]]
 name = "ade-store"
 version = "0.0.1"
 dependencies = [
@@ -2798,13 +2805,6 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-build",
-]
-
-[[package]]
-name = "orcinus-pty"
-version = "0.0.1"
-dependencies = [
- "portable-pty",
 ]
 
 [[package]]
