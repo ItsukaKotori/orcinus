@@ -1,6 +1,7 @@
 pub mod diff;
 pub mod porcelain;
 pub mod runner;
+pub mod staging;
 pub mod status;
 pub mod status_read;
 
