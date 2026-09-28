@@ -1,18 +1,50 @@
 //! Worktree creation support that needs a real git repository: base-ref
-//! probing and git username resolution.
+//! probing, git username resolution, `git worktree add`/`remove` and branch
+//! cleanup.
 //!
 //! Mirrors `orca:src/main/git/repo-default-base-ref.ts`,
-//! `orca:src/main/worktree-create-base.ts` and the explicit-config half of
-//! `orca:src/main/git/git-username.ts` (the `gh` CLI probe is not ported).
+//! `orca:src/main/worktree-create-base.ts`, the explicit-config half of
+//! `orca:src/main/git/git-username.ts` (the `gh` CLI probe is not ported),
+//! `orca:src/main/git/worktree-add.ts`, `worktree-removal*.ts` and
+//! `worktree-branch-removal.ts`.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Mutex, MutexGuard, Once};
 
 use ade_core::errors::CoreError;
 use ade_git::branch::{resolve_create_base, resolve_default_base_ref, resolve_git_username};
+use ade_git::worktree_create::{
+    configure_branch_base, ensure_push_auto_setup_remote, worktree_add, AddWorktreeRequest,
+};
+use ade_git::worktree_remove::{
+    assert_worktree_removable, delete_branch, force_delete_branch, worktree_remove,
+    BranchDeleteOutcome,
+};
 
 static COUNTER: AtomicU64 = AtomicU64::new(0);
+static ENV_LOCK: Mutex<()> = Mutex::new(());
+static ENV_INIT: Once = Once::new();
+
+/// Serializes the tests that drive library-spawned git and strips the host's
+/// git config once, so `push.autoSetupRemote` and identity cannot leak into
+/// the fixtures (the direct [`git_command`] calls are isolated regardless).
+fn hermetic_env() -> MutexGuard<'static, ()> {
+    let guard = ENV_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    ENV_INIT.call_once(|| {
+        std::env::set_var("GIT_CONFIG_NOSYSTEM", "1");
+        std::env::set_var("GIT_CONFIG_GLOBAL", "/dev/null");
+        std::env::set_var("GIT_AUTHOR_NAME", "Ade Test");
+        std::env::set_var("GIT_AUTHOR_EMAIL", "ade-test@example.com");
+        std::env::set_var("GIT_COMMITTER_NAME", "Ade Test");
+        std::env::set_var("GIT_COMMITTER_EMAIL", "ade-test@example.com");
+        std::env::set_var("GIT_TERMINAL_PROMPT", "0");
+    });
+    guard
+}
 
 struct TempDir {
     path: PathBuf,
@@ -266,4 +298,306 @@ fn resolve_git_username_is_none_without_usable_config() {
     git(&repo, &["config", "--local", "user.username", ".hidden"]);
 
     assert_eq!(resolve_git_username(repo_path(&repo)), None);
+}
+
+/// git invocation that tolerates a non-zero exit, for asserting failures.
+fn try_git(dir: &Path, args: &[&str]) -> std::process::Output {
+    git_command(dir).args(args).output().expect("run git")
+}
+
+fn output_text(output: &std::process::Output) -> String {
+    String::from_utf8_lossy(&output.stdout).trim().to_string()
+}
+
+/// The linked worktree path used by the add/remove tests, a sibling of `repo`.
+fn linked_path(dir: &TempDir) -> PathBuf {
+    dir.path().join("wt-feature")
+}
+
+fn str_path(path: &Path) -> &str {
+    path.to_str().expect("path is UTF-8")
+}
+
+/// `feature/x` created from `main` through the library under test.
+fn add_feature_worktree(repo: &Path, linked: &Path) {
+    worktree_add(&AddWorktreeRequest {
+        repo_path: repo_path(repo).to_string(),
+        worktree_path: str_path(linked).to_string(),
+        branch: "feature/x".to_string(),
+        base_ref: "main".to_string(),
+    })
+    .expect("worktree_add");
+}
+
+/// Point the linked worktree's branch at one extra commit.
+fn commit_on_linked(linked: &Path) -> String {
+    std::fs::write(linked.join("feature.txt"), "feature\n").expect("write feature file");
+    commit_all(linked, "feature commit");
+    output_text(&git(linked, &["rev-parse", "HEAD"]))
+}
+
+fn same_path(listed: &str, expected: &Path) -> bool {
+    std::fs::canonicalize(listed).expect("canonicalize listed path")
+        == std::fs::canonicalize(expected).expect("canonicalize expected path")
+}
+
+#[test]
+fn worktree_add_creates_linked_worktree_on_new_branch() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("worktree-add");
+    let repo = init_repo_with_commit(&dir);
+    let linked = linked_path(&dir);
+
+    add_feature_worktree(&repo, &linked);
+
+    let entries = ade_git::worktree_list(repo_path(&repo)).expect("worktree_list");
+    assert_eq!(entries.len(), 2);
+    assert!(
+        linked.join(".git").is_file(),
+        "linked worktree has a .git file"
+    );
+    let linked_entry = entries
+        .iter()
+        .find(|entry| same_path(&entry.path, &linked))
+        .expect("linked worktree entry");
+    assert_eq!(linked_entry.branch.as_deref(), Some("refs/heads/feature/x"));
+    assert!(!linked_entry.is_main_worktree);
+
+    configure_branch_base(str_path(&linked), "feature/x", "main").expect("configure_branch_base");
+    let value = output_text(&git(
+        &linked,
+        &["config", "--local", "--get", "branch.feature/x.base"],
+    ));
+    assert_eq!(value, "main");
+}
+
+#[test]
+fn worktree_add_rejects_registered_path_with_conflict_message() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("worktree-add-conflict");
+    let repo = init_repo_with_commit(&dir);
+    let linked = linked_path(&dir);
+    add_feature_worktree(&repo, &linked);
+
+    let error = worktree_add(&AddWorktreeRequest {
+        repo_path: repo_path(&repo).to_string(),
+        worktree_path: str_path(&linked).to_string(),
+        branch: "feature/other".to_string(),
+        base_ref: "main".to_string(),
+    })
+    .unwrap_err();
+
+    assert_eq!(
+        invalid_input_message(error),
+        format!("Worktree path already exists locally: {}", linked.display())
+    );
+}
+
+#[test]
+fn ensure_push_auto_setup_remote_sets_once() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("push-auto-setup");
+    let repo = init_repo_with_commit(&dir);
+    let linked = linked_path(&dir);
+    add_feature_worktree(&repo, &linked);
+
+    ensure_push_auto_setup_remote(str_path(&linked)).expect("ensure_push_auto_setup_remote");
+
+    let value = output_text(&git(
+        &linked,
+        &["config", "--local", "--get", "push.autoSetupRemote"],
+    ));
+    assert_eq!(value, "true");
+
+    // The second call observes the value and leaves it alone.
+    ensure_push_auto_setup_remote(str_path(&linked)).expect("ensure is idempotent");
+}
+
+#[test]
+fn assert_worktree_removable_rejects_dirty_without_force() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("worktree-dirty");
+    let repo = init_repo_with_commit(&dir);
+    let linked = linked_path(&dir);
+    add_feature_worktree(&repo, &linked);
+    std::fs::write(linked.join("dirty.txt"), "dirty\n").expect("write dirty file");
+
+    let error = assert_worktree_removable(repo_path(&repo), str_path(&linked), false).unwrap_err();
+    assert_eq!(
+        invalid_input_message(error),
+        "Worktree has uncommitted or untracked changes."
+    );
+
+    assert_worktree_removable(repo_path(&repo), str_path(&linked), true)
+        .expect("force skips the dirty check");
+}
+
+#[test]
+fn assert_worktree_removable_rejects_missing_registration() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("worktree-missing");
+    let repo = init_repo_with_commit(&dir);
+    let missing = dir.path().join("wt-never-added");
+
+    let error = assert_worktree_removable(repo_path(&repo), str_path(&missing), false).unwrap_err();
+
+    assert_eq!(
+        invalid_input_message(error),
+        format!(
+            "Worktree registration changed during deletion: {}",
+            missing.display()
+        )
+    );
+}
+
+#[test]
+fn worktree_remove_deletes_directory_and_registration() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("worktree-remove");
+    let repo = init_repo_with_commit(&dir);
+    let linked = linked_path(&dir);
+    add_feature_worktree(&repo, &linked);
+
+    worktree_remove(repo_path(&repo), str_path(&linked), false).expect("worktree_remove");
+
+    assert!(!linked.exists());
+    let entries = ade_git::worktree_list(repo_path(&repo)).expect("worktree_list");
+    assert_eq!(entries.len(), 1);
+    assert!(entries[0].is_main_worktree);
+}
+
+#[test]
+fn worktree_remove_succeeds_when_directory_and_registration_are_gone() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("worktree-remove-missing");
+    let repo = init_repo_with_commit(&dir);
+    let linked = linked_path(&dir);
+    add_feature_worktree(&repo, &linked);
+    std::fs::remove_dir_all(&linked).expect("delete linked directory by hand");
+    // Prune first so `git worktree remove` itself fails, forcing the fallback.
+    git(&repo, &["worktree", "prune"]);
+
+    worktree_remove(repo_path(&repo), str_path(&linked), false).expect("idempotent removal");
+
+    assert!(!linked.exists());
+    let entries = ade_git::worktree_list(repo_path(&repo)).expect("worktree_list");
+    assert_eq!(entries.len(), 1);
+}
+
+#[test]
+fn delete_branch_preserves_unmerged_branch_and_deletes_merged_one() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("branch-delete");
+    let repo = init_repo_with_commit(&dir);
+    let linked = linked_path(&dir);
+    add_feature_worktree(&repo, &linked);
+    let feature_head = commit_on_linked(&linked);
+    worktree_remove(repo_path(&repo), str_path(&linked), false).expect("worktree_remove");
+
+    let outcome =
+        delete_branch(repo_path(&repo), "refs/heads/feature/x", false).expect("delete_branch");
+    match outcome {
+        BranchDeleteOutcome::Preserved { branch_name, head } => {
+            assert_eq!(branch_name, "feature/x");
+            assert_eq!(head.as_deref(), Some(feature_head.as_str()));
+        }
+        other => panic!("expected Preserved, got {other:?}"),
+    }
+
+    // Fast-forward `main` so the branch is fully merged, then `-d` deletes it.
+    git(&repo, &["merge", "--ff-only", "feature/x"]);
+    let outcome =
+        delete_branch(repo_path(&repo), "refs/heads/feature/x", false).expect("delete_branch");
+    assert_eq!(outcome, BranchDeleteOutcome::Deleted);
+    assert!(
+        !try_git(&repo, &["rev-parse", "--verify", "refs/heads/feature/x"])
+            .status
+            .success()
+    );
+}
+
+#[test]
+fn delete_branch_skips_non_local_branch_refs() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("branch-skip");
+    let repo = init_repo_with_commit(&dir);
+
+    let outcome = delete_branch(repo_path(&repo), "refs/remotes/origin/main", false)
+        .expect("non-local refs are skipped");
+    assert_eq!(outcome, BranchDeleteOutcome::Skipped);
+    let outcome = delete_branch(repo_path(&repo), "", false).expect("empty refs are skipped");
+    assert_eq!(outcome, BranchDeleteOutcome::Skipped);
+}
+
+#[test]
+fn force_delete_branch_enforces_cas() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("branch-force-delete");
+    let repo = init_repo_with_commit(&dir);
+    let linked = linked_path(&dir);
+    add_feature_worktree(&repo, &linked);
+    configure_branch_base(str_path(&linked), "feature/x", "main").expect("configure_branch_base");
+    let feature_head = commit_on_linked(&linked);
+    worktree_remove(repo_path(&repo), str_path(&linked), false).expect("worktree_remove");
+
+    // Any head other than the preserved one must fail the CAS; `main` still
+    // points at the base commit here, so it is a valid but different OID.
+    let wrong_head = output_text(&git(&repo, &["rev-parse", "refs/heads/main"]));
+    assert_ne!(wrong_head, feature_head);
+    let error = force_delete_branch(repo_path(&repo), "feature/x", &wrong_head).unwrap_err();
+    assert_eq!(
+        invalid_input_message(error),
+        "Local branch \"feature/x\" changed after the workspace was deleted. Review it before deleting it."
+    );
+    // The mismatch must not touch the branch or its config.
+    assert!(
+        try_git(&repo, &["rev-parse", "--verify", "refs/heads/feature/x"])
+            .status
+            .success()
+    );
+    assert!(try_git(
+        &repo,
+        &["config", "--local", "--get", "branch.feature/x.base"]
+    )
+    .status
+    .success());
+
+    force_delete_branch(repo_path(&repo), "feature/x", &feature_head).expect("force_delete_branch");
+    assert!(
+        !try_git(&repo, &["rev-parse", "--verify", "refs/heads/feature/x"])
+            .status
+            .success()
+    );
+    // `config --remove-section` runs best-effort after the ref deletion.
+    assert!(!try_git(
+        &repo,
+        &["config", "--local", "--get", "branch.feature/x.base"]
+    )
+    .status
+    .success());
+}
+
+#[test]
+fn remove_locked_worktree_is_rejected() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("worktree-locked");
+    let repo = init_repo_with_commit(&dir);
+    let linked = linked_path(&dir);
+    add_feature_worktree(&repo, &linked);
+    git(
+        &repo,
+        &["worktree", "lock", "--reason", "in use", str_path(&linked)],
+    );
+
+    let error = assert_worktree_removable(repo_path(&repo), str_path(&linked), false).unwrap_err();
+    let message = invalid_input_message(error);
+    assert!(message.contains("git worktree unlock"), "{message}");
+    assert!(message.contains("in use"), "{message}");
+
+    // A Git lock is an external safety contract: force must not bypass it.
+    let error = assert_worktree_removable(repo_path(&repo), str_path(&linked), true).unwrap_err();
+    assert!(invalid_input_message(error).contains("git worktree unlock"));
+
+    // And the removal itself refuses even with --force.
+    assert!(worktree_remove(repo_path(&repo), str_path(&linked), true).is_err());
 }
