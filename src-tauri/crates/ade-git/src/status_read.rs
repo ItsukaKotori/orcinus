@@ -233,15 +233,22 @@ fn resolve_git_dir(worktree_path: &str) -> PathBuf {
 
 /// The `gitdir:` payload of a `.git` gitfile, mirroring Git's own
 /// `read_gitfile_gently`: the marker must start the first line and the payload
-/// is trimmed.
+/// is trimmed. The prefix is compared as *bytes*: a `.git` file can hold
+/// arbitrary text, and byte-slicing the `&str` would panic when a multibyte
+/// character straddles the marker boundary (e.g. a line starting `résumé`).
 fn parse_gitdir_marker(content: &str) -> Option<String> {
+    const MARKER: &[u8] = b"gitdir:";
     let first_line = content.lines().next()?;
-    if first_line.len() < "gitdir:".len()
-        || !first_line[.."gitdir:".len()].eq_ignore_ascii_case("gitdir:")
-    {
+    let is_marker = first_line
+        .as_bytes()
+        .get(..MARKER.len())
+        .is_some_and(|prefix| prefix.eq_ignore_ascii_case(MARKER));
+    if !is_marker {
         return None;
     }
-    let value = first_line["gitdir:".len()..].trim();
+    // The byte comparison proves the first `MARKER.len()` bytes are the ASCII
+    // marker, so byte index `MARKER.len()` is a char boundary.
+    let value = first_line[MARKER.len()..].trim();
     if value.is_empty() {
         None
     } else {
@@ -754,5 +761,17 @@ mod tests {
         );
         assert_eq!(parse_gitdir_marker("gitdir:   \n"), None);
         assert_eq!(parse_gitdir_marker("nope: x\n"), None);
+    }
+
+    #[test]
+    fn gitdir_marker_tolerates_multibyte_first_line() {
+        // 第 7 字节落在多字节字符内部时不得 panic（按字节比较而不是切 &str）。
+        assert_eq!(parse_gitdir_marker("résumé\n"), None);
+        assert_eq!(parse_gitdir_marker("résumé: x\n"), None);
+        assert_eq!(parse_gitdir_marker("日本語のテキスト"), None);
+        assert_eq!(
+            parse_gitdir_marker("GITDIR: /repo/é"),
+            Some("/repo/é".to_string())
+        );
     }
 }

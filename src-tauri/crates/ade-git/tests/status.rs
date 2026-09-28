@@ -444,6 +444,24 @@ fn conflict_operation_reads_linked_worktree_gitdir_file() {
 }
 
 #[test]
+fn malformed_gitdir_file_with_multibyte_first_line_is_tolerated() {
+    let dir = TempDir::new("status-bad-gitdir");
+    let path = dir.path().join("not-a-repo");
+    std::fs::create_dir_all(&path).expect("create bogus repo dir");
+    // `résumé` 的第 7 个字节落在第二个 `é` 内部：旧实现切 &str 时会 panic。
+    std::fs::write(path.join(".git"), "résumé\n").expect("write bogus .git file");
+
+    assert_eq!(
+        conflict_operation(path.to_str().unwrap()).unwrap(),
+        GitConflictOperation::Unknown
+    );
+    let result = status(path.to_str().unwrap(), &StatusOptions::default(), None).unwrap();
+    assert!(result.entries.is_empty());
+    assert!(result.branch.is_none());
+    assert_eq!(result.conflict_operation, GitConflictOperation::Unknown);
+}
+
+#[test]
 fn branch_line_total_is_omitted_without_a_merge_base() {
     let dir = TempDir::new("status-branch-total-absent");
     let repo = init_repo_with_commit(&dir);
