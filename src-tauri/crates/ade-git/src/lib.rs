@@ -1,3 +1,4 @@
+pub mod diff;
 pub mod porcelain;
 pub mod runner;
 pub mod status;
