@@ -1,6 +1,7 @@
 pub mod porcelain;
 pub mod runner;
 pub mod status;
+pub mod status_read;
 
 pub use porcelain::{parse_worktree_list, GitWorktreeEntry};
 pub use runner::{run_git_in, CancelToken, GitOutput};

@@ -156,11 +156,21 @@ pub struct GitStatusResult {
     pub branch_line_total: Option<GitBranchLineTotal>,
 }
 
+/// One changed row in Git's output order. Unmerged (`u`) rows defer their
+/// worktree lookups, so the caller resolves them later; keeping them in this
+/// ordered table lets a limit truncate the same rows Git emitted first.
+#[derive(Debug, Clone, PartialEq)]
+pub enum StatusRecord {
+    Entry(GitStatusEntry),
+    Unmerged(String),
+}
+
 /// Parser output before the caller resolves unmerged rows and merges branch
 /// metadata into a [`GitStatusResult`].
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct ParsedStatus {
     pub entries: Vec<GitStatusEntry>,
+    pub records: Vec<StatusRecord>,
     pub ignored_paths: Vec<String>,
     pub unmerged_lines: Vec<String>,
     pub head: Option<String>,
@@ -184,11 +194,18 @@ pub struct ParsedStatus {
 /// form put the original path in the next NUL fragment with no prefix of its
 /// own; `pending_rename` holds how many trailing entries that fragment must
 /// stamp once it arrives.
+///
+/// Once `update` reports the limit crossed the parser is *stopped*: no further
+/// chunk is parsed and `finish` is a no-op, because whatever sits in the carry
+/// is the tail of a record Git never finished writing (it was killed). Without
+/// that, flushing the carry would emit one garbage row.
 #[derive(Debug, Default)]
 pub struct StatusParser {
     carry: Vec<u8>,
     pending_rename: Option<usize>,
+    stopped: bool,
     entries: Vec<GitStatusEntry>,
+    records: Vec<StatusRecord>,
     ignored_paths: Vec<String>,
     unmerged_lines: Vec<String>,
     head: Option<String>,
@@ -206,32 +223,41 @@ impl StatusParser {
     /// Feed one chunk. Returns true once the accumulated changed-entry count
     /// exceeds `limit` (limit 0 disables the cap), signaling the caller to stop
     /// git. Complete records are parsed; an incomplete trailing record is
-    /// carried, and already-parsed results are kept.
+    /// carried, and already-parsed results are kept. The check runs after the
+    /// whole chunk, so with a caller that buffers output this counts every
+    /// changed row rather than stopping one row past the cap.
     pub fn update(&mut self, chunk: &[u8], limit: usize) -> bool {
+        if self.stopped {
+            return true;
+        }
         self.carry.extend_from_slice(chunk);
         while let Some(nul) = self.carry.iter().position(|byte| *byte == 0) {
             let tail = self.carry.split_off(nul + 1);
             let mut record = std::mem::replace(&mut self.carry, tail);
             record.pop();
             self.parse_record(&record);
-            if limit != 0 && self.changed_count > limit as u64 {
-                return true;
-            }
+        }
+        if limit != 0 && self.changed_count > limit as u64 {
+            self.stopped = true;
+            return true;
         }
         false
     }
 
-    /// Flush a final record with no trailing NUL (e.g. when git exits).
+    /// Flush a final record with no trailing NUL (e.g. when git exits). A
+    /// stopped parser flushes nothing: the carry belongs to a killed Git.
     pub fn finish(&mut self) {
-        if !self.carry.is_empty() {
-            let record = std::mem::take(&mut self.carry);
-            self.parse_record(&record);
+        if self.stopped || self.carry.is_empty() {
+            return;
         }
+        let record = std::mem::take(&mut self.carry);
+        self.parse_record(&record);
     }
 
     pub fn into_parsed(self) -> ParsedStatus {
         ParsedStatus {
             entries: self.entries,
+            records: self.records,
             ignored_paths: self.ignored_paths,
             unmerged_lines: self.unmerged_lines,
             head: self.head,
@@ -251,6 +277,12 @@ impl StatusParser {
             let start = self.entries.len().saturating_sub(pushed);
             for entry in &mut self.entries[start..] {
                 entry.old_path = Some(old_path.clone());
+            }
+            let record_start = self.records.len().saturating_sub(pushed);
+            for record in &mut self.records[record_start..] {
+                if let StatusRecord::Entry(entry) = record {
+                    entry.old_path = Some(old_path.clone());
+                }
             }
             return;
         }
@@ -305,8 +337,10 @@ impl StatusParser {
             return;
         }
         if record.starts_with(b"u ") {
+            let line = text(record);
             self.changed_count += 1;
-            self.unmerged_lines.push(text(record));
+            self.records.push(StatusRecord::Unmerged(line.clone()));
+            self.unmerged_lines.push(line);
         }
     }
 
@@ -366,6 +400,7 @@ impl StatusParser {
 
     fn push(&mut self, entry: GitStatusEntry) {
         self.changed_count += 1;
+        self.records.push(StatusRecord::Entry(entry.clone()));
         self.entries.push(entry);
     }
 }
@@ -494,6 +529,74 @@ mod tests {
         assert_eq!(parsed.entries.len(), 1);
         assert_eq!(parsed.entries[0].path, "new name.txt");
         assert_eq!(parsed.entries[0].old_path.as_deref(), Some("has space.txt"));
+        // 有序记录表同样带上旧路径，行的输出序不变。
+        assert_eq!(
+            parsed.records,
+            vec![StatusRecord::Entry(parsed.entries[0].clone())]
+        );
+    }
+
+    #[test]
+    fn record_split_across_chunks_is_carried() {
+        let mut parser = StatusParser::new();
+        assert!(!parser.update(b"1 M. N... 100644 100644 100644 a a spl", 1000));
+        assert!(!parser.update(b"it.txt\0? untracked.txt\0", 1000));
+        parser.finish();
+
+        let parsed = parser.into_parsed();
+        assert_eq!(parsed.entries.len(), 2);
+        assert_eq!(parsed.entries[0].path, "split.txt");
+        assert_eq!(parsed.entries[1].path, "untracked.txt");
+    }
+
+    #[test]
+    fn records_preserve_git_output_order() {
+        let (parser, _) = feed(
+            &[
+                "1 .M N... 100644 100644 100644 a a first.txt",
+                "u UU N... 100644 100644 100644 100644 a b c conflict.txt",
+                "? last.txt",
+            ],
+            1000,
+        );
+        let parsed = parser.into_parsed();
+        assert_eq!(parsed.records.len(), 3);
+        match &parsed.records[0] {
+            StatusRecord::Entry(entry) => assert_eq!(entry.path, "first.txt"),
+            other => panic!("expected entry record, got {other:?}"),
+        }
+        match &parsed.records[1] {
+            StatusRecord::Unmerged(line) => assert!(line.contains("conflict.txt")),
+            other => panic!("expected unmerged record, got {other:?}"),
+        }
+        match &parsed.records[2] {
+            StatusRecord::Entry(entry) => assert_eq!(entry.path, "last.txt"),
+            other => panic!("expected entry record, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn limit_stop_discards_unfinished_carry_and_finish_is_noop() {
+        let mut parser = StatusParser::new();
+
+        let mut first = Vec::new();
+        first.extend_from_slice(b"1 M. N... 100644 100644 100644 a a one\0");
+        first.extend_from_slice(b"1 M. N... 100644 100644 100644 a a tw");
+        assert!(!parser.update(&first, 2));
+
+        let mut second = Vec::new();
+        second.extend_from_slice(b"o\0");
+        second.extend_from_slice(b"1 M. N... 100644 100644 100644 a a three\0");
+        second.extend_from_slice(b"1 M. N... 100644 100644 100644 a a fo");
+        assert!(parser.update(&second, 2));
+        // 调用方在 stop 后不得把 carry 当成完整记录冲刷。
+        assert!(parser.update(b"ur\0", 2));
+        parser.finish();
+
+        let parsed = parser.into_parsed();
+        assert_eq!(parsed.changed_count, 3);
+        assert_eq!(parsed.entries.len(), 3);
+        assert!(parsed.entries.iter().all(|entry| entry.path != "fo"));
     }
 
     #[test]
