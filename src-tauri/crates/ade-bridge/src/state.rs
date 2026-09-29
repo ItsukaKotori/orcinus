@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread::{self, JoinHandle};
@@ -5,6 +6,7 @@ use std::time::{Duration, Instant};
 
 use ade_core::defaults::{onboarding_defaults, settings_defaults, ui_state_defaults};
 use ade_fs::{FsService, FsWatcher};
+use ade_git::runner::CancelToken;
 use ade_store::onboarding_store::OnboardingStore;
 use ade_store::projects_store::ProjectsStore;
 use ade_store::settings_store::SettingsStore;
@@ -284,6 +286,54 @@ fn persisted_root_paths(projects: &ProjectsStore) -> Vec<String> {
     paths
 }
 
+/// In-flight `git_status` cancellations, keyed by the renderer's request
+/// token. Re-registering the same token cancels the superseded run first, so a
+/// stale poll can never publish a result after its caller gave up.
+pub struct GitCancelRegistry {
+    tokens: Mutex<HashMap<String, CancelToken>>,
+}
+
+impl GitCancelRegistry {
+    pub fn new() -> Self {
+        Self {
+            tokens: Mutex::new(HashMap::new()),
+        }
+    }
+
+    /// Register one run and return its live cancellation flag.
+    pub fn register(&self, token: &str) -> CancelToken {
+        let mut tokens = lock(&self.tokens);
+        if let Some(previous) = tokens.get(token) {
+            previous.cancel();
+        }
+        let fresh = CancelToken::new();
+        tokens.insert(token.to_string(), fresh.clone());
+        fresh
+    }
+
+    /// Drop one registration once its run returned (success or failure).
+    pub fn finish(&self, token: &str) {
+        lock(&self.tokens).remove(token);
+    }
+
+    /// Set and drop one registration; `false` when the run already finished.
+    pub fn cancel(&self, token: &str) -> bool {
+        match lock(&self.tokens).remove(token) {
+            Some(cancel) => {
+                cancel.cancel();
+                true
+            }
+            None => false,
+        }
+    }
+}
+
+impl Default for GitCancelRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Shared backend state for every command. Initialized once in `setup` with the
 /// app data directory before the main window is built.
 pub struct AppState {
@@ -294,6 +344,7 @@ pub struct AppState {
     pub fs: Arc<FsService>,
     pub watchers: FsWatcher,
     pub app: AppHandle,
+    pub git_cancels: GitCancelRegistry,
     settings_writer: WriteScheduler,
     ui_writer: WriteScheduler,
 }
@@ -341,6 +392,7 @@ impl AppState {
             fs: Arc::new(persisted.fs),
             watchers,
             app: app.clone(),
+            git_cancels: GitCancelRegistry::new(),
             settings_writer,
             ui_writer,
         })

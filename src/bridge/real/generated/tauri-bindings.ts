@@ -112,6 +112,33 @@ export const commands = {
 	 *  renderer's job (spec §5.2).
 	 */
 	folderWorkspacesGetPathStatus: (args: FolderWorkspacesGetPathStatusArgs) => typedError<FolderWorkspacePathStatus_Serialize, BridgeError>(__TAURI_INVOKE("folder_workspaces_get_path_status", { args })),
+	/**
+	 *  `git.status`: registers the renderer's `requestToken` (or a generated one)
+	 *  so `git_cancel_status` can kill the running subprocess; the registration is
+	 *  released whether the run succeeds or fails.
+	 */
+	gitStatus: (args: GitStatusArgs) => typedError<GitStatusResult_Serialize, BridgeError>(__TAURI_INVOKE("git_status", { args })),
+	/**
+	 *  `git.cancelStatus`: sets the registered token; `false` (silently) when the
+	 *  status already finished, matching the renderer's fire-and-forget call.
+	 */
+	gitCancelStatus: (args: GitCancelStatusArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_cancel_status", { args })),
+	/**  `git.diff`: HEAD/index vs worktree blob contents for one path. */
+	gitDiff: (args: GitDiffArgs) => typedError<GitDiffResult_Serialize, BridgeError>(__TAURI_INVOKE("git_diff", { args })),
+	gitStage: (args: GitFileArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_stage", { args })),
+	gitBulkStage: (args: GitFilesArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_bulk_stage", { args })),
+	gitUnstage: (args: GitFileArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_unstage", { args })),
+	gitBulkUnstage: (args: GitFilesArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_bulk_unstage", { args })),
+	gitDiscard: (args: GitFileArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_discard", { args })),
+	gitBulkDiscard: (args: GitFilesArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_bulk_discard", { args })),
+	gitCommit: (args: GitCommitArgs) => typedError<GitCommitOutcome_Serialize, BridgeError>(__TAURI_INVOKE("git_commit", { args })),
+	gitUpstreamStatus: (args: GitWorktreeArgs) => typedError<GitUpstreamStatus_Serialize, BridgeError>(__TAURI_INVOKE("git_upstream_status", { args })),
+	gitConflictOperation: (args: GitWorktreeArgs) => typedError<GitConflictOperation, BridgeError>(__TAURI_INVOKE("git_conflict_operation", { args })),
+	gitBranchCompare: (args: GitBranchCompareArgs) => typedError<GitBranchCompareResult_Serialize, BridgeError>(__TAURI_INVOKE("git_branch_compare", { args })),
+	gitCommitCompare: (args: GitCommitCompareArgs) => typedError<GitCommitCompareResult_Serialize, BridgeError>(__TAURI_INVOKE("git_commit_compare", { args })),
+	gitBranchDiff: (args: GitBranchDiffArgs) => typedError<GitDiffResult_Serialize, BridgeError>(__TAURI_INVOKE("git_branch_diff", { args })),
+	gitCommitDiff: (args: GitCommitDiffArgs) => typedError<GitDiffResult_Serialize, BridgeError>(__TAURI_INVOKE("git_commit_diff", { args })),
+	gitHistory: (args: GitHistoryArgs) => typedError<GitHistoryResult_Serialize, BridgeError>(__TAURI_INVOKE("git_history", { args })),
 };
 
 /* Types */
@@ -139,6 +166,16 @@ export type BootstrapPayload = {
 
 export type BridgeError = {
 	message: string,
+};
+
+export type DiffLineCountMinimums = {
+	original: boolean,
+	modified: boolean,
+};
+
+export type DiffLineCounts = {
+	original: number,
+	modified: number,
 };
 
 export type DirEntry = {
@@ -337,7 +374,541 @@ export type FsWriteFileArgs = {
 	content: string,
 };
 
+/**  Mirrors `GitBranchChangeEntry` in `src/shared/git-diff-compare-types.ts`. */
+export type GitBranchChangeEntry = GitBranchChangeEntry_Serialize | GitBranchChangeEntry_Deserialize;
+
+/**  Mirrors `GitBranchChangeEntry` in `src/shared/git-diff-compare-types.ts`. */
+export type GitBranchChangeEntry_Deserialize = {
+	path: string,
+	status: GitBranchChangeStatus,
+	oldPath: string | null,
+	added: number | null,
+	removed: number | null,
+};
+
+/**  Mirrors `GitBranchChangeEntry` in `src/shared/git-diff-compare-types.ts`. */
+export type GitBranchChangeEntry_Serialize = {
+	path: string,
+	status: GitBranchChangeStatus,
+	oldPath?: string | null,
+	added?: number | null,
+	removed?: number | null,
+};
+
+/**
+ *  One changed path in a branch/commit compare, mirroring the renderer's
+ *  `GitBranchChangeStatus` (`src/shared/git-status-types.ts`) without
+ *  `untracked`: compared trees can never grow an untracked file.
+ */
+export type GitBranchChangeStatus = "modified" | "added" | "deleted" | "renamed" | "copied";
+
+export type GitBranchCompareArgs = {
+	worktreePath: string,
+	baseRef: string,
+	connectionId?: string | null,
+	admissionTier?: string | null,
+};
+
+/**  Mirrors `GitBranchCompareResult` in `src/shared/git-diff-compare-types.ts`. */
+export type GitBranchCompareResult = GitBranchCompareResult_Serialize | GitBranchCompareResult_Deserialize;
+
+/**  Mirrors `GitBranchCompareResult` in `src/shared/git-diff-compare-types.ts`. */
+export type GitBranchCompareResult_Deserialize = {
+	summary: GitBranchCompareSummary_Deserialize,
+	entries: GitBranchChangeEntry_Deserialize[],
+};
+
+/**  Mirrors `GitBranchCompareResult` in `src/shared/git-diff-compare-types.ts`. */
+export type GitBranchCompareResult_Serialize = {
+	summary: GitBranchCompareSummary_Serialize,
+	entries: GitBranchChangeEntry_Serialize[],
+};
+
+/**
+ *  Mirrors `GitBranchCompareSummary` in `src/shared/git-diff-compare-types.ts`.
+ *  `status` takes `'ready' | 'invalid-base' | 'unborn-head' | 'no-merge-base' |
+ *  'error'`; `base_oid`/`head_oid`/`merge_base` serialize as `null` when the
+ *  oracle keeps them nullable.
+ */
+export type GitBranchCompareSummary = GitBranchCompareSummary_Serialize | GitBranchCompareSummary_Deserialize;
+
+/**
+ *  Mirrors `GitBranchCompareSummary` in `src/shared/git-diff-compare-types.ts`.
+ *  `status` takes `'ready' | 'invalid-base' | 'unborn-head' | 'no-merge-base' |
+ *  'error'`; `base_oid`/`head_oid`/`merge_base` serialize as `null` when the
+ *  oracle keeps them nullable.
+ */
+export type GitBranchCompareSummary_Deserialize = {
+	baseRef: string,
+	baseOid: string | null,
+	compareRef: string,
+	headOid: string | null,
+	mergeBase: string | null,
+	changedFiles: number,
+	commitsAhead: number | null,
+	commitsBehind: number | null,
+	status: string,
+	errorMessage: string | null,
+};
+
+/**
+ *  Mirrors `GitBranchCompareSummary` in `src/shared/git-diff-compare-types.ts`.
+ *  `status` takes `'ready' | 'invalid-base' | 'unborn-head' | 'no-merge-base' |
+ *  'error'`; `base_oid`/`head_oid`/`merge_base` serialize as `null` when the
+ *  oracle keeps them nullable.
+ */
+export type GitBranchCompareSummary_Serialize = {
+	baseRef: string,
+	baseOid: string | null,
+	compareRef: string,
+	headOid: string | null,
+	mergeBase: string | null,
+	changedFiles: number,
+	commitsAhead?: number | null,
+	commitsBehind?: number | null,
+	status: string,
+	errorMessage?: string | null,
+};
+
+export type GitBranchDiffArgs = {
+	worktreePath: string,
+	compare: GitCompareRefsArgs,
+	filePath: string,
+	oldPath?: string | null,
+	connectionId?: string | null,
+};
+
+export type GitBranchLineTotal = GitBranchLineTotal_Serialize | GitBranchLineTotal_Deserialize;
+
+export type GitBranchLineTotal_Deserialize = {
+	added: number,
+	removed: number,
+	mergeBase: string,
+	test: LineStat | null,
+	generated: LineStat | null,
+};
+
+export type GitBranchLineTotal_Serialize = {
+	added: number,
+	removed: number,
+	mergeBase: string,
+	test?: LineStat | null,
+	generated?: LineStat | null,
+};
+
+export type GitCancelStatusArgs = {
+	requestToken: string,
+};
+
+export type GitCommitArgs = {
+	worktreePath: string,
+	message: string,
+	connectionId?: string | null,
+};
+
+export type GitCommitCompareArgs = {
+	worktreePath: string,
+	commitId: string,
+	connectionId?: string | null,
+};
+
+/**  Mirrors `GitCommitCompareResult` in `src/shared/git-diff-compare-types.ts`. */
+export type GitCommitCompareResult = GitCommitCompareResult_Serialize | GitCommitCompareResult_Deserialize;
+
+/**  Mirrors `GitCommitCompareResult` in `src/shared/git-diff-compare-types.ts`. */
+export type GitCommitCompareResult_Deserialize = {
+	summary: GitCommitCompareSummary_Deserialize,
+	entries: GitBranchChangeEntry_Deserialize[],
+};
+
+/**  Mirrors `GitCommitCompareResult` in `src/shared/git-diff-compare-types.ts`. */
+export type GitCommitCompareResult_Serialize = {
+	summary: GitCommitCompareSummary_Serialize,
+	entries: GitBranchChangeEntry_Serialize[],
+};
+
+/**
+ *  Mirrors `GitCommitCompareSummary` in `src/shared/git-diff-compare-types.ts`.
+ *  `status` takes `'ready' | 'invalid-commit' | 'error'`.
+ */
+export type GitCommitCompareSummary = GitCommitCompareSummary_Serialize | GitCommitCompareSummary_Deserialize;
+
+/**
+ *  Mirrors `GitCommitCompareSummary` in `src/shared/git-diff-compare-types.ts`.
+ *  `status` takes `'ready' | 'invalid-commit' | 'error'`.
+ */
+export type GitCommitCompareSummary_Deserialize = {
+	commitOid: string,
+	parentOid: string | null,
+	compareRef: string,
+	baseRef: string,
+	changedFiles: number,
+	status: string,
+	errorMessage: string | null,
+};
+
+/**
+ *  Mirrors `GitCommitCompareSummary` in `src/shared/git-diff-compare-types.ts`.
+ *  `status` takes `'ready' | 'invalid-commit' | 'error'`.
+ */
+export type GitCommitCompareSummary_Serialize = {
+	commitOid: string,
+	parentOid: string | null,
+	compareRef: string,
+	baseRef: string,
+	changedFiles: number,
+	status: string,
+	errorMessage?: string | null,
+};
+
+export type GitCommitDiffArgs = {
+	worktreePath: string,
+	commitOid: string,
+	parentOid?: string | null,
+	filePath: string,
+	oldPath?: string | null,
+	connectionId?: string | null,
+};
+
+/**
+ *  `git.commit` resolves a rejected commit as `{success:false,error?}` rather
+ *  than rejecting; only a missing message still rejects.
+ */
+export type GitCommitOutcome = GitCommitOutcome_Serialize | GitCommitOutcome_Deserialize;
+
+/**
+ *  `git.commit` resolves a rejected commit as `{success:false,error?}` rather
+ *  than rejecting; only a missing message still rejects.
+ */
+export type GitCommitOutcome_Deserialize = {
+	success: boolean,
+	error: string | null,
+};
+
+/**
+ *  `git.commit` resolves a rejected commit as `{success:false,error?}` rather
+ *  than rejecting; only a missing message still rejects.
+ */
+export type GitCommitOutcome_Serialize = {
+	success: boolean,
+	error?: string | null,
+};
+
+/**
+ *  `branchDiff.compare`: the caller passes both the base tip and the resolved
+ *  merge base, and the diff runs from the merge base (not `baseOid`), so a
+ *  diverged fork compares only the branch's own changes.
+ */
+export type GitCompareRefsArgs = {
+	baseRef: string,
+	baseOid: string,
+	headOid: string,
+	mergeBase: string,
+};
+
+export type GitConflictKind = "both_modified" | "both_added" | "both_deleted" | "added_by_us" | "added_by_them" | "deleted_by_us" | "deleted_by_them";
+
+export type GitConflictOperation = "merge" | "rebase" | "cherry-pick" | "unknown";
+
+export type GitConflictResolutionStatus = "unresolved" | "resolved_locally";
+
+export type GitConflictStatusSource = "git" | "session";
+
+export type GitDiffArgs = {
+	worktreePath: string,
+	filePath: string,
+	staged: boolean,
+	compareAgainstHead?: boolean | null,
+	connectionId?: string | null,
+};
+
+/**
+ *  Mirrors `GitDiffResult` in `src/shared/git-diff-compare-types.ts`: the
+ *  `kind` tag discriminates the two shapes on the wire.
+ */
+export type GitDiffResult = GitDiffResult_Serialize | GitDiffResult_Deserialize;
+
+/**
+ *  Mirrors `GitDiffResult` in `src/shared/git-diff-compare-types.ts`: the
+ *  `kind` tag discriminates the two shapes on the wire.
+ */
+export type GitDiffResult_Deserialize = ({ kind: "text"; originalContent: string; modifiedContent: string; originalIsBinary: boolean; modifiedIsBinary: boolean; largeDiffRenderLimit: LargeDiffRenderLimit_Deserialize | null }) & { isImage?: never; mimeType?: never; modifiedDeleted?: never } | ({ kind: "binary"; originalContent: string; modifiedContent: string; isImage: boolean | null; mimeType: string | null; modifiedDeleted: boolean | null; originalIsBinary: boolean; modifiedIsBinary: boolean }) & { largeDiffRenderLimit?: never };
+
+/**
+ *  Mirrors `GitDiffResult` in `src/shared/git-diff-compare-types.ts`: the
+ *  `kind` tag discriminates the two shapes on the wire.
+ */
+export type GitDiffResult_Serialize = ({ kind: "text"; originalContent: string; modifiedContent: string; originalIsBinary: boolean; modifiedIsBinary: boolean; largeDiffRenderLimit?: LargeDiffRenderLimit_Serialize | null }) & { isImage?: never; mimeType?: never; modifiedDeleted?: never } | ({ kind: "binary"; originalContent: string; modifiedContent: string; isImage?: boolean | null; mimeType?: string | null; modifiedDeleted?: boolean | null; originalIsBinary: boolean; modifiedIsBinary: boolean }) & { largeDiffRenderLimit?: never };
+
+export type GitFileArgs = {
+	worktreePath: string,
+	filePath: string,
+	connectionId?: string | null,
+};
+
+/**  One changed path as reported by `git status --porcelain=v2`. */
+export type GitFileStatus = "modified" | "added" | "deleted" | "renamed" | "untracked" | "copied";
+
+export type GitFilesArgs = {
+	worktreePath: string,
+	filePaths: string[],
+	connectionId?: string | null,
+};
+
+export type GitHistoryArgs = {
+	worktreePath: string,
+	connectionId?: string | null,
+	limit?: number | null,
+	baseRef?: string | null,
+};
+
+/**  Mirrors `GitHistoryGraphColorId` (`git-history-types.ts:1-9`). */
+export type GitHistoryGraphColorId = "git-graph-ref" | "git-graph-remote-ref" | "git-graph-base-ref" | "git-graph-lane1" | "git-graph-lane2" | "git-graph-lane3" | "git-graph-lane4" | "git-graph-lane5";
+
+/**  Mirrors `GitHistoryItem` (`git-history-types.ts:43-55`). */
+export type GitHistoryItem = GitHistoryItem_Serialize | GitHistoryItem_Deserialize;
+
+/**  Mirrors `GitHistoryItemRef` (`git-history-types.ts:28-35`). */
+export type GitHistoryItemRef = GitHistoryItemRef_Serialize | GitHistoryItemRef_Deserialize;
+
+/**  Mirrors `GitHistoryItemRef` (`git-history-types.ts:28-35`). */
+export type GitHistoryItemRef_Deserialize = {
+	id: string,
+	name: string,
+	revision: string | null,
+	category: GitHistoryRefCategory | null,
+	description: string | null,
+	color: GitHistoryGraphColorId | null,
+};
+
+/**  Mirrors `GitHistoryItemRef` (`git-history-types.ts:28-35`). */
+export type GitHistoryItemRef_Serialize = {
+	id: string,
+	name: string,
+	revision?: string | null,
+	category?: GitHistoryRefCategory | null,
+	description?: string | null,
+	color?: GitHistoryGraphColorId | null,
+};
+
+/**  Mirrors `GitHistoryItemStatistics` (`git-history-types.ts:37-41`). */
+export type GitHistoryItemStatistics = {
+	files: number,
+	insertions: number,
+	deletions: number,
+};
+
+/**  Mirrors `GitHistoryItem` (`git-history-types.ts:43-55`). */
+export type GitHistoryItem_Deserialize = {
+	id: string,
+	parentIds: string[],
+	subject: string,
+	message: string,
+	displayId: string | null,
+	author: string | null,
+	authorEmail: string | null,
+	timestamp: number | null,
+	statistics: GitHistoryItemStatistics | null,
+	references: GitHistoryItemRef_Deserialize[] | null,
+};
+
+/**  Mirrors `GitHistoryItem` (`git-history-types.ts:43-55`). */
+export type GitHistoryItem_Serialize = {
+	id: string,
+	parentIds: string[],
+	subject: string,
+	message: string,
+	displayId?: string | null,
+	author?: string | null,
+	authorEmail?: string | null,
+	timestamp?: number | null,
+	statistics?: GitHistoryItemStatistics | null,
+	references?: GitHistoryItemRef_Serialize[] | null,
+};
+
+/**  Mirrors `GitHistoryRefCategory` (`git-history-types.ts:26`). */
+export type GitHistoryRefCategory = "branches" | "remote branches" | "tags" | "commits";
+
+/**  Mirrors `GitHistoryResult` (`git-history-types.ts:62-72`). */
+export type GitHistoryResult = GitHistoryResult_Serialize | GitHistoryResult_Deserialize;
+
+/**  Mirrors `GitHistoryResult` (`git-history-types.ts:62-72`). */
+export type GitHistoryResult_Deserialize = {
+	items: GitHistoryItem_Deserialize[],
+	currentRef: GitHistoryItemRef_Deserialize | null,
+	remoteRef: GitHistoryItemRef_Deserialize | null,
+	baseRef: GitHistoryItemRef_Deserialize | null,
+	mergeBase: string | null,
+	hasIncomingChanges: boolean,
+	hasOutgoingChanges: boolean,
+	hasMore: boolean,
+	limit: number,
+};
+
+/**  Mirrors `GitHistoryResult` (`git-history-types.ts:62-72`). */
+export type GitHistoryResult_Serialize = {
+	items: GitHistoryItem_Serialize[],
+	currentRef?: GitHistoryItemRef_Serialize | null,
+	remoteRef?: GitHistoryItemRef_Serialize | null,
+	baseRef?: GitHistoryItemRef_Serialize | null,
+	mergeBase?: string | null,
+	hasIncomingChanges: boolean,
+	hasOutgoingChanges: boolean,
+	hasMore: boolean,
+	limit: number,
+};
+
+export type GitStagingArea = "staged" | "unstaged" | "untracked";
+
+export type GitStatusArgs = {
+	worktreePath: string,
+	connectionId?: string | null,
+	admissionTier?: string | null,
+	includeIgnored?: boolean | null,
+	includeLineStats?: boolean | null,
+	bypassEffectiveUpstreamNegativeCache?: boolean | null,
+	reuseLineStats?: boolean | null,
+	branchLineTotalMergeBase?: string | null,
+	requestToken?: string | null,
+};
+
+/**
+ *  One row of the Source Control list. Mirrors the renderer contract
+ *  (`src/shared/git-status-types.ts`); absent optionals are omitted on the wire.
+ */
+export type GitStatusEntry = GitStatusEntry_Serialize | GitStatusEntry_Deserialize;
+
+/**
+ *  One row of the Source Control list. Mirrors the renderer contract
+ *  (`src/shared/git-status-types.ts`); absent optionals are omitted on the wire.
+ */
+export type GitStatusEntry_Deserialize = {
+	path: string,
+	status: GitFileStatus,
+	area: GitStagingArea,
+	oldPath: string | null,
+	conflictKind: GitConflictKind | null,
+	conflictStatus: GitConflictResolutionStatus | null,
+	conflictStatusSource: GitConflictStatusSource | null,
+	submodule: GitSubmoduleStatus | null,
+	submoduleRoot: string | null,
+	added: number | null,
+	removed: number | null,
+};
+
+/**
+ *  One row of the Source Control list. Mirrors the renderer contract
+ *  (`src/shared/git-status-types.ts`); absent optionals are omitted on the wire.
+ */
+export type GitStatusEntry_Serialize = {
+	path: string,
+	status: GitFileStatus,
+	area: GitStagingArea,
+	oldPath?: string | null,
+	conflictKind?: GitConflictKind | null,
+	conflictStatus?: GitConflictResolutionStatus | null,
+	conflictStatusSource?: GitConflictStatusSource | null,
+	submodule?: GitSubmoduleStatus | null,
+	submoduleRoot?: string | null,
+	added?: number | null,
+	removed?: number | null,
+};
+
+export type GitStatusResult = GitStatusResult_Serialize | GitStatusResult_Deserialize;
+
+export type GitStatusResult_Deserialize = {
+	entries: GitStatusEntry_Deserialize[],
+	conflictOperation: GitConflictOperation,
+	head: string | null,
+	branch: string | null,
+	upstreamStatus: GitUpstreamStatus_Deserialize | null,
+	ignoredPaths: string[] | null,
+	didHitLimit: boolean | null,
+	statusLength: number | null,
+	branchLineTotal: GitBranchLineTotal_Deserialize | null,
+};
+
+export type GitStatusResult_Serialize = {
+	entries: GitStatusEntry_Serialize[],
+	conflictOperation: GitConflictOperation,
+	head?: string | null,
+	branch?: string | null,
+	upstreamStatus?: GitUpstreamStatus_Serialize | null,
+	ignoredPaths?: string[] | null,
+	didHitLimit?: boolean | null,
+	statusLength?: number | null,
+	branchLineTotal?: GitBranchLineTotal_Serialize | null,
+};
+
+export type GitSubmoduleStatus = {
+	commitChanged: boolean,
+	trackedChanges: boolean,
+	untrackedChanges: boolean,
+};
+
+export type GitUpstreamStatus = GitUpstreamStatus_Serialize | GitUpstreamStatus_Deserialize;
+
+export type GitUpstreamStatus_Deserialize = {
+	hasUpstream: boolean,
+	upstreamName: string | null,
+	ahead: number,
+	behind: number,
+	hasConfiguredPushTarget: boolean | null,
+	behindCommitsArePatchEquivalent: boolean | null,
+};
+
+export type GitUpstreamStatus_Serialize = {
+	hasUpstream: boolean,
+	upstreamName?: string | null,
+	ahead: number,
+	behind: number,
+	hasConfiguredPushTarget?: boolean | null,
+	behindCommitsArePatchEquivalent?: boolean | null,
+};
+
+export type GitWorktreeArgs = {
+	worktreePath: string,
+	connectionId?: string | null,
+};
+
 export type Json = "Null" | ({ Bool: boolean }) & { Array?: never; Number?: never; Object?: never; String?: never } | ({ Number: number | null }) & { Array?: never; Bool?: never; Object?: never; String?: never } | ({ String: string }) & { Array?: never; Bool?: never; Number?: never; Object?: never } | ({ Array: Json[] }) & { Bool?: never; Number?: never; Object?: never; String?: never } | ({ Object: { [key in string]: Json } }) & { Array?: never; Bool?: never; Number?: never; String?: never };
+
+/**
+ *  Mirrors the `LargeDiffRenderLimit` union in
+ *  `src/shared/large-diff-render-limit.ts`. `Unlimited` exists for contract
+ *  fidelity; a result that fits the caps omits the field entirely (the oracle
+ *  computes the unlimited shape and then drops it in `buildDiffResult`).
+ */
+export type LargeDiffRenderLimit = LargeDiffRenderLimit_Serialize | LargeDiffRenderLimit_Deserialize;
+
+export type LargeDiffRenderLimitLimits = {
+	maxLinesPerSide: number,
+	maxCombinedCharacters: number,
+};
+
+export type LargeDiffRenderLimitReason = "line-count" | "character-count";
+
+/**
+ *  Mirrors the `LargeDiffRenderLimit` union in
+ *  `src/shared/large-diff-render-limit.ts`. `Unlimited` exists for contract
+ *  fidelity; a result that fits the caps omits the field entirely (the oracle
+ *  computes the unlimited shape and then drops it in `buildDiffResult`).
+ */
+export type LargeDiffRenderLimit_Deserialize = ({ limited: boolean; lineCounts: DiffLineCounts; characterCount: number }) & { limits?: never; lineCountsAreMinimum?: never; reason?: never } | { limited: boolean; reason: LargeDiffRenderLimitReason; lineCounts: DiffLineCounts | null; lineCountsAreMinimum: DiffLineCountMinimums | null; characterCount: number; limits: LargeDiffRenderLimitLimits };
+
+/**
+ *  Mirrors the `LargeDiffRenderLimit` union in
+ *  `src/shared/large-diff-render-limit.ts`. `Unlimited` exists for contract
+ *  fidelity; a result that fits the caps omits the field entirely (the oracle
+ *  computes the unlimited shape and then drops it in `buildDiffResult`).
+ */
+export type LargeDiffRenderLimit_Serialize = ({ limited: boolean; lineCounts: DiffLineCounts; characterCount: number }) & { limits?: never; lineCountsAreMinimum?: never; reason?: never } | { limited: boolean; reason: LargeDiffRenderLimitReason; lineCounts: DiffLineCounts | null; lineCountsAreMinimum?: DiffLineCountMinimums | null; characterCount: number; limits: LargeDiffRenderLimitLimits };
+
+/**  One added/removed pair in a [`GitBranchLineTotal`] bucket. */
+export type LineStat = {
+	added: number,
+	removed: number,
+};
 
 export type MarkdownDocument = {
 	filePath: string,
