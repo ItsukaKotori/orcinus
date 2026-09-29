@@ -1,6 +1,7 @@
 pub mod cpr;
 pub mod server;
 pub mod session;
+pub mod supervisor;
 
 /// crate 级错误类型：portable-pty 的公开 API（openpty/spawn_command/take_writer/
 /// resize 等）返回 `anyhow::Error`，本地 io 失败（线程启动等）归入 `Io`。

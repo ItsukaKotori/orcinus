@@ -3,20 +3,22 @@
 //! [`Session::spawn`] 一次拉起 pty + shell：reader 线程把输出经有界通道送往
 //! server（通道满即停读 + sleep 重试，绝不丢块），同时镜像进 pre-attach 环形
 //! 缓冲供首连重放（Task 7 首连后置空并停用）；exit 线程阻塞等待子进程并把退出
-//! 码交给 oneshot。kill 的 supervisor 语义由 Task 6 补齐；ConnectionSlot 由
-//! Task 7 填充。
+//! 码交给 oneshot。kill（[`Session::kill`]）走 supervisor 的 reap 路径：closer
+//! 先断 master，reader 句柄交 harvester 兜底 join；ConnectionSlot 由 Task 7 填充。
 
 use std::collections::VecDeque;
 use std::io::Write;
 use std::sync::{Arc, Mutex};
+use std::thread::JoinHandle;
 use std::time::Duration;
 
 use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 use tokio::sync::mpsc::error::TrySendError;
 
-use crate::PtyError;
 #[cfg(windows)]
 use crate::cpr;
+use crate::supervisor::Supervisor;
+use crate::PtyError;
 
 /// reader → server 的输出块；内部 `Arc<Vec<u8>>` 使 pre-attach 重放与 WS 广播
 /// 之间克隆零拷贝。
@@ -77,8 +79,9 @@ pub struct Session {
     // writer 独立 Mutex（输入与 kill 竞争小）；child 用于 kill/wait
     writer: Mutex<Box<dyn Write + Send>>,
     child: Mutex<Box<dyn portable_pty::Child + Send + Sync>>,
-    /// master 句柄：resize 需要（brief：master 需存进 Session）。
-    master: Mutex<Box<dyn portable_pty::MasterPty + Send>>,
+    /// master 句柄：resize 需要（brief：master 需存进 Session）。kill 时
+    /// take 出来 drop（断管道）；None = 会话已 kill（终态）。
+    master: Mutex<Option<Box<dyn portable_pty::MasterPty + Send>>>,
     pub cwd: String,
     pub size: Mutex<(u16, u16)>,
     /// reader → server；容量 [`OUTBOUND_CAPACITY`]。
@@ -91,7 +94,7 @@ pub struct Session {
 
 /// 会话运行期句柄：`exit` 在子进程退出后给出退出码（unix 语义；信号死亡时
 /// portable-pty 的 `ExitStatus::exit_code()` 已折算，见 [`Session::spawn`] 注释）；
-/// `reader_handle` 交由 Task 6 的 supervisor 在 kill 路径上 closer→join 回收。
+/// `reader_handle` 经 [`Session::kill`] 传入 [`Supervisor::reap`]（closer→join）回收。
 pub struct SessionRuntime {
     pub exit: tokio::sync::oneshot::Receiver<i32>,
     pub reader_handle: std::thread::JoinHandle<()>,
@@ -168,7 +171,7 @@ impl Session {
             id: id.clone(),
             writer: Mutex::new(writer),
             child: Mutex::new(child),
-            master: Mutex::new(pair.master),
+            master: Mutex::new(Some(pair.master)),
             cwd,
             size: Mutex::new((req.cols, req.rows)),
             outbound: outbound_tx,
@@ -204,8 +207,8 @@ impl Session {
         std::thread::Builder::new()
             .name(format!("pty-exit-{id}"))
             .spawn(move || {
-                // 阻塞期间持有 child 锁：本任务无竞争；Task 6 的 kill 走「先断
-                // master（closer）→ 子进程退出 → wait 返回释放锁」，与之天然串行。
+                // 阻塞期间持有 child 锁：kill（Session::kill）走「先断 master
+                // （closer）→ 子进程退出 → wait 返回释放锁」，与之天然串行。
                 let code = exit_session
                     .child
                     .lock()
@@ -233,11 +236,13 @@ impl Session {
         writer.flush()
     }
 
-    /// 调整 pty 大小并更新 size。
+    /// 调整 pty 大小并更新 size。会话已 kill（master 已摘除）时报错。
     pub fn resize(&self, cols: u16, rows: u16) -> Result<(), PtyError> {
-        self.master
-            .lock()
-            .expect("master mutex poisoned")
+        let mut master = self.master.lock().expect("master mutex poisoned");
+        let master = master
+            .as_mut()
+            .ok_or_else(|| PtyError::Io(std::io::Error::other("session killed")))?;
+        master
             .resize(PtySize {
                 rows,
                 cols,
@@ -247,6 +252,38 @@ impl Session {
             .map_err(PtyError::from)?;
         *self.size.lock().expect("size mutex poisoned") = (cols, rows);
         Ok(())
+    }
+
+    /// kill 会话：closer 先断 master（writer 换入 sink——旧 writer 的 Drop 发
+    /// EOT——再把 master take 出来 drop，关闭 master fd），随后 child.kill 兜底、
+    /// 重读 waitpid 状态取退出码返回。
+    ///
+    /// 顺序契约（Task 5 审查交接）：closer 必须先于 child.kill——master 关闭
+    /// 使子进程 HUP/EIO 退出，exit 线程的 `wait()` 返回并**释放 child 锁**后，
+    /// 下面的 `child.lock()` 才能取得（exit 线程整个 wait 期间持锁）。因此本
+    /// 方法在子进程收尾期间可能短暂阻塞，语义即「kill 等到退出码」。
+    ///
+    /// reader 句柄交 [`Supervisor::reap`]：closer 已断管道，harvester 兜底
+    /// join（本方法不等待其完成）。若 reader 因 outbound 接收端存活且通道
+    /// 打满而滞留在背压重试里，join 会晚些完成（最终回收语义，不丢失）。
+    ///
+    /// 终态语义：之后 `write` 静默丢弃（sink）、`resize` 报错；「从注册表摘除」
+    /// 由上层（Task 9 PtyHost）负责。可重复调用（幂等）。
+    ///
+    /// 与 brief 接口草图的偏差：签名多 `reader_handle` 参数——句柄在
+    /// [`SessionRuntime`]（其 pub 形状冻结），Session 无法自取，由调用方传入。
+    pub fn kill(&self, sup: &Supervisor, reader_handle: JoinHandle<()>) -> i32 {
+        let closer = || {
+            *self.writer.lock().expect("writer mutex poisoned") = Box::new(std::io::sink());
+            self.master.lock().expect("master mutex poisoned").take();
+        };
+        sup.reap(closer, reader_handle);
+        let mut child = self.child.lock().expect("child mutex poisoned");
+        // 子进程此刻已死或正在死：kill 兜底（已回收时 portable-pty 内部
+        // try_wait 命中缓存直接返回，或 ESRCH 报错——一并忽略）。
+        let _ = child.kill();
+        // std 缓存首次 wait 的状态：此处重读与 exit 通道同源、同值。
+        child.wait().map(|st| st.exit_code() as i32).unwrap_or(-1)
     }
 }
 
