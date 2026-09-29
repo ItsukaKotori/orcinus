@@ -1,5 +1,5 @@
 use ade_core::models::repo::RepoKind;
-use ade_core::models::worktree::{Worktree, DEFAULT_WORKSPACE_STATUS};
+use ade_core::models::worktree::{branch_short, Worktree, DEFAULT_WORKSPACE_STATUS};
 use ade_core::path_compare::normalize_for_comparison;
 use ade_fs::FsService;
 use ade_git::branch::{
@@ -61,19 +61,16 @@ pub fn repo_kind(repo: &Value) -> RepoKind {
 /// Merge persisted worktree metadata into a projection row (spec §3.4).
 ///
 /// Only the whitelisted user-facing keys are honored; everything else the
-/// renderer persists stays invisible until a later phase defines it. A
-/// persisted `displayName` is an explicit label, so the row reports the
-/// `custom` display-name mode instead of the automatic one.
+/// renderer persists stays invisible until a later phase defines it.
+///
+/// Precondition: `worktree` still carries its automatic projection (as
+/// [`Worktree::for_git_entry`] produces), because an unpinned `displayName`
+/// falls back to that automatic name rather than the persisted one.
 pub fn apply_worktree_meta(worktree: &mut Worktree, meta: Option<&Value>) {
     let Some(meta) = meta.and_then(Value::as_object) else {
         return;
     };
-    if let Some(display_name) = meta.get("displayName").and_then(Value::as_str) {
-        if !display_name.is_empty() {
-            worktree.display_name = display_name.to_string();
-            worktree.display_name_mode = "custom".to_string();
-        }
-    }
+    apply_display_name_meta(worktree, meta);
     if let Some(comment) = meta.get("comment").and_then(Value::as_str) {
         worktree.comment = comment.to_string();
     }
@@ -106,6 +103,41 @@ pub fn apply_worktree_meta(worktree: &mut Worktree, meta: Option<&Value>) {
             worktree.workspace_status = status.to_string();
         }
     }
+}
+
+/// Mirrors the `displayName`/`displayNameMode` half of `mergeWorktree`
+/// (`orca:src/main/ipc/worktree-metadata-merge.ts:53-65`): a pinned label is
+/// authoritative, an explicitly unpinned label falls back to the automatic
+/// name, and an unpinned persisted label only counts when it differs from the
+/// branch short name (with a CLI-created label counting as legacy-pinned).
+fn apply_display_name_meta(worktree: &mut Worktree, meta: &Map<String, Value>) {
+    let branch_short = branch_short(&worktree.branch);
+    let pinned = meta.get("displayNameIsPinned").and_then(Value::as_bool);
+    let legacy_cli_pinned = pinned.is_none()
+        && meta
+            .get("cliProvenance")
+            .and_then(Value::as_object)
+            .and_then(|provenance| provenance.get("kind"))
+            .and_then(Value::as_str)
+            == Some("created-by-cli");
+    let display_name = meta
+        .get("displayName")
+        .and_then(Value::as_str)
+        .filter(|name| !name.is_empty());
+
+    // Why: `Some(false)` is the only case that ignores the persisted label;
+    // every other case keeps `meta.displayName || automatic`.
+    if pinned == Some(false) {
+        worktree.display_name_mode = "automatic".to_string();
+        return;
+    }
+    let fixed = pinned == Some(true)
+        || legacy_cli_pinned
+        || display_name.is_some_and(|name| name.trim() != branch_short);
+    if let Some(name) = display_name {
+        worktree.display_name = name.to_string();
+    }
+    worktree.display_name_mode = if fixed { "fixed" } else { "automatic" }.to_string();
 }
 
 /// Map one `git worktree list` entry (spec §5.3) with its persisted metadata.
@@ -236,16 +268,24 @@ pub fn list_worktrees(
 ) -> Result<Vec<Worktree>, BridgeError> {
     let worktrees = match repo_kind(repo) {
         RepoKind::Folder => folder_worktrees(repo, folder_workspaces),
-        RepoKind::Git => {
-            let entries = ade_git::worktree_list(repo_path(repo))?;
-            entries
+        // Why: the oracle degrades one unreadable repo to an empty listing
+        // instead of failing the whole project list (spec §8.6).
+        RepoKind::Git => match ade_git::worktree_list(repo_path(repo)) {
+            Ok(entries) => entries
                 .iter()
                 .map(|entry| {
                     let id = ade_core::ids::worktree_id(repo_id(repo), &entry.path);
                     git_worktree(repo, entry, meta_items.get(&id))
                 })
-                .collect()
-        }
+                .collect(),
+            Err(error) => {
+                eprintln!(
+                    "[ade-bridge] failed to list worktrees for '{}': {error}",
+                    repo_path(repo)
+                );
+                Vec::new()
+            }
+        },
     };
     authorize_worktree_paths(fs, &worktrees);
     Ok(worktrees)
@@ -436,6 +476,78 @@ fn worktree_create_candidate(value: &str, suffix: u32) -> String {
     }
 }
 
+/// Control characters and bidi overrides become a plain space / disappear
+/// (`orca:src/main/ipc/worktree-display-name.ts:6-17,32-39`): labels can come
+/// from external systems and must not visually reorder sidebar text.
+fn strip_display_name_controls(input: &str) -> String {
+    input
+        .chars()
+        .map(|ch| {
+            let code = ch as u32;
+            if code <= 0x1f || (0x7f..=0x9f).contains(&code) {
+                ' '
+            } else {
+                ch
+            }
+        })
+        .filter(|ch| {
+            !('\u{202a}'..='\u{202e}').contains(ch) && !('\u{2066}'..='\u{2069}').contains(ch)
+        })
+        .collect()
+}
+
+/// Mirrors `sanitizeWorktreeDisplayName`
+/// (`orca:src/main/ipc/worktree-display-name.ts:6-20`): generated labels
+/// collapse whitespace, trim, and cap at 120 characters.
+fn sanitize_generated_display_name(input: &str) -> Option<String> {
+    let collapsed = strip_display_name_controls(input)
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ");
+    let capped: String = collapsed.chars().take(120).collect();
+    let trimmed = capped.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_string())
+    }
+}
+
+/// Mirrors the user-kind half of `resolveWorktreeCreateDisplayName`
+/// (`orca:src/main/ipc/worktree-display-name.ts:29-39`): a user label keeps
+/// its interior spacing and is only trimmed.
+fn sanitize_user_display_name(input: &str) -> Option<String> {
+    let sanitized = strip_display_name_controls(input);
+    let trimmed = sanitized.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_string())
+    }
+}
+
+/// Mirrors `resolveWorktreeCreateDisplayNameMeta`
+/// (`orca:src/main/ipc/worktree-display-name.ts:64-87`) for the legacy-client
+/// argument subset this command accepts: `displayNameKind`/`nameWasGenerated`
+/// are not sent, so an explicit `displayName` is a generated artifact label and
+/// a name-only request is a user label. Returns `(displayName, pinned)`.
+fn create_display_name_meta(
+    args: &WorktreesCreateArgs,
+    branch: &str,
+) -> (Option<String>, Option<bool>) {
+    match args.display_name.as_deref() {
+        Some(input) => match sanitize_generated_display_name(input) {
+            // Why: a generated label equal to its branch stays automatic.
+            Some(requested) if requested != branch => (Some(requested), Some(true)),
+            _ => (None, None),
+        },
+        None => match sanitize_user_display_name(&args.name) {
+            Some(requested) => (Some(requested), Some(true)),
+            None => (None, Some(false)),
+        },
+    }
+}
+
 /// One created worktree plus the warn-only follow-up failures
 /// (`branch.<name>.base` / `push.autoSetupRemote`), mirroring the oracle's
 /// `console.warn` side effects.
@@ -554,10 +666,13 @@ pub fn create_worktree_outcome(
 
     let worktree_id = ade_core::ids::worktree_id(repo_id(repo), &path);
     let mut updates = Map::new();
-    updates.insert(
-        "displayName".to_string(),
-        Value::String(args.display_name.clone().unwrap_or_else(|| name.clone())),
-    );
+    let (display_name, display_name_is_pinned) = create_display_name_meta(args, &branch);
+    if let Some(display_name) = display_name {
+        updates.insert("displayName".to_string(), Value::String(display_name));
+    }
+    if let Some(pinned) = display_name_is_pinned {
+        updates.insert("displayNameIsPinned".to_string(), Value::Bool(pinned));
+    }
     updates.insert(
         "workspaceStatus".to_string(),
         Value::String(
@@ -654,7 +769,7 @@ pub fn force_delete_preserved_branch_impl(
 
 /// `worktrees.updateMeta` core: whitelist merge into `worktrees.json`, then the
 /// merged projection row. A worktree that no longer exists answers an error
-/// rather than a fabricated row.
+/// without writing anything, so a stale id can never persist a ghost entry.
 pub fn update_meta_impl(
     repo: &Value,
     folder_workspaces: &[Value],
@@ -663,6 +778,16 @@ pub fn update_meta_impl(
     worktree_id: &str,
     updates: &Value,
 ) -> Result<Worktree, BridgeError> {
+    // Why twice: the existence check must precede the merge, and the returned
+    // projection must include the merged metadata.
+    let exists = list_worktrees(repo, folder_workspaces, &meta.items(), fs)?
+        .iter()
+        .any(|worktree| worktree.id == worktree_id);
+    if !exists {
+        return Err(BridgeError::message(format!(
+            "Worktree not found: {worktree_id}"
+        )));
+    }
     meta.merge(worktree_id, updates)?;
     list_worktrees(repo, folder_workspaces, &meta.items(), fs)?
         .into_iter()

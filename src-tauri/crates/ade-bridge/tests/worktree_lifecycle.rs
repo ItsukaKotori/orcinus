@@ -15,8 +15,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, MutexGuard, Once};
 
 use ade_bridge::commands::worktrees::{
-    create_worktree_impl, force_delete_preserved_branch_impl, forget_local_impl, list_worktrees,
-    persist_sort_order_impl, remove_worktree_impl, update_meta_impl, WorktreesCreateArgs,
+    create_worktree_impl, force_delete_preserved_branch_impl, forget_local_impl,
+    list_all_worktrees, list_worktrees, persist_sort_order_impl, remove_worktree_impl,
+    update_meta_impl, WorktreesCreateArgs,
 };
 use ade_fs::FsService;
 use ade_store::projects_store::ProjectsStore;
@@ -124,8 +125,12 @@ fn init_git_repo(dir: &TestDir, name: &str) -> PathBuf {
 }
 
 fn repo_row(repo: &Path) -> Value {
+    repo_row_with_id("r1", repo)
+}
+
+fn repo_row_with_id(id: &str, repo: &Path) -> Value {
     json!({
-        "id": "r1",
+        "id": id,
         "path": repo.to_str().expect("utf-8 repo path"),
         "displayName": "my-repo",
         "kind": "git",
@@ -421,13 +426,13 @@ fn update_meta_merges_whitelist_and_projection_reflects() {
     .unwrap();
 
     assert_eq!(updated.display_name, "renamed");
-    assert_eq!(updated.display_name_mode, "custom");
+    assert_eq!(updated.display_name_mode, "fixed");
     assert!(updated.is_pinned);
     assert!(updated.is_unread);
 
     let listed = read_worktree(&repo_value, &meta, &fs, &worktree.id);
     assert_eq!(listed["displayName"], "renamed");
-    assert_eq!(listed["displayNameMode"], "custom");
+    assert_eq!(listed["displayNameMode"], "fixed");
     assert_eq!(listed["isPinned"], true);
     assert_eq!(listed["isUnread"], true);
     assert!(listed.get("bogus").is_none(), "unknown keys are ignored");
@@ -466,4 +471,170 @@ fn persist_sort_order_sets_indexes_and_projection_order() {
     let first_row = read_worktree(&repo_value, &meta, &fs, &first.id);
     assert_eq!(second_row["sortOrder"], 0);
     assert_eq!(first_row["sortOrder"], 1);
+}
+
+#[test]
+fn create_worktree_name_only_pins_the_user_label() {
+    let _env = hermetic_env();
+    let dir = TestDir::new("create-user-label");
+    let repo = init_git_repo(&dir, "my-repo");
+    let meta = WorktreeMetaStore::load(dir.file("worktrees.json"));
+    let fs = FsService::new();
+    let repo_value = repo_row(&repo);
+    // Why: a name-only legacy request is a user label; the raw name survives as
+    // the pinned display name while the branch/path use the sanitized form.
+    let args = create_args(&repo_value, "Fix Auth");
+
+    let worktree = create_worktree_impl(&repo_value, &settings(&dir), &meta, &fs, &args).unwrap();
+
+    assert_eq!(worktree.branch, "refs/heads/Fix-Auth");
+    assert_eq!(worktree.display_name, "Fix Auth");
+    assert_eq!(worktree.display_name_mode, "fixed");
+    let stored = meta.get(&worktree.id).unwrap();
+    assert_eq!(stored["displayName"], "Fix Auth");
+    assert_eq!(stored["displayNameIsPinned"], true);
+}
+
+#[test]
+fn create_worktree_generated_display_name_equal_to_branch_stays_automatic() {
+    let _env = hermetic_env();
+    let dir = TestDir::new("create-generated-label");
+    let repo = init_git_repo(&dir, "my-repo");
+    let meta = WorktreeMetaStore::load(dir.file("worktrees.json"));
+    let fs = FsService::new();
+    let repo_value = repo_row(&repo);
+    let args: WorktreesCreateArgs = serde_json::from_value(json!({
+        "repoId": repo_value["id"],
+        "name": "fix-auth",
+        "displayName": "fix-auth"
+    }))
+    .expect("deserialize create args");
+
+    let worktree = create_worktree_impl(&repo_value, &settings(&dir), &meta, &fs, &args).unwrap();
+
+    assert_eq!(worktree.display_name, "fix-auth");
+    assert_eq!(worktree.display_name_mode, "automatic");
+    let stored = meta.get(&worktree.id).unwrap();
+    assert!(stored.get("displayName").is_none());
+    assert!(stored.get("displayNameIsPinned").is_none());
+}
+
+#[test]
+fn update_meta_unpinned_display_name_falls_back_to_automatic() {
+    let _env = hermetic_env();
+    let dir = TestDir::new("update-meta-unpinned");
+    let repo = init_git_repo(&dir, "my-repo");
+    let meta = WorktreeMetaStore::load(dir.file("worktrees.json"));
+    let fs = FsService::new();
+    let repo_value = repo_row(&repo);
+    let worktree = create_worktree_impl(
+        &repo_value,
+        &settings(&dir),
+        &meta,
+        &fs,
+        &create_args(&repo_value, "fix-auth"),
+    )
+    .unwrap();
+
+    let updated = update_meta_impl(
+        &repo_value,
+        &[],
+        &meta,
+        &fs,
+        &worktree.id,
+        &json!({ "displayName": "renamed", "displayNameIsPinned": false }),
+    )
+    .unwrap();
+
+    assert_eq!(
+        updated.display_name, "fix-auth",
+        "an unpinned label falls back to the branch short name"
+    );
+    assert_eq!(updated.display_name_mode, "automatic");
+}
+
+#[test]
+fn update_meta_legacy_cli_provenance_is_fixed() {
+    let _env = hermetic_env();
+    let dir = TestDir::new("update-meta-cli");
+    let repo = init_git_repo(&dir, "my-repo");
+    let meta = WorktreeMetaStore::load(dir.file("worktrees.json"));
+    let fs = FsService::new();
+    let repo_value = repo_row(&repo);
+    let worktree = create_worktree_impl(
+        &repo_value,
+        &settings(&dir),
+        &meta,
+        &fs,
+        &create_args(&repo_value, "fix-auth"),
+    )
+    .unwrap();
+
+    // A CLI-created label predates `displayNameIsPinned` and is still explicit.
+    let updated = update_meta_impl(
+        &repo_value,
+        &[],
+        &meta,
+        &fs,
+        &worktree.id,
+        &json!({ "displayName": "cli-label", "cliProvenance": { "kind": "created-by-cli" } }),
+    )
+    .unwrap();
+
+    assert_eq!(updated.display_name, "cli-label");
+    assert_eq!(updated.display_name_mode, "fixed");
+}
+
+#[test]
+fn update_meta_missing_worktree_errors_without_persisting() {
+    let _env = hermetic_env();
+    let dir = TestDir::new("update-meta-missing");
+    let repo = init_git_repo(&dir, "my-repo");
+    let meta = WorktreeMetaStore::load(dir.file("worktrees.json"));
+    let fs = FsService::new();
+    let repo_value = repo_row(&repo);
+    let stale_id = format!("r1::{}", dir.path.join("ws/my-repo/gone").display());
+
+    let error = update_meta_impl(
+        &repo_value,
+        &[],
+        &meta,
+        &fs,
+        &stale_id,
+        &json!({ "isPinned": true }),
+    )
+    .unwrap_err();
+
+    assert!(error.to_string().contains("Worktree not found"), "{error}");
+    assert!(
+        meta.get(&stale_id).is_none(),
+        "a stale id must not persist a ghost meta entry"
+    );
+    assert!(
+        !dir.file("worktrees.json").exists(),
+        "no store write happened"
+    );
+}
+
+#[test]
+fn git_failure_degrades_to_empty_list_for_that_repo() {
+    let _env = hermetic_env();
+    let dir = TestDir::new("list-degrade");
+    let broken = init_git_repo(&dir, "broken-repo");
+    std::fs::remove_dir_all(broken.join(".git")).expect("break the repo");
+    let healthy = init_git_repo(&dir, "healthy-repo");
+    let fs = FsService::new();
+    let meta = WorktreeMetaStore::load(dir.file("worktrees.json"));
+    let broken_row = repo_row_with_id("r-broken", &broken);
+    let healthy_row = repo_row_with_id("r-healthy", &healthy);
+
+    let listed = list_worktrees(&broken_row, &[], &meta.items(), &fs).unwrap();
+    assert!(
+        listed.is_empty(),
+        "a broken git repo degrades to an empty list"
+    );
+
+    let all = list_all_worktrees(&[broken_row, healthy_row], &[], &meta.items(), &fs).unwrap();
+    assert_eq!(all.len(), 1, "the healthy repo is still listed");
+    assert_eq!(all[0].repo_id, "r-healthy");
 }
