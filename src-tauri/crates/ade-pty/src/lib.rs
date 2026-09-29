@@ -1,7 +1,8 @@
+pub mod cpr;
 pub mod server;
 
 use portable_pty::{native_pty_system, CommandBuilder, PtySize};
-use std::io::{Read, Write};
+use std::io::Read;
 use std::path::Path;
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
@@ -12,9 +13,6 @@ pub struct ThroughputReport {
     pub elapsed: Duration,
     pub mb_per_second: f64,
 }
-
-const CPR_QUERY: &[u8] = b"\x1b[6n";
-const CPR_REPLY: &[u8] = b"\x1b[1;1R";
 
 /// Upper bound for one measurement run; on expiry the sink is killed so a stalled
 /// PTY fails as `received_bytes < total_bytes` instead of hanging the caller.
@@ -65,14 +63,14 @@ pub fn measure_pty_throughput(
     let mut scan_tail: Vec<u8> = Vec::new();
     while received < total_bytes {
         // WHY: bounded wait guards the ConPTY startup block (an unanswered CPR query, see
-        // reply_to_cursor_query, leaves the pipe silent); a stall must fail, not hang.
+        // cpr::scan_and_reply, leaves the pipe silent); a stall must fail, not hang.
         let remaining = READ_DEADLINE.saturating_sub(started.elapsed());
         if remaining.is_zero() {
             break;
         }
         match chunk_rx.recv_timeout(remaining) {
             Ok(chunk) => {
-                reply_to_cursor_query(&mut scan_tail, &chunk, &mut writer)?;
+                cpr::scan_and_reply(&mut scan_tail, &chunk, &mut writer)?;
                 received += chunk.len();
             }
             Err(_) => break,
@@ -90,62 +88,6 @@ pub fn measure_pty_throughput(
         elapsed,
         mb_per_second: (received as f64 / 1024.0 / 1024.0) / elapsed.as_secs_f64(),
     })
-}
-
-fn reply_to_cursor_query(
-    scan_tail: &mut Vec<u8>,
-    chunk: &[u8],
-    writer: &mut dyn Write,
-) -> std::io::Result<()> {
-    scan_tail.extend_from_slice(chunk);
-    if scan_tail.windows(CPR_QUERY.len()).any(|w| w == CPR_QUERY) {
-        writer.write_all(CPR_REPLY)?;
-        writer.flush()?;
-        scan_tail.clear();
-    } else {
-        let keep = scan_tail.len().min(CPR_QUERY.len() - 1);
-        let drop = scan_tail.len() - keep;
-        scan_tail.drain(..drop);
-    }
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{reply_to_cursor_query, CPR_REPLY};
-
-    #[derive(Default)]
-    struct Sink(Vec<u8>);
-
-    impl std::io::Write for Sink {
-        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-            self.0.extend_from_slice(buf);
-            Ok(buf.len())
-        }
-        fn flush(&mut self) -> std::io::Result<()> {
-            Ok(())
-        }
-    }
-
-    #[test]
-    fn replies_when_query_splits_across_chunks() {
-        let mut tail = Vec::new();
-        let mut sink = Sink::default();
-        reply_to_cursor_query(&mut tail, b"\x1b[6", &mut sink).unwrap();
-        assert!(sink.0.is_empty());
-        reply_to_cursor_query(&mut tail, b"n", &mut sink).unwrap();
-        assert_eq!(sink.0, CPR_REPLY);
-    }
-
-    #[test]
-    fn keeps_only_partial_query_tail_without_replying() {
-        let mut tail = Vec::new();
-        let mut sink = Sink::default();
-        reply_to_cursor_query(&mut tail, b"output\x1b[", &mut sink).unwrap();
-        assert!(sink.0.is_empty());
-        // CPR 查询是 4 字节；保留末尾至多 3 字节以覆盖分块边界。
-        assert_eq!(tail, b"t\x1b[");
-    }
 }
 
 /// 仅面向本 crate 集成测试的辅助：echo 行为的 WS server。Task 7 换会话路由后，
