@@ -296,6 +296,8 @@ pub struct AppState {
     pub app: AppHandle,
     settings_writer: WriteScheduler,
     ui_writer: WriteScheduler,
+    // Task 3 占位：WS echo server 端点（Task 9 由 PtyHost 接管，字段迁移为 Arc<PtyHost>）。
+    pty_endpoint: Mutex<Option<(u16, String)>>,
 }
 
 impl AppState {
@@ -343,6 +345,7 @@ impl AppState {
             app: app.clone(),
             settings_writer,
             ui_writer,
+            pty_endpoint: Mutex::new(None),
         })
     }
 
@@ -389,6 +392,17 @@ impl AppState {
 
     pub fn bootstrap_payload(&self) -> BootstrapPayload {
         bootstrap_payload(self.settings_store().get(), platform_info())
+    }
+
+    /// Task 3 占位：登记 WS 数据面服务端口与 token（规格 §4.7；进程生命周期内不变）。
+    /// 由 orcinus-app setup 在起服务后调用一次。
+    pub fn set_pty_data_endpoint(&self, port: u16, token: String) {
+        *lock(&self.pty_endpoint) = Some((port, token));
+    }
+
+    /// `pty_data_endpoint` 命令的数据源；服务未起时为 `None`。
+    pub(crate) fn pty_data_endpoint(&self) -> Option<(u16, String)> {
+        lock(&self.pty_endpoint).clone()
     }
 }
 

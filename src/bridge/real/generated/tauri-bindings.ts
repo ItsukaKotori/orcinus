@@ -112,6 +112,11 @@ export const commands = {
 	 *  renderer's job (spec §5.2).
 	 */
 	folderWorkspacesGetPathStatus: (args: FolderWorkspacesGetPathStatusArgs) => typedError<FolderWorkspacePathStatus_Serialize, BridgeError>(__TAURI_INVOKE("folder_workspaces_get_path_status", { args })),
+	/**
+	 *  下发 WS 数据面端点（`src/bridge/real/pty-socket.ts` 的
+	 *  `fetchPtyDataEndpoint` 消费；服务未起时报错，渲染层缓存成功结果）。
+	 */
+	ptyDataEndpoint: () => typedError<DataEndpointPayload, BridgeError>(__TAURI_INVOKE("pty_data_endpoint")),
 };
 
 /* Types */
@@ -139,6 +144,16 @@ export type BootstrapPayload = {
 
 export type BridgeError = {
 	message: string,
+};
+
+/**
+ *  PTY 数据面端点（规格 §4.7）：WS 环回服务的端口与一次性下发 token。
+ *  Task 3 期间由 orcinus-app setup 的 echo server 填充；Task 9 起
+ *  `PtyHost::start` 接管（端口与 token 在进程生命周期内不变）。
+ */
+export type DataEndpointPayload = {
+	port: number,
+	token: string,
 };
 
 export type DirEntry = {

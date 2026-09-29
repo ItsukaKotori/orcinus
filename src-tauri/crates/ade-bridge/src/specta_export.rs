@@ -69,8 +69,10 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::folder_workspaces::folder_workspaces_update,
                 commands::folder_workspaces::folder_workspaces_delete,
                 commands::folder_workspaces::folder_workspaces_get_path_status,
+                commands::pty::pty_data_endpoint,
             ])
             .typ::<crate::state::BootstrapPayload>()
+            .typ::<commands::pty::DataEndpointPayload>()
             .typ::<ade_fs::FsChangedPayload>()
             .typ::<crate::events::WorktreeChangedPayload>()
             .typ::<crate::events::ScanNestedProgressPayload>()
@@ -171,6 +173,7 @@ mod tests {
             "folder_workspaces_update",
             "folder_workspaces_delete",
             "folder_workspaces_get_path_status",
+            "pty_data_endpoint",
         ] {
             assert!(
                 bindings.contains(&format!("\"{command}\"")),

@@ -3,6 +3,7 @@ pub mod folder_workspaces;
 pub mod fs;
 pub mod onboarding;
 pub mod platform;
+pub mod pty;
 pub mod project_groups;
 pub mod repos;
 pub mod settings;
