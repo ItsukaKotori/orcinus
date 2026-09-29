@@ -8,7 +8,7 @@ const TIMEOUT: Duration = Duration::from_secs(5);
 
 #[tokio::test]
 async fn connects_with_valid_token_and_echoes() {
-    let (port, token, _server) = ade_pty::test_support::start_echo_server();
+    let (port, token, _server) = ade_pty::start_echo_server();
     let (mut ws, _resp) = connect_async(format!("ws://127.0.0.1:{port}/pty/test-id?token={token}"))
         .await
         .expect("handshake with valid token");
@@ -33,7 +33,7 @@ async fn connects_with_valid_token_and_echoes() {
 
 #[tokio::test]
 async fn rejects_bad_token() {
-    let (port, _token, _server) = ade_pty::test_support::start_echo_server();
+    let (port, _token, _server) = ade_pty::start_echo_server();
     let connection = connect_async(format!(
         "ws://127.0.0.1:{port}/pty/test-id?token=wrong-token"
     ))

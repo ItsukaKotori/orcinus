@@ -102,40 +102,36 @@ pub fn measure_pty_throughput(
     })
 }
 
-/// 仅面向本 crate 集成测试的辅助：echo 行为的 WS server。Task 7 换会话路由后，
-/// 集成测试应改用显式 handler，此模块届时一并退役。
+/// 仅面向本 crate 集成测试的传输层装配辅助：echo handler 的 WS server。
+/// 原 `test_support::start_echo_server`（Task 2 骨架）随 Task 7 会话路由退役，
+/// echo 装配改由 `tests/ws_server.rs` 本地持有（handler 本就属测试关注点）。
 #[doc(hidden)]
-pub mod test_support {
-    use futures_util::{SinkExt, StreamExt};
-
-    /// 起 echo server（绑 127.0.0.1:0），返回 `(port, token, serve 任务句柄)`。
-    /// 须在 tokio 运行时上下文内调用（集成测试用 `#[tokio::test]`）。
-    pub fn start_echo_server() -> (u16, String, tokio::task::JoinHandle<()>) {
-        // WHY: `Handle::block_on` 在运行时上下文内调用会 panic（"Cannot start a
-        // runtime from within a runtime"），故先以 std 绑定端口，再在当前运行时
-        // 上下文里注册为异步 listener——签名与行为不变。
-        let std_listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
-        let port = std_listener.local_addr().unwrap().port();
-        std_listener.set_nonblocking(true).unwrap();
-        let listener = tokio::net::TcpListener::from_std(std_listener).unwrap();
-        let token = crate::server::generate_token();
-        let handler: crate::server::ConnectionHandler = std::sync::Arc::new(|_id, ws| {
-            tokio::spawn(async move {
-                let (mut tx, mut rx) = ws.split();
-                while let Some(Ok(msg)) = rx.next().await {
-                    if let tokio_tungstenite::tungstenite::Message::Binary(b) = msg {
-                        if tx
-                            .send(tokio_tungstenite::tungstenite::Message::Binary(b))
-                            .await
-                            .is_err()
-                        {
-                            break;
-                        }
+pub fn start_echo_server() -> (u16, String, tokio::task::JoinHandle<()>) {
+    // WHY: `Handle::block_on` 在运行时上下文内调用会 panic（"Cannot start a
+    // runtime from within a runtime"），故先以 std 绑定端口，再在当前运行时
+    // 上下文里注册为异步 listener——签名与行为不变。
+    let std_listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = std_listener.local_addr().unwrap().port();
+    std_listener.set_nonblocking(true).unwrap();
+    let listener = tokio::net::TcpListener::from_std(std_listener).unwrap();
+    let token = server::generate_token();
+    let handler: server::ConnectionHandler = std::sync::Arc::new(|_id, ws| {
+        use futures_util::{SinkExt, StreamExt};
+        tokio::spawn(async move {
+            let (mut tx, mut rx) = ws.split();
+            while let Some(Ok(msg)) = rx.next().await {
+                if let tokio_tungstenite::tungstenite::Message::Binary(b) = msg {
+                    if tx
+                        .send(tokio_tungstenite::tungstenite::Message::Binary(b))
+                        .await
+                        .is_err()
+                    {
+                        break;
                     }
                 }
-            });
+            }
         });
-        let handle = tokio::spawn(crate::server::serve(listener, token.clone(), handler));
-        (port, token, handle)
-    }
+    });
+    let handle = tokio::spawn(server::serve(listener, token.clone(), handler));
+    (port, token, handle)
 }

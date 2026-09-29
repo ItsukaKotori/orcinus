@@ -9,7 +9,7 @@ pub fn run() {
             // Task 3 临时：echo WS server 供给连通性探针（规格 §9 风险 1）；
             // Task 9 起 `PtyHost::start` 接管（含会话路由），届时移除本块。
             let (port, token, _serve) = tauri::async_runtime::block_on(async {
-                ade_pty::test_support::start_echo_server()
+                ade_pty::start_echo_server()
             });
             state.set_pty_data_endpoint(port, token);
             // Bootstrap payload must be in place before the document parses so

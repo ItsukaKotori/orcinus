@@ -22,14 +22,11 @@ fn base_request(cwd: &std::path::Path) -> SpawnRequest {
     }
 }
 
-/// 从 connection 槽取出 outbound 接收端（Task 5 占位：spawn 时槽内即 rx）。
-async fn take_outbound(session: &Session) -> tokio::sync::mpsc::Receiver<Chunk> {
-    session
-        .connection
-        .lock()
-        .await
-        .take()
-        .expect("connection slot pre-filled with outbound rx")
+/// 建立测试下行通道（非 WS 接管口，见 [`Session::connect_channel`]）。
+/// pre-attach 重放块已排入通道头部，聚合时自然先于实时输出（含 Task 5 用例⑤
+/// 的 spawn 期 command 输出）。
+fn take_outbound(session: &Session) -> tokio::sync::mpsc::Receiver<Chunk> {
+    session.connect_channel()
 }
 
 /// 循环 recv 聚合输出，直到 `pred` 命中；总时限 [`AGG_TIMEOUT`]。
@@ -93,11 +90,15 @@ async fn echo_flows_to_outbound() {
         ..base_request(&std::env::temp_dir())
     };
     let (session, _runtime) = Session::spawn(req).expect("spawn session");
-    let mut rx = take_outbound(&session).await;
+    let mut rx = take_outbound(&session);
     session.write(b"echo ok-$ADE_PTY_TEST\n").expect("write");
     // 回显文本是 `ok-$ADE_PTY_TEST`，不含字面量 `ok-1`，contains 无假阳性。
     let agg = aggregate_until(&mut rx, |bytes| find(bytes, b"ok-1").is_some()).await;
-    assert!(find(&agg, b"ok-1").is_some(), "got: {:?}", String::from_utf8_lossy(&agg));
+    assert!(
+        find(&agg, b"ok-1").is_some(),
+        "got: {:?}",
+        String::from_utf8_lossy(&agg)
+    );
 }
 
 #[cfg(unix)]
@@ -105,7 +106,7 @@ async fn echo_flows_to_outbound() {
 async fn exit_code_propagates() {
     let (session, runtime) =
         Session::spawn(base_request(&std::env::temp_dir())).expect("spawn session");
-    let _rx = take_outbound(&session).await; // 保持通道开启，镜像真实 attach
+    let _rx = take_outbound(&session); // 保持通道开启，镜像真实 attach
     session.write(b"exit 7\n").expect("write");
     let code = tokio::time::timeout(AGG_TIMEOUT, runtime.exit)
         .await
@@ -125,8 +126,10 @@ async fn env_to_delete_removes_key() {
         ..base_request(&std::env::temp_dir())
     };
     let (session, _runtime) = Session::spawn(req).expect("spawn session");
-    let mut rx = take_outbound(&session).await;
-    session.write(b"echo ${ADE_PTY_DEL:-missing}\n").expect("write");
+    let mut rx = take_outbound(&session);
+    session
+        .write(b"echo ${ADE_PTY_DEL:-missing}\n")
+        .expect("write");
     let agg = aggregate_until(&mut rx, |bytes| {
         find(after_command_echo(bytes, CMD), b"missing").is_some()
     })
@@ -146,7 +149,7 @@ async fn backpressure_pauses_without_loss() {
     const TARGET: usize = 4_194_304;
     let (session, _runtime) =
         Session::spawn(base_request(&std::env::temp_dir())).expect("spawn session");
-    let mut rx = take_outbound(&session).await;
+    let mut rx = take_outbound(&session);
     session
         .write(b"head -c 4194304 /dev/zero | tr '\\0' A\n")
         .expect("write");
@@ -162,9 +165,7 @@ async fn backpressure_pauses_without_loss() {
         let remaining = deadline.saturating_duration_since(Instant::now());
         let chunk = match tokio::time::timeout(remaining, rx.recv()).await {
             Ok(Some(chunk)) => chunk,
-            Ok(None) => panic!(
-                "outbound closed; received {received} bytes, max A-run {max_run}"
-            ),
+            Ok(None) => panic!("outbound closed; received {received} bytes, max A-run {max_run}"),
             Err(_) => panic!(
                 "timed out; received {received} bytes, max A-run {max_run} (target {TARGET})"
             ),
@@ -197,7 +198,7 @@ async fn command_written_after_spawn_runs() {
         ..base_request(&std::env::temp_dir())
     };
     let (session, _runtime) = Session::spawn(req).expect("spawn session");
-    let mut rx = take_outbound(&session).await;
+    let mut rx = take_outbound(&session);
     // 回显行含 "delivered" 字面量，会被全文 contains 骗过；只认回显行之后的输出。
     let agg = aggregate_until(&mut rx, |bytes| {
         find(after_command_echo(bytes, CMD), b"delivered").is_some()
