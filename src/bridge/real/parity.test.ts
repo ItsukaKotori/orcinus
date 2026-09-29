@@ -184,6 +184,10 @@ const surfaceCases: SurfaceCase[] = [
       'pickDirectory',
       'isGitAvailable',
       'getDefaultCreateProjectParent',
+      'create',
+      'getBaseRefDefault',
+      'searchBaseRefs',
+      'searchBaseRefDetails',
       'onChanged',
       'onCloneProgress'
     ],
@@ -192,12 +196,8 @@ const surfaceCases: SurfaceCase[] = [
       'cloneRemote',
       'createRemote',
       'addRemote',
-      'create',
       'cloneAbort',
       'getGitUsername',
-      'getBaseRefDefault',
-      'searchBaseRefs',
-      'searchBaseRefDetails',
       'reorder',
       'removeForHost'
     ]
@@ -258,6 +258,12 @@ const surfaceCases: SurfaceCase[] = [
       'forgetRemovedForExecutionHost',
       'cancelListDetected',
       'listLineage',
+      'create',
+      'remove',
+      'forgetLocal',
+      'forceDeletePreservedBranch',
+      'updateMeta',
+      'persistSortOrder',
       'onChanged',
       'onHeadIdentitiesChanged',
       'onBaseStatus',
@@ -266,18 +272,12 @@ const surfaceCases: SurfaceCase[] = [
       'onGitStatusMetadataChanged'
     ],
     missing: [
-      'create',
-      'remove',
       'adoptProvisionedRoot',
       'prefetchCreateBase',
       'resolvePrBase',
       'resolveMrBase',
-      'forgetLocal',
-      'forceDeletePreservedBranch',
-      'updateMeta',
       'listLineageForHost',
       'updateLineage',
-      'persistSortOrder',
       'getBranchRenameFailureOutput',
       'listRetiredNames'
     ]
@@ -570,9 +570,9 @@ const unimplementedCases: UnimplementedCase[] = [
     mock: () => createMockAdeApi().projects.createHostSetup({} as never)
   },
   {
-    name: 'worktrees.create',
-    real: () => createWorktreesRealApi().create({} as never),
-    mock: () => createMockAdeApi().worktrees.create({} as never)
+    name: 'worktrees.adoptProvisionedRoot',
+    real: () => createWorktreesRealApi().adoptProvisionedRoot({} as never),
+    mock: () => createMockAdeApi().worktrees.adoptProvisionedRoot({} as never)
   },
   {
     name: 'fs.downloadFile',

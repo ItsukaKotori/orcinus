@@ -49,11 +49,42 @@ beforeEach(() => {
   listenMock.mockReset()
 })
 
+const commandCases = [
+  ['create', 'worktrees_create', { repoId: 'r1', name: 'calm-otter' }],
+  ['remove', 'worktrees_remove', { worktreeId: 'r1::/repo/calm-otter' }],
+  ['forgetLocal', 'worktrees_forget_local', { worktreeId: 'r1::/repo/calm-otter' }],
+  [
+    'forceDeletePreservedBranch',
+    'worktrees_force_delete_preserved_branch',
+    {
+      worktreeId: 'r1::/repo/calm-otter',
+      branchName: 'feature/calm-otter',
+      expectedHead: 'abc'
+    }
+  ],
+  [
+    'updateMeta',
+    'worktrees_update_meta',
+    { worktreeId: 'r1::/repo/calm-otter', updates: { isPinned: true } }
+  ],
+  ['persistSortOrder', 'worktrees_persist_sort_order', { orderedIds: ['r1::/repo'] }]
+] satisfies Array<[WorktreesMethod, string, Record<string, unknown>]>
+
 describe('worktrees real adapter commands', () => {
   it('maps list to worktrees_list with the { args } envelope', async () => {
     invokeMock.mockResolvedValueOnce([])
     await expect(createWorktreesRealApi().list({ repoId: 'r1' })).resolves.toEqual([])
     expect(invokeMock).toHaveBeenCalledWith('worktrees_list', { args: { repoId: 'r1' } })
+  })
+
+  it.each(commandCases)('maps %s to %s with the { args } envelope', async (method, command, args) => {
+    invokeMock.mockResolvedValueOnce(null)
+    const worktrees = createWorktreesRealApi() as unknown as Record<
+      string,
+      (callArgs: unknown) => Promise<unknown>
+    >
+    await worktrees[method](args)
+    expect(invokeMock).toHaveBeenCalledWith(command, { args })
   })
 
   it('maps listAll to worktrees_list_all without a payload', async () => {
@@ -69,6 +100,55 @@ describe('worktrees real adapter commands', () => {
     await expect(createWorktreesRealApi().list({ repoId: 'r1' })).rejects.toThrow(
       'git worktree list failed'
     )
+  })
+
+  it('passes the create { worktree, warnings? } result through', async () => {
+    const result = {
+      worktree: linkedWorktree,
+      warnings: [{ code: 'LINEAGE_PARENT_CONTEXT_MISSING' as const, message: 'lineage skipped' }]
+    }
+    invokeMock.mockResolvedValueOnce(result)
+    await expect(
+      createWorktreesRealApi().create({ repoId: 'r1', name: 'calm-otter' })
+    ).resolves.toBe(result)
+  })
+
+  it('passes the remove { preservedBranch } result through', async () => {
+    const result = { preservedBranch: { branchName: 'feature/calm-otter', head: 'abc' } }
+    invokeMock.mockResolvedValueOnce(result)
+    await expect(
+      createWorktreesRealApi().remove({ worktreeId: linkedWorktree.id, force: true })
+    ).resolves.toBe(result)
+  })
+
+  it('passes an empty remove result through', async () => {
+    const result = {}
+    invokeMock.mockResolvedValueOnce(result)
+    await expect(createWorktreesRealApi().remove({ worktreeId: linkedWorktree.id })).resolves.toBe(
+      result
+    )
+  })
+
+  it('returns the full merged Worktree from updateMeta unchanged', async () => {
+    const updated: Worktree = { ...linkedWorktree, isPinned: true, comment: 'keep me' }
+    invokeMock.mockResolvedValueOnce(updated)
+    await expect(
+      createWorktreesRealApi().updateMeta({
+        worktreeId: linkedWorktree.id,
+        updates: { isPinned: true, comment: 'keep me' }
+      })
+    ).resolves.toBe(updated)
+  })
+
+  it('passes the forceDeletePreservedBranch { deleted } result through', async () => {
+    invokeMock.mockResolvedValueOnce({ deleted: true })
+    await expect(
+      createWorktreesRealApi().forceDeletePreservedBranch({
+        worktreeId: linkedWorktree.id,
+        branchName: 'feature/calm-otter',
+        expectedHead: 'abc'
+      })
+    ).resolves.toEqual({ deleted: true })
   })
 })
 
@@ -185,11 +265,13 @@ describe('worktrees real adapter events', () => {
 describe('worktrees real adapter unimplemented surface', () => {
   it.each([
     'listRetiredNames',
-    'create',
-    'remove',
+    'adoptProvisionedRoot',
     'prefetchCreateBase',
-    'updateMeta',
-    'resolvePrBase'
+    'resolvePrBase',
+    'resolveMrBase',
+    'listLineageForHost',
+    'updateLineage',
+    'getBranchRenameFailureOutput'
   ] satisfies WorktreesMethod[])('rejects %s with UnimplementedBridgeError', async (method) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const worktrees = createWorktreesRealApi() as unknown as Record<

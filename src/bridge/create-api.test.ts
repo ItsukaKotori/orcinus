@@ -69,7 +69,7 @@ describe('createAdeApi mode resolution', () => {
 })
 
 describe('createAdeApi real assembly', () => {
-  it('routes the ten real domains through their commands', async () => {
+  it('routes the assembled real domains through their commands', async () => {
     const api = createAdeApi()
     invokeMock.mockResolvedValue([])
 
