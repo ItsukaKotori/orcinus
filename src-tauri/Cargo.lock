@@ -69,6 +69,7 @@ dependencies = [
 name = "ade-pty"
 version = "0.0.1"
 dependencies = [
+ "anyhow",
  "futures-util",
  "portable-pty",
  "rand 0.10.3",

@@ -1,5 +1,16 @@
 pub mod cpr;
 pub mod server;
+pub mod session;
+
+/// crate 级错误类型：portable-pty 的公开 API（openpty/spawn_command/take_writer/
+/// resize 等）返回 `anyhow::Error`，本地 io 失败（线程启动等）归入 `Io`。
+#[derive(Debug, thiserror::Error)]
+pub enum PtyError {
+    #[error("io error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("pty error: {0:#}")]
+    Pty(#[from] anyhow::Error),
+}
 
 use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 use std::io::Read;

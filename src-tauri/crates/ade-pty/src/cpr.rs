@@ -43,7 +43,10 @@ pub fn scan_and_reply(
     }
 
     let keep = (buf.len() - scanned).min(CPR_QUERY.len() - 1);
-    *tail = buf[buf.len() - keep..].to_vec();
+    let split = buf.len() - keep;
+    // 复用容量：整体移交后 drain 掉已消费前缀，避免每块重新分配（行为等价）。
+    *tail = buf;
+    tail.drain(..split);
     Ok(hits)
 }
 
