@@ -1,3 +1,4 @@
+pub mod base_ref;
 pub mod branch;
 pub(crate) mod command;
 pub mod compare;

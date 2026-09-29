@@ -79,6 +79,22 @@ export const commands = {
 	reposIsGitAvailable: () => typedError<boolean, BridgeError>(__TAURI_INVOKE("repos_is_git_available")),
 	/**  Effective local default parent for "Create new project". */
 	reposGetDefaultCreateProjectParent: () => typedError<string, BridgeError>(__TAURI_INVOKE("repos_get_default_create_project_parent")),
+	/**
+	 *  Create a repo/folder from scratch; validation and git failures answer the
+	 *  `{error}` contract union instead of rejecting. A successful create
+	 *  broadcasts `repos:changed` plus `worktrees:changed` for the new repo.
+	 */
+	reposCreate: (args: ReposCreateArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("repos_create", { args })),
+	/**
+	 *  `repos:getBaseRefDefault`: folder repos (and unknown ids) answer
+	 *  `{defaultBaseRef: null, remoteCount: 0}`; git repos resolve the short
+	 *  default base ref and count configured remotes.
+	 */
+	reposGetBaseRefDefault: (args: GetBaseRefDefaultArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("repos_get_base_ref_default", { args })),
+	/**  `repos:searchBaseRefs`: short ref names matching `query`. */
+	reposSearchBaseRefs: (args: SearchBaseRefsArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("repos_search_base_refs", { args })),
+	/**  `repos:searchBaseRefDetails`: `[{refName, localBranchName}]`. */
+	reposSearchBaseRefDetails: (args: SearchBaseRefsArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("repos_search_base_ref_details", { args })),
 	/**  Project the worktrees of one repo. */
 	worktreesList: (args: WorktreesListArgs) => typedError<Worktree[], BridgeError>(__TAURI_INVOKE("worktrees_list", { args })),
 	/**  Project every repo's worktrees, merged in registry order. */
@@ -387,6 +403,11 @@ export type FsWatchWorktreeArgs = {
 export type FsWriteFileArgs = {
 	filePath: string,
 	content: string,
+};
+
+export type GetBaseRefDefaultArgs = {
+	repoId: string,
+	hostId?: string | null,
 };
 
 /**  Mirrors `GitBranchChangeEntry` in `src/shared/git-diff-compare-types.ts`. */
@@ -1094,6 +1115,16 @@ export type ReposAddArgs = {
 	displayName?: string | null,
 };
 
+/**
+ *  `repos:create` payload (`repo-creation-handlers.ts:132-136`); an absent or
+ *  unknown kind coerces to `git`, exactly like the oracle's narrow union.
+ */
+export type ReposCreateArgs = {
+	parentPath: string,
+	name: string,
+	kind?: RepoKind | null,
+};
+
 export type ReposRemoveArgs = {
 	repoId: string,
 };
@@ -1120,6 +1151,13 @@ export type ScanNestedProgressPayload = {
 	scanned: number,
 	found: number,
 	scan: NestedRepoScanResult,
+};
+
+export type SearchBaseRefsArgs = {
+	repoId: string,
+	query: string,
+	limit?: number | null,
+	hostId?: string | null,
 };
 
 export type SearchFileResult = SearchFileResult_Serialize | SearchFileResult_Deserialize;

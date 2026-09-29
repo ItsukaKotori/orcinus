@@ -1,8 +1,11 @@
 use std::collections::HashSet;
+use std::path::Path;
+use std::time::Duration;
 
 use ade_core::models::repo::{new_repo, now_ms, RepoKind};
 use ade_core::path_compare::normalize_for_comparison;
 use ade_fs::FsService;
+use ade_git::base_ref::BaseRefSearchResult;
 use ade_store::projects_store::ProjectsStore;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
@@ -74,6 +77,42 @@ pub struct ReposReorderForHostArgs {
     pub host_id: String,
 }
 
+/// `repos:create` payload (`repo-creation-handlers.ts:132-136`); an absent or
+/// unknown kind coerces to `git`, exactly like the oracle's narrow union.
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ReposCreateArgs {
+    pub parent_path: String,
+    pub name: String,
+    #[serde(default)]
+    pub kind: Option<RepoKind>,
+}
+
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GetBaseRefDefaultArgs {
+    pub repo_id: String,
+    #[serde(default)]
+    pub host_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchBaseRefsArgs {
+    pub repo_id: String,
+    pub query: String,
+    #[serde(default)]
+    pub limit: Option<u32>,
+    #[serde(default)]
+    pub host_id: Option<String>,
+}
+
+/// `git init`/`git commit` budget for `repos_create`.
+const REPO_CREATE_GIT_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// Verbatim setup hint (`repo-creation-handlers.ts:247-248`).
+const IDENTITY_SETUP_HINT: &str = "Git author identity is not configured. Run `git config --global user.name \"Your Name\"` and `git config --global user.email \"you@example.com\"`, then try again.";
+
 /// Outcome of a successful `repos_add` (spec §5.2).
 #[derive(Debug, Clone, PartialEq)]
 pub struct AddRepoOutcome {
@@ -94,6 +133,51 @@ fn find_repo(store: &ProjectsStore, repo_id_value: &str) -> Option<Value> {
         .repos()
         .into_iter()
         .find(|repo| repo_id(repo) == repo_id_value)
+}
+
+/// `getRepoKind` (`orca:src/shared/repo-kind.ts:3-5`): only an explicit
+/// `folder` kind is a folder; absent/unknown kinds read as git.
+fn repo_kind_of(repo: &Value) -> RepoKind {
+    repo.get("kind")
+        .and_then(Value::as_str)
+        .and_then(RepoKind::parse)
+        .unwrap_or(RepoKind::Git)
+}
+
+/// `getRepoExecutionHostId` (`orca:src/shared/execution-host.ts:158-167`): an
+/// explicit `executionHostId` wins, then a connection id becomes `ssh:<id>`,
+/// otherwise the repo is local.
+fn repo_execution_host(repo: &Value) -> String {
+    if let Some(host) = repo
+        .get("executionHostId")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|host| !host.is_empty())
+    {
+        return host.to_string();
+    }
+    if let Some(connection) = repo
+        .get("connectionId")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|connection| !connection.is_empty())
+    {
+        return format!("ssh:{connection}");
+    }
+    "local".to_string()
+}
+
+/// `getRepoForExecutionHost` (`base-ref-query-handlers.ts:190-204`): without a
+/// host id, match the id alone; with one, the repo must belong to that host.
+fn repo_for_host(
+    store: &ProjectsStore,
+    repo_id_value: &str,
+    host_id: Option<&str>,
+) -> Option<Value> {
+    store.repos().into_iter().find(|repo| {
+        repo_id(repo) == repo_id_value
+            && host_id.is_none_or(|host| repo_execution_host(repo) == host)
+    })
 }
 
 /// Resolve the registry path for `repos_add`: git roots come from
@@ -147,6 +231,173 @@ pub fn add_repo(
     })
 }
 
+/// Create a repo/folder from scratch and register it.
+///
+/// Mirrors `repos:create` (`orca:src/main/ipc/repos/repo-creation-handlers.ts:132-296`):
+/// trimmed name/parent validation in oracle order, empty pre-existing
+/// directories are reused, a `git` kind runs `git init` plus an empty
+/// "Initial commit", and a failure cleans up exactly what this call created.
+/// Domain failures answer the `{error}` contract union instead of rejecting.
+pub fn create_repo(
+    store: &mut ProjectsStore,
+    fs: &FsService,
+    args: &ReposCreateArgs,
+    added_at_ms: u64,
+) -> Value {
+    let name = args.name.trim();
+    let parent_path = args.parent_path.trim();
+    // Why: IPC input is untrusted — coerce to the narrow union so a bogus kind
+    // can't skip git init yet persist in the store.
+    let kind = match args.kind {
+        Some(RepoKind::Folder) => RepoKind::Folder,
+        _ => RepoKind::Git,
+    };
+
+    if name.is_empty() {
+        return json!({ "error": "Name cannot be empty" });
+    }
+    // Block slashes and ./.. so the name can't escape the chosen parent.
+    if name.contains(['/', '\\']) || name == "." || name == ".." {
+        return json!({ "error": "Name cannot contain slashes or be \".\" / \"..\"" });
+    }
+    if parent_path.is_empty() {
+        return json!({ "error": "Parent directory is required" });
+    }
+    // Block CWD-relative paths at the IPC boundary — keeps targetPath stable
+    // across process cwd changes.
+    if !Path::new(parent_path).is_absolute() {
+        return json!({ "error": "Parent directory must be an absolute path" });
+    }
+
+    let target = Path::new(parent_path).join(name);
+    let target_path = target.to_string_lossy().into_owned();
+    let find_exact = |store: &ProjectsStore| {
+        store
+            .repos()
+            .into_iter()
+            .find(|repo| repo_path(repo) == Some(target_path.as_str()))
+    };
+
+    // Dedup by path so a double-click on Create doesn't make two entries for
+    // one folder.
+    if let Some(existing) = find_exact(store) {
+        return json!({ "repo": existing });
+    }
+
+    // The default parent may not exist on a fresh install; create only the
+    // parent before probing the target.
+    if let Err(error) = std::fs::create_dir_all(parent_path) {
+        return json!({ "error": format!("Cannot access target path: {error}") });
+    }
+
+    // Empty pre-existing dirs are allowed (e.g. made in Finder first);
+    // non-empty ones are rejected so we don't overwrite files.
+    let mut created_dir = false;
+    match std::fs::metadata(&target) {
+        Ok(metadata) => {
+            if !metadata.is_dir() {
+                return json!({ "error": "Failed to read directory: Not a directory" });
+            }
+            match std::fs::read_dir(&target) {
+                Ok(mut entries) => {
+                    if entries.next().is_some() {
+                        return json!({
+                            "error": format!(
+                                "\"{name}\" already exists at this location and is not empty."
+                            )
+                        });
+                    }
+                }
+                Err(error) => {
+                    return json!({ "error": format!("Failed to read directory: {error}") });
+                }
+            }
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            match std::fs::create_dir(&target) {
+                Ok(()) => created_dir = true,
+                // EEXIST means a concurrent create won the mkdir race; return
+                // its store entry instead of a confusing error.
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+                    if let Some(winner) = find_exact(store) {
+                        return json!({ "repo": winner });
+                    }
+                    return json!({ "error": format!("Failed to create directory: {error}") });
+                }
+                Err(error) => {
+                    return json!({ "error": format!("Failed to create directory: {error}") });
+                }
+            }
+        }
+        Err(error) => return json!({ "error": format!("Cannot access target path: {error}") }),
+    }
+
+    if kind == RepoKind::Git {
+        // Track which git step ran so the failure can attribute the error and
+        // the identity hint only applies during commit.
+        let mut step_commit = false;
+        let failure = match run_create_git_step(&target_path, &["init"]) {
+            Some(message) => Some(message),
+            None => {
+                step_commit = true;
+                run_create_git_step(
+                    &target_path,
+                    &["commit", "--allow-empty", "-m", "Initial commit"],
+                )
+            }
+        };
+        if let Some(message) = failure {
+            // Only rm the dir if we made it (pre-existing folders must survive
+            // retry); otherwise strip just the `.git/` that `git init` created.
+            if created_dir {
+                let _ = std::fs::remove_dir_all(&target);
+            } else if step_commit {
+                let _ = std::fs::remove_dir_all(target.join(".git"));
+            }
+            if step_commit && looks_like_identity_error(&message) {
+                return json!({ "error": IDENTITY_SETUP_HINT });
+            }
+            let step_label = if step_commit {
+                "Failed to create initial commit"
+            } else {
+                "Failed to initialize git repository"
+            };
+            return json!({ "error": format!("{step_label}: {message}") });
+        }
+    }
+
+    // Why: command invocations don't serialize, so re-check dedup here to close
+    // the race between the first check and `add_repo`.
+    if let Some(winner) = find_exact(store) {
+        // Don't rm even if we made the dir — the race winner owns it.
+        return json!({ "repo": winner });
+    }
+
+    match add_repo(store, fs, &target_path, kind, Some(name), added_at_ms) {
+        Ok(outcome) => json!({ "repo": outcome.repo }),
+        Err(error) => json!({ "error": error.to_string() }),
+    }
+}
+
+/// Run one `repos_create` git step; `Some(message)` on any failure, where the
+/// message is the stderr text (or the process error).
+fn run_create_git_step(repo_path: &str, args: &[&str]) -> Option<String> {
+    match ade_git::run_git_in(repo_path, args, REPO_CREATE_GIT_TIMEOUT, None) {
+        Ok(output) if output.status.success() => None,
+        Ok(output) => Some(String::from_utf8_lossy(&output.stderr).trim().to_string()),
+        Err(error) => Some(error.to_string()),
+    }
+}
+
+/// `/Please tell me who you are|user\.name|user\.email/i`
+/// (`repo-creation-handlers.ts:244`).
+fn looks_like_identity_error(message: &str) -> bool {
+    let lower = message.to_lowercase();
+    lower.contains("please tell me who you are")
+        || lower.contains("user.name")
+        || lower.contains("user.email")
+}
+
 /// A failed grant is logged, not fatal: startup re-authorizes every persisted
 /// root, so one bad entry cannot strand the whole registry (spec §5.1).
 fn authorize_repo_root(fs: &FsService, path: &str) {
@@ -198,6 +449,93 @@ pub fn remove_repo(
         revoke_root_if_unused(store, fs, path);
     }
     Ok(Some(repo))
+}
+
+/// `repos:getBaseRefDefault`: folder repos (and unknown ids) answer
+/// `{defaultBaseRef: null, remoteCount: 0}` so the renderer skips a fabricated
+/// default; git repos resolve the short default ref and count remotes.
+pub fn base_ref_default(
+    store: &ProjectsStore,
+    repo_id_value: &str,
+    host_id: Option<&str>,
+) -> Value {
+    base_ref_default_for_repo(repo_for_host(store, repo_id_value, host_id).as_ref())
+}
+
+fn base_ref_default_for_repo(repo: Option<&Value>) -> Value {
+    let Some(repo) = repo else {
+        return json!({ "defaultBaseRef": null, "remoteCount": 0 });
+    };
+    if repo_kind_of(repo) == RepoKind::Folder {
+        return json!({ "defaultBaseRef": null, "remoteCount": 0 });
+    }
+    let path = repo_path(repo).unwrap_or_default();
+    json!({
+        "defaultBaseRef": ade_git::base_ref::resolve_default_base_ref_short(path),
+        "remoteCount": ade_git::base_ref::remote_count(path),
+    })
+}
+
+/// `repos:searchBaseRefs`: the `refName` list of [`search_base_ref_details`].
+pub fn search_base_refs(
+    store: &ProjectsStore,
+    repo_id_value: &str,
+    query: &str,
+    limit: Option<u32>,
+    host_id: Option<&str>,
+) -> Vec<String> {
+    search_base_ref_results_for_repo(
+        repo_for_host(store, repo_id_value, host_id).as_ref(),
+        query,
+        limit,
+    )
+    .into_iter()
+    .map(|entry| entry.ref_name)
+    .collect()
+}
+
+/// `repos:searchBaseRefDetails`: `[{refName, localBranchName}]`; folder repos
+/// and unknown ids answer `[]`.
+pub fn search_base_ref_details(
+    store: &ProjectsStore,
+    repo_id_value: &str,
+    query: &str,
+    limit: Option<u32>,
+    host_id: Option<&str>,
+) -> Vec<Value> {
+    search_base_ref_results_for_repo(
+        repo_for_host(store, repo_id_value, host_id).as_ref(),
+        query,
+        limit,
+    )
+    .into_iter()
+    .map(|entry| {
+        json!({
+            "refName": entry.ref_name,
+            "localBranchName": entry.local_branch_name,
+        })
+    })
+    .collect()
+}
+
+fn search_base_ref_results_for_repo(
+    repo: Option<&Value>,
+    query: &str,
+    limit: Option<u32>,
+) -> Vec<BaseRefSearchResult> {
+    let Some(repo) = repo else {
+        return Vec::new();
+    };
+    if repo_kind_of(repo) == RepoKind::Folder {
+        return Vec::new();
+    }
+    let requested = limit.unwrap_or(ade_git::base_ref::SEARCH_REFS_DEFAULT_LIMIT);
+    // `isRepoSearchRefsRequestLimit`: zero is not a positive request.
+    if requested == 0 {
+        return Vec::new();
+    }
+    let path = repo_path(repo).unwrap_or_default();
+    ade_git::base_ref::search_base_ref_details(path, query, requested)
 }
 
 /// Persist `projectGroupOrder = index` for the given permutation. Only the
@@ -618,6 +956,96 @@ pub async fn repos_get_default_create_project_parent(
         .map(|path| path.to_string_lossy().into_owned())
         .unwrap_or_default();
     Ok(default_create_project_parent(&settings, &home))
+}
+
+/// Create a repo/folder from scratch; validation and git failures answer the
+/// `{error}` contract union instead of rejecting. A successful create
+/// broadcasts `repos:changed` plus `worktrees:changed` for the new repo.
+#[tauri::command]
+#[specta::specta]
+pub async fn repos_create(
+    state: State<'_, AppState>,
+    args: ReposCreateArgs,
+) -> Result<Json, BridgeError> {
+    let value = {
+        let mut projects = lock(&state.projects);
+        create_repo(&mut projects, &state.fs, &args, now_ms())
+    };
+    if let Some(id) = value
+        .get("repo")
+        .and_then(|repo| repo.get("id"))
+        .and_then(Value::as_str)
+    {
+        emit_repo_mutation(&state.app, id);
+    }
+    Ok(Json::new(value))
+}
+
+/// `repos:getBaseRefDefault`: folder repos (and unknown ids) answer
+/// `{defaultBaseRef: null, remoteCount: 0}`; git repos resolve the short
+/// default base ref and count configured remotes.
+#[tauri::command]
+#[specta::specta]
+pub async fn repos_get_base_ref_default(
+    state: State<'_, AppState>,
+    args: GetBaseRefDefaultArgs,
+) -> Result<Json, BridgeError> {
+    let repo = {
+        let projects = lock(&state.projects);
+        repo_for_host(&projects, &args.repo_id, args.host_id.as_deref())
+    };
+    run_blocking(move || Ok(Json::new(base_ref_default_for_repo(repo.as_ref())))).await
+}
+
+/// `repos:searchBaseRefs`: short ref names matching `query`.
+#[tauri::command]
+#[specta::specta]
+pub async fn repos_search_base_refs(
+    state: State<'_, AppState>,
+    args: SearchBaseRefsArgs,
+) -> Result<Json, BridgeError> {
+    let repo = {
+        let projects = lock(&state.projects);
+        repo_for_host(&projects, &args.repo_id, args.host_id.as_deref())
+    };
+    let names = run_blocking(move || {
+        Ok(
+            search_base_ref_results_for_repo(repo.as_ref(), &args.query, args.limit)
+                .into_iter()
+                .map(|entry| entry.ref_name)
+                .collect::<Vec<_>>(),
+        )
+    })
+    .await?;
+    Ok(Json::new(json!(names)))
+}
+
+/// `repos:searchBaseRefDetails`: `[{refName, localBranchName}]`.
+#[tauri::command]
+#[specta::specta]
+pub async fn repos_search_base_ref_details(
+    state: State<'_, AppState>,
+    args: SearchBaseRefsArgs,
+) -> Result<Json, BridgeError> {
+    let repo = {
+        let projects = lock(&state.projects);
+        repo_for_host(&projects, &args.repo_id, args.host_id.as_deref())
+    };
+    let details = run_blocking(move || {
+        Ok(
+            search_base_ref_results_for_repo(repo.as_ref(), &args.query, args.limit)
+                .into_iter()
+                .map(|entry| {
+                    json!({
+                        "refName": entry.ref_name,
+                        "localBranchName": entry.local_branch_name,
+                    })
+                })
+                .collect::<Vec<_>>(),
+        )
+    })
+    .await?;
+    Ok(Json::new(json!(details)))
 }
 
 #[cfg(test)]
