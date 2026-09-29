@@ -31,7 +31,8 @@
 | 12 | `c76d2a4` | repos.create 与 base ref 查询命令 |
 | 13 | `9a29e7c` | git 域真实适配层与 create-api 接线 |
 | 14 | `e48402a` | worktrees/repos 真实适配扩展与 parity 更新 |
-| 15 | 本提交 | 全量门禁、冒烟与收尾记录 |
+| 15 | `2615c7b` | 全量门禁、冒烟与收尾记录 |
+| 15-fix | 本提交 | 终审修复：warnings 形状、symlink 路径归一、branch override 采用、git 授权守卫（4 Important） |
 
 截至 Task 14：分支 diff 44 文件，+13238/−135（`git diff --shortstat main...HEAD`）。每个 Task 1–14 均经独立 reviewer 子代理评审（review 包存于证据目录）；Task 8 因 harness 子代理 SSE 超时改为控制者内联执行（§7）。
 
@@ -58,6 +59,7 @@
 6. worktree 列表 git 失败按 repo 降级为空并跳过（oracle 行为，替代 A 的 fail-fast）。
 7. `repos.create` 在 projects 锁内同步跑 git（生命周期所致；最长 2×10s 阻塞其他 store 命令）。
 8. compare 的 name-status 用 `-z`；硬读失败（diff）上抛 Err（oracle 降级空内容，UI 以错误卡片呈现）；`history` 的 log 失败上抛。
+9. `worktrees.create` 结果只含 `{ worktree }`：Rust 不发射 `warnings`（TS `CreateWorktreeResult.warnings` 是 `WorktreeLineageWarning[]` 形状，B 无 lineage 数据），配置失败仅 `eprintln!` 日志（终审修复，替代 spec §4.4 的 `warnings?: []` 字面最小子集）。
 
 ### 3.2 review 暴露并修复的关键点
 
@@ -66,19 +68,25 @@
 - 分支删除失败应降级为保留/Skipped（绝不判整体失败）；强删需 checked-out 前后守卫与恢复（修复 `3fd2f37`）。
 - worktree 投影 `displayNameMode` 必须为 `'fixed'|'automatic'` 并按 `displayNameIsPinned`/`cliProvenance` 判定（修复 `2afcf35`）。
 - `updateMeta` 必须先校验 worktree 存在再写盘；worktree 列表按 repo 降级（修复 `2afcf35`）。
+- 终审 4 Important（修复本提交）：
+  1. `WorktreesCreateResult.warnings` 的 Rust `string[]` 与 TS `WorktreeLineageWarning[]` 形状不符 → 移除字段，配置失败只记日志。
+  2. symlink 工作区根下 create 用词法路径作 meta key、git 返回真实路径 → create 在 checkout 后报 "Worktree not found"、meta 孤儿 → 统一 `ade_git::canonical_worktree_path`；remove/updateMeta/forget 的 id 解析 exact-first、canonical 回退（保住 folder workspace 的 verbatim id）。
+  3. `branchNameOverride` 命中已存在本地分支未走 checkout-existing → 按 oracle `canCheckoutExistingLocalBranch` 采用该分支（`git worktree add <path> <branch>`，无 `-b`/`--no-track`，跳过 base/upstream 配置，meta 写 `preserveBranchOnDelete:true`）；override 不再套 branchPrefix，并加 `check-ref-format --branch` 校验。
+  4. git 命令未过 fs 授权 → 每个命令先 `FsService::resolve(worktreePath)`；含 `filePath`/`oldPath` 的命令拒绝绝对路径与含 `..` 段的相对路径。
 
 ### 3.3 已知近似与延后 minor（来自各任务评审，完整见台账）
 
 - status：`conflict_compatibility` 仅 NotFound→deleted（缺 ENOTDIR）；ignored_paths 未随 limit 截断；entries 双存内存翻倍；`attach_line_stats` 无取消；历史遗留切片点。
 - diff：超限 blob 先整体缓冲；`LargeDiffRenderLimit::Unlimited.limited` 为 bool；对 index 缺失回退 HEAD/二进制删除的测试缺口。
 - staging/upstream：`rev-list` 畸形输出 (0,0)；TOCTOU 窗口。
-- worktree：`delete_branch` squash-merge 树等价重试未移植（保留分支，安全方向）；`is_branch_checked_out` 忽略 prunable 注册；missing-registration 文案后缀缺失；`finish` 取消注册竞态（唯一 token 下理论）；名称冲突匹配偏宽；`updateMeta` 对 folder workspace 不投影；`persistSortOrder/forgetLocal` 未走 run_blocking。
+- worktree：`delete_branch` squash-merge 树等价重试未移植（保留分支，安全方向）；`is_branch_checked_out` 忽略 prunable 注册；missing-registration 文案后缀缺失；`finish` 取消注册竞态（唯一 token 下理论）；名称冲突匹配偏宽；`updateMeta` 对 folder workspace 不投影；`persistSortOrder/forgetLocal` 未走 run_blocking；git 授权守卫的 `filePath` 只拒绝绝对路径与 `..` 段，未逐路径 canonicalize（worktree 内 symlink 父目录的间接逃逸未拦，按终审要求的最小面实现）。
 - TS：mock 侧 worktrees.create/remove 等仍 reject（后续 mock 任务）；`setStatusUpstreamRefWatch` 维持 fallback（warn 噪音）；refs 排序用 `String::cmp`（非 locale）。
 - 全量 `pnpm test` 既有性能 flake（`browser-history-match.performance`，phase1a 已记录；本次终局未触发）。
 
 ## 4. 测试与门禁证据（Task 15）
 
 - Rust：`cargo test --manifest-path src-tauri/Cargo.toml --workspace` → **546 passed / 0 failed**（基线 351；+195）。
+- fix wave（本提交）：`cargo test --workspace` → **556 passed / 0 failed**（+10：symlink 工作区根全链路、override adopt/去前缀/checked-out/diverged、folder id verbatim、git 授权守卫、相对路径守卫）；`pnpm vitest run src/bridge` → **352 passed**；`rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm build:web` → exit 0（仅既有 chunk-size 警告）；bindings 重生成（`WorktreesCreateResult` 去 `warnings`）且 `bindings_are_fresh` 绿。
 - 前端冷门禁：`rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm build:web` → exit 0（仅既有 chunk-size 警告）。
 - 全量前端：`pnpm test` → **3848 passed | 8 skipped（3856 文件）；34245 passed | 122 skipped（34367 测试）；0 failed**；540.04s；`grep -cE '^\s*FAIL'` = 0。较 phase1a 验收后基线（34204）**+41 测试**；`src/bridge` 域测试 352 通过（新增 git/worktrees/repos 契约与 parity）。
 
@@ -127,10 +135,11 @@ Mock 回退模式（`dev-smoke-phase1b-mock.log`）：`Running target/debug/orci
 
 - Task 8 三次子代理派发均因 harness SSE 超时中断（未提交）→ 控制者内联接手其脚手架并完成实现；评审仍由独立子代理完成。代价：控制者上下文增长、与 SDD 标准流程偏离。
 - 预检修正（计划内直接修正并记录）：Store 方法 `&self` 化；Task 10 测试直调 `ade_git`；`includeLineStats: None→true` 的映射裁定。
+- 终审 fix wave 裁定：`warnings` 选择移除字段而非对齐 lineage 形状（B 无 lineage 数据、TS 字段可选，绑定面最小）；canonical 化复用 `ade_git::canonical_worktree_path`，id 解析 exact-first + canonical 回退以保住 folder workspace 的 verbatim id；override 按 oracle 去前缀并加 `check-ref-format --branch` 校验；授权守卫在 async 命令体内锁外同步 `resolve`。
 - 其余裁定见 SDD 台账 `progress.md`（每项含成本说明）。
 
 ## 8. 收尾状态
 
-- 门禁：cargo 546/0、冷 `typecheck`+`build:web` exit 0、`pnpm test` 0 failed（3848 文件 / 34245 测试）、真实 + mock 冒烟通过。
+- 门禁：cargo 556/0（fix wave 后）、冷 `typecheck`+`build:web` exit 0、`pnpm test` 0 failed（3848 文件 / 34245 测试）、真实 + mock 冒烟通过；终审 4 Important 已全部修复（本提交）。
 - 工作树干净；分支未 push、未 merge。
 - 交付选项（用户决定）：合并到 `main` / 开 PR / 保留分支。

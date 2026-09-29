@@ -100,7 +100,7 @@ export const commands = {
 	/**  Project every repo's worktrees, merged in registry order. */
 	worktreesListAll: () => typedError<Worktree[], BridgeError>(__TAURI_INVOKE("worktrees_list_all")),
 	/**  Create a worktree and persist its metadata; broadcasts `worktrees:changed`. */
-	worktreesCreate: (args: WorktreesCreateArgs) => typedError<WorktreesCreateResult_Serialize, BridgeError>(__TAURI_INVOKE("worktrees_create", { args })),
+	worktreesCreate: (args: WorktreesCreateArgs) => typedError<WorktreesCreateResult, BridgeError>(__TAURI_INVOKE("worktrees_create", { args })),
 	/**  Remove a worktree, revoke its root when unused, and broadcast the change. */
 	worktreesRemove: (args: WorktreesRemoveArgs) => typedError<WorktreesRemoveResult_Serialize, BridgeError>(__TAURI_INVOKE("worktrees_remove", { args })),
 	/**  Drop a workspace's metadata and authorization without touching disk or git. */
@@ -1313,27 +1313,13 @@ export type WorktreesCreateArgs = {
 };
 
 /**
- *  `{ worktree, warnings? }` (spec §4.4): `warnings` carries the non-fatal
- *  follow-up failures that the oracle only logs.
+ *  `{ worktree }` (spec §4.4 minimal subset). The TS `CreateWorktreeResult`
+ *  declares `warnings` as `WorktreeLineageWarning[]`, and B has no lineage
+ *  metadata, so the field is omitted entirely rather than emitted with the
+ *  wrong shape; follow-up config failures are logged only.
  */
-export type WorktreesCreateResult = WorktreesCreateResult_Serialize | WorktreesCreateResult_Deserialize;
-
-/**
- *  `{ worktree, warnings? }` (spec §4.4): `warnings` carries the non-fatal
- *  follow-up failures that the oracle only logs.
- */
-export type WorktreesCreateResult_Deserialize = {
+export type WorktreesCreateResult = {
 	worktree: Worktree,
-	warnings: string[] | null,
-};
-
-/**
- *  `{ worktree, warnings? }` (spec §4.4): `warnings` carries the non-fatal
- *  follow-up failures that the oracle only logs.
- */
-export type WorktreesCreateResult_Serialize = {
-	worktree: Worktree,
-	warnings?: string[] | null,
 };
 
 export type WorktreesForceDeleteArgs = {

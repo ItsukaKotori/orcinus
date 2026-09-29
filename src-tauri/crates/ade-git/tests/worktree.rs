@@ -16,7 +16,8 @@ use std::sync::{Mutex, MutexGuard, Once};
 use ade_core::errors::CoreError;
 use ade_git::branch::{resolve_create_base, resolve_default_base_ref, resolve_git_username};
 use ade_git::worktree_create::{
-    configure_branch_base, ensure_push_auto_setup_remote, worktree_add, AddWorktreeRequest,
+    can_checkout_existing_local_branch, configure_branch_base, ensure_push_auto_setup_remote,
+    worktree_add, AddWorktreeRequest,
 };
 use ade_git::worktree_remove::{
     assert_worktree_removable, delete_branch, force_delete_branch, worktree_remove,
@@ -325,8 +326,40 @@ fn add_feature_worktree(repo: &Path, linked: &Path) {
         worktree_path: str_path(linked).to_string(),
         branch: "feature/x".to_string(),
         base_ref: "main".to_string(),
+        checkout_existing: false,
     })
     .expect("worktree_add");
+}
+
+/// An existing local branch can be adopted with the `<path> <branch>` form.
+#[test]
+fn worktree_add_checks_out_an_existing_branch() {
+    let _env = hermetic_env();
+    let dir = TempDir::new("worktree-add-existing");
+    let repo = init_repo_with_commit(&dir);
+    let linked = linked_path(&dir);
+    git(&repo, &["branch", "feature/x"]);
+
+    assert!(
+        can_checkout_existing_local_branch(repo_path(&repo), "feature/x", "main")
+            .expect("can_checkout_existing_local_branch")
+    );
+
+    worktree_add(&AddWorktreeRequest {
+        repo_path: repo_path(&repo).to_string(),
+        worktree_path: str_path(&linked).to_string(),
+        branch: "feature/x".to_string(),
+        base_ref: "main".to_string(),
+        checkout_existing: true,
+    })
+    .expect("worktree_add existing branch");
+
+    let entries = ade_git::worktree_list(repo_path(&repo)).expect("worktree_list");
+    let linked_entry = entries
+        .iter()
+        .find(|entry| same_path(&entry.path, &linked))
+        .expect("linked worktree entry");
+    assert_eq!(linked_entry.branch.as_deref(), Some("refs/heads/feature/x"));
 }
 
 /// Point the linked worktree's branch at one extra commit.
@@ -384,6 +417,7 @@ fn worktree_add_rejects_registered_path_with_conflict_message() {
         worktree_path: str_path(&linked).to_string(),
         branch: "feature/other".to_string(),
         base_ref: "main".to_string(),
+        checkout_existing: false,
     })
     .unwrap_err();
 

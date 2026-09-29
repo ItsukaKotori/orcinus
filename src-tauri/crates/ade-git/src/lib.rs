@@ -59,7 +59,7 @@ pub fn worktree_list(path: &str) -> Result<Vec<GitWorktreeEntry>, CoreError> {
 /// through their nearest existing ancestor, so a just-deleted worktree still
 /// compares equal to its registration. Dot segments are resolved lexically and
 /// Windows-syntax paths are case-folded.
-pub(crate) fn canonical_worktree_path(path_value: &str) -> String {
+pub fn canonical_worktree_path(path_value: &str) -> String {
     let resolved = resolve_real_path(Path::new(path_value))
         .unwrap_or_else(|_| normalize_lexically(Path::new(path_value)));
     let text = resolved.to_string_lossy().into_owned();

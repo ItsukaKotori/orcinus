@@ -47,8 +47,9 @@ async function listDetected(
  * `worktrees:changed` event are real; the remote/runtime surfaces either answer
  * the provider contract empty/rejected or stay on `withMethodFallback` until
  * their subproject lands. Mutation payloads pass through untranslated — the
- * Rust commands answer the `{ worktree, warnings? }`, `{ preservedBranch? }`,
- * and full-`Worktree` shapes the TS contract already declares.
+ * Rust commands answer the `{ worktree }`, `{ preservedBranch? }`, and
+ * full-`Worktree` shapes the TS contract already declares (`warnings` stays
+ * unemitted: it is a lineage shape B has no data for).
  */
 export function createWorktreesRealApi(): WorktreeApi {
   return withMethodFallback<WorktreeApi>('worktrees', {

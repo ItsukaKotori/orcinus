@@ -6,8 +6,10 @@
 //! git subprocesses run through [`run_blocking`] so they never sit on the
 //! async runtime threads.
 
+use std::path::{Component, Path};
 use std::time::Duration;
 
+use ade_fs::FsService;
 use ade_git::compare::{GitBranchCompareResult, GitCommitCompareResult};
 use ade_git::diff::GitDiffResult;
 use ade_git::history::GitHistoryResult;
@@ -325,6 +327,39 @@ pub fn history_impl(
     Ok(ade_git::history::history(worktree_path, limit, base_ref)?)
 }
 
+// ─── authorization guards ────────────────────────────────────────────────────
+
+/// Reject a worktree path outside every authorized fs root, so the renderer
+/// cannot run git against an arbitrary repository (the `fs.*` authorization
+/// model).
+pub fn require_authorized_worktree(fs: &FsService, worktree_path: &str) -> Result<(), BridgeError> {
+    fs.resolve(worktree_path)?;
+    Ok(())
+}
+
+/// Renderer-supplied repo-relative paths must not escape the authorized
+/// worktree: absolute paths and `..` segments are rejected before git runs.
+pub fn validate_relative_file_path(file_path: &str) -> Result<(), BridgeError> {
+    let path = Path::new(file_path);
+    if path.is_absolute()
+        || path
+            .components()
+            .any(|part| matches!(part, Component::ParentDir))
+    {
+        return Err(BridgeError::message(format!(
+            "Invalid file path: {file_path}"
+        )));
+    }
+    Ok(())
+}
+
+fn validate_relative_file_paths(file_paths: &[String]) -> Result<(), BridgeError> {
+    for file_path in file_paths {
+        validate_relative_file_path(file_path)?;
+    }
+    Ok(())
+}
+
 // ─── commands ────────────────────────────────────────────────────────────────
 
 /// `git.status`: registers the renderer's `requestToken` (or a generated one)
@@ -336,6 +371,7 @@ pub async fn git_status(
     state: State<'_, AppState>,
     args: GitStatusArgs,
 ) -> Result<GitStatusResult, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
     let request_token = args
         .request_token
         .clone()
@@ -363,7 +399,12 @@ pub async fn git_cancel_status(
 /// `git.diff`: HEAD/index vs worktree blob contents for one path.
 #[tauri::command]
 #[specta::specta]
-pub async fn git_diff(args: GitDiffArgs) -> Result<GitDiffResult, BridgeError> {
+pub async fn git_diff(
+    state: State<'_, AppState>,
+    args: GitDiffArgs,
+) -> Result<GitDiffResult, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    validate_relative_file_path(&args.file_path)?;
     run_blocking(move || {
         diff_impl(
             &args.worktree_path,
@@ -377,79 +418,122 @@ pub async fn git_diff(args: GitDiffArgs) -> Result<GitDiffResult, BridgeError> {
 
 #[tauri::command]
 #[specta::specta]
-pub async fn git_stage(args: GitFileArgs) -> Result<(), BridgeError> {
+pub async fn git_stage(state: State<'_, AppState>, args: GitFileArgs) -> Result<(), BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    validate_relative_file_path(&args.file_path)?;
     run_blocking(move || stage_impl(&args.worktree_path, &args.file_path)).await
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn git_bulk_stage(args: GitFilesArgs) -> Result<(), BridgeError> {
+pub async fn git_bulk_stage(
+    state: State<'_, AppState>,
+    args: GitFilesArgs,
+) -> Result<(), BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    validate_relative_file_paths(&args.file_paths)?;
     run_blocking(move || bulk_stage_impl(&args.worktree_path, &args.file_paths)).await
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn git_unstage(args: GitFileArgs) -> Result<(), BridgeError> {
+pub async fn git_unstage(state: State<'_, AppState>, args: GitFileArgs) -> Result<(), BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    validate_relative_file_path(&args.file_path)?;
     run_blocking(move || unstage_impl(&args.worktree_path, &args.file_path)).await
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn git_bulk_unstage(args: GitFilesArgs) -> Result<(), BridgeError> {
+pub async fn git_bulk_unstage(
+    state: State<'_, AppState>,
+    args: GitFilesArgs,
+) -> Result<(), BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    validate_relative_file_paths(&args.file_paths)?;
     run_blocking(move || bulk_unstage_impl(&args.worktree_path, &args.file_paths)).await
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn git_discard(args: GitFileArgs) -> Result<(), BridgeError> {
+pub async fn git_discard(state: State<'_, AppState>, args: GitFileArgs) -> Result<(), BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    validate_relative_file_path(&args.file_path)?;
     run_blocking(move || discard_impl(&args.worktree_path, &args.file_path)).await
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn git_bulk_discard(args: GitFilesArgs) -> Result<(), BridgeError> {
+pub async fn git_bulk_discard(
+    state: State<'_, AppState>,
+    args: GitFilesArgs,
+) -> Result<(), BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    validate_relative_file_paths(&args.file_paths)?;
     run_blocking(move || bulk_discard_impl(&args.worktree_path, &args.file_paths)).await
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn git_commit(args: GitCommitArgs) -> Result<GitCommitOutcome, BridgeError> {
+pub async fn git_commit(
+    state: State<'_, AppState>,
+    args: GitCommitArgs,
+) -> Result<GitCommitOutcome, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
     run_blocking(move || commit_impl(&args.worktree_path, &args.message)).await
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn git_upstream_status(args: GitWorktreeArgs) -> Result<GitUpstreamStatus, BridgeError> {
+pub async fn git_upstream_status(
+    state: State<'_, AppState>,
+    args: GitWorktreeArgs,
+) -> Result<GitUpstreamStatus, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
     run_blocking(move || upstream_status_impl(&args.worktree_path)).await
 }
 
 #[tauri::command]
 #[specta::specta]
 pub async fn git_conflict_operation(
+    state: State<'_, AppState>,
     args: GitWorktreeArgs,
 ) -> Result<GitConflictOperation, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
     run_blocking(move || conflict_operation_impl(&args.worktree_path)).await
 }
 
 #[tauri::command]
 #[specta::specta]
 pub async fn git_branch_compare(
+    state: State<'_, AppState>,
     args: GitBranchCompareArgs,
 ) -> Result<GitBranchCompareResult, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
     run_blocking(move || branch_compare_impl(&args.worktree_path, &args.base_ref)).await
 }
 
 #[tauri::command]
 #[specta::specta]
 pub async fn git_commit_compare(
+    state: State<'_, AppState>,
     args: GitCommitCompareArgs,
 ) -> Result<GitCommitCompareResult, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
     run_blocking(move || commit_compare_impl(&args.worktree_path, &args.commit_id)).await
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn git_branch_diff(args: GitBranchDiffArgs) -> Result<GitDiffResult, BridgeError> {
+pub async fn git_branch_diff(
+    state: State<'_, AppState>,
+    args: GitBranchDiffArgs,
+) -> Result<GitDiffResult, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    validate_relative_file_path(&args.file_path)?;
+    if let Some(old_path) = &args.old_path {
+        validate_relative_file_path(old_path)?;
+    }
     run_blocking(move || {
         branch_diff_impl(
             &args.worktree_path,
@@ -464,7 +548,15 @@ pub async fn git_branch_diff(args: GitBranchDiffArgs) -> Result<GitDiffResult, B
 
 #[tauri::command]
 #[specta::specta]
-pub async fn git_commit_diff(args: GitCommitDiffArgs) -> Result<GitDiffResult, BridgeError> {
+pub async fn git_commit_diff(
+    state: State<'_, AppState>,
+    args: GitCommitDiffArgs,
+) -> Result<GitDiffResult, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    validate_relative_file_path(&args.file_path)?;
+    if let Some(old_path) = &args.old_path {
+        validate_relative_file_path(old_path)?;
+    }
     run_blocking(move || {
         commit_diff_impl(
             &args.worktree_path,
@@ -479,7 +571,11 @@ pub async fn git_commit_diff(args: GitCommitDiffArgs) -> Result<GitDiffResult, B
 
 #[tauri::command]
 #[specta::specta]
-pub async fn git_history(args: GitHistoryArgs) -> Result<GitHistoryResult, BridgeError> {
+pub async fn git_history(
+    state: State<'_, AppState>,
+    args: GitHistoryArgs,
+) -> Result<GitHistoryResult, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
     run_blocking(move || history_impl(&args.worktree_path, args.limit, args.base_ref.as_deref()))
         .await
 }
@@ -581,6 +677,14 @@ mod tests {
         }))
         .unwrap();
         assert_eq!(null.parent_oid, None);
+    }
+
+    #[test]
+    fn relative_file_path_guard_rejects_absolute_and_parent_traversal() {
+        assert!(validate_relative_file_path("src/app.ts").is_ok());
+        assert!(validate_relative_file_path("../outside.txt").is_err());
+        assert!(validate_relative_file_path("a/b/../c").is_err());
+        assert!(validate_relative_file_path("/etc/passwd").is_err());
     }
 
     #[test]

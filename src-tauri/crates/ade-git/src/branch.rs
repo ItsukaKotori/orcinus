@@ -12,6 +12,7 @@ use std::time::Duration;
 
 use ade_core::errors::CoreError;
 
+use crate::git_command_failed;
 use crate::runner::run_git_in;
 
 /// Read-only config probe timeout, mirroring `LOCAL_GIT_READ_TIMEOUT_MS`
@@ -116,6 +117,36 @@ pub fn build_branch_name(prefix: Option<&str>, name: &str) -> String {
     } else {
         format!("{prefix}/{name}")
     }
+}
+
+/// Resolve the branch name a create should use: an explicit override is
+/// validated and kept verbatim, otherwise the configured prefix joins the
+/// sanitized name.
+///
+/// Mirrors `resolveCreateBranchName`
+/// (`orca:src/main/ipc/worktree-remote.ts:681-697`): a `-`-leading override is
+/// rejected before git's `check-ref-format --branch` validation, and the
+/// branch prefix never applies to an override.
+pub fn resolve_create_branch_name(
+    repo_path: &str,
+    branch_name_override: Option<&str>,
+    prefix: Option<&str>,
+    name: &str,
+) -> Result<String, CoreError> {
+    let Some(override_name) = branch_name_override.filter(|value| !value.is_empty()) else {
+        return Ok(build_branch_name(prefix, name));
+    };
+    if override_name.starts_with('-') {
+        return Err(CoreError::InvalidInput(
+            "Branch name must not start with \"-\"".to_string(),
+        ));
+    }
+    let args = ["check-ref-format", "--branch", override_name];
+    let output = run_git_in(repo_path, &args, CONFIG_PROBE_TIMEOUT, None)?;
+    if !output.status.success() {
+        return Err(git_command_failed(&args, &output));
+    }
+    Ok(override_name.to_string())
 }
 
 /// Resolve the branch-prefix username from explicit git config.
@@ -397,6 +428,20 @@ mod tests {
             "team/fix-auth"
         );
         assert_eq!(build_branch_name(Some("///"), "fix-auth"), "fix-auth");
+    }
+
+    #[test]
+    fn resolve_create_branch_name_keeps_overrides_verbatim_and_rejects_dash_leading() {
+        assert_eq!(
+            resolve_create_branch_name("/nonexistent", None, Some("team"), "fix").unwrap(),
+            "team/fix"
+        );
+        let error = resolve_create_branch_name("/nonexistent", Some("-bad"), Some("team"), "fix")
+            .unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "Invalid input: Branch name must not start with \"-\""
+        );
     }
 
     #[test]

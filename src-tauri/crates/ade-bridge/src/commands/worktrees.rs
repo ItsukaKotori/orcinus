@@ -3,11 +3,12 @@ use ade_core::models::worktree::{branch_short, Worktree, DEFAULT_WORKSPACE_STATU
 use ade_core::path_compare::normalize_for_comparison;
 use ade_fs::FsService;
 use ade_git::branch::{
-    build_branch_name, compute_worktree_path, resolve_create_base, resolve_git_username,
+    compute_worktree_path, resolve_create_base, resolve_create_branch_name, resolve_git_username,
     sanitize_worktree_name, select_branch_prefix_input,
 };
 use ade_git::worktree_create::{
-    configure_branch_base, ensure_push_auto_setup_remote, worktree_add, AddWorktreeRequest,
+    can_checkout_existing_local_branch, configure_branch_base, ensure_push_auto_setup_remote,
+    worktree_add, AddWorktreeRequest,
 };
 use ade_git::worktree_remove::{
     assert_worktree_removable, delete_branch, force_delete_branch, worktree_remove,
@@ -368,14 +369,14 @@ pub struct WorktreesCreateArgs {
     pub created_with_agent: Option<String>,
 }
 
-/// `{ worktree, warnings? }` (spec §4.4): `warnings` carries the non-fatal
-/// follow-up failures that the oracle only logs.
+/// `{ worktree }` (spec §4.4 minimal subset). The TS `CreateWorktreeResult`
+/// declares `warnings` as `WorktreeLineageWarning[]`, and B has no lineage
+/// metadata, so the field is omitted entirely rather than emitted with the
+/// wrong shape; follow-up config failures are logged only.
 #[derive(Debug, Clone, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct WorktreesCreateResult {
     pub worktree: Worktree,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub warnings: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Deserialize, specta::Type)]
@@ -457,6 +458,33 @@ fn split_worktree_id(worktree_id: &str) -> Result<(&str, &str), BridgeError> {
     worktree_id
         .split_once("::")
         .ok_or_else(|| BridgeError::message(format!("Invalid worktreeId: {worktree_id}")))
+}
+
+/// Canonical form of a worktree id: the path half is resolved to its real
+/// spelling, so an id carrying a symlinked root (`/tmp`, `/var`, a symlinked
+/// HOME) matches the rows `git worktree list` reports and the metadata create
+/// persisted. Unknown shapes pass through unchanged.
+fn canonical_worktree_id(worktree_id: &str) -> String {
+    match split_worktree_id(worktree_id) {
+        Ok((repo_id_value, path)) => {
+            ade_core::ids::worktree_id(repo_id_value, &ade_git::canonical_worktree_path(path))
+        }
+        Err(_) => worktree_id.to_string(),
+    }
+}
+
+/// Resolve a requested id against the listed rows: the exact spelling wins
+/// (folder workspace ids are persisted verbatim), then the canonical spelling
+/// so a symlinked git root still matches.
+fn resolve_listed_worktree_id(worktree_id: &str, worktrees: &[Worktree]) -> Option<String> {
+    if worktrees.iter().any(|worktree| worktree.id == worktree_id) {
+        return Some(worktree_id.to_string());
+    }
+    let canonical = canonical_worktree_id(worktree_id);
+    worktrees
+        .iter()
+        .any(|worktree| worktree.id == canonical)
+        .then_some(canonical)
 }
 
 /// `git worktree add` conflicts the suffix loop retries: an occupied path or an
@@ -548,15 +576,11 @@ fn create_display_name_meta(
     }
 }
 
-/// One created worktree plus the warn-only follow-up failures
-/// (`branch.<name>.base` / `push.autoSetupRemote`), mirroring the oracle's
-/// `console.warn` side effects.
-pub struct CreateWorktreeOutcome {
-    pub worktree: Worktree,
-    pub warnings: Vec<String>,
-}
-
-/// Testable `worktrees.create` orchestration returning just the projection row.
+/// `worktrees.create` core (oracle `createLocalWorktree`,
+/// `orca:src/main/ipc/worktree-remote.ts:2301`): resolve the branch name and
+/// base ref, retry name conflicts with `-2..-100` suffixes, then persist
+/// metadata and authorize the new checkout. Follow-up config failures are
+/// logged, never create failures.
 pub fn create_worktree_impl(
     repo: &Value,
     settings: &Value,
@@ -564,21 +588,6 @@ pub fn create_worktree_impl(
     fs: &FsService,
     args: &WorktreesCreateArgs,
 ) -> Result<Worktree, BridgeError> {
-    create_worktree_outcome(repo, settings, meta, fs, args).map(|outcome| outcome.worktree)
-}
-
-/// `worktrees.create` core (oracle `createLocalWorktree`,
-/// `orca:src/main/ipc/worktree-remote.ts:2301`): resolve the branch name and
-/// base ref, retry name conflicts with `-2..-100` suffixes, then persist
-/// metadata and authorize the new checkout. Follow-up config failures are
-/// warnings, never create failures.
-pub fn create_worktree_outcome(
-    repo: &Value,
-    settings: &Value,
-    meta: &WorktreeMetaStore,
-    fs: &FsService,
-    args: &WorktreesCreateArgs,
-) -> Result<CreateWorktreeOutcome, BridgeError> {
     if repo_kind(repo) != RepoKind::Git {
         return Err(BridgeError::message(
             "Worktrees can only be created for git repositories",
@@ -600,10 +609,10 @@ pub fn create_worktree_outcome(
         None
     };
     let prefix = select_branch_prefix_input(strategy, custom, username.as_deref());
-    let branch_leaf = args
+    let branch_override = args
         .branch_name_override
-        .clone()
-        .unwrap_or_else(|| name.clone());
+        .as_deref()
+        .filter(|value| !value.is_empty());
 
     let base_ref = resolve_create_base(
         repo_path_value,
@@ -623,28 +632,60 @@ pub fn create_worktree_outcome(
         .unwrap_or(true);
     let repo_name = ade_core::models::repo::basename(repo_path_value);
 
-    let mut created: Option<(String, String)> = None;
+    let mut created: Option<(String, String, bool)> = None;
+    // Why: an adopted existing branch must stay fixed across path retries
+    // (`selectedExistingLocalBranchName` in the oracle's suffix loop).
+    let mut adopted_branch: Option<String> = None;
     for suffix in 1..=WORKTREE_CREATE_MAX_SUFFIX_ATTEMPTS {
         let candidate_name = worktree_create_candidate(&name, suffix);
-        let candidate_branch_leaf = worktree_create_candidate(&branch_leaf, suffix);
-        let branch = build_branch_name(prefix.as_deref(), &candidate_branch_leaf);
+        let branch = match &adopted_branch {
+            Some(adopted) => adopted.clone(),
+            None => {
+                let override_candidate =
+                    branch_override.map(|value| worktree_create_candidate(value, suffix));
+                resolve_create_branch_name(
+                    repo_path_value,
+                    override_candidate.as_deref(),
+                    prefix.as_deref(),
+                    &candidate_name,
+                )?
+            }
+        };
+        let checkout_existing = if adopted_branch.is_some() {
+            true
+        } else if branch_override.is_some()
+            && can_checkout_existing_local_branch(repo_path_value, &branch, &base_ref)?
+        {
+            adopted_branch = Some(branch.clone());
+            true
+        } else {
+            false
+        };
         let path = compute_worktree_path(root, &repo_name, nest, &candidate_name)?;
         let request = AddWorktreeRequest {
             repo_path: repo_path_value.to_string(),
             worktree_path: path.clone(),
             branch: branch.clone(),
             base_ref: base_ref.clone(),
+            checkout_existing,
         };
         match worktree_add(&request) {
             Ok(()) => {
-                created = Some((path, branch));
+                // Why: git registers and reports the real path; a symlinked
+                // workspace root would otherwise key metadata and the
+                // post-create lookup on the lexical spelling.
+                created = Some((
+                    ade_git::canonical_worktree_path(&path),
+                    branch,
+                    checkout_existing,
+                ));
                 break;
             }
             Err(error) if is_worktree_name_conflict(&error.to_string()) => continue,
             Err(error) => return Err(error.into()),
         }
     }
-    let Some((path, branch)) = created else {
+    let Some((path, branch, checkout_existing)) = created else {
         // Why: the fixed text deliberately avoids every retryable-conflict
         // pattern the renderer's `isRetryableWorktreeCreateConflict` matches, so
         // an exhausted suffix loop is not retried a second time in JS.
@@ -653,15 +694,16 @@ pub fn create_worktree_outcome(
         ));
     };
 
-    let mut warnings = Vec::new();
-    if let Err(error) = configure_branch_base(&path, &branch, &base_ref) {
-        warnings.push(error.to_string());
-    }
-    if let Err(error) = ensure_push_auto_setup_remote(&path) {
-        warnings.push(error.to_string());
-    }
-    for warning in &warnings {
-        eprintln!("[ade-bridge] worktree create warning: {warning}");
+    // Why: an adopted branch keeps its own base/upstream config; the oracle
+    // skips both follow-ups for a checkout-existing create. Failures are
+    // warn-only (the oracle logs them), so they never fail the create.
+    if !checkout_existing {
+        if let Err(error) = configure_branch_base(&path, &branch, &base_ref) {
+            eprintln!("[ade-bridge] worktree create warning: {error}");
+        }
+        if let Err(error) = ensure_push_auto_setup_remote(&path) {
+            eprintln!("[ade-bridge] worktree create warning: {error}");
+        }
     }
 
     let worktree_id = ade_core::ids::worktree_id(repo_id(repo), &path);
@@ -687,6 +729,11 @@ pub fn create_worktree_outcome(
     if let Some(order) = args.manual_order {
         updates.insert("manualOrder".to_string(), Value::from(order));
     }
+    // Why: an adopted branch belongs to the user, so removal must preserve it
+    // (oracle writes `preserveBranchOnDelete` for checkout-existing creates).
+    if checkout_existing {
+        updates.insert("preserveBranchOnDelete".to_string(), Value::Bool(true));
+    }
     meta.merge(&worktree_id, &Value::Object(updates))?;
     fs.authorize_root(&path)?;
 
@@ -696,7 +743,7 @@ pub fn create_worktree_outcome(
         .ok_or_else(|| {
             BridgeError::message(format!("Worktree not found after creation: {worktree_id}"))
         })?;
-    Ok(CreateWorktreeOutcome { worktree, warnings })
+    Ok(worktree)
 }
 
 /// `worktrees.remove` core: preflight, `git worktree remove`, then `-d` branch
@@ -710,9 +757,12 @@ pub fn remove_worktree_impl(
     force: bool,
 ) -> Result<WorktreesRemoveResult, BridgeError> {
     let (_repo_id_value, path) = split_worktree_id(worktree_id)?;
-    let entry = list_worktrees(repo, &[], &meta.items(), fs)?
-        .into_iter()
-        .find(|worktree| worktree.id == worktree_id)
+    let listed = list_worktrees(repo, &[], &meta.items(), fs)?;
+    let resolved_id = resolve_listed_worktree_id(worktree_id, &listed)
+        .ok_or_else(|| BridgeError::message(format!("Worktree not found: {path}")))?;
+    let entry = listed
+        .iter()
+        .find(|worktree| worktree.id == resolved_id)
         .ok_or_else(|| BridgeError::message(format!("Worktree not found: {path}")))?;
 
     let repo_path_value = repo_path(repo);
@@ -720,7 +770,7 @@ pub fn remove_worktree_impl(
     worktree_remove(repo_path_value, &entry.path, force)?;
 
     let preserve_branch = meta
-        .get(worktree_id)
+        .get(&resolved_id)
         .and_then(|entry| entry.get("preserveBranchOnDelete").and_then(Value::as_bool))
         .unwrap_or(false);
     let preserved_branch = if preserve_branch {
@@ -733,7 +783,7 @@ pub fn remove_worktree_impl(
             BranchDeleteOutcome::Deleted | BranchDeleteOutcome::Skipped => None,
         }
     };
-    meta.remove(worktree_id)?;
+    meta.remove(&resolved_id)?;
     Ok(WorktreesRemoveResult { preserved_branch })
 }
 
@@ -746,8 +796,17 @@ pub fn forget_local_impl(
     worktree_id: &str,
 ) -> Result<WorktreesRemoveResult, BridgeError> {
     let (_repo_id_value, path) = split_worktree_id(worktree_id)?;
-    meta.remove(worktree_id)?;
+    // Why: git worktree ids carry git's real path, but folder workspace ids are
+    // persisted verbatim; only fall back to the canonical key when the exact
+    // one is absent.
+    if !meta.remove(worktree_id)? {
+        meta.remove(&canonical_worktree_id(worktree_id))?;
+    }
     revoke_root_if_unused(store, fs, path);
+    let canonical_path = ade_git::canonical_worktree_path(path);
+    if canonical_path != path {
+        revoke_root_if_unused(store, fs, &canonical_path);
+    }
     Ok(WorktreesRemoveResult::default())
 }
 
@@ -780,18 +839,13 @@ pub fn update_meta_impl(
 ) -> Result<Worktree, BridgeError> {
     // Why twice: the existence check must precede the merge, and the returned
     // projection must include the merged metadata.
-    let exists = list_worktrees(repo, folder_workspaces, &meta.items(), fs)?
-        .iter()
-        .any(|worktree| worktree.id == worktree_id);
-    if !exists {
-        return Err(BridgeError::message(format!(
-            "Worktree not found: {worktree_id}"
-        )));
-    }
-    meta.merge(worktree_id, updates)?;
+    let listed = list_worktrees(repo, folder_workspaces, &meta.items(), fs)?;
+    let resolved_id = resolve_listed_worktree_id(worktree_id, &listed)
+        .ok_or_else(|| BridgeError::message(format!("Worktree not found: {worktree_id}")))?;
+    meta.merge(&resolved_id, updates)?;
     list_worktrees(repo, folder_workspaces, &meta.items(), fs)?
         .into_iter()
-        .find(|worktree| worktree.id == worktree_id)
+        .find(|worktree| worktree.id == resolved_id)
         .ok_or_else(|| BridgeError::message(format!("Worktree not found: {worktree_id}")))
 }
 
@@ -831,13 +885,10 @@ pub async fn worktrees_create(
     let settings = state.settings_store().get();
     let meta = state.worktree_meta_store();
     let fs = state.fs.clone();
-    let outcome =
-        run_blocking(move || create_worktree_outcome(&repo, &settings, &meta, &fs, &args)).await?;
-    events::emit_worktrees_changed(&state.app, &outcome.worktree.repo_id);
-    Ok(WorktreesCreateResult {
-        worktree: outcome.worktree,
-        warnings: (!outcome.warnings.is_empty()).then_some(outcome.warnings),
-    })
+    let worktree =
+        run_blocking(move || create_worktree_impl(&repo, &settings, &meta, &fs, &args)).await?;
+    events::emit_worktrees_changed(&state.app, &worktree.repo_id);
+    Ok(WorktreesCreateResult { worktree })
 }
 
 /// Remove a worktree, revoke its root when unused, and broadcast the change.
@@ -848,6 +899,7 @@ pub async fn worktrees_remove(
     args: WorktreesRemoveArgs,
 ) -> Result<WorktreesRemoveResult, BridgeError> {
     let (repo_id_value, path) = split_worktree_id(&args.worktree_id)?;
+    let revoke_path = ade_git::canonical_worktree_path(path);
     let repo = {
         let projects = lock(&state.projects);
         projects
@@ -870,7 +922,7 @@ pub async fn worktrees_remove(
             .await?;
     {
         let projects = lock(&state.projects);
-        revoke_root_if_unused(&projects, &fs, path);
+        revoke_root_if_unused(&projects, &fs, &revoke_path);
     }
     events::emit_worktrees_changed(&state.app, repo_id_value);
     Ok(result)

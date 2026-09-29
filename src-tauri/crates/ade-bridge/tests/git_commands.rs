@@ -7,10 +7,11 @@ use std::process::Command;
 use ade_bridge::commands::git::{
     branch_compare_impl, branch_diff_impl, bulk_discard_impl, bulk_stage_impl, bulk_unstage_impl,
     commit_compare_impl, commit_diff_impl, commit_impl, conflict_operation_impl, diff_impl,
-    discard_impl, history_impl, stage_impl, status_impl, unstage_impl, upstream_status_impl,
-    GitStatusArgs,
+    discard_impl, history_impl, require_authorized_worktree, stage_impl, status_impl, unstage_impl,
+    upstream_status_impl, GitStatusArgs,
 };
 use ade_bridge::state::GitCancelRegistry;
+use ade_fs::FsService;
 use ade_git::diff::GitDiffResult;
 use ade_git::runner::CancelToken;
 use ade_git::status::GitConflictOperation;
@@ -340,6 +341,28 @@ fn compare_impls_are_thin_wrappers() {
     assert_eq!(commit.summary.status, "ready");
     assert_eq!(commit.summary.parent_oid.as_deref(), Some(first.as_str()));
     assert_eq!(commit.entries.len(), 1);
+}
+
+/// The git command surface refuses worktree paths outside every authorized fs
+/// root, so a renderer cannot point git at an arbitrary repository.
+#[test]
+fn worktree_authorization_guard_requires_an_authorized_root() {
+    let dir = TestDir::new("auth-guard");
+    let fs = FsService::new();
+    fs.authorize_root(dir.path_str()).expect("authorize root");
+
+    assert!(require_authorized_worktree(&fs, dir.path_str()).is_ok());
+    let child = dir.path.join("nested");
+    std::fs::create_dir_all(&child).expect("create nested dir");
+    assert!(require_authorized_worktree(&fs, child.to_str().expect("utf-8")).is_ok());
+
+    let sibling = format!("{}-sibling", dir.path_str());
+    let error = require_authorized_worktree(&fs, &sibling).unwrap_err();
+    assert!(
+        error.to_string().contains("Access denied"),
+        "unexpected error: {error}"
+    );
+    assert!(require_authorized_worktree(&fs, "/etc").is_err());
 }
 
 #[test]

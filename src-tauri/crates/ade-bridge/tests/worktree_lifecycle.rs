@@ -243,6 +243,271 @@ fn create_worktree_uses_default_base_ref_when_absent() {
     assert_eq!(worktree.branch, "refs/heads/fix-auth");
 }
 
+/// A symlinked workspace root (`/tmp` → `/private/tmp`, a symlinked HOME) makes
+/// git report the real path while the create path is lexical: the meta key and
+/// the post-create lookup must use one canonical spelling, or create fails
+/// after the checkout was made and a retry keeps creating suffixed directories.
+#[cfg(unix)]
+#[test]
+fn create_worktree_under_symlinked_workspace_root_round_trips() {
+    let _env = hermetic_env();
+    let dir = TestDir::new("create-symlink-root");
+    let repo = init_git_repo(&dir, "my-repo");
+    let real_ws = dir.file("real-ws");
+    std::fs::create_dir_all(&real_ws).expect("create real workspace root");
+    let link_ws = dir.file("link-ws");
+    std::os::unix::fs::symlink(&real_ws, &link_ws).expect("create workspace symlink");
+    let meta = WorktreeMetaStore::load(dir.file("worktrees.json"));
+    let fs = FsService::new();
+    let repo_value = repo_row(&repo);
+    let settings = json!({
+        "workspaceDir": link_ws.to_str().expect("utf-8 link path"),
+        "nestWorkspaces": true,
+        "branchPrefix": "none",
+    });
+
+    let worktree = create_worktree_impl(
+        &repo_value,
+        &settings,
+        &meta,
+        &fs,
+        &create_args(&repo_value, "fix-auth"),
+    )
+    .unwrap();
+
+    let expected = real_ws
+        .join("my-repo/fix-auth")
+        .canonicalize()
+        .expect("canonicalize created worktree");
+    assert_eq!(
+        worktree.path,
+        expected.to_str().expect("utf-8 real path"),
+        "the projection carries git's real path, not the lexical symlink path"
+    );
+    assert_eq!(worktree.id, format!("r1::{}", worktree.path));
+    assert!(
+        meta.get(&worktree.id).is_some(),
+        "metadata is keyed by the canonical path"
+    );
+
+    let listed = read_worktree(&repo_value, &meta, &fs, &worktree.id);
+    assert_eq!(listed["displayName"], "fix-auth", "list merges the meta");
+
+    // A renderer id built from the symlinked spelling resolves to the same row.
+    let lexical_id = format!(
+        "r1::{}",
+        link_ws
+            .join("my-repo/fix-auth")
+            .to_str()
+            .expect("utf-8 lexical path")
+    );
+    let updated = update_meta_impl(
+        &repo_value,
+        &[],
+        &meta,
+        &fs,
+        &lexical_id,
+        &json!({ "isPinned": true }),
+    )
+    .unwrap();
+    assert!(updated.is_pinned);
+
+    remove_worktree_impl(&repo_value, &meta, &fs, &lexical_id, false).unwrap();
+    assert!(!expected.exists(), "checkout was deleted");
+    assert!(meta.get(&worktree.id).is_none(), "metadata was cleaned up");
+    assert!(meta.items().is_empty(), "no orphaned metadata entries");
+}
+
+/// Spec §4.4: an override that hits an existing local branch checks that branch
+/// out (`git worktree add <path> <branch>`, no `-b`/`--no-track`) instead of
+/// suffix-retrying, and the adopted branch is preserved on removal.
+#[test]
+fn create_worktree_branch_override_adopts_existing_local_branch() {
+    let _env = hermetic_env();
+    let dir = TestDir::new("create-adopt-branch");
+    let repo = init_git_repo(&dir, "my-repo");
+    let main_head = git(&repo, &["rev-parse", "HEAD"]);
+    git(&repo, &["branch", "fix-auth"]);
+    let meta = WorktreeMetaStore::load(dir.file("worktrees.json"));
+    let fs = FsService::new();
+    let repo_value = repo_row(&repo);
+    let args: WorktreesCreateArgs = serde_json::from_value(json!({
+        "repoId": repo_value["id"],
+        "name": "fix-auth",
+        "branchNameOverride": "fix-auth"
+    }))
+    .expect("deserialize create args");
+
+    let worktree = create_worktree_impl(&repo_value, &settings(&dir), &meta, &fs, &args).unwrap();
+
+    assert_eq!(worktree.branch, "refs/heads/fix-auth");
+    assert_eq!(worktree.head, main_head);
+    assert_eq!(
+        worktree.path,
+        format!("{}/ws/my-repo/fix-auth", dir.path.display()),
+        "no -2 suffix directory"
+    );
+    assert_eq!(
+        meta.get(&worktree.id).unwrap()["preserveBranchOnDelete"],
+        true,
+        "an adopted branch is preserved on removal"
+    );
+    // Why: checkout-existing skips the new-branch config side effects.
+    assert!(!git_succeeds(
+        &repo,
+        &["config", "--local", "--get", "branch.fix-auth.base"]
+    ));
+    assert!(!git_succeeds(
+        &repo,
+        &["config", "--local", "--get", "push.autoSetupRemote"]
+    ));
+
+    let removal = remove_worktree_impl(&repo_value, &meta, &fs, &worktree.id, false).unwrap();
+    assert!(removal.preserved_branch.is_none(), "no branch was deleted");
+    assert!(
+        git_succeeds(&repo, &["rev-parse", "--verify", "refs/heads/fix-auth"]),
+        "the adopted branch survives removal"
+    );
+}
+
+/// The override is used verbatim (`resolveCreateBranchName`): the configured
+/// branch prefix applies only to generated names.
+#[test]
+fn create_worktree_branch_override_skips_the_configured_prefix() {
+    let _env = hermetic_env();
+    let dir = TestDir::new("create-override-prefix");
+    let repo = init_git_repo(&dir, "my-repo");
+    let meta = WorktreeMetaStore::load(dir.file("worktrees.json"));
+    let fs = FsService::new();
+    let repo_value = repo_row(&repo);
+    let settings = json!({
+        "workspaceDir": dir.file("ws").to_str().expect("utf-8 workspace dir"),
+        "nestWorkspaces": true,
+        "branchPrefix": "custom",
+        "branchPrefixCustom": "team",
+    });
+    let args: WorktreesCreateArgs = serde_json::from_value(json!({
+        "repoId": repo_value["id"],
+        "name": "fix-auth",
+        "branchNameOverride": "review/fix-auth"
+    }))
+    .expect("deserialize create args");
+
+    let worktree = create_worktree_impl(&repo_value, &settings, &meta, &fs, &args).unwrap();
+
+    assert_eq!(worktree.branch, "refs/heads/review/fix-auth");
+}
+
+/// A branch that is already checked out elsewhere cannot be adopted; the
+/// suffix retry keeps the override candidate (`fix-auth-2`) for both branch and
+/// path.
+#[test]
+fn create_worktree_branch_override_suffixes_when_branch_is_checked_out() {
+    let _env = hermetic_env();
+    let dir = TestDir::new("create-override-checked-out");
+    let repo = init_git_repo(&dir, "my-repo");
+    let first = dir.file("first-checkout");
+    git(
+        &repo,
+        &["worktree", "add", "-b", "fix-auth", first.to_str().unwrap()],
+    );
+    let meta = WorktreeMetaStore::load(dir.file("worktrees.json"));
+    let fs = FsService::new();
+    let repo_value = repo_row(&repo);
+    let args: WorktreesCreateArgs = serde_json::from_value(json!({
+        "repoId": repo_value["id"],
+        "name": "fix-auth",
+        "branchNameOverride": "fix-auth"
+    }))
+    .expect("deserialize create args");
+
+    let worktree = create_worktree_impl(&repo_value, &settings(&dir), &meta, &fs, &args).unwrap();
+
+    assert_eq!(worktree.branch, "refs/heads/fix-auth-2");
+    assert_eq!(
+        worktree.path,
+        format!("{}/ws/my-repo/fix-auth-2", dir.path.display())
+    );
+}
+
+/// Folder workspace ids stay verbatim: canonicalizing them would miss the
+/// stored `folderPath` spelling and make updateMeta fail under a symlink.
+#[cfg(unix)]
+#[test]
+fn update_meta_keeps_folder_workspace_ids_verbatim_under_symlinks() {
+    let _env = hermetic_env();
+    let dir = TestDir::new("update-meta-folder-symlink");
+    let real_folder = dir.file("real-folder");
+    std::fs::create_dir_all(real_folder.join("child")).expect("create real folder");
+    let link_folder = dir.file("link-folder");
+    std::os::unix::fs::symlink(&real_folder, &link_folder).expect("create folder symlink");
+    let fs = FsService::new();
+    let meta = WorktreeMetaStore::load(dir.file("worktrees.json"));
+    let repo_value = json!({
+        "id": "f1",
+        "path": real_folder.to_str().expect("utf-8 folder path"),
+        "displayName": "Folder",
+        "kind": "folder",
+        "projectGroupId": "g1",
+    });
+    let workspace_path = link_folder.join("child");
+    let workspace_path = workspace_path.to_str().expect("utf-8 workspace path");
+    let workspace = json!({
+        "id": "w1",
+        "projectGroupId": "g1",
+        "folderPath": workspace_path,
+        "name": "Child",
+        "lastActivityAt": 1,
+    });
+    let raw_id = format!("f1::{workspace_path}");
+
+    let updated = update_meta_impl(
+        &repo_value,
+        std::slice::from_ref(&workspace),
+        &meta,
+        &fs,
+        &raw_id,
+        &json!({ "isPinned": true }),
+    )
+    .unwrap();
+
+    // Why: the folder projection does not merge the meta store yet (record
+    // §3.3), so the id resolution and the persisted key are what this guards.
+    assert_eq!(updated.id, raw_id);
+    assert_eq!(
+        meta.get(&raw_id).unwrap()["isPinned"],
+        true,
+        "metadata keeps the verbatim folder-workspace id"
+    );
+}
+
+/// `canCheckoutExistingLocalBranch` only adopts a branch that points at the
+/// base ref; a diverged local branch is a conflict the suffix loop retries.
+#[test]
+fn create_worktree_branch_override_suffixes_when_local_branch_diverged_from_base() {
+    let _env = hermetic_env();
+    let dir = TestDir::new("create-override-diverged");
+    let repo = init_git_repo(&dir, "my-repo");
+    git(&repo, &["checkout", "-b", "fix-auth"]);
+    std::fs::write(repo.join("wip.txt"), "wip\n").expect("write file");
+    git(&repo, &["add", "."]);
+    git(&repo, &["commit", "-m", "wip"]);
+    git(&repo, &["checkout", "main"]);
+    let meta = WorktreeMetaStore::load(dir.file("worktrees.json"));
+    let fs = FsService::new();
+    let repo_value = repo_row(&repo);
+    let args: WorktreesCreateArgs = serde_json::from_value(json!({
+        "repoId": repo_value["id"],
+        "name": "fix-auth",
+        "branchNameOverride": "fix-auth"
+    }))
+    .expect("deserialize create args");
+
+    let worktree = create_worktree_impl(&repo_value, &settings(&dir), &meta, &fs, &args).unwrap();
+
+    assert_eq!(worktree.branch, "refs/heads/fix-auth-2");
+}
+
 #[test]
 fn remove_worktree_deletes_and_preserves_unmerged_branch() {
     let _env = hermetic_env();
