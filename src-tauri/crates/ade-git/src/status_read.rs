@@ -351,9 +351,9 @@ fn is_octal_file_mode(value: &str) -> bool {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-struct GitLineStats {
-    added: Option<u64>,
-    removed: Option<u64>,
+pub(crate) struct GitLineStats {
+    pub(crate) added: Option<u64>,
+    pub(crate) removed: Option<u64>,
 }
 
 /// Attaches per-entry working-tree line counts. A failed numstat pass leaves
@@ -433,8 +433,9 @@ fn run_numstat(worktree_path: &str, cached: bool) -> Option<HashMap<String, GitL
 
 /// Parses `git diff -z --numstat -M` output. In `-z` form a rename header
 /// carries an empty path and is followed by the preimage and postimage as
-/// separate NUL fragments; the postimage keys the status row.
-fn parse_numstat(stdout: &[u8]) -> HashMap<String, GitLineStats> {
+/// separate NUL fragments; the postimage keys the status row. Shared with
+/// branch/commit compare, whose line stats come from the same oracle parser.
+pub(crate) fn parse_numstat(stdout: &[u8]) -> HashMap<String, GitLineStats> {
     let records: Vec<&[u8]> = stdout.split(|byte| *byte == 0).collect();
     let mut stats = HashMap::new();
     let mut index = 0;

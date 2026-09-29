@@ -1,5 +1,8 @@
 pub mod branch;
+pub(crate) mod command;
+pub mod compare;
 pub mod diff;
+pub mod history;
 pub mod porcelain;
 pub mod runner;
 pub mod staging;
