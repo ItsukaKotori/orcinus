@@ -83,6 +83,21 @@ export const commands = {
 	worktreesList: (args: WorktreesListArgs) => typedError<Worktree[], BridgeError>(__TAURI_INVOKE("worktrees_list", { args })),
 	/**  Project every repo's worktrees, merged in registry order. */
 	worktreesListAll: () => typedError<Worktree[], BridgeError>(__TAURI_INVOKE("worktrees_list_all")),
+	/**  Create a worktree and persist its metadata; broadcasts `worktrees:changed`. */
+	worktreesCreate: (args: WorktreesCreateArgs) => typedError<WorktreesCreateResult_Serialize, BridgeError>(__TAURI_INVOKE("worktrees_create", { args })),
+	/**  Remove a worktree, revoke its root when unused, and broadcast the change. */
+	worktreesRemove: (args: WorktreesRemoveArgs) => typedError<WorktreesRemoveResult_Serialize, BridgeError>(__TAURI_INVOKE("worktrees_remove", { args })),
+	/**  Drop a workspace's metadata and authorization without touching disk or git. */
+	worktreesForgetLocal: (args: WorktreesForgetLocalArgs) => typedError<WorktreesRemoveResult_Serialize, BridgeError>(__TAURI_INVOKE("worktrees_forget_local", { args })),
+	/**  Force-delete a branch a removal preserved; broadcasts `worktrees:changed`. */
+	worktreesForceDeletePreservedBranch: (args: WorktreesForceDeleteArgs) => typedError<WorktreesForceDeleteResult, BridgeError>(__TAURI_INVOKE("worktrees_force_delete_preserved_branch", { args })),
+	/**
+	 *  Merge whitelisted metadata and return the merged projection row. No event:
+	 *  the renderer applies this update optimistically.
+	 */
+	worktreesUpdateMeta: (args: WorktreesUpdateMetaArgs) => typedError<Worktree, BridgeError>(__TAURI_INVOKE("worktrees_update_meta", { args })),
+	/**  Persist the manual worktree order (`sortOrder` = index in `orderedIds`). */
+	worktreesPersistSortOrder: (args: WorktreesPersistSortOrderArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("worktrees_persist_sort_order", { args })),
 	/**  Read the projects registry's project groups (spec §5.2). */
 	projectGroupsList: () => typedError<Json, BridgeError>(__TAURI_INVOKE("project_groups_list")),
 	/**  Create one project group; blank names normalize to `Untitled group`. */
@@ -1013,6 +1028,18 @@ export type PlatformInfo = {
 	displayServer: string | null,
 };
 
+export type PreservedBranch = PreservedBranch_Serialize | PreservedBranch_Deserialize;
+
+export type PreservedBranch_Deserialize = {
+	branchName: string,
+	head: string | null,
+};
+
+export type PreservedBranch_Serialize = {
+	branchName: string,
+	head?: string | null,
+};
+
 /**  `ProjectGroup.createdFrom` (oracle `ProjectGroupCreatedFrom`). */
 export type ProjectGroupCreatedFrom = "manual" | "folder-scan" | "migration";
 
@@ -1236,8 +1263,92 @@ export type WorktreeChangedPayload = {
 	repoId: string,
 };
 
+export type WorktreesCreateArgs = {
+	repoId: string,
+	name: string,
+	displayName?: string | null,
+	baseBranch?: string | null,
+	branchNameOverride?: string | null,
+	workspaceStatus?: string | null,
+	manualOrder?: number | null,
+	createdWithAgent?: string | null,
+};
+
+/**
+ *  `{ worktree, warnings? }` (spec §4.4): `warnings` carries the non-fatal
+ *  follow-up failures that the oracle only logs.
+ */
+export type WorktreesCreateResult = WorktreesCreateResult_Serialize | WorktreesCreateResult_Deserialize;
+
+/**
+ *  `{ worktree, warnings? }` (spec §4.4): `warnings` carries the non-fatal
+ *  follow-up failures that the oracle only logs.
+ */
+export type WorktreesCreateResult_Deserialize = {
+	worktree: Worktree,
+	warnings: string[] | null,
+};
+
+/**
+ *  `{ worktree, warnings? }` (spec §4.4): `warnings` carries the non-fatal
+ *  follow-up failures that the oracle only logs.
+ */
+export type WorktreesCreateResult_Serialize = {
+	worktree: Worktree,
+	warnings?: string[] | null,
+};
+
+export type WorktreesForceDeleteArgs = {
+	worktreeId: string,
+	branchName: string,
+	expectedHead: string,
+	hostId?: string | null,
+};
+
+export type WorktreesForceDeleteResult = {
+	deleted: boolean,
+};
+
+export type WorktreesForgetLocalArgs = {
+	worktreeId: string,
+	hostId?: string | null,
+	snapshotPruneBatchId?: string | null,
+};
+
 export type WorktreesListArgs = {
 	repoId: string,
+};
+
+export type WorktreesPersistSortOrderArgs = {
+	orderedIds: string[],
+};
+
+export type WorktreesRemoveArgs = {
+	worktreeId: string,
+	hostId?: string | null,
+	force?: boolean | null,
+	allowUnverifiedPtyStop?: boolean | null,
+	skipArchive?: boolean | null,
+	snapshotPruneBatchId?: string | null,
+};
+
+/**  `{ preservedBranch?: { branchName, head? } }` (oracle `RemoveWorktreeResult`). */
+export type WorktreesRemoveResult = WorktreesRemoveResult_Serialize | WorktreesRemoveResult_Deserialize;
+
+/**  `{ preservedBranch?: { branchName, head? } }` (oracle `RemoveWorktreeResult`). */
+export type WorktreesRemoveResult_Deserialize = {
+	preservedBranch: PreservedBranch_Deserialize | null,
+};
+
+/**  `{ preservedBranch?: { branchName, head? } }` (oracle `RemoveWorktreeResult`). */
+export type WorktreesRemoveResult_Serialize = {
+	preservedBranch?: PreservedBranch_Serialize | null,
+};
+
+export type WorktreesUpdateMetaArgs = {
+	worktreeId: string,
+	executionHostId?: string | null,
+	updates: Json,
 };
 
 /* Tauri Specta runtime */

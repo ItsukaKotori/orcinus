@@ -11,6 +11,7 @@ use ade_store::onboarding_store::OnboardingStore;
 use ade_store::projects_store::ProjectsStore;
 use ade_store::settings_store::SettingsStore;
 use ade_store::ui_state_store::UiStateStore;
+use ade_store::worktree_meta_store::WorktreeMetaStore;
 use ade_store::SCHEMA_VERSION;
 use serde::Serialize;
 use serde_json::Value;
@@ -238,6 +239,7 @@ pub struct PersistedState {
     pub ui: UiStateStore,
     pub onboarding: OnboardingStore,
     pub projects: ProjectsStore,
+    pub worktree_meta: WorktreeMetaStore,
     pub fs: FsService,
 }
 
@@ -250,6 +252,7 @@ pub fn load_persisted_state(data_dir: &Path, home: &str) -> PersistedState {
     let onboarding =
         OnboardingStore::load(data_dir.join("onboarding.json"), onboarding_defaults());
     let projects = ProjectsStore::load(data_dir.join("projects.json"));
+    let worktree_meta = WorktreeMetaStore::load(data_dir.join("worktrees.json"));
     let fs = FsService::new();
     authorize_persisted_roots(&fs, &projects);
     PersistedState {
@@ -257,6 +260,7 @@ pub fn load_persisted_state(data_dir: &Path, home: &str) -> PersistedState {
         ui,
         onboarding,
         projects,
+        worktree_meta,
         fs,
     }
 }
@@ -341,6 +345,9 @@ pub struct AppState {
     pub ui: Arc<Mutex<UiStateStore>>,
     pub onboarding: Arc<Mutex<OnboardingStore>>,
     pub projects: Mutex<ProjectsStore>,
+    /// Per-worktree metadata (`worktrees.json`), shared with the worktree
+    /// commands as an `Arc` so blocking closures can own it.
+    pub worktree_meta: Arc<WorktreeMetaStore>,
     pub fs: Arc<FsService>,
     pub watchers: FsWatcher,
     pub app: AppHandle,
@@ -389,6 +396,7 @@ impl AppState {
             ui,
             onboarding,
             projects: Mutex::new(persisted.projects),
+            worktree_meta: Arc::new(persisted.worktree_meta),
             fs: Arc::new(persisted.fs),
             watchers,
             app: app.clone(),
@@ -400,6 +408,11 @@ impl AppState {
 
     pub(crate) fn settings_store(&self) -> MutexGuard<'_, SettingsStore> {
         lock(&self.settings)
+    }
+
+    /// Shared handle to the worktree metadata store (`worktrees.json`).
+    pub fn worktree_meta_store(&self) -> Arc<WorktreeMetaStore> {
+        Arc::clone(&self.worktree_meta)
     }
 
     pub(crate) fn ui_store(&self) -> MutexGuard<'_, UiStateStore> {
