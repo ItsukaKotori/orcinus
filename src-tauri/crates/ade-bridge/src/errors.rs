@@ -14,6 +14,8 @@ pub enum BridgeError {
     #[error(transparent)]
     Store(#[from] ade_store::StoreError),
     #[error(transparent)]
+    Pty(#[from] ade_pty::PtyError),
+    #[error(transparent)]
     Io(#[from] std::io::Error),
     #[error("{0}")]
     Message(String),

@@ -15,6 +15,11 @@ pub const WORKTREES_CHANGED: &str = "worktrees:changed";
 /// Incremental `project_groups_scan_nested` progress
 /// (`ScanNestedProgressPayload`).
 pub const PROJECT_GROUPS_SCAN_NESTED_PROGRESS: &str = "project-groups:scan-nested-progress";
+/// PtyHost spawn 成功（`ade_pty::PtyEvent::Spawned` 转发，载荷 `{id}`）。
+pub const PTY_SPAWNED: &str = "pty:spawned";
+/// 会话退出（`ade_pty::PtyEvent::Exit` 转发；载荷 `{id, code}`，WS close 之
+/// 后发）。即时退出会话的 Exit 可能先于 spawn 返回到达（Task 9 交接）。
+pub const PTY_EXIT: &str = "pty:exit";
 
 /// Payload for [`WORKTREES_CHANGED`] (spec §5.3).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
@@ -46,6 +51,40 @@ where
     }
 }
 
+/// Payload for [`PTY_SPAWNED`].
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
+pub struct PtySpawnedPayload {
+    pub id: String,
+}
+
+/// Payload for [`PTY_EXIT`]（`ade_pty::ExitInfo` 的 bridge 侧同形——host crate
+/// 不依赖 specta，投影在此定形）。
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PtyExitPayload {
+    pub id: String,
+    pub code: i32,
+}
+
+/// Forward one PtyHost event to the Tauri event bus (spec §2.1). Spawned 在
+/// `PtyHost::spawn` 成功处发、Exit 在会话退出处发——命令层不再重复 emit。
+/// Delivery failure is logged and dropped (`emit_json` 惯例)。
+pub fn forward_pty_event<R: Runtime>(app: &AppHandle<R>, event: ade_pty::PtyEvent) {
+    match event {
+        ade_pty::PtyEvent::Spawned { id } => {
+            emit_json(app, PTY_SPAWNED, PtySpawnedPayload { id });
+        }
+        ade_pty::PtyEvent::Exit(info) => emit_json(
+            app,
+            PTY_EXIT,
+            PtyExitPayload {
+                id: info.id,
+                code: info.code,
+            },
+        ),
+    }
+}
+
 /// Broadcast an empty `repos:changed` for one registry mutation.
 pub fn emit_repos_changed<R: Runtime>(app: &AppHandle<R>) {
     emit_json(app, REPOS_CHANGED, ());
@@ -66,6 +105,27 @@ pub fn emit_worktrees_changed<R: Runtime>(app: &AppHandle<R>, repo_id: &str) {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn pty_event_payloads_serialize_verbatim_and_names_are_locked() {
+        assert_eq!(
+            serde_json::to_value(PtySpawnedPayload {
+                id: "p1".to_string()
+            })
+            .unwrap(),
+            json!({ "id": "p1" })
+        );
+        assert_eq!(
+            serde_json::to_value(PtyExitPayload {
+                id: "p1".to_string(),
+                code: 0,
+            })
+            .unwrap(),
+            json!({ "id": "p1", "code": 0 })
+        );
+        assert_eq!(PTY_SPAWNED, "pty:spawned");
+        assert_eq!(PTY_EXIT, "pty:exit");
+    }
 
     #[test]
     fn worktree_changed_payload_serializes_camel_case() {

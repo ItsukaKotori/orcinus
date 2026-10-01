@@ -114,9 +114,62 @@ export const commands = {
 	folderWorkspacesGetPathStatus: (args: FolderWorkspacesGetPathStatusArgs) => typedError<FolderWorkspacePathStatus_Serialize, BridgeError>(__TAURI_INVOKE("folder_workspaces_get_path_status", { args })),
 	/**
 	 *  下发 WS 数据面端点（`src/bridge/real/pty-socket.ts` 的
-	 *  `fetchPtyDataEndpoint` 消费；服务未起时报错，渲染层缓存成功结果）。
+	 *  `fetchPtyDataEndpoint` 消费）。`PtyHost` 装配即起服务，恒 `Ok`
+	 *  （渲染层缓存成功结果）。
 	 */
+	ptySpawn: (args: PtySpawnArgs) => typedError<PtySpawnReply_Serialize, BridgeError>(__TAURI_INVOKE("pty_spawn", { args })),
+	/**  上行直写 master（阻塞写，等效键入；会话已 kill 时静默丢弃）。 */
+	ptyWrite: (args: PtyWriteArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("pty_write", { args })),
+	/**  非阻塞上行写：满即 `false`（背压显式化），通道关（写线程不在）→ Err。 */
+	ptyWriteAccepted: (args: PtyWriteArgs) => typedError<boolean, BridgeError>(__TAURI_INVOKE("pty_write_accepted", { args })),
+	/**  写 PTY 尺寸（ConPTY reflow 依赖）。 */
+	ptyResize: (args: PtyResizeArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("pty_resize", { args })),
+	/**  信号透传（unix `libc::kill`，Windows 有限映射；不等待子进程）。 */
+	ptySignal: (args: PtySignalArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("pty_signal", { args })),
+	/**  清空会话的 pre-attach 环形缓冲（首连重放语义保留）。 */
+	ptyClearBuffer: (args: PtyIdArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("pty_clear_buffer", { args })),
+	/**
+	 *  kill 会话（`keepHistory` 忽略）。退出码由 `pty:exit` 事件携带，此处不回
+	 *  传；宿主线程不参与升级等待（PtyHost::kill 内部 2s+2s 时限，run_blocking
+	 *  承载），未知/已杀会话 → Err。
+	 */
+	ptyKill: (args: PtyKillArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("pty_kill", { args })),
+	/**  spawn cwd（不做 OSC7 追踪，规格 §2.1）；未知会话 → Err。 */
+	ptyGetCwd: (args: PtyIdArgs) => typedError<string, BridgeError>(__TAURI_INVOKE("pty_get_cwd", { args })),
+	/**  最近 resize/spawn 的尺寸；未知会话 → `null`（TS `getSize` 契约）。 */
+	ptyGetSize: (args: PtyIdArgs) => typedError<{
+	cols: number,
+	rows: number,
+} | null, BridgeError>(__TAURI_INVOKE("pty_get_size", { args })),
+	/**  会话在册即有 pty（kill/退出路径摘除后为 `false`）。 */
+	ptyHasPty: (args: PtyIdArgs) => typedError<boolean, BridgeError>(__TAURI_INVOKE("pty_has_pty", { args })),
+	/**
+	 *  在册活会话列表：host 三元组 + bridge 补 `worktreeId`/`title:''`；
+	 *  `agentOwnership` 保持 host 的 `'unknown'`（对齐 `PtyListedSession`）。
+	 */
+	ptyListSessions: (args: PtyListSessionsArgs) => typedError<PtyListedSessionRow_Serialize[], BridgeError>(__TAURI_INVOKE("pty_list_sessions", { args })),
 	ptyDataEndpoint: () => typedError<DataEndpointPayload, BridgeError>(__TAURI_INVOKE("pty_data_endpoint")),
+	/**  §2.2：`inspectProcess` → reject `Error('terminal_liveness_unavailable')`。 */
+	ptyInspectProcess: (args: PtyInspectProcessArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("pty_inspect_process", { args })),
+	ptyGetForegroundProcess: (args: PtyIdArgs) => typedError<string | null, BridgeError>(__TAURI_INVOKE("pty_get_foreground_process", { args })),
+	/**  §2.2：`confirmForegroundProcess` → `null`。 */
+	ptyConfirmForegroundProcess: (args: PtyIdArgs) => typedError<string | null, BridgeError>(__TAURI_INVOKE("pty_confirm_foreground_process", { args })),
+	ptyHasChildProcesses: (args: PtyIdArgs) => typedError<boolean, BridgeError>(__TAURI_INVOKE("pty_has_child_processes", { args })),
+	ptyGetMainBufferSnapshot: (args: PtyGetMainBufferSnapshotArgs) => typedError<"Null" | ({ Bool: boolean }) & { Array?: never; Number?: never; Object?: never; String?: never } | ({ Number: number | null }) & { Array?: never; Bool?: never; Object?: never; String?: never } | ({ String: string }) & { Array?: never; Bool?: never; Number?: never; Object?: never } | ({ Array: Json[] }) & { Bool?: never; Number?: never; Object?: never; String?: never } | ({ Object: { [key in string]: Json } }) & { Array?: never; Bool?: never; Number?: never; String?: never } | null, BridgeError>(__TAURI_INVOKE("pty_get_main_buffer_snapshot", { args })),
+	ptyGetAuthoritativeBufferSnapshotCapabilities: (args: PtySnapshotCapabilitiesArgs) => typedError<PtySnapshotCapability[], BridgeError>(__TAURI_INVOKE("pty_get_authoritative_buffer_snapshot_capabilities", { args })),
+	ptyReportRendererDeliveryState: (args: PtyReportRendererDeliveryStateArgs) => typedError<PtyRendererDeliveryHealthReply, BridgeError>(__TAURI_INVOKE("pty_report_renderer_delivery_state", { args })),
+	ptyGetRendererDeliveryDebugSnapshot: () => typedError<PtyRendererDeliveryDebugSnapshot_Serialize, BridgeError>(__TAURI_INVOKE("pty_get_renderer_delivery_debug_snapshot")),
+	ptyManagementListSessions: () => typedError<PtyManagementListReply, BridgeError>(__TAURI_INVOKE("pty_management_list_sessions")),
+	ptyManagementKillAll: () => typedError<PtyManagementKillAllReply, BridgeError>(__TAURI_INVOKE("pty_management_kill_all")),
+	/**
+	 *  单会话 kill；未知/已杀会话回 `{success:false}`（与 web stub 形状一致），
+	 *  不作错误抛出。
+	 */
+	ptyManagementKillOne: (args: PtyManagementKillOneArgs) => typedError<PtyManagementOpReply, BridgeError>(__TAURI_INVOKE("pty_management_kill_one", { args })),
+	/**  无 daemon 可重启（规格 §2.1）；恒 `{success:true}`。 */
+	ptyManagementRestart: () => typedError<PtyManagementOpReply, BridgeError>(__TAURI_INVOKE("pty_management_restart")),
+	/**  本侧无 daemon pid 记录可查 → 恒 `'unknown'`（横幅不显示）。 */
+	ptyManagementMacTccAttribution: () => typedError<PtyManagementMacTccHealth, BridgeError>(__TAURI_INVOKE("pty_management_mac_tcc_attribution")),
 };
 
 /* Types */
@@ -148,8 +201,7 @@ export type BridgeError = {
 
 /**
  *  PTY 数据面端点（规格 §4.7）：WS 环回服务的端口与一次性下发 token。
- *  Task 3 期间由 orcinus-app setup 的 echo server 填充；Task 9 起
- *  `PtyHost::start` 接管（端口与 token 在进程生命周期内不变）。
+ *  Task 9 起 `PtyHost::start` 接管（端口与 token 在进程生命周期内不变）。
  */
 export type DataEndpointPayload = {
 	port: number,
@@ -501,6 +553,382 @@ export type ProjectGroupsScanNestedArgs = {
 export type ProjectGroupsUpdateArgs = {
 	groupId: string,
 	updates: Json,
+};
+
+/**  `PtyDeliveryBreadcrumb`（`src/shared/pty-delivery-diagnostics.ts`）。 */
+export type PtyDeliveryBreadcrumb = PtyDeliveryBreadcrumb_Serialize | PtyDeliveryBreadcrumb_Deserialize;
+
+/**  `PtyDeliveryBreadcrumb`（`src/shared/pty-delivery-diagnostics.ts`）。 */
+export type PtyDeliveryBreadcrumb_Deserialize = {
+	atMs: number,
+	kind: string,
+	detail: { [key in string]: Json } | null,
+	/**  Same-kind events within the coalesce window fold into this counter. */
+	repeats: number | null,
+};
+
+/**  `PtyDeliveryBreadcrumb`（`src/shared/pty-delivery-diagnostics.ts`）。 */
+export type PtyDeliveryBreadcrumb_Serialize = {
+	atMs: number,
+	kind: string,
+	detail?: { [key in string]: Json } | null,
+	/**  Same-kind events within the coalesce window fold into this counter. */
+	repeats?: number | null,
+};
+
+/**
+ *  Payload for [`PTY_EXIT`]（`ade_pty::ExitInfo` 的 bridge 侧同形——host crate
+ *  不依赖 specta，投影在此定形）。
+ */
+export type PtyExitPayload = {
+	id: string,
+	code: number,
+};
+
+/**
+ *  `pty_get_main_buffer_snapshot` 参数：scrollback 行数契约参数收下但忽略
+ *  （快照机械属 Phase 2+，规格 §2.5）。
+ */
+export type PtyGetMainBufferSnapshotArgs = {
+	id: string,
+	scrollbackRows?: number | null,
+};
+
+/**  单 `id` 参数（clearBuffer/getCwd/getSize/hasPty/进程检查 stub 族共用）。 */
+export type PtyIdArgs = {
+	id: string,
+};
+
+/**  `pty_inspect_process` 参数：id 之外的选项契约收下但忽略（§2.2 stub）。 */
+export type PtyInspectProcessArgs = {
+	id: string,
+	expectedIncarnationId?: string | null,
+	scanChildProcesses?: boolean | null,
+	steadyState?: boolean | null,
+};
+
+/**
+ *  `pty_kill` 参数：`keepHistory` 契约参数收下但忽略（规格 §2.1：kill 即
+ *  teardown，退出码走 `pty:exit` 事件）。
+ */
+export type PtyKillArgs = {
+	id: string,
+	keepHistory?: boolean | null,
+};
+
+/**
+ *  `pty_list_sessions` 参数：`PtySessionListScope` 契约参数收下但忽略
+ *  （本地 provider 恒全量）。
+ */
+export type PtyListSessionsArgs = {
+	scope?: Json | null,
+};
+
+/**
+ *  `pty_list_sessions` 行（对齐 `src/shared/pty-listed-session.ts` 的
+ *  `PtyListedSession`）：host 三元组 + bridge 补 `worktreeId`/`title`。
+ */
+export type PtyListedSessionRow = PtyListedSessionRow_Serialize | PtyListedSessionRow_Deserialize;
+
+/**
+ *  `pty_list_sessions` 行（对齐 `src/shared/pty-listed-session.ts` 的
+ *  `PtyListedSession`）：host 三元组 + bridge 补 `worktreeId`/`title`。
+ */
+export type PtyListedSessionRow_Deserialize = {
+	id: string,
+	cwd: string,
+	title: string,
+	worktreeId: string | null,
+	agentOwnership: string,
+};
+
+/**
+ *  `pty_list_sessions` 行（对齐 `src/shared/pty-listed-session.ts` 的
+ *  `PtyListedSession`）：host 三元组 + bridge 补 `worktreeId`/`title`。
+ */
+export type PtyListedSessionRow_Serialize = {
+	id: string,
+	cwd: string,
+	title: string,
+	worktreeId?: string | null,
+	agentOwnership: string,
+};
+
+/**  §2.2 的 diagnostics 零对象（`EMPTY_PTY_MAIN_DELIVERY_DIAGNOSTICS` 逐字）。 */
+export type PtyMainDeliveryDiagnostics = PtyMainDeliveryDiagnostics_Serialize | PtyMainDeliveryDiagnostics_Deserialize;
+
+/**  §2.2 的 diagnostics 零对象（`EMPTY_PTY_MAIN_DELIVERY_DIAGNOSTICS` 逐字）。 */
+export type PtyMainDeliveryDiagnostics_Deserialize = {
+	appVersion: string,
+	mainUptimeMs: number,
+	windowFocused: boolean | null,
+	windowVisible: boolean | null,
+	windowMinimized: boolean | null,
+	msSinceLastPowerSuspend: number | null,
+	msSinceLastPowerResume: number | null,
+	perPty: PtyPerPtyDeliveryDiagnostics[],
+	breadcrumbs: PtyDeliveryBreadcrumb_Deserialize[],
+};
+
+/**  §2.2 的 diagnostics 零对象（`EMPTY_PTY_MAIN_DELIVERY_DIAGNOSTICS` 逐字）。 */
+export type PtyMainDeliveryDiagnostics_Serialize = {
+	appVersion: string,
+	mainUptimeMs: number,
+	windowFocused: boolean | null,
+	windowVisible: boolean | null,
+	windowMinimized: boolean | null,
+	msSinceLastPowerSuspend: number | null,
+	msSinceLastPowerResume: number | null,
+	perPty: PtyPerPtyDeliveryDiagnostics[],
+	breadcrumbs: PtyDeliveryBreadcrumb_Serialize[],
+};
+
+/**  management `killAll` 回复（规格 §2.1：逐会话 kill 并聚合）。 */
+export type PtyManagementKillAllReply = {
+	killedCount: number,
+	remainingCount: number,
+	killedSessionIds: string[],
+};
+
+/**  `pty_management_kill_one` 参数。 */
+export type PtyManagementKillOneArgs = {
+	sessionId: string,
+};
+
+/**
+ *  management `listSessions` 回复：`degraded` 恒 `false`（本侧总能本地
+ *  spawn，无「daemon 活但不可 spawn」语义）。
+ */
+export type PtyManagementListReply = {
+	degraded: boolean,
+	sessions: PtyManagementSessionRow[],
+};
+
+/**
+ *  management `macTccAttribution` 回复：本侧无 daemon pid 记录可查 →
+ *  恒 `'unknown'`（横幅不显示，web stub 同语义）。
+ */
+export type PtyManagementMacTccHealth = "unknown";
+
+/**  management killOne/restart 共用的 `{success}` 回复。 */
+export type PtyManagementOpReply = {
+	success: boolean,
+};
+
+/**
+ *  management `listSessions` 行（对齐 `pty-management-api.ts` 的
+ *  `PtyManagementSession`，即 daemon `DaemonSessionInfo` 的 preload 镜像；
+ *  本侧无 daemon——pid/createdAt/protocolVersion 无源，恒空/零值）。
+ */
+export type PtyManagementSessionRow = {
+	sessionId: string,
+	state: PtyManagementSessionState,
+	shellState: PtyManagementShellState,
+	isAlive: boolean,
+	pid: number | null,
+	cwd: string | null,
+	cols: number,
+	rows: number,
+	createdAt: number,
+	protocolVersion: number,
+};
+
+/**  management 行的 `state`：在册即活 → 恒 `running`。 */
+export type PtyManagementSessionState = "running";
+
+/**  management 行的 `shellState`：shell-ready 协议未实现 → 恒 `unsupported`。 */
+export type PtyManagementShellState = "unsupported";
+
+/**  `PtyPerPtyDeliveryDiagnostics`（`src/shared/pty-delivery-diagnostics.ts`）。 */
+export type PtyPerPtyDeliveryDiagnostics = {
+	id: string,
+	sentChars: number,
+	ackedChars: number,
+	inFlightChars: number,
+	pendingChars: number,
+	hidden: boolean,
+	visible: boolean,
+	active: boolean,
+	msSinceLastSend: number | null,
+	msSinceLastAck: number | null,
+};
+
+/**
+ *  `pty_get_renderer_delivery_debug_snapshot` 返回：web stub 零对象逐字
+ *  （`web-terminal-api.ts:51-78`）。
+ */
+export type PtyRendererDeliveryDebugSnapshot = PtyRendererDeliveryDebugSnapshot_Serialize | PtyRendererDeliveryDebugSnapshot_Deserialize;
+
+/**
+ *  `pty_get_renderer_delivery_debug_snapshot` 返回：web stub 零对象逐字
+ *  （`web-terminal-api.ts:51-78`）。
+ */
+export type PtyRendererDeliveryDebugSnapshot_Deserialize = {
+	pendingPtyCount: number,
+	pendingChars: number,
+	maxPendingCharsByPty: number,
+	rendererInFlightPtyCount: number,
+	rendererInFlightChars: number,
+	maxRendererInFlightCharsByPty: number,
+	activeRendererPtyCount: number,
+	flushScheduled: boolean,
+	peakPendingChars: number,
+	peakMaxPendingCharsByPty: number,
+	peakRendererInFlightChars: number,
+	peakMaxRendererInFlightCharsByPty: number,
+	ackGatedFlushSkipCount: number,
+	hiddenDeliveryGatedPtyCount: number,
+	hiddenDeliveryGatedVisiblePtyCount: number,
+	hiddenDeliveryGatedActivePtyCount: number,
+	deliveryInterestPtyCount: number,
+	hiddenDeliveryDroppedChars: number,
+	hiddenDeliveryDroppedChunks: number,
+	pendingDroppedChars: number,
+	diagnostics: PtyMainDeliveryDiagnostics_Deserialize,
+	rendererLifecycleResetCount: number,
+	lastLifecycleResetClearedChars: number,
+	rendererPtyDispatcherReady: boolean,
+	rendererDispatcherReadyForcedCount: number,
+};
+
+/**
+ *  `pty_get_renderer_delivery_debug_snapshot` 返回：web stub 零对象逐字
+ *  （`web-terminal-api.ts:51-78`）。
+ */
+export type PtyRendererDeliveryDebugSnapshot_Serialize = {
+	pendingPtyCount: number,
+	pendingChars: number,
+	maxPendingCharsByPty: number,
+	rendererInFlightPtyCount: number,
+	rendererInFlightChars: number,
+	maxRendererInFlightCharsByPty: number,
+	activeRendererPtyCount: number,
+	flushScheduled: boolean,
+	peakPendingChars: number,
+	peakMaxPendingCharsByPty: number,
+	peakRendererInFlightChars: number,
+	peakMaxRendererInFlightCharsByPty: number,
+	ackGatedFlushSkipCount: number,
+	hiddenDeliveryGatedPtyCount: number,
+	hiddenDeliveryGatedVisiblePtyCount: number,
+	hiddenDeliveryGatedActivePtyCount: number,
+	deliveryInterestPtyCount: number,
+	hiddenDeliveryDroppedChars: number,
+	hiddenDeliveryDroppedChunks: number,
+	pendingDroppedChars: number,
+	diagnostics: PtyMainDeliveryDiagnostics_Serialize,
+	rendererLifecycleResetCount: number,
+	lastLifecycleResetClearedChars: number,
+	rendererPtyDispatcherReady: boolean,
+	rendererDispatcherReadyForcedCount: number,
+};
+
+/**
+ *  `pty_report_renderer_delivery_state` 回复：零 in-flight 让 watchdog 保持
+ *  idle（§2.2，对齐 web stub）。
+ */
+export type PtyRendererDeliveryHealthReply = {
+	inFlightTotalChars: number,
+	inFlightPtyCount: number,
+	/**  null = 自主侧计数（重）建以来无 ACK。 */
+	msSinceLastAck: number | null,
+};
+
+/**
+ *  `pty_report_renderer_delivery_state` 参数：渲染层报告整包收下但忽略
+ *  （本侧无投递机械，§2.2）。
+ */
+export type PtyReportRendererDeliveryStateArgs = {
+	report: Json,
+};
+
+/**  `pty_resize` 参数。 */
+export type PtyResizeArgs = {
+	id: string,
+	cols: number,
+	rows: number,
+};
+
+/**  `pty_signal` 参数（信号名透传，`SIG` 前缀可选）。 */
+export type PtySignalArgs = {
+	id: string,
+	signal: string,
+};
+
+/**  `pty_get_size` 返回；未知会话为 `null`（TS `getSize` 契约）。 */
+export type PtySizeReply = {
+	cols: number,
+	rows: number,
+};
+
+/**  `pty_get_authoritative_buffer_snapshot_capabilities` 参数。 */
+export type PtySnapshotCapabilitiesArgs = {
+	ids: string[],
+};
+
+/**
+ *  逐 id 能力行（§2.2：取 `authoritative:false` 对齐 web stub；规格允许
+ *  null/false 任一）。
+ */
+export type PtySnapshotCapability = {
+	id: string,
+	authoritative: boolean,
+};
+
+/**
+ *  `pty_spawn` 参数（对齐 `src/shared/preload-api/api/pty-api.ts` `spawn` opts
+ *  的生效字段——规格 §2.4；契约-only 字段渲染层可能附带，serde 未知字段忽略）。
+ */
+export type PtySpawnArgs = {
+	cols: number,
+	rows: number,
+	cwd?: string | null,
+	/**  仅识别 `'worktree'`（规格 §2.4）：cwd 缺省时按 `worktreeId` 解析路径。 */
+	cwdFallback?: string | null,
+	env?: { [key in string]: string },
+	envToDelete?: string[],
+	/**  spawn 后作为一行输入键入（`Session::spawn` 的命令交付语义）。 */
+	command?: string | null,
+	shellOverride?: string | null,
+	/**  命中在册活会话 → reattach：回 `{id, isReattach:true}`，不再 spawn。 */
+	sessionId?: string | null,
+	/**  成功 spawn 后记入 worktreeId 映射（`pty_list_sessions` 补列）。 */
+	worktreeId?: string | null,
+};
+
+/**
+ *  `pty_spawn` 返回（规格 §2.1 最小合法响应；`isReattach` 仅 reattach 命中时
+ *  为 `true`，新开 spawn 时整字段缺省）。
+ */
+export type PtySpawnReply = PtySpawnReply_Serialize | PtySpawnReply_Deserialize;
+
+/**
+ *  `pty_spawn` 返回（规格 §2.1 最小合法响应；`isReattach` 仅 reattach 命中时
+ *  为 `true`，新开 spawn 时整字段缺省）。
+ */
+export type PtySpawnReply_Deserialize = {
+	id: string,
+	isReattach: boolean | null,
+};
+
+/**
+ *  `pty_spawn` 返回（规格 §2.1 最小合法响应；`isReattach` 仅 reattach 命中时
+ *  为 `true`，新开 spawn 时整字段缺省）。
+ */
+export type PtySpawnReply_Serialize = {
+	id: string,
+	isReattach?: boolean | null,
+};
+
+/**  Payload for [`PTY_SPAWNED`]. */
+export type PtySpawnedPayload = {
+	id: string,
+};
+
+/**  `pty_write` / `pty_write_accepted` 参数。 */
+export type PtyWriteArgs = {
+	id: string,
+	data: string,
 };
 
 export type RepoKind = "git" | "folder";

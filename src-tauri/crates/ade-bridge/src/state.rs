@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread::{self, JoinHandle};
@@ -5,6 +6,7 @@ use std::time::{Duration, Instant};
 
 use ade_core::defaults::{onboarding_defaults, settings_defaults, ui_state_defaults};
 use ade_fs::{FsService, FsWatcher};
+use ade_pty::PtyHost;
 use ade_store::onboarding_store::OnboardingStore;
 use ade_store::projects_store::ProjectsStore;
 use ade_store::settings_store::SettingsStore;
@@ -15,6 +17,7 @@ use serde_json::Value;
 use tauri::{AppHandle, Manager};
 
 use crate::commands::platform::{platform_info, PlatformInfo};
+use crate::commands::pty::DataEndpointPayload;
 use crate::errors::BridgeError;
 use crate::events;
 use crate::json::Json;
@@ -245,8 +248,7 @@ pub struct PersistedState {
 pub fn load_persisted_state(data_dir: &Path, home: &str) -> PersistedState {
     let settings = SettingsStore::load(data_dir.join("settings.json"), settings_defaults(home));
     let ui = UiStateStore::load(data_dir.join("ui-state.json"), ui_state_defaults());
-    let onboarding =
-        OnboardingStore::load(data_dir.join("onboarding.json"), onboarding_defaults());
+    let onboarding = OnboardingStore::load(data_dir.join("onboarding.json"), onboarding_defaults());
     let projects = ProjectsStore::load(data_dir.join("projects.json"));
     let fs = FsService::new();
     authorize_persisted_roots(&fs, &projects);
@@ -284,6 +286,27 @@ fn persisted_root_paths(projects: &ProjectsStore) -> Vec<String> {
     paths
 }
 
+/// spawn 成功后的 ptyId → worktreeId 映射：`pty_list_sessions` 补列用。
+/// 即时退出会话的 Exit 可能先于 spawn 返回到达（Task 9 交接）——清理与查询
+/// 对未知 id 一律静默，不得 unwrap/panic。
+#[derive(Clone, Default)]
+pub struct PtyWorktreeIds(Arc<Mutex<HashMap<String, String>>>);
+
+impl PtyWorktreeIds {
+    pub fn record(&self, pty_id: &str, worktree_id: String) {
+        lock(&self.0).insert(pty_id.to_string(), worktree_id);
+    }
+
+    pub fn get(&self, pty_id: &str) -> Option<String> {
+        lock(&self.0).get(pty_id).cloned()
+    }
+
+    /// Exit 清理：未知 id（miss）静默返回 `None`。
+    pub fn remove(&self, pty_id: &str) -> Option<String> {
+        lock(&self.0).remove(pty_id)
+    }
+}
+
 /// Shared backend state for every command. Initialized once in `setup` with the
 /// app data directory before the main window is built.
 pub struct AppState {
@@ -294,14 +317,18 @@ pub struct AppState {
     pub fs: Arc<FsService>,
     pub watchers: FsWatcher,
     pub app: AppHandle,
+    /// PtyHost 门面（Task 9）：WS 数据面 + 会话注册表 + 事件回调源。
+    pub pty_host: Arc<PtyHost>,
+    /// ptyId → worktreeId（`pty_spawn` 记、`pty_list_sessions` 查、Exit 清）。
+    pub pty_worktree_ids: PtyWorktreeIds,
+    /// 启动时解析的用户 home（spawn cwd 兜底，规格 §2.4）。
+    pub home: String,
     settings_writer: WriteScheduler,
     ui_writer: WriteScheduler,
-    // Task 3 占位：WS echo server 端点（Task 9 由 PtyHost 接管，字段迁移为 Arc<PtyHost>）。
-    pty_endpoint: Mutex<Option<(u16, String)>>,
 }
 
 impl AppState {
-    pub fn initialize(app: &AppHandle) -> Result<Self, BridgeError> {
+    pub fn initialize(app: &AppHandle, pty_host: Arc<PtyHost>) -> Result<Self, BridgeError> {
         let data_dir = app.path().app_data_dir().map_err(|error| {
             BridgeError::message(format!("failed to resolve app data dir: {error}"))
         })?;
@@ -335,6 +362,22 @@ impl AppState {
             });
         }
 
+        let pty_worktree_ids = PtyWorktreeIds::default();
+        {
+            let app_handle = app.clone();
+            let worktree_ids = pty_worktree_ids.clone();
+            // PtyHost 事件 → Tauri 事件广播（规格 §2.1：pty:spawned/pty:exit）。
+            // 事件统一经此回调发（`PtyHost::spawn` 已发 Spawned，命令层不重复
+            // emit）；Exit 顺带清 worktreeId 映射——即时退出会话的 Exit 可能
+            // 先于 spawn 返回到达，remove 对未知 id 静默（Task 9 交接）。
+            pty_host.set_event_callback(Box::new(move |event| {
+                if let ade_pty::PtyEvent::Exit(info) = &event {
+                    worktree_ids.remove(&info.id);
+                }
+                events::forward_pty_event(&app_handle, event);
+            }));
+        }
+
         Ok(Self {
             settings,
             ui,
@@ -343,9 +386,11 @@ impl AppState {
             fs: Arc::new(persisted.fs),
             watchers,
             app: app.clone(),
+            pty_host,
+            pty_worktree_ids,
+            home,
             settings_writer,
             ui_writer,
-            pty_endpoint: Mutex::new(None),
         })
     }
 
@@ -394,15 +439,14 @@ impl AppState {
         bootstrap_payload(self.settings_store().get(), platform_info())
     }
 
-    /// Task 3 占位：登记 WS 数据面服务端口与 token（规格 §4.7；进程生命周期内不变）。
-    /// 由 orcinus-app setup 在起服务后调用一次。
-    pub fn set_pty_data_endpoint(&self, port: u16, token: String) {
-        *lock(&self.pty_endpoint) = Some((port, token));
-    }
-
-    /// `pty_data_endpoint` 命令的数据源；服务未起时为 `None`。
-    pub(crate) fn pty_data_endpoint(&self) -> Option<(u16, String)> {
-        lock(&self.pty_endpoint).clone()
+    /// `pty_data_endpoint` 命令的数据源（规格 §4.7）：`PtyHost` 装配即起服务，
+    /// 端口与 token 在进程生命周期内不变。
+    pub fn pty_data_endpoint(&self) -> DataEndpointPayload {
+        let endpoint = self.pty_host.endpoint();
+        DataEndpointPayload {
+            port: endpoint.port,
+            token: endpoint.token,
+        }
     }
 }
 
@@ -410,6 +454,19 @@ impl AppState {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn worktree_id_map_records_lookups_and_tolerates_unknown_exit() {
+        let ids = PtyWorktreeIds::default();
+        ids.record("p1", "r1::/wt".to_string());
+        assert_eq!(ids.get("p1").as_deref(), Some("r1::/wt"));
+        assert_eq!(ids.get("missing"), None);
+        // Task 9 交接：即时退出会话的 Exit 可能先于 spawn 返回到达，未知 id
+        // 的清理必须静默（不得 unwrap/panic）。
+        assert_eq!(ids.remove("missing"), None);
+        assert_eq!(ids.remove("p1").as_deref(), Some("r1::/wt"));
+        assert_eq!(ids.get("p1"), None);
+    }
 
     struct TestDir {
         path: std::path::PathBuf,

@@ -15,6 +15,7 @@ dependencies = [
  "ade-core",
  "ade-fs",
  "ade-git",
+ "ade-pty",
  "ade-store",
  "rfd",
  "serde",

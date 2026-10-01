@@ -5,13 +5,11 @@ use tauri::Manager;
 pub fn run() {
     let app = tauri::Builder::default()
         .setup(|app| {
-            let state = AppState::initialize(app.handle())?;
-            // Task 3 临时：echo WS server 供给连通性探针（规格 §9 风险 1）；
-            // Task 9 起 `PtyHost::start` 接管（含会话路由），届时移除本块。
-            let (port, token, _serve) = tauri::async_runtime::block_on(async {
-                ade_pty::start_echo_server()
-            });
-            state.set_pty_data_endpoint(port, token);
+            // PtyHost：WS 数据面 + 会话注册表（规格 §4.7），accept 循环与 exit
+            // watcher 挂 tauri 异步运行时；spawned/exit 事件回调由
+            // `AppState::initialize` 转 Tauri emit（`pty:spawned`/`pty:exit`）。
+            let pty_host = ade_pty::PtyHost::start(tauri::async_runtime::handle().inner().clone())?;
+            let state = AppState::initialize(app.handle(), pty_host)?;
             // Bootstrap payload must be in place before the document parses so
             // `settings.getSync()`/`platform.get()` can read it synchronously.
             let bootstrap = state.bootstrap_payload();
@@ -36,11 +34,14 @@ pub fn run() {
         .expect("error while building Orcinus");
 
     app.run(|app_handle, event| {
-        // Debounced settings/ui writes may still be pending; flush them so a
-        // quick quit after a change cannot lose the update (spec §4.1).
         if let tauri::RunEvent::Exit = event {
             if let Some(state) = app_handle.try_state::<AppState>() {
+                // Debounced settings/ui writes may still be pending; flush them so a
+                // quick quit after a change cannot lose the update (spec §4.1).
                 state.flush_pending_writes();
+                // 逐会话 kill（带 2s+2s 升级时限）+ WS server 关闭（规格 §3.1：
+                // app 退出全量收尾）。
+                state.pty_host.shutdown_all();
             }
         }
     });

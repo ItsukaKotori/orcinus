@@ -150,8 +150,12 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use crate::server::{ConnectionHandler, DataEndpoint, Sessions};
-use crate::session::{Session, SpawnRequest};
+use crate::session::Session;
 use crate::supervisor::Supervisor;
+
+/// [`PtyHost::spawn`] 的请求形状；门面处再导出（Task 10 的 bridge 命令层
+/// 组装用，不必深入 `session` 模块路径）。
+pub use crate::session::SpawnRequest;
 
 /// 会话退出事件载荷（camelCase serde，Task 10 经 Tauri emit 给前端）。
 #[derive(Debug, Clone, serde::Serialize)]
