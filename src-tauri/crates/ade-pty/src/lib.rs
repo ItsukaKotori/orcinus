@@ -1,6 +1,7 @@
 pub mod cpr;
 pub mod server;
 pub mod session;
+pub mod shell;
 pub mod supervisor;
 
 /// crate 级错误类型：portable-pty 的公开 API（openpty/spawn_command/take_writer/

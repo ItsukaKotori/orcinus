@@ -241,13 +241,23 @@ impl Session {
     pub fn spawn(req: SpawnRequest) -> Result<(Arc<Self>, SessionRuntime), PtyError> {
         let id = uuid::Uuid::new_v4().to_string();
 
-        // shell 解析（临时实现）：override → $SHELL → /bin/sh。Task 8 定型
-        // shell.rs（含带参解析、cwdFallback 等）后整体替换，保持测试兼容。
-        let shell = req
-            .shell_override
-            .clone()
-            .or_else(|| std::env::var("SHELL").ok())
-            .unwrap_or_else(|| "/bin/sh".to_string());
+        // shell 解析（Task 8 定型，规则见 [`crate::shell`]）：override →
+        // $SHELL/COMSPEC → 静态回退；登录参数随 ShellSpec.args（unix ["-l"]）。
+        // `platform` 按编译目标注入；env 快照由本调用方读取传入（resolve_shell
+        // 纯函数不读进程 env，tests/shell.rs 表驱动覆盖全部分支）。两平台变量
+        // 互不越界（unix 忽略 COMSPEC、windows 忽略 SHELL），无条件读取即可。
+        #[cfg(unix)]
+        let platform = "unix";
+        #[cfg(windows)]
+        let platform = "windows";
+        let env_shell = std::env::var("SHELL").ok();
+        let env_comspec = std::env::var("COMSPEC").ok();
+        let shell = crate::shell::resolve_shell(
+            platform,
+            req.shell_override.as_deref(),
+            env_shell.as_deref(),
+            env_comspec.as_deref(),
+        );
 
         // env 组装（规格 §4.6 顺序）：进程 env → envToDelete 删除 → env 覆盖 →
         // unix 追加 TERM/COLORTERM（已存在不覆盖）。
@@ -255,9 +265,10 @@ impl Session {
         // 经 get_base_env()（= std::env::vars_os）自行快照进程 env，即「收集」
         // 步骤，删除/覆盖/追加相应落在 env_remove / env / get_env 判空上，
         // `as_command` 最终 env_clear 后只应用该快照，删除语义真实生效。
-        let mut cmd = CommandBuilder::new(&shell);
-        #[cfg(unix)]
-        cmd.arg("-l"); // login shell
+        let mut cmd = CommandBuilder::new(&shell.program);
+        for arg in &shell.args {
+            cmd.arg(arg);
+        }
         for key in &req.env_to_delete {
             cmd.env_remove(key);
         }
