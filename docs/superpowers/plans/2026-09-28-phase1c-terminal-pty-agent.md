@@ -748,7 +748,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - 移除面：`generate_token`/`DataEndpoint`/serve/accept/auth、`pty_data_endpoint` 命令、specta 登记与 bindings 重生成、orcinus-app 的 `PtyHost::endpoint` 调用与 token 传递。
 - 门禁：`cargo test -p ade-pty -p ade-bridge` 全绿（ws_server/ws_session 用例重写后数量不减语义等价）+ `cargo build -p orcinus-app`。
 
-### Task 16: TS 流客户端——pty-stream.ts
+### Task 16: TS 流客户端（修订二形态：Tauri Channel）
 
 **Files:**
 - Rename: `src/bridge/real/pty-socket.ts` → `src/bridge/real/pty-stream.ts`
@@ -757,9 +757,9 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - Test: `src/bridge/real/pty-stream.test.ts`、`pty.test.ts`、`parity.test.ts`（方法处置表不变，仅数据面内部实现换）
 
 **Interfaces:**
-- `openPtyStream(id, handlers)`：`fetch('orcinus-pty://localhost/stream/<id>')` → `res.body.getReader()` 循环读 → `onData({id, data: utf8Decode, rawLength})`；AbortController 由 `closePtyStream(id)` 触发；流异常终止（reader throw / done）且未被 `closePtyStream` 主动关闭 → `onAbnormalClose(id)`（本地 exit(-1) 语义保留，墓碑/in-flight 门控逻辑随迁）。
+- **下行**：`invoke('pty_attach', { args: { id }, channel })`——`channel = new Channel<...>()`（`@tauri-apps/api/core`）；`channel.onmessage` 收二进制块（≥1KiB 为 ArrayBuffer Raw 帧，<1KiB 为 JSON 数字数组——解码两形态都要兜）→ `onData({id, data, rawLength})`。宿主 attach 有接管语义：同 id 重复 attach 取消旧转发（原 WS/墓碑/in-flight 门控语义坍缩为 attach 的天然替换，渲染层死亡判定**严格以 `pty:exit` 事件为权威**，通道结束本身不判死）。
 - `sendPtySocketData` → 删除；`write`/`writeAccepted` 改 invoke `pty_write`/`pty_write_accepted`（writeAccepted 发出即 true）。
-- `__probeAdePtyWs` → `__probeAdePtyStream`：真实 spawn + 建流 + echo 验证（常驻诊断，控制台可执行）。
+- `__probeAdePtyWs` → `__probeAdePtyStream`：真实 spawn + attach + echo 验证（常驻诊断，控制台可执行）。
 - 门禁：`pnpm vitest run src/bridge` + `pnpm typecheck && pnpm build:web` + `pnpm test` 全绿。
 
 ### Task 17: 手工闸门重跑（用户）+ 门禁复核（控制器）

@@ -13,7 +13,7 @@ Phase 1 拆 A（打开项目，已完成）、B（worktree + git，并行进行�
 
 **验收（自动 + 手工）**：`pnpm dev` 下 —— 新建终端 tab 跑真实 shell（macOS 登录 zsh / Windows PowerShell）→ 键入交互（回显、光标、颜色、Ctrl-C 正常）→ split 出第二 pane（一 leaf 一 PTY，两会话独立互不串扰）→ 在 worktree 中点选 Claude Code 启动新会话（TUI 正常渲染、可交互对话、能完成一次真实提交）→ Codex 同验 → 关闭 tab（会话回收、`onExit` 触发、无僵尸进程）→ `cat` 大文件（≥16 MiB）不丢字节、不卡死 UI。自动化门禁：`cargo test --workspace` 全绿 + `pnpm test` 全绿（既有套件 + 新增）+ `pnpm typecheck && pnpm build:web` exit 0。
 
-**已知缺口（记录在案，Phase 2 收口）**：app 重启 / webview reload / cold-park 休眠唤醒后终端画面空白（无 scrollback 回放；渲染层 eager buffer 仅覆盖 spawn→attach 窗口）；agent resume 按钮不可用（`coldRestore` 缺省）；delivery-health、隐藏投递门、pane 序列化器机械不实现（WS 数据面无此需要，见 §2.2/§2.3）。
+**已知缺口（记录在案，Phase 2 收口）**：app 重启 / webview reload / cold-park 休眠唤醒后终端画面空白（无 scrollback 回放；渲染层 eager buffer 仅覆盖 spawn→attach 窗口）；agent resume 按钮不可用（`coldRestore` 缺省）；delivery-health、隐藏投递门、pane 序列化器机械不实现（Channel 数据面有序可靠无此需要，见 §2.2/§2.3）。
 
 ## 2. 范围
 
@@ -65,9 +65,9 @@ src-tauri/crates/
 └── ade-bridge/src/commands/pty.rs   # 控制面命令 + AppState 挂 PtyHost + 事件广播
 ```
 
-- **`ade-pty` 不依赖 tauri**：WS server 与宿主逻辑自包含；`PtyHost::new(handle: tokio::runtime::Handle)` 注入运行时（ade-bridge 传 `tauri::async_runtime::handle()`，测试传 `#[tokio::test]` 的 handle）——Phase 2 提取 sidecar 时本 crate 原样搬走，WS 帧协议不变（§10 偏差 1 的接口缝）。
-- 新增依赖：`tokio`（net/rt/sync/time/macros）、`tokio-tungstenite`、`uuid`（v4）、`rand`、`portable-pty = 0.9`（既有）、`thiserror`、`serde`。
-- `orcinus-app` setup 中初始化 `PtyHost` 并 `manage`；app 退出时 `shutdown_all`（逐会话 kill + join + WS server 关闭）。
+- **`ade-pty` 不依赖 tauri**：会话宿主逻辑自包含；`PtyHost::start(handle: tokio::runtime::Handle)` 注入运行时（ade-bridge 传 `tauri::async_runtime::handle()`，测试传 `#[tokio::test]` 的 handle）——Phase 2 提取 sidecar 时本 crate 原样搬走，`subscribe`/Channel 消费形态不变（§10 偏差 1 的接口缝）。
+- 新增依赖：`tokio`（rt/sync/time/macros）、`uuid`（v4）、`portable-pty = 0.9`（既有）、`thiserror`、`serde`、`libc`（unix signal/升级）。
+- `orcinus-app` setup 中初始化 `PtyHost` 并 `manage`；app 退出时 `shutdown_all`（逐会话 kill + join）。
 
 ### 3.2 数据面协议（修订二：Tauri Channel 分块投递；WS 环回被 §10 偏差 4 否决，自定义协议流式被 Tauri 2 API 面否决——responder 为一次性完整响应 `FnOnce(Response<Cow<[u8]>>)`，wry macOS 整包投递，流式 body 不存在，证据见 task-15-report）
 
@@ -84,7 +84,7 @@ src-tauri/crates/
 
 ### 3.4 启动引导
 
-无 bootstrap 变更（`pty_data_endpoint` 按需调用 + 渲染层缓存）。`VITE_ADE_BRIDGE=mock` 全量回退保持可用（终端不可用但 app 可跑，测试依赖）。当前 CSP 为 null 不拦截 `ws://127.0.0.1`；若未来启用 CSP，`connect-src` 须含 `ws://127.0.0.1:*`（记录在案）。
+无 bootstrap 变更。`VITE_ADE_BRIDGE=mock` 全量回退保持可用（终端不可用但 app 可跑，测试依赖）。数据面为 Channel（invoke 私有通道），CSP 无涉。
 
 ## 4. ade-pty 宿主语义
 
@@ -93,7 +93,7 @@ src-tauri/crates/
 - `spawn`：uuid id → openpty(cols, rows) → 解析 shell（§4.5）→ env 组装（§4.6）→ `spawn_command` → 注册表插入 → pre-attach 缓冲就位 → 若有 `command` 立即写入一行（§4.5）→ 回 `{id}` + emit `pty:spawned`。
 - `kill`：`child.kill()` → drop master writer/reader（断管道触发 reader EOF）→ 注册表摘除 → supervisor join（超时进 Reaper）→ `pty:exit {id, code}`（code 取 `wait()`；kill 路径取得到的退出码，取不到回 -1）。
 - 自然退出：reader EOF → child.wait() 拿 code → 同上收尾。exit 与末帧的顺序：先排空会话出站队列再发事件。
-- app 退出：`shutdown_all` = 逐会话 kill + join + WS server close（orcinus-app exit handler 调用）。
+- app 退出：`shutdown_all` = 逐会话 kill + join（orcinus-app exit handler 调用）。
 
 ### 4.2 背压与读取循环（spike 要求 2）
 
@@ -122,10 +122,10 @@ src-tauri/crates/
 - cwd：`cwd` 优先；否则 `cwdFallback:'worktree'` 且 `worktreeId` 可解析时取 worktree 路径（folder 仓库取 `repo.path`；解析失败回 home，记录 warn）；再否则 home。
 - env：进程 env 继承 → `envToDelete` 删除 → `env` 覆盖 → unix 追加 `TERM=xterm-256color`、`COLORTERM=truecolor`（已存在则不覆盖）。Windows 交由 ConPTY。
 
-### 4.7 鉴权（修订：随 WS 方案取消）
+### 4.7 鉴权（修订二：随数据面改 Channel 取消）
 
-- 自定义 URI scheme 仅本 webview 可达（其他进程无法构造可被处理的 `orcinus-pty://` 请求），**无需端口/token/鉴权**；`pty_data_endpoint` 命令与 token 机制整体移除。
-- 处理函数仍校验路径形态与会话在册性：未知 id → 404 状态。
+- Channel 为 `pty_attach` invoke 建立的私有通道，**无需端口/token/鉴权**；`pty_data_endpoint` 命令与 token 机制整体移除。
+- `pty_attach` 仍校验会话在册性：未知 id → `BridgeError`（渲染层以错误/无数据面+无 exit 判定死亡，权威仍是 `pty:exit` 事件）。
 
 ## 5. 命令面（清单）
 
@@ -161,7 +161,7 @@ stub 同形方法的 Rust 侧即常量回复（无会话逻辑）；`getPtyDataL
   - 单测：cpr（跨块命中、tail 保留、同块双查询修正）；背压（通道满→暂停读→恢复→零丢失，用假 reader 验证）；supervisor（正常 join、超时进 Reaper、Reaper 上限淘汰）；shell 解析（unix/windows 参数与 override）；注册表（spawn/kill/reattach 幂等、exit 后摘除）。
   - 集成（unix CI 可跑；Windows 本机跑）：真 spawn `/bin/sh`——echo 回显经流到达（进程内 subscribe，无需网络栈）、exit 码透传、resize 后 `tput cols` 生效、并发 4 会话互不串扰、`yes` 大输出 8 MiB 计数不丢、command 行投递（`echo done` 于 shell 就绪后输出）、未知 id 流 404。
 - **Rust（ade-bridge）**：命令契约测试（命令名、`{args}` 反序列化、错误形状、事件载荷）+ specta bindings 新鲜度（沿用 1A 机制）。
-- **TS**：`real/pty.test.ts`（方法全集断言：真实方法走 invoke/WS、stub 同形逐字对齐 web stub、noop 订阅返回退订函数）；`real/preflight.test.ts` 扩 refreshAgents；`parity.test.ts` 迁移；`create-api` 组装测试更新。
+- **TS**：`real/pty.test.ts`（方法全集断言：真实方法走 invoke/Channel、stub 同形逐字对齐 web stub、noop 订阅返回退订函数）；`real/preflight.test.ts` 扩 refreshAgents；`parity.test.ts` 迁移；`create-api` 组装测试更新。
 - **手工验收**：§1 场景清单；另验 webview reload（dev 下 Cmd+R）后 tab 重挂不崩、死亡 tab UI 可关闭重开。
 
 ## 9. 风险
@@ -174,7 +174,7 @@ stub 同形方法的 Rust 侧即常量回复（无会话逻辑）；`getPtyDataL
 
 ## 10. 相对已批准设计的偏差（需审阅确认）
 
-1. **「独立 PTY 宿主进程」推迟至 Phase 2**：spike 决策（2026-09-14）与上游 §4 决策 2 字面要求独立长驻进程；1C 以进程内 `ade-pty` 实现（不依赖 tauri、注入 runtime handle、WS 协议自包含），Phase 2 重启恢复需要时整体提取为 sidecar，渲染层协议不变。理由：1C 无重启恢复交付物，双进程生命周期/协议版本/崩溃检测的复杂度前置无收益。
+1. **「独立 PTY 宿主进程」推迟至 Phase 2**：spike 决策（2026-09-14）与上游 §4 决策 2 字面要求独立长驻进程；1C 以进程内 `ade-pty` 实现（不依赖 tauri、注入 runtime handle、`subscribe` 数据面自包含），Phase 2 重启恢复需要时整体提取为 sidecar，渲染层协议不变。理由：1C 无重启恢复交付物，双进程生命周期/协议版本/崩溃检测的复杂度前置无收益。
 2. **shell-ready 命令投递降级为 spawn 即投递**：orca 的标记机制依赖 shell 集成注入（`orca:src/main/zsh-startup-wrapper-builder.ts` 等）；1C 的 tty 输入缓冲方案语义等价（shell 初始化完成后才消费输入），代价是命令回显可能出现在 prompt 之后（外观差异，记录）。
 3. **`orcinus-pty` 更名 `ade-pty`**：对齐上游 §5 crate 表；spike 的吞吐 bench/sink 保留为 bins，`docs/spikes/2026-09-14-pty-throughput.md` 的复现命令本就写作 `-p ade-pty`，更名后文档与实现一致。
 4. **数据面「本地 socket/WS」改为「Tauri Channel 分块投递」（2026-10-01 修订二；即 §9.1 原备案 fallback）**：spike 决策与原 §3.2 要求终端数据走本地 socket（WS 环回落地）。手工闸门实测（macOS 26 / Darwin 25）：服务端在册、普通进程 `nc` 秒连、Safari 同页同端口 WS 握手正常（OPEN → close 1008），唯独 Tauri app 的 WKWebView 网络子进程报 `The network connection was lost`——本地网络隐私对无 bundle Info.plist 的 ad-hoc dev 二进制静默丢包且无法归因授权（系统设置无条目）；Info.plist 嵌入（`__TEXT,__info_plist`）未能解除。**第一次修订**改自定义协议流式，旋即被 API 面否决：tauri 2.11.5/2.12.1 的 URI scheme responder 均为一次性完整响应（`FnOnce(Response<Cow<[u8]>>)`），wry macOS 整包投递，流式 body 不存在。**最终决策（即本规格 §9.1 原备案 fallback，设计评审已批准）**：下行 `pty_attach` + `tauri::ipc::Channel` 二进制分块（`subscribe` 接管语义保留），上行沿用 `pty_write` 命令；端口/token/鉴权整体取消。spike 决策中「不经 Tauri 事件通道」一条被放弃（Channel 即为事件通道），其余意图（原始字节、背压分片、有序）保留；16 MiB 吞吐门禁重验。若未来 Windows/其他 macOS 版本实测 WS 可用，可在 Channel 与 WS 两形态间选择（数据面接口 onData/write 不变）。
