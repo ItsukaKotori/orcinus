@@ -724,3 +724,43 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 1. **Spec coverage**：规格 §2.1 处置表 → Task 10（控制面/stub/management）+ Task 12（渲染层）；§3.1 crate → Task 1/5/7/9；§3.2 协议 → Task 2/7；§4.1–4.7 → Task 5/6/8/9/2；§5 命令清单 → Task 10 全枚举；§6 桥接 → Task 3/12/13；§7 refreshAgents → Task 11；§8 测试策略 → 各 Task 测试步 + Task 13 门禁；§1 验收 → Task 14；§9 风险 1 → Task 3 闸门、风险 2 → Task 5 测试 4 + Task 14 第 5 项、风险 3 → Task 11 水合、风险 4 → Task 14 第 7 项。**无缺口**。
 2. **Placeholder scan**：Task 2 Step 3 的 `constant_time_eq` 标注了实现要求（长度先比逐字节 OR）；Task 6 的 supervisor 接口在 Step 2 中显式修正了「join 超时」为 harvester 模式并要求以行为测试为准——已消除假接口；无 TBD/TODO。
 3. **Type consistency**：`SpawnRequest`/`Chunk`/`DataEndpoint`/`ExitInfo`/`PtyEvent` 在 Task 5/9/10 间签名一致；`scan_and_reply`（Task 4）被 Task 5 引用名一致；`fetchPtyDataEndpoint`（Task 3）被 Task 12 引用一致；`noopUnsubscribe` 路径 `../mock/noop-unsubscribe` 与仓库现有 `src/bridge/mock/noop-unsubscribe.ts` 一致。
+
+---
+
+## 修订任务（2026-10-01，规格 §3.2 修订版 / §10 偏差 4：数据面 WS → 自定义协议流式）
+
+> 背景：手工闸门实测 macOS 26 对 Tauri app 的 WKWebView 环回 WebSocket 静默丢包（Safari 同端口正常，服务端无碍；Info.plist 嵌入无效；无本地网络条目可授权）。用户批准改自定义协议流式。会话核心（session/supervisor/cpr/shell/背压/pre-attach）不动。
+
+### Task 15: Rust 流面——subscribe API + 协议处理器 + WS 拆除
+
+**Files:**
+- Modify: `src-tauri/crates/ade-pty/src/lib.rs`（PtyHost：`subscribe(id) -> Result<SessionStream, PtyError>`；`start` 去掉 WS server 装配；`endpoint`/token 移除）
+- Modify: `src-tauri/crates/ade-pty/src/server.rs`（accept/鉴权/WS 帧搬运拆除；保留接管/替换/pre-attach 排空/退出收尾语义，改暴露为进程内 `connect_channel` 消费形态）
+- Modify: `src-tauri/crates/ade-bridge/src/commands/pty.rs`（`pty_data_endpoint` 命令与 `DataEndpointPayload` 移除）
+- Modify: `src-tauri/src/lib.rs`（`register_asynchronous_uri_scheme_protocol("orcinus-pty", handler)`；Task 3 遗留 echo/PtyHost WS 装配换为协议注册）
+- Modify: `src-tauri/macos-info.plist`、`build.rs`（保留——发布面仍需要本地网络声明；不阻塞本任务）
+- Test: `src-tauri/crates/ade-pty/tests/ws_server.rs`/`ws_session.rs`（重写为流式：进程内 subscribe——echo 回显、pre-attach 排空、接管替换、退出收尾、未知 id Err；无 TCP）
+
+**Interfaces:**
+- Produces: `PtyHost::subscribe(&self, id: &str) -> Result<SessionStream, PtyError>`；`SessionStream { pub backlog: Vec<Chunk> /*pre-attach 排空*/, pub outbound: tokio::sync::mpsc::Receiver<Chunk>, pub exited: tokio::sync::watch::Receiver<Option<i32>> }`（同 id 重复 subscribe = 旧流取消后新建，保留 Task 7 接管语义；会话退出时 outbound 关闭 + exited 触发）。
+- 协议处理器（ade-bridge 或 orcinus-app 内，URI `orcinus-pty://localhost/stream/<id>`）：未知 id → 404；否则 `subscribe` → 先写 backlog 再逐块转发 outbound 为响应体流；`exited` 触发或 outbound 关闭 → body 终止。
+- **实现前必查**：Tauri 2 实际版本的流式自定义协议 API（`register_asynchronous_uri_scheme_protocol` + responder 的流式 body 形态）——读 `~/.cargo/registry` 里 tauri 源码的 `uri_scheme` 模块与官方文档；以实际 API 为准，测试为行为锚点。
+- 移除面：`generate_token`/`DataEndpoint`/serve/accept/auth、`pty_data_endpoint` 命令、specta 登记与 bindings 重生成、orcinus-app 的 `PtyHost::endpoint` 调用与 token 传递。
+- 门禁：`cargo test -p ade-pty -p ade-bridge` 全绿（ws_server/ws_session 用例重写后数量不减语义等价）+ `cargo build -p orcinus-app`。
+
+### Task 16: TS 流客户端——pty-stream.ts
+
+**Files:**
+- Rename: `src/bridge/real/pty-socket.ts` → `src/bridge/real/pty-stream.ts`
+- Modify: `src/bridge/real/pty.ts`（write/writeAccepted 走 invoke；openPtySocket → openPtyStream；fetchPtyDataEndpoint 移除）
+- Modify: `src/bridge/create-api.ts`（无域变化，仅 import 路径）
+- Test: `src/bridge/real/pty-stream.test.ts`、`pty.test.ts`、`parity.test.ts`（方法处置表不变，仅数据面内部实现换）
+
+**Interfaces:**
+- `openPtyStream(id, handlers)`：`fetch('orcinus-pty://localhost/stream/<id>')` → `res.body.getReader()` 循环读 → `onData({id, data: utf8Decode, rawLength})`；AbortController 由 `closePtyStream(id)` 触发；流异常终止（reader throw / done）且未被 `closePtyStream` 主动关闭 → `onAbnormalClose(id)`（本地 exit(-1) 语义保留，墓碑/in-flight 门控逻辑随迁）。
+- `sendPtySocketData` → 删除；`write`/`writeAccepted` 改 invoke `pty_write`/`pty_write_accepted`（writeAccepted 发出即 true）。
+- `__probeAdePtyWs` → `__probeAdePtyStream`：真实 spawn + 建流 + echo 验证（常驻诊断，控制台可执行）。
+- 门禁：`pnpm vitest run src/bridge` + `pnpm typecheck && pnpm build:web` + `pnpm test` 全绿。
+
+### Task 17: 手工闸门重跑（用户）+ 门禁复核（控制器）
+- 用户 `pnpm dev` 后控制台跑 `__probeAdePtyStream`（或终端实际使用），确认数据面通路；随后按原手工清单继续 §B–E 项。
