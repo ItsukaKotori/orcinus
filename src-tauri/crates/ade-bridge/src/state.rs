@@ -17,6 +17,7 @@ use serde_json::Value;
 use tauri::{AppHandle, Manager};
 
 use crate::commands::platform::{platform_info, PlatformInfo};
+use crate::commands::preflight::PathHydrationCache;
 use crate::commands::pty::DataEndpointPayload;
 use crate::errors::BridgeError;
 use crate::events;
@@ -323,6 +324,8 @@ pub struct AppState {
     pub pty_worktree_ids: PtyWorktreeIds,
     /// 启动时解析的用户 home（spawn cwd 兜底，规格 §2.4）。
     pub home: String,
+    /// 登录 shell PATH 水合的进程内缓存（Task 11）：进程生命周期内最多水合一次。
+    pub path_hydration_cache: PathHydrationCache,
     settings_writer: WriteScheduler,
     ui_writer: WriteScheduler,
 }
@@ -389,6 +392,7 @@ impl AppState {
             pty_host,
             pty_worktree_ids,
             home,
+            path_hydration_cache: PathHydrationCache::default(),
             settings_writer,
             ui_writer,
         })

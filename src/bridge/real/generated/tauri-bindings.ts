@@ -51,6 +51,16 @@ export const commands = {
 	onboardingGet: () => typedError<Json, BridgeError>(__TAURI_INVOKE("onboarding_get")),
 	/**  Merge a renderer partial into the snapshot and persist it synchronously. */
 	onboardingUpdate: (args: Json) => typedError<Json, BridgeError>(__TAURI_INVOKE("onboarding_update", { args })),
+	/**
+	 *  `preflight_refresh_agents`：登录 shell PATH 水合（进程内缓存一次）→
+	 *  与 app 进程 PATH 求差 → 探测 agent CLI。水合 shell 取 `$SHELL`，平台取
+	 *  编译目标 OS；`args` 契约参数收下忽略。
+	 */
+	preflightRefreshAgents: (args: {
+	wslDistro?: string | null,
+	wslDefault?: boolean | null,
+	projectRuntime?: Json | null,
+} | null) => typedError<RefreshAgentsResult, BridgeError>(__TAURI_INVOKE("preflight_refresh_agents", { args })),
 	platformGet: () => typedError<PlatformInfo, BridgeError>(__TAURI_INVOKE("platform_get")),
 	appGetIdentity: () => typedError<AppIdentityInfo, BridgeError>(__TAURI_INVOKE("app_get_identity")),
 	/**  Read the projects registry (spec §5.2). */
@@ -500,6 +510,20 @@ export type NestedRepoSelectedPathKind = "git_repo" | "non_git_folder";
 
 export type PathExistence = ({ exists: boolean }) & { error?: never } | ({ error: string }) & { exists?: never };
 
+/**
+ *  契约 `ShellHydrationFailureReason`。同上：`'none' | 'no_shell' | 'timeout'
+ *  | 'spawn_error' | 'empty_path'`。brief 中的水合失败 `FailureKind` 与该契约
+ *  枚举一一对应，直接复用本类型（分类 1:1，免二次映射）。
+ */
+export type PathFailureReason = "none" | "no_shell" | "timeout" | "spawn_error" | "empty_path";
+
+/**
+ *  契约 `PathSource`（`shell-path-hydration-types.ts`）。字面量本身是
+ *  snake_case——variant CamelCase 经 `rename_all = "snake_case"` 精确对齐
+ *  `'shell_hydrate' | 'sync_seed_only'`。
+ */
+export type PathSource = "shell_hydrate" | "sync_seed_only";
+
 /**  Platform contract (`src/shared/preload-api/api/app-api.ts` `PlatformApi.get`). */
 export type PlatformInfo = {
 	platform: string,
@@ -507,6 +531,16 @@ export type PlatformInfo = {
 	arch: string,
 	shell: string,
 	displayServer: string | null,
+};
+
+/**
+ *  契约 `preflight.refreshAgents` 的 `args`（`PreflightRuntimeContext`）：A 的
+ *  本机探测不分支远程/WSL——收下忽略，仅为 IPC 形状对齐。
+ */
+export type PreflightRuntimeContext = {
+	wslDistro?: string | null,
+	wslDefault?: boolean | null,
+	projectRuntime?: Json | null,
 };
 
 /**  `ProjectGroup.createdFrom` (oracle `ProjectGroupCreatedFrom`). */
@@ -937,6 +971,15 @@ export type PtySpawnedPayload = {
 export type PtyWriteArgs = {
 	id: string,
 	data: string,
+};
+
+/**  契约 `RefreshAgentsResult`（`preflight-api.ts`）。 */
+export type RefreshAgentsResult = {
+	agents: string[],
+	addedPathSegments: string[],
+	shellHydrationOk: boolean,
+	pathSource: PathSource,
+	pathFailureReason: PathFailureReason,
 };
 
 export type RepoKind = "git" | "folder";

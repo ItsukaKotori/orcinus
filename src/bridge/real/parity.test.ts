@@ -372,8 +372,8 @@ const surfaceCases: SurfaceCase[] = [
   },
   {
     domain: 'preflight',
-    explicit: ['check'],
-    missing: ['refreshAgents']
+    explicit: ['check', 'refreshAgents'],
+    missing: []
   },
   { domain: 'onboarding', explicit: ['get', 'update'], missing: [] },
   { domain: 'platform', explicit: ['get'], missing: [] }
