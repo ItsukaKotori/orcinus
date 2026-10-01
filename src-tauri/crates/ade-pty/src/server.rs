@@ -171,6 +171,26 @@ async fn attach_session(sessions: Sessions, session: Arc<Session>, session_id: S
         let _ = old.replace.send(());
     }
 
+    // ④ 装槽后复查注册表（收口 ② 与 ④ 之间并发退出摘除的残余窗口，审查 I-1）：
+    // 旧任务的 finish_exit 若在 ② 之后才摘除（其 hub 维判定时尚无新代次在途），
+    // 本连接不得继续以该会话名义转发。让位收场：清本代槽/hub（gen 判定防误删
+    // 后续接管方）、close(1000)。已让位的旧连接自身会按两维判定不摘，安全收敛。
+    if !sessions
+        .lock()
+        .expect("sessions mutex poisoned")
+        .contains_key(&session_id)
+    {
+        teardown(&session, gen).await;
+        let mut ws = ws;
+        let _ = ws
+            .close(Some(CloseFrame {
+                code: CloseCode::Normal,
+                reason: "session ended".into(),
+            }))
+            .await;
+        return;
+    }
+
     tokio::spawn(forward_loop(Takeover {
         sessions,
         session,
@@ -197,14 +217,14 @@ struct Takeover {
 
 /// 双向帧搬运与收尾（一个任务同时服务上行/下行/让位/退出四路事件）：
 /// - 下行：先逐帧发 pre-attach 重放存量，再循环通道 `recv()` → `Binary`；
-/// - 上行：`Binary(data)` → `session.write`（协议 §3.2：binary 即原始字节，
-///   无文本帧——文本帧忽略）；
+/// - 上行：`Binary(data)` → 经 [`Session::input`] 有界通道移交写线程（协议
+///   §3.2：binary 即原始字节，无文本帧——文本帧忽略）；
 /// - 让位：新接管方发信号 → 本连接 close(1000) → 终止（通道接收端随之 drop）；
 /// - 退出（规格 §3.2 顺序）：排空 outbound → close(1000) → 从注册表摘除。
-///   退出检测源有二，殊途同归到同一收尾：reader EOF 断开 hub 后通道排空 recv
-///   得 `None`；[`Session::exited`] watch（子进程死）在 reader 尚未排完时先到，
-///   此时断开 hub 再继续 recv 把尾量送完。客户端主动断开**不**摘会话（webview
-///   reload 会重连同 id）。
+///   退出检测源有二，殊途同归到 [`finish_exit`]：reader EOF 断开 hub 后通道排空
+///   recv 得 `None`；[`Session::exited`] watch（子进程死）在 reader 尚未排完时
+///   先到，此时断开 hub 再继续 recv 把尾量送完。客户端主动断开**不**摘会话
+///   （webview reload 会重连同 id）。
 async fn forward_loop(t: Takeover) {
     let Takeover {
         sessions,
@@ -218,38 +238,17 @@ async fn forward_loop(t: Takeover) {
     } = t;
     let (mut sink, mut stream) = ws.split();
     let mut exited = session.exited.clone();
-    // 退出/让位共用的收尾：close(1000) + 清槽/清 hub；`remove` 仅退出路径按
-    // 代次判定（见 [`finish_exit`]）。
-    async fn finish(
-        sessions: &Sessions,
-        session: &Session,
-        session_id: &str,
-        gen: u64,
-        mut sink: futures_util::stream::SplitSink<WsConn, Message>,
-        reason: &'static str,
-        remove: bool,
-    ) {
-        let _ = sink
-            .send(Message::Close(Some(CloseFrame {
-                code: CloseCode::Normal,
-                reason: reason.into(),
-            })))
-            .await;
-        if remove {
-            sessions
-                .lock()
-                .expect("sessions mutex poisoned")
-                .remove(session_id);
-        }
-        teardown(session, gen).await;
-    }
 
     // 退出收尾（规格 §3.2：排空 outbound → close(1000) → 从注册表摘除）。
-    // **摘除以槽内代次为准**：仅当本连接仍是当前接管者才摘。`rx.recv()` 得
-    // `None` 有两义——reader EOF（真退出）或本代通道已被新接管方换出（连接
-    // 替换的伴生事件）；[`Session::exited`] watch 对被替换的旧连接同样会触发。
-    // 两者的迟到事件都不得摘掉新连接名下的会话，故统一走代次判定，且判定与
-    // 清槽在槽锁内原子完成（新接管方安装槽与本判定互斥）。
+    // **摘除判定取两维**（审查 I-1）：
+    // 1. hub 代次：`rx.recv()` 得 `None` 有两义——reader EOF（真退出）或本代
+    //    通道已被新接管方换出（替换 ① 换 hub 与 ④ 装槽之间）；hub 出现别的
+    //    代次即替换在途，绝不摘。`exited` watch 对被替换的旧连接同样触发，
+    //    此维同样拦住旧连接的迟到退出事件。
+    // 2. 槽内代次：仅当本连接仍是当前接管者才摘。判定与清槽在槽锁内原子完成
+    //    （新接管方安装槽与本判定互斥），且 attach ④ 装槽后复查注册表
+    //    （[`attach_session`]）与本判定互为收口——任一交错次序下都不会出现
+    //    「活会话被旧任务摘除且新连接不自知」。
     async fn finish_exit(
         sessions: &Sessions,
         session: &Session,
@@ -269,8 +268,10 @@ async fn forward_loop(t: Takeover) {
                 reason: "session ended".into(),
             })))
             .await;
+        // hub 维：出现其他代次 = 新接管已换入 hub、装槽在途——不摘。
+        let replacement_in_flight = matches!(session.outbound.current(), Some((g, _)) if g != gen);
         let mut slot = session.connection.lock().await;
-        let is_current = slot.as_ref().is_some_and(|s| s.gen == gen);
+        let is_current = !replacement_in_flight && slot.as_ref().is_some_and(|s| s.gen == gen);
         if is_current {
             sessions
                 .lock()
@@ -295,18 +296,22 @@ async fn forward_loop(t: Takeover) {
         tokio::select! {
             // 让位：新连接接管（会话不摘——它仍归新连接所有）。
             _ = &mut replace_rx => {
-                finish(&sessions, &session, &session_id, gen, sink, "replaced", false).await;
+                let _ = sink.send(Message::Close(Some(CloseFrame {
+                    code: CloseCode::Normal,
+                    reason: "replaced".into(),
+                }))).await;
+                teardown(&session, gen).await;
                 break;
             }
             // 退出：watch 先于 reader EOF 到达时由此收尾——先断生产（防
-            // 「退出后才接管」的 recv 悬挂），再排净尾量后按代次判定摘除。
+            // 「退出后才接管」的 recv 悬挂），再排净尾量后按两维判定摘除。
             _ = exited.changed() => {
                 session.outbound.clear_if(gen);
                 finish_exit(&sessions, &session, &session_id, gen, sink, outbound_rx).await;
                 break;
             }
             // 下行：PTY 输出 → WS；recv 得 None = 通道已排空且无生产者（reader
-            // EOF 或已换代），交 [`finish_exit`] 按代次判定收尾。
+            // EOF 或已换代），交 [`finish_exit`] 判定收尾。
             chunk = outbound_rx.recv() => match chunk {
                 Some(chunk) => {
                     if sink.send(Message::Binary(chunk.bytes())).await.is_err() {
@@ -319,11 +324,12 @@ async fn forward_loop(t: Takeover) {
                     break;
                 }
             },
-            // 上行：键盘输入 → master writer。阻塞写保序（spawn_blocking 会乱序）；
-            // 击键级数据短暂阻塞本连接任务可接受（1C）。
+            // 上行：键盘输入 → 有界通道（写线程串行写 master）。满则在此背压
+            // 等待——分支体不受 select 取消影响，帧不丢；tty 阻塞由写线程承担，
+            // 不冻结本任务（审查 I-2）。
             msg = stream.next() => match msg {
                 Some(Ok(Message::Binary(bytes))) => {
-                    let _ = session.write(&bytes);
+                    let _ = session.input.send(bytes.to_vec()).await;
                 }
                 // 客户端断开/出错：清本连接的槽与 hub（代次判据防误清新接管方），
                 // 但不摘会话——同 id 可重连（webview reload；post-attach 不缓冲，
@@ -364,7 +370,16 @@ fn constant_time_eq(a: &str, b: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{constant_time_eq, generate_token};
+    use std::collections::HashMap;
+    use std::sync::{Arc, Mutex};
+    use std::time::Duration;
+
+    use futures_util::{SinkExt, StreamExt};
+
+    use super::{
+        constant_time_eq, generate_token, route_connection, serve, ConnectionHandler, Sessions,
+    };
+    use crate::session::{Session, SpawnRequest};
 
     #[test]
     fn token_is_64_hex_chars_and_random() {
@@ -385,5 +400,106 @@ mod tests {
         assert!(!constant_time_eq("abc", "abd"));
         assert!(!constant_time_eq("abc", "ab"));
         assert!(!constant_time_eq("", "a"));
+    }
+
+    /// 复现（审查 I-1 / M-4）：连接替换 ①换 hub → ④装槽 之间，旧连接 A 的
+    /// 迟到 `rx.recv()→None` 进入 [`forward_loop::finish_exit`] 时，不得把仍在册
+    /// 的活会话摘除。多线程 flavor + 手工构造交错次序：hub 先换入新代次（替换
+    /// ①），A 的 gen1 通道随即失生产者、rx-None 就绪——A 醒来时 hub 维判定必然
+    /// 见到在途替换。修复前此处确定性摘除（is_current 槽维判定单维误判真）。
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn late_none_during_replacement_keeps_session() {
+        let std_listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = std_listener.local_addr().unwrap().port();
+        std_listener.set_nonblocking(true).unwrap();
+        let listener = tokio::net::TcpListener::from_std(std_listener).unwrap();
+        let token = generate_token();
+        let sessions: Sessions = Arc::new(Mutex::new(HashMap::new()));
+        let handler: ConnectionHandler = {
+            let sessions = Arc::clone(&sessions);
+            Arc::new(move |id, ws| route_connection(&sessions, id, ws))
+        };
+        let _serve = tokio::spawn(serve(listener, token.clone(), handler));
+
+        let (session, _runtime) = Session::spawn(SpawnRequest {
+            cols: 80,
+            rows: 24,
+            cwd: Some(std::env::temp_dir().to_string_lossy().into_owned()),
+            env: HashMap::new(),
+            env_to_delete: Vec::new(),
+            command: None,
+            shell_override: Some("/bin/sh".to_string()),
+        })
+        .unwrap();
+        let id = session.id.clone();
+        sessions
+            .lock()
+            .unwrap()
+            .insert(id.clone(), Arc::clone(&session));
+
+        // 连接 A（真实接管：hub gen1 + 槽 gen1 + 转发任务）。
+        let (mut a, _resp) = tokio_tungstenite::connect_async(format!(
+            "ws://127.0.0.1:{port}/pty/{id}?token={token}"
+        ))
+        .await
+        .unwrap();
+        let slot = session.connection.lock().await;
+        assert_eq!(slot.as_ref().map(|s| s.gen), Some(1));
+        drop(slot);
+
+        // 手工执行 B 的替换①（仅换 hub，④装槽不动）——模拟审查指出的窗口。
+        let (tx2, _rx2) = tokio::sync::mpsc::channel(64);
+        assert_eq!(session.outbound.replace(tx2), 2);
+
+        // A 的 rx-None 触发 finish_exit：修复后按 hub 维判定「替换在途」不摘，
+        // 仅 close(1000)。等 A 的 Close 帧（bounded）。
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(2);
+        let mut a_closed = false;
+        while tokio::time::Instant::now() < deadline {
+            match tokio::time::timeout(Duration::from_millis(100), a.next()).await {
+                Ok(Some(Ok(tokio_tungstenite::tungstenite::Message::Close(_)))) => {
+                    a_closed = true;
+                    break;
+                }
+                Ok(Some(Ok(_))) => {}
+                _ => {}
+            }
+        }
+        assert!(a_closed, "A must be closed by the replacement takeover");
+        // 核心断言：会话必须仍在注册表（修复前被 A 的 finish_exit 误摘）。
+        assert!(
+            sessions.lock().unwrap().contains_key(&id),
+            "late rx-None of the replaced connection must not remove the live session"
+        );
+
+        // 自愈：真实连接 C 照常路由（hub gen3 + 槽 gen3 + roundtrip）。
+        let (mut c, _resp) = tokio_tungstenite::connect_async(format!(
+            "ws://127.0.0.1:{port}/pty/{id}?token={token}"
+        ))
+        .await
+        .unwrap();
+        c.send(tokio_tungstenite::tungstenite::Message::binary(
+            b"echo c-ok\n".as_slice(),
+        ))
+        .await
+        .unwrap();
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+        let mut agg: Vec<u8> = Vec::new();
+        let mut ok = false;
+        while tokio::time::Instant::now() < deadline && !ok {
+            match tokio::time::timeout(Duration::from_millis(200), c.next()).await {
+                Ok(Some(Ok(tokio_tungstenite::tungstenite::Message::Binary(bytes)))) => {
+                    agg.extend_from_slice(bytes.as_ref());
+                    ok = agg.windows(4).any(|w| w == b"c-ok");
+                }
+                Ok(Some(Ok(_))) => {}
+                _ => break,
+            }
+        }
+        assert!(
+            ok,
+            "third connection must roundtrip after the window; got: {:?}",
+            String::from_utf8_lossy(&agg)
+        );
     }
 }

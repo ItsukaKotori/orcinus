@@ -102,9 +102,10 @@ pub fn measure_pty_throughput(
     })
 }
 
-/// 仅面向本 crate 集成测试的传输层装配辅助：echo handler 的 WS server。
-/// 原 `test_support::start_echo_server`（Task 2 骨架）随 Task 7 会话路由退役，
-/// echo 装配改由 `tests/ws_server.rs` 本地持有（handler 本就属测试关注点）。
+/// 数据面连通性探针的 echo 装配（crate 级 pub fn，非测试模块）：Task 3 由
+/// orcinus-app setup 直接调用（`test_support` 模块随 Task 7 会话路由退役，函数
+/// 平移至此保持调用点可用）；`tests/ws_server.rs` 亦复用。Task 9 `PtyHost::start`
+/// 接管后，连同 orcinus-app 侧调用整块移除。
 #[doc(hidden)]
 pub fn start_echo_server() -> (u16, String, tokio::task::JoinHandle<()>) {
     // WHY: `Handle::block_on` 在运行时上下文内调用会 panic（"Cannot start a

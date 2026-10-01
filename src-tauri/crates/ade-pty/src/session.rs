@@ -56,6 +56,9 @@ impl std::ops::Deref for Chunk {
 
 /// outbound 通道容量（块数；每块至多 [`READ_BUF_BYTES`]）。
 pub(crate) const OUTBOUND_CAPACITY: usize = 128;
+/// 上行输入通道容量（帧数）：写线程消费速率即 tty 写速率，128 帧足量缓冲
+/// 粘贴突发；超出即发送方背压（见 [`Session::input`]）。
+const INPUT_CAPACITY: usize = 128;
 /// pre-attach 环形缓冲字节上限，超限弹最旧。
 pub(crate) const PRE_ATTACH_CAP_BYTES: usize = 256 * 1024;
 /// reader 单次 read 的块大小。
@@ -208,6 +211,11 @@ pub struct Session {
     master: Mutex<Option<Box<dyn portable_pty::MasterPty + Send>>>,
     pub cwd: String,
     pub size: Mutex<(u16, u16)>,
+    /// 上行输入通道：WS 上行帧经此移交专用写线程（[`Session::spawn`] 的
+    /// `pty-writer`）串行写 master——保序，且转发任务不做内联阻塞写（审查
+    /// I-2：内联写在输出积压时会冻结双向甚至死锁）。满时发送方 `send.await`
+    /// 背压。[`Session::write`] 直写保留给宿主 API/command 交付/CPR 应答。
+    pub input: tokio::sync::mpsc::Sender<Vec<u8>>,
     /// reader → 当前连接下行通道的出口（接管方换入通道，见 [`OutboundHub`]）。
     pub outbound: OutboundHub,
     /// 256 KiB 环形（含水位与停用位，见 [`PreAttach`]）；首连排空即停用。
@@ -292,11 +300,12 @@ impl Session {
         let writer = pair.master.take_writer().map_err(PtyError::from)?;
         let reader = pair.master.try_clone_reader().map_err(PtyError::from)?;
 
-        // 下行出口（空 hub：通道由 WS 接管方建立）与 pre-attach 环形。
+        // 下行出口（空 hub：通道由 WS 接管方建立）、pre-attach 环形与上行输入通道。
         let outbound = OutboundHub::new();
         let pre_attach = Arc::new(Mutex::new(PreAttach::new()));
         let connection: Arc<tokio::sync::Mutex<Option<ConnectionSlot>>> =
             Arc::new(tokio::sync::Mutex::new(None));
+        let (input_tx, mut input_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(INPUT_CAPACITY);
 
         // 退出广播（exit 线程置 Some(code)；oneshot 走 SessionRuntime）。
         let (exit_bcast_tx, exit_bcast_rx) = tokio::sync::watch::channel::<Option<i32>>(None);
@@ -308,6 +317,7 @@ impl Session {
             master: Mutex::new(Some(pair.master)),
             cwd,
             size: Mutex::new((req.cols, req.rows)),
+            input: input_tx,
             outbound,
             pre_attach: Arc::clone(&pre_attach),
             connection,
@@ -331,6 +341,29 @@ impl Session {
             Arc::clone(&pre_attach),
             Arc::clone(&session),
         );
+
+        // 上行写线程（审查 I-2 裁决：单一 writer 线程 + 有界通道，与 reader 侧
+        // 对称）：WS 上行帧若由转发任务内联阻塞写 master，输出积压时会卡死转发
+        // 任务（停 recv 下行 → reader 停读 → 子进程阻塞在 tty write，若其需读
+        // 输入才能推进则永久死锁）。专用 std 线程串行消费有界通道：保序、tty
+        // 阻塞不传染异步侧；通道满时转发任务 send.await 背压（上行帧迟到毫秒级
+        // 可接受，冻结不可接受）。
+        // Weak 而非 Arc：writer 线程不得钉住 Session（同 unix reader 的理由）；
+        // 逐帧 upgrade，Session 已弃置即退出。所有发送端 drop（Session 弃置 +
+        // 各转发任务终止）后 blocking_recv 得 None，线程自然结束——无需回收。
+        let writer_session = Arc::downgrade(&session);
+        std::thread::Builder::new()
+            .name(format!("pty-writer-{id}"))
+            .spawn(move || {
+                while let Some(data) = input_rx.blocking_recv() {
+                    let Some(sess) = writer_session.upgrade() else {
+                        break;
+                    };
+                    let _ = sess.write(&data);
+                    drop(sess);
+                }
+            })
+            .map_err(std::io::Error::other)?;
 
         // exit 检测：独立线程阻塞 wait，退出码经 oneshot 交付 SessionRuntime，
         // 同时广播到 watch（路由层/Task 9 监视用；接收端已弃置则发送失败被忽略）。
@@ -399,6 +432,9 @@ impl Session {
             .expect("pre_attach mutex poisoned")
             .take_replay();
         for chunk in replay {
+            // Full 环按当前参数不可达：容量 ≥ max(OUTBOUND_CAPACITY, 存量块数)，
+            // 重放块数 ≤ 存量，而 reader 侧并发灌入需在本循环的微秒级窗口内产出
+            // ≥128 块（≈8 MiB）才可能挤满——重试环仅为参数未来变化兜底。
             while let Err(TrySendError::Full(_)) = tx.try_send(chunk.clone()) {
                 std::thread::sleep(TRY_SEND_RETRY);
             }
