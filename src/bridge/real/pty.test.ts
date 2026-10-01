@@ -192,6 +192,30 @@ describe('exit semantics', () => {
     await vi.waitFor(() => expect(FakeWebSocket.instances).toHaveLength(1))
     expect(exits).toEqual([{ id: 'pty-1', code: 0 }])
   })
+
+  it('duplicate exit deliveries after the socket landed leave no tombstone (respawn stays live)', async () => {
+    // 审查 fix round 1：真实渲染层 ≥2 个 onExit 订阅者（pty-dispatcher、
+    // use-resource-session-inventory，subscribeToEvent 不去重），Tauri 逐订阅者
+    // 投递——第 1 个摘表，第 2+ 个全命中 close-miss。此时没有 open 在飞，不得
+    // 立碑；否则 Phase 2 的 id 复用/reattach 会被残留墓碑静默吞掉活连接。
+    const { api, ws } = await spawnedApi()
+    api.onExit(() => {})
+    api.onExit(() => {})
+    const exits: unknown[] = []
+    api.onExit((data) => exits.push(data))
+    const exitHandlers = listenMock.mock.calls
+      .filter(([name]) => name === 'pty:exit')
+      .map(([, handler]) => handler as (message: { payload: unknown }) => void)
+    expect(exitHandlers.length).toBeGreaterThanOrEqual(2)
+    for (const handler of exitHandlers) handler({ payload: { id: 'pty-1', code: 0 } })
+    expect(ws.closedViaCloseMethod).toBe(true)
+    expect(exits).toEqual([{ id: 'pty-1', code: 0 }])
+    // 同 id 重生：无墓碑残留，新连接正常落地（旧实现此处 open 被静默吞掉）。
+    mockSpawn({ id: 'pty-1' })
+    await api.spawn(spawnOpts)
+    await vi.waitFor(() => expect(FakeWebSocket.instances).toHaveLength(2))
+    expect(exits).toEqual([{ id: 'pty-1', code: 0 }])
+  })
 })
 
 describe('write', () => {

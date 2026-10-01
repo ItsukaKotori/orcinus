@@ -34,12 +34,21 @@ const WS_OPEN = 1
 /** 活跃会话 → WS。多会话并存；同 id 重连先让位旧连接（规格 §3.2 连接替换）。 */
 const sockets = new Map<string, WebSocket>()
 
+/** 停在端点 await 上的 open（in-flight 门控：墓碑只对真正在飞的 open 有意义）。 */
+const opensInFlight = new Set<string>()
+
 /**
- * 「退出早于 socket 落地」的墓碑：`pty:exit` 可在 `openPtySocket` 还在 await 端点
- * 时到达（规格 §3.2 的窗口），此刻表里无连接可摘；记下 id 让晚到的 open 直接丢弃
+ * 「退出早于 socket 落地」的墓碑：`pty:exit` 在 `openPtySocket` 停在端点 await 上时
+ * 到达（规格 §3.2 的窗口），此刻表里无连接可摘；记下 id 让晚到的 open 直接丢弃
  * 本次连接——否则该 socket 会连上已死的会话，其异常关闭再广播一条假的本地死亡
- * （Task 12 审查 Minor-1 的 duplicate exit 竞态）。同一 id 重生（重 spawn）在 open
- * 处消费墓碑，不受影响；socket 已落地再收到 exit 则无需墓碑（摘表已抑制其关闭）。
+ * （Task 12 审查 Minor-1 的 duplicate exit 竞态）。立碑由 `opensInFlight` 门控
+ * （审查 fix round 1）：真实渲染层有多个 onExit 订阅者（pty-dispatcher、
+ * use-resource-session-inventory，`subscribeToEvent` 不去重，Tauri 逐订阅者投递），
+ * 普通 exit 时第 1 个订阅者摘表、第 2+ 个全命中 close-miss——此时并没有 open 在飞，
+ * 无条件立碑会让墓碑无界增长，且 Phase 2 的 id 复用/reattach open 会被残留墓碑
+ * 静默吞掉活连接（open 正常 resolve、无 onData、零报错）。残余窗口（需
+ * incarnationId 穿透 socket 层才能根治，Phase 2）：旧代次的 exit 事件在同 id
+ * 替换/重生 open 已落地后才送达 → 摘掉的是新代次的活 socket。
  */
 const exitedDuringOpen = new Set<string>()
 
@@ -68,32 +77,38 @@ export async function openPtySocket(id: string, handlers: PtySocketHandlers): Pr
     sockets.delete(id)
     previous.close()
   }
-  const { port, token } = await fetchPtyDataEndpoint()
-  if (exitedDuringOpen.delete(id)) return // await 期间 exit 已到达：丢弃晚到的连接
-  const ws = new WebSocket(`ws://127.0.0.1:${port}/pty/${id}?token=${token}`)
-  ws.binaryType = 'arraybuffer'
-  ws.onmessage = (event) => {
-    const buffer = event.data as ArrayBuffer
-    handlers.onData({ id, data: utf8Decode(buffer), rawLength: buffer.byteLength })
+  opensInFlight.add(id)
+  try {
+    const { port, token } = await fetchPtyDataEndpoint()
+    if (exitedDuringOpen.delete(id)) return // await 期间 exit 已到达：丢弃晚到的连接
+    const ws = new WebSocket(`ws://127.0.0.1:${port}/pty/${id}?token=${token}`)
+    ws.binaryType = 'arraybuffer'
+    ws.onmessage = (event) => {
+      const buffer = event.data as ArrayBuffer
+      handlers.onData({ id, data: utf8Decode(buffer), rawLength: buffer.byteLength })
+    }
+    ws.onclose = (event) => {
+      if (sockets.get(id) !== ws) return // pty:exit / 替换触发的关闭：已被摘除或接管
+      sockets.delete(id)
+      if (event.code === 1000) return // server 干净收尾，退出码由 pty:exit 携带
+      handlers.onAbnormalClose(id)
+    }
+    sockets.set(id, ws)
+  } finally {
+    opensInFlight.delete(id) // 失败路径（端点拒绝）同样退出在飞集，不留假门控
   }
-  ws.onclose = (event) => {
-    if (sockets.get(id) !== ws) return // pty:exit / 替换触发的关闭：已被摘除或接管
-    sockets.delete(id)
-    if (event.code === 1000) return // server 干净收尾，退出码由 pty:exit 携带
-    handlers.onAbnormalClose(id)
-  }
-  sockets.set(id, ws)
 }
 
 /**
  * 关闭并摘除会话连接（`pty:exit` 事件 / 本地清理路径）。摘除先行，连接的
- * onclose 因此被判为「有意关闭」，不再触发会话死亡广播。表里无连接可摘时立
- * 墓碑——可能有 open 正在 await 端点（见 `exitedDuringOpen`）。
+ * onclose 因此被判为「有意关闭」，不再触发会话死亡广播。表里无连接可摘时，
+ * 仅当该 id 有 open 停在端点 await 上才立墓碑（`opensInFlight` 门控，见
+ * `exitedDuringOpen`）——多订阅者的重复 exit 在无 open 在飞时不得立碑。
  */
 export function closePtySocket(id: string): void {
   const ws = sockets.get(id)
   if (!ws) {
-    exitedDuringOpen.add(id)
+    if (opensInFlight.has(id)) exitedDuringOpen.add(id)
     return
   }
   sockets.delete(id)
