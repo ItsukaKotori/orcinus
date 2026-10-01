@@ -89,6 +89,7 @@
 - fix wave（本提交）：`cargo test --workspace` → **556 passed / 0 failed**（+10：symlink 工作区根全链路、override adopt/去前缀/checked-out/diverged、folder id verbatim、git 授权守卫、相对路径守卫）；`pnpm vitest run src/bridge` → **352 passed**；`rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm build:web` → exit 0（仅既有 chunk-size 警告）；bindings 重生成（`WorktreesCreateResult` 去 `warnings`）且 `bindings_are_fresh` 绿。
 - 前端冷门禁：`rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm build:web` → exit 0（仅既有 chunk-size 警告）。
 - 全量前端：`pnpm test` → **3848 passed | 8 skipped（3856 文件）；34245 passed | 122 skipped（34367 测试）；0 failed**；540.04s；`grep -cE '^\s*FAIL'` = 0。较 phase1a 验收后基线（34204）**+41 测试**；`src/bridge` 域测试 352 通过（新增 git/worktrees/repos 契约与 parity）。
+- **终树复跑**（fix wave 之后，控制者执行）：`cargo test --workspace` → 556/0；`pnpm test` → 3848 文件 / 34245 测试 / **0 failed**；431.66s；`grep -cE '^\s*FAIL'` = 0（日志 `tools/pnpm-test-final.log`）。终审修复触及 Rust 与生成 bindings，故全量在前述数字之后于最终提交树上重跑一次。
 
 ## 5. 手工验收（自动化部分）与待用户复核
 
