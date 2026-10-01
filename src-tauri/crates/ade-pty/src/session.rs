@@ -2,13 +2,13 @@
 //!
 //! [`Session::spawn`] 一次拉起 pty + shell。输出路径：reader 线程每块先镜像进
 //! pre-attach 环形（首连前积累，重放即停用，见 [`PreAttach`]），再经
-//! [`OutboundHub`] 投递给当前连接的下行通道（满即停读 + sleep 重试，绝不丢块）；
-//! 无连接且 pre-attach 已停用时块弃置（post-attach 不缓冲，规格 §3.2）。
+//! [`OutboundHub`] 投递给当前订阅的下行通道（满即停读 + sleep 重试，绝不丢块）；
+//! 无订阅且 pre-attach 已停用时块弃置（post-attach 不缓冲，规格 §3.2）。
 //! 退出检测双通道：oneshot 交 [`SessionRuntime`]（spawn 返回给调用方），
 //! [`Session::exited`] watch 广播给路由层——Task 9 的 PtyEvent::Exit 挂在
 //! `changed()` 上。kill（[`Session::kill`]）走 supervisor 的 reap 路径。
-//! WS 连接的接管/替换/收尾在 [`crate::server::route_connection`]；非 WS 装配
-//! （测试）用 [`Session::connect_channel`]。
+//! 订阅的接管/替换/收尾在 [`crate::server::attach`] / [`crate::server::forward_stream`]；
+//! 非订阅装配（测试）用 [`Session::connect_channel`]。
 
 use std::collections::VecDeque;
 use std::io::Write;
@@ -18,31 +18,25 @@ use std::time::Duration;
 
 use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 use tokio::sync::mpsc::error::TrySendError;
-use tokio_tungstenite::tungstenite::Bytes;
 
 #[cfg(windows)]
 use crate::cpr;
 use crate::supervisor::Supervisor;
 use crate::PtyError;
 
-/// reader → server 的输出块；内部 `Bytes`（引用计数）使 pre-attach 重放与 WS
-/// 帧构造（`Message::Binary` 同为 `Bytes`）之间零拷贝。
+/// reader → 订阅方的输出块；内部 `Arc<[u8]>`（引用计数）使 pre-attach 重放与
+/// 下行转发（[`crate::server::forward_stream`] 的 sink 回调）之间零拷贝。
 #[derive(Clone)]
-pub struct Chunk(Bytes);
+pub struct Chunk(Arc<[u8]>);
 
 impl Chunk {
     pub fn new(data: Vec<u8>) -> Self {
-        // Bytes::from(Vec) 直接接管堆内存，无拷贝。
-        Self(Bytes::from(data))
+        // Arc::from(Box<[u8]>) 直接接管堆内存，无拷贝（原 Bytes::from 语义）。
+        Self(Arc::from(data.into_boxed_slice()))
     }
 
     pub fn as_slice(&self) -> &[u8] {
         &self.0
-    }
-
-    /// 内部 `Bytes` 的克隆（引用计数 +1，零拷贝）；WS 帧构造用。
-    pub(crate) fn bytes(&self) -> Bytes {
-        self.0.clone()
     }
 }
 
@@ -176,16 +170,16 @@ impl OutboundHub {
     }
 }
 
-/// 活动连接槽（[`Session::connection`] 的载荷）：一个会话至多一条活动 WS 接管
-/// 任务。spawn 预置 `None`——下行通道与槽都由接管方
-/// （[`crate::server::route_connection`]）建立；「Close/Err → 连接槽清空」即
-/// 接管任务收尾时的 `take()`（仅当代次仍匹配）。
+/// 活动连接槽（[`Session::connection`] 的载荷）：一个会话至多一条活动订阅
+/// forward 任务。spawn 预置 `None`——下行通道与槽都由订阅方
+/// （[`crate::server::attach`]）建立；「终点消失/让位 → 连接槽清空」即
+/// forward 任务收尾时的 `take()`（仅当代次仍匹配）。
 ///
 /// 与 brief 接口草图的偏差（记录在案）：草图的 `{ outbound_rx, pre_attach }`
 /// 由接管任务**本地持有**——rx 被 `recv()` 循环独占移动使用、pre-attach 排空后
 /// 不再需要，两者放进共享槽会迫使锁跨 `.await` 持有，替换方与收尾方会互相死锁。
 /// 槽内只留替换协议所需的最小状态：代次（收尾方的「还是我吗」判据）与让位闸
-/// （新接管方 `send(())`，旧任务收到后自行 `ws.close(1000)` 并退出）。
+/// （新订阅方 `send(())`，旧 forward 任务收到后自行终止并退出）。
 pub struct ConnectionSlot {
     pub(crate) gen: u64,
     pub(crate) replace: tokio::sync::oneshot::Sender<()>,
@@ -226,7 +220,7 @@ pub struct Session {
     master: Mutex<Option<Box<dyn portable_pty::MasterPty + Send>>>,
     pub cwd: String,
     pub size: Mutex<(u16, u16)>,
-    /// 上行输入通道：WS 上行帧经此移交专用写线程（[`Session::spawn`] 的
+    /// 上行输入通道：上行写（`pty_write`/`pty_write_accepted` 命令面）经此移交专用写线程（[`Session::spawn`] 的
     /// `pty-writer`）串行写 master——保序，且转发任务不做内联阻塞写（审查
     /// I-2：内联写在输出积压时会冻结双向甚至死锁）。满时发送方 `send.await`
     /// 背压。[`Session::write`] 直写保留给宿主 API/command 交付/CPR 应答。
@@ -242,7 +236,7 @@ pub struct Session {
     pub outbound: OutboundHub,
     /// 256 KiB 环形（含水位与停用位，见 [`PreAttach`]）；首连排空即停用。
     pub pre_attach: Arc<Mutex<PreAttach>>,
-    /// 活动连接槽：spawn 预置 `None`，WS 接管方建立并安装（见 [`ConnectionSlot`]）。
+    /// 活动连接槽：spawn 预置 `None`，订阅接管方建立并安装（见 [`ConnectionSlot`]）。
     pub connection: Arc<tokio::sync::Mutex<Option<ConnectionSlot>>>,
     /// 退出广播：exit 线程置 `Some(code)`。路由层/Task 9 用 `changed()` 挂接
     /// 退出收尾与 PtyEvent::Exit（oneshot 已被 [`SessionRuntime`] 占用）。
@@ -337,7 +331,7 @@ impl Session {
         let writer = pair.master.take_writer().map_err(PtyError::from)?;
         let reader = pair.master.try_clone_reader().map_err(PtyError::from)?;
 
-        // 下行出口（空 hub：通道由 WS 接管方建立）、pre-attach 环形与上行输入通道。
+        // 下行出口（空 hub：通道由订阅接管方建立）、pre-attach 环形与上行输入通道。
         let outbound = OutboundHub::new();
         let pre_attach = Arc::new(Mutex::new(PreAttach::new()));
         let connection: Arc<tokio::sync::Mutex<Option<ConnectionSlot>>> =
@@ -382,7 +376,7 @@ impl Session {
         );
 
         // 上行写线程（审查 I-2 裁决：单一 writer 线程 + 有界通道，与 reader 侧
-        // 对称）：WS 上行帧若由转发任务内联阻塞写 master，输出积压时会卡死转发
+        // 对称）：上行写若由转发任务内联阻塞写 master，输出积压时会卡死转发
         // 任务（停 recv 下行 → reader 停读 → 子进程阻塞在 tty write，若其需读
         // 输入才能推进则永久死锁）。专用 std 线程串行消费有界通道：保序、tty
         // 阻塞不传染异步侧；通道满时转发任务 send.await 背压（上行帧迟到毫秒级
@@ -448,13 +442,13 @@ impl Session {
         writer.flush()
     }
 
-    /// 非 WS 的下行接管口（宿主/测试装配；生产路径走
-    /// [`crate::server::route_connection`]，两者接管次序一致）：建通道 → 换入
-    /// hub → 排空并停用 pre-attach、把存量排进通道头部 → 返回接收端。重放块
-    /// 与实时块因此不重不漏且有序。
+    /// 非 [`crate::server::attach`] 的下行接管口（测试装配遗留；两者接管次序
+    /// 一致，唯本口不做连接槽/让位）：建通道 → 换入 hub → 排空并停用
+    /// pre-attach、把存量排进通道头部 → 返回接收端。重放块与实时块因此不重
+    /// 不漏且有序。
     ///
-    /// 注：不动连接槽（无 WS 可让位）；重放一次性入队，通道容量按存量预估放大，
-    /// 偶发超限时 sleep 重试（消费端聚合循环会持续 recv 腾位）。
+    /// 注：不动连接槽（无让位信号可发）；重放一次性入队，通道容量按存量预估
+    /// 放大，偶发超限时 sleep 重试（消费端聚合循环会持续 recv 腾位）。
     #[doc(hidden)]
     pub fn connect_channel(&self) -> tokio::sync::mpsc::Receiver<Chunk> {
         // ① 探存量定容量（此刻尚未停用）。

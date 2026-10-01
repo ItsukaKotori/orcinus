@@ -81,7 +81,6 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::pty::pty_get_size,
                 commands::pty::pty_has_pty,
                 commands::pty::pty_list_sessions,
-                commands::pty::pty_data_endpoint,
                 commands::pty::pty_inspect_process,
                 commands::pty::pty_get_foreground_process,
                 commands::pty::pty_confirm_foreground_process,
@@ -97,7 +96,6 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::pty::pty_management_mac_tcc_attribution,
             ])
             .typ::<crate::state::BootstrapPayload>()
-            .typ::<commands::pty::DataEndpointPayload>()
             .typ::<crate::events::PtySpawnedPayload>()
             .typ::<crate::events::PtyExitPayload>()
             .typ::<ade_fs::FsChangedPayload>()
@@ -212,7 +210,6 @@ mod tests {
             "pty_get_size",
             "pty_has_pty",
             "pty_list_sessions",
-            "pty_data_endpoint",
             "pty_inspect_process",
             "pty_get_foreground_process",
             "pty_confirm_foreground_process",
@@ -232,5 +229,21 @@ mod tests {
                 "bindings are missing command {command}"
             );
         }
+    }
+
+    #[test]
+    fn pty_data_endpoint_is_gone_and_pty_attach_is_manual_only() {
+        // 规格 §3.2 修订二（§10 偏差 4）：`pty_data_endpoint`/token 机制整体
+        // 移除；`pty_attach` 走 `generate_handler!` 手工注册（Channel 参数无
+        // specta::Type，见 commands/pty.rs 选型说明），刻意不在 bindings 中。
+        let bindings = export_bindings();
+        assert!(
+            !bindings.contains("pty_data_endpoint"),
+            "removed command must not resurface in bindings"
+        );
+        assert!(
+            !bindings.contains("pty_attach"),
+            "pty_attach is registered manually (Channel arg has no specta type)"
+        );
     }
 }

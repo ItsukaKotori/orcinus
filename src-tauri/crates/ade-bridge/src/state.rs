@@ -18,7 +18,6 @@ use tauri::{AppHandle, Manager};
 
 use crate::commands::platform::{platform_info, PlatformInfo};
 use crate::commands::preflight::PathHydrationCache;
-use crate::commands::pty::DataEndpointPayload;
 use crate::errors::BridgeError;
 use crate::events;
 use crate::json::Json;
@@ -441,16 +440,6 @@ impl AppState {
 
     pub fn bootstrap_payload(&self) -> BootstrapPayload {
         bootstrap_payload(self.settings_store().get(), platform_info())
-    }
-
-    /// `pty_data_endpoint` 命令的数据源（规格 §4.7）：`PtyHost` 装配即起服务，
-    /// 端口与 token 在进程生命周期内不变。
-    pub fn pty_data_endpoint(&self) -> DataEndpointPayload {
-        let endpoint = self.pty_host.endpoint();
-        DataEndpointPayload {
-            port: endpoint.port,
-            token: endpoint.token,
-        }
     }
 }
 

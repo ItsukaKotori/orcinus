@@ -8,13 +8,13 @@ use crate::errors::BridgeError;
 use crate::json::Json;
 use crate::state::AppState;
 
-/// PTY 数据面端点（规格 §4.7）：WS 环回服务的端口与一次性下发 token。
-/// Task 9 起 `PtyHost::start` 接管（端口与 token 在进程生命周期内不变）。
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+/// `pty_attach` 参数（规格 §3.2 修订二）：`{args: { id }}` 包裹（桥接惯例）。
+/// `channel` 为**顶层**参数——Tauri `ipc::Channel` 经 `CommandArg` 从 invoke
+/// payload 顶层提取（`__CHANNEL__:<id>` 标记），不能嵌进 JSON 结构体参数。
+#[derive(Debug, Clone, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct DataEndpointPayload {
-    pub port: u16,
-    pub token: String,
+pub struct PtyAttachArgs {
+    pub id: String,
 }
 
 /// `pty_spawn` 参数（对齐 `src/shared/preload-api/api/pty-api.ts` `spawn` opts
@@ -382,19 +382,64 @@ pub struct PtyManagementMacTccAttributionReply {
     pub health: PtyManagementMacTccHealth,
 }
 
-#[tauri::command]
-#[specta::specta]
-pub fn pty_data_endpoint(
-    state: tauri::State<'_, crate::state::AppState>,
-) -> Result<DataEndpointPayload, BridgeError> {
-    Ok(state.pty_data_endpoint())
-}
-
 // ===== 会话控制（真实走 PtyHost，规格 §2.1） =====
 
-/// 下发 WS 数据面端点（`src/bridge/real/pty-socket.ts` 的
-/// `fetchPtyDataEndpoint` 消费）。`PtyHost` 装配即起服务，恒 `Ok`
-/// （渲染层缓存成功结果）。
+/// 建立会话数据面下行（规格 §3.2 修订二：Tauri Channel 分块投递）：
+/// `subscribe(id)`（未知 id → Err，对齐 404）→ [`forward_stream`] 驱动
+/// [`SessionStream`]——backlog 先行、outbound 逐块以 `Raw` 帧交 Channel；
+/// `exited` 触发或 outbound 关闭 → 转发任务自然结束。重复 `pty_attach` =
+/// subscribe 的接管语义自动取消旧转发（旧 outbound 关闭）。
+///
+/// **选型说明**：本命令**不经 specta builder 登记**——`Channel<InvokeResponseBody>`
+/// 无 `specta::Type`（tauri 仅为 `Channel` 提供基于 `TAURI_CHANNEL` remote
+/// derive 的 Type 形态，要求 `TSend: Type`，而 `InvokeResponseBody` 未 derive），
+/// `#[specta::specta]` 无法编译。改走 `#[tauri::command]` + 手工
+/// `generate_handler!` 注册（`crate::invoke_handler` 组合分发），TS bindings
+/// 排除（调用形态由 Task 16 的 `pty-stream.ts` 直接 `invoke`）。
+#[tauri::command]
+pub async fn pty_attach(
+    state: tauri::State<'_, AppState>,
+    args: PtyAttachArgs,
+    channel: tauri::ipc::Channel<tauri::ipc::InvokeResponseBody>,
+) -> Result<(), BridgeError> {
+    let host = Arc::clone(&state.pty_host);
+    let stream = host.subscribe(&args.id).await.map_err(BridgeError::from)?;
+    tauri::async_runtime::spawn(ade_pty::server::forward_stream(
+        stream,
+        ChannelSink { channel },
+    ));
+    Ok(())
+}
+
+/// [`forward_stream`] 的 sink：一块字节 → Channel `Raw` 帧（原始字节过 IPC，
+/// TS 侧收到二进制；「先拷成 Vec」的一次拷贝发生在 IPC 边界，不可避免）。
+/// `Err` = webview 侧通道已消失（reload/关闭），forward_stream 按「客户端
+/// 断开」收尾（清本订阅槽/hub，不摘会话，同 id 可重挂）。
+struct ChannelSink {
+    channel: tauri::ipc::Channel<tauri::ipc::InvokeResponseBody>,
+}
+
+impl ade_pty::server::ByteSink for ChannelSink {
+    type Error = tauri::Error;
+
+    async fn send(&mut self, bytes: &[u8]) -> Result<(), Self::Error> {
+        self.channel
+            .send(tauri::ipc::InvokeResponseBody::Raw(bytes.to_vec()))
+    }
+}
+
+/// `pty_attach` 的手工 invoke 分发：照 `tauri::generate_handler!` 的单命令
+/// 展开直接调用 `#[tauri::command]` 生成的包装宏（`Channel` 经 `CommandArg`
+/// 从 payload 顶层提取只在包装宏内）。仅由 `crate::invoke_handler` 在命令名
+/// 命中 `pty_attach` 时调用。
+pub(crate) fn handle_pty_attach_invoke(invoke: tauri::ipc::Invoke<tauri::Wry>) {
+    // 包装宏为块表达式（IIFE 响应 invoke），**必须置于表达式位置**——语句位置
+    // 的宏展开按 statements 解析，`{closure}()` 会被拆成「块语句 + 单元表达
+    // 式」而丢失调用。展开终值即 generate_handler! 的 match 臂值（丢弃即可）。
+    let _responded =
+        crate::commands::pty::__cmd__pty_attach!(crate::commands::pty::pty_attach, invoke);
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn pty_spawn(
@@ -823,13 +868,10 @@ mod tests {
     use serde_json::{json, Value};
 
     #[test]
-    fn payload_serializes_camel_case() {
-        let payload = DataEndpointPayload {
-            port: 51234,
-            token: "abcd".to_string(),
-        };
-        let value: Value = serde_json::to_value(&payload).unwrap();
-        assert_eq!(value, serde_json::json!({ "port": 51234, "token": "abcd" }));
+    fn attach_args_deserialize_camel_case() {
+        let args: PtyAttachArgs =
+            serde_json::from_value(json!({ "id": "p-attach" })).expect("deserialize attach args");
+        assert_eq!(args.id, "p-attach");
     }
 
     #[test]

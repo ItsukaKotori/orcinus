@@ -103,53 +103,19 @@ pub fn measure_pty_throughput(
     })
 }
 
-/// 数据面连通性探针的 echo 装配（crate 级 pub fn，非测试模块）：Task 3 由
-/// orcinus-app setup 直接调用（`test_support` 模块随 Task 7 会话路由退役，函数
-/// 平移至此保持调用点可用）；`tests/ws_server.rs` 亦复用。Task 9 `PtyHost::start`
-/// 接管后，连同 orcinus-app 侧调用整块移除。
-#[doc(hidden)]
-pub fn start_echo_server() -> (u16, String, tokio::task::JoinHandle<()>) {
-    // WHY: `Handle::block_on` 在运行时上下文内调用会 panic（"Cannot start a
-    // runtime from within a runtime"），故先以 std 绑定端口，再在当前运行时
-    // 上下文里注册为异步 listener——签名与行为不变。
-    let std_listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
-    let port = std_listener.local_addr().unwrap().port();
-    std_listener.set_nonblocking(true).unwrap();
-    let listener = tokio::net::TcpListener::from_std(std_listener).unwrap();
-    let token = server::generate_token();
-    let handler: server::ConnectionHandler = std::sync::Arc::new(|_id, ws| {
-        use futures_util::{SinkExt, StreamExt};
-        tokio::spawn(async move {
-            let (mut tx, mut rx) = ws.split();
-            while let Some(Ok(msg)) = rx.next().await {
-                if let tokio_tungstenite::tungstenite::Message::Binary(b) = msg {
-                    if tx
-                        .send(tokio_tungstenite::tungstenite::Message::Binary(b))
-                        .await
-                        .is_err()
-                    {
-                        break;
-                    }
-                }
-            }
-        });
-    });
-    let handle = tokio::spawn(server::serve(listener, token.clone(), handler));
-    (port, token, handle)
-}
-
 // ===== Task 9：PtyHost 组装（ade-bridge 将看到的全部门面） =====
 //
-// 注册表（与 `server::route_connection` 共用同一张表）+ 事件回调 + kill 升级
-// 路径 + shutdown_all。生命周期：`PtyHost::start` 起 WS server（127.0.0.1:0，
-// 运行在传入的 tokio Handle 上）→ spawn/写入/信号/kill → `shutdown_all` 全量
-// 收尾。会话退出事件源是 `Session.exited`（watch），摘除与 Task 7 的
-// forward_loop 共用 hub 代次判定语义（见 [`HostState::spawn_exit_watcher`]）。
+// 注册表（与 `server::attach` 共用同一张表）+ 事件回调 + kill 升级路径 +
+// shutdown_all。生命周期：`PtyHost::start`（无端点形态——规格 §3.2 修订二：
+// 数据面为进程内订阅，`subscribe` + Tauri Channel 分块下行）→ spawn/写入/
+// 信号/kill → `shutdown_all` 全量收尾。会话退出事件源是 `Session.exited`
+// （watch），摘除与订阅的 forward_stream 共用 hub 代次判定语义（见
+// [`HostState::spawn_exit_watcher`]）。
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use crate::server::{ConnectionHandler, DataEndpoint, Sessions};
+use crate::server::{SessionStream, Sessions};
 use crate::session::Session;
 use crate::supervisor::Supervisor;
 
@@ -200,18 +166,15 @@ pub struct PtyHost {
 
 /// 共享内核：exit watcher 任务与各方法经 `Arc<HostState>` 共享。
 struct HostState {
-    /// server 与 exit watcher 的运行时（`PtyHost::start` 传入）。
+    /// exit watcher 的运行时（`PtyHost::start` 传入）。
     handle: tokio::runtime::Handle,
-    endpoint: DataEndpoint,
     /// 进程级单例（Task 6 交接：勿每会话建）。
     sup: Arc<Supervisor>,
-    /// 会话注册表：与 `server::route_connection` 共用同一张表。
+    /// 会话注册表：与 `server::attach` 共用同一张表。
     sessions: Sessions,
     /// 每会话 reader 句柄（Task 6 交接：kill 时传 `session.kill(&sup, handle)`）。
     readers: Mutex<HashMap<String, std::thread::JoinHandle<()>>>,
     event_cb: Mutex<Option<EventCallback>>,
-    /// accept 循环任务；`shutdown_all` 时 abort（= server close）。
-    serve: Mutex<Option<tokio::task::JoinHandle<()>>>,
 }
 
 impl HostState {
@@ -264,46 +227,29 @@ impl HostState {
 }
 
 impl PtyHost {
-    /// 起 PtyHost：绑 127.0.0.1:0，把会话路由 server 挂到传入的运行时上。
+    /// 起 PtyHost（无端点形态，规格 §3.2 修订二）：仅建注册表与 exit watcher
+    /// 运行时，数据面由 [`PtyHost::subscribe`] 按需建立，不再有监听端口/token。
+    /// 保留 `Result` 签名（调用面稳定；本形态不再有可失败步骤）。
     pub fn start(handle: tokio::runtime::Handle) -> Result<Arc<Self>, PtyError> {
-        let std_listener = std::net::TcpListener::bind("127.0.0.1:0")?;
-        let port = std_listener.local_addr()?.port();
-        std_listener.set_nonblocking(true)?;
-        // WHY enter() 而非 handle.block_on：`TcpListener::from_std` 需要当前
-        // 线程处于该运行时的注册上下文；`enter` 在任意线程（含运行时线程自身）
-        // 都成立，规避「运行时内不能 block_on」的 panic——Task 10 的 tauri
-        // setup 正是在 async_runtime::block_on 内装配。
-        let listener = {
-            let _guard = handle.enter();
-            tokio::net::TcpListener::from_std(std_listener)?
-        };
-        let token = server::generate_token();
-        let endpoint = DataEndpoint {
-            port,
-            token: token.clone(),
-        };
         let sessions: Sessions = Arc::new(Mutex::new(HashMap::new()));
-        let handler: ConnectionHandler = {
-            let sessions = Arc::clone(&sessions);
-            Arc::new(move |id, ws| server::route_connection(&sessions, id, ws))
-        };
-        let serve = handle.spawn(server::serve(listener, token, handler));
         Ok(Arc::new(PtyHost {
             inner: Arc::new(HostState {
                 handle,
-                endpoint,
                 sup: Arc::new(Supervisor::new()),
                 sessions,
                 readers: Mutex::new(HashMap::new()),
                 event_cb: Mutex::new(None),
-                serve: Mutex::new(Some(serve)),
             }),
         }))
     }
 
-    /// 数据面 endpoint（port + token，宿主交前端/agent 连接）。
-    pub fn endpoint(&self) -> DataEndpoint {
-        self.inner.endpoint.clone()
+    /// 订阅会话数据面（规格 §3.2 修订二）：接管/替换语义与原 WS 接管一致——
+    /// 同 id 重复订阅 = 旧流取消后新建（旧 outbound 关闭）；未知 id → Err。
+    /// 下行经返回的 [`SessionStream`]（backlog 先行 → outbound 逐块），交给
+    /// [`server::forward_stream`] 驱动（ade-bridge 的 `pty_attach` 命令即
+    /// 「subscribe + spawn forward_stream 到 Tauri Channel」的薄壳）。
+    pub async fn subscribe(&self, id: &str) -> Result<SessionStream, PtyError> {
+        server::attach(&self.inner.sessions, id).await
     }
 
     /// 设置事件回调（spawn 成功 / 会话退出时分发，见 [`PtyEvent`]）。
@@ -474,8 +420,8 @@ impl PtyHost {
     }
 
     /// 全量收尾：逐会话 kill（复用升级路径；单个无视信号的子进程至多拖
-    /// 2×[`KILL_WAIT`]）+ abort accept 循环（server close）。返回时在册会话
-    /// 全部摘除。
+    /// 2×[`KILL_WAIT`]）。返回时在册会话全部摘除（无 server 可关——数据面
+    /// 已随偏差 4 改进程内订阅，流的终止由 kill 触发 forward_stream 收尾）。
     pub fn shutdown_all(&self) {
         let ids: Vec<String> = self
             .inner
@@ -487,15 +433,6 @@ impl PtyHost {
             .collect();
         for id in ids {
             let _ = self.kill(&id);
-        }
-        if let Some(serve) = self
-            .inner
-            .serve
-            .lock()
-            .expect("serve mutex poisoned")
-            .take()
-        {
-            serve.abort();
         }
     }
 }

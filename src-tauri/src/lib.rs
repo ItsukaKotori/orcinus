@@ -5,9 +5,10 @@ use tauri::Manager;
 pub fn run() {
     let app = tauri::Builder::default()
         .setup(|app| {
-            // PtyHost：WS 数据面 + 会话注册表（规格 §4.7），accept 循环与 exit
-            // watcher 挂 tauri 异步运行时；spawned/exit 事件回调由
-            // `AppState::initialize` 转 Tauri emit（`pty:spawned`/`pty:exit`）。
+            // PtyHost：进程内数据面订阅 + 会话注册表（规格 §3.2 修订二：下行走
+            // `pty_attach` 命令的 Tauri Channel 分块，无端口/token；exit watcher
+            // 挂 tauri 异步运行时；spawned/exit 事件回调由 `AppState::initialize`
+            // 转 Tauri emit（`pty:spawned`/`pty:exit`）。
             let pty_host = ade_pty::PtyHost::start(tauri::async_runtime::handle().inner().clone())?;
             let state = AppState::initialize(app.handle(), pty_host)?;
             // Bootstrap payload must be in place before the document parses so
@@ -39,8 +40,8 @@ pub fn run() {
                 // Debounced settings/ui writes may still be pending; flush them so a
                 // quick quit after a change cannot lose the update (spec §4.1).
                 state.flush_pending_writes();
-                // 逐会话 kill（带 2s+2s 升级时限）+ WS server 关闭（规格 §3.1：
-                // app 退出全量收尾）。
+                // 逐会话 kill（带 2s+2s 升级时限）——订阅流随会话退出自然终止
+                // （规格 §3.1：app 退出全量收尾）。
                 state.pty_host.shutdown_all();
             }
         }

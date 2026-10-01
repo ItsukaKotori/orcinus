@@ -122,11 +122,6 @@ export const commands = {
 	 *  renderer's job (spec §5.2).
 	 */
 	folderWorkspacesGetPathStatus: (args: FolderWorkspacesGetPathStatusArgs) => typedError<FolderWorkspacePathStatus_Serialize, BridgeError>(__TAURI_INVOKE("folder_workspaces_get_path_status", { args })),
-	/**
-	 *  下发 WS 数据面端点（`src/bridge/real/pty-socket.ts` 的
-	 *  `fetchPtyDataEndpoint` 消费）。`PtyHost` 装配即起服务，恒 `Ok`
-	 *  （渲染层缓存成功结果）。
-	 */
 	ptySpawn: (args: PtySpawnArgs) => typedError<PtySpawnReply_Serialize, BridgeError>(__TAURI_INVOKE("pty_spawn", { args })),
 	/**  上行直写 master（阻塞写，等效键入；会话已 kill 时静默丢弃）。 */
 	ptyWrite: (args: PtyWriteArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("pty_write", { args })),
@@ -158,7 +153,6 @@ export const commands = {
 	 *  `agentOwnership` 保持 host 的 `'unknown'`（对齐 `PtyListedSession`）。
 	 */
 	ptyListSessions: (args: PtyListSessionsArgs) => typedError<PtyListedSessionRow_Serialize[], BridgeError>(__TAURI_INVOKE("pty_list_sessions", { args })),
-	ptyDataEndpoint: () => typedError<DataEndpointPayload, BridgeError>(__TAURI_INVOKE("pty_data_endpoint")),
 	/**  §2.2：`inspectProcess` → reject `Error('terminal_liveness_unavailable')`。 */
 	ptyInspectProcess: (args: PtyInspectProcessArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("pty_inspect_process", { args })),
 	ptyGetForegroundProcess: (args: PtyIdArgs) => typedError<string | null, BridgeError>(__TAURI_INVOKE("pty_get_foreground_process", { args })),
@@ -207,15 +201,6 @@ export type BootstrapPayload = {
 
 export type BridgeError = {
 	message: string,
-};
-
-/**
- *  PTY 数据面端点（规格 §4.7）：WS 环回服务的端口与一次性下发 token。
- *  Task 9 起 `PtyHost::start` 接管（端口与 token 在进程生命周期内不变）。
- */
-export type DataEndpointPayload = {
-	port: number,
-	token: string,
 };
 
 export type DirEntry = {
