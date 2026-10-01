@@ -21,6 +21,10 @@ export function createPreflightRealApi(): PreloadApi['preflight'] {
       git: { installed: await invokeCommand<boolean>('repos_is_git_available') },
       gh: { installed: false, authenticated: false }
     }),
+    detectAgents: (args?: PreflightRuntimeContext) =>
+      invokeCommand<RefreshAgentsResult>('preflight_refresh_agents', {
+        args
+      }).then(r => r.agents),
     refreshAgents: (args?: PreflightRuntimeContext) =>
       invokeCommand<RefreshAgentsResult>('preflight_refresh_agents', { args })
   })

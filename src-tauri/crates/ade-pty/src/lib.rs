@@ -336,8 +336,10 @@ impl PtyHost {
             .lock()
             .expect("readers mutex poisoned")
             .insert(id.clone(), runtime.reader_handle);
-        self.inner.spawn_exit_watcher(&session);
+        // Spawned 先于 exit watcher 发出：即时退出的会话若 watcher 先启动，
+        // Exit 可能抢在 Spawned 前到达宿主，事件序倒挂。
         self.inner.emit(PtyEvent::Spawned { id: id.clone() });
+        self.inner.spawn_exit_watcher(&session);
         Ok(id)
     }
 

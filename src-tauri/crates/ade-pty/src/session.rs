@@ -596,7 +596,8 @@ impl Session {
     /// 顺序契约（Task 5 审查交接）：closer 必须先于 child.kill——master 关闭
     /// 使子进程 HUP/EIO 退出，exit 线程的 `wait()` 返回并**释放 child 锁**后，
     /// 下面的 `child.lock()` 才能取得（exit 线程整个 wait 期间持锁）。因此本
-    /// 方法在子进程收尾期间可能短暂阻塞，语义即「kill 等到退出码」。
+    /// 方法在子进程收尾期间阻塞至子进程退出（经 `PtyHost::kill` 受 2s+2s
+    /// 升级时限约束），语义即「kill 等到退出码」。
     ///
     /// reader 句柄交 [`Supervisor::reap`]：closer 已断管道，harvester 兜底
     /// join（本方法不等待其完成）。若 reader 因 outbound 接收端存活且通道

@@ -15,5 +15,5 @@ pnpm dev          # Tauri 开发窗口
 pnpm typecheck    # TS 类型检查
 pnpm test         # Vitest（全量，等价 vitest run）
 pnpm build:web    # 仅构建渲染层
-cargo test -p orcinus-pty
+cargo test -p ade-pty
 ```

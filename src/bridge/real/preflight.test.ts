@@ -56,4 +56,18 @@ describe('preflight real adapter', () => {
     })
     expect(invokeMock).toHaveBeenCalledWith('preflight_refresh_agents', { args: undefined })
   })
+
+  it('detects agents through preflight_refresh_agents and extracts only the agent list', async () => {
+    const result: RefreshAgentsResult = {
+      agents: ['claude', 'codex'],
+      addedPathSegments: ['/opt/cli/bin'],
+      shellHydrationOk: true,
+      pathSource: 'shell_hydrate',
+      pathFailureReason: 'none'
+    }
+    invokeMock.mockResolvedValueOnce(result)
+    const args = { wslDistro: null }
+    await expect(createPreflightRealApi().detectAgents(args)).resolves.toEqual(['claude', 'codex'])
+    expect(invokeMock).toHaveBeenCalledWith('preflight_refresh_agents', { args })
+  })
 })
