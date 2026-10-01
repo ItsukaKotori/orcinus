@@ -19,7 +19,9 @@ import { createSettingsRealApi } from './settings'
 import { createUiRealApi } from './ui'
 import { createWorktreesRealApi } from './worktrees'
 
-vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
+// Channel: pty 数据面（pty-stream）的下行载体；parity 只查方法处置面、从不
+// spawn，故仅要求该导出存在，避免 mock 缺导出的访问期报错。
+vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn(), Channel: class {} }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn() }))
 
 const invokeMock = vi.mocked(invoke)

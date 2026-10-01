@@ -3,7 +3,7 @@ import { EMPTY_PTY_MAIN_DELIVERY_DIAGNOSTICS } from '../../shared/pty-delivery-d
 import { noopUnsubscribe } from '../mock/noop-unsubscribe'
 import { withMethodFallback } from '../unimplemented-fallback'
 import { invokeCommand, subscribeToEvent } from './invoke'
-import { closePtySocket, openPtySocket, sendPtySocketData } from './pty-socket'
+import { closePtyStream, openPtyStream } from './pty-stream'
 
 /** 契约 `onData` 载荷（`Parameters` 两层剥壳：订阅方法 → 回调 → 载荷）。 */
 type PtyDataPayload = Parameters<Parameters<PreloadApi['pty']['onData']>[0]>[0]
@@ -41,12 +41,13 @@ function createListenerSet<Payload>(): {
 /**
  * Real `pty` adapter (spec §2.1–§2.3 disposition table). The control plane
  * rides the `pty_*` commands with the `{args}` envelope; the data plane is a
- * per-session loopback WebSocket (`openPtySocket`) fanned out through the
- * local `onData` emitter — pty bytes never transit a Tauri event. A Tauri
- * `pty:exit` forwards to `onExit` and closes that session's socket; an
- * abnormal socket close (not caused by `pty:exit`) declares the session dead
- * with a local `code: -1` exit broadcast (spec §3.2 known semantics). The
- * renderer machinery that has no Phase 1C host (delivery gate, pane
+ * per-session Tauri Channel (`openPtyStream`, spec §3.2 revision 2) fanned out
+ * through the local `onData` emitter, and the uplink rides `pty_write` /
+ * `pty_write_accepted`. A Tauri `pty:exit` forwards to `onExit` and closes that
+ * session's channel; the renderer treats `pty:exit` as the sole death
+ * authority — a silently ending channel never broadcasts a local death, and
+ * the only abnormal lane is a rejected `pty_attach` (spec §3.2 revision 2).
+ * The renderer machinery that has no Phase 1C host (delivery gate, pane
  * serializers, snapshots, liveness) keeps the web stub's verbatim shapes.
  */
 export function createPtyRealApi(): PreloadApi['pty'] {
@@ -54,7 +55,7 @@ export function createPtyRealApi(): PreloadApi['pty'] {
   const exitListeners = createListenerSet<PtyExitPayload>()
   // Why: the local death broadcast must reach every onExit subscriber, while
   // `pty:exit` forwards per subscription — the two sources never overlap
-  // because closePtySocket removes the socket before its onclose can fire.
+  // because closePtyStream removes the channel before any late frame lands.
   const declareSessionDeath = (id: string): void => {
     exitListeners.emit({ id, code: -1 })
   }
@@ -63,10 +64,10 @@ export function createPtyRealApi(): PreloadApi['pty'] {
     // ===== §2.1 real —— 控制面（`{args}` 包裹，契约-only 字段整包透传）=====
     spawn: async (opts) => {
       const reply = await invokeCommand<PtySpawnReply>('pty_spawn', { args: opts })
-      // Why fire-and-forget: the endpoint fetch is one cached IPC hop; bytes
-      // emitted before the socket lands drain from the host's pre-attach
-      // buffer on first connect (spec §3.2).
-      void openPtySocket(reply.id, {
+      // Why fire-and-forget: the attach is one IPC hop; bytes emitted before
+      // the channel lands drain from the host's pre-attach buffer on first
+      // attach (spec §3.2).
+      void openPtyStream(reply.id, {
         onData: (payload) => dataListeners.emit(payload),
         onAbnormalClose: declareSessionDeath
       }).catch(() => {})
@@ -91,11 +92,18 @@ export function createPtyRealApi(): PreloadApi['pty'] {
     hasPty: (id) => invokeCommand<boolean | null>('pty_has_pty', { args: { id } }),
     listSessions: (scope) => invokeCommand('pty_list_sessions', { args: { scope } }),
 
-    // ===== §2.1 real —— 数据面（WS 直写；不经 Tauri event）=====
+    // ===== §2.1 real —— 数据面上行（pty_write / pty_write_accepted，规格 §3.2 修订二）=====
     write: (id, data) => {
-      sendPtySocketData(id, data) // WS 未就绪即静默丢
+      // Why swallowed: the void contract has no error lane, and the host
+      // silently drops writes to a dead session (bindings `ptyWrite` doc).
+      void invokeCommand('pty_write', { args: { id, data } }).catch(() => {})
     },
-    writeAccepted: async (id, data) => sendPtySocketData(id, data),
+    writeAccepted: (id, data) => {
+      // 发出即回 true（spec §3.2 revision 2）：非阻塞上行的背压语义由宿主
+      // 命令承载，渲染层契约只保证「已发出」；拒绝同样吞掉（无 error lane）。
+      void invokeCommand('pty_write_accepted', { args: { id, data } }).catch(() => {})
+      return Promise.resolve(true)
+    },
     onData: (callback) => dataListeners.add(callback),
     /** 真实返回 pty:data emitter 的监听数（比 stub 的 0 诚实，规格 §2.2）。 */
     getPtyDataListenerCount: () => dataListeners.size(),
@@ -103,10 +111,11 @@ export function createPtyRealApi(): PreloadApi['pty'] {
     // ===== §2.1 real —— 事件映射 =====
     onExit: (callback) => {
       const stopLocal = exitListeners.add(callback)
-      // Server order (spec §3.2): the socket closes before the event arrives;
-      // closing here also suppresses that socket's abnormal-close path.
+      // Host order (spec §3.2): the channel ends before the event arrives;
+      // closing here also detaches that channel so late frames stay inert.
+      // `pty:exit` is the sole death authority — channel silence never is.
       const stopEvent = subscribeToEvent<PtyExitPayload>('pty:exit', (payload) => {
-        closePtySocket(payload.id)
+        closePtyStream(payload.id)
         callback(payload)
       })
       return () => {
