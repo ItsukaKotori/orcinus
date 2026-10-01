@@ -22,8 +22,8 @@ Phase 1 拆 A（打开项目，已完成）、B（worktree + git，并行进行�
 | 面 | 方法 | 说明 |
 |---|---|---|
 | 会话创建 | `spawn` | 控制面命令；返回**最小合法响应 `{id}`**（渲染层 `ipc-pty-connect-result.ts` 对其余字段全部容忍缺省，`isReattach` 仅在 `sessionId` 命中活会话时返回 true） |
-| 数据面（流） | `write` `writeAccepted` | 上行走 `pty_write`/`pty_write_accepted` 命令（§3.2 修订版）；`writeAccepted` 发出即回 `true` |
-| 数据面（流） | `onData` | 流式下行（自定义协议 fetch ReadableStream）直喂渲染层 dispatcher（**不经 Tauri event**），载荷 `{id, data, rawLength}` |
+| 数据面（流） | `write` `writeAccepted` | 上行走 `pty_write`/`pty_write_accepted` 命令（§3.2 修订二）；`writeAccepted` 发出即回 `true` |
+| 数据面（流） | `onData` | Channel 分块下行（`pty_attach` + tauri::ipc::Channel）直喂渲染层 dispatcher，载荷 `{id, data, rawLength}` |
 | 几何 | `resize` `getSize` | resize 写 PTY 尺寸（ConPTY reflow 依赖）；getSize 回最近 resize/spawn 值 |
 | 生命周期 | `kill` `signal` `clearBuffer` `onExit` `onSpawned` | kill（`keepHistory` 参数忽略）= child kill + 注册表摘除 + `pty:exit {id, code}`；signal 透传（unix `kill -<sig>`，Windows 仅支持有限信号，透传失败返回错误）；clearBuffer 清空宿主侧 pre-attach 缓冲；`pty:spawned {id}` 事件 |
 | 会话读取 | `getCwd` `hasPty` `listSessions` | getCwd 回 spawn cwd（不做 OSC7 追踪）；hasPty 查注册表；listSessions 按 `PtyListedSession`（`src/shared/pty-listed-session.ts`，normative）投影注册表活会话；带 `sessionId` 的 spawn 命中活会话时按 reattach 处理（webview reload 后 tab 重挂路径） |
@@ -59,7 +59,7 @@ src-tauri/crates/
 │       ├── lib.rs           # PtyHost：会话注册表、spawn/resize/write/signal/kill、SessionHandle
 │       ├── cpr.rs           # CPR 扫描器（自 spike reply_to_cursor_query 平移：跨块 tail 保留 ≤3 字节）
 │       ├── session.rs       # 单会话：portable-pty pair、child、reader 线程、有界队列、pre-attach 环形缓冲
-│       ├── server.rs        # 数据面会话路由（§3.2 修订版：进程内流式接管/替换/退出收尾；原 WS accept/鉴权层随偏差 4 移除）
+│       ├── server.rs        # 数据面会话路由（§3.2 修订二：attach 接管/替换/pre-attach 排空/退出收尾，消费方为 bridge 转发任务；原 WS accept/鉴权层随偏差 4 移除）
 │       ├── supervisor.rs    # reader 线程 join（2s 超时）+ Reaper 有界回收列表
 │       └── shell.rs         # 默认 shell 解析（unix $SHELL -l / Windows $COMSPEC、shellOverride）
 └── ade-bridge/src/commands/pty.rs   # 控制面命令 + AppState 挂 PtyHost + 事件广播
@@ -69,14 +69,14 @@ src-tauri/crates/
 - 新增依赖：`tokio`（net/rt/sync/time/macros）、`tokio-tungstenite`、`uuid`（v4）、`rand`、`portable-pty = 0.9`（既有）、`thiserror`、`serde`。
 - `orcinus-app` setup 中初始化 `PtyHost` 并 `manage`；app 退出时 `shutdown_all`（逐会话 kill + join + WS server 关闭）。
 
-### 3.2 数据面协议（修订版：自定义协议流式；原 WS 环回方案被 2026-10-01 手工闸门否决，见 §10 偏差 4）
+### 3.2 数据面协议（修订二：Tauri Channel 分块投递；WS 环回被 §10 偏差 4 否决，自定义协议流式被 Tauri 2 API 面否决——responder 为一次性完整响应 `FnOnce(Response<Cow<[u8]>>)`，wry macOS 整包投递，流式 body 不存在，证据见 task-15-report）
 
-- **传输**：Tauri 自定义 URI scheme（`register_asynchronous_uri_scheme_protocol`），协议名 `orcinus-pty`；URL 形态 `orcinus-pty://localhost/stream/<sessionId>`。处理函数运行在**应用进程内**，不经过系统网络栈——免疫 ATS / 本地网络隐私 / 防火墙（macOS 26 对 Tauri app 网络子进程的环回 WebSocket 静默丢包，实测证据见 §10 偏差 4）。
-- **下行（host→client）**：`fetch('orcinus-pty://localhost/stream/<id>')` 的响应体为**无限流**：处理函数先排空会话 pre-attach 缓冲（256 KiB 环形，原 §3.2 语义不变），再持续转发 outbound 通道的字节块；会话退出/摘除时流正常结束（body 终止）。未知 id → 404；流式响应以 body 终止表达「会话数据面关闭」。
+- **下行（host→client）**：新命令 `pty_attach {args:{id}} + channel: tauri::ipc::Channel`。宿主侧 `PtyHost::subscribe(id)`（接管语义沿 §3.2 原 two-generation 设计：同 id 重复 attach 取消旧转发任务）取得 `{backlog, outbound, exited}`：先经 Channel 发 backlog 块，再持续转发 outbound 字节块（`InvokeResponseBody::Raw` 二进制形态，避免 base64 放大——以 tauri 实际 Channel API 为准）；`exited` 触发或 outbound 关闭 → 转发任务结束（渲染层以 `pty:exit` 事件为退出权威）。
 - **上行（client→host）**：键盘输入走既有 `pty_write` / `pty_write_accepted` 命令（每次几字节；oracle 的输入本就经主进程 IPC）。`writeAccepted` = 发出即回 `true`。
-- **post-attach 不缓冲**：流中断后不重放（进程内直连无网络层断线；webview reload 后由 sessionId reattach 路径重建，画面空白为 §1 已知缺口）。中断即会话死亡判定：fetch 流异常终止且无 `pty:exit` 跟进 → 本地广播 `exit(-1)`（原语义保留）。
-- **鉴权/端口/token：全部取消**——自定义协议仅本 webview 可达，外部进程无法触碰；`pty_data_endpoint` 命令与 token 机制整体移除（§5 同步修订）。
-- 连接替换与退出收尾语义保持：同 id 重新 fetch = 旧流取消（AbortController）后新建；会话退出时排空 → 流终止 → `pty:exit` 事件（顺序保证：流先终止、事件后发）。
+- **post-attach 不缓冲**：转发取消后不重放（webview reload 后由 sessionId reattach 路径重建，画面空白为 §1 已知缺口）。Channel 本地 IPC 有序可靠，无重放/ack 机械需要。
+- **鉴权/端口/token：全部取消**——Channel 为 invoke 建立的私有通道，`pty_data_endpoint` 命令与 token 机制整体移除（§5 同步修订）。
+- **已知代价（记录）**：下行过 IPC 序列化（二进制形态下为拷贝级）；慢消费端无宿主侧 pending cap（outbound 不会被填满则 reader 不暂停——内存上限由 IPC 队列吸收，Phase 2 补 pending cap）；16 MiB 吞吐在手工验收重验（§1 门禁第 8 项）。
+- 退出收尾语义保持：attach 转发排空 → 转发结束 → `pty:exit` 事件（顺序保证：流先终止、事件后发）。
 
 ### 3.3 控制面
 
@@ -97,7 +97,7 @@ src-tauri/crates/
 
 ### 4.2 背压与读取循环（spike 要求 2）
 
-- reader 线程 64 KiB 块阻塞读 → CPR 扫描（§4.4）→ `tokio::sync::mpsc` 有界通道（128 × 64 KiB ≈ 8 MiB 上限）→ 流式下行（§3.2 修订版：协议处理任务从 outbound 通道取块写入响应体）。
+- reader 线程 64 KiB 块阻塞读 → CPR 扫描（§4.4）→ `tokio::sync::mpsc` 有界通道（128 × 64 KiB ≈ 8 MiB 上限）→ attach 转发任务从 outbound 取块经 Channel 下行（§3.2 修订二）。
 - **队列满即停止 `read` 调用**（通道 `try_send` 失败则睡 5–10ms 重试，不丢块）；背压经 ConPTY 管道/posix tty 缓冲传导到子进程——终端语义本该如此。绝不 drop 字节。
 
 ### 4.3 supervisor 与回收（spike 要求 3）
@@ -177,4 +177,4 @@ stub 同形方法的 Rust 侧即常量回复（无会话逻辑）；`getPtyDataL
 1. **「独立 PTY 宿主进程」推迟至 Phase 2**：spike 决策（2026-09-14）与上游 §4 决策 2 字面要求独立长驻进程；1C 以进程内 `ade-pty` 实现（不依赖 tauri、注入 runtime handle、WS 协议自包含），Phase 2 重启恢复需要时整体提取为 sidecar，渲染层协议不变。理由：1C 无重启恢复交付物，双进程生命周期/协议版本/崩溃检测的复杂度前置无收益。
 2. **shell-ready 命令投递降级为 spawn 即投递**：orca 的标记机制依赖 shell 集成注入（`orca:src/main/zsh-startup-wrapper-builder.ts` 等）；1C 的 tty 输入缓冲方案语义等价（shell 初始化完成后才消费输入），代价是命令回显可能出现在 prompt 之后（外观差异，记录）。
 3. **`orcinus-pty` 更名 `ade-pty`**：对齐上游 §5 crate 表；spike 的吞吐 bench/sink 保留为 bins，`docs/spikes/2026-09-14-pty-throughput.md` 的复现命令本就写作 `-p ade-pty`，更名后文档与实现一致。
-4. **数据面「本地 socket/WS」改为「自定义协议流式」（2026-10-01 修订）**：spike 决策与原 §3.2 要求终端数据走本地 socket（WS 环回落地）。手工闸门实测（macOS 26 / Darwin 25）：服务端在册、普通进程 `nc` 秒连、Safari 同页同端口 WS 握手正常（OPEN → close 1008），唯独 Tauri app 的 WKWebView 网络子进程报 `The network connection was lost`——本地网络隐私对无 bundle Info.plist 的 ad-hoc dev 二进制静默丢包且无法归因授权（系统设置无条目）；Info.plist 嵌入（`__TEXT,__info_plist`：NSLocalNetworkUsageDescription + ATS NSAllowsLocalNetworking）未能解除。**决策**：下行改 `orcinus-pty://` 自定义协议无限流（处理函数在应用进程内，不经网络栈），上行沿用 `pty_write` 命令；端口/token/鉴权整体取消。spike 决策的意图（不经 Tauri 事件通道、原始字节、背压分片）全部保留；「本地 socket」字面被进程内直连取代。若未来 Windows/其他 macOS 版本实测 WS 可用，可在 §3.2 两形态间选择（数据面接口 onData/write 不变）。
+4. **数据面「本地 socket/WS」改为「Tauri Channel 分块投递」（2026-10-01 修订二；即 §9.1 原备案 fallback）**：spike 决策与原 §3.2 要求终端数据走本地 socket（WS 环回落地）。手工闸门实测（macOS 26 / Darwin 25）：服务端在册、普通进程 `nc` 秒连、Safari 同页同端口 WS 握手正常（OPEN → close 1008），唯独 Tauri app 的 WKWebView 网络子进程报 `The network connection was lost`——本地网络隐私对无 bundle Info.plist 的 ad-hoc dev 二进制静默丢包且无法归因授权（系统设置无条目）；Info.plist 嵌入（`__TEXT,__info_plist`）未能解除。**第一次修订**改自定义协议流式，旋即被 API 面否决：tauri 2.11.5/2.12.1 的 URI scheme responder 均为一次性完整响应（`FnOnce(Response<Cow<[u8]>>)`），wry macOS 整包投递，流式 body 不存在。**最终决策（即本规格 §9.1 原备案 fallback，设计评审已批准）**：下行 `pty_attach` + `tauri::ipc::Channel` 二进制分块（`subscribe` 接管语义保留），上行沿用 `pty_write` 命令；端口/token/鉴权整体取消。spike 决策中「不经 Tauri 事件通道」一条被放弃（Channel 即为事件通道），其余意图（原始字节、背压分片、有序）保留；16 MiB 吞吐门禁重验。若未来 Windows/其他 macOS 版本实测 WS 可用，可在 Channel 与 WS 两形态间选择（数据面接口 onData/write 不变）。
