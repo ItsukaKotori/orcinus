@@ -44,6 +44,7 @@ import { createWorktreesApi } from './mock/worktrees-api'
 import { createAppRealApi } from './real/app'
 import { createFolderWorkspacesRealApi } from './real/folder-workspaces'
 import { createFsRealApi } from './real/fs'
+import { createGitRealApi } from './real/git'
 import { createOnboardingRealApi } from './real/onboarding'
 import { createPlatformRealApi } from './real/platform'
 import { createPreflightRealApi } from './real/preflight'
@@ -67,6 +68,7 @@ type RealDomains = Pick<
   | 'app'
   | 'folderWorkspaces'
   | 'fs'
+  | 'git'
   | 'onboarding'
   | 'platform'
   | 'preflight'
@@ -136,6 +138,7 @@ function createRealDomains(): RealDomains {
     app: createAppRealApi(),
     folderWorkspaces: createFolderWorkspacesRealApi(),
     fs: createFsRealApi(),
+    git: createGitRealApi(),
     onboarding: createOnboardingRealApi(),
     platform: createPlatformRealApi(),
     preflight: createPreflightRealApi(),

@@ -1,11 +1,24 @@
+pub mod base_ref;
+pub mod branch;
+pub(crate) mod command;
+pub mod compare;
+pub mod diff;
+pub mod history;
 pub mod porcelain;
+pub mod runner;
+pub mod staging;
+pub mod status;
+pub mod status_read;
+pub mod worktree_create;
+pub mod worktree_remove;
 
 pub use porcelain::{parse_worktree_list, GitWorktreeEntry};
+pub use runner::{run_git_in, CancelToken, GitOutput};
 
 use ade_core::errors::CoreError;
-use std::io::Read;
-use std::process::{Child, Command, ExitStatus, Output, Stdio};
-use std::time::{Duration, Instant};
+use std::path::{Component, Path, PathBuf};
+use std::process::{Command, Output};
+use std::time::Duration;
 
 const VERSION_TIMEOUT: Duration = Duration::from_millis(1500);
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(10);
@@ -36,6 +49,88 @@ pub fn worktree_list(path: &str) -> Result<Vec<GitWorktreeEntry>, CoreError> {
     Ok(parse_worktree_list(&output.stdout))
 }
 
+/// Normalize a worktree path for cross-platform comparison.
+///
+/// Mirrors `canonicalWorktreePath`
+/// (`orca:src/main/git/worktree-path-comparison.ts:5-10`) with one addition
+/// the oracle gets for free because its callers already hold resolved paths:
+/// the path is canonicalized on disk, because `git worktree list` reports the
+/// real path it stored (macOS `/var` → `/private/var`). Missing paths resolve
+/// through their nearest existing ancestor, so a just-deleted worktree still
+/// compares equal to its registration. Dot segments are resolved lexically and
+/// Windows-syntax paths are case-folded.
+pub fn canonical_worktree_path(path_value: &str) -> String {
+    let resolved = resolve_real_path(Path::new(path_value))
+        .unwrap_or_else(|_| normalize_lexically(Path::new(path_value)));
+    let text = resolved.to_string_lossy().into_owned();
+    if looks_like_windows_path(path_value) {
+        text.to_lowercase()
+    } else {
+        text
+    }
+}
+
+/// Mirrors `areWorktreePathsEqual`
+/// (`orca:src/main/git/worktree-path-comparison.ts:12-21`).
+pub(crate) fn are_worktree_paths_equal(left: &str, right: &str) -> bool {
+    canonical_worktree_path(left) == canonical_worktree_path(right)
+}
+
+/// Mirrors `looksLikeWindowsPath` (`orca:src/main/git/worktree-path-comparison.ts:23-25`).
+fn looks_like_windows_path(path_value: &str) -> bool {
+    let bytes = path_value.as_bytes();
+    (bytes.len() >= 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':')
+        || path_value.starts_with("\\\\")
+}
+
+/// Real path of a possibly-missing leaf: the nearest existing ancestor is
+/// canonicalized (following symlinks) and the missing tail is appended.
+fn resolve_real_path(path: &Path) -> std::io::Result<PathBuf> {
+    if let Ok(resolved) = std::fs::canonicalize(path) {
+        return Ok(resolved);
+    }
+    let mut ancestor = path.parent();
+    while let Some(current) = ancestor {
+        if let Ok(resolved) = std::fs::canonicalize(current) {
+            let mut result = resolved;
+            if let Ok(remainder) = path.strip_prefix(current) {
+                result.push(remainder);
+            }
+            return Ok(result);
+        }
+        ancestor = current.parent();
+    }
+    Err(std::io::Error::new(
+        std::io::ErrorKind::NotFound,
+        "path has no existing ancestor",
+    ))
+}
+
+/// Lexical path normalization equivalent to Node's `path.posix.normalize`:
+/// drops `.` components and resolves `..` by popping.
+fn normalize_lexically(path: &Path) -> PathBuf {
+    let mut normalized = PathBuf::new();
+    for component in path.components() {
+        match component {
+            Component::CurDir => {}
+            Component::ParentDir => {
+                normalized.pop();
+            }
+            other => normalized.push(other.as_os_str()),
+        }
+    }
+    normalized
+}
+
+/// Shared mapping for a non-zero exit from a commanded git invocation.
+pub(crate) fn git_command_failed(args: &[&str], output: &GitOutput) -> CoreError {
+    CoreError::GitCommandFailed {
+        command: args.join(" "),
+        stderr: String::from_utf8_lossy(&output.stderr).trim().to_string(),
+        exit_code: output.status.code(),
+    }
+}
+
 fn run_git(path: &str, args: &[&str]) -> Result<Output, CoreError> {
     let mut command = Command::new("git");
     command.arg("-C").arg(path).args(args);
@@ -48,68 +143,13 @@ fn run_git(path: &str, args: &[&str]) -> Result<Output, CoreError> {
 }
 
 fn output_with_timeout(command: &mut Command, timeout: Duration) -> std::io::Result<Output> {
-    let mut child = command
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()?;
-    let stdout = child.stdout.take().expect("stdout is piped");
-    let stderr = child.stderr.take().expect("stderr is piped");
-    let stdout_reader = std::thread::spawn(move || read_all(stdout));
-    let stderr_reader = std::thread::spawn(move || read_all(stderr));
-
-    let status = match wait_with_timeout(&mut child, timeout) {
-        Ok(Some(status)) => status,
-        Ok(None) => {
-            reap(&mut child);
-            let _ = stdout_reader.join();
-            let _ = stderr_reader.join();
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::TimedOut,
-                "git command timed out",
-            ));
-        }
-        Err(error) => {
-            reap(&mut child);
-            let _ = stdout_reader.join();
-            let _ = stderr_reader.join();
-            return Err(error);
-        }
-    };
-
-    Ok(Output {
-        status,
-        stdout: stdout_reader.join().expect("stdout reader panicked")?,
-        stderr: stderr_reader.join().expect("stderr reader panicked")?,
-    })
-}
-
-fn wait_with_timeout(child: &mut Child, timeout: Duration) -> std::io::Result<Option<ExitStatus>> {
-    let deadline = Instant::now() + timeout;
-    loop {
-        if let Some(status) = child.try_wait()? {
-            return Ok(Some(status));
-        }
-        if Instant::now() >= deadline {
-            return Ok(None);
-        }
-        std::thread::sleep(Duration::from_millis(10));
-    }
-}
-
-fn reap(child: &mut Child) {
-    let _ = child.kill();
-    let _ = child.wait();
-}
-
-fn read_all(mut reader: impl Read) -> std::io::Result<Vec<u8>> {
-    let mut buffer = Vec::new();
-    reader.read_to_end(&mut buffer)?;
-    Ok(buffer)
+    runner::run_process(command, timeout, None)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Instant;
 
     #[cfg(unix)]
     #[test]

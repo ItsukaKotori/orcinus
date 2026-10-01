@@ -3,6 +3,9 @@ pub mod onboarding_store;
 pub mod projects_store;
 pub mod settings_store;
 pub mod ui_state_store;
+pub mod worktree_meta_store;
+
+pub use worktree_meta_store::{WorktreeMetaStore, WORKTREE_META_FIELDS};
 
 use serde_json::Value;
 use thiserror::Error;

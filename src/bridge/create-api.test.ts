@@ -69,7 +69,7 @@ describe('createAdeApi mode resolution', () => {
 })
 
 describe('createAdeApi real assembly', () => {
-  it('routes the ten real domains through their commands', async () => {
+  it('routes the assembled real domains through their commands', async () => {
     const api = createAdeApi()
     invokeMock.mockResolvedValue([])
 
@@ -135,19 +135,44 @@ describe('createAdeApi real assembly', () => {
     await expect(
       api.hostedReview.forBranch({ repoPath: '/repo', branch: 'main' })
     ).resolves.toBeNull()
-    await expect(api.git.status({ worktreePath: '/repo' })).resolves.toEqual({
-      entries: [],
-      conflictOperation: 'unknown'
-    })
-    await expect(api.git.cancelStatus({ requestToken: 'token-1' })).resolves.toBeUndefined()
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it('routes the git domain through its commands', async () => {
+    const api = createAdeApi()
+    invokeMock.mockResolvedValue({})
+
+    await api.git.status({ worktreePath: '/repo' })
+    await api.git.cancelStatus({ requestToken: 'token-1' })
+    await api.git.stage({ worktreePath: '/repo', filePath: 'a.txt' })
+    await api.git.commit({ worktreePath: '/repo', message: 'msg' })
+    await api.git.history({ worktreePath: '/repo' })
+
+    expect(invokeMock).toHaveBeenCalledWith('git_status', { args: { worktreePath: '/repo' } })
+    expect(invokeMock.mock.calls.map(([command]) => command)).toEqual([
+      'git_status',
+      'git_cancel_status',
+      'git_stage',
+      'git_commit',
+      'git_history'
+    ])
+  })
+
+  it('keeps the unported git methods loudly unimplemented in real mode', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const api = createAdeApi()
+    await expect(
+      api.git.generateCommitMessage({ worktreePath: '/repo' } as never)
+    ).rejects.toMatchObject({ name: 'UnimplementedBridgeError' })
     await expect(
       api.git.setStatusUpstreamRefWatch({
         worktreeId: 'repo::/repo',
         worktreePath: '/repo',
         executionHostId: 'local'
       })
-    ).resolves.toBeUndefined()
+    ).rejects.toMatchObject({ name: 'UnimplementedBridgeError' })
     expect(invokeMock).not.toHaveBeenCalled()
+    warn.mockRestore()
   })
 
   it('answers the optional ephemeral-VM wake probe without rejecting', async () => {

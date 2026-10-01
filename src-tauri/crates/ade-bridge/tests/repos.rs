@@ -6,14 +6,15 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use ade_bridge::commands::repos::{
-    add_repo, default_create_project_parent, remove_repo, reorder_repos_for_host, resolve_add_path,
-    update_repo,
+    add_repo, base_ref_default, create_repo, default_create_project_parent, remove_repo,
+    reorder_repos_for_host, resolve_add_path, search_base_ref_details, search_base_refs,
+    update_repo, ReposCreateArgs,
 };
 use ade_bridge::commands::worktrees::{list_all_worktrees, list_worktrees};
 use ade_core::models::repo::RepoKind;
 use ade_fs::FsService;
 use ade_store::projects_store::ProjectsStore;
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 
 struct TestDir {
     path: PathBuf,
@@ -115,7 +116,7 @@ fn git_repo_add_projects_main_worktree() {
         "a successful add authorizes its root"
     );
 
-    let worktrees = list_worktrees(&repo, &[], &fs).expect("git worktree list");
+    let worktrees = list_worktrees(&repo, &[], &Map::new(), &fs).expect("git worktree list");
     assert_eq!(worktrees.len(), 1, "fresh repo has one worktree");
     let main = &worktrees[0];
     assert_eq!(main.id, format!("{}::{}", repo_id(&repo), resolved));
@@ -166,7 +167,7 @@ fn linked_worktrees_follow_the_main_entry() {
     )
     .unwrap();
 
-    let worktrees = list_worktrees(&outcome.repo, &[], &fs).unwrap();
+    let worktrees = list_worktrees(&outcome.repo, &[], &Map::new(), &fs).unwrap();
     assert_eq!(worktrees.len(), 2);
     assert!(worktrees[0].is_main_worktree);
     assert_eq!(worktrees[0].display_name, "main");
@@ -209,7 +210,7 @@ fn list_worktrees_authorizes_linked_worktree_paths() {
         Err(ade_fs::FsError::PathAccessDenied)
     ));
 
-    let worktrees = list_worktrees(&outcome.repo, &[], &fs).unwrap();
+    let worktrees = list_worktrees(&outcome.repo, &[], &Map::new(), &fs).unwrap();
     assert!(
         worktrees
             .iter()
@@ -253,7 +254,7 @@ fn folder_kind_add_projects_its_main_workspace() {
     assert!(repo.get("externalWorktreeVisibilityLegacy").is_none());
     assert!(fs.resolve(&resolved).is_ok());
 
-    let worktrees = list_worktrees(&repo, &[], &fs).unwrap();
+    let worktrees = list_worktrees(&repo, &[], &Map::new(), &fs).unwrap();
     assert_eq!(worktrees.len(), 1);
     let main = &worktrees[0];
     assert_eq!(main.id, format!("{}::{}", repo_id(&repo), resolved));
@@ -301,7 +302,7 @@ fn folder_workspaces_append_after_main_by_last_activity() {
         }),
     ];
 
-    let worktrees = list_worktrees(&repo, &workspaces, &fs).unwrap();
+    let worktrees = list_worktrees(&repo, &workspaces, &Map::new(), &fs).unwrap();
     assert_eq!(
         worktrees
             .iter()
@@ -383,7 +384,7 @@ fn folder_workspaces_are_scoped_to_their_repo_group() {
         }),
     ];
 
-    let first_worktrees = list_worktrees(&first, &workspaces, &fs).unwrap();
+    let first_worktrees = list_worktrees(&first, &workspaces, &Map::new(), &fs).unwrap();
     assert_eq!(
         first_worktrees
             .iter()
@@ -392,7 +393,7 @@ fn folder_workspaces_are_scoped_to_their_repo_group() {
         vec![first_folder.to_str().unwrap(), dir.dir("first/one").to_str().unwrap()]
     );
 
-    let second_worktrees = list_worktrees(&second, &workspaces, &fs).unwrap();
+    let second_worktrees = list_worktrees(&second, &workspaces, &Map::new(), &fs).unwrap();
     assert_eq!(
         second_worktrees
             .iter()
@@ -404,7 +405,7 @@ fn folder_workspaces_are_scoped_to_their_repo_group() {
         ]
     );
 
-    let all = list_all_worktrees(&projects.repos(), &workspaces, &fs).unwrap();
+    let all = list_all_worktrees(&projects.repos(), &workspaces, &Map::new(), &fs).unwrap();
     assert_eq!(
         all.iter().map(|worktree| worktree.id.as_str()).collect::<Vec<_>>(),
         vec![
@@ -449,7 +450,7 @@ fn ungrouped_folder_repo_projects_only_its_root() {
         }),
     ];
 
-    let worktrees = list_worktrees(&repo, &workspaces, &fs).unwrap();
+    let worktrees = list_worktrees(&repo, &workspaces, &Map::new(), &fs).unwrap();
     assert_eq!(worktrees.len(), 1);
     assert_eq!(worktrees[0].id, format!("{}::{}", repo_id(&repo), folder.to_str().unwrap()));
     assert!(worktrees[0].is_main_worktree);
@@ -481,7 +482,7 @@ fn folder_root_spelling_does_not_duplicate_the_root_row() {
         "lastActivityAt": 1
     })];
 
-    let worktrees = list_worktrees(&repo, &workspaces, &fs).unwrap();
+    let worktrees = list_worktrees(&repo, &workspaces, &Map::new(), &fs).unwrap();
     assert_eq!(worktrees.len(), 1);
     assert_eq!(worktrees[0].display_name, "notes");
     assert!(worktrees[0].is_main_worktree);
@@ -702,8 +703,13 @@ fn worktrees_list_all_merges_every_repo() {
     .unwrap()
     .repo;
 
-    let worktrees =
-        list_all_worktrees(&projects.repos(), &projects.folder_workspaces(), &fs).unwrap();
+    let worktrees = list_all_worktrees(
+        &projects.repos(),
+        &projects.folder_workspaces(),
+        &Map::new(),
+        &fs,
+    )
+    .unwrap();
     assert_eq!(worktrees.len(), 2);
     assert_eq!(
         worktrees
@@ -725,4 +731,364 @@ fn default_parent_survives_the_generated_settings_default() {
         default_create_project_parent(&settings, home),
         "/Users/tester/orcinus/projects"
     );
+}
+
+fn create_args(parent: &Path, name: &str, kind: Option<RepoKind>) -> ReposCreateArgs {
+    ReposCreateArgs {
+        parent_path: parent.to_str().expect("utf8 parent").to_string(),
+        name: name.to_string(),
+        kind,
+    }
+}
+
+/// `create_repo` shells out to git in-process, so the tests that control the
+/// identity environment process-wide must not overlap each other.
+static GIT_IDENTITY_ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+fn git_identity_env_lock() -> std::sync::MutexGuard<'static, ()> {
+    GIT_IDENTITY_ENV_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
+/// Applies environment changes and restores the previous values on drop, so a
+/// test can never leak a fake HOME or identity into the host config.
+struct EnvGuard {
+    saved: Vec<(&'static str, Option<std::ffi::OsString>)>,
+}
+
+impl EnvGuard {
+    fn apply(changes: &[(&'static str, Option<&str>)]) -> Self {
+        let saved = changes
+            .iter()
+            .map(|(key, _)| (*key, std::env::var_os(key)))
+            .collect();
+        for (key, value) in changes {
+            match value {
+                Some(value) => std::env::set_var(key, value),
+                None => std::env::remove_var(key),
+            }
+        }
+        Self { saved }
+    }
+}
+
+impl Drop for EnvGuard {
+    fn drop(&mut self) {
+        for (key, value) in &self.saved {
+            match value {
+                Some(value) => std::env::set_var(key, value),
+                None => std::env::remove_var(key),
+            }
+        }
+    }
+}
+
+/// A deterministic `git commit` identity, independent of the host config.
+fn with_test_git_identity() -> EnvGuard {
+    EnvGuard::apply(&[
+        ("GIT_AUTHOR_NAME", Some("Ade Test")),
+        ("GIT_AUTHOR_EMAIL", Some("ade-test@example.com")),
+        ("GIT_COMMITTER_NAME", Some("Ade Test")),
+        ("GIT_COMMITTER_EMAIL", Some("ade-test@example.com")),
+    ])
+}
+
+/// No identity anywhere: global/system config is bypassed and
+/// `user.useConfigOnly` stops git from inventing one from the OS account, so
+/// `git commit` fails with the oracle's "Please tell me who you are." error.
+fn without_git_identity(home: &Path) -> EnvGuard {
+    let xdg = home.join(".config");
+    EnvGuard::apply(&[
+        ("GIT_CONFIG_GLOBAL", Some("/dev/null")),
+        ("GIT_CONFIG_NOSYSTEM", Some("1")),
+        ("GIT_CONFIG_COUNT", Some("1")),
+        ("GIT_CONFIG_KEY_0", Some("user.useConfigOnly")),
+        ("GIT_CONFIG_VALUE_0", Some("true")),
+        ("HOME", Some(home.to_str().expect("utf8 home"))),
+        ("XDG_CONFIG_HOME", Some(xdg.to_str().expect("utf8 xdg"))),
+        ("GIT_AUTHOR_NAME", None),
+        ("GIT_AUTHOR_EMAIL", None),
+        ("GIT_COMMITTER_NAME", None),
+        ("GIT_COMMITTER_EMAIL", None),
+        ("EMAIL", None),
+    ])
+}
+
+const IDENTITY_SETUP_HINT: &str = "Git author identity is not configured. Run `git config --global user.name \"Your Name\"` and `git config --global user.email \"you@example.com\"`, then try again.";
+
+#[test]
+fn create_git_repo_makes_directory_initial_commit_and_registers() {
+    let _lock = git_identity_env_lock();
+    let _env = with_test_git_identity();
+    let dir = TestDir::new("create-git");
+    let parents = dir.dir("parents");
+    let fs = FsService::new();
+    let mut projects = store(&dir);
+
+    let value = create_repo(
+        &mut projects,
+        &fs,
+        &create_args(&parents, "demo", Some(RepoKind::Git)),
+        5_000,
+    );
+
+    let repo = value.get("repo").expect("created repo");
+    let expected = parents.join("demo");
+    assert_eq!(repo["path"], expected.to_str().unwrap());
+    assert_eq!(repo["displayName"], "demo");
+    assert_eq!(repo["kind"], "git");
+    assert_eq!(repo["addedAt"], 5_000);
+    assert_eq!(projects.repos().len(), 1);
+    assert_eq!(
+        git(&expected, &["log", "-1", "--format=%s"]),
+        "Initial commit"
+    );
+    assert!(
+        fs.resolve(expected.to_str().unwrap()).is_ok(),
+        "a created repo authorizes its root"
+    );
+}
+
+#[test]
+fn create_repo_rejects_name_with_slash_and_empty_name() {
+    let _lock = git_identity_env_lock();
+    let dir = TestDir::new("create-name-validation");
+    let fs = FsService::new();
+    let mut projects = store(&dir);
+
+    assert_eq!(
+        create_repo(
+            &mut projects,
+            &fs,
+            &create_args(&dir.path, "a/b", Some(RepoKind::Git)),
+            1
+        ),
+        json!({ "error": "Name cannot contain slashes or be \".\" / \"..\"" })
+    );
+    assert_eq!(
+        create_repo(&mut projects, &fs, &create_args(&dir.path, "a\\b", None), 1),
+        json!({ "error": "Name cannot contain slashes or be \".\" / \"..\"" })
+    );
+    assert_eq!(
+        create_repo(&mut projects, &fs, &create_args(&dir.path, "..", None), 1),
+        json!({ "error": "Name cannot contain slashes or be \".\" / \"..\"" })
+    );
+    assert_eq!(
+        create_repo(&mut projects, &fs, &create_args(&dir.path, "   ", None), 1),
+        json!({ "error": "Name cannot be empty" })
+    );
+    assert_eq!(
+        create_repo(
+            &mut projects,
+            &fs,
+            &create_args(Path::new("relative"), "demo", None),
+            1
+        ),
+        json!({ "error": "Parent directory must be an absolute path" })
+    );
+    assert!(projects.repos().is_empty());
+    assert!(!dir.path.join("demo").exists());
+}
+
+#[test]
+fn create_repo_rejects_non_empty_existing_directory() {
+    let _lock = git_identity_env_lock();
+    let _env = with_test_git_identity();
+    let dir = TestDir::new("create-non-empty");
+    let parents = dir.dir("parents");
+    let target = parents.join("demo");
+    std::fs::create_dir_all(&target).unwrap();
+    std::fs::write(target.join("keep.txt"), "precious").unwrap();
+    let fs = FsService::new();
+    let mut projects = store(&dir);
+
+    let value = create_repo(
+        &mut projects,
+        &fs,
+        &create_args(&parents, "demo", Some(RepoKind::Git)),
+        1,
+    );
+
+    assert_eq!(
+        value,
+        json!({ "error": "\"demo\" already exists at this location and is not empty." })
+    );
+    assert_eq!(
+        std::fs::read_to_string(target.join("keep.txt")).unwrap(),
+        "precious"
+    );
+    assert!(!target.join(".git").exists());
+    assert!(projects.repos().is_empty());
+}
+
+#[test]
+fn create_repo_reuses_existing_empty_directory() {
+    let _lock = git_identity_env_lock();
+    let _env = with_test_git_identity();
+    let dir = TestDir::new("create-empty-dir");
+    let parents = dir.dir("parents");
+    let target = parents.join("demo");
+    std::fs::create_dir_all(&target).unwrap();
+    let fs = FsService::new();
+    let mut projects = store(&dir);
+
+    let value = create_repo(
+        &mut projects,
+        &fs,
+        &create_args(&parents, "demo", Some(RepoKind::Git)),
+        2,
+    );
+
+    let repo = value.get("repo").expect("reused empty directory");
+    assert_eq!(repo["path"], target.to_str().unwrap());
+    assert_eq!(projects.repos().len(), 1);
+    assert_eq!(
+        git(&target, &["log", "-1", "--format=%s"]),
+        "Initial commit"
+    );
+}
+
+#[test]
+fn create_repo_identity_failure_reports_setup_hint() {
+    let _lock = git_identity_env_lock();
+    let dir = TestDir::new("create-identity");
+    let parents = dir.dir("parents");
+    let home = dir.dir("identity-home");
+    let _env = without_git_identity(&home);
+    let fs = FsService::new();
+    let mut projects = store(&dir);
+
+    let value = create_repo(
+        &mut projects,
+        &fs,
+        &create_args(&parents, "demo", Some(RepoKind::Git)),
+        1,
+    );
+    assert_eq!(value, json!({ "error": IDENTITY_SETUP_HINT }));
+    assert!(
+        !parents.join("demo").exists(),
+        "a directory this call created is removed on failure"
+    );
+    assert!(projects.repos().is_empty());
+
+    let target = parents.join("demo2");
+    std::fs::create_dir_all(&target).unwrap();
+    let value = create_repo(
+        &mut projects,
+        &fs,
+        &create_args(&parents, "demo2", Some(RepoKind::Git)),
+        1,
+    );
+    assert_eq!(value, json!({ "error": IDENTITY_SETUP_HINT }));
+    assert!(
+        target.exists(),
+        "a pre-existing empty directory survives the failure"
+    );
+    assert!(
+        !target.join(".git").exists(),
+        "the partial .git from git init is removed"
+    );
+    assert!(projects.repos().is_empty());
+}
+
+#[test]
+fn base_ref_default_and_remote_count() {
+    let dir = TestDir::new("base-ref-default");
+    let repo_path = init_git_repo(&dir.path, "demo");
+    let folder = dir.dir("notes");
+    let mut projects = store(&dir);
+    projects
+        .mutate_repos(|repos| {
+            repos.push(json!({
+                "id": "r1",
+                "path": repo_path.to_str().unwrap(),
+                "kind": "git"
+            }));
+            repos.push(json!({
+                "id": "r2",
+                "path": folder.to_str().unwrap(),
+                "kind": "folder"
+            }));
+        })
+        .unwrap();
+
+    assert_eq!(
+        base_ref_default(&projects, "r1", None),
+        json!({ "defaultBaseRef": "main", "remoteCount": 0 })
+    );
+    assert_eq!(
+        base_ref_default(&projects, "r1", Some("local")),
+        json!({ "defaultBaseRef": "main", "remoteCount": 0 })
+    );
+    assert_eq!(
+        base_ref_default(&projects, "r1", Some("ssh:box")),
+        json!({ "defaultBaseRef": null, "remoteCount": 0 })
+    );
+    assert_eq!(
+        base_ref_default(&projects, "r2", None),
+        json!({ "defaultBaseRef": null, "remoteCount": 0 })
+    );
+    assert_eq!(
+        base_ref_default(&projects, "missing", None),
+        json!({ "defaultBaseRef": null, "remoteCount": 0 })
+    );
+
+    git(
+        &repo_path,
+        &["remote", "add", "origin", "/nonexistent/origin.git"],
+    );
+    assert_eq!(
+        base_ref_default(&projects, "r1", None),
+        json!({ "defaultBaseRef": "main", "remoteCount": 1 })
+    );
+}
+
+#[test]
+fn search_base_refs_filters_and_limits() {
+    let dir = TestDir::new("search-base-refs");
+    let repo_path = init_git_repo(&dir.path, "demo");
+    git(&repo_path, &["branch", "feature-x"]);
+    let head = git(&repo_path, &["rev-parse", "HEAD"]);
+    git(
+        &repo_path,
+        &["update-ref", "refs/remotes/origin/main", &head],
+    );
+    let folder = dir.dir("notes");
+    let mut projects = store(&dir);
+    projects
+        .mutate_repos(|repos| {
+            repos.push(json!({
+                "id": "r1",
+                "path": repo_path.to_str().unwrap(),
+                "kind": "git"
+            }));
+            repos.push(json!({
+                "id": "r2",
+                "path": folder.to_str().unwrap(),
+                "kind": "folder"
+            }));
+        })
+        .unwrap();
+
+    assert_eq!(
+        search_base_ref_details(&projects, "r1", "origin", None, None),
+        vec![json!({ "refName": "origin/main", "localBranchName": "main" })]
+    );
+
+    let names = search_base_refs(&projects, "r1", "", None, None);
+    assert!(names.contains(&"main".to_string()));
+    assert!(names.contains(&"feature-x".to_string()));
+    assert!(names.contains(&"origin/main".to_string()));
+
+    assert_eq!(
+        search_base_refs(&projects, "r1", "", Some(1), None).len(),
+        1
+    );
+    assert!(search_base_refs(&projects, "r1", "", Some(0), None).is_empty());
+    assert!(search_base_refs(&projects, "r1", "origin", None, None)
+        .iter()
+        .all(|name| name.contains("origin")));
+    assert!(search_base_refs(&projects, "r2", "", None, None).is_empty());
+    assert!(search_base_ref_details(&projects, "missing", "", None, None).is_empty());
 }

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- WHY: 裸二进制（tauri dev / cargo run）无 bundle Info.plist，macOS 15+ 的
+	     本地网络隐私对 WKWebView 网络子进程的环回 WebSocket 静默丢包
+	     （"The network connection was lost"），PTY 数据面（规格 §3.2）依赖
+	     ws://127.0.0.1。嵌入 __TEXT,__info_plist 段供 NSBundle 回退读取：
+	     声明本地网络用途（触发权限提示/设置开关）+ ATS 本地放行。
+	     打包发布的 .app 由 Tauri 生成自己的 Info.plist（bundle 文件优先于
+	     __TEXT 段），发布配置需携带同两项——记录于 phase1c 收尾记录。 -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Orcinus 需要访问本机回环地址以驱动内置终端（PTY 数据面）。</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

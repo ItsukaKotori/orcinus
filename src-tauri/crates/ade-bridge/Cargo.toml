@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 ade-core = { path = "../ade-core", features = ["specta"] }
 ade-fs = { path = "../ade-fs", features = ["specta"] }
-ade-git = { path = "../ade-git" }
+ade-git = { path = "../ade-git", features = ["specta"] }
 ade-pty = { path = "../ade-pty" }
 ade-store = { path = "../ade-store" }
 rfd = "0.16"

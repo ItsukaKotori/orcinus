@@ -6,11 +6,13 @@ use std::time::{Duration, Instant};
 
 use ade_core::defaults::{onboarding_defaults, settings_defaults, ui_state_defaults};
 use ade_fs::{FsService, FsWatcher};
+use ade_git::runner::CancelToken;
 use ade_pty::PtyHost;
 use ade_store::onboarding_store::OnboardingStore;
 use ade_store::projects_store::ProjectsStore;
 use ade_store::settings_store::SettingsStore;
 use ade_store::ui_state_store::UiStateStore;
+use ade_store::worktree_meta_store::WorktreeMetaStore;
 use ade_store::SCHEMA_VERSION;
 use serde::Serialize;
 use serde_json::Value;
@@ -239,6 +241,7 @@ pub struct PersistedState {
     pub ui: UiStateStore,
     pub onboarding: OnboardingStore,
     pub projects: ProjectsStore,
+    pub worktree_meta: WorktreeMetaStore,
     pub fs: FsService,
 }
 
@@ -250,6 +253,7 @@ pub fn load_persisted_state(data_dir: &Path, home: &str) -> PersistedState {
     let ui = UiStateStore::load(data_dir.join("ui-state.json"), ui_state_defaults());
     let onboarding = OnboardingStore::load(data_dir.join("onboarding.json"), onboarding_defaults());
     let projects = ProjectsStore::load(data_dir.join("projects.json"));
+    let worktree_meta = WorktreeMetaStore::load(data_dir.join("worktrees.json"));
     let fs = FsService::new();
     authorize_persisted_roots(&fs, &projects);
     PersistedState {
@@ -257,6 +261,7 @@ pub fn load_persisted_state(data_dir: &Path, home: &str) -> PersistedState {
         ui,
         onboarding,
         projects,
+        worktree_meta,
         fs,
     }
 }
@@ -307,6 +312,54 @@ impl PtyWorktreeIds {
     }
 }
 
+/// In-flight `git_status` cancellations, keyed by the renderer's request
+/// token. Re-registering the same token cancels the superseded run first, so a
+/// stale poll can never publish a result after its caller gave up.
+pub struct GitCancelRegistry {
+    tokens: Mutex<HashMap<String, CancelToken>>,
+}
+
+impl GitCancelRegistry {
+    pub fn new() -> Self {
+        Self {
+            tokens: Mutex::new(HashMap::new()),
+        }
+    }
+
+    /// Register one run and return its live cancellation flag.
+    pub fn register(&self, token: &str) -> CancelToken {
+        let mut tokens = lock(&self.tokens);
+        if let Some(previous) = tokens.get(token) {
+            previous.cancel();
+        }
+        let fresh = CancelToken::new();
+        tokens.insert(token.to_string(), fresh.clone());
+        fresh
+    }
+
+    /// Drop one registration once its run returned (success or failure).
+    pub fn finish(&self, token: &str) {
+        lock(&self.tokens).remove(token);
+    }
+
+    /// Set and drop one registration; `false` when the run already finished.
+    pub fn cancel(&self, token: &str) -> bool {
+        match lock(&self.tokens).remove(token) {
+            Some(cancel) => {
+                cancel.cancel();
+                true
+            }
+            None => false,
+        }
+    }
+}
+
+impl Default for GitCancelRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Shared backend state for every command. Initialized once in `setup` with the
 /// app data directory before the main window is built.
 pub struct AppState {
@@ -314,6 +367,9 @@ pub struct AppState {
     pub ui: Arc<Mutex<UiStateStore>>,
     pub onboarding: Arc<Mutex<OnboardingStore>>,
     pub projects: Mutex<ProjectsStore>,
+    /// Per-worktree metadata (`worktrees.json`), shared with the worktree
+    /// commands as an `Arc` so blocking closures can own it.
+    pub worktree_meta: Arc<WorktreeMetaStore>,
     pub fs: Arc<FsService>,
     pub watchers: FsWatcher,
     pub app: AppHandle,
@@ -325,6 +381,7 @@ pub struct AppState {
     pub home: String,
     /// 登录 shell PATH 水合的进程内缓存（Task 11）：进程生命周期内最多水合一次。
     pub path_hydration_cache: PathHydrationCache,
+    pub git_cancels: GitCancelRegistry,
     settings_writer: WriteScheduler,
     ui_writer: WriteScheduler,
 }
@@ -385,6 +442,7 @@ impl AppState {
             ui,
             onboarding,
             projects: Mutex::new(persisted.projects),
+            worktree_meta: Arc::new(persisted.worktree_meta),
             fs: Arc::new(persisted.fs),
             watchers,
             app: app.clone(),
@@ -392,6 +450,7 @@ impl AppState {
             pty_worktree_ids,
             home,
             path_hydration_cache: PathHydrationCache::default(),
+            git_cancels: GitCancelRegistry::new(),
             settings_writer,
             ui_writer,
         })
@@ -399,6 +458,11 @@ impl AppState {
 
     pub(crate) fn settings_store(&self) -> MutexGuard<'_, SettingsStore> {
         lock(&self.settings)
+    }
+
+    /// Shared handle to the worktree metadata store (`worktrees.json`).
+    pub fn worktree_meta_store(&self) -> Arc<WorktreeMetaStore> {
+        Arc::clone(&self.worktree_meta)
     }
 
     pub(crate) fn ui_store(&self) -> MutexGuard<'_, UiStateStore> {

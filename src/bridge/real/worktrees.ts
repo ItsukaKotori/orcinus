@@ -43,14 +43,25 @@ async function listDetected(
 
 /**
  * Real `worktrees` adapter (spec §5.3). The registry projection, the detected
- * provider lease, and the `worktrees:changed` event are real; every other
- * surface either answers the provider contract empty/rejected or stays on
- * `withMethodFallback` until its subproject lands.
+ * provider lease, the local create/remove/forget/meta mutations, and the
+ * `worktrees:changed` event are real; the remote/runtime surfaces either answer
+ * the provider contract empty/rejected or stay on `withMethodFallback` until
+ * their subproject lands. Mutation payloads pass through untranslated — the
+ * Rust commands answer the `{ worktree }`, `{ preservedBranch? }`, and
+ * full-`Worktree` shapes the TS contract already declares (`warnings` stays
+ * unemitted: it is a lineage shape B has no data for).
  */
 export function createWorktreesRealApi(): WorktreeApi {
   return withMethodFallback<WorktreeApi>('worktrees', {
     list: (args) => invokeCommand('worktrees_list', { args }),
     listDetected,
+    create: (args) => invokeCommand('worktrees_create', { args }),
+    remove: (args) => invokeCommand('worktrees_remove', { args }),
+    forgetLocal: (args) => invokeCommand('worktrees_forget_local', { args }),
+    forceDeletePreservedBranch: (args) =>
+      invokeCommand('worktrees_force_delete_preserved_branch', { args }),
+    updateMeta: (args) => invokeCommand('worktrees_update_meta', { args }),
+    persistSortOrder: (args) => invokeCommand('worktrees_persist_sort_order', { args }),
     listAll: () => invokeCommand('worktrees_list_all'),
     listKnownForExecutionHost: async ({ repoId, executionHostId }) => ({
       status: 'rejected',

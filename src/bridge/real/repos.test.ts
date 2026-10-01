@@ -30,6 +30,26 @@ const argCases = [
     method: 'reorderForHost',
     command: 'repos_reorder_for_host',
     args: { orderedIds: ['r1', 'r2'], hostId: 'local' }
+  },
+  {
+    method: 'create',
+    command: 'repos_create',
+    args: { parentPath: '/tmp', name: 'calm-otter', kind: 'git' }
+  },
+  {
+    method: 'getBaseRefDefault',
+    command: 'repos_get_base_ref_default',
+    args: { repoId: 'r1' }
+  },
+  {
+    method: 'searchBaseRefs',
+    command: 'repos_search_base_refs',
+    args: { repoId: 'r1', query: 'main' }
+  },
+  {
+    method: 'searchBaseRefDetails',
+    command: 'repos_search_base_ref_details',
+    args: { repoId: 'r1', query: 'main' }
   }
 ] satisfies Array<{ method: ReposMethod; command: string; args: Record<string, unknown> }>
 
@@ -76,6 +96,42 @@ describe('repos real adapter commands', () => {
     await expect(createReposRealApi().add({ path: '/tmp/x' })).resolves.toEqual(errorResult)
   })
 
+  it('passes a repos.create {error} result through without rejecting', async () => {
+    const errorResult = { error: 'Path already exists: /tmp/calm-otter' }
+    invokeMock.mockResolvedValueOnce(errorResult)
+    await expect(
+      createReposRealApi().create({ parentPath: '/tmp', name: 'calm-otter', kind: 'git' })
+    ).resolves.toBe(errorResult)
+  })
+
+  it('passes a repos.create {repo} result through', async () => {
+    const repoResult = { repo: { id: 'r1', path: '/tmp/calm-otter' } }
+    invokeMock.mockResolvedValueOnce(repoResult)
+    await expect(
+      createReposRealApi().create({ parentPath: '/tmp', name: 'calm-otter', kind: 'git' })
+    ).resolves.toBe(repoResult)
+  })
+
+  it('passes the base-ref helper payloads through unchanged', async () => {
+    const baseRefDefault = { defaultBaseRef: 'main', remoteCount: 1 }
+    invokeMock.mockResolvedValueOnce(baseRefDefault)
+    await expect(createReposRealApi().getBaseRefDefault({ repoId: 'r1' })).resolves.toBe(
+      baseRefDefault
+    )
+
+    const refs = ['main', 'origin/main']
+    invokeMock.mockResolvedValueOnce(refs)
+    await expect(
+      createReposRealApi().searchBaseRefs({ repoId: 'r1', query: 'main' })
+    ).resolves.toBe(refs)
+
+    const details = [{ refName: 'origin/main', localBranchName: 'main' }]
+    invokeMock.mockResolvedValueOnce(details)
+    await expect(
+      createReposRealApi().searchBaseRefDetails({ repoId: 'r1', query: 'main' })
+    ).resolves.toBe(details)
+  })
+
   it('maps a {message} rejection to a normal Error', async () => {
     invokeMock.mockRejectedValueOnce({ message: 'Repo not found: r1' })
     const rejection = createReposRealApi().update({ repoId: 'r1', updates: {} })
@@ -119,12 +175,8 @@ describe('repos real adapter unimplemented surface', () => {
     'cloneRemote',
     'createRemote',
     'addRemote',
-    'create',
     'cloneAbort',
     'getGitUsername',
-    'getBaseRefDefault',
-    'searchBaseRefs',
-    'searchBaseRefDetails',
     'reorder',
     'removeForHost'
   ] satisfies ReposMethod[])('rejects %s with UnimplementedBridgeError', async (method) => {
