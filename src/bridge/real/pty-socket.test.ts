@@ -31,6 +31,18 @@ describe('fetchPtyDataEndpoint', () => {
     await fetchPtyDataEndpoint()
     expect(invokeMock).toHaveBeenCalledTimes(1)
   })
+
+  it('retries after a failed fetch instead of caching the rejection', async () => {
+    invokeMock.mockRejectedValueOnce(new Error('endpoint momentarily down'))
+    invokeMock.mockResolvedValue({ port: 51235, token: 'efgh' })
+    const { fetchPtyDataEndpoint } = await importFresh()
+    // 端点瞬时失败：拒绝当次调用，但不缓存 rejected promise（Task 12 Minor-2）。
+    await expect(fetchPtyDataEndpoint()).rejects.toThrow('endpoint momentarily down')
+    await expect(fetchPtyDataEndpoint()).resolves.toEqual({ port: 51235, token: 'efgh' })
+    // 自愈后缓存照常工作：第三次不再发起 IPC。
+    await expect(fetchPtyDataEndpoint()).resolves.toEqual({ port: 51235, token: 'efgh' })
+    expect(invokeMock).toHaveBeenCalledTimes(2)
+  })
 })
 
 describe('__probeAdePtyWs', () => {

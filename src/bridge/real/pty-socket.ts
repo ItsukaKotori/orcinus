@@ -6,12 +6,17 @@ export type PtyDataEndpoint = { port: number; token: string }
 let cached: Promise<PtyDataEndpoint> | null = null
 
 /**
- * WS 数据面端点（规格 §4.7）。端口与 token 在进程生命周期内不变，取一次即缓存。
- * PtyHost 随装配即起服务，`pty_data_endpoint` 恒 `Ok`（Task 10 起不再有
- * 「服务未起」分支；`BridgeError` 归一仍由 invokeCommand 兜底）。
+ * WS 数据面端点（规格 §4.7）。端口与 token 在进程生命周期内不变，成功一次即缓存。
+ * 失败不缓存：`.catch` 先清空缓存再重新抛出，端点瞬时失败只损失当次调用、下次
+ * 重取（Task 12 审查 Minor-2——`cached ??=` 若留下 rejected promise 会缓存到进程
+ * 余生，数据面静默死亡）。PtyHost 随装配即起服务，`pty_data_endpoint` 恒 `Ok`
+ * （Task 10 起不再有「服务未起」分支；`BridgeError` 归一仍由 invokeCommand 兜底）。
  */
 export function fetchPtyDataEndpoint(): Promise<PtyDataEndpoint> {
-  cached ??= invokeCommand<PtyDataEndpoint>('pty_data_endpoint')
+  cached ??= invokeCommand<PtyDataEndpoint>('pty_data_endpoint').catch((error: unknown) => {
+    cached = null
+    throw error
+  })
   return cached
 }
 
@@ -28,6 +33,15 @@ const WS_OPEN = 1
 
 /** 活跃会话 → WS。多会话并存；同 id 重连先让位旧连接（规格 §3.2 连接替换）。 */
 const sockets = new Map<string, WebSocket>()
+
+/**
+ * 「退出早于 socket 落地」的墓碑：`pty:exit` 可在 `openPtySocket` 还在 await 端点
+ * 时到达（规格 §3.2 的窗口），此刻表里无连接可摘；记下 id 让晚到的 open 直接丢弃
+ * 本次连接——否则该 socket 会连上已死的会话，其异常关闭再广播一条假的本地死亡
+ * （Task 12 审查 Minor-1 的 duplicate exit 竞态）。同一 id 重生（重 spawn）在 open
+ * 处消费墓碑，不受影响；socket 已落地再收到 exit 则无需墓碑（摘表已抑制其关闭）。
+ */
+const exitedDuringOpen = new Set<string>()
 
 function utf8Decode(buffer: ArrayBuffer): string {
   return new TextDecoder().decode(buffer)
@@ -55,6 +69,7 @@ export async function openPtySocket(id: string, handlers: PtySocketHandlers): Pr
     previous.close()
   }
   const { port, token } = await fetchPtyDataEndpoint()
+  if (exitedDuringOpen.delete(id)) return // await 期间 exit 已到达：丢弃晚到的连接
   const ws = new WebSocket(`ws://127.0.0.1:${port}/pty/${id}?token=${token}`)
   ws.binaryType = 'arraybuffer'
   ws.onmessage = (event) => {
@@ -72,11 +87,15 @@ export async function openPtySocket(id: string, handlers: PtySocketHandlers): Pr
 
 /**
  * 关闭并摘除会话连接（`pty:exit` 事件 / 本地清理路径）。摘除先行，连接的
- * onclose 因此被判为「有意关闭」，不再触发会话死亡广播。
+ * onclose 因此被判为「有意关闭」，不再触发会话死亡广播。表里无连接可摘时立
+ * 墓碑——可能有 open 正在 await 端点（见 `exitedDuringOpen`）。
  */
 export function closePtySocket(id: string): void {
   const ws = sockets.get(id)
-  if (!ws) return
+  if (!ws) {
+    exitedDuringOpen.add(id)
+    return
+  }
   sockets.delete(id)
   try {
     ws.close()

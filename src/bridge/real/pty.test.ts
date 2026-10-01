@@ -163,6 +163,35 @@ describe('exit semantics', () => {
     await Promise.resolve()
     expect(unlisten).toHaveBeenCalledTimes(1)
   })
+
+  it('exit landing during the endpoint await drops the late socket (no duplicate death)', async () => {
+    // Task 12 Minor-1 竞态：openPtySocket await 端点期间 pty:exit 到达（规格 §3.2
+    // 窗口）。墓碑让晚到的 open 丢弃连接，而不是连上已死会话再广播假的 code:-1。
+    let releaseEndpoint: (endpoint: unknown) => void = () => {}
+    const endpointGate = new Promise((resolve) => {
+      releaseEndpoint = resolve
+    })
+    mockPtyCommands({
+      pty_data_endpoint: () => endpointGate,
+      pty_spawn: () => ({ id: 'pty-1' })
+    })
+    const { createPtyRealApi } = await importFresh()
+    const api = createPtyRealApi()
+    const exits: unknown[] = []
+    api.onExit((data) => exits.push(data))
+    await api.spawn(spawnOpts)
+    expect(FakeWebSocket.instances).toHaveLength(0) // 端点仍 gated：socket 未落地
+    tauriHandler('pty:exit')({ payload: { id: 'pty-1', code: 0 } })
+    expect(exits).toEqual([{ id: 'pty-1', code: 0 }])
+    releaseEndpoint(DATA_ENDPOINT)
+    await new Promise((resolve) => setTimeout(resolve, 0)) // 让 open 走完墓碑检查
+    expect(FakeWebSocket.instances).toHaveLength(0) // 晚到的连接被墓碑丢弃
+    expect(exits).toEqual([{ id: 'pty-1', code: 0 }]) // 无 code:-1 的重复死亡
+    // 同 id 重生：墓碑已被消费，新 spawn 正常落地连接。
+    await api.spawn(spawnOpts)
+    await vi.waitFor(() => expect(FakeWebSocket.instances).toHaveLength(1))
+    expect(exits).toEqual([{ id: 'pty-1', code: 0 }])
+  })
 })
 
 describe('write', () => {

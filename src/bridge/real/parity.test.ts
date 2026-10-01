@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { PtyManagementApi } from '../../shared/preload-api/api/pty-management-api'
 import type { PreloadApi } from '../../shared/preload-api/api-types'
 import type { Repo } from '../../shared/repo-types'
 import type { Worktree } from '../../shared/worktree/types'
@@ -12,6 +13,7 @@ import { createOnboardingRealApi } from './onboarding'
 import { createPlatformRealApi } from './platform'
 import { createPreflightRealApi } from './preflight'
 import { createProjectsRealApi } from './projects'
+import { createPtyRealApi } from './pty'
 import { createReposRealApi } from './repos'
 import { createSettingsRealApi } from './settings'
 import { createUiRealApi } from './ui'
@@ -59,6 +61,7 @@ const fixtures: Record<string, unknown> = {
   worktrees_list_all: [worktreeFixture],
   settings_get: { theme: 'dark' },
   ui_get: { activeView: 'terminal' },
+  pty_list_sessions: [],
   app_get_identity: {
     name: 'Orcinus',
     isDev: false,
@@ -169,6 +172,84 @@ const uiNoopSubscriptions = [
   'onWorktreeHistoryNavigate',
   'onZoomBrowserPage'
 ]
+
+/**
+ * pty 扁平契约方法的处置全集（Task 12 审查 Minor-3 的机械护栏）。键集由
+ * `satisfies Record<keyof …>` 锁定为契约全集：往 `PtyApi` 新增契约方法而不在此
+ * 处置，`pnpm typecheck` 直接报缺失键——「新增必须处置」是门禁失败而非 review
+ * 记忆。`management` 是嵌套子对象，不适配 surfaceCases 的「函数性」断言，由
+ * 下方专用用例以同样方式锁定。
+ */
+type PtyMethodDisposition = 'explicit' | 'missing'
+
+const ptySurfaceDispositions = {
+  // §2.1 控制面
+  spawn: 'explicit',
+  resize: 'explicit',
+  signal: 'explicit',
+  clearBuffer: 'explicit',
+  kill: 'explicit',
+  getCwd: 'explicit',
+  getSize: 'explicit',
+  hasPty: 'explicit',
+  listSessions: 'explicit',
+  // §2.1 数据面
+  write: 'explicit',
+  writeAccepted: 'explicit',
+  onData: 'explicit',
+  getPtyDataListenerCount: 'explicit',
+  // §2.1 事件映射
+  onExit: 'explicit',
+  onSpawned: 'explicit',
+  // §2.2 web-stub 同形缺省
+  getForegroundProcess: 'explicit',
+  confirmForegroundProcess: 'explicit',
+  hasChildProcesses: 'explicit',
+  inspectProcess: 'explicit',
+  getMainBufferSnapshot: 'explicit',
+  getAuthoritativeBufferSnapshotCapabilities: 'explicit',
+  reportRendererDeliveryState: 'explicit',
+  getRendererDeliveryDebugSnapshot: 'explicit',
+  // §2.3 noop 订阅 / no-op 方法
+  ackData: 'explicit',
+  ackColdRestore: 'explicit',
+  claimViewport: 'explicit',
+  reportGeometry: 'explicit',
+  onDeliveryResyncRequest: 'explicit',
+  respondDeliveryResync: 'explicit',
+  rendererDispatcherReady: 'explicit',
+  setActiveRendererPty: 'explicit',
+  setRendererPtyVisible: 'explicit',
+  setHiddenRendererPty: 'explicit',
+  setPtyDeliveryInterest: 'explicit',
+  publishTerminalViewAttributes: 'explicit',
+  onWriteUnavailable: 'explicit',
+  onReplay: 'explicit',
+  onModelRestoreNeeded: 'explicit',
+  onSideEffect: 'explicit',
+  getSideEffectSnapshot: 'explicit',
+  onSerializeBufferRequest: 'explicit',
+  onClearBufferRequest: 'explicit',
+  sendSerializedBuffer: 'explicit',
+  declarePendingPaneSerializer: 'explicit',
+  settlePaneSerializer: 'explicit',
+  clearPendingPaneSerializer: 'explicit',
+  reportRendererSerializerReady: 'explicit',
+  resetRendererDeliveryDebug: 'explicit'
+} satisfies Record<Exclude<keyof PreloadApi['pty'], 'management'>, PtyMethodDisposition>
+
+const ptyManagementSurface = Object.keys({
+  listSessions: true,
+  killAll: true,
+  killOne: true,
+  restart: true,
+  macTccAttribution: true
+} satisfies Record<keyof PtyManagementApi, boolean>)
+
+const ptySurfaceMethods = (disposition: PtyMethodDisposition): string[] =>
+  Object.entries(ptySurfaceDispositions)
+    .filter(([, value]) => value === disposition)
+    .map(([method]) => method)
 
 const surfaceCases: SurfaceCase[] = [
   {
@@ -375,6 +456,11 @@ const surfaceCases: SurfaceCase[] = [
     explicit: ['check', 'refreshAgents'],
     missing: []
   },
+  {
+    domain: 'pty',
+    explicit: ptySurfaceMethods('explicit'),
+    missing: ptySurfaceMethods('missing')
+  },
   { domain: 'onboarding', explicit: ['get', 'update'], missing: [] },
   { domain: 'platform', explicit: ['get'], missing: [] }
 ]
@@ -427,6 +513,22 @@ describe('mock/real parity: method surface', () => {
       warn.mockRestore()
     }
   )
+
+  it('pty.management implements the full management sub-surface', () => {
+    // `management` 嵌套子对象同样以 `satisfies Record<keyof …>` 锁键集（见
+    // `ptyManagementSurface`）：契约新增而 real 未接，typecheck 失败。
+    const management = createPtyRealApi().management
+    for (const method of ptyManagementSurface) {
+      expect(
+        Object.prototype.hasOwnProperty.call(management, method),
+        `pty.management.${method} must be explicitly implemented in real mode`
+      ).toBe(true)
+      expect(
+        typeof management[method as keyof PtyManagementApi],
+        `pty.management.${method} must be a function`
+      ).toBe('function')
+    }
+  })
 })
 
 type ShapeCase = {
@@ -514,6 +616,17 @@ const shapeCases: ShapeCase[] = [
     assertShape: (value) => {
       expect(value).toEqual(expect.objectContaining({ platform: expect.any(String) }))
     }
+  },
+  {
+    // No `command`: listSessions rides the `{args}` envelope, which the shared
+    // `toHaveBeenCalledWith(command)` single-arg form cannot express — the exact
+    // envelope is asserted verbatim in pty.test.ts (invoke passthrough).
+    name: 'pty.listSessions',
+    real: () => createPtyRealApi().listSessions(),
+    mock: () => createMockAdeApi().pty.listSessions(),
+    assertShape: (value) => {
+      expect(Array.isArray(value)).toBe(true)
+    }
   }
 ]
 
@@ -544,6 +657,20 @@ describe('mock/real parity: event subscriptions', () => {
     expect(typeof realStop).toBe('function')
     expect(typeof mockStop).toBe('function')
     expect(listenMock).toHaveBeenCalledWith('repos:changed', expect.any(Function))
+    realStop()
+    await Promise.resolve()
+    expect(unlisten).toHaveBeenCalledTimes(1)
+    mockStop()
+  })
+
+  it('pty.onSpawned hands back an unsubscriber in both modes', async () => {
+    const unlisten = vi.fn()
+    listenMock.mockResolvedValueOnce(unlisten)
+    const realStop = createPtyRealApi().onSpawned(() => {})
+    const mockStop = createMockAdeApi().pty.onSpawned(() => {})
+    expect(typeof realStop).toBe('function')
+    expect(typeof mockStop).toBe('function')
+    expect(listenMock).toHaveBeenCalledWith('pty:spawned', expect.any(Function))
     realStop()
     await Promise.resolve()
     expect(unlisten).toHaveBeenCalledTimes(1)
@@ -615,6 +742,8 @@ function realApiFor(domain: keyof PreloadApi): unknown {
       return createAppRealApi()
     case 'preflight':
       return createPreflightRealApi()
+    case 'pty':
+      return createPtyRealApi()
     case 'platform':
       return createPlatformRealApi()
     default:
