@@ -168,8 +168,8 @@ export const commands = {
 	ptyManagementKillOne: (args: PtyManagementKillOneArgs) => typedError<PtyManagementOpReply, BridgeError>(__TAURI_INVOKE("pty_management_kill_one", { args })),
 	/**  无 daemon 可重启（规格 §2.1）；恒 `{success:true}`。 */
 	ptyManagementRestart: () => typedError<PtyManagementOpReply, BridgeError>(__TAURI_INVOKE("pty_management_restart")),
-	/**  本侧无 daemon pid 记录可查 → 恒 `'unknown'`（横幅不显示）。 */
-	ptyManagementMacTccAttribution: () => typedError<PtyManagementMacTccHealth, BridgeError>(__TAURI_INVOKE("pty_management_mac_tcc_attribution")),
+	/**  本侧无 daemon pid 记录可查 → 恒 `{health:'unknown'}`（横幅不显示）。 */
+	ptyManagementMacTccAttribution: () => typedError<PtyManagementMacTccAttributionReply, BridgeError>(__TAURI_INVOKE("pty_management_mac_tcc_attribution")),
 };
 
 /* Types */
@@ -705,8 +705,16 @@ export type PtyManagementListReply = {
 };
 
 /**
- *  management `macTccAttribution` 回复：本侧无 daemon pid 记录可查 →
- *  恒 `'unknown'`（横幅不显示，web stub 同语义）。
+ *  management `macTccAttribution` 回复（对齐 `pty-management-api.ts` 的
+ *  `{ health }` 包裹契约）。
+ */
+export type PtyManagementMacTccAttributionReply = {
+	health: PtyManagementMacTccHealth,
+};
+
+/**
+ *  `macTccAttribution` 的 `health` 值：本侧无 daemon pid 记录可查 → 恒
+ *  `'unknown'`（横幅不显示，web stub 同语义）。
  */
 export type PtyManagementMacTccHealth = "unknown";
 

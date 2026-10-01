@@ -56,6 +56,15 @@ pub struct PtySpawnReply {
     pub is_reattach: Option<bool>,
 }
 
+/// spawn cwd 解析结果。
+pub struct ResolvedSpawnCwd {
+    /// 终值 cwd（规格 §2.4 解析链终点）。
+    pub path: String,
+    /// `cwdFallback === 'worktree'` 被请求但未命中（终值落在 home）——
+    /// 调用侧据此记 warn（规格 §4.6）。
+    pub worktree_fallback_missed: bool,
+}
+
 /// spawn cwd 解析（规格 §2.4）：`cwd` 优先（空串视为缺省）→
 /// `cwdFallback === 'worktree'` 且 `worktreeId` 可解析（`id.split_once("::")`
 /// 取 path 段 + `Path::is_dir` 校验）→ home。
@@ -64,18 +73,28 @@ pub fn resolve_spawn_cwd(
     cwd_fallback: Option<&str>,
     worktree_id: Option<&str>,
     home: &str,
-) -> String {
+) -> ResolvedSpawnCwd {
     if let Some(cwd) = cwd.filter(|value| !value.is_empty()) {
-        return cwd.to_string();
+        return ResolvedSpawnCwd {
+            path: cwd.to_string(),
+            worktree_fallback_missed: false,
+        };
     }
-    if cwd_fallback == Some("worktree") {
+    let worktree_fallback_missed = cwd_fallback == Some("worktree");
+    if worktree_fallback_missed {
         if let Some((_, path)) = worktree_id.and_then(|id| id.split_once("::")) {
             if std::path::Path::new(path).is_dir() {
-                return path.to_string();
+                return ResolvedSpawnCwd {
+                    path: path.to_string(),
+                    worktree_fallback_missed: false,
+                };
             }
         }
     }
-    home.to_string()
+    ResolvedSpawnCwd {
+        path: home.to_string(),
+        worktree_fallback_missed,
+    }
 }
 
 /// `pty_write` / `pty_write_accepted` 参数。
@@ -347,12 +366,20 @@ pub struct PtyManagementOpReply {
     pub success: bool,
 }
 
-/// management `macTccAttribution` 回复：本侧无 daemon pid 记录可查 →
-/// 恒 `'unknown'`（横幅不显示，web stub 同语义）。
+/// `macTccAttribution` 的 `health` 值：本侧无 daemon pid 记录可查 → 恒
+/// `'unknown'`（横幅不显示，web stub 同语义）。
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
 pub enum PtyManagementMacTccHealth {
     #[serde(rename = "unknown")]
     Unknown,
+}
+
+/// management `macTccAttribution` 回复（对齐 `pty-management-api.ts` 的
+/// `{ health }` 包裹契约）。
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PtyManagementMacTccAttributionReply {
+    pub health: PtyManagementMacTccHealth,
 }
 
 #[tauri::command]
@@ -386,16 +413,23 @@ pub async fn pty_spawn(
     }
     let worktree_id = args.worktree_id.clone();
     let host = Arc::clone(&state.pty_host);
-    let cwd = resolve_spawn_cwd(
+    let resolved_cwd = resolve_spawn_cwd(
         args.cwd.as_deref(),
         args.cwd_fallback.as_deref(),
         args.worktree_id.as_deref(),
         &state.home,
     );
+    if resolved_cwd.worktree_fallback_missed {
+        // 规格 §4.6：worktree cwd 解析失败记录 warn（bridge 层 eprintln 惯例）。
+        eprintln!(
+            "[ade-bridge] pty_spawn: cwdFallback 'worktree' unresolved (worktreeId: {:?}), falling back to home",
+            args.worktree_id
+        );
+    }
     let request = ade_pty::SpawnRequest {
         cols: args.cols,
         rows: args.rows,
-        cwd: Some(cwd),
+        cwd: Some(resolved_cwd.path),
         env: args.env,
         env_to_delete: args.env_to_delete,
         command: args.command,
@@ -773,11 +807,14 @@ pub fn pty_management_restart() -> Result<PtyManagementOpReply, BridgeError> {
     Ok(PtyManagementOpReply { success: true })
 }
 
-/// 本侧无 daemon pid 记录可查 → 恒 `'unknown'`（横幅不显示）。
+/// 本侧无 daemon pid 记录可查 → 恒 `{health:'unknown'}`（横幅不显示）。
 #[tauri::command]
 #[specta::specta]
-pub fn pty_management_mac_tcc_attribution() -> Result<PtyManagementMacTccHealth, BridgeError> {
-    Ok(PtyManagementMacTccHealth::Unknown)
+pub fn pty_management_mac_tcc_attribution(
+) -> Result<PtyManagementMacTccAttributionReply, BridgeError> {
+    Ok(PtyManagementMacTccAttributionReply {
+        health: PtyManagementMacTccHealth::Unknown,
+    })
 }
 
 #[cfg(test)]
@@ -874,15 +911,15 @@ mod tests {
 
     #[test]
     fn resolve_cwd_prefers_explicit_cwd() {
-        assert_eq!(
-            resolve_spawn_cwd(Some("/explicit"), Some("worktree"), Some("r::/wt"), "/home"),
-            "/explicit"
-        );
-        // 空串 cwd 视为缺省，走回退链（空 program/cwd 必败，不得透传）。
-        assert_eq!(
-            resolve_spawn_cwd(Some(""), Some("worktree"), Some("r::/wt"), "/home"),
-            "/home"
-        );
+        let explicit =
+            resolve_spawn_cwd(Some("/explicit"), Some("worktree"), Some("r::/wt"), "/home");
+        assert_eq!(explicit.path, "/explicit");
+        assert!(!explicit.worktree_fallback_missed);
+        // 空串 cwd 视为缺省，走回退链（空 program/cwd 必败，不得透传）；
+        // 回退被请求但未命中 → miss 旗标立（规格 §4.6 记 warn 用）。
+        let missed = resolve_spawn_cwd(Some(""), Some("worktree"), Some("r::/wt"), "/home");
+        assert_eq!(missed.path, "/home");
+        assert!(missed.worktree_fallback_missed);
     }
 
     #[test]
@@ -891,35 +928,31 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         let dir_str = dir.to_str().expect("utf-8 temp dir").to_string();
         // `r1::<dir>` 命中 path 段且是目录 → 采用。
-        assert_eq!(
-            resolve_spawn_cwd(
-                None,
-                Some("worktree"),
-                Some(&format!("r1::{dir_str}")),
-                "/home"
-            ),
-            dir_str
+        let hit = resolve_spawn_cwd(
+            None,
+            Some("worktree"),
+            Some(&format!("r1::{dir_str}")),
+            "/home",
         );
-        // worktreeId 无 "::" path 段 → home。
-        assert_eq!(
-            resolve_spawn_cwd(None, Some("worktree"), Some("r1"), "/home"),
-            "/home"
+        assert_eq!(hit.path, dir_str);
+        assert!(!hit.worktree_fallback_missed);
+        // worktreeId 无 "::" path 段 → home + miss。
+        let no_sep = resolve_spawn_cwd(None, Some("worktree"), Some("r1"), "/home");
+        assert_eq!(no_sep.path, "/home");
+        assert!(no_sep.worktree_fallback_missed);
+        // path 段不是目录 → home + miss。
+        let not_dir = resolve_spawn_cwd(
+            None,
+            Some("worktree"),
+            Some("r1::/definitely/not/a/dir"),
+            "/home",
         );
-        // path 段不是目录 → home。
-        assert_eq!(
-            resolve_spawn_cwd(
-                None,
-                Some("worktree"),
-                Some("r1::/definitely/not/a/dir"),
-                "/home"
-            ),
-            "/home"
-        );
-        // cwdFallback 非 'worktree' → home。
-        assert_eq!(
-            resolve_spawn_cwd(None, Some("repo"), Some(&format!("r1::{dir_str}")), "/home"),
-            "/home"
-        );
+        assert_eq!(not_dir.path, "/home");
+        assert!(not_dir.worktree_fallback_missed);
+        // cwdFallback 非 'worktree' → home 但不算 miss（回退未被请求）。
+        let other = resolve_spawn_cwd(None, Some("repo"), Some(&format!("r1::{dir_str}")), "/home");
+        assert_eq!(other.path, "/home");
+        assert!(!other.worktree_fallback_missed);
         std::fs::remove_dir_all(&dir).ok();
     }
 
@@ -1080,9 +1113,14 @@ mod tests {
             serde_json::to_value(PtyManagementOpReply { success: true }).unwrap(),
             json!({ "success": true })
         );
+        // macTccAttribution → `{health:'unknown'}` 包裹对象（对齐
+        // pty-management-api.ts 的 `{ health }` 契约与 web stub）。
         assert_eq!(
-            serde_json::to_value(PtyManagementMacTccHealth::Unknown).unwrap(),
-            json!("unknown")
+            serde_json::to_value(PtyManagementMacTccAttributionReply {
+                health: PtyManagementMacTccHealth::Unknown,
+            })
+            .unwrap(),
+            json!({ "health": "unknown" })
         );
         assert_eq!(
             serde_json::to_value(PtyManagementKillAllReply {
