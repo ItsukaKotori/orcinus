@@ -71,6 +71,7 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "futures-util",
+ "libc",
  "portable-pty",
  "rand 0.10.3",
  "serde",

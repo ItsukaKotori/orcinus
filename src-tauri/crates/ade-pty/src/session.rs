@@ -122,6 +122,13 @@ impl PreAttach {
     pub(crate) fn len(&self) -> usize {
         self.buf.len()
     }
+
+    /// 只排空字节、不停用（[`Session::clear_buffer`] 用）：清空后的新输出
+    /// 照常入环形，首连重放语义保留（与 [`PreAttach::take_replay`] 的差别）。
+    pub(crate) fn clear(&mut self) {
+        self.buf.clear();
+        self.total = 0;
+    }
 }
 
 /// reader → 当前连接下行通道的出口。接管方经 [`OutboundHub::replace`] 换入新
@@ -206,6 +213,14 @@ pub struct Session {
     // writer 独立 Mutex（输入与 kill 竞争小）；child 用于 kill/wait
     writer: Mutex<Box<dyn Write + Send>>,
     child: Mutex<Box<dyn portable_pty::Child + Send + Sync>>,
+    /// spawn 时快照的子进程 pid（Task 9）：kill 升级路径（SIGKILL）与 signal
+    /// 必须绕开 child 锁——exit 线程在整个 `wait()` 期间持锁，子进程无视信号
+    /// 存活时升级方若走 child 锁会与其被杀线程互相阻塞。Option：进程被 reap
+    /// 后 portable-pty 的 `process_id()` 才会变 None，而快照恒为已观测值。
+    pid: Option<u32>,
+    /// spawn 时 `clone_killer()` 留存的独立终止句柄（Task 9）：与 child 锁无关
+    /// 的 kill/terminate 通道（windows 升级路径用；unix 主走 pid + libc::kill）。
+    killer: Mutex<Box<dyn portable_pty::ChildKiller + Send + Sync>>,
     /// master 句柄：resize 需要（brief：master 需存进 Session）。kill 时
     /// take 出来 drop（断管道）；None = 会话已 kill（终态）。
     master: Mutex<Option<Box<dyn portable_pty::MasterPty + Send>>>,
@@ -215,6 +230,13 @@ pub struct Session {
     /// `pty-writer`）串行写 master——保序，且转发任务不做内联阻塞写（审查
     /// I-2：内联写在输出积压时会冻结双向甚至死锁）。满时发送方 `send.await`
     /// 背压。[`Session::write`] 直写保留给宿主 API/command 交付/CPR 应答。
+    ///
+    /// 背压残余死锁环边界（审查 I-2 残留项，记录在案）：`send.await` 挂起会
+    /// **冻结转发任务 select 的下行分支**（下行转发暂停，输出滞留通道而非丢失）；
+    /// 当「下行积压打满（128 块 ≈ 8 MiB）+ 上行 128 帧打满 + 子进程不读 stdin」
+    /// 三条件同时成立时环闭合——转发任务挂起 → 下行停摆 → reader 停读 → 子进程
+    /// 阻塞在 tty write → 写线程阻塞在 master 写 → 上行通道更满。环上唯一能
+    /// 单方面打破的出口是宿主 kill（会话终态），规格接受该残余形态。
     pub input: tokio::sync::mpsc::Sender<Vec<u8>>,
     /// reader → 当前连接下行通道的出口（接管方换入通道，见 [`OutboundHub`]）。
     pub outbound: OutboundHub,
@@ -306,6 +328,10 @@ impl Session {
             })
             .map_err(PtyError::from)?;
         let child = pair.slave.spawn_command(cmd).map_err(PtyError::from)?;
+        // Task 9：spawn 即快照 pid 与独立 killer 句柄（字段文档：升级/信号路径
+        // 绝不走 child 锁）。
+        let pid = child.process_id();
+        let killer = child.clone_killer();
         // 子进程已持有 slave 端；宿主侧立即丢弃（portable-pty API 惯例）。
         drop(pair.slave);
         let writer = pair.master.take_writer().map_err(PtyError::from)?;
@@ -325,6 +351,8 @@ impl Session {
             id: id.clone(),
             writer: Mutex::new(writer),
             child: Mutex::new(child),
+            pid,
+            killer: Mutex::new(killer),
             master: Mutex::new(Some(pair.master)),
             cwd,
             size: Mutex::new((req.cols, req.rows)),
@@ -362,6 +390,9 @@ impl Session {
         // Weak 而非 Arc：writer 线程不得钉住 Session（同 unix reader 的理由）；
         // 逐帧 upgrade，Session 已弃置即退出。所有发送端 drop（Session 弃置 +
         // 各转发任务终止）后 blocking_recv 得 None，线程自然结束——无需回收。
+        // 本 spawn 失败（OOM 级）即 `?` 返回：此刻 reader 线程已在跑而 exit 线程
+        // 未起，半成品 Session 随 Err 弃置——master drop 使 reader 确定性 EOF
+        // 自然收尾（孤儿边界，无泄漏；exit 无从检测亦无意义）。
         let writer_session = Arc::downgrade(&session);
         std::thread::Builder::new()
             .name(format!("pty-writer-{id}"))
@@ -469,6 +500,93 @@ impl Session {
             .map_err(PtyError::from)?;
         *self.size.lock().expect("size mutex poisoned") = (cols, rows);
         Ok(())
+    }
+
+    /// spawn 时快照的子进程 pid（不在 child 锁内——见字段文档）。
+    pub fn process_id(&self) -> Option<u32> {
+        self.pid
+    }
+
+    /// 清空 pre-attach 环形缓冲（Task 9 `PtyHost::clear_buffer`）：只排空字节，
+    /// **不停用**——首连重放语义保留，清空后的新输出照常入环形。
+    pub fn clear_buffer(&self) {
+        self.pre_attach
+            .lock()
+            .expect("pre_attach mutex poisoned")
+            .clear();
+    }
+
+    /// 向子进程发信号（Task 9 `PtyHost::signal`）。unix：信号名（`SIG` 前缀
+    /// 可选）映射后经 `libc::kill` 进程级投递；windows：仅 SIGTERM/SIGKILL，
+    /// 映射到 spawn 时留存的 killer 句柄 `kill`（TerminateProcess），其余 Err。
+    ///
+    /// 与 [`Session::kill`] 的差别：本方法**不等待**——信号投递即返回，退出
+    /// 检测仍走 exit 线程/watch；也绝不触碰 child 锁（exit 线程可能在持锁
+    /// `wait`，届时本方法仍可即时投递）。
+    pub fn signal(&self, sig: &str) -> Result<(), PtyError> {
+        #[cfg(unix)]
+        {
+            let signum = signal_number(sig).ok_or_else(|| {
+                PtyError::Io(std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    format!("unsupported signal: {sig}"),
+                ))
+            })?;
+            let pid = self.pid.ok_or_else(|| {
+                PtyError::Io(std::io::Error::other(
+                    "child pid unavailable (already reaped)",
+                ))
+            })?;
+            // SAFETY: libc::kill 仅取 pid 与信号号两个整型，无指针参数。
+            if unsafe { libc::kill(pid as libc::pid_t, signum) } != 0 {
+                return Err(PtyError::Io(std::io::Error::last_os_error()));
+            }
+            Ok(())
+        }
+        #[cfg(windows)]
+        {
+            match bare_signal_name(sig) {
+                Some("TERM" | "KILL") => self
+                    .killer
+                    .lock()
+                    .expect("killer mutex poisoned")
+                    .kill()
+                    .map_err(PtyError::from),
+                _ => Err(PtyError::Io(std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    format!("windows supports only SIGTERM/SIGKILL, got: {sig}"),
+                ))),
+            }
+        }
+    }
+
+    /// 锁无关的强制终止（Task 9 kill 升级路径）：unix 进程级 SIGKILL（pid +
+    /// `libc::kill`，正是审查要求的升级通道）；windows 经 killer 句柄
+    /// TerminateProcess。返回是否成功投递（已 reap/句柄失效为 false）。
+    pub fn force_terminate(&self) -> bool {
+        #[cfg(unix)]
+        {
+            match self.pid {
+                // SAFETY: 同 signal。
+                Some(pid) => (unsafe { libc::kill(pid as libc::pid_t, libc::SIGKILL) } == 0),
+                // pid 缺失（理论不可达，spawn 即快照）：killer 兜底（portable-pty
+                // unix 实现同为进程级 SIGKILL）。
+                None => self
+                    .killer
+                    .lock()
+                    .expect("killer mutex poisoned")
+                    .kill()
+                    .is_ok(),
+            }
+        }
+        #[cfg(windows)]
+        {
+            self.killer
+                .lock()
+                .expect("killer mutex poisoned")
+                .kill()
+                .is_ok()
+        }
     }
 
     /// kill 会话：closer 先断 master（writer 换入 sink——旧 writer 的 Drop 发
@@ -597,4 +715,47 @@ impl std::io::Write for CprReplyWriter<'_> {
         // Session::write 内部已 flush。
         Ok(())
     }
+}
+
+/// 剥掉可选的 `SIG` 前缀，返回裸信号名（[`Session::signal`] 入口归一用）。
+fn bare_signal_name(sig: &str) -> Option<&str> {
+    Some(sig.strip_prefix("SIG").unwrap_or(sig))
+}
+
+/// 信号名（裸名或带 `SIG` 前缀）→ 信号号（unix）。覆盖终端会话常用集；
+/// 未知名返回 None（[`Session::signal`] 转 InvalidInput）。
+#[cfg(unix)]
+fn signal_number(sig: &str) -> Option<i32> {
+    let num = match bare_signal_name(sig)? {
+        "HUP" => libc::SIGHUP,
+        "INT" => libc::SIGINT,
+        "QUIT" => libc::SIGQUIT,
+        "ILL" => libc::SIGILL,
+        "TRAP" => libc::SIGTRAP,
+        "ABRT" => libc::SIGABRT,
+        "FPE" => libc::SIGFPE,
+        "KILL" => libc::SIGKILL,
+        "BUS" => libc::SIGBUS,
+        "SEGV" => libc::SIGSEGV,
+        "USR1" => libc::SIGUSR1,
+        "USR2" => libc::SIGUSR2,
+        "PIPE" => libc::SIGPIPE,
+        "ALRM" => libc::SIGALRM,
+        "TERM" => libc::SIGTERM,
+        "CHLD" => libc::SIGCHLD,
+        "CONT" => libc::SIGCONT,
+        "STOP" => libc::SIGSTOP,
+        "TSTP" => libc::SIGTSTP,
+        "TTIN" => libc::SIGTTIN,
+        "TTOU" => libc::SIGTTOU,
+        "URG" => libc::SIGURG,
+        "XCPU" => libc::SIGXCPU,
+        "XFSZ" => libc::SIGXFSZ,
+        "VTALRM" => libc::SIGVTALRM,
+        "PROF" => libc::SIGPROF,
+        "WINCH" => libc::SIGWINCH,
+        "SYS" => libc::SIGSYS,
+        _ => return None,
+    };
+    Some(num)
 }
