@@ -6,19 +6,102 @@ export type PtyDataEndpoint = { port: number; token: string }
 let cached: Promise<PtyDataEndpoint> | null = null
 
 /**
- * WS 数据面端点（规格 §4.7）。端口与 token 在进程生命周期内不变，取一次即缓存；
- * 服务未起时 reject（`BridgeError` 已由 invokeCommand 归一为 `Error`）。
+ * WS 数据面端点（规格 §4.7）。端口与 token 在进程生命周期内不变，取一次即缓存。
+ * PtyHost 随装配即起服务，`pty_data_endpoint` 恒 `Ok`（Task 10 起不再有
+ * 「服务未起」分支；`BridgeError` 归一仍由 invokeCommand 兜底）。
  */
 export function fetchPtyDataEndpoint(): Promise<PtyDataEndpoint> {
   cached ??= invokeCommand<PtyDataEndpoint>('pty_data_endpoint')
   return cached
 }
 
+/** 每会话数据面连接的回调（`pty.ts` 的 emitter 接线）。 */
+export type PtySocketHandlers = {
+  /** 下行帧 → 契约 `onData` 载荷（utf8 解码，`rawLength` 为原始字节数）。 */
+  onData: (payload: { id: string; data: string; rawLength: number }) => void
+  /** 非 pty:exit / 替换触发的连接关闭 → 判会话死亡（规格 §3.2 已知语义）。 */
+  onAbnormalClose: (id: string) => void
+}
+
+/** WS readyState OPEN（字面量而非 `WebSocket.OPEN` 静态量——stub 友好）。 */
+const WS_OPEN = 1
+
+/** 活跃会话 → WS。多会话并存；同 id 重连先让位旧连接（规格 §3.2 连接替换）。 */
+const sockets = new Map<string, WebSocket>()
+
+function utf8Decode(buffer: ArrayBuffer): string {
+  return new TextDecoder().decode(buffer)
+}
+
+export function utf8Encode(data: string): Uint8Array<ArrayBuffer> {
+  // SAFETY: TextEncoder.encode always allocates a plain (non-shared) ArrayBuffer.
+  return new TextEncoder().encode(data) as Uint8Array<ArrayBuffer>
+}
+
+/**
+ * 建一条会话数据面连接：`ws://127.0.0.1:<port>/pty/<id>?token=…`（规格 §3.2），
+ * 端点经 `fetchPtyDataEndpoint`（缓存）。binary 帧即原始字节：下行喂
+ * `onData`，上行（`sendPtySocketData`）直写 master writer。
+ *
+ * 关闭语义（规格 §3.2 的顺序保证）：`closePtySocket`（pty:exit / 同 id 替换
+ * 触发）先把连接摘出表，其 onclose 不再回调；其余关闭按 close code 二分——
+ * `1000` 是 server 退出/让位的干净收尾（真实退出码随后由 pty:exit 事件携带，
+ * 不重复广播 code:-1），非 1000 即异常断线 → 会话死亡 → `onAbnormalClose`。
+ */
+export async function openPtySocket(id: string, handlers: PtySocketHandlers): Promise<void> {
+  const previous = sockets.get(id)
+  if (previous) {
+    sockets.delete(id)
+    previous.close()
+  }
+  const { port, token } = await fetchPtyDataEndpoint()
+  const ws = new WebSocket(`ws://127.0.0.1:${port}/pty/${id}?token=${token}`)
+  ws.binaryType = 'arraybuffer'
+  ws.onmessage = (event) => {
+    const buffer = event.data as ArrayBuffer
+    handlers.onData({ id, data: utf8Decode(buffer), rawLength: buffer.byteLength })
+  }
+  ws.onclose = (event) => {
+    if (sockets.get(id) !== ws) return // pty:exit / 替换触发的关闭：已被摘除或接管
+    sockets.delete(id)
+    if (event.code === 1000) return // server 干净收尾，退出码由 pty:exit 携带
+    handlers.onAbnormalClose(id)
+  }
+  sockets.set(id, ws)
+}
+
+/**
+ * 关闭并摘除会话连接（`pty:exit` 事件 / 本地清理路径）。摘除先行，连接的
+ * onclose 因此被判为「有意关闭」，不再触发会话死亡广播。
+ */
+export function closePtySocket(id: string): void {
+  const ws = sockets.get(id)
+  if (!ws) return
+  sockets.delete(id)
+  try {
+    ws.close()
+  } catch {
+    // 已死连接的 close 可能抛（stub/实现差异）；摘除即目的已达成。
+  }
+}
+
+/**
+ * 上行一帧（utf8 编码直写 master writer）。仅 WS 就绪（OPEN）时可写——
+ * `write` 静默丢、`writeAccepted` 回 false 的语义由此实现；返回是否已发出。
+ */
+export function sendPtySocketData(id: string, data: string): boolean {
+  const ws = sockets.get(id)
+  if (!ws || ws.readyState !== WS_OPEN) return false
+  ws.send(utf8Encode(data))
+  return true
+}
+
 /**
  * 诊断探针（非产品路径）：连 `/pty/probe` 发一字节收一字节，验证 webview 到
  * WS 环回服务（规格 §9 风险 1）的连通性。控制台执行
  * `await __probeAdePtyWs()`，期望返回 `'ade pty ws: ok'`。
- * Task 7 会话路由落地后此探针改测真实会话路径，保留为常驻诊断。
+ * 注意：生产 server 无名为 probe 的会话（未知 id → close(1008)），回显需自备
+ * 回显目标；真实会话路径由 `openPtySocket` 承载，本探针保留为常驻连通性诊断。
  */
 export async function __probeAdePtyWs(): Promise<string> {
   const { port, token } = await fetchPtyDataEndpoint()

@@ -49,6 +49,7 @@ import { createPlatformRealApi } from './real/platform'
 import { createPreflightRealApi } from './real/preflight'
 import { createProjectGroupsRealApi } from './real/project-groups'
 import { createProjectsRealApi } from './real/projects'
+import { createPtyRealApi } from './real/pty'
 import { createReposRealApi } from './real/repos'
 import { createSettingsRealApi } from './real/settings'
 import { createUiRealApi } from './real/ui'
@@ -71,6 +72,7 @@ type RealDomains = Pick<
   | 'preflight'
   | 'projectGroups'
   | 'projects'
+  | 'pty'
   | 'repos'
   | 'settings'
   | 'ui'
@@ -79,7 +81,7 @@ type RealDomains = Pick<
 
 /**
  * The Phase 0 mock inventory. Real mode starts from this map and replaces the
- * twelve ported domains, so both modes share one namespace list and cannot drift.
+ * thirteen ported domains, so both modes share one namespace list and cannot drift.
  */
 function createMockDomains(): Partial<PreloadApi> {
   return {
@@ -139,6 +141,7 @@ function createRealDomains(): RealDomains {
     preflight: createPreflightRealApi(),
     projectGroups: createProjectGroupsRealApi(),
     projects: createProjectsRealApi(),
+    pty: createPtyRealApi(),
     repos: createReposRealApi(),
     settings: createSettingsRealApi(),
     ui: createUiRealApi(),
@@ -161,7 +164,7 @@ export function createAdeApi(options?: AdeApiOptions): PreloadApi {
   if (resolveMode(options) === 'mock') {
     return createMockAdeApi()
   }
-  // SAFETY: the twelve ported domains plus the mock inventory cover every namespace;
+  // SAFETY: the thirteen ported domains plus the mock inventory cover every namespace;
   // the Proxy fallback keeps unlisted names rejecting as unimplemented.
   const partial: Partial<PreloadApi> = { ...createMockDomains(), ...createRealDomains() }
   return withUnimplementedFallback(partial)
