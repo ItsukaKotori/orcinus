@@ -29,6 +29,7 @@ import {
   createShutdownCheckpointGuard
 } from '../lib/shutdown-checkpoint-guard'
 import { createShutdownCheckpointPersist } from './shutdown-checkpoint-persist'
+import { createSessionFlushPersist } from '../lib/session-flush-persist'
 import { shutdownBufferCaptures } from '../components/terminal-pane/shutdown-buffer-captures'
 import {
   dispatchWindowCloseRequest,
@@ -42,6 +43,8 @@ import {
   ORCA_RENDERER_SHUTDOWN_CHECKPOINT_ABORTED_EVENT,
   ORCA_RENDERER_UNLOAD_PREVENTED_EVENT
 } from '../../../shared/renderer-shutdown-events'
+import { registerSessionFlushHandler } from '../../../bridge/real/session'
+import type { WorkspaceSessionPatch } from '../../../shared/workspace-session-state-types'
 import type { AppState } from '../store/types'
 import { applyRemoteWorkspacePushStatus } from '../hooks/remote-workspace-push-status'
 
@@ -293,6 +296,31 @@ export function useAppSessionPersistence(): void {
         captureAll: captureAllMountedTabBuffers,
         isDocumentHidden: () => document.visibilityState === 'hidden'
       }),
+    []
+  )
+
+  // R2 (spec §3.4): host-driven quit flush — one deterministic capture + full
+  // payload patch + flush, then the bridge acks and the host exits.
+  useEffect(
+    () =>
+      registerSessionFlushHandler(
+        createSessionFlushPersist({
+          captureAll: captureAllMountedTabBuffers,
+          captureTranscripts: () =>
+            captureTranscriptAgentSessions({
+              state: useAppStore.getState(),
+              origin: 'quit',
+              ...defaultTranscriptCaptureIo,
+              now: Date.now,
+              mergeRecords: (records) =>
+                useAppStore.getState().mergeSleepingAgentSessionRecords(records)
+            }),
+          buildPayload: () => buildWorkspaceSessionPayload(useAppStore.getState()),
+          canPersist: () => shouldPersistWorkspaceSession(useAppStore.getState()),
+          patch: (payload) => window.api.session.patch(payload as WorkspaceSessionPatch),
+          flush: () => window.api.session.flush()
+        })
+      ),
     []
   )
 
