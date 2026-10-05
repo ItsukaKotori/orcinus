@@ -52,6 +52,7 @@ import { createProjectGroupsRealApi } from './real/project-groups'
 import { createProjectsRealApi } from './real/projects'
 import { createPtyRealApi } from './real/pty'
 import { createReposRealApi } from './real/repos'
+import { createSessionRealApi } from './real/session'
 import { createSettingsRealApi } from './real/settings'
 import { createUiRealApi } from './real/ui'
 import { createWorktreesRealApi } from './real/worktrees'
@@ -76,6 +77,7 @@ type RealDomains = Pick<
   | 'projects'
   | 'pty'
   | 'repos'
+  | 'session'
   | 'settings'
   | 'ui'
   | 'worktrees'
@@ -146,6 +148,10 @@ function createRealDomains(): RealDomains {
     projects: createProjectsRealApi(),
     pty: createPtyRealApi(),
     repos: createReposRealApi(),
+    // Why `.session`: PreloadApi flattens the workspace-session contract into
+    // sibling domains, so the real `session` key takes the sub-surface while the
+    // factory's `Pick<PreloadApi, 'session'>` wrapper stays the parity anchor.
+    session: createSessionRealApi().session,
     settings: createSettingsRealApi(),
     ui: createUiRealApi(),
     worktrees: createWorktreesRealApi()

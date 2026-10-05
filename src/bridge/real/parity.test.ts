@@ -15,6 +15,7 @@ import { createPreflightRealApi } from './preflight'
 import { createProjectsRealApi } from './projects'
 import { createPtyRealApi } from './pty'
 import { createReposRealApi } from './repos'
+import { createSessionRealApi } from './session'
 import { createSettingsRealApi } from './settings'
 import { createUiRealApi } from './ui'
 import { createWorktreesRealApi } from './worktrees'
@@ -724,10 +725,46 @@ describe('mock/real parity: unimplemented methods', () => {
   })
 })
 
+// Why a dedicated key-set lock: `PreloadApi` flattens the workspace-session
+// contract, so `session` is already the method sub-surface — but like
+// pty.management it gets its own explicit lock (withMethodFallback would
+// otherwise fabricate any forgotten method instead of failing the gate).
+const sessionSubApiSurface = [
+  'get',
+  'set',
+  'patch',
+  'flush',
+  'readTerminalScrollback',
+  'setSync'
+] as const satisfies readonly (keyof PreloadApi['session'])[]
+
+describe('mock/real parity: session sub-surface', () => {
+  it('session implements the full renderer session sub-surface', () => {
+    const real = createSessionRealApi().session
+    for (const method of sessionSubApiSurface) {
+      expect(
+        Object.prototype.hasOwnProperty.call(real, method),
+        `session.${method} must be explicitly implemented in real mode`
+      ).toBe(true)
+      expect(typeof real[method], `session.${method} must be a function`).toBe('function')
+    }
+  })
+
+  it('preflight implements resolveAgentProviderSession in real mode', () => {
+    const real = createPreflightRealApi() as unknown as Record<string, unknown>
+    expect(Object.prototype.hasOwnProperty.call(real, 'resolveAgentProviderSession')).toBe(true)
+    expect(typeof real.resolveAgentProviderSession).toBe('function')
+    const mock = createMockAdeApi().preflight as unknown as Record<string, unknown>
+    expect(typeof mock.resolveAgentProviderSession).toBe('function')
+  })
+})
+
 function realApiFor(domain: keyof PreloadApi): unknown {
   switch (domain) {
     case 'repos':
       return createReposRealApi()
+    case 'session':
+      return createSessionRealApi()
     case 'fs':
       return createFsRealApi()
     case 'onboarding':

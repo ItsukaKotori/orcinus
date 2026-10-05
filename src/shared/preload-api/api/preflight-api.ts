@@ -1,3 +1,4 @@
+import type { AgentProviderSessionMetadata } from '../../agent-session-resume'
 import type { ProjectExecutionRuntimeResolution } from '../../project-execution-runtime'
 import type {
   PathSource,
@@ -55,4 +56,11 @@ export type PreflightApi = {
     gitBashAvailable: boolean
     hostPlatform: NodeJS.Platform | null
   }>
+  /** Transcript-scan capture of a resumable provider session (spec §3.3). */
+  resolveAgentProviderSession: (args: {
+    cwd: string
+    agentKind: string
+    windowFromMs: number
+    windowToMs: number
+  }) => Promise<AgentProviderSessionMetadata | null>
 }

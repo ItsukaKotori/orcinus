@@ -4,11 +4,12 @@ import {
   withUnimplementedFallback,
   UnimplementedBridgeError
 } from './unimplemented-fallback'
+import { createCacheApi } from './mock/cache-api'
 import { createCliApi } from './mock/cli-api'
 import { createOnboardingApi } from './mock/onboarding-api'
 import { createReposApi } from './mock/repos-api'
 import { createRuntimeEnvironmentsApi } from './mock/runtime-environments-api'
-import { createRemoteWorkspaceApi, createSessionApi } from './mock/workspace-session-api'
+import { createRemoteWorkspaceApi } from './mock/workspace-session-api'
 import { createPtyApi } from './mock/pty-api'
 
 describe('withUnimplementedFallback', () => {
@@ -120,7 +121,12 @@ describe('mock namespaces reject missing methods through the method-level fallba
         path: 'runtimeEnvironments.resolve',
         call: () => createRuntimeEnvironmentsApi().resolve({ selector: 'env-1' })
       },
-      { path: 'session.flush', call: () => createSessionApi().flush() },
+      // Why not session.flush: the Phase 2A mock session sub-surface implements
+      // all six contract methods, so the probe moved to the cache domain.
+      {
+        path: 'cache.setGitHub',
+        call: () => createCacheApi().setGitHub({ cache: { pr: {}, issue: {} } })
+      },
       {
         path: 'remoteWorkspace.get',
         call: () => createRemoteWorkspaceApi().get({ targetId: 'target-1' })

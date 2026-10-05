@@ -22,6 +22,7 @@ const NO_AGENTS: RefreshAgentsResult = {
 export function createPreflightApi(): PreloadApi['preflight'] {
   return withMethodFallback<PreloadApi['preflight']>('preflight', {
     check: async () => cloneMockValue(NOT_PROBED),
-    refreshAgents: async () => cloneMockValue(NO_AGENTS)
+    refreshAgents: async () => cloneMockValue(NO_AGENTS),
+    resolveAgentProviderSession: async () => null
   })
 }

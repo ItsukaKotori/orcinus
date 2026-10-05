@@ -86,7 +86,10 @@ export function createPreflightApi(): NonNullable<Partial<PreloadApi>['preflight
             'preflight.detectRemoteWindowsTerminalCapabilities',
             args
           ).catch(() => fallbackWindowsTerminalCapabilities)
-        : Promise.resolve(fallbackWindowsTerminalCapabilities)
+        : Promise.resolve(fallbackWindowsTerminalCapabilities),
+    // Why: transcript-scan capture is a desktop-host capability (spec §3.3); the
+    // web runtime has no host transcripts to scan, so there is never a session.
+    resolveAgentProviderSession: async () => null
   }
 }
 

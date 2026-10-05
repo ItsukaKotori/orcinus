@@ -6,7 +6,11 @@ import { withMethodFallback } from '../unimplemented-fallback'
 export function createSessionApi(): PreloadApi['session'] {
   return withMethodFallback<PreloadApi['session']>('session', {
     get: async () => getDefaultWorkspaceSession(),
-    patch: async () => {}
+    set: async () => {},
+    patch: async () => {},
+    flush: async () => {},
+    readTerminalScrollback: () => null,
+    setSync: () => {}
   })
 }
 

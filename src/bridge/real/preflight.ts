@@ -26,6 +26,8 @@ export function createPreflightRealApi(): PreloadApi['preflight'] {
         args
       }).then(r => r.agents),
     refreshAgents: (args?: PreflightRuntimeContext) =>
-      invokeCommand<RefreshAgentsResult>('preflight_refresh_agents', { args })
+      invokeCommand<RefreshAgentsResult>('preflight_refresh_agents', { args }),
+    resolveAgentProviderSession: (args) =>
+      invokeCommand('agent_sessions_resolve_capture', { args })
   })
 }

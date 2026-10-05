@@ -39,5 +39,11 @@ export const preflightApi = {
     pwshAvailable: boolean
     gitBashAvailable: boolean
     hostPlatform: NodeJS.Platform | null
-  }> => ipcRenderer.invoke('preflight:detectRemoteWindowsTerminalCapabilities', args)
+  }> => ipcRenderer.invoke('preflight:detectRemoteWindowsTerminalCapabilities', args),
+  resolveAgentProviderSession: (args: {
+    cwd: string
+    agentKind: string
+    windowFromMs: number
+    windowToMs: number
+  }) => ipcRenderer.invoke('preflight:resolveAgentProviderSession', args)
 } satisfies PreloadApi['preflight']
