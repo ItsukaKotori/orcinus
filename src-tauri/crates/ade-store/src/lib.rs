@@ -2,6 +2,7 @@ pub mod json_file;
 pub mod onboarding_store;
 pub mod projects_store;
 pub mod settings_store;
+pub mod sqlite;
 pub mod ui_state_store;
 pub mod worktree_meta_store;
 
@@ -16,6 +17,8 @@ pub const SCHEMA_VERSION: u64 = 1;
 pub enum StoreError {
     #[error(transparent)]
     Io(#[from] std::io::Error),
+    #[error(transparent)]
+    Rusqlite(#[from] rusqlite::Error),
     #[error("Invalid store payload: {0}")]
     InvalidInput(String),
 }
