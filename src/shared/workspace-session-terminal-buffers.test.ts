@@ -102,14 +102,17 @@ describe('pruneLocalTerminalScrollbackBuffers', () => {
     expect(pruneLocalTerminalScrollbackBuffers(legacySession, [])).toEqual(legacySession)
   })
 
-  it('classifies which worktrees need renderer-captured scrollback', () => {
+  it('preserves scrollback for local repos too (ade has no daemon — spec R2)', () => {
+    // Why: renderer-captured scrollback is the only durable copy for every repo
+    // kind now that no out-of-process daemon holds a local history, so local
+    // worktrees preserve exactly like remote/runtime ones.
     const repos = [
       { id: 'local-repo', connectionId: null },
       { id: 'remote-repo', connectionId: 'ssh-target-1' }
     ]
 
     expect(shouldPreserveTerminalScrollbackBuffers('local-repo::/local/worktree', repos)).toBe(
-      false
+      true
     )
     expect(shouldPreserveTerminalScrollbackBuffers('remote-repo::/remote/worktree', repos)).toBe(
       true
@@ -149,7 +152,17 @@ describe('pruneLocalTerminalScrollbackBuffers', () => {
     })
   })
 
-  it('drops scrollback for explicitly local execution hosts', () => {
+  it('preserves scrollback for explicitly local execution hosts (spec R2)', () => {
+    expect(
+      shouldPreserveTerminalScrollbackBuffers('runtime-repo::/runtime/worktree', [
+        {
+          id: 'runtime-repo',
+          connectionId: null,
+          executionHostId: 'local'
+        }
+      ])
+    ).toBe(true)
+
     const result = pruneLocalTerminalScrollbackBuffers(makeRuntimeSession(), [
       {
         id: 'runtime-repo',
@@ -158,25 +171,25 @@ describe('pruneLocalTerminalScrollbackBuffers', () => {
       }
     ])
 
-    expect(result.terminalLayoutsByTabId['runtime-tab']).toEqual({
-      root: null,
-      activeLeafId: null,
-      expandedLeafId: null,
-      ptyIdsByLeafId: { 'pane:1': 'runtime-pty' }
+    expect(result.terminalLayoutsByTabId['runtime-tab'].buffersByLeafId).toEqual({
+      'pane:1': 'runtime-scrollback'
+    })
+    expect(result.terminalLayoutsByTabId['runtime-tab'].scrollbackRefsByLeafId).toEqual({
+      'pane:1': 'v1-runtime'
     })
   })
 
-  it('drops local scrollback while preserving SSH scrollback and PTY bindings', () => {
+  it('preserves local scrollback alongside SSH scrollback and PTY bindings (spec R2)', () => {
     const result = pruneLocalTerminalScrollbackBuffers(makeSession(), [
       { id: 'local-repo', connectionId: null },
       { id: 'remote-repo', connectionId: 'ssh-target-1' }
     ])
 
-    expect(result.terminalLayoutsByTabId['local-tab']).toEqual({
-      root: null,
-      activeLeafId: null,
-      expandedLeafId: null,
-      ptyIdsByLeafId: { 'pane:1': 'local-pty' }
+    expect(result.terminalLayoutsByTabId['local-tab'].buffersByLeafId).toEqual({
+      'pane:1': 'local-scrollback'
+    })
+    expect(result.terminalLayoutsByTabId['local-tab'].scrollbackRefsByLeafId).toEqual({
+      'pane:1': 'v1-local'
     })
     expect(result.terminalLayoutsByTabId['remote-tab'].buffersByLeafId).toEqual({
       'pane:1': 'remote-scrollback'
@@ -322,43 +335,31 @@ describe('pruneLocalTerminalScrollbackBuffers', () => {
     })
   })
 
-  it('keeps persisted session size from scaling with local scrollback buffers', () => {
-    const largeScrollback = 'x'.repeat(8 * 1024)
-    const tabs = Array.from({ length: 8 }, (_, index) => ({
-      id: `local-tab-${index}`,
-      title: `local ${index}`,
-      customTitle: null,
-      color: null,
-      sortOrder: index,
-      createdAt: index,
-      ptyId: `local-pty-${index}`,
-      worktreeId: 'local-repo::/local/worktree'
-    }))
+  it('preserves local scrollback buffers, capped like remote ones so session JSON cannot scale with raw scrollback (spec R2)', () => {
+    const hugeScrollback = `start-${'x'.repeat(TERMINAL_SCROLLBACK_SESSION_BUFFER_BYTE_LIMIT + 10)}`
     const session = makeSession({
-      tabsByWorktree: {
-        'local-repo::/local/worktree': tabs
-      },
-      terminalLayoutsByTabId: Object.fromEntries(
-        tabs.map((tab, index) => [
-          tab.id,
-          {
-            root: null,
-            activeLeafId: null,
-            expandedLeafId: null,
-            buffersByLeafId: { 'pane:1': `${largeScrollback}-${index}` },
-            ptyIdsByLeafId: { 'pane:1': tab.ptyId ?? '' }
-          }
-        ])
-      )
+      terminalLayoutsByTabId: {
+        'local-tab': {
+          root: null,
+          activeLeafId: null,
+          expandedLeafId: null,
+          buffersByLeafId: { 'pane:1': hugeScrollback },
+          scrollbackRefsByLeafId: { 'pane:1': 'v1-local' },
+          ptyIdsByLeafId: { 'pane:1': 'local-pty' }
+        }
+      }
     })
 
-    const originalBytes = Buffer.byteLength(JSON.stringify(session))
     const result = pruneLocalTerminalScrollbackBuffers(session, [
       { id: 'local-repo', connectionId: null }
     ])
-    const prunedBytes = Buffer.byteLength(JSON.stringify(result))
 
-    expect(JSON.stringify(result)).not.toContain(largeScrollback)
-    expect(prunedBytes).toBeLessThan(originalBytes / 5)
+    expect(result.terminalLayoutsByTabId['local-tab'].buffersByLeafId).toBeDefined()
+    const buffer = result.terminalLayoutsByTabId['local-tab'].buffersByLeafId?.['pane:1']
+    expect(buffer).toHaveLength(TERMINAL_SCROLLBACK_SESSION_BUFFER_BYTE_LIMIT)
+    expect(buffer?.startsWith('start-')).toBe(false)
+    expect(result.terminalLayoutsByTabId['local-tab'].scrollbackRefsByLeafId).toEqual({
+      'pane:1': 'v1-local'
+    })
   })
 })

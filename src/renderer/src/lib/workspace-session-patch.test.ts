@@ -171,7 +171,7 @@ describe('buildWorkspaceSessionPatch', () => {
     expect(patch.markdownFrontmatterVisible).toEqual({ '/tmp/demo.ts': true })
   })
 
-  it('sanitizes terminal tabs and prunes local buffers when tab topology changes', () => {
+  it('sanitizes terminal tabs and keeps local buffers when tab topology changes (spec R2)', () => {
     const localWorktreeId = 'repo-1::/local/worktree'
     const patch = buildWorkspaceSessionPatch(
       createSnapshot({
@@ -228,8 +228,14 @@ describe('buildWorkspaceSessionPatch', () => {
     // Why: the recovery ledger describes a mounted pane's in-flight heal; a
     // persisted one would refuse the first legitimate recovery after restart.
     expect('recovery' in patch.tabsByWorktree![localWorktreeId][0]).toBe(false)
-    expect(patch.terminalLayoutsByTabId?.['tab-local'].buffersByLeafId).toBeUndefined()
-    expect(patch.terminalLayoutsByTabId?.['tab-local'].scrollbackRefsByLeafId).toBeUndefined()
+    // Why: with no daemon (spec R2), renderer-captured buffers are the only
+    // durable local scrollback, so a topology patch must carry them forward.
+    expect(patch.terminalLayoutsByTabId?.['tab-local'].buffersByLeafId).toEqual({
+      'pane:1': 'serialized-local-scrollback'
+    })
+    expect(patch.terminalLayoutsByTabId?.['tab-local'].scrollbackRefsByLeafId).toEqual({
+      'pane:1': 'v1-local'
+    })
   })
 
   it('keeps optional clearing keys in patches', () => {

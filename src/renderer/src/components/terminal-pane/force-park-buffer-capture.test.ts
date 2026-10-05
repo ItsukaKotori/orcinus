@@ -19,7 +19,7 @@ afterEach(() => {
 })
 
 describe('captureForceParkedWorktreeBuffers', () => {
-  it('skips the capture for a local-repo worktree so a stored buffer survives force-park', () => {
+  it('captures local-repo worktree tabs too (ade has no daemon — spec R2)', () => {
     const capture = vi.fn()
     shutdownBufferCaptures.set('tab-1', capture)
 
@@ -30,7 +30,7 @@ describe('captureForceParkedWorktreeBuffers', () => {
     })
 
     expect(captured).toBe(true)
-    expect(capture).not.toHaveBeenCalled()
+    expect(capture).toHaveBeenCalledWith({ includeLocalBuffers: false })
   })
 
   it('captures remote worktree tabs without local buffers and reports full coverage', () => {

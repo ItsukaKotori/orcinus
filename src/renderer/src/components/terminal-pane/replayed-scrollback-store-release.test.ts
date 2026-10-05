@@ -20,7 +20,7 @@ const RUNTIME_REPO: RepoConnection = {
 const REPOS = [LOCAL_REPO, SSH_REPO, RUNTIME_REPO]
 
 describe('canReleaseReplayedScrollbackFromStore', () => {
-  it("releases ref-backed and remote-repo replays but keeps a local worktree's only copy", () => {
+  it('releases store-held replays for every repo kind (the park capture re-mints them — spec R2)', () => {
     expect(
       canReleaseReplayedScrollbackFromStore({
         hasScrollbackRefs: true,
@@ -48,7 +48,7 @@ describe('canReleaseReplayedScrollbackFromStore', () => {
         worktreeId: 'local-repo::/local/worktree',
         repos: REPOS
       })
-    ).toBe(false)
+    ).toBe(true)
   })
 
   it('releases for an unhydrated repo catalog, matching the capture guard that re-mints it', () => {

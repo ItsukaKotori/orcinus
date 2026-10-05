@@ -4,18 +4,16 @@ import { FLOATING_TERMINAL_WORKTREE_ID } from './constants'
 import { getRepoIdFromWorktreeId } from './worktree/id'
 import { TERMINAL_SCROLLBACK_SESSION_BUFFER_BYTE_LIMIT } from './terminal-scrollback-limits'
 import { clampUtf8TextTail, isUtf8ByteLengthWithinLimit } from './utf8-byte-limits'
-import { parseExecutionHostId } from './execution-host'
 
 export type RepoConnection = Pick<Repo, 'id' | 'connectionId' | 'executionHostId'>
 
 type RepoTerminalScrollbackOwner = Pick<RepoConnection, 'connectionId' | 'executionHostId'>
 
-function repoNeedsRendererCapturedScrollback(repo: RepoTerminalScrollbackOwner): boolean {
-  if (repo.connectionId) {
-    return true
-  }
-  const parsedHost = parseExecutionHostId(repo.executionHostId)
-  return parsedHost !== null && parsedHost.kind !== 'local'
+function repoNeedsRendererCapturedScrollback(_repo: RepoTerminalScrollbackOwner): boolean {
+  // ade has no out-of-process PTY daemon (spec R2): renderer-captured
+  // scrollback is the only durable copy for every repo kind, local included.
+  // Signature kept — upstream flips this off when a daemon lands.
+  return true
 }
 
 function shouldPreserveTerminalScrollbackBuffersForRepoMap(
@@ -118,10 +116,9 @@ export function pruneLocalTerminalScrollbackBuffers(
 
   return {
     ...session,
-    // Why: local daemon history/checkpoints are authoritative for restart
-    // scrollback. Keeping renderer-captured buffers for local tabs makes every
-    // persisted state write scale with old terminal output; remote/runtime tabs
-    // keep them because teardown may leave no local history to cold-restore.
+    // Why: with no out-of-process daemon (spec R2), renderer-captured buffers
+    // are the only durable scrollback for every repo kind, so this pass only
+    // prunes unclassifiable/floating tabs and caps the rest per buffer.
     terminalLayoutsByTabId
   }
 }

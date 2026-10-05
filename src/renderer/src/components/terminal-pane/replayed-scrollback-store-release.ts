@@ -16,7 +16,8 @@ export function canReleaseReplayedScrollbackFromStore({
   worktreeId,
   repos
 }: ReplayedScrollbackReleaseArgs): boolean {
-  // Refs re-hydrate from disk and remote/SSH worktrees re-serialize at the next park; a local
-  // worktree never re-mints its copy (includeLocalBuffers:false), so releasing it would lose it.
+  // Every repo kind re-mints its copy at the next park/shutdown capture (spec R2:
+  // no daemon, so the renderer capture runs for local worktrees too), and refs
+  // re-hydrate from disk — releasing the store copy therefore loses nothing.
   return hasScrollbackRefs || shouldPreserveTerminalScrollbackBuffers(worktreeId, repos)
 }

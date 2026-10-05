@@ -17,8 +17,9 @@ export function captureForceParkedWorktreeBuffers({
   tabIds,
   repos
 }: ForceParkedWorktreeCaptureArgs): boolean {
-  // Why skip local worktrees: includeLocalBuffers:false serializes nothing for them, so the only
-  // effect left is setTabLayout replacing away a stored buffer (e.g. an exited setup pane's output).
+  // Why capture for every repo kind (spec R2): with no daemon, renderer-captured
+  // buffers are the only durable scrollback, so a force-parked local pane must
+  // re-mint them exactly like a remote one before eviction unmounts it.
   if (!shouldPreserveTerminalScrollbackBuffers(worktreeId, repos)) {
     return true
   }

@@ -393,7 +393,7 @@ describe('buildWorkspaceSessionPayload', () => {
     })
   })
 
-  it('drops local terminal scrollback buffers from session payloads', () => {
+  it('keeps local terminal scrollback buffers in session payloads (ade has no daemon — spec R2)', () => {
     const localWorktreeId = 'repo-1::/local/worktree'
     const payload = buildWorkspaceSessionPayload(
       createSnapshot({
@@ -429,6 +429,8 @@ describe('buildWorkspaceSessionPayload', () => {
       root: null,
       activeLeafId: null,
       expandedLeafId: null,
+      buffersByLeafId: { 'pane:1': 'serialized-local-scrollback' },
+      scrollbackRefsByLeafId: { 'pane:1': 'v1-local' },
       ptyIdsByLeafId: { 'pane:1': 'pty-1' },
       titlesByLeafId: { 'pane:1': 'build' }
     })
