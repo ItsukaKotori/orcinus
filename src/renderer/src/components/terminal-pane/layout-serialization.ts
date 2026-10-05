@@ -9,7 +9,14 @@ import {
   RESET_GRAPHIC_RENDITION
 } from '../../../../shared/terminal-mode-reset-profiles'
 import type { PaneManager } from '@/lib/pane-manager/pane-manager'
-import { replayIntoTerminal, type ReplayingPanesRef } from './replay-guard'
+import type { ManagedPane } from '@/lib/pane-manager/pane-manager-types'
+import { safeFit } from '@/lib/pane-manager/pane-tree-ops'
+import { presentPaneViewport } from '@/lib/pane-manager/pane-webgl-renderer'
+import {
+  replayIntoTerminal,
+  waitForTerminalReplayWritesParsed,
+  type ReplayingPanesRef
+} from './replay-guard'
 import type { RestoredViewportBlankingPanesRef } from './terminal-restored-viewport'
 import { isXtermInstanceDisposed } from '@/lib/pane-manager/xterm-instance-disposed'
 
@@ -137,6 +144,43 @@ export function serializeTerminalLayout(
   }
 }
 
+// Why the restore needs its own paint pass: a mount-time restore replays into a
+// pane whose WebGL renderer is already attached (openTerminal → attachWebgl), so
+// the sync-viewport-refresh gate skips it, and every fit in the mount pipeline
+// (initial-fit rAF, ResizeObserver first fire, queueResizeAll) runs BEFORE the
+// replay bytes parse and reflows an empty grid — their full refreshes can never
+// show the restored rows. The refreshes that do follow the parse are xterm's
+// debounced ones, which nothing re-kicks on a WKWebView reload (no grid-changing
+// resize, and no Electron-style post-reload focus/wake pass), so the buffer sits
+// unpainted until a user resize. Waiting for the replay writes to parse and then
+// running one settled-frame fit + full present makes the restored buffer the
+// painted frame deterministically, and is a no-op repaint for panes whose
+// renderer already showed them.
+function scheduleRestoredReplayPaint(pane: ManagedPane): void {
+  if (typeof requestAnimationFrame !== 'function') {
+    return
+  }
+  void waitForTerminalReplayWritesParsed(pane.terminal)
+    .then(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          try {
+            // Why fit first: the mount-time fit can be skipped while the pane box
+            // is still unmeasurable; the restored grid must be authoritative
+            // before the present so the rows repaint at their final wrap.
+            safeFit(pane)
+          } catch {
+            // Pane may be disposed mid-restore; the present below guards itself.
+          }
+          presentPaneViewport(pane)
+        })
+      })
+    })
+    .catch(() => {
+      // Restore paint is best-effort; a disposed terminal must not surface here.
+    })
+}
+
 /**
  * Write saved scrollback buffers into restored panes so the user sees prior
  * output after a restart. Exits alt-screen first if a buffer ended mid-TUI.
@@ -191,6 +235,9 @@ export function restoreScrollbackBuffers(
         replayIntoTerminal(pane, replayingPanesRef, POST_REPLAY_MODE_RESET, renderOptions)
         // Why: connection resolution runs after layout replay; only fresh-shell paths move these rows into scrollback.
         restoredViewportBlankingPanesRef?.current.add(pane.id)
+        // Why: only panes that actually received replayed bytes need the deferred
+        // paint; the fresh-spawn path (no buffer) must stay untouched.
+        scheduleRestoredReplayPaint(pane)
       }
     } catch (error: unknown) {
       // Breadcrumb: this catch was silent while zombie panes went undiagnosed.

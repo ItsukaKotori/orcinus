@@ -1,5 +1,14 @@
-import { describe, expect, it, beforeAll, vi } from 'vitest'
+import { describe, expect, it, beforeAll, beforeEach, afterEach, vi } from 'vitest'
 import type { TerminalPaneLayoutNode } from '../../../../shared/terminal-tab-types'
+
+// The deferred restore paint routes through these pane-manager primitives; mock
+// them so the scheduling can be pinned without a real PaneManager.
+vi.mock('@/lib/pane-manager/pane-tree-ops', () => ({
+  safeFit: vi.fn(() => true)
+}))
+vi.mock('@/lib/pane-manager/pane-webgl-renderer', () => ({
+  presentPaneViewport: vi.fn()
+}))
 
 // ---------------------------------------------------------------------------
 // Provide a minimal HTMLElement so `instanceof HTMLElement` passes in Node env
@@ -51,6 +60,8 @@ import {
   collectLeafIdsInOrder,
   collectLeafIdsInReplayCreationOrder
 } from './layout-serialization'
+import { safeFit } from '@/lib/pane-manager/pane-tree-ops'
+import { presentPaneViewport } from '@/lib/pane-manager/pane-webgl-renderer'
 
 // ---------------------------------------------------------------------------
 // Helper to create mock elements
@@ -464,6 +475,127 @@ describe('restoreScrollbackBuffers', () => {
     expect(manager.hasWebglRenderer).toHaveBeenCalledWith(1)
     expect(restoredViewportBlankingPanesRef.current.has(1)).toBe(true)
     expect(replayingPanesRef.current.size).toBe(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// restoreScrollbackBuffers deferred replay paint
+// ---------------------------------------------------------------------------
+describe('restoreScrollbackBuffers deferred replay paint', () => {
+  // Why a queue instead of the environment's rAF: the node test env has no
+  // animation frames, and the scheduling must be observed deterministically.
+  // Why drain instead of counting frames: the replay writes' own settle refresh
+  // also queues frames, so the paint chain's position in the queue is not fixed.
+  const installDeferredPaintFrameQueue = (): { flushAllFrames: () => void } => {
+    const frames: FrameRequestCallback[] = []
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback): number => {
+      frames.push(callback)
+      return frames.length
+    })
+    return {
+      flushAllFrames: () => {
+        for (let guard = 0; frames.length > 0 && guard < 32; guard += 1) {
+          frames.shift()?.(0)
+        }
+      }
+    }
+  }
+
+  const createRestorePane = (id: number): { id: number; terminal: { write: ReturnType<typeof vi.fn> } } => ({
+    id,
+    terminal: {
+      write: vi.fn((_data: string, callback?: () => void) => {
+        callback?.()
+      })
+    }
+  })
+
+  beforeEach(() => {
+    vi.mocked(safeFit).mockClear()
+    vi.mocked(presentPaneViewport).mockClear()
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('schedules exactly one settled fit+present per restored pane once its replay parses', async () => {
+    const { flushAllFrames } = installDeferredPaintFrameQueue()
+    const panes = [createRestorePane(1), createRestorePane(2)]
+    const manager = {
+      getPanes: vi.fn(() => panes),
+      hasWebglRenderer: vi.fn(() => true)
+    }
+
+    restoreScrollbackBuffers(
+      manager as unknown as Parameters<typeof restoreScrollbackBuffers>[0],
+      { [LEAF_1]: 'first pane scrollback', [LEAF_2]: 'second pane scrollback' },
+      new Map([
+        [LEAF_1, 1],
+        [LEAF_2, 2]
+      ]),
+      { current: new Map<number, number>() },
+      { current: new Set<number>() }
+    )
+
+    // The FIFO parse probe resolves on microtasks; nothing paints before the settled frames run.
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(safeFit).not.toHaveBeenCalled()
+    expect(presentPaneViewport).not.toHaveBeenCalled()
+
+    flushAllFrames()
+
+    expect(safeFit).toHaveBeenCalledTimes(2)
+    expect(vi.mocked(safeFit).mock.calls.map(([pane]) => pane.id).sort((a, b) => a - b)).toEqual([
+      1, 2
+    ])
+    expect(presentPaneViewport).toHaveBeenCalledTimes(2)
+    expect(
+      vi.mocked(presentPaneViewport).mock.calls.map(([pane]) => pane.id).sort((a, b) => a - b)
+    ).toEqual([1, 2])
+
+    // Idle frames after the one-shot paint must not repeat it.
+    flushAllFrames()
+    expect(safeFit).toHaveBeenCalledTimes(2)
+    expect(presentPaneViewport).toHaveBeenCalledTimes(2)
+  })
+
+  it('schedules no deferred paint when the pane has no restored buffer', async () => {
+    const { flushAllFrames } = installDeferredPaintFrameQueue()
+    const pane = createRestorePane(1)
+    const manager = {
+      getPanes: vi.fn(() => [pane]),
+      hasWebglRenderer: vi.fn(() => false)
+    }
+    const managerLike = manager as unknown as Parameters<typeof restoreScrollbackBuffers>[0]
+    const replayingPanesRef = { current: new Map<number, number>() }
+    const blankingRef = { current: new Set<number>() }
+
+    // Fresh spawn: no saved buffers at all, and an empty captured buffer must be skipped too.
+    restoreScrollbackBuffers(
+      managerLike,
+      undefined,
+      new Map([[LEAF_1, 1]]),
+      replayingPanesRef,
+      blankingRef
+    )
+    restoreScrollbackBuffers(
+      managerLike,
+      { [LEAF_1]: '' },
+      new Map([[LEAF_1, 1]]),
+      replayingPanesRef,
+      blankingRef
+    )
+
+    await Promise.resolve()
+    await Promise.resolve()
+    flushAllFrames()
+
+    expect(safeFit).not.toHaveBeenCalled()
+    expect(presentPaneViewport).not.toHaveBeenCalled()
+    // Why: the no-buffer path must stay byte-for-byte untouched.
+    expect(pane.terminal.write).not.toHaveBeenCalled()
   })
 })
 
