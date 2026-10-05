@@ -157,6 +157,7 @@ session.patch（顶层键整键替换）→ session_patch 命令 → SQLite work
 
 - 输入：store 快照；枚举 terminal tabs × layouts leaves → paneKey（`${tabId}:${leafId}`）
 - **捕获门（R5 修订）**：原文以 OSC 标题身份（`titleHasAgentName`，仅 `claude|codex`）作门——**验收证伪**：ade 无 shell 集成（1C 延后项），zsh 与 claude TUI 均不发 OSC 标题，标题恒为默认值，身份门永不打开。修订为：**无现有 providerSession 记录的活 pane（有 ptyId）一律扫描**——claude 先、codex 兜底，命中即以该 agent kind 建记录；双未命中 → 无记录（恢复为普通 shell）。transcript 的 mtime 落在本会话窗口内 = 「本会话期间该 cwd 跑过 agent」的存在性证据。误报语义（运行过并已退出的 pane 被自动 resume）在已批准的自动 resume UX 内；精度由 2B hooks 恢复
+- **会话去重（R5 补充，验收轮 4）**：一个 providerSession id 至多被一个 paneKey 认领——认领集合 = 既有记录的 id + 本轮扫描先命中者；同 id 的兄弟 pane（split 同 cwd 场景）不建记录，恢复为普通 shell。先来者优先，位置歧义可接受（同 worktree 同布局）
 - cwd：`window.api.pty.getCwd(ptyId)`（`ptyIdsByLeafId` 活会话）
 - 命中则按 `SleepingAgentSessionRecord` 形状构造记录（`state` 用 `'waiting'`——`AgentStatusState` 无 `'idle'` 值、`prompt: ''`、`origin: 'quit'|'live'` 对齐调用方模式）并入 `sleepingAgentSessionsByPaneKey`
 - 接入点：`captureAllSleepingAgentSessions` 动作末尾触发（`agent-status-recovery-actions.ts:54`，quit/periodic 两模式都跑）；异步执行、失败静默（无记录 = 恢复为普通 shell）
