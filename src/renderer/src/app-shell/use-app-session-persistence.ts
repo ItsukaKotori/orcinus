@@ -7,6 +7,10 @@ import {
 import { createSessionWriteSubscriber } from '../lib/session-write-subscriber'
 import { buildActiveViewUnloadPatch } from '../lib/active-view-persist'
 import { captureAllMountedTabBuffers } from '../lib/capture-all-terminal-buffers'
+import {
+  captureTranscriptAgentSessions,
+  defaultTranscriptCaptureIo
+} from '../lib/agent-transcript-capture'
 import { createTerminalBufferCaptureScheduler } from '../lib/terminal-buffer-capture-scheduler'
 import {
   isIntentionalAppRestartInProgress,
@@ -195,8 +199,20 @@ export function useAppSessionPersistence(): void {
       // which is in-memory. Capture them into the persisted sleeping-session
       // map so a daemon/session death while the app is closed can still
       // cold-restore via the agent's resume command (#5232).
-      captureSleepingAgentSessions: () =>
-        useAppStore.getState().captureAllSleepingAgentSessions('quit'),
+      captureSleepingAgentSessions: () => {
+        useAppStore.getState().captureAllSleepingAgentSessions('quit')
+        // Why: panes whose provider session lives only in the host transcript
+        // (OSC-title identity, no hook payload) get a best-effort quit capture;
+        // the synchronous checkpoint cannot await it (#5232, spec §5.4).
+        void captureTranscriptAgentSessions({
+          state: useAppStore.getState(),
+          origin: 'quit',
+          ...defaultTranscriptCaptureIo,
+          now: Date.now,
+          mergeRecords: (records) =>
+            useAppStore.getState().mergeSleepingAgentSessionRecords(records)
+        })
+      },
       // Why: re-read state after capture() calls populated scrollback buffers
       // into the store via Zustand setters. The shouldCaptureSession read is
       // only for the gating flags and would miss those updates.
@@ -256,6 +272,16 @@ export function useAppSessionPersistence(): void {
         return
       }
       useAppStore.getState().captureAllSleepingAgentSessions('periodic')
+      // Why: same crash-loss floor for transcript-only resume identity (spec §5.4);
+      // fire-and-forget so a slow host scan never blocks the interval tick.
+      void captureTranscriptAgentSessions({
+        state: useAppStore.getState(),
+        origin: 'live',
+        ...defaultTranscriptCaptureIo,
+        now: Date.now,
+        mergeRecords: (records) =>
+          useAppStore.getState().mergeSleepingAgentSessionRecords(records)
+      })
     }, SLEEPING_AGENT_RESUME_CAPTURE_INTERVAL_MS)
     return () => window.clearInterval(timer)
   }, [])

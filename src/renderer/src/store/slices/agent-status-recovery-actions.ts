@@ -20,6 +20,7 @@ export function createAgentStatusRecoveryActions(
   AgentStatusSlice,
   | 'captureSleepingAgentSessionsByWorktree'
   | 'captureAllSleepingAgentSessions'
+  | 'mergeSleepingAgentSessionRecords'
   | 'clearSleepingAgentSession'
   | 'clearSleepingAgentSessionsByPaneKey'
   | 'clearSleepingAgentSessionsByWorktree'
@@ -99,6 +100,23 @@ export function createAgentStatusRecoveryActions(
           if (record && !sleepingRecordsEquivalentIgnoringCaptureTime(existing, record)) {
             next[record.paneKey] = record
             changed = true
+          }
+        }
+        return changed ? { sleepingAgentSessionsByPaneKey: next } : s
+      })
+    },
+
+    mergeSleepingAgentSessionRecords: (records) => {
+      set((s) => {
+        let next = s.sleepingAgentSessionsByPaneKey
+        let changed = false
+        for (const record of records) {
+          if (next[record.paneKey] !== record) {
+            if (!changed) {
+              next = { ...next }
+              changed = true
+            }
+            next[record.paneKey] = record
           }
         }
         return changed ? { sleepingAgentSessionsByPaneKey: next } : s
