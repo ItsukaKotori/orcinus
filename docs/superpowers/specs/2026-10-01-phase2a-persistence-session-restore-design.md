@@ -153,12 +153,12 @@ session.patch（顶层键整键替换）→ session_patch 命令 → SQLite work
 - 60s 间隔：`document.visibilityState !== 'hidden'` 时逐 tab 调 `shutdownBufferCaptures.get(tabId)?.()`（默认 `includeLocalBuffers:true`）
 - `visibilitychange` 监听：转 hidden 时立即同上
 
-### 5.4 resume 捕获模块（`agent-transcript-capture.ts`，新）
+### 5.4 resume 捕获模块（`agent-transcript-capture.ts`，新；终审后验收修订 R5：门改为 transcript 存在性扫描）
 
 - 输入：store 快照；枚举 terminal tabs × layouts leaves → paneKey（`${tabId}:${leafId}`）
-- agent 身份：tab `title` / `titlesByLeafId[leafId]` 经共享 OSC 身份检测（`src/shared/agent-detection.ts` barrel）解析 `ResumableTuiAgent`；仅 `claude|codex` 进入捕获（2A 扫描只实现两 agent；其余身份忽略）
+- **捕获门（R5 修订）**：原文以 OSC 标题身份（`titleHasAgentName`，仅 `claude|codex`）作门——**验收证伪**：ade 无 shell 集成（1C 延后项），zsh 与 claude TUI 均不发 OSC 标题，标题恒为默认值，身份门永不打开。修订为：**无现有 providerSession 记录的活 pane（有 ptyId）一律扫描**——claude 先、codex 兜底，命中即以该 agent kind 建记录；双未命中 → 无记录（恢复为普通 shell）。transcript 的 mtime 落在本会话窗口内 = 「本会话期间该 cwd 跑过 agent」的存在性证据。误报语义（运行过并已退出的 pane 被自动 resume）在已批准的自动 resume UX 内；精度由 2B hooks 恢复
 - cwd：`window.api.pty.getCwd(ptyId)`（`ptyIdsByLeafId` 活会话）
-- 对「有身份且现有 record 无 providerSession」的 pane 调 `agent_sessions_resolve_capture`；命中则按 `SleepingAgentSessionRecord` 形状构造记录（`state` 用 `'waiting'`——`AgentStatusState` 无 `'idle'` 值、`prompt: ''`、`origin: 'quit'|'live'` 对齐调用方模式）并入 `sleepingAgentSessionsByPaneKey`
+- 命中则按 `SleepingAgentSessionRecord` 形状构造记录（`state` 用 `'waiting'`——`AgentStatusState` 无 `'idle'` 值、`prompt: ''`、`origin: 'quit'|'live'` 对齐调用方模式）并入 `sleepingAgentSessionsByPaneKey`
 - 接入点：`captureAllSleepingAgentSessions` 动作末尾触发（`agent-status-recovery-actions.ts:54`，quit/periodic 两模式都跑）；异步执行、失败静默（无记录 = 恢复为普通 shell）
 
 ### 5.5 恢复接线（多数为既有机械接真）
