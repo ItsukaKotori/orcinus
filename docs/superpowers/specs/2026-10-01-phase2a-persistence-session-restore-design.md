@@ -12,6 +12,7 @@
 - **R1（scrollback 内联化）**：fork 桌面路径的关停捕获把序列化文本**内联**写进 `TerminalLayoutSnapshot.buffersByLeafId`（每 leaf ≤ `TERMINAL_SCROLLBACK_SESSION_BUFFER_BYTE_LIMIT` 512 KiB，UTF-8 字节上限 + 插值探针截尾内置，`terminal-shutdown-layout-capture.ts:45-131`）；恢复主源即内联 buffers（`terminal-pane-lifecycle-primitives.ts:89-118` 对 refs null 容错）。`scrollbackRefsByLeafId`/`readTerminalScrollback` 为已删域 G 的移动端镜像残留。**原 §3.3 快照文件 + 写读命令 + GC 全部取消**；serialize 产物落 SQLite session state。
 - **R2（退出路径宿主驱动 flush）**：orca 的 `stageBeforeUnloadSync` 依赖 Electron 同步 IPC，Tauri 无同步 invoke。改为 `RunEvent::ExitRequested` → `prevent_exit` → emit `session:flush-requested` → 渲染层捕获 + `session.flush` → ack 命令 → 宿主线程等 ack（2s 超时）→ `exit(0)`。配套翻转 `shouldPreserveTerminalScrollbackBuffers`（fork 裁掉本地 repo buffers 因有 daemon 兜底；ade 无 daemon，本地也保留）。
 - **R3（采集降频）**：fork 因主线程卡顿移除过定期全量 re-serialize（orca `use-app-session-persistence.ts:266` #461）。原 5s/30s 防抖改为 60s 间隔（跳过 `document.hidden`，对齐既有 60s resume 捕获间隔）+ `visibilitychange→hidden` 立即捕获；优雅退出零损失由 R2 保证，60s 间隔只兜硬崩溃。
+- **R4（退出握手迁移至 CloseRequested；2026-10-05 终审裁定，用户批准流程内）**：R2 原文假设 `RunEvent::ExitRequested { code: None }` 阶段渲染层可达——终审对照 vendored tauri-runtime-wry 2.11.4 证伪（该事件在窗口销毁后发出，emit 无人接收，且每次退出白付 2s 停顿）。握手迁移至 `WindowEvent::CloseRequested`（webview 存活），一次性 `CloseFlushLatch` 防 `window.close()` 重入死循环；`session-flush-persist` 对 `captureTranscripts` 拒绝免疫（patch/flush 必达）。详见 §3.4 终态。
 
 ## 1. 背景与目标
 
@@ -86,14 +87,14 @@ CREATE TABLE workspace_sessions (
 - 无命中/目录不存在/无 home/`agentKind` 非 `claude|codex` → 返回 null（不报错）；扫描超时上限（单目录 500ms，防挂载卷卡顿）
 - 调用时机：渲染层 `agent-transcript-capture` 模块在捕获点调用（§5.4）；窗口 = [应用启动时刻, now]（2A 不做 per-pane 起始时间追踪）；返回值写入 `sleepingAgentSessionsByPaneKey[paneKey]` 随 session.patch 落库
 
-### 3.4 退出 flush 协议（R2）
+### 3.4 退出 flush 协议（R2；终审修订 R4：迁移至 CloseRequested）
 
-Tauri 无同步 IPC，beforeunload 阻塞写盘不可行（orca `stageBeforeUnloadSync` 的机制在 ade 不可复制）。协议：
+Tauri 无同步 IPC，beforeunload 阻塞写盘不可行（orca `stageBeforeUnloadSync` 的机制在 ade 不可复制）。**且终审（对照 vendored tauri-runtime-wry 2.11.4 源码）证实：`RunEvent::ExitRequested { code: None }` 在最后一个窗口（连同 webview/JS 上下文）销毁之后才发出**（`lib.rs:4309-4322`，`TaoWindowEvent::Destroyed` 内）——此阶段 emit 事件无人接收。协议终态（webview 存活期握手）：
 
-1. `src-tauri/src/lib.rs` `app.run` 增 `RunEvent::ExitRequested { code, .. }` 分支：仅拦 `code: None`（窗口关闭触发；显式 `exit(code)` 不拦）；调 `api.prevent_exit()`，emit `session:flush-requested`，spawn 线程等 ack
-2. 渲染层 `real/session.ts` 订阅 `session:flush-requested` → 执行关停捕获（复用 `shutdownBufferCaptures` 逐 tab `capture({includeLocalBuffers:true})`）→ `session.flush` → 调 `session_flush_ack` 命令
-3. 宿主 ack 命令置 Condvar；等待线程超时 2s 后无论结果调 `app_handle.exit(0)`（事件循环在等待期间持续泵动——等待在后台线程，不在主线程，无 macOS WKWebView 主线程死锁）
-4. `AppState` 增 `session_flush_waiter`（Mutex<Option<Arc<(Mutex<bool>, Condvar)>>>）；`session_flush_ack` 命令置位并 notify
+1. `Builder::on_window_event` 拦 `WindowEvent::CloseRequested { api, .. }`（webview 此刻仍存活）：`begin_close_with_session_flush(window)` 返回 bool——一次性 `CloseFlushLatch`（AtomicBool）首次为 false：emit `session:flush-requested` + spawn 等待线程 + 返回 true → `api.prevent_close()`；latch 已置（含 `window.close()` 重入的 CloseRequested——`close()` 会再次触发该事件，不 gate 则死循环）则返回 false → 不拦，直接放行关闭
+2. 渲染层 `real/session.ts` 订阅 `session:flush-requested` → 执行关停捕获（复用 `shutdownBufferCaptures` 逐 tab `capture()`）→ 全量 `session.patch` + `session.flush`（不依赖 150ms 防抖订阅器，避免与 ack 竞态）→ bridge 层在 handler 结束后（无论成败）调 `session_flush_ack`
+3. 宿主 ack 命令置 Condvar；等待线程超时 2s 后无论结果 `window.close()`（放行被拦的关闭）；最后一个窗口关闭后 Tauri 默认退出 → `RunEvent::Exit` 跑既有收尾（flush_pending_writes + checkpoint_truncate + shutdown_all）
+4. 边界（留档）：flush 窗口内（≤2s）用户再次关窗 = 截断 in-flight flush、立即关闭（尊重用户意图，latch 放行）；**Cmd+Q / `AppHandle::exit(code)` 路径不经 CloseRequested，不受握手覆盖**（与 R2 批准范围一致：窗口关闭退出）
 
 ### 3.5 resume 重生路径（fork 冷恢复机械接真，宿主零改动）
 
@@ -157,7 +158,7 @@ session.patch（顶层键整键替换）→ session_patch 命令 → SQLite work
 - 输入：store 快照；枚举 terminal tabs × layouts leaves → paneKey（`${tabId}:${leafId}`）
 - agent 身份：tab `title` / `titlesByLeafId[leafId]` 经共享 OSC 身份检测（`src/shared/agent-detection.ts` barrel）解析 `ResumableTuiAgent`；仅 `claude|codex` 进入捕获（2A 扫描只实现两 agent；其余身份忽略）
 - cwd：`window.api.pty.getCwd(ptyId)`（`ptyIdsByLeafId` 活会话）
-- 对「有身份且现有 record 无 providerSession」的 pane 调 `agent_sessions_resolve_capture`；命中则按 `SleepingAgentSessionRecord` 形状构造记录（`state` 用 `'idle'`、`prompt: ''`、`origin: 'quit'|'live'` 对齐调用方模式）并入 `sleepingAgentSessionsByPaneKey`
+- 对「有身份且现有 record 无 providerSession」的 pane 调 `agent_sessions_resolve_capture`；命中则按 `SleepingAgentSessionRecord` 形状构造记录（`state` 用 `'waiting'`——`AgentStatusState` 无 `'idle'` 值、`prompt: ''`、`origin: 'quit'|'live'` 对齐调用方模式）并入 `sleepingAgentSessionsByPaneKey`
 - 接入点：`captureAllSleepingAgentSessions` 动作末尾触发（`agent-status-recovery-actions.ts:54`，quit/periodic 两模式都跑）；异步执行、失败静默（无记录 = 恢复为普通 shell）
 
 ### 5.5 恢复接线（多数为既有机械接真）
