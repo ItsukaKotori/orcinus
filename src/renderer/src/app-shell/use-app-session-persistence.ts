@@ -6,6 +6,8 @@ import {
 } from '../hooks/remote-workspace-snapshot-apply'
 import { createSessionWriteSubscriber } from '../lib/session-write-subscriber'
 import { buildActiveViewUnloadPatch } from '../lib/active-view-persist'
+import { captureAllMountedTabBuffers } from '../lib/capture-all-terminal-buffers'
+import { createTerminalBufferCaptureScheduler } from '../lib/terminal-buffer-capture-scheduler'
 import {
   isIntentionalAppRestartInProgress,
   registerUpdaterBeforeUnloadBypass
@@ -258,10 +260,20 @@ export function useAppSessionPersistence(): void {
     return () => window.clearInterval(timer)
   }, [])
 
+  // R3 (spec §5.3): coarse crash-loss floor; hidden documents skip serialization.
+  useEffect(
+    () =>
+      createTerminalBufferCaptureScheduler({
+        captureAll: captureAllMountedTabBuffers,
+        isDocumentHidden: () => document.visibilityState === 'hidden'
+      }),
+    []
+  )
+
   // Why: subscribe at the always-mounted App root — Terminal owns the confirm flow but isn't mounted on the landing page, so subscribing there left File→Exit / Ctrl+Q with no listener (#5144).
   useEffect(() => {
     return window.api.ui.onWindowCloseRequested(dispatchWindowCloseRequest)
   }, [])
 
-  // Why no periodic scrollback save: the old 3-min re-serialize (#461) stalled the main thread for seconds; the out-of-process daemon (#729) is the durable replacement, non-daemon users lose in-session scrollback on unexpected exit.
+  // Why no continuous scrollback re-serialize: the old 3-min full re-serialize (#461) stalled the main thread for seconds; the out-of-process daemon (#729) is the durable replacement. R3 above keeps only the coarse crash-loss floor — a 60s capture that skips unchanged/hidden windows — not continuous serialization.
 }
