@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
@@ -36,6 +37,24 @@ const FLUSH_ACK_TIMEOUT: Duration = Duration::from_secs(2);
 
 /// Renderer flush handshake state: `false` until `session_flush_ack` lands.
 pub type SessionFlushSignal = Arc<(Mutex<bool>, Condvar)>;
+
+/// One-shot `CloseRequested` re-entry latch (spec §3.4).
+///
+/// `WebviewWindow::close()` re-fires `CloseRequested` "like a user-initiated
+/// close request", so the flush waiter's own programmatic close comes back
+/// through the same host handler. Only the first (user-initiated) request may
+/// start the handshake and hold the window open; the re-entrant one must pass
+/// through unprevented or the quit would never converge.
+#[derive(Default)]
+pub(crate) struct CloseFlushLatch(AtomicBool);
+
+impl CloseFlushLatch {
+    /// `true` = first close request (run the flush handshake, `prevent_close`);
+    /// `false` = re-entry (let the close proceed).
+    pub(crate) fn try_start(&self) -> bool {
+        !self.0.swap(true, Ordering::SeqCst)
+    }
+}
 
 pub(crate) fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex
@@ -406,6 +425,10 @@ pub struct AppState {
     pub session: Arc<Store>,
     /// `session:flush-requested` 握手槽（spec §3.4；None = 无等待中的退出编排）。
     pub(crate) session_flush_slot: Mutex<Option<SessionFlushSignal>>,
+    /// CloseRequested 重入门闩（spec §3.4）：仅首次（用户发起）close 编排
+    /// flush；flush 后的 programmatic `window.close()` 会再次触发
+    /// CloseRequested，该次必须放行，否则 quit 永不收敛。
+    close_flush_latch: CloseFlushLatch,
     /// 启动时解析的用户 home（spawn cwd 兜底，规格 §2.4）。
     pub home: String,
     /// 登录 shell PATH 水合的进程内缓存（Task 11）：进程生命周期内最多水合一次。
@@ -480,6 +503,7 @@ impl AppState {
             pty_worktree_ids,
             session,
             session_flush_slot: Mutex::new(None),
+            close_flush_latch: CloseFlushLatch::default(),
             home,
             path_hydration_cache: PathHydrationCache::default(),
             git_cancels: GitCancelRegistry::new(),
@@ -541,11 +565,30 @@ impl AppState {
 
     /// Window-close quit (spec §3.4): request one renderer flush window, wait
     /// on a background thread (never the event-loop thread — macOS WKWebView
-    /// IPC is main-thread), then exit regardless of the outcome.
-    pub fn flush_session_then_exit(&self) {
+    /// IPC is main-thread), then close the window regardless of the outcome.
+    ///
+    /// Why `CloseRequested` and not `RunEvent::ExitRequested`: tauri-runtime-wry
+    /// emits `ExitRequested { code: None }` from inside its `Destroyed` handler,
+    /// i.e. after the last window and its WKWebView/JS context are already gone —
+    /// the `session:flush-requested` emit reached a dead webview, so no quit
+    /// could ever be acked and every close paid the full 2s windowless stall.
+    /// `CloseRequested` is the only window event where the webview is still
+    /// alive, so the renderer can actually receive the event and ack.
+    ///
+    /// Returns `true` when the handshake was armed for this request — the caller
+    /// must `prevent_close()` to hold the window open for it. Returns `false`
+    /// for the re-entrant request fired by the programmatic `window.close()`
+    /// below (see `CloseFlushLatch`); that request must pass through unprevented,
+    /// and when the last window closes Tauri exits by default, running the
+    /// `RunEvent::Exit` cleanup (flush_pending_writes + checkpoint_truncate +
+    /// shutdown_all).
+    pub fn begin_close_with_session_flush(&self, window: tauri::WebviewWindow) -> bool {
+        if !self.close_flush_latch.try_start() {
+            return false;
+        }
         let signal = arm_session_flush_signal(&self.session_flush_slot);
         events::emit_json(&self.app, events::SESSION_FLUSH_REQUESTED, serde_json::json!({}));
-        let app_for_thread = self.app.clone();
+        let window_for_thread = window.clone();
         let wait = std::thread::Builder::new()
             .name("session-flush-exit".to_string())
             .spawn(move || {
@@ -561,14 +604,18 @@ impl AppState {
                 };
                 drop(guard);
                 if !acked {
-                    eprintln!("[ade-bridge] session flush ack not received in time; exiting");
+                    eprintln!("[ade-bridge] session flush ack not received in time; closing");
                 }
-                app_for_thread.exit(0);
+                // Proceed with the previously-prevented close; the app exits when
+                // the last window closes and `RunEvent::Exit` does the cleanup.
+                let _ = window_for_thread.close();
             });
         if wait.is_err() {
-            // No waiter thread → no flush window; still must exit.
-            self.app.exit(0);
+            // No waiter thread → no flush window; still must close. This
+            // re-enters `CloseRequested`, but the latch already admits it.
+            let _ = window.close();
         }
+        true
     }
 
     pub fn bootstrap_payload(&self) -> BootstrapPayload {
@@ -804,6 +851,20 @@ mod tests {
             scheduler.schedule();
         }
         assert_eq!(read_settings(&dir.file("settings.json"))["theme"], "dark");
+    }
+
+    #[test]
+    fn close_flush_latch_admits_only_the_first_close_request() {
+        let latch = CloseFlushLatch::default();
+        assert!(
+            latch.try_start(),
+            "first (user-initiated) close must run the flush handshake"
+        );
+        // The flush waiter's programmatic `window.close()` re-enters
+        // CloseRequested; that request must pass through unprevented or the
+        // quit never converges.
+        assert!(!latch.try_start(), "re-entrant close must be let through");
+        assert!(!latch.try_start(), "latch stays latched");
     }
 
     #[test]

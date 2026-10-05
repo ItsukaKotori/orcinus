@@ -4,6 +4,24 @@ use tauri::Manager;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app = tauri::Builder::default()
+        .on_window_event(|window, event| {
+            // Window-close quit (spec §3.4): `CloseRequested` is the only event
+            // where the webview is still alive — tauri-runtime-wry emits
+            // `RunEvent::ExitRequested { code: None }` from inside `Destroyed`,
+            // i.e. after the WKWebView is gone, so the flush handshake can never
+            // be acked there. Latch-gated: the flush waiter's programmatic
+            // `window.close()` re-enters this handler and must NOT be prevented
+            // again, or the quit never converges.
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                if let Some(webview) = window.get_webview_window(window.label()) {
+                    if let Some(state) = window.try_state::<ade_bridge::AppState>() {
+                        if state.begin_close_with_session_flush(webview) {
+                            api.prevent_close();
+                        }
+                    }
+                }
+            }
+        })
         .setup(|app| {
             // PtyHost：进程内数据面订阅 + 会话注册表（规格 §3.2 修订二：下行走
             // `pty_attach` 命令的 Tauri Channel 分块，无端口/token；exit watcher
@@ -35,33 +53,22 @@ pub fn run() {
         .expect("error while building Orcinus");
 
     app.run(|app_handle, event| {
-        match event {
-            tauri::RunEvent::ExitRequested { code, api, .. } => {
-                // code: None = window-close-initiated quit (spec §3.4): give the
-                // renderer one flush window, then exit from the waiter thread.
-                // Some(_) = explicit exit() from that waiter — pass through.
-                if code.is_some() {
-                    return;
+        // 仅剩 Exit 收尾（`if let` 保持 clippy 干净）：窗口关闭的 flush 握手
+        // 编排已迁至 builder 的 `on_window_event`（CloseRequested 时 webview
+        // 仍存活；ExitRequested 发生于 Destroyed 之后，emit 只能到达已销毁
+        // 的 webview，故该拦截已拆除）。
+        if let tauri::RunEvent::Exit = event {
+            if let Some(state) = app_handle.try_state::<AppState>() {
+                // Debounced settings/ui writes may still be pending; flush them so a
+                // quick quit after a change cannot lose the update (spec §4.1).
+                state.flush_pending_writes();
+                if let Err(error) = state.session_store().checkpoint_truncate() {
+                    eprintln!("[ade] failed to checkpoint session store on exit: {error}");
                 }
-                if let Some(state) = app_handle.try_state::<AppState>() {
-                    state.flush_session_then_exit();
-                    api.prevent_exit();
-                }
+                // 逐会话 kill（带 2s+2s 升级时限）——订阅流随会话退出自然终止
+                // （规格 §3.1：app 退出全量收尾）。
+                state.pty_host.shutdown_all();
             }
-            tauri::RunEvent::Exit => {
-                if let Some(state) = app_handle.try_state::<AppState>() {
-                    // Debounced settings/ui writes may still be pending; flush them so a
-                    // quick quit after a change cannot lose the update (spec §4.1).
-                    state.flush_pending_writes();
-                    if let Err(error) = state.session_store().checkpoint_truncate() {
-                        eprintln!("[ade] failed to checkpoint session store on exit: {error}");
-                    }
-                    // 逐会话 kill（带 2s+2s 升级时限）——订阅流随会话退出自然终止
-                    // （规格 §3.1：app 退出全量收尾）。
-                    state.pty_host.shutdown_all();
-                }
-            }
-            _ => {}
         }
     });
 }
