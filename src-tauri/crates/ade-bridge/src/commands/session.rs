@@ -133,3 +133,11 @@ pub async fn session_set(state: State<'_, AppState>, args: String) -> Result<(),
 pub async fn session_flush(state: State<'_, AppState>) -> Result<(), BridgeError> {
     Ok(state.session_store().checkpoint_passive()?)
 }
+
+/// Renderer acknowledges the `session:flush-requested` window (spec §3.4).
+#[tauri::command]
+#[specta::specta]
+pub async fn session_flush_ack(state: State<'_, AppState>) -> Result<(), BridgeError> {
+    crate::state::signal_session_flush_ack(&state.session_flush_slot);
+    Ok(())
+}

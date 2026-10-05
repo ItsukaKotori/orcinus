@@ -31,6 +31,12 @@ pub const WRITE_DEBOUNCE: Duration = Duration::from_millis(1000);
 /// this point even while updates keep arriving (spec §4.1).
 pub const WRITE_MAX_WAIT: Duration = Duration::from_millis(5000);
 
+/// Renderer flush window on window-close quit (spec §3.4).
+const FLUSH_ACK_TIMEOUT: Duration = Duration::from_secs(2);
+
+/// Renderer flush handshake state: `false` until `session_flush_ack` lands.
+pub type SessionFlushSignal = Arc<(Mutex<bool>, Condvar)>;
+
 pub(crate) fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex
         .lock()
@@ -292,6 +298,24 @@ fn persisted_root_paths(projects: &ProjectsStore) -> Vec<String> {
     paths
 }
 
+pub(crate) fn arm_session_flush_signal(
+    slot: &Mutex<Option<SessionFlushSignal>>,
+) -> SessionFlushSignal {
+    let signal: SessionFlushSignal = Arc::new((Mutex::new(false), Condvar::new()));
+    *lock(slot) = Some(Arc::clone(&signal));
+    signal
+}
+
+pub(crate) fn signal_session_flush_ack(slot: &Mutex<Option<SessionFlushSignal>>) {
+    let current = lock(slot).clone();
+    if let Some(signal) = current {
+        let (flag, cvar) = &*signal;
+        let mut acked = flag.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        *acked = true;
+        cvar.notify_all();
+    }
+}
+
 /// spawn 成功后的 ptyId → worktreeId 映射：`pty_list_sessions` 补列用。
 /// 即时退出会话的 Exit 可能先于 spawn 返回到达（Task 9 交接）——清理与查询
 /// 对未知 id 一律静默，不得 unwrap/panic。
@@ -380,6 +404,8 @@ pub struct AppState {
     pub pty_worktree_ids: PtyWorktreeIds,
     /// SQLite 会话态存储（规格 §3.1；Task 2）。损坏由 `Store::open` 隔离重建。
     pub session: Arc<Store>,
+    /// `session:flush-requested` 握手槽（spec §3.4；None = 无等待中的退出编排）。
+    pub(crate) session_flush_slot: Mutex<Option<SessionFlushSignal>>,
     /// 启动时解析的用户 home（spawn cwd 兜底，规格 §2.4）。
     pub home: String,
     /// 登录 shell PATH 水合的进程内缓存（Task 11）：进程生命周期内最多水合一次。
@@ -453,6 +479,7 @@ impl AppState {
             pty_host,
             pty_worktree_ids,
             session,
+            session_flush_slot: Mutex::new(None),
             home,
             path_hydration_cache: PathHydrationCache::default(),
             git_cancels: GitCancelRegistry::new(),
@@ -509,6 +536,38 @@ impl AppState {
             if let Err(error) = result {
                 eprintln!("[ade-bridge] failed to flush {label} on exit: {error}");
             }
+        }
+    }
+
+    /// Window-close quit (spec §3.4): request one renderer flush window, wait
+    /// on a background thread (never the event-loop thread — macOS WKWebView
+    /// IPC is main-thread), then exit regardless of the outcome.
+    pub fn flush_session_then_exit(&self) {
+        let signal = arm_session_flush_signal(&self.session_flush_slot);
+        events::emit_json(&self.app, events::SESSION_FLUSH_REQUESTED, serde_json::json!({}));
+        let app_for_thread = self.app.clone();
+        let wait = std::thread::Builder::new()
+            .name("session-flush-exit".to_string())
+            .spawn(move || {
+                let (flag, cvar) = &*signal;
+                let guard = flag.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+                // `wait_timeout_while` = brief's `wait_timeout_for`: wake early on
+                // ack, else give up at the deadline (`timed_out()` ⇒ not acked).
+                let (guard, acked) = {
+                    let (guard, result) = cvar
+                        .wait_timeout_while(guard, FLUSH_ACK_TIMEOUT, |acked| !*acked)
+                        .unwrap_or_else(|poisoned| poisoned.into_inner());
+                    (guard, !result.timed_out())
+                };
+                drop(guard);
+                if !acked {
+                    eprintln!("[ade-bridge] session flush ack not received in time; exiting");
+                }
+                app_for_thread.exit(0);
+            });
+        if wait.is_err() {
+            // No waiter thread → no flush window; still must exit.
+            self.app.exit(0);
         }
     }
 
@@ -745,6 +804,50 @@ mod tests {
             scheduler.schedule();
         }
         assert_eq!(read_settings(&dir.file("settings.json"))["theme"], "dark");
+    }
+
+    #[test]
+    fn session_flush_signal_arms_resets_and_acks() {
+        let slot: Mutex<Option<SessionFlushSignal>> = Mutex::new(None);
+        let signal = arm_session_flush_signal(&slot);
+        {
+            let (lock, _) = &*signal;
+            assert!(!*lock.lock().unwrap());
+        }
+        signal_session_flush_ack(&slot);
+        {
+            let (lock, _) = &*signal;
+            assert!(*lock.lock().unwrap());
+        }
+        // Re-arm resets the flag (a second window-close quit must wait afresh).
+        let rearmed = arm_session_flush_signal(&slot);
+        {
+            let (lock, _) = &*rearmed;
+            assert!(!*lock.lock().unwrap());
+        }
+    }
+
+    #[test]
+    fn session_flush_ack_wakes_a_waiter_before_timeout() {
+        let slot: std::sync::Arc<Mutex<Option<SessionFlushSignal>>> =
+            std::sync::Arc::new(Mutex::new(None));
+        // The waiter re-reads the armed signal from the slot; the parent's copy
+        // must stay alive only for the arm itself (`_signal` keeps it bound).
+        let _signal = arm_session_flush_signal(&slot);
+        let waiter_slot = std::sync::Arc::clone(&slot);
+        let handle = thread::spawn(move || {
+            let slot_ref = &*waiter_slot;
+            let signal = lock(slot_ref).clone().expect("armed");
+            let (lock, cvar) = &*signal;
+            let guard = lock.lock().unwrap();
+            let (_guard, result) = cvar
+                .wait_timeout_while(guard, Duration::from_millis(2_000), |acked| !*acked)
+                .unwrap();
+            !result.timed_out()
+        });
+        thread::sleep(Duration::from_millis(50));
+        signal_session_flush_ack(&slot);
+        assert!(handle.join().unwrap(), "ack must arrive well before the 2s timeout");
     }
 
     #[test]

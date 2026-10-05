@@ -35,18 +35,33 @@ pub fn run() {
         .expect("error while building Orcinus");
 
     app.run(|app_handle, event| {
-        if let tauri::RunEvent::Exit = event {
-            if let Some(state) = app_handle.try_state::<AppState>() {
-                // Debounced settings/ui writes may still be pending; flush them so a
-                // quick quit after a change cannot lose the update (spec §4.1).
-                state.flush_pending_writes();
-                if let Err(error) = state.session_store().checkpoint_truncate() {
-                    eprintln!("[ade] failed to checkpoint session store on exit: {error}");
+        match event {
+            tauri::RunEvent::ExitRequested { code, api, .. } => {
+                // code: None = window-close-initiated quit (spec §3.4): give the
+                // renderer one flush window, then exit from the waiter thread.
+                // Some(_) = explicit exit() from that waiter — pass through.
+                if code.is_some() {
+                    return;
                 }
-                // 逐会话 kill（带 2s+2s 升级时限）——订阅流随会话退出自然终止
-                // （规格 §3.1：app 退出全量收尾）。
-                state.pty_host.shutdown_all();
+                if let Some(state) = app_handle.try_state::<AppState>() {
+                    state.flush_session_then_exit();
+                    api.prevent_exit();
+                }
             }
+            tauri::RunEvent::Exit => {
+                if let Some(state) = app_handle.try_state::<AppState>() {
+                    // Debounced settings/ui writes may still be pending; flush them so a
+                    // quick quit after a change cannot lose the update (spec §4.1).
+                    state.flush_pending_writes();
+                    if let Err(error) = state.session_store().checkpoint_truncate() {
+                        eprintln!("[ade] failed to checkpoint session store on exit: {error}");
+                    }
+                    // 逐会话 kill（带 2s+2s 升级时限）——订阅流随会话退出自然终止
+                    // （规格 §3.1：app 退出全量收尾）。
+                    state.pty_host.shutdown_all();
+                }
+            }
+            _ => {}
         }
     });
 }

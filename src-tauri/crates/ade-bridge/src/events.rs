@@ -20,6 +20,8 @@ pub const PTY_SPAWNED: &str = "pty:spawned";
 /// 会话退出（`ade_pty::PtyEvent::Exit` 转发；载荷 `{id, code}`，WS close 之
 /// 后发）。即时退出会话的 Exit 可能先于 spawn 返回到达（Task 9 交接）。
 pub const PTY_EXIT: &str = "pty:exit";
+/// Window-close quit → one renderer flush window (spec §3.4).
+pub const SESSION_FLUSH_REQUESTED: &str = "session:flush-requested";
 
 /// Payload for [`WORKTREES_CHANGED`] (spec §5.3).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]

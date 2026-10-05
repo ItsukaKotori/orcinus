@@ -40,6 +40,8 @@ export const commands = {
 	 *  folds the WAL (spec §3.2).
 	 */
 	sessionFlush: () => typedError<null, BridgeError>(__TAURI_INVOKE("session_flush")),
+	/**  Renderer acknowledges the `session:flush-requested` window (spec §3.4). */
+	sessionFlushAck: () => typedError<null, BridgeError>(__TAURI_INVOKE("session_flush_ack")),
 	/**  Read the full effective UI state (`defaults ∪ stored`). */
 	uiGet: () => typedError<Json, BridgeError>(__TAURI_INVOKE("ui_get")),
 	/**
