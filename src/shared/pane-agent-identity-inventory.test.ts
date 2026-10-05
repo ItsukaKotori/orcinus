@@ -125,10 +125,7 @@ const INVENTORY: readonly InventoryGroup[] = [
   {
     helper: 'titleHasAgentName',
     classification: 'evidence-producer',
-    paths: [
-      ['src/renderer/src/hooks/ipc-events/agent-status-routing.ts', 2],
-      ['src/renderer/src/lib/agent-transcript-capture.ts', 2]
-    ]
+    paths: [['src/renderer/src/hooks/ipc-events/agent-status-routing.ts', 2]]
   },
   {
     helper: 'buildAgentNameRe',

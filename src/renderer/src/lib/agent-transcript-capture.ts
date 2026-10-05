@@ -1,4 +1,3 @@
-import { titleHasAgentName } from '../../../shared/agent-detection'
 import type {
   AgentProviderSessionMetadata,
   SleepingAgentSessionRecord
@@ -8,8 +7,16 @@ import type { TerminalPaneLayoutNode } from '../../../shared/terminal-tab-types'
 import type { AppState } from '../store'
 import { findAgentPaneWorktreeId } from '../store/slices/agent-status-pane-key-tab-binding'
 
-const CAPTURE_AGENTS = ['claude', 'codex'] as const
-type CaptureAgent = (typeof CAPTURE_AGENTS)[number]
+/**
+ * Agent kinds probed per pane, in order. Why no OSC-title identity gate: ade
+ * ships no shell integration (spec 1C deferred) and neither plain zsh nor the
+ * agent TUIs reliably emit OSC titles, so title identity was a dead signal —
+ * every pane was skipped and resume records were never written. The
+ * controller ruling: a transcript appearing inside the session window IS the
+ * agent-ran signal. Claude is probed first because it dominates real usage.
+ */
+const SCAN_AGENT_KINDS = ['claude', 'codex'] as const
+type CaptureAgentKind = (typeof SCAN_AGENT_KINDS)[number]
 
 /** Renderer boot time is the widest window 2A tracks (spec §3.3). */
 export const RENDERER_BOOT_MS = Date.now()
@@ -32,7 +39,6 @@ type CaptureTarget = {
   paneKey: string
   tabId: string
   worktreeId: string
-  agent: CaptureAgent
   ptyId: string
 }
 
@@ -68,11 +74,6 @@ function collectCaptureTargets(state: AppState): CaptureTarget[] {
         if (state.sleepingAgentSessionsByPaneKey[paneKey]?.providerSession) {
           continue
         }
-        const title = layout.titlesByLeafId?.[leafId] ?? tab.title ?? ''
-        const agent = CAPTURE_AGENTS.find((candidate) => titleHasAgentName(title, candidate))
-        if (!agent) {
-          continue
-        }
         const ptyId = layout.ptyIdsByLeafId?.[leafId]
         if (!ptyId) {
           continue
@@ -81,7 +82,6 @@ function collectCaptureTargets(state: AppState): CaptureTarget[] {
           paneKey,
           tabId: tab.id,
           worktreeId: findAgentPaneWorktreeId(state, paneKey) ?? worktreeKey,
-          agent,
           ptyId
         })
       }
@@ -91,9 +91,11 @@ function collectCaptureTargets(state: AppState): CaptureTarget[] {
 }
 
 /**
- * OSC-title identity + transcript-directory scan → sleeping resume records
- * (spec §5.4). Best-effort by construction: every failure mode converges on
- * "no record" = shell-only restore, never an error surface.
+ * Transcript-directory scan → sleeping resume records (spec §5.4). Every
+ * live pane without a providerSession record is scanned; the transcript's
+ * existence within `[RENDERER_BOOT_MS, now]` is the agent-ran signal.
+ * Best-effort by construction: every failure mode converges on "no record" =
+ * shell-only restore, never an error surface.
  */
 export async function captureTranscriptAgentSessions(deps: TranscriptCaptureDeps): Promise<void> {
   const targets = collectCaptureTargets(deps.state)
@@ -108,20 +110,28 @@ export async function captureTranscriptAgentSessions(deps: TranscriptCaptureDeps
       if (!cwd) {
         continue
       }
-      const providerSession = await deps.resolveProviderSession({
-        cwd,
-        agentKind: target.agent,
-        windowFromMs: RENDERER_BOOT_MS,
-        windowToMs: now
-      })
-      if (!providerSession) {
+      let hitAgent: CaptureAgentKind | null = null
+      let providerSession: AgentProviderSessionMetadata | null = null
+      for (const agentKind of SCAN_AGENT_KINDS) {
+        providerSession = await deps.resolveProviderSession({
+          cwd,
+          agentKind,
+          windowFromMs: RENDERER_BOOT_MS,
+          windowToMs: now
+        })
+        if (providerSession) {
+          hitAgent = agentKind
+          break
+        }
+      }
+      if (!hitAgent || !providerSession) {
         continue
       }
       records.push({
         paneKey: target.paneKey,
         tabId: target.tabId,
         worktreeId: target.worktreeId,
-        agent: target.agent,
+        agent: hitAgent,
         providerSession,
         prompt: '',
         state: 'waiting',

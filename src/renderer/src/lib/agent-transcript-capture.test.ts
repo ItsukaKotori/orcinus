@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { AgentProviderSessionMetadata } from '../../../shared/agent-session-resume'
 import type { AppState } from '../store'
 import {
   captureTranscriptAgentSessions,
@@ -6,15 +7,13 @@ import {
 } from './agent-transcript-capture'
 
 const LEAF_A = '11111111-1111-4111-8111-111111111111'
-const LEAF_B = '22222222-2222-4222-8222-222222222222'
 
+// Why single-pane: every live pane is now a scan target (no title gate), so a
+// second pane in the default fixture would double every record/call assertion.
 function makeState(overrides?: Partial<Record<string, unknown>>): AppState {
   return {
     tabsByWorktree: {
-      'w1::/repo': [
-        { id: 'tab1', title: 'claude · working' },
-        { id: 'tab2', title: 'zsh' }
-      ]
+      'w1::/repo': [{ id: 'tab1', title: 'claude · working' }]
     },
     terminalLayoutsByTabId: {
       tab1: {
@@ -23,12 +22,6 @@ function makeState(overrides?: Partial<Record<string, unknown>>): AppState {
         expandedLeafId: null,
         ptyIdsByLeafId: { [LEAF_A]: 'pty-1' },
         titlesByLeafId: { [LEAF_A]: 'claude · working' }
-      },
-      tab2: {
-        root: { type: 'leaf', leafId: LEAF_B },
-        activeLeafId: LEAF_B,
-        expandedLeafId: null,
-        ptyIdsByLeafId: { [LEAF_B]: 'pty-2' }
       }
     },
     sleepingAgentSessionsByPaneKey: {},
@@ -79,7 +72,55 @@ describe('captureTranscriptAgentSessions', () => {
     })
   })
 
-  it('skips shell-titled panes and panes whose record already has a providerSession', async () => {
+  it('creates a record for a shell-titled pane when the scan hits (title no longer gates)', async () => {
+    const mergeRecords = vi.fn()
+    const state = makeState({
+      tabsByWorktree: {
+        'w1::/repo': [{ id: 'tab1', title: 'Terminal 1' }]
+      }
+    })
+    ;(state.terminalLayoutsByTabId.tab1 as { titlesByLeafId?: Record<string, string> }).titlesByLeafId = {
+      [LEAF_A]: 'zsh'
+    }
+    await captureTranscriptAgentSessions(makeDeps({ state, mergeRecords }))
+    expect(mergeRecords).toHaveBeenCalledTimes(1)
+    const records = mergeRecords.mock.calls[0][0]
+    expect(records[0]).toMatchObject({
+      paneKey: `tab1:${LEAF_A}`,
+      worktreeId: 'w1::/repo',
+      agent: 'claude',
+      origin: 'quit'
+    })
+  })
+
+  it('falls back to the codex scan when the claude scan misses', async () => {
+    const mergeRecords = vi.fn()
+    const resolveProviderSession = vi.fn(
+      async (args: { agentKind: string }): Promise<AgentProviderSessionMetadata | null> =>
+        args.agentKind === 'codex' ? { key: 'session_id', id: 'codex-uuid' } : null
+    )
+    await captureTranscriptAgentSessions(makeDeps({ resolveProviderSession, mergeRecords }))
+    expect(resolveProviderSession.mock.calls.map((call) => call[0].agentKind)).toEqual([
+      'claude',
+      'codex'
+    ])
+    const records = mergeRecords.mock.calls[0][0]
+    expect(records[0]).toMatchObject({
+      paneKey: `tab1:${LEAF_A}`,
+      agent: 'codex',
+      providerSession: { key: 'session_id', id: 'codex-uuid' }
+    })
+  })
+
+  it('a miss on every scan yields no record and no merge', async () => {
+    const mergeRecords = vi.fn()
+    await captureTranscriptAgentSessions(
+      makeDeps({ resolveProviderSession: async () => null, mergeRecords })
+    )
+    expect(mergeRecords).not.toHaveBeenCalled()
+  })
+
+  it('skips panes whose record already has a providerSession', async () => {
     const resolveProviderSession = vi.fn()
     const state = makeState({
       sleepingAgentSessionsByPaneKey: {
@@ -109,13 +150,5 @@ describe('captureTranscriptAgentSessions', () => {
       makeDeps({ resolveCwd: async () => null, resolveProviderSession })
     )
     expect(resolveProviderSession).not.toHaveBeenCalled()
-  })
-
-  it('a null scan result yields no record and no merge', async () => {
-    const mergeRecords = vi.fn()
-    await captureTranscriptAgentSessions(
-      makeDeps({ resolveProviderSession: async () => null, mergeRecords })
-    )
-    expect(mergeRecords).not.toHaveBeenCalled()
   })
 })
