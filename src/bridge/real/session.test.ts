@@ -57,6 +57,51 @@ describe('session real domain', () => {
     await expect(api.session.get()).resolves.toEqual(getDefaultWorkspaceSession())
   })
 
+  // Why read-side dedupe: capture-side claiming (agent-transcript-capture) prevents
+  // NEW duplicates, but rows written by pre-dedupe builds can hold the same
+  // providerSession id under several paneKeys — restore must not resume the same
+  // session from multiple panes forever. Keep the earliest capturedAt (the original
+  // claim) and drop later duplicates.
+  it('get dedupes sleeping records by providerSession id keeping the earliest capturedAt', async () => {
+    invokeMock.mockResolvedValue(
+      JSON.stringify({
+        sleepingAgentSessionsByPaneKey: {
+          'pk-b': {
+            paneKey: 'pk-b',
+            worktreeId: 'wt-1',
+            agent: 'claude',
+            providerSession: { key: 'session_id', id: 'dup' },
+            prompt: '',
+            state: 'sleeping',
+            capturedAt: 200
+          },
+          'pk-a': {
+            paneKey: 'pk-a',
+            worktreeId: 'wt-1',
+            agent: 'claude',
+            providerSession: { key: 'session_id', id: 'dup' },
+            prompt: '',
+            state: 'sleeping',
+            capturedAt: 100
+          },
+          'pk-c': {
+            paneKey: 'pk-c',
+            worktreeId: 'wt-1',
+            agent: 'claude',
+            providerSession: { key: 'session_id', id: 'solo' },
+            prompt: '',
+            state: 'sleeping',
+            capturedAt: 300
+          }
+        }
+      })
+    )
+    const api = createSessionRealApi()
+    const state = await api.session.get()
+    expect(Object.keys(state.sleepingAgentSessionsByPaneKey ?? {})).toEqual(['pk-a', 'pk-c'])
+    expect(state.sleepingAgentSessionsByPaneKey?.['pk-a']?.capturedAt).toBe(100)
+  })
+
   it('patch stringifies the payload into the args envelope', async () => {
     invokeMock.mockResolvedValue(undefined)
     const api = createSessionRealApi()

@@ -19,6 +19,39 @@ import { invokeCommand, subscribeToEvent } from './invoke'
  * `cache` and `remoteWorkspace` keep their Phase 0 mock implementations
  * (spec §2.2 keeps them out of 2A scope).
  */
+type SleepingRecords = NonNullable<WorkspaceSessionState['sleepingAgentSessionsByPaneKey']>
+
+/**
+ * Keeps the earliest-capturedAt record per `providerSession.id` and drops later
+ * duplicates (records without a providerSession id pass through; ties keep the
+ * first record in Object iteration order).
+ */
+function dedupeSleepingRecordsByProviderId(records: SleepingRecords): SleepingRecords {
+  const kept: SleepingRecords = {}
+  const claimByProviderId = new Map<string, { paneKey: string; record: SleepingRecords[string] }>()
+  for (const [paneKey, record] of Object.entries(records)) {
+    const providerId = record.providerSession?.id
+    if (providerId === undefined) {
+      kept[paneKey] = record
+      continue
+    }
+    const claim = claimByProviderId.get(providerId)
+    if (claim === undefined) {
+      claimByProviderId.set(providerId, { paneKey, record })
+      kept[paneKey] = record
+      continue
+    }
+    if (record.capturedAt < claim.record.capturedAt) {
+      // The stored order is paneKey order, not claim order: the earlier record may
+      // sit under a later key, so evict the later duplicate from its own key.
+      delete kept[claim.paneKey]
+      claimByProviderId.set(providerId, { paneKey, record })
+      kept[paneKey] = record
+    }
+  }
+  return kept
+}
+
 export function createSessionRealApi(): Pick<PreloadApi, 'session'> {
   return {
     session: withMethodFallback<PreloadApi['session']>('session', {
@@ -28,7 +61,16 @@ export function createSessionRealApi(): Pick<PreloadApi, 'session'> {
       // Stored rows win over the canonical defaults; set/patch/flush stay sparse.
       get: async () => {
         const stored = JSON.parse(await invokeCommand<string>('session_get')) as Partial<WorkspaceSessionState>
-        return { ...getDefaultWorkspaceSession(), ...stored } as WorkspaceSessionState
+        // Why dedupe on read: capture-side claiming (agent-transcript-capture)
+        // prevents NEW duplicates, but rows written by pre-dedupe builds can hold
+        // the same providerSession id under several paneKeys — restore would then
+        // resume the same session from multiple panes forever.
+        const sleeping = stored.sleepingAgentSessionsByPaneKey
+        return {
+          ...getDefaultWorkspaceSession(),
+          ...stored,
+          ...(sleeping ? { sleepingAgentSessionsByPaneKey: dedupeSleepingRecordsByProviderId(sleeping) } : {})
+        } as WorkspaceSessionState
       },
       set: async (args: WorkspaceSessionState) => {
         await invokeCommand('session_set', { args: JSON.stringify(args) })
