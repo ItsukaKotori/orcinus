@@ -44,4 +44,14 @@ describe('createSessionFlushPersist', () => {
     expect(patch).not.toHaveBeenCalled()
     expect(flush).not.toHaveBeenCalled()
   })
+
+  it('a transcripts rejection still patches and flushes', async () => {
+    const captureTranscripts = vi.fn().mockRejectedValue(new Error('transcript capture exploded'))
+    const { deps, captureAll, patch, flush } = makeDeps({ captureTranscripts })
+    await createSessionFlushPersist(deps)()
+    expect(captureAll).toHaveBeenCalledTimes(1)
+    expect(captureTranscripts).toHaveBeenCalledTimes(1)
+    expect(patch).toHaveBeenCalledTimes(1)
+    expect(flush).toHaveBeenCalledTimes(1)
+  })
 })

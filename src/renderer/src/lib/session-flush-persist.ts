@@ -18,7 +18,14 @@ export function createSessionFlushPersist(
 ): () => Promise<void> {
   return async () => {
     deps.captureAll()
-    await deps.captureTranscripts()
+    // Transcripts are best-effort: a rejection here must not abort the quit
+    // write — the bridge acks either way, so patch/flush of everything already
+    // captured always proceed.
+    try {
+      await deps.captureTranscripts()
+    } catch {
+      // Swallow; the per-pane capture loop already tolerates its own failures.
+    }
     if (!deps.canPersist()) {
       return
     }
