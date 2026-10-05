@@ -24,6 +24,10 @@ export function restoreTerminalPaneLayout(args: {
     replayTerminalLayout(manager, initialLayoutRef.current, isActive)
   )
   const restoredBuffers = initialLayoutRef.current.buffersByLeafId
+  // DEBUG(replay-paint): remove after diagnosis — build-freshness + restore-shape marker.
+  console.debug(
+    `[replay-paint] restore entry: tab=${tabId} buffers=${restoredBuffers ? Object.keys(restoredBuffers).length : 0} leaves=${restoredPaneByLeafId.size}`
+  )
   restoreScrollbackBuffers(
     manager,
     restoredBuffers,

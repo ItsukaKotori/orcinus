@@ -156,22 +156,49 @@ export function serializeTerminalLayout(
 // running one settled-frame fit + full present makes the restored buffer the
 // painted frame deterministically, and is a no-op repaint for panes whose
 // renderer already showed them.
-function scheduleRestoredReplayPaint(pane: ManagedPane): void {
+function scheduleRestoredReplayPaint(
+  pane: ManagedPane,
+  bufferLength: number,
+  hasWebglRenderer: boolean
+): void {
+  // DEBUG(replay-paint): remove after diagnosis — schedule-time renderer state.
+  console.debug(
+    `[replay-paint] pane=${pane.id} schedule: buffer=${bufferLength} chars, hasWebgl=${hasWebglRenderer}`
+  )
   if (typeof requestAnimationFrame !== 'function') {
     return
   }
+  const probeStartedAt = Date.now()
   void waitForTerminalReplayWritesParsed(pane.terminal)
     .then(() => {
+      // DEBUG(replay-paint): remove after diagnosis — ~10s elapsed means the stall path resolved the probe.
+      console.debug(
+        `[replay-paint] pane=${pane.id} parse probe resolved in ${Date.now() - probeStartedAt}ms`
+      )
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
+          const canvas = pane.terminal.element?.querySelector('canvas') as HTMLCanvasElement | null
+          // DEBUG(replay-paint): remove after diagnosis — zero/unresized canvas would confirm the stale-canvas hypothesis.
+          console.debug(
+            `[replay-paint] pane=${pane.id} settled frame: box=${pane.container?.clientWidth}x${pane.container?.clientHeight} grid=${pane.terminal.cols}x${pane.terminal.rows} canvas=${
+              canvas
+                ? `${canvas.width}x${canvas.height} css ${canvas.style.width}x${canvas.style.height} connected=${canvas.isConnected}`
+                : 'none'
+            }`
+          )
+          let fitResult: boolean | 'threw' = 'threw'
           try {
             // Why fit first: the mount-time fit can be skipped while the pane box
             // is still unmeasurable; the restored grid must be authoritative
             // before the present so the rows repaint at their final wrap.
-            safeFit(pane)
+            fitResult = safeFit(pane)
           } catch {
             // Pane may be disposed mid-restore; the present below guards itself.
           }
+          // DEBUG(replay-paint): remove after diagnosis — did the fit change the grid or early-return?
+          console.debug(
+            `[replay-paint] pane=${pane.id} safeFit=${fitResult} grid now=${pane.terminal.cols}x${pane.terminal.rows}`
+          )
           presentPaneViewport(pane)
         })
       })
@@ -237,7 +264,7 @@ export function restoreScrollbackBuffers(
         restoredViewportBlankingPanesRef?.current.add(pane.id)
         // Why: only panes that actually received replayed bytes need the deferred
         // paint; the fresh-spawn path (no buffer) must stay untouched.
-        scheduleRestoredReplayPaint(pane)
+        scheduleRestoredReplayPaint(pane, buffer.length, manager.hasWebglRenderer(pane.id))
       }
     } catch (error: unknown) {
       // Breadcrumb: this catch was silent while zombie panes went undiagnosed.
