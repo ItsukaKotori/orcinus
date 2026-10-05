@@ -103,6 +103,18 @@ export async function captureTranscriptAgentSessions(deps: TranscriptCaptureDeps
     return
   }
   const now = deps.now()
+  // Why: a provider session id may be claimed by at most one record — split
+  // panes share a cwd, so the scan would otherwise resolve the same newest
+  // transcript for every sibling and auto-resume the same session twice
+  // (two live TUIs fighting over one conversation). Claimed = ids already in
+  // the sleeping registry + ids hit earlier in this same pass.
+  const claimedProviderSessionIds = new Set<string>()
+  for (const record of Object.values(deps.state.sleepingAgentSessionsByPaneKey)) {
+    const id = record.providerSession?.id
+    if (id) {
+      claimedProviderSessionIds.add(id)
+    }
+  }
   const records: SleepingAgentSessionRecord[] = []
   for (const target of targets) {
     try {
@@ -113,20 +125,29 @@ export async function captureTranscriptAgentSessions(deps: TranscriptCaptureDeps
       let hitAgent: CaptureAgentKind | null = null
       let providerSession: AgentProviderSessionMetadata | null = null
       for (const agentKind of SCAN_AGENT_KINDS) {
-        providerSession = await deps.resolveProviderSession({
+        const candidate = await deps.resolveProviderSession({
           cwd,
           agentKind,
           windowFromMs: RENDERER_BOOT_MS,
           windowToMs: now
         })
-        if (providerSession) {
-          hitAgent = agentKind
-          break
+        if (!candidate) {
+          continue
         }
+        // Why no fall-through to the next kind on a claimed id: the pane is a
+        // sibling of an already-resumed session (split shares cwd), not a
+        // candidate for the other agent.
+        hitAgent = agentKind
+        providerSession = candidate
+        break
       }
       if (!hitAgent || !providerSession) {
         continue
       }
+      if (claimedProviderSessionIds.has(providerSession.id)) {
+        continue
+      }
+      claimedProviderSessionIds.add(providerSession.id)
       records.push({
         paneKey: target.paneKey,
         tabId: target.tabId,

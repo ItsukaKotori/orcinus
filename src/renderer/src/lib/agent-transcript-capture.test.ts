@@ -7,6 +7,7 @@ import {
 } from './agent-transcript-capture'
 
 const LEAF_A = '11111111-1111-4111-8111-111111111111'
+const LEAF_B = '22222222-2222-4222-8222-222222222222'
 
 // Why single-pane: every live pane is now a scan target (no title gate), so a
 // second pane in the default fixture would double every record/call assertion.
@@ -110,6 +111,78 @@ describe('captureTranscriptAgentSessions', () => {
       agent: 'codex',
       providerSession: { key: 'session_id', id: 'codex-uuid' }
     })
+  })
+
+  it('two panes in one cwd claim a transcript only once', async () => {
+    const mergeRecords = vi.fn()
+    const state = makeState({
+      terminalLayoutsByTabId: {
+        tab1: {
+          root: {
+            type: 'split',
+            direction: 'horizontal',
+            first: { type: 'leaf', leafId: LEAF_A },
+            second: { type: 'leaf', leafId: LEAF_B }
+          },
+          activeLeafId: LEAF_A,
+          expandedLeafId: null,
+          ptyIdsByLeafId: { [LEAF_A]: 'pty-1', [LEAF_B]: 'pty-2' }
+        }
+      }
+    })
+    const resolveProviderSession = vi.fn(
+      async (): Promise<AgentProviderSessionMetadata | null> => ({
+        key: 'session_id',
+        id: 'shared-uuid'
+      })
+    )
+    await captureTranscriptAgentSessions(makeDeps({ state, resolveProviderSession, mergeRecords }))
+    expect(mergeRecords).toHaveBeenCalledTimes(1)
+    const records = mergeRecords.mock.calls[0][0]
+    expect(records).toHaveLength(1)
+    expect(records[0]).toMatchObject({ paneKey: `tab1:${LEAF_A}`, agent: 'claude' })
+  })
+
+  it('a session id already claimed by an existing record is not re-claimed by a sibling pane', async () => {
+    const mergeRecords = vi.fn()
+    const state = makeState({
+      terminalLayoutsByTabId: {
+        tab1: {
+          root: {
+            type: 'split',
+            direction: 'horizontal',
+            first: { type: 'leaf', leafId: LEAF_A },
+            second: { type: 'leaf', leafId: LEAF_B }
+          },
+          activeLeafId: LEAF_A,
+          expandedLeafId: null,
+          ptyIdsByLeafId: { [LEAF_A]: 'pty-1', [LEAF_B]: 'pty-2' }
+        }
+      },
+      sleepingAgentSessionsByPaneKey: {
+        [`tab1:${LEAF_A}`]: {
+          paneKey: `tab1:${LEAF_A}`,
+          worktreeId: 'w1::/repo',
+          agent: 'claude',
+          providerSession: { key: 'session_id', id: 'claimed-uuid' },
+          prompt: '',
+          state: 'waiting',
+          capturedAt: 1,
+          updatedAt: 1
+        }
+      }
+    })
+    const resolveProviderSession = vi.fn(
+      async (): Promise<AgentProviderSessionMetadata | null> => ({
+        key: 'session_id',
+        id: 'claimed-uuid'
+      })
+    )
+    await captureTranscriptAgentSessions(makeDeps({ state, resolveProviderSession, mergeRecords }))
+    // Pane A is skipped pre-scan (existing record); pane B is probed but its
+    // hit resolves an already-claimed id, so nothing new is recorded.
+    expect(resolveProviderSession).toHaveBeenCalledTimes(1)
+    expect(mergeRecords).not.toHaveBeenCalled()
   })
 
   it('a miss on every scan yields no record and no merge', async () => {
