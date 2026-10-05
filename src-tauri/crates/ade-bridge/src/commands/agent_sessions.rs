@@ -183,12 +183,19 @@ pub(crate) fn resolve_capture(
         }
         "codex" => {
             // Observed layout: ~/.codex/sessions/YYYY/MM/DD/rollout-<local-ts>-<uuid>.jsonl.
-            // The CLI resume id is the trailing uuid segment (loose by design —
-            // spec §8.3; a miss degrades to shell-only restore).
+            // The CLI resume id is the rollout filename's dashed UUID — exactly
+            // the trailing 5 hyphen groups (loose by design — spec §8.3; a miss
+            // degrades to shell-only restore).
             let sessions = home.join(".codex").join("sessions");
             let transcript = latest_codex_rollout_in_window(&sessions, cwd, window, &started)?;
             let stem = transcript.file_stem()?.to_str()?;
-            let id = stem.rsplit('-').next()?.trim().to_string();
+            let groups: Vec<&str> = stem.split('-').collect();
+            let id = if groups.len() >= 5 {
+                groups[groups.len() - 5..].join("-")
+            } else {
+                stem.to_string()
+            };
+            let id = id.trim().to_string();
             if id.is_empty() {
                 return None;
             }
@@ -293,7 +300,8 @@ mod tests {
         );
 
         let found = resolve_capture(home.path(), "/repo/one", "codex", WINDOW).unwrap();
-        assert_eq!(found.id, "444444444444");
+        // The CLI resume id is the whole dashed UUID, not a fragment.
+        assert_eq!(found.id, "aaaaaaaa-1111-2222-3333-444444444444");
         assert!(found.transcript_path.unwrap().contains("aaaaaaaa"));
     }
 
