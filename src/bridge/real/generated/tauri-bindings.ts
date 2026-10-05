@@ -72,6 +72,15 @@ export const commands = {
 	wslDefault?: boolean | null,
 	projectRuntime?: Json | null,
 } | null) => typedError<RefreshAgentsResult, BridgeError>(__TAURI_INVOKE("preflight_refresh_agents", { args })),
+	/**
+	 *  Transcript scan runs off the async runtime (directory walks can stall on
+	 *  network volumes); the 500ms budget bounds the worst case.
+	 */
+	agentSessionsResolveCapture: (args: AgentSessionsResolveCaptureArgs) => typedError<{
+	key: AgentProviderSessionKey,
+	id: string,
+	transcriptPath?: string | null,
+} | null, BridgeError>(__TAURI_INVOKE("agent_sessions_resolve_capture", { args })),
 	platformGet: () => typedError<PlatformInfo, BridgeError>(__TAURI_INVOKE("platform_get")),
 	appGetIdentity: () => typedError<AppIdentityInfo, BridgeError>(__TAURI_INVOKE("app_get_identity")),
 	/**  Read the projects registry (spec §5.2). */
@@ -246,6 +255,29 @@ export const commands = {
 };
 
 /* Types */
+export type AgentProviderSessionKey = "session_id" | "conversation_id";
+
+export type AgentProviderSessionMetadata = AgentProviderSessionMetadata_Serialize | AgentProviderSessionMetadata_Deserialize;
+
+export type AgentProviderSessionMetadata_Deserialize = {
+	key: AgentProviderSessionKey,
+	id: string,
+	transcriptPath?: string | null,
+};
+
+export type AgentProviderSessionMetadata_Serialize = {
+	key: AgentProviderSessionKey,
+	id: string,
+	transcriptPath?: string | null,
+};
+
+export type AgentSessionsResolveCaptureArgs = {
+	cwd: string,
+	agentKind: string,
+	windowFromMs: number,
+	windowToMs: number,
+};
+
 /**
  *  Superset of the renderer `AppIdentity` contract: the native identity also
  *  carries the crate version (`docs/.../2026-09-23-phase1a-open-project-design.md` §5.5).
