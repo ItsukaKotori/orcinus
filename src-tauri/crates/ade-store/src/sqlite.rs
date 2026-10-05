@@ -67,6 +67,16 @@ fn sidecar_paths(path: &Path) -> [PathBuf; 2] {
     [PathBuf::from(wal), PathBuf::from(shm)]
 }
 
+/// Quarantine target `<original>.corrupt-<stamp>`. The suffix is appended to
+/// the full original name (never `with_extension`, which would replace the
+/// last extension and collide the main DB with its WAL/SHM sidecars onto one
+/// path), so all three quarantine to distinct files (spec §6).
+fn quarantined_path(path: &Path, stamp: i64) -> PathBuf {
+    let mut quarantined = path.as_os_str().to_os_string();
+    quarantined.push(format!(".corrupt-{stamp}"));
+    PathBuf::from(quarantined)
+}
+
 pub struct Store {
     conn: Mutex<Connection>,
 }
@@ -86,12 +96,9 @@ impl Store {
             Err(open_error) => {
                 let stamp = unix_ms();
                 for sidecar in sidecar_paths(path) {
-                    let _ = std::fs::rename(
-                        &sidecar,
-                        sidecar.with_extension(format!("corrupt-{stamp}")),
-                    );
+                    let _ = std::fs::rename(&sidecar, quarantined_path(&sidecar, stamp));
                 }
-                let quarantined = path.with_extension(format!("corrupt-{stamp}"));
+                let quarantined = quarantined_path(path, stamp);
                 let _ = std::fs::rename(path, &quarantined);
                 eprintln!(
                     "[ade-store] sqlite open failed ({open_error}); quarantined to {} and rebuilt",
@@ -280,11 +287,33 @@ mod tests {
         let store = Store::open(&db).unwrap();
         store.put("after", r#"rebuild"#).unwrap();
         assert_eq!(store.get("after").unwrap().as_deref(), Some("rebuild"));
-        let quarantined = std::fs::read_dir(dir.path())
+        let quarantined: Vec<PathBuf> = std::fs::read_dir(dir.path())
             .unwrap()
             .flatten()
-            .any(|entry| entry.file_name().to_string_lossy().contains("corrupt-"));
-        assert!(quarantined, "old corrupt file must be renamed aside");
+            .map(|entry| entry.path())
+            .filter(|path| {
+                path.file_name()
+                    .is_some_and(|name| name.to_string_lossy().contains("corrupt-"))
+            })
+            .collect();
+        assert_eq!(quarantined.len(), 1, "exactly one quarantined file expected");
+        let quarantined = &quarantined[0];
+        assert!(
+            quarantined
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .starts_with("ade.sqlite.corrupt-"),
+            "quarantine must append the suffix to the full name: {}",
+            quarantined.display()
+        );
+        let preserved = std::fs::read_to_string(quarantined).unwrap();
+        assert_eq!(
+            preserved, "this is not sqlite",
+            "corrupt bytes must be preserved aside, not overwritten"
+        );
+        let rebuilt = Store::open(&db).unwrap();
+        assert_eq!(rebuilt.get("after").unwrap().as_deref(), Some("rebuild"));
     }
 
     #[test]
