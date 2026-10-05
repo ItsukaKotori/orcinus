@@ -9,6 +9,7 @@ use ade_fs::{FsService, FsWatcher};
 use ade_git::runner::CancelToken;
 use ade_pty::PtyHost;
 use ade_store::onboarding_store::OnboardingStore;
+use ade_store::sqlite::Store;
 use ade_store::projects_store::ProjectsStore;
 use ade_store::settings_store::SettingsStore;
 use ade_store::ui_state_store::UiStateStore;
@@ -377,6 +378,8 @@ pub struct AppState {
     pub pty_host: Arc<PtyHost>,
     /// ptyId → worktreeId（`pty_spawn` 记、`pty_list_sessions` 查、Exit 清）。
     pub pty_worktree_ids: PtyWorktreeIds,
+    /// SQLite 会话态存储（规格 §3.1；Task 2）。损坏由 `Store::open` 隔离重建。
+    pub session: Arc<Store>,
     /// 启动时解析的用户 home（spawn cwd 兜底，规格 §2.4）。
     pub home: String,
     /// 登录 shell PATH 水合的进程内缓存（Task 11）：进程生命周期内最多水合一次。
@@ -392,6 +395,7 @@ impl AppState {
             BridgeError::message(format!("failed to resolve app data dir: {error}"))
         })?;
         std::fs::create_dir_all(&data_dir)?;
+        let session = Arc::new(Store::open(&data_dir.join("ade.sqlite"))?);
         let home = app
             .path()
             .home_dir()
@@ -448,6 +452,7 @@ impl AppState {
             app: app.clone(),
             pty_host,
             pty_worktree_ids,
+            session,
             home,
             path_hydration_cache: PathHydrationCache::default(),
             git_cancels: GitCancelRegistry::new(),
@@ -467,6 +472,11 @@ impl AppState {
 
     pub(crate) fn ui_store(&self) -> MutexGuard<'_, UiStateStore> {
         lock(&self.ui)
+    }
+
+    /// Shared handle to the SQLite session store (spec §3.1).
+    pub fn session_store(&self) -> &Store {
+        &self.session
     }
 
     pub(crate) fn schedule_settings_write(&self) {

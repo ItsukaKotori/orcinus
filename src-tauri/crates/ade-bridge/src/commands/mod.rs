@@ -8,6 +8,7 @@ pub mod preflight;
 pub mod project_groups;
 pub mod pty;
 pub mod repos;
+pub mod session;
 pub mod settings;
 pub mod ui;
 pub mod worktrees;

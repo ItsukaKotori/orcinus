@@ -29,6 +29,17 @@ export const commands = {
 	 *  write. Returns the complete merged object.
 	 */
 	settingsSet: (args: Json) => typedError<Json, BridgeError>(__TAURI_INVOKE("settings_set", { args })),
+	/**  Read the full workspace session state as one JSON object text. */
+	sessionGet: () => typedError<string, BridgeError>(__TAURI_INVOKE("session_get")),
+	/**  Whole-state replace; keys absent from the payload are deleted. */
+	sessionSet: (args: string) => typedError<null, BridgeError>(__TAURI_INVOKE("session_set", { args })),
+	/**  Replace each present top-level key wholesale (opaque JSON payload). */
+	sessionPatch: (args: string) => typedError<null, BridgeError>(__TAURI_INVOKE("session_patch", { args })),
+	/**
+	 *  Explicit flush point; WAL commits already hold durability, so this only
+	 *  folds the WAL (spec §3.2).
+	 */
+	sessionFlush: () => typedError<null, BridgeError>(__TAURI_INVOKE("session_flush")),
 	/**  Read the full effective UI state (`defaults ∪ stored`). */
 	uiGet: () => typedError<Json, BridgeError>(__TAURI_INVOKE("ui_get")),
 	/**

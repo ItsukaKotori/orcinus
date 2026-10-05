@@ -40,6 +40,9 @@ pub fn run() {
                 // Debounced settings/ui writes may still be pending; flush them so a
                 // quick quit after a change cannot lose the update (spec §4.1).
                 state.flush_pending_writes();
+                if let Err(error) = state.session_store().checkpoint_truncate() {
+                    eprintln!("[ade] failed to checkpoint session store on exit: {error}");
+                }
                 // 逐会话 kill（带 2s+2s 升级时限）——订阅流随会话退出自然终止
                 // （规格 §3.1：app 退出全量收尾）。
                 state.pty_host.shutdown_all();
