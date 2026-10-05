@@ -1,5 +1,7 @@
 import type { ManagedPane } from '@/lib/pane-manager/pane-manager'
 import { writeForegroundTerminalChunk } from '@/lib/pane-manager/pane-terminal-foreground-render-settle'
+import { queuedByTerminal } from '@/lib/pane-manager/pane-terminal-output-queue-registry'
+import { replayPaintDebugLog } from './replay-paint-debug-log'
 
 import { ensureArabicShapingJoinerForText } from '@/lib/pane-manager/terminal-arabic-shaping-joiner'
 import {
@@ -137,6 +139,8 @@ export function replayIntoTerminal(
   }
   // Why: a certified-dead pipeline never parses; retrying only re-arms a guard for another wedged release, so skip it.
   if (isTerminalWritePipelineCertifiedDead(pane.terminal)) {
+    // DEBUG(replay-paint): remove after diagnosis — dead-pipeline skip at replay time.
+    replayPaintDebugLog(`pane=${pane.id} write skipped: pipeline certified dead`)
     return
   }
   ensureArabicShapingJoinerForText(pane.terminal, data)
@@ -146,14 +150,30 @@ export function replayIntoTerminal(
     pane.terminal,
     options.stallCheckMs ?? REPLAY_GUARD_STALL_CHECK_MS
   )
+  // DEBUG(replay-paint): remove after diagnosis — enqueue time + foreground scheduler hold state at replay.
+  const enqueuedAt = Date.now()
+  const queueEntry = queuedByTerminal.get(pane.terminal)
+  replayPaintDebugLog(
+    `pane=${pane.id} write enqueue: chars=${data.length} hold=${String(queueEntry?.foregroundHold ?? false)} coalesce=${String(queueEntry?.foregroundCoalesce ?? false)} queuedChars=${String(queueEntry?.queuedChars ?? 0)}`
+  )
   // Why: hidden/snapshot replay skips the foreground path; WebGL/canvas still need a post-parse repaint to drop stale cells.
   writeForegroundTerminalChunk(pane.terminal, data, {
     forceViewportRefresh: true,
     followupViewportRefresh: true,
     shouldRefreshViewportSynchronously: options.shouldRefreshViewportSynchronously,
     shouldReleaseRenderPause: options.shouldReleaseRenderPause,
-    onParsed: guardCallbacks.onParsed,
-    onWriteFailure: guardCallbacks.onWriteFailure
+    onParsed: () => {
+      // DEBUG(replay-paint): remove after diagnosis — enqueue→parse gap per write.
+      replayPaintDebugLog(
+        `pane=${pane.id} write parsed: chars=${data.length} after=${Date.now() - enqueuedAt}ms`
+      )
+      guardCallbacks.onParsed()
+    },
+    onWriteFailure: () => {
+      // DEBUG(replay-paint): remove after diagnosis — synchronous write rejection.
+      replayPaintDebugLog(`pane=${pane.id} write FAILED synchronously: chars=${data.length}`)
+      guardCallbacks.onWriteFailure()
+    }
   })
 }
 
@@ -200,6 +220,7 @@ export function waitForTerminalReplayWritesParsed(
   return new Promise((resolve) => {
     let finished = false
     let stallTimer: ReturnType<typeof setTimeout> | null = null
+    const probeStartedAt = Date.now()
     const finish = (): void => {
       if (finished) {
         return
@@ -209,12 +230,18 @@ export function waitForTerminalReplayWritesParsed(
         clearTimeout(stallTimer)
         stallTimer = null
       }
+      // DEBUG(replay-paint): remove after diagnosis — >9s elapsed means the immediate probe never fired.
+      replayPaintDebugLog(
+        `probe finished after ${Date.now() - probeStartedAt}ms (that delay is the immediate-probe stall)`
+      )
       resolve()
     }
     const queueProbe = (): void => {
       if (finished) {
         return
       }
+      // DEBUG(replay-paint): remove after diagnosis — the +10s re-probe moment.
+      replayPaintDebugLog('re-probe issued at +10s (immediate probe callback never arrived)')
       try {
         // Why: empty write is FIFO after replay bytes; its callback recovers a lost sentinel without changing parser state.
         terminal.write('', finish)
@@ -226,6 +253,8 @@ export function waitForTerminalReplayWritesParsed(
     stallTimer = setTimeout(queueProbe, options.stallCheckMs ?? REPLAY_GUARD_STALL_CHECK_MS)
     try {
       // Why empty: keep pendingEscapeTailAnsi as the final replay bytes; xterm still orders this completion after earlier writes.
+      // DEBUG(replay-paint): remove after diagnosis — immediate probe enqueue marker.
+      replayPaintDebugLog('immediate probe enqueued')
       terminal.write('', finish)
     } catch {
       // A disposed terminal cannot parse any remaining replay bytes.

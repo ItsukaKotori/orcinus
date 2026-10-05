@@ -233,6 +233,12 @@ export function registerTerminalBacklogRecovery(
 export function discardTerminalOutput(terminal: TerminalOutputTarget): void {
   exposeDebugApi()
   const entry = queuedByTerminal.get(terminal)
+  // DEBUG(replay-paint): remove after diagnosis — did a discard swallow queued output during the stall window?
+  if (entry && entry.queuedChars > 0) {
+    console.debug(
+      `[replay-paint] discardTerminalOutput: dropping ${entry.queuedChars} queued chars (${entry.chunks.length} chunks)`
+    )
+  }
   if (entry) {
     // Why: discarded chunks still consumed their deliveries — credit them or main's in-flight window leaks (fireQueuedAckCredits).
     fireQueuedAckCredits(entry)

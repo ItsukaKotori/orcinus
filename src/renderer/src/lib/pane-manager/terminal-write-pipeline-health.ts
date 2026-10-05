@@ -92,6 +92,8 @@ export function notifyUndeliverableWrite(terminal: object, reason: Undeliverable
   if (certifiedDeadTerminals.has(terminal)) {
     return
   }
+  // DEBUG(replay-paint): remove after diagnosis — the moment a pipeline gets certified dead.
+  console.debug(`[replay-paint] pipeline CERTIFIED DEAD: reason=${reason}`)
   certifiedDeadTerminals.add(terminal)
   try {
     handlersByTerminal.get(terminal)?.(reason)

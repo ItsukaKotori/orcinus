@@ -17,6 +17,7 @@ import {
   waitForTerminalReplayWritesParsed,
   type ReplayingPanesRef
 } from './replay-guard'
+import { replayPaintDebugLog } from './replay-paint-debug-log'
 import type { RestoredViewportBlankingPanesRef } from './terminal-restored-viewport'
 import { isXtermInstanceDisposed } from '@/lib/pane-manager/xterm-instance-disposed'
 
@@ -156,31 +157,58 @@ export function serializeTerminalLayout(
 // running one settled-frame fit + full present makes the restored buffer the
 // painted frame deterministically, and is a no-op repaint for panes whose
 // renderer already showed them.
+// DEBUG(replay-paint): remove after diagnosis — overlay logger moved to
+// replay-paint-debug-log.ts so replay-guard.ts breadcrumbs can share it.
+
 function scheduleRestoredReplayPaint(
   pane: ManagedPane,
   bufferLength: number,
   hasWebglRenderer: boolean
 ): void {
   // DEBUG(replay-paint): remove after diagnosis — schedule-time renderer state.
-  console.debug(
-    `[replay-paint] pane=${pane.id} schedule: buffer=${bufferLength} chars, hasWebgl=${hasWebglRenderer}`
+  replayPaintDebugLog(
+    `pane=${pane.id} schedule: buffer=${bufferLength} chars, hasWebgl=${hasWebglRenderer}`
   )
   if (typeof requestAnimationFrame !== 'function') {
     return
   }
+  // DEBUG(replay-paint): remove after diagnosis — sample xterm's WriteBuffer
+  // depth while the stall window is open: depth>0 with a frozen offset means
+  // chunks are not being processed; depth 0 means chunks parsed but callbacks
+  // were lost. Reads vendored internals defensively; never throws into restore.
+  const sampleWriteBufferDepth = (label: string): void => {
+    try {
+      const core = (pane.terminal as unknown as { _core?: { _writeBuffer?: Record<string, unknown> } })
+        ._core
+      const writeBuffer = core?._writeBuffer
+      if (!writeBuffer) {
+        replayPaintDebugLog(`pane=${pane.id} writebuf ${label}: internals unavailable`)
+        return
+      }
+      const chunks = writeBuffer._writeBuffer as unknown[] | undefined
+      replayPaintDebugLog(
+        `pane=${pane.id} writebuf ${label}: depth=${chunks?.length ?? '?'} offset=${String(writeBuffer._bufferOffset)} pending=${String(writeBuffer._pendingData)} syncWriting=${String(writeBuffer._isSyncWriting)}`
+      )
+    } catch {
+      replayPaintDebugLog(`pane=${pane.id} writebuf ${label}: sample threw`)
+    }
+  }
+  sampleWriteBufferDepth('t0')
+  setTimeout(() => sampleWriteBufferDepth('t+1s'), 1000)
+  setTimeout(() => sampleWriteBufferDepth('t+3s'), 3000)
   const probeStartedAt = Date.now()
   void waitForTerminalReplayWritesParsed(pane.terminal)
     .then(() => {
       // DEBUG(replay-paint): remove after diagnosis — ~10s elapsed means the stall path resolved the probe.
-      console.debug(
-        `[replay-paint] pane=${pane.id} parse probe resolved in ${Date.now() - probeStartedAt}ms`
+      replayPaintDebugLog(
+        `pane=${pane.id} parse probe resolved in ${Date.now() - probeStartedAt}ms`
       )
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           const canvas = pane.terminal.element?.querySelector('canvas') as HTMLCanvasElement | null
           // DEBUG(replay-paint): remove after diagnosis — zero/unresized canvas would confirm the stale-canvas hypothesis.
-          console.debug(
-            `[replay-paint] pane=${pane.id} settled frame: box=${pane.container?.clientWidth}x${pane.container?.clientHeight} grid=${pane.terminal.cols}x${pane.terminal.rows} canvas=${
+          replayPaintDebugLog(
+            `pane=${pane.id} settled frame: box=${pane.container?.clientWidth}x${pane.container?.clientHeight} grid=${pane.terminal.cols}x${pane.terminal.rows} canvas=${
               canvas
                 ? `${canvas.width}x${canvas.height} css ${canvas.style.width}x${canvas.style.height} connected=${canvas.isConnected}`
                 : 'none'
@@ -196,14 +224,16 @@ function scheduleRestoredReplayPaint(
             // Pane may be disposed mid-restore; the present below guards itself.
           }
           // DEBUG(replay-paint): remove after diagnosis — did the fit change the grid or early-return?
-          console.debug(
-            `[replay-paint] pane=${pane.id} safeFit=${fitResult} grid now=${pane.terminal.cols}x${pane.terminal.rows}`
+          replayPaintDebugLog(
+            `pane=${pane.id} safeFit=${fitResult} grid now=${pane.terminal.cols}x${pane.terminal.rows}`
           )
           presentPaneViewport(pane)
+          replayPaintDebugLog(`pane=${pane.id} present dispatched`)
         })
       })
     })
     .catch(() => {
+      replayPaintDebugLog(`pane=${pane.id} parse probe rejected`)
       // Restore paint is best-effort; a disposed terminal must not surface here.
     })
 }
