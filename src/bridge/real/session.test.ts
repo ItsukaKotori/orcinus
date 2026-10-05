@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import type { EventCallback } from '@tauri-apps/api/event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { getDefaultWorkspaceSession } from '../../shared/constants'
 import type { WorkspaceSessionState } from '../../shared/workspace-session-state-types'
 import { createSessionRealApi } from './session'
 
@@ -35,6 +36,25 @@ describe('session real domain', () => {
     const state = await api.session.get()
     expect(invokeMock).toHaveBeenCalledWith('session_get')
     expect(state.activeTabId).toBe('t1')
+  })
+
+  // Why read-side normalization: the store keeps sparse rows, but the contract is a
+  // full WorkspaceSessionState — unguarded consumers in the hydration chain read
+  // top-level fields directly, so a raw `{}` from a first-run empty store would
+  // throw (`Object.keys(session.tabsByWorktree)` on undefined).
+  it('get merges canonical defaults under stored rows', async () => {
+    invokeMock.mockResolvedValue('{"activeTabId":"t1"}')
+    const api = createSessionRealApi()
+    const state = await api.session.get()
+    expect(state.tabsByWorktree).toEqual({})
+    expect(state.activeTabId).toBe('t1')
+    expect(state).toEqual({ ...getDefaultWorkspaceSession(), activeTabId: 't1' })
+  })
+
+  it('get on an empty store returns the full canonical default', async () => {
+    invokeMock.mockResolvedValue('{}')
+    const api = createSessionRealApi()
+    await expect(api.session.get()).resolves.toEqual(getDefaultWorkspaceSession())
   })
 
   it('patch stringifies the payload into the args envelope', async () => {

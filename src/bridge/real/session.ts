@@ -1,4 +1,5 @@
 import type { PreloadApi } from '../../preload/api-types'
+import { getDefaultWorkspaceSession } from '../../shared/constants'
 import type {
   WorkspaceSessionPatch,
   WorkspaceSessionState
@@ -21,7 +22,14 @@ import { invokeCommand, subscribeToEvent } from './invoke'
 export function createSessionRealApi(): Pick<PreloadApi, 'session'> {
   return {
     session: withMethodFallback<PreloadApi['session']>('session', {
-      get: async () => JSON.parse(await invokeCommand<string>('session_get')) as WorkspaceSessionState,
+      // Read-side normalization: the store keeps sparse rows (a first-run empty
+      // store answers `{}`), but the contract is a full WorkspaceSessionState and
+      // unguarded consumers in the hydration chain read top-level fields directly.
+      // Stored rows win over the canonical defaults; set/patch/flush stay sparse.
+      get: async () => {
+        const stored = JSON.parse(await invokeCommand<string>('session_get')) as Partial<WorkspaceSessionState>
+        return { ...getDefaultWorkspaceSession(), ...stored } as WorkspaceSessionState
+      },
       set: async (args: WorkspaceSessionState) => {
         await invokeCommand('session_set', { args: JSON.stringify(args) })
       },
