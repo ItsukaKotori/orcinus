@@ -6,6 +6,8 @@ pub mod cache;
 pub mod endpoint;
 pub mod installer;
 pub mod script;
+pub mod server;
 
 pub use cache::CachedHookEvent;
 pub use installer::{install_claude_hooks, HookInstallSkipReason, HookInstallState};
+pub use server::{AgentHookServer, HookCallback, StartOptions};

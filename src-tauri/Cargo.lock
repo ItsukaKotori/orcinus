@@ -2890,6 +2890,7 @@ name = "orcinus-app"
 version = "0.0.1"
 dependencies = [
  "ade-bridge",
+ "ade-hooks",
  "ade-pty",
  "serde",
  "serde_json",
