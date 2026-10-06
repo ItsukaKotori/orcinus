@@ -49,6 +49,7 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::onboarding::onboarding_update,
                 commands::preflight::preflight_refresh_agents,
                 commands::agent_sessions::agent_sessions_resolve_capture,
+                commands::agent_status::agent_status_get_snapshot,
                 commands::platform::platform_get,
                 commands::app::app_get_identity,
                 commands::repos::repos_list,
@@ -134,6 +135,8 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
             .typ::<ade_fs::FsChangedPayload>()
             .typ::<crate::events::WorktreeChangedPayload>()
             .typ::<crate::events::ScanNestedProgressPayload>()
+            .typ::<crate::events::AgentHookRawPayload>()
+            .typ::<commands::agent_status::AgentHookSnapshotEntry>()
             .typ::<commands::project_groups::NestedRepoImportResult>()
             .typ::<ade_core::models::folder_workspace::FolderWorkspacePathStatus>()
             .typ::<ade_core::models::project_group::NestedRepoScanResult>()
@@ -211,6 +214,7 @@ mod tests {
             "onboarding_update",
             "preflight_refresh_agents",
             "agent_sessions_resolve_capture",
+            "agent_status_get_snapshot",
             "platform_get",
             "app_get_identity",
             "repos_list",

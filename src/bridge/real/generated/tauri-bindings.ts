@@ -83,6 +83,8 @@ export const commands = {
 	id: string,
 	transcriptPath?: string | null,
 } | null, BridgeError>(__TAURI_INVOKE("agent_sessions_resolve_capture", { args })),
+	/**  重启后 renderer hydration 的原始缓存快照（升序；归一化在 renderer）。 */
+	agentStatusGetSnapshot: () => typedError<AgentHookSnapshotEntry_Serialize[], BridgeError>(__TAURI_INVOKE("agent_status_get_snapshot")),
 	platformGet: () => typedError<PlatformInfo, BridgeError>(__TAURI_INVOKE("platform_get")),
 	appGetIdentity: () => typedError<AppIdentityInfo, BridgeError>(__TAURI_INVOKE("app_get_identity")),
 	/**  Read the projects registry (spec §5.2). */
@@ -257,6 +259,78 @@ export const commands = {
 };
 
 /* Types */
+/**
+ *  Payload for [`AGENT_HOOK_RAW`]（`CachedHookEvent` 的 bridge 侧同形；
+ *  `restored` false 时省略——实时事件不需要回放标记，规格 §3.2）。
+ */
+export type AgentHookRawPayload = AgentHookRawPayload_Serialize | AgentHookRawPayload_Deserialize;
+
+/**
+ *  Payload for [`AGENT_HOOK_RAW`]（`CachedHookEvent` 的 bridge 侧同形；
+ *  `restored` false 时省略——实时事件不需要回放标记，规格 §3.2）。
+ */
+export type AgentHookRawPayload_Deserialize = {
+	source: string,
+	payload: Json,
+	paneKey: string,
+	tabId: string | null,
+	worktreeId: string | null,
+	launchToken: string | null,
+	receivedAt: number,
+	restored: boolean,
+};
+
+/**
+ *  Payload for [`AGENT_HOOK_RAW`]（`CachedHookEvent` 的 bridge 侧同形；
+ *  `restored` false 时省略——实时事件不需要回放标记，规格 §3.2）。
+ */
+export type AgentHookRawPayload_Serialize = {
+	source: string,
+	payload: Json,
+	paneKey: string,
+	tabId?: string | null,
+	worktreeId?: string | null,
+	launchToken?: string | null,
+	receivedAt: number,
+	restored?: boolean,
+};
+
+/**
+ *  `agent_status_get_snapshot` 元素：与 `AgentHookRawPayload` 同形，
+ *  `restored` 显式携带（hydrate 回放标记，规格 §3.6/§3.7）。
+ */
+export type AgentHookSnapshotEntry = AgentHookSnapshotEntry_Serialize | AgentHookSnapshotEntry_Deserialize;
+
+/**
+ *  `agent_status_get_snapshot` 元素：与 `AgentHookRawPayload` 同形，
+ *  `restored` 显式携带（hydrate 回放标记，规格 §3.6/§3.7）。
+ */
+export type AgentHookSnapshotEntry_Deserialize = {
+	source: string,
+	payload: Json,
+	paneKey: string,
+	tabId: string | null,
+	worktreeId: string | null,
+	launchToken: string | null,
+	receivedAt: number,
+	restored: boolean,
+};
+
+/**
+ *  `agent_status_get_snapshot` 元素：与 `AgentHookRawPayload` 同形，
+ *  `restored` 显式携带（hydrate 回放标记，规格 §3.6/§3.7）。
+ */
+export type AgentHookSnapshotEntry_Serialize = {
+	source: string,
+	payload: Json,
+	paneKey: string,
+	tabId?: string | null,
+	worktreeId?: string | null,
+	launchToken?: string | null,
+	receivedAt: number,
+	restored: boolean,
+};
+
 export type AgentProviderSessionKey = "session_id" | "conversation_id";
 
 export type AgentProviderSessionMetadata = AgentProviderSessionMetadata_Serialize | AgentProviderSessionMetadata_Deserialize;

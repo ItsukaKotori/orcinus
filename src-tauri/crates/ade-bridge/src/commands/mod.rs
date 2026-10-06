@@ -1,4 +1,5 @@
 pub mod agent_sessions;
+pub mod agent_status;
 pub mod app;
 pub mod folder_workspaces;
 pub mod fs;

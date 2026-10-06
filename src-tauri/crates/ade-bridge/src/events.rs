@@ -1,6 +1,8 @@
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Runtime};
 
+use crate::json::Json;
+
 /// Out-of-band settings updates (View > Appearance toggles etc.). Payload is a
 /// partial `GlobalSettings` containing only the changed top-level keys.
 pub const SETTINGS_CHANGED: &str = "settings:changed";
@@ -22,6 +24,8 @@ pub const PTY_SPAWNED: &str = "pty:spawned";
 pub const PTY_EXIT: &str = "pty:exit";
 /// Window-close quit → one renderer flush window (spec §3.4).
 pub const SESSION_FLUSH_REQUESTED: &str = "session:flush-requested";
+/// hook server 原始事件（归一化在 renderer，规格 §3.2）。
+pub const AGENT_HOOK_RAW: &str = "agent-hook:raw";
 
 /// Payload for [`WORKTREES_CHANGED`] (spec §5.3).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
@@ -103,6 +107,44 @@ pub fn emit_worktrees_changed<R: Runtime>(app: &AppHandle<R>, repo_id: &str) {
     );
 }
 
+/// Payload for [`AGENT_HOOK_RAW`]（`CachedHookEvent` 的 bridge 侧同形；
+/// `restored` false 时省略——实时事件不需要回放标记，规格 §3.2）。
+#[derive(Debug, Clone, PartialEq, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentHookRawPayload {
+    pub source: String,
+    pub payload: Json,
+    pub pane_key: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tab_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub worktree_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub launch_token: Option<String>,
+    pub received_at: i64,
+    #[serde(skip_serializing_if = "restored_is_false")]
+    pub restored: bool,
+}
+
+fn restored_is_false(value: &bool) -> bool {
+    !*value
+}
+
+impl From<ade_hooks::CachedHookEvent> for AgentHookRawPayload {
+    fn from(event: ade_hooks::CachedHookEvent) -> Self {
+        Self {
+            source: event.source,
+            payload: Json::new(event.payload),
+            pane_key: event.pane_key,
+            tab_id: event.tab_id,
+            worktree_id: event.worktree_id,
+            launch_token: event.launch_token,
+            received_at: event.received_at,
+            restored: event.restored,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -138,6 +180,31 @@ mod tests {
             serde_json::to_value(&payload).unwrap(),
             json!({ "repoId": "r1" })
         );
+    }
+
+    #[test]
+    fn agent_hook_raw_payload_serializes_camel_case_and_omits_false_restored() {
+        let payload = AgentHookRawPayload::from(ade_hooks::CachedHookEvent {
+            source: "claude".to_string(),
+            payload: json!({ "hook_event_name": "Stop" }),
+            pane_key: "t1:leaf".to_string(),
+            tab_id: Some("t1".to_string()),
+            worktree_id: None,
+            launch_token: None,
+            received_at: 42,
+            restored: false,
+        });
+        assert_eq!(
+            serde_json::to_value(&payload).unwrap(),
+            json!({
+                "source": "claude",
+                "payload": { "hook_event_name": "Stop" },
+                "paneKey": "t1:leaf",
+                "tabId": "t1",
+                "receivedAt": 42
+            })
+        );
+        assert_eq!(AGENT_HOOK_RAW, "agent-hook:raw");
     }
 
     #[test]

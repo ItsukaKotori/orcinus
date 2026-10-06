@@ -65,6 +65,8 @@ pub fn run() {
                 if let Err(error) = state.session_store().checkpoint_truncate() {
                     eprintln!("[ade] failed to checkpoint session store on exit: {error}");
                 }
+                // hook 缓存/安装器收尾（规格 §3.1）。
+                state.hooks.shutdown();
                 // 逐会话 kill（带 2s+2s 升级时限）——订阅流随会话退出自然终止
                 // （规格 §3.1：app 退出全量收尾）。
                 state.pty_host.shutdown_all();

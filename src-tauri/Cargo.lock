@@ -15,6 +15,7 @@ dependencies = [
  "ade-core",
  "ade-fs",
  "ade-git",
+ "ade-hooks",
  "ade-pty",
  "ade-store",
  "filetime",

@@ -8,6 +8,7 @@ use std::time::{Duration, Instant};
 use ade_core::defaults::{onboarding_defaults, settings_defaults, ui_state_defaults};
 use ade_fs::{FsService, FsWatcher};
 use ade_git::runner::CancelToken;
+use ade_hooks::{AgentHookServer, StartOptions};
 use ade_pty::PtyHost;
 use ade_store::onboarding_store::OnboardingStore;
 use ade_store::sqlite::Store;
@@ -423,6 +424,8 @@ pub struct AppState {
     pub pty_worktree_ids: PtyWorktreeIds,
     /// SQLite 会话态存储（规格 §3.1；Task 2）。损坏由 `Store::open` 隔离重建。
     pub session: Arc<Store>,
+    /// hook server（规格 §3.1；Task 6）：HTTP 接收 + endpoint 发布 + 状态缓存。
+    pub hooks: Arc<AgentHookServer>,
     /// `session:flush-requested` 握手槽（spec §3.4；None = 无等待中的退出编排）。
     pub(crate) session_flush_slot: Mutex<Option<SessionFlushSignal>>,
     /// CloseRequested 重入门闩（spec §3.4）：仅首次（用户发起）close 编排
@@ -454,6 +457,34 @@ impl AppState {
 
         let persisted = load_persisted_state(&data_dir, &home);
         let settings = Arc::new(Mutex::new(persisted.settings));
+        let hooks_enabled = lock(&settings)
+            .get()
+            .get("agentStatusHooksEnabled")
+            .and_then(Value::as_bool)
+            .unwrap_or(true);
+        let hooks = {
+            let app_handle = app.clone();
+            AgentHookServer::start(
+                StartOptions {
+                    app_data_dir: data_dir.join("agent-hooks"),
+                    home: home.clone(),
+                    env: if cfg!(debug_assertions) {
+                        "development".to_string()
+                    } else {
+                        "production".to_string()
+                    },
+                    // 启动策略（规格 §3.3）：关闭 = skip 不删；开启 = 安装/更新。
+                    install_enabled: hooks_enabled,
+                },
+                Box::new(move |event| {
+                    events::emit_json(
+                        &app_handle,
+                        events::AGENT_HOOK_RAW,
+                        events::AgentHookRawPayload::from(event),
+                    );
+                }),
+            )
+        };
         let ui = Arc::new(Mutex::new(persisted.ui));
         let onboarding = Arc::new(Mutex::new(persisted.onboarding));
 
@@ -502,6 +533,7 @@ impl AppState {
             pty_host,
             pty_worktree_ids,
             session,
+            hooks,
             session_flush_slot: Mutex::new(None),
             close_flush_latch: CloseFlushLatch::default(),
             home,
