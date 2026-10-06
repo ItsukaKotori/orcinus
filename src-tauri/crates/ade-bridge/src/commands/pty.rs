@@ -44,6 +44,14 @@ pub struct PtySpawnArgs {
     /// 成功 spawn 后记入 worktreeId 映射（`pty_list_sessions` 补列）。
     #[serde(default)]
     pub worktree_id: Option<String>,
+    /// pane 归因身份（2A 忽略、2B 接真，规格 §3.5）：`ORCA_PANE_KEY = ${tabId}:${leafId}`。
+    #[serde(default)]
+    pub tab_id: Option<String>,
+    #[serde(default)]
+    pub leaf_id: Option<String>,
+    /// launchToken：hook 归因元数据与 pending 队列 TTL 已用，spawn 时注入 `ORCA_AGENT_LAUNCH_TOKEN`。
+    #[serde(default)]
+    pub launch_token: Option<String>,
 }
 
 /// `pty_spawn` 返回（规格 §2.1 最小合法响应；`isReattach` 仅 reattach 命中时
@@ -95,6 +103,40 @@ pub fn resolve_spawn_cwd(
         path: home.to_string(),
         worktree_fallback_missed,
     }
+}
+
+/// spawn env 终态（规格 §3.5）：renderer env 打底 → hook endpoint env 覆盖 →
+/// pane 身份/launchToken 覆盖（宿主是权威，防 renderer 陈旧值）。
+pub fn build_spawn_env(
+    base: HashMap<String, String>,
+    hooks_env: &HashMap<String, String>,
+    tab_id: Option<&str>,
+    leaf_id: Option<&str>,
+    worktree_id: Option<&str>,
+    launch_token: Option<&str>,
+) -> HashMap<String, String> {
+    let mut env = base;
+    for (key, value) in hooks_env {
+        env.insert(key.clone(), value.clone());
+    }
+    if let (Some(tab_id), Some(leaf_id)) = (tab_id, leaf_id) {
+        if !tab_id.is_empty() && !leaf_id.is_empty() {
+            env.insert("ORCA_PANE_KEY".to_string(), format!("{tab_id}:{leaf_id}"));
+        }
+    }
+    if let Some(tab_id) = tab_id.filter(|value| !value.is_empty()) {
+        env.insert("ORCA_TAB_ID".to_string(), tab_id.to_string());
+    }
+    if let Some(worktree_id) = worktree_id.filter(|value| !value.is_empty()) {
+        env.insert("ORCA_WORKTREE_ID".to_string(), worktree_id.to_string());
+    }
+    if let Some(launch_token) = launch_token.filter(|value| !value.is_empty()) {
+        env.insert(
+            "ORCA_AGENT_LAUNCH_TOKEN".to_string(),
+            launch_token.to_string(),
+        );
+    }
+    env
 }
 
 /// `pty_write` / `pty_write_accepted` 参数。
@@ -471,11 +513,19 @@ pub async fn pty_spawn(
             args.worktree_id
         );
     }
+    let env = build_spawn_env(
+        args.env,
+        &state.hooks.pty_env(),
+        args.tab_id.as_deref(),
+        args.leaf_id.as_deref(),
+        args.worktree_id.as_deref(),
+        args.launch_token.as_deref(),
+    );
     let request = ade_pty::SpawnRequest {
         cols: args.cols,
         rows: args.rows,
         cwd: Some(resolved_cwd.path),
-        env: args.env,
+        env,
         env_to_delete: args.env_to_delete,
         command: args.command,
         shell_override: args.shell_override,
@@ -916,8 +966,6 @@ mod tests {
             "startupCommandDelivery": "fast",
             "telemetry": { "agent_kind": "codex" },
             "connectionId": null,
-            "tabId": "t1",
-            "leafId": "l1",
             "initiallyHidden": true,
             "terminalColorQueryReplies": { "foreground": "\\e]11;?" }
         }))
@@ -1192,5 +1240,82 @@ mod tests {
         let args: PtyManagementKillOneArgs =
             serde_json::from_value(json!({ "sessionId": "p9" })).unwrap();
         assert_eq!(args.session_id, "p9");
+    }
+
+    #[test]
+    fn spawn_args_read_tab_leaf_and_launch_token() {
+        let args: PtySpawnArgs = serde_json::from_value(json!({
+            "cols": 80,
+            "rows": 24,
+            "tabId": "t1",
+            "leafId": "123e4567-e89b-42d3-a456-426614174000",
+            "launchToken": "tok-9"
+        }))
+        .expect("deserialize spawn args");
+        assert_eq!(args.tab_id.as_deref(), Some("t1"));
+        assert_eq!(
+            args.leaf_id.as_deref(),
+            Some("123e4567-e89b-42d3-a456-426614174000")
+        );
+        assert_eq!(args.launch_token.as_deref(), Some("tok-9"));
+    }
+
+    #[test]
+    fn build_spawn_env_injects_hook_endpoint_and_pane_identity() {
+        let base = HashMap::from([("K".to_string(), "V".to_string())]);
+        let hooks = HashMap::from([
+            ("ORCA_AGENT_HOOK_PORT".to_string(), "43123".to_string()),
+            ("ORCA_AGENT_HOOK_TOKEN".to_string(), "tok".to_string()),
+        ]);
+        let env = build_spawn_env(
+            base,
+            &hooks,
+            Some("t1"),
+            Some("123e4567-e89b-42d3-a456-426614174000"),
+            Some("r1::/wt"),
+            Some("launch-1"),
+        );
+        assert_eq!(env.get("K").map(String::as_str), Some("V"));
+        assert_eq!(
+            env.get("ORCA_AGENT_HOOK_PORT").map(String::as_str),
+            Some("43123")
+        );
+        assert_eq!(
+            env.get("ORCA_PANE_KEY").map(String::as_str),
+            Some("t1:123e4567-e89b-42d3-a456-426614174000")
+        );
+        assert_eq!(env.get("ORCA_TAB_ID").map(String::as_str), Some("t1"));
+        assert_eq!(
+            env.get("ORCA_WORKTREE_ID").map(String::as_str),
+            Some("r1::/wt")
+        );
+        assert_eq!(
+            env.get("ORCA_AGENT_LAUNCH_TOKEN").map(String::as_str),
+            Some("launch-1")
+        );
+    }
+
+    #[test]
+    fn build_spawn_env_skips_pane_key_without_both_ids_and_overrides_renderer_env() {
+        let base = HashMap::from([("ORCA_PANE_KEY".to_string(), "stale".to_string())]);
+        let hooks = HashMap::from([("ORCA_AGENT_HOOK_PORT".to_string(), "1".to_string())]);
+        let env = build_spawn_env(base, &hooks, Some("t1"), None, None, None);
+        assert_eq!(env.get("ORCA_PANE_KEY").map(String::as_str), Some("stale"));
+        let env = build_spawn_env(
+            HashMap::new(),
+            &hooks,
+            Some("t1"),
+            Some("leaf-1"),
+            None,
+            None,
+        );
+        assert_eq!(
+            env.get("ORCA_PANE_KEY").map(String::as_str),
+            Some("t1:leaf-1")
+        );
+        assert_eq!(
+            env.get("ORCA_AGENT_HOOK_PORT").map(String::as_str),
+            Some("1")
+        );
     }
 }

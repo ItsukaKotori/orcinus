@@ -1659,6 +1659,11 @@ export type PtySpawnArgs = {
 	sessionId?: string | null,
 	/**  成功 spawn 后记入 worktreeId 映射（`pty_list_sessions` 补列）。 */
 	worktreeId?: string | null,
+	/**  pane 归因身份（2A 忽略、2B 接真，规格 §3.5）：`ORCA_PANE_KEY = ${tabId}:${leafId}`。 */
+	tabId?: string | null,
+	leafId?: string | null,
+	/**  launchToken：hook 归因元数据与 pending 队列 TTL 已用，spawn 时注入 `ORCA_AGENT_LAUNCH_TOKEN`。 */
+	launchToken?: string | null,
 };
 
 /**
