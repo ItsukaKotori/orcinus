@@ -4,5 +4,6 @@
 
 pub mod cache;
 pub mod endpoint;
+pub mod script;
 
 pub use cache::CachedHookEvent;
