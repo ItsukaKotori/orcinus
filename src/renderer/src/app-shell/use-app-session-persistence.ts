@@ -221,8 +221,10 @@ export function useAppSessionPersistence(): void {
       // only for the gating flags and would miss those updates.
       buildSessionSnapshots: () => {
         const freshState = useAppStore.getState()
-        const payload = buildWorkspaceSessionPayload(freshState)
-        return buildWorkspaceSessionHostSnapshots(payload, freshState)
+        return buildWorkspaceSessionHostSnapshots(
+          buildWorkspaceSessionPayload(freshState),
+          freshState
+        )
       },
       buildUiPatch: () => buildActiveViewUnloadPatch(useAppStore.getState()),
       hasDirtyOpenFiles: () => useAppStore.getState().openFiles.some((file) => file.isDirty),
