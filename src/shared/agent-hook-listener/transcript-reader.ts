@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer'
 import { closeSync, openSync, readSync, statSync } from 'node:fs'
 
 import { extractAssistantTextFromLine } from './transcript-entry-text'
