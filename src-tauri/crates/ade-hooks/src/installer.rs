@@ -139,8 +139,18 @@ pub fn remove_managed_hooks(config: &Value) -> (Value, bool) {
 
 fn read_settings_json(path: &Path) -> io::Result<Value> {
     match std::fs::read_to_string(path) {
-        Ok(raw) => serde_json::from_str(&raw)
-            .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error)),
+        Ok(raw) => {
+            let value: Value = serde_json::from_str(&raw)
+                .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
+            if value.is_object() {
+                Ok(value)
+            } else {
+                Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "claude settings must be a JSON object",
+                ))
+            }
+        }
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(json!({})),
         Err(error) => Err(error),
     }
@@ -208,6 +218,9 @@ pub fn install_claude_hooks(home: &str, enabled: bool, cli_present: bool) -> Hoo
 /// （规格 §3.3 与 §4 裁定：启动 skip 不删防多 profile 互删，显式 toggle 才删）。
 pub fn remove_claude_hooks(home: &str) -> HookInstallState {
     let path = claude_settings_path(home);
+    if !path.exists() {
+        return HookInstallState::Installed;
+    }
     let config = match read_settings_json(&path) {
         Ok(config) => config,
         Err(error) => return HookInstallState::Error(format!("failed to read claude settings: {error}")),
@@ -419,5 +432,48 @@ mod tests {
             std::fs::read_to_string(claude_settings_path(home)).unwrap(),
             "{ not json"
         );
+    }
+
+    #[test]
+    fn install_reports_error_for_non_object_settings() {
+        let dir = tempfile::tempdir().unwrap();
+        let home = dir.path().to_str().unwrap();
+        std::fs::create_dir_all(claude_settings_path(home).parent().unwrap()).unwrap();
+        std::fs::write(claude_settings_path(home), "[]").unwrap();
+        assert!(matches!(
+            install_claude_hooks(home, true, true),
+            HookInstallState::Error(_)
+        ));
+        assert_eq!(
+            std::fs::read_to_string(claude_settings_path(home)).unwrap(),
+            "[]"
+        );
+    }
+
+    #[test]
+    fn remove_reports_error_for_non_object_settings() {
+        let dir = tempfile::tempdir().unwrap();
+        let home = dir.path().to_str().unwrap();
+        std::fs::create_dir_all(claude_settings_path(home).parent().unwrap()).unwrap();
+        std::fs::write(claude_settings_path(home), "[]").unwrap();
+        assert!(matches!(
+            remove_claude_hooks(home),
+            HookInstallState::Error(_)
+        ));
+        assert_eq!(
+            std::fs::read_to_string(claude_settings_path(home)).unwrap(),
+            "[]"
+        );
+    }
+
+    #[test]
+    fn remove_without_settings_file_writes_nothing() {
+        let dir = tempfile::tempdir().unwrap();
+        let home = dir.path().to_str().unwrap();
+        assert!(!matches!(
+            remove_claude_hooks(home),
+            HookInstallState::Error(_)
+        ));
+        assert!(!claude_settings_path(home).exists());
     }
 }
