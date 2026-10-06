@@ -27,12 +27,8 @@ pub struct CachedHookEvent {
     pub received_at: i64,
     /// 仅内存标记：hydrate 后为 true，渲染层据此补 `restoredUnconfirmed`；
     /// 从不落盘（oracle 同语义，规格 §3.6）。
-    #[serde(skip_serializing_if = "is_false", default)]
+    #[serde(skip_serializing, default)]
     pub restored: bool,
-}
-
-fn is_false(value: &bool) -> bool {
-    !*value
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -283,6 +279,36 @@ mod tests {
         std::fs::write(&path, "not json").unwrap();
         let cache = StatusCache::load(path);
         assert!(cache.snapshot().is_empty());
+        cache.shutdown();
+    }
+
+    #[test]
+    fn hydrate_then_record_then_flush_never_persists_restored() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("last-status.json");
+        std::fs::write(
+            &path,
+            serde_json::to_string(&json!({
+                "version": 1,
+                "entries": {
+                    "t1:hydrated": event("t1:hydrated", now_ms() - 1_000),
+                }
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        let cache = StatusCache::load(path.clone());
+        cache.record(event("t1:new", now_ms()));
+        cache.flush_sync();
+        let raw: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        let entries = raw["entries"].as_object().unwrap();
+        assert_eq!(entries.len(), 2);
+        for entry in entries.values() {
+            assert!(
+                entry.get("restored").is_none(),
+                "restored leaked to disk: {entry}"
+            );
+        }
         cache.shutdown();
     }
 
