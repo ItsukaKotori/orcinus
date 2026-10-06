@@ -45,7 +45,7 @@ describe('resumeSleepingAgentSessionsForWorktree navigation suppression', () => 
   it('resumes without navigating the desktop when navigation is suppressed', () => {
     // Mobile-scoped wake: the desktop sits on a different worktree/view. The
     // resume must spawn the recovery tab without changing the active surface.
-    const record = makeRecord({ origin: 'quit' })
+    const record = makeRecord({ origin: 'worktree-sleep' })
     useAppStore.setState({
       activeWorktreeId: 'wt-other',
       activeTabId: 'other-tab',
@@ -73,7 +73,7 @@ describe('resumeSleepingAgentSessionsForWorktree navigation suppression', () => 
     // wake starts its own in-place --resume; the generic resume must neither
     // launch a second tab for that provider session nor clear the record (the
     // in-place spawn clears it on success).
-    const record = makeRecord({ origin: 'quit' })
+    const record = makeRecord({ origin: 'worktree-sleep' })
     useAppStore.setState({
       activeWorktreeId: 'wt-other',
       activeTabId: 'other-tab',
@@ -95,7 +95,7 @@ describe('resumeSleepingAgentSessionsForWorktree navigation suppression', () => 
   })
 
   it('reports each launched resume tab through onSessionLaunched', () => {
-    const record = makeRecord({ origin: 'quit' })
+    const record = makeRecord({ origin: 'worktree-sleep' })
     useAppStore.setState({
       activeWorktreeId: 'wt-other',
       activeTabId: 'other-tab',
@@ -123,7 +123,7 @@ describe('resumeSleepingAgentSessionsForWorktree navigation suppression', () => 
   it('still navigates to the resumed tab for default (desktop) callers', () => {
     // Regression guard: the suppress-navigation flag must be opt-in — desktop
     // resume keeps flipping the active view to the recovered terminal.
-    const record = makeRecord({ origin: 'quit' })
+    const record = makeRecord({ origin: 'worktree-sleep' })
     useAppStore.setState({
       activeWorktreeId: 'wt-1',
       activeTabId: 'tab-1',

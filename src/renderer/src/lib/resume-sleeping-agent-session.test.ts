@@ -82,21 +82,25 @@ function makeActiveTerminalState(tabId: string, worktreeId = 'wt-1'): Record<str
 }
 
 describe('resumeSleepingAgentSessionsForWorktree', () => {
-  it('resumes quit-captured records when no preserved pane can own recovery', () => {
+  // Why: quit-origin records describe panes that were still mounted at app quit
+  // (agent-session-resume.ts). When the pane did not come back in the restored
+  // session, activation must not fork a duplicate resume tab — the record stays
+  // for the pane's own cold restore / manual resume, and the existing stale
+  // record hygiene retires it once it ages out.
+  it('keeps quit-captured records for the pane cold restore when no preserved pane exists — activation must not open a resume tab', () => {
     const record = makeRecord({ origin: 'quit' })
     useAppStore.setState({
-      tabsByWorktree: { 'wt-1': [makeTerminalTab('tab-1', 'wt-1')] },
+      tabsByWorktree: { 'wt-1': [] },
       sleepingAgentSessionsByPaneKey: { [record.paneKey]: record }
     } as never)
 
     const launched = resumeSleepingAgentSessionsForWorktree('wt-1')
 
-    expect(launched).toBe(1)
+    expect(launched).toBe(0)
     const state = useAppStore.getState()
-    const resumedTab = state.tabsByWorktree['wt-1']?.find((tab) => tab.id !== 'tab-1')
-    expect(resumedTab?.launchAgent).toBe('claude')
-    expect(state.pendingStartupByTabId[resumedTab!.id]?.showSessionRestoredBanner).toBe(true)
-    expect(state.sleepingAgentSessionsByPaneKey[record.paneKey]).toBeUndefined()
+    expect(state.tabsByWorktree['wt-1']).toHaveLength(0)
+    expect(Object.keys(state.pendingStartupByTabId)).toHaveLength(0)
+    expect(state.sleepingAgentSessionsByPaneKey[record.paneKey]).toBe(record)
   })
 
   it('resumes live-checkpoint records when no preserved pane can own recovery', () => {

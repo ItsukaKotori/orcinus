@@ -5,7 +5,7 @@ import { resumeSleepingAgentSessionsForWorktree } from './resume-sleeping-agent-
 
 const initialState = useAppStore.getState()
 
-function record(origin: 'live' | 'quit'): SleepingAgentSessionRecord {
+function record(origin?: 'live' | 'quit'): SleepingAgentSessionRecord {
   return {
     paneKey: 'tab-1:leaf-1',
     tabId: 'tab-1',
@@ -55,7 +55,7 @@ describe('remote sleeping-agent compatibility', () => {
   })
 
   it('preserves legacy automatic wake when host authority is not known', () => {
-    const value = record('quit')
+    const value = record()
     setRemoteSleepRecord(value)
 
     expect(resumeSleepingAgentSessionsForWorktree('wt-1')).toBe(1)

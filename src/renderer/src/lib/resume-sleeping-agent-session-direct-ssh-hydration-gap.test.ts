@@ -119,10 +119,15 @@ describe('sleeping-agent resume across the direct-SSH hydration gap', () => {
 
   it('leaves a purely local workspace resuming with no added latency', () => {
     seedColdDirectSshStart()
+    // Why worktree-sleep origin: this test pins the AUTHORITY gate (a local
+    // workspace must not wait on any host answer), not the quit-origin gating —
+    // a local quit-origin record with no restored pane is deliberately kept for
+    // manual resume now.
     const localRecord = {
       ...makeRecord(LOCAL_WORKTREE_ID),
       paneKey: 'tab-2:leaf-1',
-      tabId: 'tab-2'
+      tabId: 'tab-2',
+      origin: 'worktree-sleep' as const
     }
     useAppStore.setState({
       sleepingAgentSessionsByPaneKey: { [localRecord.paneKey]: localRecord }

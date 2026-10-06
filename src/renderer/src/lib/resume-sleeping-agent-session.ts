@@ -17,6 +17,8 @@ import { isStructuredAgentSyntheticSleepingRecord } from './structured-agent-syn
 import { findUnhydratedHostMirrorForPane } from './host-mirrored-pane-liveness'
 import { resolveWorkspaceTerminalHostAuthority } from './workspace-terminal-host-authority'
 import { parkUntilHostSessionMirrorHydrates } from '@/runtime/host-session-mirror-hydration'
+import { parseExecutionHostId } from '../../../shared/execution-host'
+import { getExecutionHostIdForWorktree } from './worktree-runtime-owner'
 
 export type { ResumeSleepingAgentSessionsOptions } from './sleeping-agent-session-launch'
 
@@ -81,6 +83,27 @@ function getAgentStatusTabId(entry: {
   }
   const separatorIndex = entry.paneKey.indexOf(':')
   return separatorIndex === -1 ? null : entry.paneKey.slice(0, separatorIndex)
+}
+
+/** True when the workspace's execution host is this client: the agent process
+ *  died with the app, so a quit-origin record's session is genuinely closed. */
+function workspaceExecutionHostIsThisClient(
+  state: ReturnType<typeof useAppStore.getState>,
+  worktreeId: string
+): boolean {
+  const host = parseExecutionHostId(getExecutionHostIdForWorktree(state, worktreeId))
+  return host?.kind !== 'ssh' && host?.kind !== 'runtime'
+}
+
+/** True when the record's pane still exists in the restored session — including
+ *  a husk tab whose PTY binding was cleared (it can still take a replacement
+ *  resume tab). False when the tab was closed before quit, so nothing restored. */
+function restoredSessionHasRecordPane(
+  record: SleepingAgentSessionRecord,
+  state: ReturnType<typeof useAppStore.getState>
+): boolean {
+  const tabId = getAgentStatusTabId(record)
+  return tabId !== null && state.terminalLayoutsByTabId[tabId] !== undefined
 }
 
 function activeOrQueuedResumeClaimsProviderSession(
@@ -257,6 +280,25 @@ export function resumeSleepingAgentSessionsForWorktree(
       continue
     }
     if (isPaneOwned) {
+      continue
+    }
+    // Why: quit-origin records describe panes that were still mounted at app
+    // quit (agent-session-resume.ts). When that pane did not come back in the
+    // restored session (its tab was closed before quitting), activation opening
+    // a resume tab would fork a session the user explicitly closed. Keep the
+    // record for manual resume; the stale-record hygiene above retires it past
+    // AGENT_STATUS_STALE_AFTER_MS. A restored husk tab still launches its
+    // replacement here (preserved-pane replacement contract). Remote worktrees
+    // are exempt: an ssh/runtime agent survives the relaunch independently, so
+    // waking it after the host answers is the designed recovery (STA-3500).
+    // Live-origin records also keep launching here: the web runtime's wake
+    // replay is this sweep (pinned by
+    // resume-sleeping-agent-session-replay.test.ts).
+    if (
+      record.origin === 'quit' &&
+      workspaceExecutionHostIsThisClient(currentState, record.worktreeId) &&
+      !restoredSessionHasRecordPane(record, currentState)
+    ) {
       continue
     }
     if (launchSleepingAgentSession(record, options)) {
