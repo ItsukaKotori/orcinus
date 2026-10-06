@@ -118,4 +118,63 @@ describe('agentStatus real bridge', () => {
     expect(snapshot[1]).toMatchObject({ state: 'done' })
     expect('restoredUnconfirmed' in snapshot[1]).toBe(false)
   })
+
+  it('getSnapshot_does_not_corrupt_live_epoch_state', async () => {
+    const api = createAgentStatusRealApi()
+    let resolveSnapshot: (entries: unknown[]) => void = () => {}
+    invokeMock.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveSnapshot = resolve
+        })
+    )
+    const seen: { state: string; stateStartedAt: number }[] = []
+    api.onSet((payload) => {
+      seen.push({ state: payload.state, stateStartedAt: payload.stateStartedAt })
+    })
+    await flush()
+    const snapshotPromise = api.getSnapshot()
+    emitRaw({ hook_event_name: 'UserPromptSubmit', prompt: 'Fix login bug', session_id: 's1' }, 2000)
+    expect(seen).toEqual([{ state: 'working', stateStartedAt: 2000 }])
+    resolveSnapshot([
+      {
+        source: 'claude',
+        payload: { hook_event_name: 'UserPromptSubmit', prompt: 'Fix login bug', session_id: 's1' },
+        paneKey: PANE,
+        tabId: 't1',
+        worktreeId: 'r1::/wt',
+        receivedAt: 1000
+      }
+    ])
+    const snapshot = await snapshotPromise
+    expect(snapshot).toHaveLength(1)
+    expect(snapshot[0]).toMatchObject({ state: 'working', stateStartedAt: 1000 })
+    emitRaw({ hook_event_name: 'PostToolUse', tool_name: 'Bash', session_id: 's1' }, 2100)
+    expect(seen).toEqual([
+      { state: 'working', stateStartedAt: 2000 },
+      { state: 'working', stateStartedAt: 2000 }
+    ])
+  })
+
+  it('getSnapshot_is_repeatable', async () => {
+    const api = createAgentStatusRealApi()
+    invokeMock.mockResolvedValue([
+      {
+        source: 'claude',
+        payload: { hook_event_name: 'Stop', last_assistant_message: 'Done.', session_id: 's1' },
+        paneKey: PANE,
+        tabId: 't1',
+        worktreeId: 'r1::/wt',
+        receivedAt: 600
+      }
+    ])
+    const first = await api.getSnapshot()
+    const second = await api.getSnapshot()
+    expect(first).toHaveLength(1)
+    expect(second).toHaveLength(1)
+    expect(second.map((payload) => payload.state)).toEqual(first.map((payload) => payload.state))
+    expect(second.map((payload) => payload.stateStartedAt)).toEqual(
+      first.map((payload) => payload.stateStartedAt)
+    )
+  })
 })
