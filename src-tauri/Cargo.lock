@@ -72,6 +72,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "ade-hooks"
+version = "0.0.1"
+dependencies = [
+ "ade-core",
+ "base64 0.22.1",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "ade-pty"
 version = "0.0.1"
 dependencies = [
