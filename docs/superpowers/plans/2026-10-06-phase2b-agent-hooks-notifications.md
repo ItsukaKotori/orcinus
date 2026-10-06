@@ -960,7 +960,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 **Interfaces:**
 - Consumes: `script::{write_managed_script, managed_script_path}`
 - Produces（Task 5/8 依赖）:
-  - `installer::{HookInstallState, HookInstallSkipReason, install_claude_hooks, remove_claude_hooks, is_claude_cli_available, claude_settings_path, hooks_installation_present}`
+  - `installer::{HookInstallState, HookInstallSkipReason, install_claude_hooks, remove_claude_hooks, is_claude_cli_available, claude_settings_path}`
   - `install_claude_hooks(home: &str, enabled: bool, cli_present: bool) -> HookInstallState`
   - `remove_claude_hooks(home: &str) -> HookInstallState`
   - 事件集（12）：SessionStart、UserPromptSubmit、Stop、StopFailure、SubagentStart、SubagentStop、TeammateIdle、PreToolUse(`*`)、PostToolUse(`*`)、PostToolUseFailure(`*`)、PermissionRequest(`*`)、PostCompact（规格 §3.3；不装 Notification/PreCompact）
