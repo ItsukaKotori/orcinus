@@ -19,6 +19,7 @@ import { createKeybindingsApi } from './mock/keybindings-api'
 import { createLinearApi } from './mock/linear-api'
 import { createMacosTccPromptsApi } from './mock/macos-tcc-prompts-api'
 import { createMemoryApi } from './mock/memory-api'
+import { createNotificationsApi } from './mock/notifications-api'
 import { createOnboardingApi } from './mock/onboarding-api'
 import { createOrcaProfilesApi } from './mock/orca-profiles-api'
 import { createPlatformApi } from './mock/platform-api'
@@ -46,6 +47,7 @@ import { createAppRealApi } from './real/app'
 import { createFolderWorkspacesRealApi } from './real/folder-workspaces'
 import { createFsRealApi } from './real/fs'
 import { createGitRealApi } from './real/git'
+import { createNotificationsRealApi } from './real/notifications'
 import { createOnboardingRealApi } from './real/onboarding'
 import { createPlatformRealApi } from './real/platform'
 import { createPreflightRealApi } from './real/preflight'
@@ -72,6 +74,7 @@ type RealDomains = Pick<
   | 'folderWorkspaces'
   | 'fs'
   | 'git'
+  | 'notifications'
   | 'onboarding'
   | 'platform'
   | 'preflight'
@@ -87,7 +90,7 @@ type RealDomains = Pick<
 
 /**
  * The Phase 0 mock inventory. Real mode starts from this map and replaces the
- * thirteen ported domains, so both modes share one namespace list and cannot drift.
+ * ported domains, so both modes share one namespace list and cannot drift.
  */
 function createMockDomains(): Partial<PreloadApi> {
   return {
@@ -111,6 +114,7 @@ function createMockDomains(): Partial<PreloadApi> {
     linear: createLinearApi(),
     macosTccPrompts: createMacosTccPromptsApi(),
     memory: createMemoryApi(),
+    notifications: createNotificationsApi(),
     onboarding: createOnboardingApi(),
     orcaProfiles: createOrcaProfilesApi(),
     platform: createPlatformApi(),
@@ -144,6 +148,7 @@ function createRealDomains(): RealDomains {
     folderWorkspaces: createFolderWorkspacesRealApi(),
     fs: createFsRealApi(),
     git: createGitRealApi(),
+    notifications: createNotificationsRealApi(),
     onboarding: createOnboardingRealApi(),
     platform: createPlatformRealApi(),
     preflight: createPreflightRealApi(),
@@ -176,7 +181,7 @@ export function createAdeApi(options?: AdeApiOptions): PreloadApi {
   if (resolveMode(options) === 'mock') {
     return createMockAdeApi()
   }
-  // SAFETY: the thirteen ported domains plus the mock inventory cover every namespace;
+  // SAFETY: the ported domains plus the mock inventory cover every namespace;
   // the Proxy fallback keeps unlisted names rejecting as unimplemented.
   const partial: Partial<PreloadApi> = { ...createMockDomains(), ...createRealDomains() }
   return withUnimplementedFallback(partial)

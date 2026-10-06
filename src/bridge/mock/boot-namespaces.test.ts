@@ -11,6 +11,7 @@ import { createKeybindingsApi } from './keybindings-api'
 import { createLinearApi } from './linear-api'
 import { createMacosTccPromptsApi } from './macos-tcc-prompts-api'
 import { createMemoryApi } from './memory-api'
+import { createNotificationsApi } from './notifications-api'
 import { createOnboardingApi } from './onboarding-api'
 import { createOrcaProfilesApi } from './orca-profiles-api'
 import { createPreflightApi } from './preflight-api'
@@ -189,5 +190,14 @@ describe('Phase 0 boot query mocks', () => {
 
   it('macosTccPrompts: consumePending resolves null', async () => {
     await expect(createMacosTccPromptsApi().consumePending()).resolves.toBeNull()
+  })
+
+  it('notifications: mock dispatch reports not-supported and subscription-free methods resolve', async () => {
+    const notifications = createNotificationsApi()
+    await expect(
+      notifications.dispatch({ source: 'agent-task-complete' })
+    ).resolves.toEqual({ delivered: false, reason: 'not-supported' })
+    await expect(notifications.dismiss(['a'])).resolves.toEqual({ dismissed: 0 })
+    await expect(notifications.getDesktopAwayState()).resolves.toBeUndefined()
   })
 })

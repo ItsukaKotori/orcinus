@@ -10,6 +10,7 @@ import { UnimplementedBridgeError } from '../unimplemented-fallback'
 import { createAgentStatusRealApi } from './agent-status'
 import { createAppRealApi } from './app'
 import { createFsRealApi } from './fs'
+import { createNotificationsRealApi } from './notifications'
 import { createOnboardingRealApi } from './onboarding'
 import { createPlatformRealApi } from './platform'
 import { createPreflightRealApi } from './preflight'
@@ -486,6 +487,19 @@ const surfaceCases: SurfaceCase[] = [
       'restorePaneAuthority',
       'transferPaneAuthority'
     ]
+  },
+  {
+    domain: 'notifications',
+    explicit: [
+      'getDesktopAwayState',
+      'dispatch',
+      'dismiss',
+      'openSystemSettings',
+      'getPermissionStatus',
+      'probeDelivery',
+      'playSound'
+    ],
+    missing: []
   }
 ]
 
@@ -808,6 +822,8 @@ function realApiFor(domain: keyof PreloadApi): unknown {
       return createPtyRealApi()
     case 'platform':
       return createPlatformRealApi()
+    case 'notifications':
+      return createNotificationsRealApi()
     default:
       throw new Error(`no real factory for ${domain}`)
   }
