@@ -7,6 +7,7 @@ import type { Repo } from '../../shared/repo-types'
 import type { Worktree } from '../../shared/worktree/types'
 import { createMockAdeApi } from '../create-api'
 import { UnimplementedBridgeError } from '../unimplemented-fallback'
+import { createAgentStatusRealApi } from './agent-status'
 import { createAppRealApi } from './app'
 import { createFsRealApi } from './fs'
 import { createOnboardingRealApi } from './onboarding'
@@ -465,7 +466,27 @@ const surfaceCases: SurfaceCase[] = [
     missing: ptySurfaceMethods('missing')
   },
   { domain: 'onboarding', explicit: ['get', 'update'], missing: [] },
-  { domain: 'platform', explicit: ['get'], missing: [] }
+  { domain: 'platform', explicit: ['get'], missing: [] },
+  {
+    domain: 'agentStatus',
+    explicit: ['onSet', 'onClear', 'getSnapshot'],
+    missing: [
+      'inferInterrupt',
+      'inferQuestionAnswered',
+      'getMigrationUnsupportedSnapshot',
+      'onMigrationUnsupported',
+      'onMigrationUnsupportedClear',
+      'onLegacyWorkerTerminalRecovery',
+      'drop',
+      'dropPersisted',
+      'dropPersistedBatch',
+      'reconcileEndedProcess',
+      'dropByTabPrefix',
+      'retirePaneAuthority',
+      'restorePaneAuthority',
+      'transferPaneAuthority'
+    ]
+  }
 ]
 
 describe('mock/real parity: method surface', () => {
@@ -763,6 +784,8 @@ function realApiFor(domain: keyof PreloadApi): unknown {
   switch (domain) {
     case 'repos':
       return createReposRealApi()
+    case 'agentStatus':
+      return createAgentStatusRealApi()
     case 'session':
       return createSessionRealApi()
     case 'fs':
