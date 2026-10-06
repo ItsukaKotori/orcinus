@@ -340,6 +340,21 @@ export function createReattachPayloadHandlers(
         // applied-grid verification — it is the only point reached by both the immediate
         // and the deferred-until-revealed path.
         await fit.completion
+        // Reload recreates xterm without a snapshot for an idle live PTY. A
+        // same-size SIGWINCH is not enough for some full-screen TUIs to repaint;
+        // changing one column and restoring it makes the resize observable,
+        // just as opening DevTools does when its dock changes the pane width.
+        if (
+          ctx.isCurrentReattachPayload() &&
+          session.deps.isVisibleRef.current &&
+          ctx.connectResult?.isReattach &&
+          !ctx.connectResult.snapshot &&
+          !ctx.connectResult.replay &&
+          !ctx.connectResult.coldRestore &&
+          !isRemoteRuntimePtyId(reattachPtyId)
+        ) {
+          session.pulseVisibleLocalPtySizeForTuiRepaint(reattachPtyId)
+        }
       } finally {
         if (session.pendingReattachFit === fit) {
           session.pendingReattachFit = null
