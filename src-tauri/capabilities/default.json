@@ -2,5 +2,5 @@
   "identifier": "default",
   "description": "ade default capability",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "notification:default"]
 }

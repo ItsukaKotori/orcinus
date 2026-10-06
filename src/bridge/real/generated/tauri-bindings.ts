@@ -29,6 +29,9 @@ export const commands = {
 	 *  write. Returns the complete merged object.
 	 */
 	settingsSet: (args: Json) => typedError<Json, BridgeError>(__TAURI_INVOKE("settings_set", { args })),
+	/**  打开 macOS 通知系统设置（blocked-by-system 回退入口）。 */
+	notificationsOpenSystemSettings: () => typedError<null, BridgeError>(__TAURI_INVOKE("notifications_open_system_settings")),
+	notificationsReadSound: (args: NotificationsReadSoundArgs) => typedError<NotificationSoundReadResult_Serialize, BridgeError>(__TAURI_INVOKE("notifications_read_sound", { args })),
 	/**  Read the full workspace session state as one JSON object text. */
 	sessionGet: () => typedError<string, BridgeError>(__TAURI_INVOKE("session_get")),
 	/**  Whole-state replace; keys absent from the payload are deleted. */
@@ -1218,6 +1221,28 @@ export type NestedRepoScanResult = {
  *  `NestedRepoScanResult['selectedPathKind']`).
  */
 export type NestedRepoSelectedPathKind = "git_repo" | "non_git_folder";
+
+export type NotificationSoundReadResult = NotificationSoundReadResult_Serialize | NotificationSoundReadResult_Deserialize;
+
+export type NotificationSoundReadResult_Deserialize = {
+	ok: boolean,
+	dataBase64: string | null,
+	mimeType: string | null,
+	path: string | null,
+	reason: string | null,
+};
+
+export type NotificationSoundReadResult_Serialize = {
+	ok: boolean,
+	dataBase64?: string | null,
+	mimeType?: string | null,
+	path?: string | null,
+	reason?: string | null,
+};
+
+export type NotificationsReadSoundArgs = {
+	path: string,
+};
 
 export type PathExistence = ({ exists: boolean }) & { error?: never } | ({ error: string }) & { exists?: never };
 

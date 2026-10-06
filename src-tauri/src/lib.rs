@@ -4,6 +4,7 @@ use tauri::Manager;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app = tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
         .on_window_event(|window, event| {
             // Window-close quit (spec §3.4): `CloseRequested` is the only event
             // where the webview is still alive — tauri-runtime-wry emits

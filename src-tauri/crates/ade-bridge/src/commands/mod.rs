@@ -4,6 +4,7 @@ pub mod app;
 pub mod folder_workspaces;
 pub mod fs;
 pub mod git;
+pub mod notifications;
 pub mod onboarding;
 pub mod platform;
 pub mod preflight;

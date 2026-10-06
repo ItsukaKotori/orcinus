@@ -36,6 +36,8 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::fs::fs_authorize_external_path,
                 commands::settings::settings_get,
                 commands::settings::settings_set,
+                commands::notifications::notifications_open_system_settings,
+                commands::notifications::notifications_read_sound,
                 commands::session::session_get,
                 commands::session::session_set,
                 commands::session::session_patch,
@@ -137,6 +139,7 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
             .typ::<crate::events::ScanNestedProgressPayload>()
             .typ::<crate::events::AgentHookRawPayload>()
             .typ::<commands::agent_status::AgentHookSnapshotEntry>()
+            .typ::<commands::notifications::NotificationSoundReadResult>()
             .typ::<commands::project_groups::NestedRepoImportResult>()
             .typ::<ade_core::models::folder_workspace::FolderWorkspacePathStatus>()
             .typ::<ade_core::models::project_group::NestedRepoScanResult>()
@@ -201,6 +204,8 @@ mod tests {
             "fs_authorize_external_path",
             "settings_get",
             "settings_set",
+            "notifications_open_system_settings",
+            "notifications_read_sound",
             "session_get",
             "session_set",
             "session_patch",
