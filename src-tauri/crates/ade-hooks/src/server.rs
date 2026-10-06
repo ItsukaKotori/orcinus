@@ -58,8 +58,8 @@ impl AgentHookServer {
         let callback: SharedCallback = Arc::from(callback);
         let endpoint_path = options.app_data_dir.join(endpoint::ENDPOINT_FILE_NAME);
 
-        // 启动序（规格 §3.1）：hydrate（在 load 内）→ spool 重放 → bind →
-        // settings reconcile。spool 重放先于 bind，避免与实时 POST 竞争。
+        // 启动序（规格 §3.1）：hydrate（在 load 内）→ spool 重放 → settings
+        // reconcile → bind。spool 重放先于 bind，避免与实时 POST 竞争。
         drain_spool(&options.app_data_dir.join("spool"), &cache, &callback);
 
         // 安装策略（规格 §3.3/§4 裁定）：启动关闭 = skip 不删；开启 = 安装/更新。
@@ -394,8 +394,8 @@ fn percent_decode(input: &str) -> String {
                 out.push(b' ');
                 index += 1;
             }
-            b'%' if index + 2 < bytes.len() => {
-                match u8::from_str_radix(&input[index + 1..index + 3], 16) {
+            b'%' if index + 2 < bytes.len() => match input.get(index + 1..index + 3) {
+                Some(hex) => match u8::from_str_radix(hex, 16) {
                     Ok(byte) => {
                         out.push(byte);
                         index += 3;
@@ -404,8 +404,12 @@ fn percent_decode(input: &str) -> String {
                         out.push(bytes[index]);
                         index += 1;
                     }
+                },
+                None => {
+                    out.push(bytes[index]);
+                    index += 1;
                 }
-            }
+            },
             byte => {
                 out.push(byte);
                 index += 1;
@@ -445,7 +449,8 @@ fn build_cached_event(headers: &HashMap<String, String>, body: &[u8]) -> Option<
     })
 }
 
-/// spool 重放（规格 §3.4）：启动时 drain，失败行保留文件下轮再试；成功则清空。
+/// spool 重放（规格 §3.4）：启动时逐行 drain，成功行重放并从文件移除，
+/// 失败行保留文件下轮再试；无失败行则清空文件。
 fn drain_spool(dir: &Path, cache: &Arc<StatusCache>, callback: &SharedCallback) {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return;
@@ -458,7 +463,7 @@ fn drain_spool(dir: &Path, cache: &Arc<StatusCache>, callback: &SharedCallback) 
         let Ok(raw) = std::fs::read_to_string(&path) else {
             continue;
         };
-        let mut all_parsed = true;
+        let mut retained: Vec<&str> = Vec::new();
         for line in raw.lines().filter(|line| !line.trim().is_empty()) {
             match serde_json::from_str::<CachedHookEvent>(line) {
                 Ok(mut event) => {
@@ -466,13 +471,15 @@ fn drain_spool(dir: &Path, cache: &Arc<StatusCache>, callback: &SharedCallback) 
                     cache.record(event.clone());
                     callback(event);
                 }
-                Err(_) => {
-                    all_parsed = false;
-                }
+                Err(_) => retained.push(line),
             }
         }
-        if all_parsed {
+        if retained.is_empty() {
             let _ = std::fs::write(&path, "");
+        } else {
+            let mut contents = retained.join("\n");
+            contents.push('\n');
+            let _ = std::fs::write(&path, contents);
         }
     }
 }
@@ -601,6 +608,31 @@ mod tests {
     }
 
     #[test]
+    fn form_body_with_multibyte_after_percent_stays_204_and_no_panic() {
+        let dir = tempfile::tempdir().unwrap();
+        let (events, callback) = captured();
+        let server = start_test_server(dir.path(), callback);
+        let body = "paneKey=%€&payload={}";
+        let (status, _) = request(
+            server.port,
+            "POST",
+            "/hook/claude",
+            &[
+                ("Content-Type", "application/x-www-form-urlencoded"),
+                ("X-Orca-Agent-Hook-Token", &server.token),
+            ],
+            body.as_bytes(),
+        );
+        assert_eq!(status, 204);
+        // `%` 后接 3 字节 UTF-8：`get(index+1..index+3)` 落在字符中间返回 None，
+        // 按原样吐出 `%` 与后续字节（不再越界切片 panic）；paneKey 非空照常转发。
+        let forwarded = events.lock().unwrap();
+        assert_eq!(forwarded.len(), 1);
+        assert_eq!(forwarded[0].pane_key, "%€");
+        server.shutdown();
+    }
+
+    #[test]
     fn rejects_wrong_token_non_post_and_unknown_paths() {
         let dir = tempfile::tempdir().unwrap();
         let (events, callback) = captured();
@@ -703,6 +735,59 @@ mod tests {
         assert!(hydrated.restored);
         assert!(!replayed.restored);
         assert!(events.lock().unwrap().iter().any(|entry| entry.pane_key.starts_with("t8:")));
+        server.shutdown();
+    }
+
+    #[test]
+    fn spool_drain_removes_replayed_lines_and_keeps_only_unparsed() {
+        let dir = tempfile::tempdir().unwrap();
+        let spool = dir.path().join("spool");
+        std::fs::create_dir_all(&spool).unwrap();
+        let spool_file = spool.join("pane-t7.jsonl");
+        let valid = format!(
+            "{}\n",
+            serde_json::json!({
+                "paneKey": "t7:123e4567-e89b-42d3-a456-426614174000",
+                "tabId": "t7",
+                "worktreeId": "",
+                "env": "development",
+                "version": "1",
+                "launchToken": "",
+                "source": "claude",
+                "receivedAt": now_ms(),
+                "payload": { "hook_event_name": "Stop" },
+            })
+        );
+        let garbage = "not json\n";
+        std::fs::write(&spool_file, format!("{valid}{garbage}")).unwrap();
+        {
+            let (events, callback) = captured();
+            let server = start_test_server(dir.path(), callback);
+            let snapshot = server.snapshot();
+            assert_eq!(snapshot.len(), 1);
+            assert_eq!(snapshot[0].pane_key, "t7:123e4567-e89b-42d3-a456-426614174000");
+            assert!(!snapshot[0].restored);
+            assert_eq!(
+                events
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .filter(|entry| entry.pane_key.starts_with("t7:"))
+                    .count(),
+                1
+            );
+            // 合法行被消费移除；无法解析的行保留给下轮。
+            assert_eq!(std::fs::read_to_string(&spool_file).unwrap(), garbage);
+            server.shutdown();
+        }
+        // 重启：合法行不得重放；快照只来自 hydrate，回调不再触发。
+        let (events_again, callback_again) = captured();
+        let server = start_test_server(dir.path(), callback_again);
+        let snapshot = server.snapshot();
+        assert_eq!(snapshot.len(), 1);
+        assert!(snapshot[0].restored);
+        assert!(events_again.lock().unwrap().is_empty());
+        assert_eq!(std::fs::read_to_string(&spool_file).unwrap(), garbage);
         server.shutdown();
     }
 }
