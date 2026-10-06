@@ -12,11 +12,39 @@ import { describe, expect, it } from 'vitest'
  *
  * So walk the import graph from every renderer entry — lazy routes included, since a `node:`
  * builtin behind one is just a blank route instead of a blank app — and refuse any builtin.
+ *
+ * Why: the agent-hook normalize graph is deliberately reused in the renderer (`agent-status.ts`
+ * imports `shared/agent-hook-listener.ts`) and is made browser-safe by the exact node-builtin
+ * aliases in the repo-root `vite.config.ts`, which all point at `lib/browser-node-shims.ts`. The
+ * allowance below is scoped to that entry and those importers only: every other renderer file
+ * importing any `node:` builtin still fails, and deleting an alias fails the alias test below.
  */
 const RENDERER_SRC = import.meta.dirname
 const REPO_SRC = path.resolve(RENDERER_SRC, '../..')
 const ENTRIES = ['main.tsx', 'web/main.tsx']
 const EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx']
+
+const ALIASED_NODE_BUILTINS = new Set([
+  'node:buffer',
+  'node:crypto',
+  'node:fs',
+  'node:fs/promises',
+  'node:os',
+  'node:path'
+])
+
+const ALIASED_IMPORTERS = new Set([
+  'shared/agent-hook-listener/hook-envelope.ts',
+  'shared/agent-hook-relay.ts',
+  'shared/agent-hook-listener/command-code-transcript.ts',
+  'shared/agent-hook-listener/grok-result-discovery.ts',
+  'shared/agent-hook-listener/transcript-reader.ts',
+  'shared/grok-session-paths.ts',
+  'shared/codex-subagent-transcript.ts',
+  'shared/grok-session-path-lookup-queue.ts'
+])
+
+const ALIASED_ENTRY = 'bridge/real/agent-status.ts'
 
 /** `import`/`export ... from` and `import(...)` specifiers, minus type-only ones, which erase. */
 function collectValueImportSpecifiers(source: string): string[] {
@@ -91,16 +119,37 @@ describe('renderer node-builtin boundary', () => {
     const graph = walkRendererImportGraph()
     const offenders: string[] = []
     for (const [file, chain] of graph) {
+      const relativeFile = path.relative(REPO_SRC, file)
+      const relativeChain = chain.map((step) => path.relative(REPO_SRC, step))
+      const viaAliasedEntry = relativeChain.includes(ALIASED_ENTRY)
       const builtins = collectValueImportSpecifiers(readFileSync(file, 'utf8')).filter(
-        (specifier) => specifier.startsWith('node:')
+        (specifier) => {
+          if (!specifier.startsWith('node:')) {
+            return false
+          }
+          return !(
+            ALIASED_IMPORTERS.has(relativeFile) &&
+            ALIASED_NODE_BUILTINS.has(specifier) &&
+            viaAliasedEntry
+          )
+        }
       )
       if (builtins.length === 0) {
         continue
       }
-      const relativeChain = chain.map((step) => path.relative(REPO_SRC, step)).join('\n    -> ')
-      offenders.push(`${builtins.join(', ')} via\n    ${relativeChain}`)
+      offenders.push(`${builtins.join(', ')} via\n    ${relativeChain.join('\n    -> ')}`)
     }
     expect(offenders.join('\n\n')).toBe('')
+  })
+
+  it('vite aliases every node builtin the boundary allowance relies on', () => {
+    const viteSource = readFileSync(path.resolve(REPO_SRC, '..', 'vite.config.ts'), 'utf8').replaceAll(
+      '\\/',
+      '/'
+    )
+    for (const specifier of ALIASED_NODE_BUILTINS) {
+      expect(viteSource).toContain(`/^${specifier}$/`)
+    }
   })
 
   it('walks a real graph, so an empty offender list means something', () => {
