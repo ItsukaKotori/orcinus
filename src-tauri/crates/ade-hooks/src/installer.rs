@@ -142,14 +142,21 @@ fn read_settings_json(path: &Path) -> io::Result<Value> {
         Ok(raw) => {
             let value: Value = serde_json::from_str(&raw)
                 .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
-            if value.is_object() {
-                Ok(value)
-            } else {
-                Err(io::Error::new(
+            if !value.is_object() {
+                return Err(io::Error::new(
                     io::ErrorKind::InvalidData,
                     "claude settings must be a JSON object",
-                ))
+                ));
             }
+            if let Some(hooks) = value.get("hooks") {
+                if !hooks.is_object() {
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        "claude settings hooks must be a JSON object",
+                    ));
+                }
+            }
+            Ok(value)
         }
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(json!({})),
         Err(error) => Err(error),
@@ -475,5 +482,23 @@ mod tests {
             HookInstallState::Error(_)
         ));
         assert!(!claude_settings_path(home).exists());
+    }
+
+    #[test]
+    fn install_reports_error_for_non_object_hooks() {
+        for raw in ["{\"hooks\": []}", "{\"hooks\": \"x\"}"] {
+            let dir = tempfile::tempdir().unwrap();
+            let home = dir.path().to_str().unwrap();
+            std::fs::create_dir_all(claude_settings_path(home).parent().unwrap()).unwrap();
+            std::fs::write(claude_settings_path(home), raw).unwrap();
+            assert!(matches!(
+                install_claude_hooks(home, true, true),
+                HookInstallState::Error(_)
+            ));
+            assert_eq!(
+                std::fs::read_to_string(claude_settings_path(home)).unwrap(),
+                raw
+            );
+        }
     }
 }
