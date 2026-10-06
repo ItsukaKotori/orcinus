@@ -11,6 +11,10 @@ import {
 import { containsHiddenStartupRendererQuery } from './hidden-startup-renderer-query'
 
 import type { ConnectPanePtySession } from './connect-pane-pty-session'
+import { replayPaintDebugLog } from '../replay-paint-debug-log'
+
+// DEBUG(replay-paint): remove after diagnosis — bounds per-pane funnel noise.
+const xtermWriteDebugCountByPane = new Map<number, number>()
 
 /** The xterm write path for PTY output, including the queued agent-idle mode reset. */
 export function bindWritePtyOutputToXterm(session: ConnectPanePtySession): void {
@@ -19,6 +23,14 @@ export function bindWritePtyOutputToXterm(session: ConnectPanePtySession): void 
     foreground: boolean,
     opts?: { hiddenStartupRendererQuery?: boolean }
   ): void {
+    // DEBUG(replay-paint): remove after diagnosis — did bytes reach the xterm-write handoff?
+    const debugSeen = xtermWriteDebugCountByPane.get(session.pane.id) ?? 0
+    if (debugSeen < 4 && data.length > 0) {
+      xtermWriteDebugCountByPane.set(session.pane.id, debugSeen + 1)
+      replayPaintDebugLog(
+        `pane=${session.pane.id} xterm write #${debugSeen + 1}: chars=${data.length} foreground=${foreground}`
+      )
+    }
     // Why: every application byte funnels through here, so it's the one place the kitty keyboard mirror observes the pane's protocol negotiation.
     session.kittyKeyboardModes.scan(data)
     if (foreground) {

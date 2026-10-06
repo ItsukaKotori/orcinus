@@ -1,5 +1,6 @@
 import type { ManagedPane } from './pane-manager-types'
 import { recordTerminalWebglDiagnostic } from '../../../../shared/terminal-webgl-diagnostics'
+import { replayPaintDebugLog } from '../../components/terminal-pane/replay-paint-debug-log'
 
 /**
  * Why: when devicePixelRatio changes while a pane is hidden (window moved
@@ -82,4 +83,49 @@ export function repairPaneWebglCanvasDpr(pane: ManagedPane): PaneWebglCanvasDprR
 
 export function repairPaneWebglCanvasDprMismatch(pane: ManagedPane): boolean {
   return repairPaneWebglCanvasDpr(pane) === 'repaired'
+}
+
+/**
+ * Forces the active renderer to re-run its resize path against the terminal's
+ * CURRENT grid, then repaints every row.
+ *
+ * Why: a reload-restore can leave the renderer's canvas sized for a transient
+ * mount-time grid (field: 14x1408 backing + 7px css for a 43x44 box) while the
+ * buffer grid is already authoritative. Every later fit early-returns because
+ * proposeDimensions matches, and the DPR repair above passes because canvas ==
+ * renderer.dimensions — both compare against the same stale internal state, so
+ * nothing ever re-anchors the renderer to `terminal.cols/rows`. Restore owns
+ * the deterministic fix: xterm's own renderer resize recomputes dimensions from
+ * the live grid, resizes the backing store, and clears the model; the caller's
+ * present then paints the restored rows into a correctly sized canvas.
+ */
+export function forcePaneRendererResize(pane: ManagedPane): boolean {
+  try {
+    const renderer = (
+      pane.terminal as unknown as {
+        _core?: { _renderService?: { _renderer?: { value?: XtermRendererInternals } } }
+      }
+    )._core?._renderService?._renderer?.value
+    if (!renderer || typeof renderer.handleResize !== 'function') {
+      // DEBUG(replay-paint): remove after diagnosis.
+      replayPaintDebugLog(
+        `pane=${pane.id} forceRendererResize: renderer unavailable (hasRenderer=${Boolean(renderer)})`
+      )
+      return false
+    }
+    const canvasBefore =
+      renderer._canvas?.width ?? renderer._gl?.canvas?.width ?? -1
+    renderer.handleResize(pane.terminal.cols, pane.terminal.rows)
+    pane.terminal.refresh(0, pane.terminal.rows - 1)
+    const canvasAfter = renderer._canvas?.width ?? renderer._gl?.canvas?.width ?? -1
+    // DEBUG(replay-paint): remove after diagnosis — did the forced resize re-anchor the canvas?
+    replayPaintDebugLog(
+      `pane=${pane.id} forceRendererResize: cols=${pane.terminal.cols} rows=${pane.terminal.rows} canvas ${canvasBefore}→${canvasAfter} expected=${String(renderer.dimensions?.device?.canvas?.width)}`
+    )
+    return true
+  } catch (error) {
+    // Pane may be mid-teardown; the caller's present still guards itself.
+    replayPaintDebugLog(`forceRendererResize threw: ${error}`)
+    return false
+  }
 }

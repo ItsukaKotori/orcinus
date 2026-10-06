@@ -10,6 +10,7 @@ import {
   mergeWorkspaceSessionsWithHostShadow,
   normalizeWorkspaceSessionKeyToWorktreeId
 } from './workspace-session-host-contention'
+import { replayPaintDebugLog } from '../components/terminal-pane/replay-paint-debug-log'
 import { nonLocalHostSessionEntries, type HostSessionSlices } from './workspace-session-host-split'
 
 type SessionReadApi = {
@@ -134,6 +135,20 @@ export async function fetchWorkspaceSessionWithRuntimeHostOwners(
   const slices: HostSessionSlices = {
     [LOCAL_EXECUTION_HOST_ID]: await api.get()
   }
+  // DEBUG(replay-paint): remove after diagnosis — what the SQLite document actually held at boot.
+  {
+    const localLayouts = slices[LOCAL_EXECUTION_HOST_ID]?.terminalLayoutsByTabId ?? {}
+    const summary = Object.entries(localLayouts)
+      .map(([tabId, layout]) => {
+        const buffers = (layout as { buffersByLeafId?: Record<string, string> }).buffersByLeafId ?? {}
+        const chars = Object.values(buffers).reduce((sum, buf) => sum + buf.length, 0)
+        return `${tabId.slice(0, 8)}:${Object.keys(buffers).length}/${chars}`
+      })
+      .join(',')
+    replayPaintDebugLog(
+      `boot session read: layoutTabs=${Object.keys(localLayouts).length} [${summary}]`
+    )
+  }
   // Why: startup can know saved runtime session hosts before their repo
   // catalogs hydrate, so include those partitions in the first read.
   const runtimeHostIds = new Set<ExecutionHostId>([
@@ -150,6 +165,20 @@ export async function fetchWorkspaceSessionWithRuntimeHostOwners(
     })
   )
   const merged = mergeWorkspaceSessionsWithHostShadow(slices)
+  // DEBUG(replay-paint): remove after diagnosis — merged session the store actually hydrates from.
+  {
+    const mergedLayouts = merged.session.terminalLayoutsByTabId ?? {}
+    const mergedSummary = Object.entries(mergedLayouts)
+      .map(([tabId, layout]) => {
+        const buffers = (layout as { buffersByLeafId?: Record<string, string> }).buffersByLeafId ?? {}
+        const chars = Object.values(buffers).reduce((sum, buf) => sum + buf.length, 0)
+        return `${tabId.slice(0, 8)}:${Object.keys(buffers).length}/${chars}`
+      })
+      .join(',')
+    replayPaintDebugLog(
+      `boot merged read: layoutTabs=${Object.keys(mergedLayouts).length} [${mergedSummary}]`
+    )
+  }
   return {
     session: merged.session,
     // Why the merged slices and not the raw ones: a row parked out of the renderer session must not

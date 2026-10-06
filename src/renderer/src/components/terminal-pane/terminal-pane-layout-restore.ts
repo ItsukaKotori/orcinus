@@ -10,6 +10,7 @@ import {
   mapRestoredPaneTitlesByPaneId,
   replayLayoutWithOneShotParkIntent
 } from './terminal-pane-lifecycle-primitives'
+import { replayPaintDebugLog } from './replay-paint-debug-log'
 
 export function restoreTerminalPaneLayout(args: {
   manager: PaneManager
@@ -20,14 +21,14 @@ export function restoreTerminalPaneLayout(args: {
 }): Map<string, number> {
   const { manager, deps, refs, ptyDeps, initialLayoutHadBuffers } = args
   const { initialLayoutRef, tabId, worktreeId, isActive, managerRef } = deps
+  // DEBUG(replay-paint): remove after diagnosis — build-freshness + restore-shape marker (overlay-visible).
+  replayPaintDebugLog(
+    `restore entry: tab=${tabId} layoutLeaves=${initialLayoutRef.current.root ? 'tree' : 'null'} buffers=${initialLayoutRef.current.buffersByLeafId ? Object.keys(initialLayoutRef.current.buffersByLeafId).length : 0} ptys=${initialLayoutRef.current.ptyIdsByLeafId ? Object.keys(initialLayoutRef.current.ptyIdsByLeafId).length : 0}`
+  )
   const restoredPaneByLeafId = replayLayoutWithOneShotParkIntent(ptyDeps, () =>
     replayTerminalLayout(manager, initialLayoutRef.current, isActive)
   )
   const restoredBuffers = initialLayoutRef.current.buffersByLeafId
-  // DEBUG(replay-paint): remove after diagnosis — build-freshness + restore-shape marker.
-  console.debug(
-    `[replay-paint] restore entry: tab=${tabId} buffers=${restoredBuffers ? Object.keys(restoredBuffers).length : 0} leaves=${restoredPaneByLeafId.size}`
-  )
   restoreScrollbackBuffers(
     manager,
     restoredBuffers,

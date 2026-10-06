@@ -10,6 +10,7 @@ import {
   type ExecutionHostId
 } from '../../../shared/execution-host'
 import { workspaceSessionPartitionHostId } from '../../../shared/workspace-session-partition-owner'
+import { replayPaintDebugLog } from '../components/terminal-pane/replay-paint-debug-log'
 import { parseWorkspaceKey } from '../../../shared/workspace-scope'
 import { getRepoIdFromWorktreeId } from '../../../shared/worktree/id'
 import {
@@ -221,6 +222,23 @@ export function patchWorkspaceSessionByHost(
   state: HostPersistenceState
 ): Promise<void> {
   const slices = splitWorkspaceSessionForWrite(patch as WorkspaceSessionState, state, 'patch')
+  // DEBUG(replay-paint): remove after diagnosis — per-partition buffer content at the IPC boundary.
+  for (const [hostId, slice] of Object.entries(slices)) {
+    const layouts = (slice as WorkspaceSessionPatch).terminalLayoutsByTabId
+    if (!layouts) {
+      continue
+    }
+    const summary = Object.entries(layouts)
+      .map(([tabId, layout]) => {
+        const buffers = (layout as { buffersByLeafId?: Record<string, string> }).buffersByLeafId ?? {}
+        const chars = Object.values(buffers).reduce((sum, buf) => sum + buf.length, 0)
+        return `${tabId.slice(0, 8)}:${Object.keys(buffers).length}/${chars}`
+      })
+      .join(',')
+    replayPaintDebugLog(
+      `patch slice host=${hostId} layoutTabs=${Object.keys(layouts).length} [${summary}]`
+    )
+  }
   const local = (slices[LOCAL_EXECUTION_HOST_ID] ?? patch) as WorkspaceSessionPatch
   const localWrite = api.patch(local)
   for (const [hostId, slice] of nonLocalHostSessionEntries(slices)) {

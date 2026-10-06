@@ -17,6 +17,7 @@ import {
 import type { PaneTitleOverlayRect } from './TerminalPaneHeaderOverlay'
 import { shutdownBufferCaptures } from './shutdown-buffer-captures'
 import { captureTerminalShutdownLayout } from './terminal-shutdown-layout-capture'
+import { replayPaintDebugLog } from './replay-paint-debug-log'
 import { shouldPreserveTerminalScrollbackBuffers } from '../../../../shared/workspace-session-terminal-buffers'
 import type { TerminalPaneCloseController } from './use-terminal-pane-close-actions'
 
@@ -214,6 +215,14 @@ export function useTerminalPaneTitleEffects(controller: TerminalPaneCloseControl
         clearedScrollbackLeafIds: clearedScrollbackLeafIdsRef.current
       })
       setTabLayout(tabId, layout)
+      // DEBUG(replay-paint): remove after diagnosis — did the capture store scrollback buffers?
+      {
+        const storedBuffers = layout.buffersByLeafId ?? {}
+        const totalChars = Object.values(storedBuffers).reduce((sum, buf) => sum + buf.length, 0)
+        replayPaintDebugLog(
+          `capture: tab=${tabId.slice(0, 8)} leaves=${panes.length} bufferLeaves=${Object.keys(storedBuffers).length} chars=${totalChars} shouldCapture=${shouldCaptureScrollbackBuffers}`
+        )
+      }
       for (const pane of panes) {
         clearedScrollbackLeafIdsRef.current.delete(pane.leafId)
       }

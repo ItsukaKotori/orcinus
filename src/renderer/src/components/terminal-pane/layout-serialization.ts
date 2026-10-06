@@ -11,6 +11,9 @@ import {
 import type { PaneManager } from '@/lib/pane-manager/pane-manager'
 import type { ManagedPane } from '@/lib/pane-manager/pane-manager-types'
 import { safeFit } from '@/lib/pane-manager/pane-tree-ops'
+import { forcePaneRendererResize } from '@/lib/pane-manager/terminal-canvas-dpr-repair'
+import { flushTerminalWriteBufferSync } from '@/lib/pane-manager/terminal-write-buffer-sync-flush'
+import { isTerminalWriteBufferEmpty } from '@/lib/pane-manager/terminal-write-buffer-sync-flush'
 import { presentPaneViewport } from '@/lib/pane-manager/pane-webgl-renderer'
 import {
   replayIntoTerminal,
@@ -196,6 +199,50 @@ function scheduleRestoredReplayPaint(
   sampleWriteBufferDepth('t0')
   setTimeout(() => sampleWriteBufferDepth('t+1s'), 1000)
   setTimeout(() => sampleWriteBufferDepth('t+3s'), 3000)
+  const runSettledPaint = (): void => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const canvas = pane.terminal.element?.querySelector('canvas') as HTMLCanvasElement | null
+        // DEBUG(replay-paint): remove after diagnosis — zero/unresized canvas would confirm the stale-canvas hypothesis.
+        replayPaintDebugLog(
+          `pane=${pane.id} settled frame: box=${pane.container?.clientWidth}x${pane.container?.clientHeight} grid=${pane.terminal.cols}x${pane.terminal.rows} canvas=${
+            canvas
+              ? `${canvas.width}x${canvas.height} css ${canvas.style.width}x${canvas.style.height} connected=${canvas.isConnected}`
+              : 'none'
+          }`
+        )
+        let fitResult: boolean | 'threw' = 'threw'
+        try {
+          // Why fit first: the mount-time fit can be skipped while the pane box
+          // is still unmeasurable; the restored grid must be authoritative
+          // before the present so the rows repaint at their final wrap.
+          fitResult = safeFit(pane)
+          // Why force the renderer resize even when the fit early-returns: a
+          // reload-restore can leave the renderer canvas sized for a transient
+          // mount-time grid (field: 14x1408 backing for a 43-col box), and no
+          // later fit re-anchors it because proposeDimensions already matches.
+          forcePaneRendererResize(pane)
+        } catch {
+          // Pane may be disposed mid-restore; the present below guards itself.
+        }
+        // DEBUG(replay-paint): remove after diagnosis — did the fit change the grid or early-return?
+        replayPaintDebugLog(
+          `pane=${pane.id} safeFit=${fitResult} grid now=${pane.terminal.cols}x${pane.terminal.rows}`
+        )
+        presentPaneViewport(pane)
+        replayPaintDebugLog(`pane=${pane.id} present dispatched`)
+      })
+    })
+  }
+  // Why the sync-drain fast path: when the flush above already parsed every
+  // replay byte, the FIFO probe below would itself depend on the starved timer
+  // queue — skip it and go straight to the settled-frame paint.
+  if (isTerminalWriteBufferEmpty(pane.terminal)) {
+    // DEBUG(replay-paint): remove after diagnosis — sync-drain fast path taken.
+    replayPaintDebugLog(`pane=${pane.id} write buffer drained synchronously → settled paint now`)
+    runSettledPaint()
+    return
+  }
   const probeStartedAt = Date.now()
   void waitForTerminalReplayWritesParsed(pane.terminal)
     .then(() => {
@@ -203,34 +250,7 @@ function scheduleRestoredReplayPaint(
       replayPaintDebugLog(
         `pane=${pane.id} parse probe resolved in ${Date.now() - probeStartedAt}ms`
       )
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          const canvas = pane.terminal.element?.querySelector('canvas') as HTMLCanvasElement | null
-          // DEBUG(replay-paint): remove after diagnosis — zero/unresized canvas would confirm the stale-canvas hypothesis.
-          replayPaintDebugLog(
-            `pane=${pane.id} settled frame: box=${pane.container?.clientWidth}x${pane.container?.clientHeight} grid=${pane.terminal.cols}x${pane.terminal.rows} canvas=${
-              canvas
-                ? `${canvas.width}x${canvas.height} css ${canvas.style.width}x${canvas.style.height} connected=${canvas.isConnected}`
-                : 'none'
-            }`
-          )
-          let fitResult: boolean | 'threw' = 'threw'
-          try {
-            // Why fit first: the mount-time fit can be skipped while the pane box
-            // is still unmeasurable; the restored grid must be authoritative
-            // before the present so the rows repaint at their final wrap.
-            fitResult = safeFit(pane)
-          } catch {
-            // Pane may be disposed mid-restore; the present below guards itself.
-          }
-          // DEBUG(replay-paint): remove after diagnosis — did the fit change the grid or early-return?
-          replayPaintDebugLog(
-            `pane=${pane.id} safeFit=${fitResult} grid now=${pane.terminal.cols}x${pane.terminal.rows}`
-          )
-          presentPaneViewport(pane)
-          replayPaintDebugLog(`pane=${pane.id} present dispatched`)
-        })
-      })
+      runSettledPaint()
     })
     .catch(() => {
       replayPaintDebugLog(`pane=${pane.id} parse probe rejected`)
@@ -292,6 +312,15 @@ export function restoreScrollbackBuffers(
         replayIntoTerminal(pane, replayingPanesRef, POST_REPLAY_MODE_RESET, renderOptions)
         // Why: connection resolution runs after layout replay; only fresh-shell paths move these rows into scrollback.
         restoredViewportBlankingPanesRef?.current.add(pane.id)
+        // Why: the replay must not depend on the page's timer queue. After a
+        // webview reload the reloaded WKWebView page can leave xterm's
+        // setTimeout-driven WriteBuffer loop starved for tens of seconds (IPC
+        // and React lifecycle run; timer callbacks don't), so the replayed
+        // rows sit unparsed and unpainted until user input takes xterm's
+        // synchronous write fast path. Restore replay is a one-shot bounded
+        // write: drain it synchronously (same primitive resize uses before
+        // reflow) and let the fit/present below paint immediately.
+        flushTerminalWriteBufferSync(pane.terminal)
         // Why: only panes that actually received replayed bytes need the deferred
         // paint; the fresh-spawn path (no buffer) must stay untouched.
         scheduleRestoredReplayPaint(pane, buffer.length, manager.hasWebglRenderer(pane.id))
