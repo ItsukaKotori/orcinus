@@ -12,7 +12,6 @@ import {
   defaultTranscriptCaptureIo
 } from '../lib/agent-transcript-capture'
 import { createTerminalBufferCaptureScheduler } from '../lib/terminal-buffer-capture-scheduler'
-import { replayPaintDebugLog } from '../components/terminal-pane/replay-paint-debug-log'
 import {
   isIntentionalAppRestartInProgress,
   registerUpdaterBeforeUnloadBypass
@@ -114,18 +113,6 @@ export function useAppSessionPersistence(): void {
       subscribeToPersistGateOpen: onDirectSshRemoteWorkspaceApplyWindowClosed,
       persist: ({ patch }) => {
         const state = useAppStore.getState()
-        // DEBUG(replay-paint): remove after diagnosis — did the debounced patch carry scrollback buffers?
-        {
-          const layouts = patch.terminalLayoutsByTabId ?? {}
-          const summary = Object.entries(layouts)
-            .map(([tabId, layout]) => {
-              const buffers = layout.buffersByLeafId ?? {}
-              const chars = Object.values(buffers).reduce((sum, buf) => sum + buf.length, 0)
-              return `${tabId.slice(0, 8)}:${Object.keys(buffers).length}/${chars}`
-            })
-            .join(',')
-          replayPaintDebugLog(`session patch: layoutTabs=${Object.keys(layouts).length} [${summary}]`)
-        }
         // Why: route each host's worktree-scoped slice to its own partition; return the local write so the remote-workspace upload chain below keeps its ordering.
         const localWrite = patchWorkspaceSessionByHost(window.api.session, patch, state)
         void localWrite
@@ -235,21 +222,6 @@ export function useAppSessionPersistence(): void {
       buildSessionSnapshots: () => {
         const freshState = useAppStore.getState()
         const payload = buildWorkspaceSessionPayload(freshState)
-        // DEBUG(replay-paint): remove after diagnosis — teardown checkpoint payload content.
-        {
-          const layouts = payload.terminalLayoutsByTabId ?? {}
-          const summary = Object.entries(layouts)
-            .map(([tabId, layout]) => {
-              const buffers =
-                (layout as { buffersByLeafId?: Record<string, string> }).buffersByLeafId ?? {}
-              const chars = Object.values(buffers).reduce((sum, buf) => sum + buf.length, 0)
-              return `${tabId.slice(0, 8)}:${Object.keys(buffers).length}/${chars}`
-            })
-            .join(',')
-          replayPaintDebugLog(
-            `checkpoint payload: layoutTabs=${Object.keys(layouts).length} [${summary}]`
-          )
-        }
         return buildWorkspaceSessionHostSnapshots(payload, freshState)
       },
       buildUiPatch: () => buildActiveViewUnloadPatch(useAppStore.getState()),

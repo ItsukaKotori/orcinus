@@ -20,7 +20,6 @@ import {
   waitForTerminalReplayWritesParsed,
   type ReplayingPanesRef
 } from './replay-guard'
-import { replayPaintDebugLog } from './replay-paint-debug-log'
 import type { RestoredViewportBlankingPanesRef } from './terminal-restored-viewport'
 import { isXtermInstanceDisposed } from '@/lib/pane-manager/xterm-instance-disposed'
 
@@ -160,63 +159,19 @@ export function serializeTerminalLayout(
 // running one settled-frame fit + full present makes the restored buffer the
 // painted frame deterministically, and is a no-op repaint for panes whose
 // renderer already showed them.
-// DEBUG(replay-paint): remove after diagnosis — overlay logger moved to
-// replay-paint-debug-log.ts so replay-guard.ts breadcrumbs can share it.
 
-function scheduleRestoredReplayPaint(
-  pane: ManagedPane,
-  bufferLength: number,
-  hasWebglRenderer: boolean
-): void {
-  // DEBUG(replay-paint): remove after diagnosis — schedule-time renderer state.
-  replayPaintDebugLog(
-    `pane=${pane.id} schedule: buffer=${bufferLength} chars, hasWebgl=${hasWebglRenderer}`
-  )
+function scheduleRestoredReplayPaint(pane: ManagedPane): void {
   if (typeof requestAnimationFrame !== 'function') {
     return
   }
-  // DEBUG(replay-paint): remove after diagnosis — sample xterm's WriteBuffer
-  // depth while the stall window is open: depth>0 with a frozen offset means
-  // chunks are not being processed; depth 0 means chunks parsed but callbacks
-  // were lost. Reads vendored internals defensively; never throws into restore.
-  const sampleWriteBufferDepth = (label: string): void => {
-    try {
-      const core = (pane.terminal as unknown as { _core?: { _writeBuffer?: Record<string, unknown> } })
-        ._core
-      const writeBuffer = core?._writeBuffer
-      if (!writeBuffer) {
-        replayPaintDebugLog(`pane=${pane.id} writebuf ${label}: internals unavailable`)
-        return
-      }
-      const chunks = writeBuffer._writeBuffer as unknown[] | undefined
-      replayPaintDebugLog(
-        `pane=${pane.id} writebuf ${label}: depth=${chunks?.length ?? '?'} offset=${String(writeBuffer._bufferOffset)} pending=${String(writeBuffer._pendingData)} syncWriting=${String(writeBuffer._isSyncWriting)}`
-      )
-    } catch {
-      replayPaintDebugLog(`pane=${pane.id} writebuf ${label}: sample threw`)
-    }
-  }
-  sampleWriteBufferDepth('t0')
-  setTimeout(() => sampleWriteBufferDepth('t+1s'), 1000)
-  setTimeout(() => sampleWriteBufferDepth('t+3s'), 3000)
   const runSettledPaint = (): void => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        const canvas = pane.terminal.element?.querySelector('canvas') as HTMLCanvasElement | null
-        // DEBUG(replay-paint): remove after diagnosis — zero/unresized canvas would confirm the stale-canvas hypothesis.
-        replayPaintDebugLog(
-          `pane=${pane.id} settled frame: box=${pane.container?.clientWidth}x${pane.container?.clientHeight} grid=${pane.terminal.cols}x${pane.terminal.rows} canvas=${
-            canvas
-              ? `${canvas.width}x${canvas.height} css ${canvas.style.width}x${canvas.style.height} connected=${canvas.isConnected}`
-              : 'none'
-          }`
-        )
-        let fitResult: boolean | 'threw' = 'threw'
         try {
           // Why fit first: the mount-time fit can be skipped while the pane box
           // is still unmeasurable; the restored grid must be authoritative
           // before the present so the rows repaint at their final wrap.
-          fitResult = safeFit(pane)
+          safeFit(pane)
           // Why force the renderer resize even when the fit early-returns: a
           // reload-restore can leave the renderer canvas sized for a transient
           // mount-time grid (field: 14x1408 backing for a 43-col box), and no
@@ -225,12 +180,7 @@ function scheduleRestoredReplayPaint(
         } catch {
           // Pane may be disposed mid-restore; the present below guards itself.
         }
-        // DEBUG(replay-paint): remove after diagnosis — did the fit change the grid or early-return?
-        replayPaintDebugLog(
-          `pane=${pane.id} safeFit=${fitResult} grid now=${pane.terminal.cols}x${pane.terminal.rows}`
-        )
         presentPaneViewport(pane)
-        replayPaintDebugLog(`pane=${pane.id} present dispatched`)
       })
     })
   }
@@ -238,22 +188,14 @@ function scheduleRestoredReplayPaint(
   // replay byte, the FIFO probe below would itself depend on the starved timer
   // queue — skip it and go straight to the settled-frame paint.
   if (isTerminalWriteBufferEmpty(pane.terminal)) {
-    // DEBUG(replay-paint): remove after diagnosis — sync-drain fast path taken.
-    replayPaintDebugLog(`pane=${pane.id} write buffer drained synchronously → settled paint now`)
     runSettledPaint()
     return
   }
-  const probeStartedAt = Date.now()
   void waitForTerminalReplayWritesParsed(pane.terminal)
     .then(() => {
-      // DEBUG(replay-paint): remove after diagnosis — ~10s elapsed means the stall path resolved the probe.
-      replayPaintDebugLog(
-        `pane=${pane.id} parse probe resolved in ${Date.now() - probeStartedAt}ms`
-      )
       runSettledPaint()
     })
     .catch(() => {
-      replayPaintDebugLog(`pane=${pane.id} parse probe rejected`)
       // Restore paint is best-effort; a disposed terminal must not surface here.
     })
 }
@@ -323,7 +265,7 @@ export function restoreScrollbackBuffers(
         flushTerminalWriteBufferSync(pane.terminal)
         // Why: only panes that actually received replayed bytes need the deferred
         // paint; the fresh-spawn path (no buffer) must stay untouched.
-        scheduleRestoredReplayPaint(pane, buffer.length, manager.hasWebglRenderer(pane.id))
+        scheduleRestoredReplayPaint(pane)
       }
     } catch (error: unknown) {
       // Breadcrumb: this catch was silent while zombie panes went undiagnosed.

@@ -165,23 +165,15 @@ function isSynchronizedOutputHeld(terminal: unknown): boolean {
 export function forceFullViewportPresent(terminal: unknown): boolean {
   const service = getRenderService(terminal)
   if (!service) {
-    // DEBUG(replay-paint): remove after diagnosis — xterm internals unavailable.
-    console.debug('[replay-paint] forceFullViewportPresent: no render service → fallback')
     return false
   }
   const rows = (terminal as TerminalWithRenderService).rows
   if (typeof rows !== 'number' || rows < 1) {
-    // DEBUG(replay-paint): remove after diagnosis — terminal rows unreadable.
-    console.debug('[replay-paint] forceFullViewportPresent: invalid rows → fallback')
     return false
   }
 
   const paused = service._isPaused === true
   const syncHeld = isSynchronizedOutputHeld(terminal)
-  // DEBUG(replay-paint): remove after diagnosis — why the forced present did or did not run.
-  console.debug(
-    `[replay-paint] forceFullViewportPresent: service=${service ? 'yes' : 'no'} paused=${paused} dec2026Held=${syncHeld} rows=${rows}`
-  )
   if (!paused && !syncHeld) {
     return false
   }

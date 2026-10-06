@@ -17,7 +17,6 @@ import { shouldWritePtyOutputForeground } from './foreground-output-scan'
 
 import type { ConnectPanePtySession } from './connect-pane-pty-session'
 import { bindWritePtyOutputToXterm } from './write-pty-output-to-xterm'
-import { replayPaintDebugLog } from '../replay-paint-debug-log'
 
 import { bindAbandonHiddenOutputRestore } from './hidden-output-restore-abandon'
 import { bindHiddenOutputRestoreChunk } from './hidden-output-restore-chunk'
@@ -78,8 +77,6 @@ export function bindHiddenOutputSeqAndSkip(session: ConnectPanePtySession): void
 
   bindWritePtyOutputToXterm(session)
   session.markHiddenOutputRestoreNeeded = function (): void {
-    // DEBUG(replay-paint): remove after diagnosis — the snapshot-restore latch moment.
-    replayPaintDebugLog(`pane=${session.pane.id} restore latch marked (snapshot rebuild needed)`)
     const ptyId = session.transport.getPtyId()
     if (!session.canUseHiddenOutputSnapshot(ptyId)) {
       return

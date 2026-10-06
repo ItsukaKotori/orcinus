@@ -10,10 +10,6 @@ import { shouldWritePtyOutputForeground } from './foreground-output-scan'
 import { registerE2eTerminalPtyDataInjection } from './e2e-terminal-pty-harness'
 
 import type { ConnectPanePtySession } from './connect-pane-pty-session'
-import { replayPaintDebugLog } from '../replay-paint-debug-log'
-
-// DEBUG(replay-paint): remove after diagnosis — bounds per-pane funnel noise.
-const liveChunkDebugCountByPane = new Map<number, number>()
 
 export function bindLiveDataCallback(session: ConnectPanePtySession): void {
   session.dataCallback = (
@@ -23,14 +19,6 @@ export function bindLiveDataCallback(session: ConnectPanePtySession): void {
   ): void => {
     if (streamGeneration !== session.transportStreamGeneration) {
       return
-    }
-    // DEBUG(replay-paint): remove after diagnosis — did live bytes reach the renderer, and which gate holds them?
-    const debugSeen = liveChunkDebugCountByPane.get(session.pane.id) ?? 0
-    if (debugSeen < 4 && data.length > 0) {
-      liveChunkDebugCountByPane.set(session.pane.id, debugSeen + 1)
-      replayPaintDebugLog(
-        `pane=${session.pane.id} live chunk #${debugSeen + 1}: chars=${data.length} deferred=${session.deferredReattachLiveData !== null} restoreNeeded=${session.hiddenOutputRestoreNeeded}`
-      )
     }
     if (session.deferredReattachLiveData !== null) {
       const ackCredit = takeCurrentTerminalDeliveryCredit()

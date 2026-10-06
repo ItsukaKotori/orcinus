@@ -285,9 +285,13 @@ export function resumeSleepingAgentSessionsForWorktree(
     // Why: quit-origin records describe panes that were still mounted at app
     // quit (agent-session-resume.ts). When that pane did not come back in the
     // restored session (its tab was closed before quitting), activation opening
-    // a resume tab would fork a session the user explicitly closed. Keep the
-    // record for manual resume; the stale-record hygiene above retires it past
-    // AGENT_STATUS_STALE_AFTER_MS. A restored husk tab still launches its
+    // a resume tab would fork a session the user explicitly closed. Such
+    // orphaned records are kept indefinitely — the safe direction, since the
+    // same session stays manually resumable — until a manual resume claims and
+    // clears them. (The stale-record hygiene above only retires records whose
+    // intra-record capturedAt/updatedAt delta exceeds
+    // AGENT_STATUS_STALE_AFTER_MS; it never ages out wall-clock-old records.)
+    // A restored husk tab still launches its
     // replacement here (preserved-pane replacement contract). Remote worktrees
     // are exempt: an ssh/runtime agent survives the relaunch independently, so
     // waking it after the host answers is the designed recovery (STA-3500).

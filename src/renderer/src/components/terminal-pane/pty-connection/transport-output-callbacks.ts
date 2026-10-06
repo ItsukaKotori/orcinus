@@ -4,10 +4,6 @@ import type { PtyDataMeta } from '../pty-dispatcher'
 import type { PtyPaneStartup } from '../pty-connection-types'
 
 import type { ConnectPanePtySession } from './connect-pane-pty-session'
-import { replayPaintDebugLog } from '../replay-paint-debug-log'
-
-// DEBUG(replay-paint): remove after diagnosis — bounds per-pane funnel noise.
-const replayChunkDebugCountByPane = new Map<number, number>()
 
 /** Per-generation transport output callbacks and the hidden-output restore state they reset. */
 export function bindCaptureTransportOutputCallbacks(session: ConnectPanePtySession): void {
@@ -36,15 +32,11 @@ export function bindCaptureTransportOutputCallbacks(session: ConnectPanePtySessi
       callbacks: {
         onReattachDetermined: (): void => {
           if (isCurrent()) {
-            // DEBUG(replay-paint): remove after diagnosis — transport reattach decision.
-            replayPaintDebugLog(`pane=${session.pane.id} transport onReattachDetermined (gen=${generation})`)
             session.beginReattachLiveDataDeferralIfUnowned(generation)
           }
         },
         onConnect: (): void => {
           if (isCurrent()) {
-            // DEBUG(replay-paint): remove after diagnosis — transport bound.
-            replayPaintDebugLog(`pane=${session.pane.id} transport onConnect (gen=${generation})`)
             session.reportRemoteRendererSerializerReady()
             // Re-derive the pause bit after a rebind; visibility can change while no PTY is bound.
             session.syncHiddenRendererPtyDelivery()
@@ -52,8 +44,6 @@ export function bindCaptureTransportOutputCallbacks(session: ConnectPanePtySessi
         },
         onStreamRecovered: (): void => {
           if (isCurrent()) {
-            // DEBUG(replay-paint): remove after diagnosis — stream recovery after reload.
-            replayPaintDebugLog(`pane=${session.pane.id} transport onStreamRecovered (gen=${generation})`)
             session.markHiddenOutputRestoreNeeded()
           }
         },
@@ -65,14 +55,6 @@ export function bindCaptureTransportOutputCallbacks(session: ConnectPanePtySessi
         },
         onReplayData: (data: string, meta?: PtyReplayDataMeta): void => {
           if (isCurrent()) {
-            // DEBUG(replay-paint): remove after diagnosis — backlog replay chunks arriving.
-            const debugSeen = replayChunkDebugCountByPane.get(session.pane.id) ?? 0
-            if (debugSeen < 4 && data.length > 0) {
-              replayChunkDebugCountByPane.set(session.pane.id, debugSeen + 1)
-              replayPaintDebugLog(
-                `pane=${session.pane.id} replay chunk #${debugSeen + 1}: chars=${data.length} gen=${generation}`
-              )
-            }
             session.replayDataCallback(data, meta, generation)
           }
         },

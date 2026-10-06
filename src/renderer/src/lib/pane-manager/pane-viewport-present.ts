@@ -73,8 +73,6 @@ function presentPaneViewportWithMode(pane: ManagedPane, mode: ViewportPresentMod
     // the deferred _pausedResizeTask that flushes alongside it. Latching is what
     // xterm's own gate does, and the reveal repaints from the latch.
     if (isManagedPaneDisplayNone(pane)) {
-      // DEBUG(replay-paint): remove after diagnosis — deferred-retry branch taken.
-      console.debug(`[replay-paint] pane=${pane.id} present(${mode}): display:none → refresh + deferred retry`)
       pane.terminal.refresh(0, pane.terminal.rows - 1)
       // Why: light tab reveal runs while the overlay is still display:none
       // (field trace: paused=true needFull=true at click). A plain refresh only
@@ -88,10 +86,6 @@ function presentPaneViewportWithMode(pane: ManagedPane, mode: ViewportPresentMod
       mode === 'force-current-buffer'
         ? forceFullViewportPresent(pane.terminal)
         : requestFullViewportPresent(pane.terminal)
-    // DEBUG(replay-paint): remove after diagnosis — which present branch executed.
-    console.debug(
-      `[replay-paint] pane=${pane.id} present(${mode}): ${presented ? 'forced full present ran' : 'plain refresh fallback (unpaused or internals unavailable)'}`
-    )
     if (!presented) {
       // Why: refresh even without a WebGL addon so recovery never silently
       // no-ops — a DOM-rendered pane can hold stale pixels after reveal too.
