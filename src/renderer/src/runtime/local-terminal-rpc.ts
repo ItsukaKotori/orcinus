@@ -10,7 +10,6 @@ import type {
 import type { AgentStatusState } from '../../../shared/agent-status-types'
 import { AGENT_STATUS_STALE_AFTER_MS } from '../../../shared/agent-status-types'
 import type { AppState } from '@/store/types'
-import { useAppStore } from '@/store'
 import { getIndexedWorktreeById } from '@/store/worktree-repo-index'
 import {
   classifyTitleActivity,
@@ -35,6 +34,13 @@ const WAIT_POLL_MS = 250
 const WAIT_OUTPUT_QUIET_MS = 1500
 const WAIT_TIMEOUT_DEFAULT_MS = 15_000
 const WAIT_TIMEOUT_MAX_MS = 60_000
+
+type StoreModule = typeof import('@/store')
+let storeModulePromise: Promise<StoreModule> | null = null
+function loadStoreModule(): Promise<StoreModule> {
+  storeModulePromise ??= import('@/store')
+  return storeModulePromise
+}
 
 export type LocalTerminalLocation = {
   ptyId: string
@@ -203,6 +209,7 @@ async function sendLocalTerminal(params: unknown): Promise<{ send: RuntimeTermin
     enter?: unknown
     requireAgentStatus?: unknown
   }
+  const { useAppStore } = await loadStoreModule()
   const state = useAppStore.getState()
   const location = findLocalTerminalLocation(state, terminal)
   if (!location) {
@@ -258,6 +265,7 @@ async function waitLocalTerminal(params: unknown): Promise<{ wait: RuntimeTermin
   const condition: RuntimeTerminalWaitCondition = args.for === 'exit' ? 'exit' : 'tui-idle'
   const timeoutMs = readWaitTimeout(args.timeoutMs)
   const deadline = Date.now() + timeoutMs
+  const { useAppStore } = await loadStoreModule()
   const state = useAppStore.getState()
   const location = findLocalTerminalLocation(state, terminal)
   if (!location) {
@@ -307,6 +315,7 @@ async function waitLocalTerminal(params: unknown): Promise<{ wait: RuntimeTermin
 
 async function getLocalAgentStatus(params: unknown): Promise<{ agentStatus: RuntimeTerminalAgentStatus }> {
   const terminal = readTerminalHandle(params)
+  const { useAppStore } = await loadStoreModule()
   const state = useAppStore.getState()
   const location = findLocalTerminalLocation(state, terminal)
   if (!location) {
@@ -341,6 +350,7 @@ function readListLimit(value: unknown): number {
 
 async function listLocalTerminals(params: unknown): Promise<RuntimeTerminalListResult> {
   const args = (params ?? {}) as { worktree?: unknown; limit?: unknown }
+  const { useAppStore } = await loadStoreModule()
   const state = useAppStore.getState()
   const worktreeFilter = readWorktreeSelectorFilter(args.worktree)
   const limit = readListLimit(args.limit)
