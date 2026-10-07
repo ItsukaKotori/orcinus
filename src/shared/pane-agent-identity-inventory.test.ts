@@ -277,7 +277,8 @@ const INVENTORY: readonly InventoryGroup[] = [
     classification: 'evidence-producer',
     paths: [
       ['src/renderer/src/lib/agent-send-title-status.ts', 2],
-      ['src/renderer/src/lib/agent-status-terminal-title.ts', 2]
+      ['src/renderer/src/lib/agent-status-terminal-title.ts', 2],
+      ['src/renderer/src/runtime/local-terminal-rpc.ts', 3]
     ]
   },
   {

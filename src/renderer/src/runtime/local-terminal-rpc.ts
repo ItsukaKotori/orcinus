@@ -17,7 +17,6 @@ import {
   resolveTitleActivityLabel
 } from '@/lib/pane-agent-evidence'
 import { resolveRuntimePaneTitleForLeaf } from '@/lib/runtime-pane-title-leaf-id'
-import { subscribeToPtyData } from '@/components/terminal-pane/pty-data-sidecar-subscriptions'
 import { RuntimeRpcCallError } from './runtime-rpc-result'
 
 const LOCAL_TERMINAL_RPC_METHODS = [
@@ -40,6 +39,13 @@ let storeModulePromise: Promise<StoreModule> | null = null
 function loadStoreModule(): Promise<StoreModule> {
   storeModulePromise ??= import('@/store')
   return storeModulePromise
+}
+
+type PtyDataModule = typeof import('@/components/terminal-pane/pty-data-sidecar-subscriptions')
+let ptyDataModulePromise: Promise<PtyDataModule> | null = null
+function loadPtyDataModule(): Promise<PtyDataModule> {
+  ptyDataModulePromise ??= import('@/components/terminal-pane/pty-data-sidecar-subscriptions')
+  return ptyDataModulePromise
 }
 
 export type LocalTerminalLocation = {
@@ -273,7 +279,9 @@ async function waitLocalTerminal(params: unknown): Promise<{ wait: RuntimeTermin
   }
   let lastOutputAt = Date.now()
   const unsubscribe =
-    condition === 'tui-idle' ? subscribeToPtyData(terminal, () => (lastOutputAt = Date.now())) : () => {}
+    condition === 'tui-idle'
+      ? (await loadPtyDataModule()).subscribeToPtyData(terminal, () => (lastOutputAt = Date.now()))
+      : () => {}
   try {
     for (;;) {
       if (!(await isPtyLive(terminal))) {
