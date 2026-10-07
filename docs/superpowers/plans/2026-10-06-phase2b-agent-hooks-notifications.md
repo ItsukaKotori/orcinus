@@ -3968,9 +3968,9 @@ pnpm typecheck && pnpm build:web
 
 Expected: 三组全绿 / exit 0
 
-- [ ] **Step 2: 手工验收（规格 §1/§5.3）**
+- [x] **Step 2: 手工验收（规格 §1/§5.3）**
 
-> 待人工执行：本会话仅完成自动化部分（交互式 claude 链无法自动运行）；六步清单与偏差备案见 `docs/phase2b-agent-hooks-notifications-record.md`。
+> 已人工验收：用户 2026-10-07 确认六步全通过（无偏差补记）；清单与备案见 `docs/phase2b-agent-hooks-notifications-record.md`。
 
 前置：`pnpm dev` 启动；Settings → Agents 确认 `agentStatusHooksEnabled` 开；`~/.claude/settings.json` 出现 12 个托管事件；`~/.ade/agent-hooks/claude-hook.sh` 存在且 0755。
 

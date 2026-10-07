@@ -5,7 +5,7 @@
 - 规格：`docs/superpowers/specs/2026-10-06-phase2b-agent-hooks-notifications-design.md`
 - 计划：`docs/superpowers/plans/2026-10-06-phase2b-agent-hooks-notifications.md`（12 任务；Task 12 手工验收节保留未勾选，见 §5）
 - 方法：subagent-driven-development（每任务 TDD 实现 + 双向评审 + fix 轮；终态门禁 + guard 修复 + 本记录）
-- 手工验收状态：**待人工执行**（本记录只含自动化证据；交互式 claude 链未在本会话运行，未发明任何结果）
+- 手工验收状态：**已验收**（用户 2026-10-07 确认六步全通过，无偏差补记；自动化证据见 §3）
 
 ## 1. 交付概览
 
@@ -53,18 +53,18 @@
 
 **先前 guard 修复记录（3c48dfa）**：上一轮全量 `pnpm test` 曾在既有 `src/renderer/src/renderer-node-builtin-boundary.test.ts` 失败——BFS 源图发现 8 条链、6 个 `node:*` 内置（buffer/crypto/fs/fs-promises/os/path）经 `bridge/real/agent-status.ts` 进入 renderer。裁决：不重构 shared 归一化图（遵守规格「TS 复用」），把门禁升级为对 agent-hook 链的**窄豁免**：精确 allowlist（8 个 importer 文件 × 6 个允许 specifier × 链必经 agent-status.ts），并新增断言要求 `vite.config.ts` 确实为每个允许 specifier 配 alias（删 alias 即测试失败）。红绿探针（移除一个 importer → 定向失败；恢复 → 绿）通过，scoped review Approved；修复后 `pnpm test` 34330 passed / 0 failed。Minor 留档：alias 断言为子串匹配，注释掉的 alias 行仍可能通过。
 
-## 4. 手工验收（待人工执行）
+## 4. 手工验收（已验收 2026-10-07）
 
-前置（全部待人工确认）：`pnpm dev` 启动；Settings → Agents 确认 `agentStatusHooksEnabled` 开；`~/.claude/settings.json` 出现 12 个托管事件；`~/.ade/agent-hooks/claude-hook.sh` 存在且 0755。
+前置（已确认）：`pnpm dev` 启动；Settings → Agents 确认 `agentStatusHooksEnabled` 开；`~/.claude/settings.json` 出现 12 个托管事件；`~/.ade/agent-hooks/claude-hook.sh` 存在且 0755。
 
-1. **待人工执行**：终端 pane 启动 `claude`，发 prompt → tab/侧栏状态变 working（`UserPromptSubmit`）。
-2. **待人工执行**：触发权限请求 → waiting + 桌面通知 + 未读徽标/高亮。
-3. **待人工执行**：完成回复 → done；点进 pane → 自动已读、徽标清除。
-4. **待人工执行**：Settings 关 `agentStatusHooksEnabled` → `~/.claude/settings.json` 托管条目被移除 → 新对话不再驱动状态；再打开 → 条目回来。
-5. **待人工执行**：重启 app（不重启 claude 进程）→ 状态经 `agent_status_get_snapshot` 回放（restored 行显示为未确认、不重新通知）。
-6. **待人工执行**：断网/服务降级兜底——server 停用时 2A transcript 扫描仍能捕获休眠记录。
+1. **已验收**：终端 pane 启动 `claude`，发 prompt → tab/侧栏状态变 working（`UserPromptSubmit`）。
+2. **已验收**：触发权限请求 → waiting + 桌面通知 + 未读徽标/高亮。
+3. **已验收**：完成回复 → done；点进 pane → 自动已读、徽标清除。
+4. **已验收**：Settings 关 `agentStatusHooksEnabled` → `~/.claude/settings.json` 托管条目被移除 → 新对话不再驱动状态；再打开 → 条目回来。
+5. **已验收**：重启 app（不重启 claude 进程）→ 状态经 `agent_status_get_snapshot` 回放（restored 行显示为未确认、不重新通知）。
+6. **已验收**：断网/服务降级兜底——server 停用时 2A transcript 扫描仍能捕获休眠记录。
 
-计划文件 Task 12 Step 2 的勾选框保持未勾选，并附一行待人工执行说明；任一手工项失败 → 补记到本文件偏差节并修复后重跑对应自动门禁。
+计划文件 Task 12 Step 2 已勾选；手工项全通过，无偏差补记。任一项失败时的补记流程保留在下：失败 → 补记到本文件偏差节并修复后重跑对应自动门禁。
 
 ## 5. 规格偏差备案
 
