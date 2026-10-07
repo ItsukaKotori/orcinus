@@ -34,7 +34,7 @@
 - Consumes: `WorktreeMetaStore` 白名单已含 `diffComments`（`ade-store/src/worktree_meta_store.rs:52`），`worktrees_update_meta` → `update_meta_impl` 已把 `updates` merge 进存储。
 - Produces: `ade_core::models::worktree::Worktree` 新字段 `diff_comments: Option<serde_json::Value>`；`worktrees_list` / `worktrees_update_meta` 的返回行携带 `diffComments`（camelCase）。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `src-tauri/crates/ade-bridge/tests/worktree_lifecycle.rs` 末尾追加（模仿同文件 `update_meta_merges_whitelist_and_projection_reflects` 的构造方式；该文件的 import 已含 `json!`、`WorktreeMetaStore`、`FsService`、`TestDir`、`init_git_repo`、`repo_row`、`settings`、`create_args`、`create_worktree_impl`、`update_meta_impl`、`read_worktree`）：
 
@@ -85,12 +85,12 @@ fn update_meta_round_trips_diff_comments() {
 }
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `cargo test -p ade-bridge --test worktree_lifecycle update_meta_round_trips_diff_comments`
 Expected: 编译失败——`Worktree` 无 `diff_comments` 字段（E0609）。
 
-- [ ] **Step 3: 最小实现**
+- [x] **Step 3: 最小实现**
 
 `src-tauri/crates/ade-core/src/models/worktree.rs`：`Worktree` struct 末尾加字段（结构体已有 `#[serde(rename_all = "camelCase")]`）：
 
@@ -111,23 +111,23 @@ Expected: 编译失败——`Worktree` 无 `diff_comments` 字段（E0609）。
     }
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `cargo test -p ade-bridge --test worktree_lifecycle update_meta_round_trips_diff_comments`
 Expected: PASS。
 
-- [ ] **Step 5: 跑该 crate 全量测试**
+- [x] **Step 5: 跑该 crate 全量测试**
 
 Run: `cargo test -p ade-core -p ade-bridge`
 Expected: 全绿（`worktree.rs` 内 `serializes_camel_case_with_null_links` 因 `skip_serializing_if` 不受影响；若它失败说明序列化行为不符，修实现而不是改该测试）。
 
-- [ ] **Step 6: 重生成 bindings 并验证新鲜度**
+- [x] **Step 6: 重生成 bindings 并验证新鲜度**
 
 Run: `cargo run -p ade-bridge --bin export-bindings`
 Run: `cargo test -p ade-bridge bindings_are_fresh`
 Expected: 生成的 `Worktree` 类型出现 `diffComments`（`Json | null`），`bindings_are_fresh` PASS。
 
-- [ ] **Step 7: 提交**
+- [x] **Step 7: 提交**
 
 ```bash
 git add src-tauri/crates/ade-core/src/models/worktree.rs \
@@ -150,7 +150,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - Consumes: Task 1 后端列表行带 `diffComments`；`fetchWorktrees` → `mergeFetchedWorktrees` → `toVisibleWorktrees`（`worktree-host-ownership.ts:105`）。
 - Produces: 一条回归测试，锁定「fetch 返回的注释不会在合并链路上被剥掉」。
 
-- [ ] **Step 1: 写测试**
+- [x] **Step 1: 写测试**
 
 在 `worktrees-fetch-listing-merge.test.ts` 的 `describe('fetchWorktrees', ...)` 内追加（文件已 import `makeWorktree`、`makeDetectedResult`、`createTestStore`、`mockApi`、`AppState`）：
 
@@ -188,12 +188,12 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   })
 ```
 
-- [ ] **Step 2: 跑测试**
+- [x] **Step 2: 跑测试**
 
 Run: `pnpm vitest run src/renderer/src/store/slices/worktrees-fetch-listing-merge.test.ts -t "keeps persisted diff comments"`
 Expected: PASS（合并链路是整行替换，不剥字段）。若 FAIL：说明 `toVisibleWorktree`（`worktrees/listing/worktree-catalog-visibility.ts`）或 `withRepoHostOwnership` 构造了新对象丢了字段——在丢字段的那一步补 `...worktree` 展开，然后重跑至 PASS。
 
-- [ ] **Step 3: 跑该文件全量并提交**
+- [x] **Step 3: 跑该文件全量并提交**
 
 Run: `pnpm vitest run src/renderer/src/store/slices/worktrees-fetch-listing-merge.test.ts`
 
@@ -224,7 +224,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - 内部类型 `LocalTerminalLocation = { ptyId: string; tabId: string; leafId: string; worktreeId: string }`
   - 内部函数（本任务定义，后续任务复用）：`readTerminalHandle`、`findLocalTerminalLocation(state, ptyId)`、`collectLocalTerminalLocations(state)`、`isPtyLive(ptyId)`、`readPaneTitle(state, loc)`、`findWorktreeIdForTab(state, tabId)`、`findLeafIdForPty(layout, ptyId)`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 创建 `src/renderer/src/runtime/local-terminal-rpc.test.ts`：
 
@@ -339,12 +339,12 @@ describe('local terminal RPC adapter', () => {
 })
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm vitest run src/renderer/src/runtime/local-terminal-rpc.test.ts`
 Expected: FAIL —— 模块不存在。
 
-- [ ] **Step 3: 实现骨架 + terminal.list**
+- [x] **Step 3: 实现骨架 + terminal.list**
 
 创建 `src/renderer/src/runtime/local-terminal-rpc.ts`：
 
@@ -543,12 +543,12 @@ import { callLocalTerminalRpc, isLocalTerminalRpcMethod } from './local-terminal
   }
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm vitest run src/renderer/src/runtime/local-terminal-rpc.test.ts`
 Expected: PASS（5 条）。
 
-- [ ] **Step 5: 路由接缝测试**
+- [x] **Step 5: 路由接缝测试**
 
 在 `runtime-rpc-client.test.ts` 顶部 mock 适配器（避免测试触碰真实 store）：
 
@@ -593,7 +593,7 @@ vi.mock('./local-terminal-rpc', () => localTerminalRpc)
 Run: `pnpm vitest run src/renderer/src/runtime/runtime-rpc-client.test.ts`
 Expected: PASS（既有「routes local runtime calls through window.api.runtime.call」用 `repo.list`，不受影响）。
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add src/renderer/src/runtime/local-terminal-rpc.ts \
@@ -622,7 +622,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - `hasIdleTitleEvidence(state: AppState, location: LocalTerminalLocation): boolean`
   - `callLocalTerminalRpc` 支持 `terminal.agentStatus`、`terminal.isRunningAgent`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `local-terminal-rpc.test.ts` 追加（import `makeAgentStatusEntry`）：
 
@@ -672,12 +672,12 @@ import { makeAgentStatusEntry } from './sync-runtime-graph-test-harness'
 
 注：标题证据用 `classifyTitleActivity` 的真实解析（`'✳ Claude Code'` 的 `classify` 结果在 `pane-agent-evidence` 里定义为 idle/working 之一）；实现后若该字符串不被识别，改用 `pane-agent-evidence.test.ts` 中已断言可识别的标题样例（同文件内可查到）。`runtimePaneTitlesByTabId` 的键为数字索引，`resolveRuntimePaneTitleForLeaf` 按 leaf 在布局中的顺序取值——本测试布局只有一个叶子，键 `0` 即该叶子。
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm vitest run src/renderer/src/runtime/local-terminal-rpc.test.ts`
 Expected: FAIL —— `terminal.agentStatus` 落入 default 抛 `method_not_found`。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `local-terminal-rpc.ts` 顶部补 import：
 
@@ -762,12 +762,12 @@ async function getLocalAgentStatus(params: unknown): Promise<{ agentStatus: Runt
     }
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm vitest run src/renderer/src/runtime/local-terminal-rpc.test.ts`
 Expected: PASS。若标题样例不被识别，替换为 `pane-agent-evidence.test.ts` 中已覆盖的 idle 标题字符串后重跑。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/renderer/src/runtime/local-terminal-rpc.ts \
@@ -792,7 +792,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - `condition: 'exit'`：pty 消失时 `{satisfied:true, status:'exited'}`；超时 `{satisfied:false, status:'running'}`
   - pty 消失：`{satisfied:false, status:'exited'}`（tui-idle）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `local-terminal-rpc.test.ts` 追加（顶部 `vi.useRealTimers()` 默认；wait 轮询间隔实现为常量，测试用 `timeoutMs: 50` 加速超时路径）：
 
@@ -852,12 +852,12 @@ import { makeAgentStatusEntry } from './sync-runtime-graph-test-harness'
 
 （`subscribeToPtyData` 需要 pty dispatcher；在测试的 `window` stub 里补 `onData: vi.fn(() => () => {})`，与 `pty` 其余所需方法。若 dispatcher 还要求 `onExit/onSpawned`，一并补 no-op。）
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm vitest run src/renderer/src/runtime/local-terminal-rpc.test.ts`
 Expected: FAIL —— `terminal.wait` 走 default。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `local-terminal-rpc.ts` 补 import：
 
@@ -949,12 +949,12 @@ async function waitLocalTerminal(params: unknown): Promise<{ wait: RuntimeTermin
 
 `callLocalTerminalRpc` switch 补 `case 'terminal.wait': return (await waitLocalTerminal(params)) as TResult`。
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm vitest run src/renderer/src/runtime/local-terminal-rpc.test.ts`
 Expected: PASS（注意超时用例耗时约 30-280ms，属预期）。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/renderer/src/runtime/local-terminal-rpc.ts \
@@ -979,7 +979,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - handle 未知 → `terminal_handle_stale`；pty 不在 → `terminal_exited`
   - 写入失败（`writeAccepted` false）→ `{accepted:false, bytesWritten:<已写>}`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `local-terminal-rpc.test.ts` 追加：
 
@@ -1051,12 +1051,12 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   })
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm vitest run src/renderer/src/runtime/local-terminal-rpc.test.ts`
 Expected: FAIL —— `terminal.send` 走 default。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `local-terminal-rpc.ts` 补 import：
 
@@ -1124,12 +1124,12 @@ async function sendLocalTerminal(params: unknown): Promise<{ send: RuntimeTermin
 
 `callLocalTerminalRpc` switch 补 `case 'terminal.send': return (await sendLocalTerminal(params)) as TResult`。
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm vitest run src/renderer/src/runtime/local-terminal-rpc.test.ts`
 Expected: PASS。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/renderer/src/runtime/local-terminal-rpc.ts \
@@ -1150,7 +1150,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - Consumes: 真实 `callRuntimeRpc`（Task 3 接缝）、真实 `sendNotesToActiveAgentSession`、`createNoteSendAppState` / `LEAF_ID` / `PASTE_BEGIN` / `PASTE_END`（`@/lib/active-agent-note-send-test-harness`）、`makeAgentStatusEntry`（`./sync-runtime-graph-test-harness`）；mock `window.api.pty`（`listSessions`/`writeAccepted`/`onData`/`onExit`/`onSpawned`）与 `window.api.runtime.call`（断言不被调用）。
 - Produces: 端到端证据：菜单发送 → 适配器 5 方法 → 括号粘贴 + 延迟 Enter 的真实写入序列；permission 路径返回 `status:'permission'`。
 
-- [ ] **Step 1: 写测试**
+- [x] **Step 1: 写测试**
 
 创建 `src/renderer/src/runtime/local-terminal-send-integration.test.ts`：
 
@@ -1243,17 +1243,17 @@ describe('local notes send end-to-end through the local terminal adapter', () =>
 })
 ```
 
-- [ ] **Step 2: 跑测试**
+- [x] **Step 2: 跑测试**
 
 Run: `pnpm vitest run src/renderer/src/runtime/local-terminal-send-integration.test.ts`
 Expected: PASS（2 条）。失败时优先检查：harness state 缺 `worktreesByRepo` 是否导致 `getSettingsForWorktreeRuntimeOwner` 抛错（现有发送栈测试证明不会）；`pty dispatcher` 还要求别的 `window.api.pty` 方法时补齐 no-op stub。
 
-- [ ] **Step 3: 新 agent 路径验证（既有覆盖，只跑不改）**
+- [x] **Step 3: 新 agent 路径验证（既有覆盖，只跑不改）**
 
 Run: `pnpm vitest run src/renderer/src/lib/agent-paste-draft.test.ts src/renderer/src/lib/agent-draft-readiness.test.ts`
 Expected: PASS —— 证明 `launchAgentInNewTab → pasteDraftWhenAgentReady` 的本地直连（`pty.onData` 就绪 + `pty.write`）仍然成立；本阶段不改该路径。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add src/renderer/src/runtime/local-terminal-send-integration.test.ts
@@ -1274,7 +1274,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - Consumes: 全部前序任务；spec §6 门禁与手工验收清单。
 - Produces: 收尾记录（范围、提交列表、门禁证据、手工验收清单、风险披露）。
 
-- [ ] **Step 1: 全量门禁**
+- [x] **Step 1: 全量门禁**
 
 Run: `cargo test --workspace`
 Expected: 全绿。
@@ -1285,7 +1285,7 @@ Expected: exit 0（仅既有 chunk-size 警告）。
 Run: `pnpm test`
 Expected: 全绿；若仅 `browser-history-match.performance.test.ts` 失败，单独复跑：`pnpm vitest run src/renderer/src/components/browser-history-match.performance.test.ts`，通过即记录为环境抖动。
 
-- [ ] **Step 2: 写收尾记录**
+- [x] **Step 2: 写收尾记录**
 
 创建 `docs/phase2c-diff-annotations-review-record.md`，结构照 `docs/phase2b1-notifications-native-closeout-record.md`：§1 范围与验收（自动 + 手工）、§2 提交清单（hash + 标题）、§3 门禁证据（命令 + 结果数字）、§4 手工验收清单（下列 6 项，标注「待用户复核」）、§5 偏差与边界备案（照抄 spec §7 五条 + 实现中发现的新偏差）、§6 已知边界与后续（远端 runtime terminal.*、sentAt/已解决模型、PR 评论等）。
 
@@ -1297,7 +1297,7 @@ Expected: 全绿；若仅 `browser-history-match.performance.test.ts` 失败，�
 5. folder workspace 注释添加 → 重启仍在；
 6. 侧栏 Notes 架：点击定位、复制、清除（单个/全部）回归。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add docs/phase2c-diff-annotations-review-record.md \
