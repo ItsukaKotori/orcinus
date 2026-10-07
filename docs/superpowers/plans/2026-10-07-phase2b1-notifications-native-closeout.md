@@ -41,7 +41,7 @@
   - 命令 `notifications_get_authorization_status()` / `notifications_request_authorization()`（后者返回同一结果形状）
   - `map_status` 纯映射（UN 常量 → 枚举；macOS-only）
 
-- [ ] **Step 1: 加 CFBundleIdentifier 与 macOS 依赖**
+- [x] **Step 1: 加 CFBundleIdentifier 与 macOS 依赖**
 
 `src-tauri/macos-info.plist` 在 `<dict>` 后追加（放在现有注释之后）：
 
@@ -60,7 +60,9 @@ objc2-foundation = "0.3"
 objc2-user-notifications = "0.3"
 ```
 
-- [ ] **Step 2: dev 二进制 UN 可用性 spike（先验证，再决定验收位置）**
+- [x] **Step 2: dev 二进制 UN 可用性 spike（先验证，再决定验收位置）**
+
+> **Spike 结论（实测）：UN 仅打包产物可用。** 裸二进制与「嵌入 `CFBundleIdentifier` plist」两形态调用 `UNUserNotificationCenter.currentNotificationCenter()` 均抛 `NSInternalInconsistencyException: bundleProxyForCurrentProcess is nil` 并 exit 134（不可捕获；plist 本身可被 `NSBundle` 读到但 LaunchServices 不认）。据此加 R3 打包进程门（`is_bundled_app_process()`，4 命令前置短路），dev 恒走插件回退、不崩；Task 6 手工验收改在 `pnpm tauri build` 产物上执行。详见 task-1-report.md §1/§7 与本收尾记录 §5.1。
 
 ```bash
 cat > /tmp/un_probe.swift <<'EOF'
@@ -87,7 +89,7 @@ swiftc -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker src-t
 
 Expected：`bundle=dev.itsuka.orcinus` 且 `auth=` 有值 → dev 路径可用；若仍 abort/超时 → 在任务报告中记为「UN 仅打包产物可用」，回退网照常（功能不退化），Task 6 手工验收改在 `tauri build` 产物上执行。`swiftc` 不存在时记录并跳过该步骤（不阻塞）。
 
-- [ ] **Step 3: 写失败测试**
+- [x] **Step 3: 写失败测试**
 
 创建 `src-tauri/crates/ade-bridge/src/commands/notifications_native.rs`（骨架 + 测试）：
 
@@ -169,12 +171,12 @@ mod tests {
 
 `commands/mod.rs` 加 `pub mod notifications_native;`。
 
-- [ ] **Step 4: 运行确认失败**
+- [x] **Step 4: 运行确认失败**
 
 Run: `cargo test -p ade-bridge notifications_native`（在 `src-tauri/` 下）
 Expected: 编译通过但命令 `todo!()`（未注册前测试可过 serde 两项；`todo!()` 仅编译占位）——若两测试已绿，进入 Step 5 实现；命令未注册前不影响既有测试
 
-- [ ] **Step 5: 实现**
+- [x] **Step 5: 实现**
 
 `notifications_native.rs` 替换 `todo!()` 并追加 macOS 模块：
 
@@ -355,7 +357,7 @@ pub mod macos {
 }
 ```
 
-- [ ] **Step 6: 注册命令 + 重新生成 bindings**
+- [x] **Step 6: 注册命令 + 重新生成 bindings**
 
 `specta_export.rs`：`collect_commands!` 在 `commands::notifications::notifications_read_sound,` 后加两行：
 
@@ -376,12 +378,12 @@ pub mod macos {
 Run: `cargo run -p ade-bridge --bin export-bindings`（在 `src-tauri/` 下）
 Expected: bindings 出现两命令 + `NotificationAuthorizationStatus`/`NotificationAuthorizationResult`
 
-- [ ] **Step 7: 运行测试确认通过**
+- [x] **Step 7: 运行测试确认通过**
 
 Run: `cargo test -p ade-bridge`
 Expected: 全绿（含 `bindings_are_fresh`/`export_lists_every_command`；macOS 下 `map_status` 测试通过）
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src-tauri/macos-info.plist src-tauri/Cargo.lock src-tauri/crates/ade-bridge src/bridge/real/generated/tauri-bindings.ts
@@ -408,7 +410,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - `NotificationNativeDismissResult { dismissed: u32 }`
   - 命令 `notifications_deliver_native` / `notifications_dismiss_native`（dismiss 先 `getDeliveredNotifications` 求交集再删，返回真实命中数）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `notifications_native.rs` 追加类型与测试：
 
@@ -501,12 +503,12 @@ pub async fn notifications_dismiss_native(
     }
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `cargo test -p ade-bridge notifications_native`
 Expected: `todo!()` 相关的命令未被直接调用，先绿 serde 测试；随后 Step 3 实现
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 命令体（非 macOS 桩在 `#[cfg(not(...))]` 内返回 `ok:false/error:"unsupported-platform"` 与 `{dismissed:0}`；macOS 走 `macos::deliver_native`/`macos::dismiss_native`，结构同 Task 1 的 `run_blocking` 桥接）。
 
@@ -607,7 +609,7 @@ Expected: `todo!()` 相关的命令未被直接调用，先绿 serde 测试；�
 
 dismiss 同形：`macos::dismiss_native(&app, args.ids)` → `Ok(NotificationNativeDismissResult { dismissed })`，`Err` → `dismissed: 0`。
 
-- [ ] **Step 4: 注册 + bindings + 测试**
+- [x] **Step 4: 注册 + bindings + 测试**
 
 `specta_export.rs` 加两命令（`collect_commands!`、清单测试）与 `.typ`：
 
@@ -619,7 +621,7 @@ dismiss 同形：`macos::dismiss_native(&app, args.ids)` → `Ok(NotificationNat
 Run: `cargo run -p ade-bridge --bin export-bindings && cargo test -p ade-bridge`
 Expected: bindings 更新，全部测试绿
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src-tauri/crates/ade-bridge src/bridge/real/generated/tauri-bindings.ts
@@ -642,7 +644,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - `BUILT_IN_SOUND_URLS: Record<BuiltInNotificationSoundId, string>`、`builtInSoundUrl(id: string): string | null`
   - `playSound` 支持 9 个内置 id（dedupe 键 = id；`force` 跳过在播去重；音量 0–100 → /100）
 
-- [ ] **Step 1: 拷贝资产并建映射**
+- [x] **Step 1: 拷贝资产并建映射**
 
 ```bash
 mkdir -p resources/notification-sounds
@@ -696,7 +698,7 @@ export function builtInSoundUrl(id: string): string | null {
 }
 ```
 
-- [ ] **Step 2: 写失败测试**
+- [x] **Step 2: 写失败测试**
 
 `notifications.test.ts` 增补（并在既有 FakeAudio 上加构造参数记录 `src`；custom 测试的 `URL` stub 不受影响）：
 
@@ -749,12 +751,12 @@ export function builtInSoundUrl(id: string): string | null {
 
 > 注：`force` 用例依赖「首次调用在 playAudio 前同步注册在播集合」这一实现细节；若顺序调整导致该断言不稳，改为 deferred 控制 `onended` 后逐次 await。
 
-- [ ] **Step 3: 运行确认失败**
+- [x] **Step 3: 运行确认失败**
 
 Run: `pnpm vitest run src/bridge/real/notifications.test.ts`
 Expected: 内置音效用例失败（当前 `missing-path`）
 
-- [ ] **Step 4: 实现**
+- [x] **Step 4: 实现**
 
 `real/notifications.ts` 顶部加 `import { builtInSoundUrl } from '../../renderer/src/lib/built-in-notification-sounds'`（路径按实际相对位置核对：`src/bridge/real/` → `../../renderer/src/lib/...`），并加播放助手：
 
@@ -822,12 +824,12 @@ function playAudio(url: string, volume: number | null): Promise<void> {
     }
 ```
 
-- [ ] **Step 5: 运行确认通过 + typecheck**
+- [x] **Step 5: 运行确认通过 + typecheck**
 
 Run: `pnpm vitest run src/bridge/real/notifications.test.ts && pnpm typecheck`
 Expected: 全绿（既有 custom 用例的 `volume: 30 → 0.3` 断言保持；`?url` 导入类型由 Vite 客户端类型提供）
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add resources/notification-sounds src/renderer/src/lib/built-in-notification-sounds.ts src/bridge/real/notifications.ts src/bridge/real/notifications.test.ts
@@ -851,7 +853,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - `getPermissionStatus`：`requested` 读持久化标志（只读不改）
   - `probeDelivery`：darwin + native → 权威三态；`not-determined` 每实例触发一次授权窗并写标志；native 不可用 → 现插件回退（`authoritative:false`）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
   it('uses the native authoritative readout for permission status and probe', async () => {
@@ -949,12 +951,12 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 
 > 注：既有 `reports blocked-by-system when permission stays denied` 用例的 `getPermissionStatus.requested` 断言将变为 `false`（ui_get 未 mock → undefined → false），保持即可；若其 mock 返回 undefined 导致 native 探测失败，该用例走插件回退，行为不变。
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `pnpm vitest run src/bridge/real/notifications.test.ts`
 Expected: 新用例失败（当前全部走插件假授权）
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 在 `createNotificationsRealApi` 工厂内、`return withMethodFallback` 之前加实例态与助手：
 
@@ -1077,12 +1079,12 @@ const stampRequestedFlag = async (): Promise<void> => {
     },
 ```
 
-- [ ] **Step 4: 运行确认通过**
+- [x] **Step 4: 运行确认通过**
 
 Run: `pnpm vitest run src/bridge/real/notifications.test.ts && pnpm typecheck`
 Expected: 全绿
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/bridge/real/notifications.ts src/bridge/real/notifications.test.ts
@@ -1109,7 +1111,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - 静音规则：`customSoundId === 'system'` → `silent:false`，其余 → `silent:true`
   - `dismiss`（darwin + native）：原始字符串 ids 走 `notifications_dismiss_native`，返回真实交集计数；否则维持哈希 + `removeActive`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
   it('delivers through the native channel with a stable identifier and system-sound rule', async () => {
@@ -1241,12 +1243,12 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   })
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `pnpm vitest run src/bridge/real/notifications.test.ts`
 Expected: 新用例失败（当前无 dispatch/dismiss 分流）
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 加随机标识符助手（模块级）：
 
@@ -1315,12 +1317,12 @@ function randomNotificationIdentifier(): string {
       }
 ```
 
-- [ ] **Step 4: 运行确认通过**
+- [x] **Step 4: 运行确认通过**
 
 Run: `pnpm vitest run src/bridge/real/notifications.test.ts && pnpm typecheck`
 Expected: 全绿；既有插件路径用例（invoke 默认 undefined → native 探测失败 → 回退）保持通过
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/bridge/real/notifications.ts src/bridge/real/notifications.test.ts
@@ -1341,7 +1343,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - Consumes: Task 1-5 产物
 - Produces: 验收记录（git 历史为最终依据）
 
-- [ ] **Step 1: 全量门禁**
+- [x] **Step 1: 全量门禁**
 
 ```bash
 cd src-tauri && cargo test --workspace
@@ -1355,6 +1357,8 @@ Expected: 三组全绿（`pnpm test` 的 palette 性能预算用例在负载下�
 
 `docs/phase2b1-notifications-native-closeout-record.md` 按既有体例（参考 2B record）：交付清单（4 命令/TS 分流/音效资产）、spike 结论（Task 1 Step 2 的实际输出：dev 二进制 UN 可用性 → 验收位置）、验收证据（三组门禁摘要）、手工验收清单（下方六项，标记 `待人工执行`）、偏差与边界备案（至少含：`requested` 语义变更、native 失败回退、dismiss 计数为交集、UN 与插件 NSUserNotificationCenter 不互删、音量 0–100、objc2 版本沿用 lock）。
 
+> 记录文档已写入（自动门禁证据见其 §3）；本 Step 因下方六项手工验收**待人工执行**而保持未勾选（打包产物 `src-tauri/target/release/bundle/macos/Orcinus.app`）。
+
 手工验收清单（待人工执行）：
 
 1. `pnpm dev`（或打包产物，按 spike 结论）：通知权限卡片首启读到真实状态。
@@ -1364,11 +1368,11 @@ Expected: 三组全绿（`pnpm test` 的 palette 性能预算用例在负载下�
 5. 触发 waiting 通知 → dismiss（或 `ui-slice-activity-actions` 路径）→ 系统通知中心横幅被移除、计数正确。
 6. 重启 app（权限已授权）→ 通知仍正常投递、dismiss 仍匹配（标识符稳定）。
 
-- [ ] **Step 3: 计划勾选同步**
+- [x] **Step 3: 计划勾选同步**
 
 把本计划所有实际完成步骤 `- [ ]` 改 `- [x]`；Step 2 手工项保持未勾选并附一行 `待人工执行` 注记。若 spike 结论为「UN 仅打包产物可用」，在 Task 1 Step 2 旁补记。
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/phase2b1-notifications-native-closeout-record.md docs/superpowers/plans/2026-10-07-phase2b1-notifications-native-closeout.md
