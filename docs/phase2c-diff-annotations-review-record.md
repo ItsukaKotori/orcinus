@@ -78,6 +78,7 @@
 8. **Task 5：wait 判定细节**：`terminal.wait` 的 tui-idle 为渲染层近似（hook 状态 + 标题 + 1500ms 输出静默窗）；`isPtyLive` 的 IPC 瞬时失败会让 wait 抛错（在发送栈顶层被捕获为失败结果）。
 9. **Task 4/6：非 hook agent 的状态映射**：无 hook 且有标题证据的非 hook agent 会被映射为 `idle`（即使标题显示 working）——guarded 发送仅在 hook/bracketed 证据成立时进行（同 §5.3 披露）。
 10. **Task 6：`bytesWritten` 口径**：为 UTF-16 code units（`text.length`），对齐既有 mock 语义；非 UTF-8 字节数。
+11. **Task 3：未发射的错误码（spec §3.2）**：本地适配器实际发射 `method_not_found` / `terminal_handle_stale` / `terminal_exited`，未发射 spec §3.2 列出的 `terminal_gone` / `no_active_terminal`；消费侧以等价语义覆盖（终端列表为空 → `no-active-terminal`；send 路径写入前重新校验 pty 活性）。
 
 ## 6. 已知边界与后续
 

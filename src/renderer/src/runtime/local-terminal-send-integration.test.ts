@@ -64,7 +64,9 @@ describe('local notes send end-to-end through the local terminal adapter', () =>
     })
 
     expect(result).toEqual({ status: 'sent' })
+    const writeTargets = writeAccepted.mock.calls.map((call) => call[0] as string)
     const writes = writeAccepted.mock.calls.map((call) => call[1] as string)
+    expect(writeTargets).toEqual(['pty-1', 'pty-1'])
     expect(writes[0]).toBe(`${PASTE_BEGIN}fix the bug${PASTE_END}`)
     expect(writes[1]).toBe('\r')
     expect(runtimeCall).not.toHaveBeenCalled()

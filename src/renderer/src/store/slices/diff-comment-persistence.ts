@@ -134,6 +134,15 @@ function persistQueueKey(
   return folderExecutionHostId ? `${folderExecutionHostId}\0${worktreeId}` : worktreeId
 }
 
+// Why: merge-side callers must know whether disk still trails local state before letting a fetch
+// replace the row, or a stale response can clobber comments a queued write is about to persist.
+export function hasPendingDiffCommentPersist(
+  worktreeId: string,
+  folderExecutionHostId?: ReturnType<typeof getExecutionHostIdForFolderWorkspace>
+): boolean {
+  return persistQueueByWorktree.has(persistQueueKey(worktreeId, folderExecutionHostId))
+}
+
 // Why: chain each write onto the prior promise so writes land in call order; both then handlers keep the chain alive past a failure.
 // Why: queued work reads the latest list at dequeue time, and the returned promise settles for THIS write.
 // Why: this promise rejects only after this write's rollback has been applied — callers must not roll back themselves.

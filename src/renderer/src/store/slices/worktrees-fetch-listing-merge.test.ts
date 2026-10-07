@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AppState } from '../types'
+import type { DiffComment } from '../../../../shared/diff-comment-types'
 import type { Worktree } from '../../../../shared/worktree/types'
 import { clearHugeRepoWarningDismissalsForTests } from '@/lib/source-control-huge-repo-warning-dismissals'
+import { enqueueDiffCommentPersist } from './diff-comment-persistence'
 import { makeDetectedResult } from './worktrees-detected-listing-fixtures'
 import { makeWorktree } from './worktrees-slice-test-fixtures'
 import {
@@ -27,6 +29,19 @@ vi.mock('sonner', () => ({
 vi.mock('@/components/worktree-base-fallback-notice', () => ({
   requestWorktreeBaseFallbackNotice
 }))
+
+function makeComment(id: string, body: string, worktreeId: string): DiffComment {
+  return {
+    id,
+    worktreeId,
+    filePath: 'src/a.ts',
+    lineNumber: 3,
+    body,
+    createdAt: 1_700_000_000_000,
+    updatedAt: 1_700_000_000_000,
+    side: 'modified'
+  }
+}
 
 beforeEach(resetWorktreeSliceModuleMemory)
 
@@ -675,5 +690,102 @@ describe('fetchWorktrees', () => {
     await store.getState().fetchWorktrees('repo1')
 
     expect(store.getState().worktreesByRepo.repo1?.[0]?.diffComments).toEqual(comments)
+  })
+
+  it('keeps local diff comments when the fetched row omits the field', async () => {
+    const store = createTestStore()
+    const worktreeId = 'repo1::/path/wt1'
+    const comments = [makeComment('c1', 'tighten this', worktreeId)]
+    const existing = makeWorktree({
+      id: worktreeId,
+      repoId: 'repo1',
+      path: '/path/wt1',
+      diffComments: comments
+    })
+    const fetched = makeWorktree({ id: worktreeId, repoId: 'repo1', path: '/path/wt1' })
+    const detected = makeDetectedResult('repo1', [fetched])
+    mockApi.worktrees.listDetected.mockResolvedValueOnce(detected)
+    store.setState({
+      worktreesByRepo: { repo1: [existing] },
+      detectedWorktreesByRepo: { repo1: detected }
+    } as Partial<AppState>)
+
+    await store.getState().fetchWorktrees('repo1')
+
+    expect(store.getState().worktreesByRepo.repo1?.[0]?.diffComments).toEqual(comments)
+  })
+
+  it('keeps pending local diff comments over a stale fetched list', async () => {
+    const store = createTestStore()
+    const worktreeId = 'repo1::/path/pending'
+    const localComments = [makeComment('c1', 'tighten this', worktreeId)]
+    const staleComments = [makeComment('c2', 'old note', worktreeId)]
+    const existing = makeWorktree({
+      id: worktreeId,
+      repoId: 'repo1',
+      path: '/path/pending',
+      diffComments: localComments
+    })
+    store.setState({ worktreesByRepo: { repo1: [existing] } } as Partial<AppState>)
+
+    let releasePersist!: () => void
+    mockApi.worktrees.updateMeta.mockReturnValueOnce(
+      new Promise<void>((resolve) => {
+        releasePersist = resolve
+      })
+    )
+    const pendingPersist = enqueueDiffCommentPersist(
+      store.setState,
+      worktreeId,
+      store.getState,
+      { previous: localComments, next: localComments }
+    )
+    await vi.waitFor(() => expect(mockApi.worktrees.updateMeta).toHaveBeenCalledTimes(1))
+
+    const fetched = makeWorktree({
+      id: worktreeId,
+      repoId: 'repo1',
+      path: '/path/pending',
+      diffComments: staleComments
+    })
+    const detected = makeDetectedResult('repo1', [fetched])
+    mockApi.worktrees.listDetected.mockResolvedValueOnce(detected)
+    store.setState({ detectedWorktreesByRepo: { repo1: detected } } as Partial<AppState>)
+
+    await store.getState().fetchWorktrees('repo1')
+
+    expect(store.getState().worktreesByRepo.repo1?.[0]?.diffComments).toEqual(localComments)
+
+    releasePersist()
+    await pendingPersist
+  })
+
+  it('accepts the fetched diff comment list when no persist is pending', async () => {
+    const store = createTestStore()
+    const worktreeId = 'repo1::/path/fresh'
+    const localComments = [makeComment('c1', 'tighten this', worktreeId)]
+    const fetchedComments = [makeComment('c2', 'peer note', worktreeId)]
+    const existing = makeWorktree({
+      id: worktreeId,
+      repoId: 'repo1',
+      path: '/path/fresh',
+      diffComments: localComments
+    })
+    const fetched = makeWorktree({
+      id: worktreeId,
+      repoId: 'repo1',
+      path: '/path/fresh',
+      diffComments: fetchedComments
+    })
+    const detected = makeDetectedResult('repo1', [fetched])
+    mockApi.worktrees.listDetected.mockResolvedValueOnce(detected)
+    store.setState({
+      worktreesByRepo: { repo1: [existing] },
+      detectedWorktreesByRepo: { repo1: detected }
+    } as Partial<AppState>)
+
+    await store.getState().fetchWorktrees('repo1')
+
+    expect(store.getState().worktreesByRepo.repo1?.[0]?.diffComments).toEqual(fetchedComments)
   })
 })

@@ -20,6 +20,7 @@ import {
 import { isCurrentDetectedWorktreeRefresh } from './detected-worktree-refresh-admission'
 import { buildWorktreePurgeState } from '../teardown/worktree-purge-state'
 import { isDisplayNamePersistencePending } from '../metadata/worktree-meta-persist'
+import { hasPendingDiffCommentPersist } from '../../diff-comment-persistence'
 import { branchName } from '@/lib/git-utils'
 import {
   forgetAuthoritativelyRemovedWorktrees,
@@ -180,6 +181,19 @@ export function mergeFetchedWorktrees(
     const currentForHost = (s.worktreesByRepo[args.repoId] ?? []).filter((worktree) =>
       worktreeMatchesHost(worktree, args.hostId, matchOptions)
     )
+    // Why: a refresh can be in flight while a comment write is still queued; adopting its row
+    // wholesale would drop locally-known comments and a later queued read could persist the loss.
+    const currentForHostById = new Map(currentForHost.map((worktree) => [worktree.id, worktree]))
+    const worktreesWithLocalComments = worktrees.map((worktree) => {
+      const current = currentForHostById.get(worktree.id)
+      if (!current?.diffComments?.length) {
+        return worktree
+      }
+      if (worktree.diffComments === undefined || hasPendingDiffCommentPersist(worktree.id)) {
+        return { ...worktree, diffComments: current.diffComments }
+      }
+      return worktree
+    })
     const mergedDetected = mergeDetectedWorktreesForHost(
       s.detectedWorktreesByRepo[args.repoId],
       refreshResult,
@@ -199,7 +213,7 @@ export function mergeFetchedWorktrees(
     }
     const mergedWorktrees = mergeWorktreesForHost(
       s.worktreesByRepo[args.repoId],
-      worktrees,
+      worktreesWithLocalComments,
       args.hostId,
       matchOptions
     )
