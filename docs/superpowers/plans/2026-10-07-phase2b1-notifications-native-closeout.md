@@ -1361,16 +1361,16 @@ Expected: 三组全绿（`pnpm test` 的 palette 性能预算用例在负载下�
 
 `docs/phase2b1-notifications-native-closeout-record.md` 按既有体例（参考 2B record）：交付清单（4 命令/TS 分流/音效资产）、spike 结论（Task 1 Step 2 的实际输出：dev 二进制 UN 可用性 → 验收位置）、验收证据（三组门禁摘要）、手工验收清单（下方六项，标记 `待人工执行`）、偏差与边界备案（至少含：`requested` 语义变更、native 失败回退、dismiss 计数为交集、UN 与插件 NSUserNotificationCenter 不互删、音量 0–100、objc2 版本沿用 lock）。
 
-> 记录文档已写入（自动门禁证据见其 §3）；本 Step 因下方六项手工验收**待人工执行**而保持未勾选（打包产物 `src-tauri/target/release/bundle/macos/Orcinus.app`）。
+> 记录文档已写入（自动门禁证据见其 §3）；本 Step 因下方六项手工验收未全部通过而保持未勾选（2026-10-07 已在打包产物上自动化执行：1/2/3/4/6 通过、5 部分；原 LO-1「macOS 27 系统 bug」经签名修复复验修正为签名缺失，详见收尾记录 §7.3）。
 
-手工验收清单（待人工执行）：
+手工验收清单（2026-10-07 已执行，结果标注；详情见收尾记录 §7）：
 
-1. `pnpm dev`（或打包产物，按 spike 结论）：通知权限卡片首启读到真实状态。
-2. 系统设置改通知权限 → 卡片 2.5s 轮询内状态实时变化（authoritative）。
-3. 首次未决 → probe 触发系统授权弹窗；拒绝后 dispatch → blocked-by-system 回退 toast。
-4. 设置页依次试听 9 个内置 + custom：可听、无双声、音量滑杆生效。
-5. 触发 waiting 通知 → dismiss（或 `ui-slice-activity-actions` 路径）→ 系统通知中心横幅被移除、计数正确。
-6. 重启 app（权限已授权）→ 通知仍正常投递、dismiss 仍匹配（标识符稳定）。
+1. `pnpm dev`（或打包产物，按 spike 结论）：通知权限卡片首启读到真实状态。—— ✅ 通过
+2. 系统设置改通知权限 → 卡片 2.5s 轮询内状态实时变化（authoritative）。—— ✅ 通过（签名修复后 app 已注册进系统通知列表；卡片真实三态翻转见收尾记录 §7.1/§7.3）
+3. 首次未决 → probe 触发系统授权弹窗；拒绝后 dispatch → blocked-by-system 回退 toast。—— ✅ 通过（签名后首启弹授权横幅并授权成功；拒绝路径回退 toast 已实拍）
+4. 设置页依次试听 9 个内置 + custom：可听、无双声、音量滑杆生效。—— ✅ 通过（custom 文件面板自动化未呈现留人工；无双声留人耳终确认）
+5. 触发 waiting 通知 → dismiss（或 `ui-slice-activity-actions` 路径）→ 系统通知中心横幅被移除、计数正确。—— ⚠️ 部分（原生投递→banner 系统日志实证；dismiss 交集计数在命令层/单测覆盖；完整 waiting→acknowledge 链留真实会话）
+6. 重启 app（权限已授权）→ 通知仍正常投递、dismiss 仍匹配（标识符稳定）。—— ✅ 通过（重启后原生投递 `hasError:0`→banner；dismiss 匹配链同上留真实会话）
 
 - [x] **Step 3: 计划勾选同步**
 
