@@ -23,11 +23,19 @@ const runtimeCall = vi.fn()
 const runtimeEnvironmentCall = vi.fn()
 const runtimeEnvironmentSubscribe = vi.fn()
 
+const localTerminalRpc = vi.hoisted(() => ({
+  callLocalTerminalRpc: vi.fn(),
+  isLocalTerminalRpcMethod: (method: string) => method.startsWith('terminal.')
+}))
+
+vi.mock('./local-terminal-rpc', () => localTerminalRpc)
+
 beforeEach(() => {
   clearRuntimeCompatibilityCacheForTests()
   runtimeCall.mockReset()
   runtimeEnvironmentCall.mockReset()
   runtimeEnvironmentSubscribe.mockReset()
+  localTerminalRpc.callLocalTerminalRpc.mockReset()
   vi.stubGlobal('window', {
     api: {
       runtime: { call: runtimeCall },
@@ -91,6 +99,29 @@ describe('runtime RPC client routing', () => {
       }
     })
     expect(runtimeEnvironmentCall).not.toHaveBeenCalled()
+  })
+
+  it('routes local terminal methods to the local adapter without touching window.api.runtime.call', async () => {
+    localTerminalRpc.callLocalTerminalRpc.mockResolvedValue({ terminals: [] })
+    await expect(
+      callRuntimeRpc({ kind: 'local' }, 'terminal.list', { limit: 5 })
+    ).resolves.toEqual({ terminals: [] })
+    expect(localTerminalRpc.callLocalTerminalRpc).toHaveBeenCalledWith('terminal.list', {
+      limit: 5
+    })
+    expect(runtimeCall).not.toHaveBeenCalled()
+  })
+
+  it('keeps non-terminal local methods on window.api.runtime.call', async () => {
+    runtimeCall.mockResolvedValue({
+      id: 'local',
+      ok: true,
+      result: [],
+      _meta: { runtimeId: 'local-runtime' }
+    })
+    await callRuntimeRpc({ kind: 'local' }, 'repo.list')
+    expect(runtimeCall).toHaveBeenCalledWith({ method: 'repo.list', params: undefined })
+    expect(localTerminalRpc.callLocalTerminalRpc).not.toHaveBeenCalled()
   })
 
   it('routes remote runtime calls through window.api.runtimeEnvironments.call', async () => {

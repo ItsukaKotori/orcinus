@@ -8,6 +8,7 @@ import { callRuntimeEnvironmentWithRevision } from './runtime-rpc-environment-ca
 import { RuntimeRpcCallError, unwrapRuntimeRpcResult } from './runtime-rpc-result'
 import { captureRuntimeEnvironmentRequestRevision } from './runtime-environment-revision'
 import type { RuntimeClientTarget } from './runtime-client-target'
+import { callLocalTerminalRpc, isLocalTerminalRpcMethod } from './local-terminal-rpc'
 
 export {
   getActiveRuntimeTarget,
@@ -79,6 +80,9 @@ export async function callRuntimeRpc<TResult>(
   const nextParams = options.suppressFeatureInteraction
     ? withBrowserPaneUiRuntimeRpcSource(params)
     : params
+  if (target.kind === 'local' && isLocalTerminalRpcMethod(method)) {
+    return await callLocalTerminalRpc<TResult>(method, nextParams)
+  }
   const response =
     target.kind === 'local'
       ? await window.api.runtime.call({ method, params: nextParams })
