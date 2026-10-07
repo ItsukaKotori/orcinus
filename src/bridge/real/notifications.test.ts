@@ -320,6 +320,27 @@ describe('notifications real bridge', () => {
     expect(commands).toContain('notifications_deliver_native')
   })
 
+  it('re-arms the once-per-session guard when the authorization request fails', async () => {
+    let requestCalls = 0
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'notifications_get_authorization_status') {
+        return { status: 'not-determined', available: true }
+      }
+      if (command === 'notifications_request_authorization') {
+        requestCalls += 1
+        throw new Error('request failed')
+      }
+      if (command === 'ui_get') {
+        return { notificationPermissionRequested: false }
+      }
+      return undefined
+    })
+    const api = createNotificationsRealApi()
+    expect(await api.probeDelivery()).toEqual({ state: 'awaiting-decision', authoritative: true })
+    expect(await api.probeDelivery()).toEqual({ state: 'awaiting-decision', authoritative: true })
+    expect(requestCalls).toBe(2)
+  })
+
   it('dismisses through the native channel with raw ids and counts the intersection', async () => {
     const dismissCalls: unknown[] = []
     invokeMock.mockImplementation(async (command: string, payload?: { args?: unknown }) => {
@@ -432,6 +453,11 @@ describe('notifications real bridge', () => {
       reason: 'missing-path'
     })
     installSettings({ customSoundId: 'not-a-sound' as never })
+    expect(await createNotificationsRealApi().playSound({})).toEqual({
+      played: false,
+      reason: 'missing-path'
+    })
+    installSettings({ customSoundId: 'constructor' })
     expect(await createNotificationsRealApi().playSound({})).toEqual({
       played: false,
       reason: 'missing-path'

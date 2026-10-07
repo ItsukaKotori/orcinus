@@ -185,7 +185,7 @@ pub async fn notifications_dismiss_native(
 }
 
 #[cfg(target_os = "macos")]
-pub mod macos {
+pub(crate) mod macos {
     use std::ptr::NonNull;
     use std::sync::mpsc;
     use std::time::Duration;

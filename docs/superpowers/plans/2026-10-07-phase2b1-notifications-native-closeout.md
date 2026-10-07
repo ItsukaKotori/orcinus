@@ -1107,11 +1107,15 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - Consumes: Task 2 两命令；Task 4 的 `ensureNativeAvailability`/`readNativeStatus`/`requestNativeAuthorization`/`stampRequestedFlag`/`probeRequestedThisSession`
 - Produces:
   - `dispatch`（darwin + native）：先读授权态——`authorized` → `notifications_deliver_native({id,title,body,silent})`；`denied` → `blocked-by-system`；`not-determined` → 触发授权窗后重读并按结果投递/拒绝；失败 → `not-displayed`
+
+  > **R4 覆写（controller ruling，见 ledger / 收尾记录 §5.4）**：`not-determined` 的最终语义不再是「触发授权窗后重读并按结果投递/拒绝」，而是 fire-and-forget 触发授权请求 + 写 `requested` 并直接返回 `blocked-by-system`（该次不投递；用户授权后下一次 dispatch 走原生投递）。其余分支（`authorized`/`denied`/失败→`not-displayed`）不变。
   - 标识符：有 `args.notificationId` 用之；否则 `orcinus:<uuid>`（`crypto.randomUUID` 不可用时退 `Date.now()` 组合）
   - 静音规则：`customSoundId === 'system'` → `silent:false`，其余 → `silent:true`
   - `dismiss`（darwin + native）：原始字符串 ids 走 `notifications_dismiss_native`，返回真实交集计数；否则维持哈希 + `removeActive`
 
 - [x] **Step 1: 写失败测试**
+
+> **R4 覆写**：下方 `requests authorization on not-determined before delivering` 是按原始语义（等待授权窗后重读并投递）写的；该用例已被裁决 R4（见 ledger / 收尾记录 §5.4）的忠实测试替换——仓库现为 `fires the authorization request on not-determined and returns blocked, delivering on the next call`（not-determined 触发请求后即回 `blocked-by-system`，下一次 dispatch 才投递）。原用例文本保留仅作历史对照。
 
 ```ts
   it('delivers through the native channel with a stable identifier and system-sound rule', async () => {

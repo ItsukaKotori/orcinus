@@ -37,5 +37,7 @@ export const BUILT_IN_SOUND_URLS: Record<BuiltInNotificationSoundId, string> = {
 }
 
 export function builtInSoundUrl(id: string): string | null {
-  return (BUILT_IN_SOUND_URLS as Record<string, string>)[id] ?? null
+  return Object.hasOwn(BUILT_IN_SOUND_URLS, id)
+    ? (BUILT_IN_SOUND_URLS as Record<string, string>)[id]
+    : null
 }

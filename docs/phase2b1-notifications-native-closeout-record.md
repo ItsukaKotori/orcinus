@@ -77,6 +77,9 @@ pnpm tauri build && open src-tauri/target/release/bundle/macos/Orcinus.app
 8. **objc2 版本沿用 Cargo.lock**：`objc2 0.6.4` / `objc2-foundation 0.3.2` / `objc2-user-notifications 0.3.2` / `block2 0.6.2` 均为 lock 既有版本（仅新增 ade-bridge 依赖边与传递件），无新解析；tauri 升级时需复核 feature 兼容。
 9. **平台边界**：非 macOS 4 命令恒返回 `unsupported` 桩（`{status:'unknown',available:false}` / `{ok:false,error:'unsupported-platform'}` / `{dismissed:0}`），Win/Linux 行为与 2B 完全一致；非 macOS 桩未做交叉编译验证（minor）。
 10. **其他留档 minor**（详见各任务报告与 `.superpowers/sdd/2026-10-07-phase2b1-notifications-native-closeout/progress.md`，git 历史为最终依据）：macOS 分支 4 处 clippy `unneeded return`（brief 原样模式，无 clippy 门禁）；deliver `Ok(false)` 丢弃 NSError 详情；超时路径存在假阴性（回调可能仍成功）；`builtInSoundUrl` 原型键（`'constructor'` 等）返回继承值 → 优雅降级 `playback-failed`；not-determined 下每次 dispatch 都幂等写 `requested`（有意）；`randomNotificationIdentifier` 的 `crypto.randomUUID` 回退分支无测试（安全）；通知点击聚焦（UN delegate）与 action 按钮明确不做（规格 §2.2）。
+11. **M3（native 投递失败不重读授权态）**：`notifications_deliver_native` 返回 `ok:false` 时直接映射 `not-displayed`，不重读授权状态；若会话中途系统权限被撤销，`blocked-by-system` 回退 toast 要到下一次 dispatch 才出现。记为相对规格 §3.3 措辞的已记录简化。
+12. **M4（in-session 混合通道窗口）**：native 通道已知可用、但某次 `readNativeStatus` 瞬时失败（返回 `null` → `unknown`）时，该次 dispatch 回退插件投递；由此产生的 `NSUserNotificationCenter` 横幅无法被 native dismiss 移除（返回 0）。与 §5.6「UN 与插件不互删」同源，窗口仅限该次瞬时读失败，下一次成功读态即回 native。
+13. **M6（非 macOS 桩无 CI 编译覆盖）**：非 macOS 桩分支未被任何 CI target 编译（本仓库无 `.github/workflows`），其正确性依赖代码审查（§5.9「未做交叉编译验证」的门禁缺口显式化）。
 
 ## 6. 已知边界与后续
 

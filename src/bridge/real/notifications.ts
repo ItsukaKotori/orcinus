@@ -207,7 +207,11 @@ export function createNotificationsRealApi(): PreloadApi['notifications'] {
           if (status === 'not-determined') {
             if (!probeRequestedThisSession) {
               probeRequestedThisSession = true
-              void requestNativeAuthorization()
+              void requestNativeAuthorization().then((requested) => {
+                if (requested === null) {
+                  probeRequestedThisSession = false
+                }
+              })
             }
             void stampRequestedFlag()
           }
@@ -279,7 +283,11 @@ export function createNotificationsRealApi(): PreloadApi['notifications'] {
         let status = await readNativeStatus()
         if (status === 'not-determined' && !probeRequestedThisSession) {
           probeRequestedThisSession = true
-          status = (await requestNativeAuthorization()) ?? status
+          const requested = await requestNativeAuthorization()
+          if (requested === null) {
+            probeRequestedThisSession = false
+          }
+          status = requested ?? status
           void stampRequestedFlag()
         }
         if (status === 'authorized') {
