@@ -2,7 +2,9 @@ import type {
   RuntimeTerminalAgentStatus,
   RuntimeTerminalAgentStatusState,
   RuntimeTerminalListResult,
-  RuntimeTerminalSummary
+  RuntimeTerminalSummary,
+  RuntimeTerminalWait,
+  RuntimeTerminalWaitCondition
 } from '../../../shared/runtime-types'
 import type { AgentStatusState } from '../../../shared/agent-status-types'
 import { AGENT_STATUS_STALE_AFTER_MS } from '../../../shared/agent-status-types'
@@ -15,6 +17,7 @@ import {
   resolveTitleActivityLabel
 } from '@/lib/pane-agent-evidence'
 import { resolveRuntimePaneTitleForLeaf } from '@/lib/runtime-pane-title-leaf-id'
+import { subscribeToPtyData } from '@/components/terminal-pane/pty-data-sidecar-subscriptions'
 import { RuntimeRpcCallError } from './runtime-rpc-result'
 
 const LOCAL_TERMINAL_RPC_METHODS = [
@@ -26,6 +29,11 @@ const LOCAL_TERMINAL_RPC_METHODS = [
 ] as const
 
 const TERMINAL_LIST_DEFAULT_LIMIT = 200
+
+const WAIT_POLL_MS = 250
+const WAIT_OUTPUT_QUIET_MS = 1500
+const WAIT_TIMEOUT_DEFAULT_MS = 15_000
+const WAIT_TIMEOUT_MAX_MS = 60_000
 
 export type LocalTerminalLocation = {
   ptyId: string
@@ -55,6 +63,8 @@ export async function callLocalTerminalRpc<TResult>(
       const { agentStatus } = await getLocalAgentStatus(params)
       return { isRunningAgent: agentStatus.isRunningAgent } as TResult
     }
+    case 'terminal.wait':
+      return (await waitLocalTerminal(params)) as TResult
     default:
       throw localTerminalFailure(
         'method_not_found',
@@ -167,6 +177,75 @@ export function hasAgentTitleEvidence(state: AppState, location: LocalTerminalLo
 export function hasIdleTitleEvidence(state: AppState, location: LocalTerminalLocation): boolean {
   const title = readPaneTitle(state, location)
   return title !== null && classifyTitleActivity(title) === 'idle'
+}
+
+function readWaitTimeout(value: unknown): number {
+  const timeout = typeof value === 'number' && Number.isFinite(value) ? value : WAIT_TIMEOUT_DEFAULT_MS
+  return Math.min(Math.max(timeout, WAIT_POLL_MS), WAIT_TIMEOUT_MAX_MS)
+}
+
+function makeWaitResult(
+  handle: string,
+  condition: RuntimeTerminalWaitCondition,
+  fields: Pick<RuntimeTerminalWait, 'satisfied' | 'status'> &
+    Partial<Pick<RuntimeTerminalWait, 'blockedReason'>>
+): { wait: RuntimeTerminalWait } {
+  return {
+    wait: { handle, condition, exitCode: null, ...fields }
+  }
+}
+
+async function waitLocalTerminal(params: unknown): Promise<{ wait: RuntimeTerminalWait }> {
+  const terminal = readTerminalHandle(params)
+  const args = (params ?? {}) as { for?: unknown; timeoutMs?: unknown }
+  const condition: RuntimeTerminalWaitCondition = args.for === 'exit' ? 'exit' : 'tui-idle'
+  const timeoutMs = readWaitTimeout(args.timeoutMs)
+  const deadline = Date.now() + timeoutMs
+  const state = useAppStore.getState()
+  const location = findLocalTerminalLocation(state, terminal)
+  if (!location) {
+    throw localTerminalFailure('terminal_handle_stale', `Unknown terminal: ${terminal}`)
+  }
+  let lastOutputAt = Date.now()
+  const unsubscribe =
+    condition === 'tui-idle' ? subscribeToPtyData(terminal, () => (lastOutputAt = Date.now())) : () => {}
+  try {
+    for (;;) {
+      if (!(await isPtyLive(terminal))) {
+        return makeWaitResult(terminal, condition, {
+          satisfied: condition === 'exit',
+          status: 'exited'
+        })
+      }
+      if (condition === 'tui-idle') {
+        const liveState = useAppStore.getState()
+        const status = readLocalAgentStatus(liveState, location)
+        if (status === 'permission') {
+          return makeWaitResult(terminal, condition, {
+            satisfied: false,
+            status: 'running',
+            blockedReason: 'agent-approval-prompt'
+          })
+        }
+        if (status === 'idle') {
+          return makeWaitResult(terminal, condition, { satisfied: true, status: 'running' })
+        }
+        if (
+          status === null &&
+          (hasIdleTitleEvidence(liveState, location) ||
+            Date.now() - lastOutputAt >= WAIT_OUTPUT_QUIET_MS)
+        ) {
+          return makeWaitResult(terminal, condition, { satisfied: true, status: 'running' })
+        }
+      }
+      if (Date.now() >= deadline) {
+        return makeWaitResult(terminal, condition, { satisfied: false, status: 'running' })
+      }
+      await new Promise<void>((resolve) => window.setTimeout(resolve, WAIT_POLL_MS))
+    }
+  } finally {
+    unsubscribe()
+  }
 }
 
 async function getLocalAgentStatus(params: unknown): Promise<{ agentStatus: RuntimeTerminalAgentStatus }> {

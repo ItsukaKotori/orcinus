@@ -45,7 +45,18 @@ beforeEach(() => {
     { id: 'pty-1', cwd: '/tmp/wt', title: '', worktreeId: 'wt-1', agentOwnership: 'present' }
   ])
   writeAccepted.mockResolvedValue(true)
-  vi.stubGlobal('window', { api: { pty: { listSessions, writeAccepted } } })
+  vi.stubGlobal('window', {
+    api: {
+      pty: {
+        listSessions,
+        writeAccepted,
+        onData: vi.fn(() => () => {}),
+        onReplay: vi.fn(() => () => {}),
+        onExit: vi.fn(() => () => {})
+      }
+    },
+    setTimeout
+  })
 })
 
 describe('local terminal RPC adapter', () => {
@@ -149,5 +160,55 @@ describe('local terminal RPC adapter', () => {
     await expect(
       callLocalTerminalRpc('terminal.agentStatus', { terminal: 'pty-gone' })
     ).rejects.toMatchObject({ name: 'RuntimeRpcCallError', code: 'terminal_handle_stale' })
+  })
+
+  it('waits until the agent is idle', async () => {
+    testState.appState = makeState({
+      agentStatusByPaneKey: {
+        [`tab-1:${LEAF_ID}`]: makeAgentStatusEntry({ state: 'waiting', updatedAt: Date.now() })
+      }
+    } as Partial<AppState>)
+    await expect(
+      callLocalTerminalRpc('terminal.wait', { terminal: 'pty-1', for: 'tui-idle', timeoutMs: 500 })
+    ).resolves.toEqual({
+      wait: {
+        handle: 'pty-1',
+        condition: 'tui-idle',
+        satisfied: true,
+        status: 'running',
+        exitCode: null
+      }
+    })
+  })
+
+  it('reports a permission prompt as a blocked wait', async () => {
+    testState.appState = makeState({
+      agentStatusByPaneKey: {
+        [`tab-1:${LEAF_ID}`]: makeAgentStatusEntry({ state: 'blocked', updatedAt: Date.now() })
+      }
+    } as Partial<AppState>)
+    await expect(
+      callLocalTerminalRpc('terminal.wait', { terminal: 'pty-1', for: 'tui-idle', timeoutMs: 500 })
+    ).resolves.toMatchObject({
+      wait: { satisfied: false, blockedReason: 'agent-approval-prompt', status: 'running' }
+    })
+  })
+
+  it('times out while the agent keeps working', async () => {
+    testState.appState = makeState({
+      agentStatusByPaneKey: {
+        [`tab-1:${LEAF_ID}`]: makeAgentStatusEntry({ state: 'working', updatedAt: Date.now() })
+      }
+    } as Partial<AppState>)
+    await expect(
+      callLocalTerminalRpc('terminal.wait', { terminal: 'pty-1', for: 'tui-idle', timeoutMs: 30 })
+    ).resolves.toMatchObject({ wait: { satisfied: false, status: 'running' } })
+  })
+
+  it('reports an exited terminal', async () => {
+    listSessions.mockResolvedValue([])
+    await expect(
+      callLocalTerminalRpc('terminal.wait', { terminal: 'pty-1', for: 'tui-idle', timeoutMs: 500 })
+    ).resolves.toMatchObject({ wait: { satisfied: false, status: 'exited' } })
   })
 })
