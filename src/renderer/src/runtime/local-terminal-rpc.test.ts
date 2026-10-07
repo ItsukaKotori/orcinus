@@ -211,4 +211,70 @@ describe('local terminal RPC adapter', () => {
       callLocalTerminalRpc('terminal.wait', { terminal: 'pty-1', for: 'tui-idle', timeoutMs: 500 })
     ).resolves.toMatchObject({ wait: { satisfied: false, status: 'exited' } })
   })
+
+  it('writes text and Enter through pty.writeAccepted', async () => {
+    testState.appState = makeState({
+      agentStatusByPaneKey: {
+        [`tab-1:${LEAF_ID}`]: makeAgentStatusEntry({ state: 'waiting', updatedAt: Date.now() })
+      }
+    } as Partial<AppState>)
+    await expect(
+      callLocalTerminalRpc('terminal.send', {
+        terminal: 'pty-1',
+        text: 'fix the bug',
+        requireAgentStatus: 'sendable'
+      })
+    ).resolves.toEqual({
+      send: { handle: 'pty-1', accepted: true, bytesWritten: 11 }
+    })
+    expect(writeAccepted).toHaveBeenCalledWith('pty-1', 'fix the bug')
+
+    await expect(
+      callLocalTerminalRpc('terminal.send', {
+        terminal: 'pty-1',
+        enter: true,
+        requireAgentStatus: 'sendable'
+      })
+    ).resolves.toEqual({
+      send: { handle: 'pty-1', accepted: true, bytesWritten: 1 }
+    })
+    expect(writeAccepted).toHaveBeenLastCalledWith('pty-1', '\r')
+  })
+
+  it('refuses to send while the agent is blocked on a permission prompt', async () => {
+    testState.appState = makeState({
+      agentStatusByPaneKey: {
+        [`tab-1:${LEAF_ID}`]: makeAgentStatusEntry({ state: 'blocked', updatedAt: Date.now() })
+      }
+    } as Partial<AppState>)
+    await expect(
+      callLocalTerminalRpc('terminal.send', {
+        terminal: 'pty-1',
+        text: 'hello',
+        requireAgentStatus: 'sendable'
+      })
+    ).resolves.toEqual({
+      send: { handle: 'pty-1', accepted: false, bytesWritten: 0, refusedReason: 'permission' }
+    })
+    expect(writeAccepted).not.toHaveBeenCalled()
+  })
+
+  it('refuses when no agent owns the terminal', async () => {
+    await expect(
+      callLocalTerminalRpc('terminal.send', {
+        terminal: 'pty-1',
+        text: 'hello',
+        requireAgentStatus: 'sendable'
+      })
+    ).resolves.toEqual({
+      send: { handle: 'pty-1', accepted: false, bytesWritten: 0, refusedReason: 'no-agent' }
+    })
+  })
+
+  it('reports an exited terminal as terminal_exited', async () => {
+    listSessions.mockResolvedValue([])
+    await expect(
+      callLocalTerminalRpc('terminal.send', { terminal: 'pty-1', text: 'hello' })
+    ).rejects.toMatchObject({ name: 'RuntimeRpcCallError', code: 'terminal_exited' })
+  })
 })

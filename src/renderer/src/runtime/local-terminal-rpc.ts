@@ -2,6 +2,7 @@ import type {
   RuntimeTerminalAgentStatus,
   RuntimeTerminalAgentStatusState,
   RuntimeTerminalListResult,
+  RuntimeTerminalSend,
   RuntimeTerminalSummary,
   RuntimeTerminalWait,
   RuntimeTerminalWaitCondition
@@ -65,6 +66,8 @@ export async function callLocalTerminalRpc<TResult>(
     }
     case 'terminal.wait':
       return (await waitLocalTerminal(params)) as TResult
+    case 'terminal.send':
+      return (await sendLocalTerminal(params)) as TResult
     default:
       throw localTerminalFailure(
         'method_not_found',
@@ -177,6 +180,60 @@ export function hasAgentTitleEvidence(state: AppState, location: LocalTerminalLo
 export function hasIdleTitleEvidence(state: AppState, location: LocalTerminalLocation): boolean {
   const title = readPaneTitle(state, location)
   return title !== null && classifyTitleActivity(title) === 'idle'
+}
+
+function readSendRefusal(
+  state: AppState,
+  location: LocalTerminalLocation
+): 'no-agent' | 'permission' | null {
+  const status = readLocalAgentStatus(state, location)
+  if (status === 'permission') {
+    return 'permission'
+  }
+  if (status !== null) {
+    return null
+  }
+  return hasAgentTitleEvidence(state, location) ? null : 'no-agent'
+}
+
+async function sendLocalTerminal(params: unknown): Promise<{ send: RuntimeTerminalSend }> {
+  const terminal = readTerminalHandle(params)
+  const args = (params ?? {}) as {
+    text?: unknown
+    enter?: unknown
+    requireAgentStatus?: unknown
+  }
+  const state = useAppStore.getState()
+  const location = findLocalTerminalLocation(state, terminal)
+  if (!location) {
+    throw localTerminalFailure('terminal_handle_stale', `Unknown terminal: ${terminal}`)
+  }
+  if (!(await isPtyLive(terminal))) {
+    throw localTerminalFailure('terminal_exited', `Terminal is not running: ${terminal}`)
+  }
+  if (args.requireAgentStatus === 'sendable') {
+    const refusal = readSendRefusal(state, location)
+    if (refusal !== null) {
+      return { send: { handle: terminal, accepted: false, bytesWritten: 0, refusedReason: refusal } }
+    }
+  }
+  const text = typeof args.text === 'string' ? args.text : ''
+  let bytesWritten = 0
+  if (text.length > 0) {
+    const accepted = await window.api.pty.writeAccepted(terminal, text)
+    if (!accepted) {
+      return { send: { handle: terminal, accepted: false, bytesWritten: 0 } }
+    }
+    bytesWritten += text.length
+  }
+  if (args.enter === true) {
+    const accepted = await window.api.pty.writeAccepted(terminal, '\r')
+    if (!accepted) {
+      return { send: { handle: terminal, accepted: false, bytesWritten } }
+    }
+    bytesWritten += 1
+  }
+  return { send: { handle: terminal, accepted: true, bytesWritten } }
 }
 
 function readWaitTimeout(value: unknown): number {
