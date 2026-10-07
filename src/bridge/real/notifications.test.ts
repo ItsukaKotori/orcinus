@@ -117,6 +117,98 @@ describe('notifications real bridge', () => {
     })
   })
 
+  it('uses the native authoritative readout for permission status and probe', async () => {
+    let statusCall = 0
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'notifications_get_authorization_status') {
+        statusCall += 1
+        return { status: 'authorized', available: true }
+      }
+      if (command === 'ui_get') {
+        return { notificationPermissionRequested: false }
+      }
+      return undefined
+    })
+    const api = createNotificationsRealApi()
+    expect(await api.getPermissionStatus()).toEqual({
+      supported: true,
+      platform: 'darwin',
+      requested: false
+    })
+    expect(await api.probeDelivery()).toEqual({ state: 'delivered', authoritative: true })
+    // ensureNativeAvailability + readNativeStatus 各读一次。
+    expect(statusCall).toBe(2)
+  })
+
+  it('triggers the authorization dialog once per session on not-determined and stamps requested', async () => {
+    let requested = false
+    let requestCalls = 0
+    const uiWrites: unknown[] = []
+    invokeMock.mockImplementation(async (command: string, payload?: { args?: unknown }) => {
+      if (command === 'notifications_get_authorization_status') {
+        return { status: requested ? 'authorized' : 'not-determined', available: true }
+      }
+      if (command === 'notifications_request_authorization') {
+        requestCalls += 1
+        requested = true
+        return { status: 'authorized', available: true }
+      }
+      if (command === 'ui_get') {
+        return { notificationPermissionRequested: false }
+      }
+      if (command === 'ui_set') {
+        uiWrites.push(payload?.args)
+        return payload?.args
+      }
+      return undefined
+    })
+    const api = createNotificationsRealApi()
+    expect(await api.probeDelivery()).toEqual({ state: 'delivered', authoritative: true })
+    expect(await api.probeDelivery()).toEqual({ state: 'delivered', authoritative: true })
+    expect(requestCalls).toBe(1)
+    expect(uiWrites).toContainEqual({ notificationPermissionRequested: true })
+  })
+
+  it('reports denied as authoritative blocked and reads requested from persisted ui state', async () => {
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'notifications_get_authorization_status') {
+        return { status: 'denied', available: true }
+      }
+      if (command === 'ui_get') {
+        return { notificationPermissionRequested: true }
+      }
+      return undefined
+    })
+    const api = createNotificationsRealApi()
+    expect(await api.probeDelivery()).toEqual({ state: 'blocked', authoritative: true })
+    expect(await api.getPermissionStatus()).toEqual({
+      supported: true,
+      platform: 'darwin',
+      requested: true
+    })
+  })
+
+  it('falls back to the plugin probe when the native channel is unavailable', async () => {
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'notifications_get_authorization_status') {
+        throw new Error('unavailable')
+      }
+      if (command === 'ui_get') {
+        return {}
+      }
+      return undefined
+    })
+    permissionGranted = false
+    requestResult = 'denied'
+    const api = createNotificationsRealApi()
+    expect(await api.probeDelivery()).toEqual({ state: 'blocked', authoritative: false })
+    expect(await api.getPermissionStatus()).toEqual({
+      supported: true,
+      platform: 'darwin',
+      requested: false
+    })
+  })
+
   it('builds deterministic copy and reserves cooldown per worktree', () => {
     expect(
       buildNotificationCopy({

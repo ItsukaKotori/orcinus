@@ -89,7 +89,78 @@ function playAudio(url: string, volume: number | null): Promise<void> {
   })
 }
 
+type NativeAuthorizationStatus = 'authorized' | 'denied' | 'not-determined' | 'unknown'
+type NativeAuthorizationResult = { status: NativeAuthorizationStatus; available: boolean }
+
 export function createNotificationsRealApi(): PreloadApi['notifications'] {
+  // 工厂内（每域实例一份）：
+  let nativeAvailable: boolean | null = null
+  let probeRequestedThisSession = false
+
+  const ensureNativeAvailability = async (): Promise<boolean> => {
+    if (platformForPermissionStatus() !== 'darwin') {
+      nativeAvailable = false
+      return false
+    }
+    if (nativeAvailable !== null) {
+      return nativeAvailable
+    }
+    try {
+      const result = await invokeCommand<NativeAuthorizationResult>(
+        'notifications_get_authorization_status'
+      )
+      nativeAvailable = result?.available === true
+      if (!nativeAvailable) {
+        console.warn('native notification channel unavailable; using the plugin fallback')
+      }
+    } catch (error) {
+      console.warn('native notification channel unavailable; using the plugin fallback', error)
+      nativeAvailable = false
+    }
+    return nativeAvailable
+  }
+
+  const readNativeStatus = async (): Promise<NativeAuthorizationStatus | null> => {
+    try {
+      const result = await invokeCommand<NativeAuthorizationResult>(
+        'notifications_get_authorization_status'
+      )
+      return result?.status ?? null
+    } catch (error) {
+      console.warn('native authorization read failed', error)
+      return null
+    }
+  }
+
+  const requestNativeAuthorization = async (): Promise<NativeAuthorizationStatus | null> => {
+    try {
+      const result = await invokeCommand<NativeAuthorizationResult>(
+        'notifications_request_authorization'
+      )
+      return result?.status ?? null
+    } catch (error) {
+      console.warn('native authorization request failed', error)
+      return null
+    }
+  }
+
+  const readRequestedFlag = async (): Promise<boolean> => {
+    try {
+      const ui = await invokeCommand<{ notificationPermissionRequested?: boolean }>('ui_get')
+      return ui?.notificationPermissionRequested === true
+    } catch {
+      return false
+    }
+  }
+
+  const stampRequestedFlag = async (): Promise<void> => {
+    try {
+      await invokeCommand('ui_set', { args: { notificationPermissionRequested: true } })
+    } catch (error) {
+      console.warn('failed to persist notificationPermissionRequested', error)
+    }
+  }
+
   return withMethodFallback<PreloadApi['notifications']>('notifications', {
     getDesktopAwayState: async () => undefined,
     dispatch: async (args) => {
@@ -149,9 +220,27 @@ export function createNotificationsRealApi(): PreloadApi['notifications'] {
     getPermissionStatus: async (): Promise<NotificationPermissionStatusResult> => ({
       supported: true,
       platform: platformForPermissionStatus(),
-      requested: await isPermissionGranted()
+      requested: await readRequestedFlag()
     }),
     probeDelivery: async () => {
+      if (await ensureNativeAvailability()) {
+        let status = await readNativeStatus()
+        if (status === 'not-determined' && !probeRequestedThisSession) {
+          probeRequestedThisSession = true
+          status = (await requestNativeAuthorization()) ?? status
+          void stampRequestedFlag()
+        }
+        if (status === 'authorized') {
+          return { state: 'delivered', authoritative: true }
+        }
+        if (status === 'denied') {
+          return { state: 'blocked', authoritative: true }
+        }
+        if (status === 'not-determined') {
+          return { state: 'awaiting-decision', authoritative: true }
+        }
+        // unknown → 落到插件探测（authoritative:false）
+      }
       if (await isPermissionGranted()) {
         return { state: 'delivered', authoritative: false }
       }
