@@ -143,10 +143,11 @@ describe('renderer node-builtin boundary', () => {
   })
 
   it('vite aliases every node builtin the boundary allowance relies on', () => {
-    const viteSource = readFileSync(path.resolve(REPO_SRC, '..', 'vite.config.ts'), 'utf8').replaceAll(
-      '\\/',
-      '/'
-    )
+    const viteSource = readFileSync(path.resolve(REPO_SRC, '..', 'vite.config.ts'), 'utf8')
+      .replaceAll('\\/', '/')
+      .split('\n')
+      .filter((line) => !line.trimStart().startsWith('//'))
+      .join('\n')
     for (const specifier of ALIASED_NODE_BUILTINS) {
       expect(viteSource).toContain(`/^${specifier}$/`)
     }

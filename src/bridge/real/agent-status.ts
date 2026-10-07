@@ -16,7 +16,6 @@ type AgentHookRawEvent = {
   launchToken?: string
   receivedAt: number
   restored?: boolean
-  env?: string
 }
 
 /** `agent_status_get_snapshot` 元素（Rust `AgentHookSnapshotEntry` 同形）。 */
@@ -45,7 +44,7 @@ export function createAgentStatusRealApi(): PreloadApi['agentStatus'] {
         launchToken: raw.launchToken,
         payload: raw.payload
       },
-      raw.env ?? ''
+      ''
     )
     if (!normalized) {
       return null
@@ -54,6 +53,7 @@ export function createAgentStatusRealApi(): PreloadApi['agentStatus'] {
     const prior = epochs.get(normalized.paneKey)
     const stateStartedAt = prior && prior.state === state ? prior.startedAt : raw.receivedAt
     epochs.set(normalized.paneKey, { state, startedAt: stateStartedAt })
+    // Why: 共享归一化器自带的 restoredUnconfirmed（agent-hook-listener.ts:124-138）在 2B 不可达——新建的 claude-only 监听状态从不填充 restore latch，raw.restored 是唯一活跃来源。
     const restoredUnconfirmed = raw.restored === true && state !== 'done'
     return {
       ...normalized.payload,

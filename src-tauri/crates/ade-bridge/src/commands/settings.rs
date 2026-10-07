@@ -1,6 +1,9 @@
+use std::sync::Arc;
+
 use serde_json::{Map, Value};
 use tauri::State;
 
+use crate::commands::run_blocking;
 use crate::errors::BridgeError;
 use crate::events;
 use crate::json::Json;
@@ -54,7 +57,13 @@ pub async fn settings_set(state: State<'_, AppState>, args: Json) -> Result<Json
     // 显式 toggle（规格 §3.3/§4 裁定）：开 = 安装/更新；关 = 移除托管条目。
     // 启动期关闭只 skip 不删；用户显式关闭才移除（oracle `applyAgentStatusHooksEnabled`）。
     if let Some(enabled) = hooks_toggle_from_changes(&changed) {
-        state.hooks.set_hooks_enabled(enabled, &state.home);
+        let hooks = Arc::clone(&state.hooks);
+        let home = state.home.clone();
+        run_blocking(move || {
+            hooks.set_hooks_enabled(enabled, &home);
+            Ok(())
+        })
+        .await?;
     }
     Ok(Json::new(next))
 }

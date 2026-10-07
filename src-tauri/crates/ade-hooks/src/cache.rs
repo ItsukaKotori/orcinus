@@ -243,6 +243,26 @@ mod tests {
     }
 
     #[test]
+    fn debounce_auto_writes_recorded_events_without_flush_sync() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("last-status.json");
+        let cache = StatusCache::load_with_debounce(path.clone(), Duration::from_millis(20));
+        cache.record(event("t1:debounced", now_ms()));
+        let deadline = std::time::Instant::now() + Duration::from_secs(2);
+        while !path.exists() {
+            assert!(
+                std::time::Instant::now() < deadline,
+                "debounced writer never produced the status file"
+            );
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        let raw: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(raw["entries"]["t1:debounced"]["source"], "claude");
+        assert_eq!(raw["entries"]["t1:debounced"]["paneKey"], "t1:debounced");
+        cache.shutdown();
+    }
+
+    #[test]
     fn hydrate_marks_restored_and_drops_stale_entries() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("last-status.json");

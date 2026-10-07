@@ -156,7 +156,8 @@ export function createNotificationsRealApi(): PreloadApi['notifications'] {
       if (!path || settings?.customSoundId !== 'custom') {
         return { played: false, reason: 'missing-path' }
       }
-      if (playingSoundPaths.has(path)) {
+      // Why: preload semantics — `force` replays while the same path is still ringing.
+      if (options?.force !== true && playingSoundPaths.has(path)) {
         return { played: false, reason: 'deduped' }
       }
       const loaded = await invokeCommand<{
@@ -186,7 +187,8 @@ export function createNotificationsRealApi(): PreloadApi['notifications'] {
         await new Promise<void>((resolve, reject) => {
           const audio = new Audio(objectUrl)
           if (typeof options?.volume === 'number') {
-            audio.volume = Math.min(1, Math.max(0, options.volume))
+            // Why: renderer contract is 0..100 (preload divides by 100); Audio.volume is 0..1.
+            audio.volume = Math.min(1, Math.max(0, options.volume / 100))
           }
           audio.onended = () => resolve()
           audio.onerror = () => reject(new Error('playback failed'))

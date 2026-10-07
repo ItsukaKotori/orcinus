@@ -190,7 +190,22 @@ fn write_settings_json(path: &Path, value: &Value) -> io::Result<()> {
         return Ok(());
     }
     let tmp = write_path.with_extension(format!("tmp-{}", std::process::id()));
-    std::fs::write(&tmp, serialized.as_bytes())?;
+    #[cfg(unix)]
+    {
+        use std::io::Write;
+        use std::os::unix::fs::OpenOptionsExt;
+        let mut file = std::fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .mode(0o600)
+            .open(&tmp)?;
+        file.write_all(serialized.as_bytes())?;
+    }
+    #[cfg(not(unix))]
+    {
+        std::fs::write(&tmp, serialized.as_bytes())?;
+    }
     if write_path.exists() {
         let backup = PathBuf::from(format!("{}.bak", write_path.to_string_lossy()));
         let _ = std::fs::copy(&write_path, &backup);

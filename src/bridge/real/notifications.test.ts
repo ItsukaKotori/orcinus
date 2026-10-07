@@ -142,10 +142,14 @@ describe('notifications real bridge', () => {
       path: '/tmp/ding.wav'
     })
     const played: string[] = []
+    const constructedAudios: Array<{ volume: number }> = []
     class FakeAudio {
       volume = 1
       onended: (() => void) | null = null
       onerror: (() => void) | null = null
+      constructor() {
+        constructedAudios.push(this)
+      }
       play(): Promise<void> {
         played.push('play')
         this.onended?.()
@@ -158,8 +162,9 @@ describe('notifications real bridge', () => {
       revokeObjectURL: () => {}
     })
     const api = createNotificationsRealApi()
-    expect(await api.playSound({ volume: 0.3 })).toEqual({ played: true })
+    expect(await api.playSound({ volume: 30 })).toEqual({ played: true })
     expect(played).toEqual(['play'])
+    expect(constructedAudios[0]?.volume).toBe(0.3)
     vi.unstubAllGlobals()
   })
 })

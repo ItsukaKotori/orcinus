@@ -16,7 +16,7 @@
 | 共享脚本 | `~/.ade/agent-hooks/claude-hook.sh`（0755）：neutral stdout `{}` + stdin 捕获 + source endpoint + curl raw/form 双通道 + 失败落 spool |
 | endpoint / PTY env | `app_data/agent-hooks/endpoint.env` 0600 原子写；spawn 注入 `ORCA_AGENT_HOOK_*` + `ORCA_PANE_KEY=${tabId}:${leafId}`（2A 透传的 tabId/leafId 接真）+ `ORCA_TAB_ID`/`ORCA_WORKTREE_ID` |
 | 状态缓存 | `last-status.json` 250ms 防抖写 + 7 天 TTL + hydrate（`restored` 仅内存，`skip_serializing` 不落盘） |
-| bridge 接线 | hook server 启动/退出接线；`agent-hook:raw` 事件（`{source,payload,paneKey,tabId,worktreeId,launchToken,receivedAt,restored,env}`）；`agent_status_get_snapshot` 回放命令；`agentStatusHooksEnabled` 运行时 reconcile |
+| bridge 接线 | hook server 启动/退出接线；`agent-hook:raw` 事件（`{source,payload,paneKey,tabId,worktreeId,launchToken,receivedAt,restored}`）；`agent_status_get_snapshot` 回放命令；`agentStatusHooksEnabled` 运行时 reconcile |
 | 新命令（3） | `agent_status_get_snapshot`、`notifications_open_system_settings`、`notifications_read_sound`——三处登记点（`collect_commands!`/命令清单测试/generated bindings）一致 |
 | TS 域 `real/agent-status.ts` | 订阅 `agent-hook:raw` → 复用 `shared/agent-hook-listener.ts` 归一化 → `AgentStatusIpcPayload`；`getSnapshot()` 走独立 replay 状态回放；`onClear` 为 noop 订阅（宿主不产 clear） |
 | TS 域 `real/notifications.ts` | `tauri-plugin-notification`：dispatch（设置门控/冷却/焦点抑制）、dismiss（FNV-1a 哈希id）、getPermissionStatus、probeDelivery（`authoritative:false`）、playSound（custom 音效经 `notifications_read_sound` → Blob/Audio）、openSystemSettings |
@@ -68,7 +68,7 @@
 
 ## 5. 规格偏差备案
 
-1. **dismiss 字符串 id → FNV-1a 32 位哈希**（`notifications.ts:63`）：`tauri-plugin-notification` 的 `removeActive` 只收数字 id，故把既有稳定字符串 notificationId 经 FNV-1a 折叠为 32-bit int；但 `dispatch` 未把该哈希作为插件 id 传入，因此在支持 `removeActive` 的宿主上 dismiss 可能匹配不到（`dismissed` 计数为乐观值）。属计划内 R4 裁定，dismiss 消费方（`ui-slice-activity-actions`）在无匹配时的行为等价于未取消。
+1. **dismiss 在 2B 为确定 no-op**（`notifications.ts:63`，修正先前记录）：已核实 `tauri-plugin-notification` 2.5.1 desktop 的 `sendNotification` 忽略 `id` 选项，且 `remove_active` 未注册（实现仅存在于 mobile crate 侧），故 macOS 上 `removeActive` 调用必然失败并被兜底为 `{dismissed:0}`——与字符串 id 的 FNV-1a 哈希映射无关，接受该行为为 2B 终态。desktop 精确 dismiss 需换机制（如原生 API），留 2B.1 跟进。属计划内 R4 裁定，dismiss 消费方（`ui-slice-activity-actions`）在无匹配时的行为等价于未取消。
 2. **playSound 仅支持 custom 音效**：仅当 `customSoundId === 'custom'` 且 `customSoundPath` 存在时经 `notifications_read_sound` 播放；其余 9 个内置音效资产不在 2B 范围，返回 `missing-path`。属计划内 R4 裁定。
 3. **开关语义裁定**：启动期 reconcile 时关闭 = **skip 不删**（防多 profile 互删）；用户显式 toggle 关闭 = **移除托管条目**（对齐 oracle `applyAgentStatusHooksEnabled`，保证 §1 验收第 4 步「关开关 → 状态停驱」可达）。解决规格 §4 与 §1 的内部张力，Task 5/8 测试钉死。
 4. **413 / 非 POST 403**：body 超限回 **413**（不采用 oracle 的 fail-open 204）、非 POST 回 **403** 并计数（不采用 oracle 的 404）——按规格 §4 表覆盖 oracle；未知路由仍 404。Task 5 测试钉死。
@@ -80,7 +80,8 @@
 
 ## 6. 已知边界与后续
 
-- **2B.1 跟进**：macOS 通知权限真探测（blocked-by-system 回退 + requested 语义）；若需精确 dismiss，把 `hashNotificationId` 结果作为插件 id 传入 dispatch。
+- **2B.1 跟进**：macOS 通知权限真探测（blocked-by-system 回退 + requested 语义）；desktop 精确 dismiss 换机制（2.5.1 `sendNotification` 忽略 `id`、`remove_active` 仅 mobile 未注册，hash 映射在 macOS 不可达）。
 - **后续 Phase**：2C/2D 按上游路线图；其余 17 个 agent 源（codex hooks.json 等）按需扩展（2B 为 claude-only 指令）；Windows hook 脚本分支（先 POSIX）顺延；9 个内置通知音效资产。
 - **明确不做（规格 §2.2 防蔓延）**：Notification/PreCompact 事件安装（避免误报）、statusline 用量路径、通知设置页扩展、归一化移植 Rust、drop 系/migration 维持 fallback noop。
+- **Cargo.lock 刷新范围**：本次锁变更保持在 tauri/plugin 闭包内（不引入闭包外新依赖），但移动了若干 tauri 家族传递依赖（tao/wry/brotli/html5ever 等），已由三组绿色门禁验证。
 - **留档 minor**：slowloris 为 per-read 非 per-connection、handler 线程无上限；`read_sound` 无路径授权（≤10MiB 任意扩展名文件可读，需 conscious sign-off）；read_sound TOCTOU；open 后不 wait 的僵尸；alias 断言子串匹配；snapshot epoch map 无逐出路径（随 pane 数有界）；Task 11 报告「dismiss 无消费方」不实（`use-notification-dispatch` 传 id、`ui-slice-activity-actions` 调 dismiss，已记录）；tauri 2.12.1 lock bump 均在本项目 tauri 闭包内（final review 已复核）。
