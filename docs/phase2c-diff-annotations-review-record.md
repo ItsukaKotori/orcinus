@@ -37,6 +37,7 @@
 | T3 fix 1 | 断开 `@/store` 静态环（惰性 import） | f7d67e6f |
 | T3 fix 2 | pty sidecar 惰性加载 + pane 身份 inventory 清单补齐（门禁修复） | 3ae690ec |
 | T8 | 三组门禁复跑 + 本记录 + 计划勾选 | 本记录提交 |
+| 终审 fix | fetch 合并保留未落盘 `diffComments`（pending-aware 保留 + 3 条回归测试）、记录 §5.11、集成测试写入基数/目标断言 | 3bbb2619 |
 
 ## 3. 验收证据（自动化）
 
@@ -49,6 +50,8 @@
 | `pnpm test`（repo 根） | **exit 0，全绿**：`Test Files 3859 passed / 0 failed / 8 skipped (3867)`；`Tests 34363 passed / 0 failed / 122 skipped (34485)`；Duration **903.29s**。**本轮无性能抖动失败**（`browser-history-match.performance.test.ts` 与 `palette-match-performance.test.ts` 均通过，无需隔离复跑） |
 
 过程说明：终态前曾有两轮门禁红（`createRepoSlice is not a function` 环、launch-agent mock TDZ 对与 inventory ratchet），对应两次 fix 轮（`f7d67e6f`、`3ae690ec`），修复后本表为最终证据。
+
+终审修复波次（`3bbb2619`）后的最终树复跑：`pnpm test` **exit 0**（`Test Files 3859 passed / 0 failed / 8 skipped`；`Tests 34366 passed / 0 failed`，较上表 +3 条新增回归测试）；`pnpm typecheck` exit 0；`pnpm build:web` `✓ built in 3.43s`（仅既有 chunk-size 警告）。终审结论：Important 1 项（stale fetch 覆盖未落盘注释的数据丢失窗口）已修复并经 scoped 复审确认；Minor 项已按 triage 记录于本记录 §5 与 SDD 台账。
 
 ## 4. 手工验收清单（待用户复核）
 
