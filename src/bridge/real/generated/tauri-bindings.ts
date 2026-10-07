@@ -32,6 +32,8 @@ export const commands = {
 	/**  打开 macOS 通知系统设置（blocked-by-system 回退入口）。 */
 	notificationsOpenSystemSettings: () => typedError<null, BridgeError>(__TAURI_INVOKE("notifications_open_system_settings")),
 	notificationsReadSound: (args: NotificationsReadSoundArgs) => typedError<NotificationSoundReadResult_Serialize, BridgeError>(__TAURI_INVOKE("notifications_read_sound", { args })),
+	notificationsGetAuthorizationStatus: () => typedError<NotificationAuthorizationResult, BridgeError>(__TAURI_INVOKE("notifications_get_authorization_status")),
+	notificationsRequestAuthorization: () => typedError<NotificationAuthorizationResult, BridgeError>(__TAURI_INVOKE("notifications_request_authorization")),
 	/**  Read the full workspace session state as one JSON object text. */
 	sessionGet: () => typedError<string, BridgeError>(__TAURI_INVOKE("session_get")),
 	/**  Whole-state replace; keys absent from the payload are deleted. */
@@ -1221,6 +1223,13 @@ export type NestedRepoScanResult = {
  *  `NestedRepoScanResult['selectedPathKind']`).
  */
 export type NestedRepoSelectedPathKind = "git_repo" | "non_git_folder";
+
+export type NotificationAuthorizationResult = {
+	status: NotificationAuthorizationStatus,
+	available: boolean,
+};
+
+export type NotificationAuthorizationStatus = "authorized" | "denied" | "not-determined" | "unknown";
 
 export type NotificationSoundReadResult = NotificationSoundReadResult_Serialize | NotificationSoundReadResult_Deserialize;
 

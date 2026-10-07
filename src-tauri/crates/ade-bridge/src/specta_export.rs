@@ -38,6 +38,8 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::settings::settings_set,
                 commands::notifications::notifications_open_system_settings,
                 commands::notifications::notifications_read_sound,
+                commands::notifications_native::notifications_get_authorization_status,
+                commands::notifications_native::notifications_request_authorization,
                 commands::session::session_get,
                 commands::session::session_set,
                 commands::session::session_patch,
@@ -140,6 +142,8 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
             .typ::<crate::events::AgentHookRawPayload>()
             .typ::<commands::agent_status::AgentHookSnapshotEntry>()
             .typ::<commands::notifications::NotificationSoundReadResult>()
+            .typ::<commands::notifications_native::NotificationAuthorizationStatus>()
+            .typ::<commands::notifications_native::NotificationAuthorizationResult>()
             .typ::<commands::project_groups::NestedRepoImportResult>()
             .typ::<ade_core::models::folder_workspace::FolderWorkspacePathStatus>()
             .typ::<ade_core::models::project_group::NestedRepoScanResult>()
@@ -206,6 +210,8 @@ mod tests {
             "settings_set",
             "notifications_open_system_settings",
             "notifications_read_sound",
+            "notifications_get_authorization_status",
+            "notifications_request_authorization",
             "session_get",
             "session_set",
             "session_patch",

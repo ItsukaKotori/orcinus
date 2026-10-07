@@ -9,6 +9,8 @@
 	     声明本地网络用途（触发权限提示/设置开关）+ ATS 本地放行。
 	     打包发布的 .app 由 Tauri 生成自己的 Info.plist（bundle 文件优先于
 	     __TEXT 段），发布配置需携带同两项——记录于 phase1c 收尾记录。 -->
+	<key>CFBundleIdentifier</key>
+	<string>dev.itsuka.orcinus</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Orcinus 需要访问本机回环地址以驱动内置终端（PTY 数据面）。</string>
 	<key>NSAppTransportSecurity</key>
