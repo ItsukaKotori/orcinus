@@ -70,6 +70,14 @@ export function hashNotificationId(id: string): number {
   return hash | 0
 }
 
+function randomNotificationIdentifier(): string {
+  try {
+    return `orcinus:${crypto.randomUUID()}`
+  } catch {
+    return `orcinus:${Date.now()}-${Math.random().toString(36).slice(2)}`
+  }
+}
+
 function platformForPermissionStatus(): NodeJS.Platform {
   const bootstrap = getBootstrap()
   const platform = bootstrap?.platform?.platform
@@ -193,6 +201,39 @@ export function createNotificationsRealApi(): PreloadApi['notifications'] {
           return { delivered: false, reason: 'cooldown' }
         }
       }
+      if (await ensureNativeAvailability()) {
+        const status = await readNativeStatus()
+        if (status === 'denied' || status === 'not-determined') {
+          if (status === 'not-determined') {
+            if (!probeRequestedThisSession) {
+              probeRequestedThisSession = true
+              void requestNativeAuthorization()
+            }
+            void stampRequestedFlag()
+          }
+          return { delivered: false, reason: 'blocked-by-system' }
+        }
+        if (status === 'authorized') {
+          const copy = buildNotificationCopy(args)
+          const identifier = args.notificationId ?? randomNotificationIdentifier()
+          const nativeResult = await invokeCommand<{ ok: boolean; error?: string }>(
+            'notifications_deliver_native',
+            {
+              args: {
+                id: identifier,
+                title: copy.title,
+                body: copy.body,
+                silent: settings?.customSoundId !== 'system'
+              }
+            }
+          )
+          if (nativeResult?.ok) {
+            return { delivered: true }
+          }
+          return { delivered: false, reason: 'not-displayed' }
+        }
+        // unknown → 插件回退
+      }
       let granted = await isPermissionGranted()
       if (!granted) {
         granted = (await requestPermission()) === 'granted'
@@ -208,6 +249,17 @@ export function createNotificationsRealApi(): PreloadApi['notifications'] {
       const unique = Array.from(new Set(ids.filter((id) => typeof id === 'string' && id.length > 0)))
       if (unique.length === 0) {
         return { dismissed: 0 }
+      }
+      if (await ensureNativeAvailability()) {
+        try {
+          const result = await invokeCommand<{ dismissed?: number }>('notifications_dismiss_native', {
+            args: { ids: unique }
+          })
+          return { dismissed: typeof result?.dismissed === 'number' ? result.dismissed : 0 }
+        } catch (error) {
+          console.warn('native dismiss failed', error)
+          return { dismissed: 0 }
+        }
       }
       try {
         await removeActive(unique.map((id) => ({ id: hashNotificationId(id) })))

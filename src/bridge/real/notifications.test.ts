@@ -209,6 +209,137 @@ describe('notifications real bridge', () => {
     })
   })
 
+  it('delivers through the native channel with a stable identifier and system-sound rule', async () => {
+    const deliverCalls: unknown[] = []
+    invokeMock.mockImplementation(async (command: string, payload?: { args?: unknown }) => {
+      if (command === 'notifications_get_authorization_status') {
+        return { status: 'authorized', available: true }
+      }
+      if (command === 'notifications_deliver_native') {
+        deliverCalls.push(payload?.args)
+        return { ok: true }
+      }
+      if (command === 'ui_get') {
+        return {}
+      }
+      return undefined
+    })
+    installSettings({ customSoundId: 'two-tone' })
+    const api = createNotificationsRealApi()
+    const result = await api.dispatch({
+      source: 'agent-task-complete',
+      worktreeId: 'r-native',
+      notificationId: 'agent:r-native:t1:leaf:100',
+      terminalTitle: 'claude',
+      agentState: 'waiting',
+      agentPrompt: 'Fix login bug'
+    })
+    expect(result).toEqual({ delivered: true })
+    expect(sendNotificationMock).not.toHaveBeenCalled()
+    expect(deliverCalls[0]).toEqual({
+      id: 'agent:r-native:t1:leaf:100',
+      title: 'claude',
+      body: 'Fix login bug',
+      silent: true
+    })
+    installSettings({ customSoundId: 'system' })
+    await createNotificationsRealApi().dispatch({
+      source: 'agent-task-complete',
+      worktreeId: 'r-native-2',
+      notificationId: 'agent:r-native-2:t1:leaf:200'
+    })
+    expect(deliverCalls[1]).toMatchObject({ silent: false })
+  })
+
+  it('returns blocked-by-system for denied and not-displayed for native delivery failure', async () => {
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'notifications_get_authorization_status') {
+        return { status: 'denied', available: true }
+      }
+      if (command === 'ui_get') {
+        return {}
+      }
+      return undefined
+    })
+    expect(
+      await createNotificationsRealApi().dispatch({
+        source: 'agent-task-complete',
+        worktreeId: 'r-denied'
+      })
+    ).toEqual({ delivered: false, reason: 'blocked-by-system' })
+
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'notifications_get_authorization_status') {
+        return { status: 'authorized', available: true }
+      }
+      if (command === 'notifications_deliver_native') {
+        return { ok: false, error: 'boom' }
+      }
+      if (command === 'ui_get') {
+        return {}
+      }
+      return undefined
+    })
+    expect(
+      await createNotificationsRealApi().dispatch({
+        source: 'agent-task-complete',
+        worktreeId: 'r-failed'
+      })
+    ).toEqual({ delivered: false, reason: 'not-displayed' })
+  })
+
+  it('fires the authorization request on not-determined and returns blocked, delivering on the next call', async () => {
+    let requested = false
+    const commands: string[] = []
+    invokeMock.mockImplementation(async (command: string) => {
+      commands.push(command)
+      if (command === 'notifications_get_authorization_status') {
+        return { status: requested ? 'authorized' : 'not-determined', available: true }
+      }
+      if (command === 'notifications_request_authorization') {
+        requested = true
+        return { status: 'not-determined', available: true }
+      }
+      if (command === 'notifications_deliver_native') {
+        return { ok: true }
+      }
+      if (command === 'ui_get') {
+        return {}
+      }
+      return undefined
+    })
+    const api = createNotificationsRealApi()
+    expect(
+      await api.dispatch({ source: 'agent-task-complete', worktreeId: 'r-ask' })
+    ).toEqual({ delivered: false, reason: 'blocked-by-system' })
+    expect(commands).toContain('notifications_request_authorization')
+    expect(commands).not.toContain('notifications_deliver_native')
+    expect(
+      await api.dispatch({ source: 'agent-task-complete', worktreeId: 'r-ask-2' })
+    ).toEqual({ delivered: true })
+    expect(commands).toContain('notifications_deliver_native')
+  })
+
+  it('dismisses through the native channel with raw ids and counts the intersection', async () => {
+    const dismissCalls: unknown[] = []
+    invokeMock.mockImplementation(async (command: string, payload?: { args?: unknown }) => {
+      if (command === 'notifications_get_authorization_status') {
+        return { status: 'authorized', available: true }
+      }
+      if (command === 'notifications_dismiss_native') {
+        dismissCalls.push(payload?.args)
+        return { dismissed: 1 }
+      }
+      if (command === 'ui_get') {
+        return {}
+      }
+      return undefined
+    })
+    const api = createNotificationsRealApi()
+    expect(await api.dismiss(['agent:r1:t1:leaf:100'])).toEqual({ dismissed: 1 })
+    expect(dismissCalls[0]).toEqual({ ids: ['agent:r1:t1:leaf:100'] })
+  })
+
   it('builds deterministic copy and reserves cooldown per worktree', () => {
     expect(
       buildNotificationCopy({
