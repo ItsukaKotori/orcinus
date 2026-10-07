@@ -40,6 +40,8 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::notifications::notifications_read_sound,
                 commands::notifications_native::notifications_get_authorization_status,
                 commands::notifications_native::notifications_request_authorization,
+                commands::notifications_native::notifications_deliver_native,
+                commands::notifications_native::notifications_dismiss_native,
                 commands::session::session_get,
                 commands::session::session_set,
                 commands::session::session_patch,
@@ -144,6 +146,8 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
             .typ::<commands::notifications::NotificationSoundReadResult>()
             .typ::<commands::notifications_native::NotificationAuthorizationStatus>()
             .typ::<commands::notifications_native::NotificationAuthorizationResult>()
+            .typ::<commands::notifications_native::NotificationNativeDeliverResult>()
+            .typ::<commands::notifications_native::NotificationNativeDismissResult>()
             .typ::<commands::project_groups::NestedRepoImportResult>()
             .typ::<ade_core::models::folder_workspace::FolderWorkspacePathStatus>()
             .typ::<ade_core::models::project_group::NestedRepoScanResult>()
@@ -212,6 +216,8 @@ mod tests {
             "notifications_read_sound",
             "notifications_get_authorization_status",
             "notifications_request_authorization",
+            "notifications_deliver_native",
+            "notifications_dismiss_native",
             "session_get",
             "session_set",
             "session_patch",

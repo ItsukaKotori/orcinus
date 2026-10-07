@@ -19,6 +19,35 @@ pub struct NotificationAuthorizationResult {
     pub available: bool,
 }
 
+#[derive(Debug, Clone, serde::Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct NotificationsDeliverNativeArgs {
+    pub id: String,
+    pub title: String,
+    pub body: String,
+    #[serde(default)]
+    pub silent: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct NotificationNativeDeliverResult {
+    pub ok: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+#[derive(Debug, Clone, serde::Deserialize, specta::Type)]
+pub struct NotificationsDismissNativeArgs {
+    pub ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct NotificationNativeDismissResult {
+    pub dismissed: u32,
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn notifications_get_authorization_status(
@@ -77,6 +106,84 @@ pub async fn notifications_request_authorization(
     }
 }
 
+#[tauri::command]
+#[specta::specta]
+pub async fn notifications_deliver_native(
+    state: tauri::State<'_, AppState>,
+    args: NotificationsDeliverNativeArgs,
+) -> Result<NotificationNativeDeliverResult, BridgeError> {
+    #[cfg(target_os = "macos")]
+    {
+        // R3：非 .app 进程进入 UN 会 NSInternalInconsistencyException abort，
+        // 任何 UN 调用前必须短路。
+        if !crate::commands::notifications_native::macos::is_bundled_app_process() {
+            return Ok(NotificationNativeDeliverResult {
+                ok: false,
+                error: Some("not-bundled".to_string()),
+            });
+        }
+        let app = state.app.clone();
+        return crate::commands::run_blocking(move || {
+            match crate::commands::notifications_native::macos::deliver_native(
+                &app, args.id, args.title, args.body, args.silent,
+            ) {
+                Ok(true) => Ok(NotificationNativeDeliverResult { ok: true, error: None }),
+                Ok(false) => Ok(NotificationNativeDeliverResult {
+                    ok: false,
+                    error: Some("delivery failed".to_string()),
+                }),
+                Err(error) => Ok(NotificationNativeDeliverResult {
+                    ok: false,
+                    error: Some(error.to_string()),
+                }),
+            }
+        })
+        .await;
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = &state;
+        let _ = &args;
+        Ok(NotificationNativeDeliverResult {
+            ok: false,
+            error: Some("unsupported-platform".to_string()),
+        })
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn notifications_dismiss_native(
+    state: tauri::State<'_, AppState>,
+    args: NotificationsDismissNativeArgs,
+) -> Result<NotificationNativeDismissResult, BridgeError> {
+    #[cfg(target_os = "macos")]
+    {
+        // R3：非 .app 进程进入 UN 会 NSInternalInconsistencyException abort，
+        // 任何 UN 调用前必须短路。
+        if !crate::commands::notifications_native::macos::is_bundled_app_process() {
+            return Ok(NotificationNativeDismissResult { dismissed: 0 });
+        }
+        let app = state.app.clone();
+        return crate::commands::run_blocking(move || {
+            match crate::commands::notifications_native::macos::dismiss_native(&app, args.ids) {
+                Ok(dismissed) => Ok(NotificationNativeDismissResult { dismissed }),
+                Err(error) => {
+                    eprintln!("[ade-bridge] notifications_dismiss_native: {error}");
+                    Ok(NotificationNativeDismissResult { dismissed: 0 })
+                }
+            }
+        })
+        .await;
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = &state;
+        let _ = &args;
+        Ok(NotificationNativeDismissResult { dismissed: 0 })
+    }
+}
+
 #[cfg(target_os = "macos")]
 pub mod macos {
     use std::ptr::NonNull;
@@ -84,8 +191,10 @@ pub mod macos {
     use std::time::Duration;
 
     use block2::RcBlock;
+    use objc2_foundation::{NSArray, NSError, NSString};
     use objc2_user_notifications::{
-        UNAuthorizationOptions, UNAuthorizationStatus, UNNotificationSettings,
+        UNAuthorizationOptions, UNAuthorizationStatus, UNMutableNotificationContent, UNNotification,
+        UNNotificationRequest, UNNotificationSettings, UNNotificationSound,
         UNUserNotificationCenter,
     };
     use tauri::AppHandle;
@@ -215,6 +324,69 @@ pub mod macos {
         }
     }
 
+    pub fn deliver_native(
+        app: &AppHandle,
+        id: String,
+        title: String,
+        body: String,
+        silent: bool,
+    ) -> Result<bool, BridgeError> {
+        let (tx, rx) = mpsc::sync_channel::<bool>(1);
+        app.run_on_main_thread(move || {
+            let content = UNMutableNotificationContent::new();
+            content.setTitle(&NSString::from_str(&title));
+            content.setBody(&NSString::from_str(&body));
+            if !silent {
+                let sound = UNNotificationSound::defaultSound();
+                content.setSound(Some(&sound));
+            }
+            let identifier = NSString::from_str(&id);
+            let request = UNNotificationRequest::requestWithIdentifier_content_trigger(
+                &identifier,
+                &content,
+                None,
+            );
+            let block = RcBlock::new(move |error: *mut NSError| {
+                let _ = tx.send(error.is_null());
+            });
+            let center = UNUserNotificationCenter::currentNotificationCenter();
+            center.addNotificationRequest_withCompletionHandler(&request, Some(&block));
+        })
+        .map_err(|error| BridgeError::message(format!("deliver: dispatch failed: {error}")))?;
+        rx.recv_timeout(CALLBACK_TIMEOUT)
+            .map_err(|_| BridgeError::message("deliver: callback timed out"))
+    }
+
+    pub fn dismiss_native(app: &AppHandle, ids: Vec<String>) -> Result<u32, BridgeError> {
+        let (tx, rx) = mpsc::sync_channel::<u32>(1);
+        app.run_on_main_thread(move || {
+            let wanted: std::collections::HashSet<String> = ids.into_iter().collect();
+            let block = RcBlock::new(move |delivered: NonNull<NSArray<UNNotification>>| {
+                // SAFETY: 回调期数组有效。
+                let delivered = unsafe { delivered.as_ref() };
+                let mut matched: Vec<objc2::rc::Retained<NSString>> = Vec::new();
+                for notification in delivered.iter() {
+                    let identifier = notification.request().identifier();
+                    if wanted.contains(&identifier.to_string()) {
+                        matched.push(identifier);
+                    }
+                }
+                let dismissed = matched.len() as u32;
+                if !matched.is_empty() {
+                    let array = NSArray::from_retained_slice(&matched);
+                    let center = UNUserNotificationCenter::currentNotificationCenter();
+                    center.removeDeliveredNotificationsWithIdentifiers(&array);
+                }
+                let _ = tx.send(dismissed);
+            });
+            let center = UNUserNotificationCenter::currentNotificationCenter();
+            center.getDeliveredNotificationsWithCompletionHandler(&block);
+        })
+        .map_err(|error| BridgeError::message(format!("dismiss: dispatch failed: {error}")))?;
+        rx.recv_timeout(CALLBACK_TIMEOUT)
+            .map_err(|_| BridgeError::message("dismiss: callback timed out"))
+    }
+
     #[cfg(test)]
     mod tests {
         use super::*;
@@ -288,6 +460,42 @@ mod tests {
             })
             .unwrap(),
             serde_json::json!({ "status": "authorized", "available": true })
+        );
+    }
+
+    #[test]
+    fn deliver_args_and_results_serialize_camel_case() {
+        let args: NotificationsDeliverNativeArgs = serde_json::from_value(serde_json::json!({
+            "id": "agent:w1:leaf:1",
+            "title": "claude",
+            "body": "Waiting for input",
+            "silent": true
+        }))
+        .unwrap();
+        assert_eq!(args.id, "agent:w1:leaf:1");
+        assert!(args.silent);
+        assert_eq!(
+            serde_json::to_value(NotificationNativeDeliverResult { ok: true, error: None }).unwrap(),
+            serde_json::json!({ "ok": true })
+        );
+        assert_eq!(
+            serde_json::to_value(NotificationNativeDeliverResult {
+                ok: false,
+                error: Some("boom".to_string()),
+            })
+            .unwrap(),
+            serde_json::json!({ "ok": false, "error": "boom" })
+        );
+    }
+
+    #[test]
+    fn dismiss_args_and_result_serialize_camel_case() {
+        let args: NotificationsDismissNativeArgs =
+            serde_json::from_value(serde_json::json!({ "ids": ["a", "b"] })).unwrap();
+        assert_eq!(args.ids, vec!["a".to_string(), "b".to_string()]);
+        assert_eq!(
+            serde_json::to_value(NotificationNativeDismissResult { dismissed: 1 }).unwrap(),
+            serde_json::json!({ "dismissed": 1 })
         );
     }
 }

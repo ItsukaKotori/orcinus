@@ -34,6 +34,8 @@ export const commands = {
 	notificationsReadSound: (args: NotificationsReadSoundArgs) => typedError<NotificationSoundReadResult_Serialize, BridgeError>(__TAURI_INVOKE("notifications_read_sound", { args })),
 	notificationsGetAuthorizationStatus: () => typedError<NotificationAuthorizationResult, BridgeError>(__TAURI_INVOKE("notifications_get_authorization_status")),
 	notificationsRequestAuthorization: () => typedError<NotificationAuthorizationResult, BridgeError>(__TAURI_INVOKE("notifications_request_authorization")),
+	notificationsDeliverNative: (args: NotificationsDeliverNativeArgs) => typedError<NotificationNativeDeliverResult_Serialize, BridgeError>(__TAURI_INVOKE("notifications_deliver_native", { args })),
+	notificationsDismissNative: (args: NotificationsDismissNativeArgs) => typedError<NotificationNativeDismissResult, BridgeError>(__TAURI_INVOKE("notifications_dismiss_native", { args })),
 	/**  Read the full workspace session state as one JSON object text. */
 	sessionGet: () => typedError<string, BridgeError>(__TAURI_INVOKE("session_get")),
 	/**  Whole-state replace; keys absent from the payload are deleted. */
@@ -1231,6 +1233,22 @@ export type NotificationAuthorizationResult = {
 
 export type NotificationAuthorizationStatus = "authorized" | "denied" | "not-determined" | "unknown";
 
+export type NotificationNativeDeliverResult = NotificationNativeDeliverResult_Serialize | NotificationNativeDeliverResult_Deserialize;
+
+export type NotificationNativeDeliverResult_Deserialize = {
+	ok: boolean,
+	error: string | null,
+};
+
+export type NotificationNativeDeliverResult_Serialize = {
+	ok: boolean,
+	error?: string | null,
+};
+
+export type NotificationNativeDismissResult = {
+	dismissed: number,
+};
+
 export type NotificationSoundReadResult = NotificationSoundReadResult_Serialize | NotificationSoundReadResult_Deserialize;
 
 export type NotificationSoundReadResult_Deserialize = {
@@ -1247,6 +1265,17 @@ export type NotificationSoundReadResult_Serialize = {
 	mimeType?: string | null,
 	path?: string | null,
 	reason?: string | null,
+};
+
+export type NotificationsDeliverNativeArgs = {
+	id: string,
+	title: string,
+	body: string,
+	silent?: boolean,
+};
+
+export type NotificationsDismissNativeArgs = {
+	ids: string[],
 };
 
 export type NotificationsReadSoundArgs = {
