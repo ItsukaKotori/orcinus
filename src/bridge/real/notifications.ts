@@ -4,6 +4,7 @@ import {
   requestPermission,
   sendNotification
 } from '@tauri-apps/plugin-notification'
+import { builtInSoundUrl } from '../../renderer/src/lib/built-in-notification-sounds'
 import type { PreloadApi } from '../../shared/preload-api/api-types'
 import type {
   NotificationDispatchRequest,
@@ -73,6 +74,19 @@ function platformForPermissionStatus(): NodeJS.Platform {
   const bootstrap = getBootstrap()
   const platform = bootstrap?.platform?.platform
   return (platform as NodeJS.Platform | undefined) ?? 'darwin'
+}
+
+function playAudio(url: string, volume: number | null): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const audio = new Audio(url)
+    if (volume !== null) {
+      // Why: renderer contract is 0..100 (preload divides by 100); Audio.volume is 0..1.
+      audio.volume = Math.min(1, Math.max(0, volume))
+    }
+    audio.onended = () => resolve()
+    audio.onerror = () => reject(new Error('playback failed'))
+    void audio.play().catch(reject)
+  })
 }
 
 export function createNotificationsRealApi(): PreloadApi['notifications'] {
@@ -152,8 +166,28 @@ export function createNotificationsRealApi(): PreloadApi['notifications'] {
     },
     playSound: async (options): Promise<NotificationSoundResult> => {
       const settings = getBootstrap()?.settings?.notifications
+      const volume = typeof options?.volume === 'number' ? options.volume / 100 : null
+      const soundId = settings?.customSoundId
+      if (soundId && soundId !== 'custom' && soundId !== 'system') {
+        const url = builtInSoundUrl(soundId)
+        if (!url) {
+          return { played: false, reason: 'missing-path' }
+        }
+        if (options?.force !== true && playingSoundPaths.has(soundId)) {
+          return { played: false, reason: 'deduped' }
+        }
+        playingSoundPaths.add(soundId)
+        try {
+          await playAudio(url, volume)
+          return { played: true }
+        } catch {
+          return { played: false, reason: 'playback-failed' }
+        } finally {
+          playingSoundPaths.delete(soundId)
+        }
+      }
       const path = settings?.customSoundPath
-      if (!path || settings?.customSoundId !== 'custom') {
+      if (!path || soundId !== 'custom') {
         return { played: false, reason: 'missing-path' }
       }
       // Why: preload semantics — `force` replays while the same path is still ringing.
@@ -184,16 +218,7 @@ export function createNotificationsRealApi(): PreloadApi['notifications'] {
       const objectUrl = URL.createObjectURL(new Blob([bytes], { type: loaded.mimeType }))
       playingSoundPaths.add(path)
       try {
-        await new Promise<void>((resolve, reject) => {
-          const audio = new Audio(objectUrl)
-          if (typeof options?.volume === 'number') {
-            // Why: renderer contract is 0..100 (preload divides by 100); Audio.volume is 0..1.
-            audio.volume = Math.min(1, Math.max(0, options.volume / 100))
-          }
-          audio.onended = () => resolve()
-          audio.onerror = () => reject(new Error('playback failed'))
-          void audio.play().catch(reject)
-        })
+        await playAudio(objectUrl, volume)
         return { played: true }
       } catch {
         return { played: false, reason: 'playback-failed' }

@@ -145,9 +145,11 @@ describe('notifications real bridge', () => {
     const constructedAudios: Array<{ volume: number }> = []
     class FakeAudio {
       volume = 1
+      source: string
       onended: (() => void) | null = null
       onerror: (() => void) | null = null
-      constructor() {
+      constructor(src: string) {
+        this.source = src
         constructedAudios.push(this)
       }
       play(): Promise<void> {
@@ -166,5 +168,50 @@ describe('notifications real bridge', () => {
     expect(played).toEqual(['play'])
     expect(constructedAudios[0]?.volume).toBe(0.3)
     vi.unstubAllGlobals()
+  })
+
+  it('plays built-in sounds from bundled assets, dedupes while playing and honors force', async () => {
+    installSettings({ customSoundId: 'two-tone' })
+    const sources: string[] = []
+    const volumes: number[] = []
+    const pending: Array<() => void> = []
+    class FakeAudio {
+      volume = 1
+      onended: (() => void) | null = null
+      onerror: (() => void) | null = null
+      constructor(src: string) {
+        sources.push(src)
+      }
+      play(): Promise<void> {
+        volumes.push(this.volume)
+        pending.push(() => this.onended?.())
+        return Promise.resolve()
+      }
+    }
+    vi.stubGlobal('Audio', FakeAudio)
+    const api = createNotificationsRealApi()
+    // 第一次调用同步注册在播集合（playAudio 之前的 add 是同步的）。
+    const first = api.playSound({ volume: 60 })
+    expect(await api.playSound({ volume: 60 })).toEqual({ played: false, reason: 'deduped' })
+    const forced = api.playSound({ volume: 60, force: true })
+    pending.forEach((finish) => finish())
+    expect(await first).toEqual({ played: true })
+    expect(await forced).toEqual({ played: true })
+    expect(sources).toEqual([expect.stringMatching(/two-tone/), expect.stringMatching(/two-tone/)])
+    expect(volumes[0]).toBe(0.6)
+    vi.unstubAllGlobals()
+  })
+
+  it('returns missing-path for system and unknown ids', async () => {
+    installSettings({ customSoundId: 'system' })
+    expect(await createNotificationsRealApi().playSound({})).toEqual({
+      played: false,
+      reason: 'missing-path'
+    })
+    installSettings({ customSoundId: 'not-a-sound' as never })
+    expect(await createNotificationsRealApi().playSound({})).toEqual({
+      played: false,
+      reason: 'missing-path'
+    })
   })
 })
