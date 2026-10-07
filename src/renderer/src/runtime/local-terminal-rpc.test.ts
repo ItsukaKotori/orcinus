@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AppState } from '@/store/types'
 import { callLocalTerminalRpc, isLocalTerminalRpcMethod } from './local-terminal-rpc'
+import { makeAgentStatusEntry } from './sync-runtime-graph-test-harness'
 
 const LEAF_ID = '11111111-1111-4111-8111-111111111111'
 
@@ -109,5 +110,44 @@ describe('local terminal RPC adapter', () => {
       name: 'RuntimeRpcCallError',
       code: 'method_not_found'
     })
+  })
+
+  it('maps fresh hook states to the runtime contract', async () => {
+    testState.appState = makeState({
+      agentStatusByPaneKey: {
+        [`tab-1:${LEAF_ID}`]: makeAgentStatusEntry({
+          state: 'blocked',
+          updatedAt: Date.now()
+        })
+      }
+    } as Partial<AppState>)
+    await expect(
+      callLocalTerminalRpc('terminal.agentStatus', { terminal: 'pty-1' })
+    ).resolves.toEqual({
+      agentStatus: { handle: 'pty-1', isRunningAgent: true, status: 'permission' }
+    })
+  })
+
+  it('falls back to agent title evidence when no fresh hook entry exists', async () => {
+    testState.appState = makeState({
+      runtimePaneTitlesByTabId: { 'tab-1': { 0: '✳ Claude Code' } }
+    } as Partial<AppState>)
+    await expect(
+      callLocalTerminalRpc('terminal.agentStatus', { terminal: 'pty-1' })
+    ).resolves.toEqual({
+      agentStatus: { handle: 'pty-1', isRunningAgent: true, status: 'idle' }
+    })
+  })
+
+  it('reports no agent when neither hook nor title evidence exists', async () => {
+    await expect(
+      callLocalTerminalRpc('terminal.isRunningAgent', { terminal: 'pty-1' })
+    ).resolves.toEqual({ isRunningAgent: false })
+  })
+
+  it('rejects stale handles', async () => {
+    await expect(
+      callLocalTerminalRpc('terminal.agentStatus', { terminal: 'pty-gone' })
+    ).rejects.toMatchObject({ name: 'RuntimeRpcCallError', code: 'terminal_handle_stale' })
   })
 })

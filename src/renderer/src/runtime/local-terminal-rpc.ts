@@ -1,10 +1,19 @@
 import type {
+  RuntimeTerminalAgentStatus,
+  RuntimeTerminalAgentStatusState,
   RuntimeTerminalListResult,
   RuntimeTerminalSummary
 } from '../../../shared/runtime-types'
+import type { AgentStatusState } from '../../../shared/agent-status-types'
+import { AGENT_STATUS_STALE_AFTER_MS } from '../../../shared/agent-status-types'
 import type { AppState } from '@/store/types'
 import { useAppStore } from '@/store'
 import { getIndexedWorktreeById } from '@/store/worktree-repo-index'
+import {
+  classifyTitleActivity,
+  isExplicitAgentStatusFresh,
+  resolveTitleActivityLabel
+} from '@/lib/pane-agent-evidence'
 import { resolveRuntimePaneTitleForLeaf } from '@/lib/runtime-pane-title-leaf-id'
 import { RuntimeRpcCallError } from './runtime-rpc-result'
 
@@ -40,6 +49,12 @@ export async function callLocalTerminalRpc<TResult>(
   switch (method) {
     case 'terminal.list':
       return (await listLocalTerminals(params)) as TResult
+    case 'terminal.agentStatus':
+      return (await getLocalAgentStatus(params)) as TResult
+    case 'terminal.isRunningAgent': {
+      const { agentStatus } = await getLocalAgentStatus(params)
+      return { isRunningAgent: agentStatus.isRunningAgent } as TResult
+    }
     default:
       throw localTerminalFailure(
         'method_not_found',
@@ -119,6 +134,56 @@ export function readPaneTitle(state: AppState, location: LocalTerminalLocation):
   const tabs = state.tabsByWorktree?.[location.worktreeId]
   const tab = tabs?.find((entry) => entry.id === location.tabId)
   return tab?.title ?? null
+}
+
+export function mapAgentStatusState(state: AgentStatusState): RuntimeTerminalAgentStatusState {
+  switch (state) {
+    case 'working':
+      return 'working'
+    case 'blocked':
+      return 'permission'
+    case 'waiting':
+    case 'done':
+      return 'idle'
+  }
+}
+
+export function readLocalAgentStatus(
+  state: AppState,
+  location: LocalTerminalLocation
+): RuntimeTerminalAgentStatusState {
+  const entry = state.agentStatusByPaneKey?.[`${location.tabId}:${location.leafId}`]
+  if (entry && isExplicitAgentStatusFresh(entry, Date.now(), AGENT_STATUS_STALE_AFTER_MS)) {
+    return mapAgentStatusState(entry.state)
+  }
+  return null
+}
+
+export function hasAgentTitleEvidence(state: AppState, location: LocalTerminalLocation): boolean {
+  const title = readPaneTitle(state, location)
+  return title !== null && classifyTitleActivity(title) !== null && resolveTitleActivityLabel(title) !== null
+}
+
+export function hasIdleTitleEvidence(state: AppState, location: LocalTerminalLocation): boolean {
+  const title = readPaneTitle(state, location)
+  return title !== null && classifyTitleActivity(title) === 'idle'
+}
+
+async function getLocalAgentStatus(params: unknown): Promise<{ agentStatus: RuntimeTerminalAgentStatus }> {
+  const terminal = readTerminalHandle(params)
+  const state = useAppStore.getState()
+  const location = findLocalTerminalLocation(state, terminal)
+  if (!location) {
+    throw localTerminalFailure('terminal_handle_stale', `Unknown terminal: ${terminal}`)
+  }
+  const hookStatus = readLocalAgentStatus(state, location)
+  if (hookStatus !== null) {
+    return { agentStatus: { handle: terminal, isRunningAgent: true, status: hookStatus } }
+  }
+  const titleEvidence = hasAgentTitleEvidence(state, location)
+  return {
+    agentStatus: { handle: terminal, isRunningAgent: titleEvidence, status: titleEvidence ? 'idle' : null }
+  }
 }
 
 function readWorktreeSelectorFilter(value: unknown): string | null {
