@@ -1,6 +1,6 @@
 # Phase 2B：agent hook server + 状态接真 + 完成通知 实施计划
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** claude hook 回调链路打通——新 crate `ade-hooks` 接收 hook、归因到 pane 并转发 renderer；`agentStatus` 与 `notifications` 两个既有契约域在真实模式下接真，点亮状态面/完成通知/未读面。
 
@@ -40,7 +40,7 @@
   - `write_endpoint_file(dir: &Path, fields: &EndpointFields) -> io::Result<bool>`（false = 值含 shell 元字符拒绝写）
   - `pty_env(fields: &EndpointFields, endpoint_path: &Path) -> HashMap<String,String>`
 
-- [ ] **Step 1: 建 crate 与 Cargo 依赖**
+- [x] **Step 1: 建 crate 与 Cargo 依赖**
 
 `src-tauri/crates/ade-hooks/Cargo.toml`：
 
@@ -71,7 +71,7 @@ tempfile = "3"
 pub mod endpoint;
 ```
 
-- [ ] **Step 2: 写失败测试**
+- [x] **Step 2: 写失败测试**
 
 创建 `src-tauri/crates/ade-hooks/src/endpoint.rs`，先只写类型/函数签名（`todo!()` 占位即可视为红）：
 
@@ -208,12 +208,12 @@ mod tests {
 }
 ```
 
-- [ ] **Step 3: 运行测试确认失败**
+- [x] **Step 3: 运行测试确认失败**
 
 Run: `cargo test -p ade-hooks`（在 `src-tauri/` 下）
 Expected: 编译通过但测试 `todo!()` panic（或 `todo` 未实现即红）
 
-- [ ] **Step 4: 实现**
+- [x] **Step 4: 实现**
 
 把 `todo!()` 替换为：
 
@@ -311,12 +311,12 @@ pub fn pty_env(fields: &EndpointFields, endpoint_path: &Path) -> HashMap<String,
 
 （把 `use std::path::{Path, PathBuf};` 收敛为实际使用的 `Path`；`PathBuf` 未用则删除。）
 
-- [ ] **Step 5: 运行测试确认通过**
+- [x] **Step 5: 运行测试确认通过**
 
 Run: `cargo test -p ade-hooks`
 Expected: 5 tests PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src-tauri/crates/ade-hooks
@@ -342,7 +342,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - `StatusCache::snapshot(&self) -> Vec<CachedHookEvent>`（按 `received_at` 升序）
   - `StatusCache::flush_sync(&self)` / `StatusCache::shutdown(&self)`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 创建 `src-tauri/crates/ade-hooks/src/cache.rs`（实现先 `todo!()`，测试完整）：
 
@@ -527,12 +527,12 @@ mod tests {
 }
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 Run: `cargo test -p ade-hooks`
 Expected: cache 测试 panic（`todo!()`）
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 在 `lib.rs` 加 `pub mod cache;` 与 `pub use cache::CachedHookEvent;`。cache.rs 的 `StatusCache`/`CacheInner` 字段换成下面 Arc + `last_record_at` 版本（writer 线程需要共享，且 shutdown 不能被长防抖挂住）：
 
@@ -714,12 +714,12 @@ pub fn now_ms() -> i64 {
 
 `snapshot_sorts_*` 测试显式传 60s 防抖，靠 `record` 内存即时可见（防抖写不参与该断言）。
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 Run: `cargo test -p ade-hooks`
 Expected: Task 1 + cache 共 9 tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src-tauri/crates/ade-hooks
@@ -746,7 +746,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 
 脚本语义（规格 §3.4，对齐 fork `hook-service.ts`/`hook-stdin-contract.ts`）：无条件 `printf "{}\n"`（PermissionRequest 需要非空 stdout）→ 捕获 stdin（空退出）→ spool 函数（Tool 进度事件不 spool、5MiB 上限、7 天截断、dir 0700/file 0600、单行 JSON）→ source endpoint（先 `unset` transport 防旧值）→ 缺 port/token/paneKey 落 spool 退出 → raw-json 优先、form 回退、curl 失败落 spool。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 创建 `src-tauri/crates/ade-hooks/src/script.rs`：
 
@@ -823,12 +823,12 @@ mod tests {
 }
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 Run: `cargo test -p ade-hooks script`
 Expected: panic（`todo!()`）
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `lib.rs` 加 `pub mod script;`。`managed_script_contents` 返回常量字符串（用 `concat!` 或 `r#"…"#` 均可，此处用字面量）：
 
@@ -935,12 +935,12 @@ pub fn write_managed_script(home: &str) -> io::Result<PathBuf> {
 
 > 注：`r#"…"#` 内 `\037`/`\n` 是脚本字面量（printf 的八进制转义），不会在 Rust 字符串转义；上面的 `\n` 在 `printf '\n{...}'` 处是两字符 `\`+`n`（对 raw string 正确）。
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 Run: `cargo test -p ade-hooks script`
 Expected: 4 tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src-tauri/crates/ade-hooks
@@ -965,7 +965,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - `remove_claude_hooks(home: &str) -> HookInstallState`
   - 事件集（12）：SessionStart、UserPromptSubmit、Stop、StopFailure、SubagentStart、SubagentStop、TeammateIdle、PreToolUse(`*`)、PostToolUse(`*`)、PostToolUseFailure(`*`)、PermissionRequest(`*`)、PostCompact（规格 §3.3；不装 Notification/PreCompact）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 创建 `src-tauri/crates/ade-hooks/src/installer.rs`：
 
@@ -1204,12 +1204,12 @@ mod tests {
 }
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 Run: `cargo test -p ade-hooks installer`
 Expected: panic（`todo!()`）
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `lib.rs` 加：
 
@@ -1446,12 +1446,12 @@ fn is_executable_file(path: &Path) -> bool {
 }
 ```
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 Run: `cargo test -p ade-hooks installer`
 Expected: 8 tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src-tauri/crates/ade-hooks
@@ -1476,7 +1476,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - HTTP 契约（规格 §3.2/§4）：`/hook/claude` 之外的路径 404、非 POST 与 token 失败 403、body ≤1MB（413）、5s slowloris 断连、成功/畸形载荷 204（fail-open）
   - 归因：`x-orca-agent-hook-meta`(base64, `\x1f` 六段) 或单头/表单字段；空 paneKey 计数丢弃
 
-- [ ] **Step 1: 写失败测试（纯函数 + 端到端 raw TCP）**
+- [x] **Step 1: 写失败测试（纯函数 + 端到端 raw TCP）**
 
 创建 `src-tauri/crates/ade-hooks/src/server.rs`（先写测试与签名）：
 
@@ -1763,12 +1763,12 @@ mod tests {
 }
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 Run: `cargo test -p ade-hooks server`
 Expected: 编译失败或 `todo!()` panic
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `lib.rs` 加：
 
@@ -2208,12 +2208,12 @@ fn drain_spool(dir: &Path, cache: &Arc<StatusCache>, callback: &SharedCallback) 
 
 删除 `script` 未使用的 import（`managed_script_path` 不需要；Task 4 已在 installer 内部写脚本）。
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 Run: `cargo test -p ade-hooks`
 Expected: 全部 PASS（server 6 个）
 
-- [ ] **Step 5: 根 Cargo 挂 ade-hooks**
+- [x] **Step 5: 根 Cargo 挂 ade-hooks**
 
 `src-tauri/Cargo.toml` `[dependencies]` 增：
 
@@ -2224,7 +2224,7 @@ ade-hooks = { path = "crates/ade-hooks" }
 Run: `cargo check --workspace`
 Expected: exit 0（根包此时尚未使用 ade-hooks，无影响；Task 6 使用）
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/crates/ade-hooks
@@ -2255,7 +2255,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - 命令 `agent_status_get_snapshot() -> Vec<AgentHookSnapshotEntry>`
   - 设置读取：`agentStatusHooksEnabled`（缺省 true）在启动时决定安装 reconcile
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `events.rs` `mod tests` 追加：
 
@@ -2321,12 +2321,12 @@ mod tests {
 
 在 `specta_export.rs` `export_lists_every_command` 清单里加 `"agent_status_get_snapshot"`（`collect_commands!` 与 `.typ::<commands::events::AgentHookRawPayload>()` 在 Step 3 加）。
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `cargo test -p ade-bridge`
 Expected: 编译失败（类型/命令缺失）
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `src-tauri/crates/ade-bridge/Cargo.toml` 增：
 
@@ -2484,17 +2484,17 @@ pub async fn agent_status_get_snapshot(
 
 `specta_export.rs`：`collect_commands!` 在 `commands::agent_sessions::agent_sessions_resolve_capture,` 后加 `commands::agent_status::agent_status_get_snapshot,`；`.typ` 链上加 `.typ::<crate::events::AgentHookRawPayload>()` 与 `.typ::<commands::agent_status::AgentHookSnapshotEntry>()`；`export_lists_every_command` 清单加 `"agent_status_get_snapshot"`。
 
-- [ ] **Step 4: 重新生成 bindings**
+- [x] **Step 4: 重新生成 bindings**
 
 Run: `cargo run -p ade-bridge --bin export-bindings`（在 `src-tauri/` 下）
 Expected: `src/bridge/real/generated/tauri-bindings.ts` 出现 `agent_status_get_snapshot` 与两个新类型
 
-- [ ] **Step 5: 运行测试确认通过**
+- [x] **Step 5: 运行测试确认通过**
 
 Run: `cargo test -p ade-bridge`
 Expected: PASS（含 `bindings_are_fresh`/`export_lists_every_command`）
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src-tauri src/bridge/real/generated/tauri-bindings.ts
@@ -2517,7 +2517,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - `build_spawn_env(base, hooks_env, tab_id, leaf_id, worktree_id, launch_token) -> HashMap<String,String>`
   - spawn env 追加：`ORCA_AGENT_HOOK_{PORT,TOKEN,ENV,VERSION,TRANSPORT,ENDPOINT}`、`ORCA_PANE_KEY=${tabId}:${leafId}`、`ORCA_TAB_ID`、`ORCA_WORKTREE_ID`、`ORCA_AGENT_LAUNCH_TOKEN`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `commands/pty.rs` `mod tests` 追加：
 
@@ -2587,12 +2587,12 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 
 并把 `spawn_args_ignore_contract_only_fields_and_default_missing` 的 fixture 中 `"tabId": "t1", "leafId": "l1",` 两行删除（它们已不是 contract-only 字段），保留 `"launchToken": "tok"` 仍在 fixture（该测试只断言已建模字段，launchToken 现在已建模但断言不涉及）。
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `cargo test -p ade-bridge pty`
 Expected: 编译失败（字段/函数缺失）
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `PtySpawnArgs` 增字段：
 
@@ -2664,12 +2664,12 @@ pub fn build_spawn_env(
     };
 ```
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 Run: `cargo test -p ade-bridge pty`
 Expected: PASS（新增 3 个 + 既有回归全绿）
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src-tauri/crates/ade-bridge/src/commands/pty.rs
@@ -2700,7 +2700,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - 命令 `notifications_open_system_settings()`
   - 命令 `notifications_read_sound({ args: { path } }) -> NotificationSoundReadResult { ok, dataBase64?, mimeType?, path?, reason? }`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `settings.rs` tests 追加：
 
@@ -2764,12 +2764,12 @@ mod tests {
 
 `specta_export.rs`：`collect_commands!` 加 `commands::notifications::notifications_open_system_settings,`、`commands::notifications::notifications_read_sound,`；`.typ` 加 `.typ::<commands::notifications::NotificationSoundReadResult>()`；清单加两条命令名。
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `cargo test -p ade-bridge settings notifications`
 Expected: 编译失败
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `settings.rs`：加纯函数与运行时接线：
 
@@ -2920,12 +2920,12 @@ pub async fn notifications_open_system_settings() -> Result<(), BridgeError> {
 }
 ```
 
-- [ ] **Step 4: 重新生成 bindings 并跑测试**
+- [x] **Step 4: 重新生成 bindings 并跑测试**
 
 Run: `cargo run -p ade-bridge --bin export-bindings && cargo test -p ade-bridge`
 Expected: `notifications_open_system_settings`/`notifications_read_sound` 进 bindings；全绿
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src-tauri src/bridge/real/generated/tauri-bindings.ts
@@ -2943,7 +2943,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 
 **背景（写计划时的实地核查）**：`src/shared/agent-hook-listener.ts` 的归一化图（72 文件）包含 `transcript-reader.ts`（`node:fs` + 模块顶层 `Buffer.alloc(0)`）、`hook-envelope.ts`（`node:buffer`）、`agent-hook-relay.ts`/`command-code-transcript.ts`（`node:crypto`）、`grok-result-discovery.ts`（`node:os`）、`grok-session-paths.ts`（`node:fs/promises`/`node:path`）。rolldown-vite 生产构建把 node 内置外置成 `{}`、dev server 外置成会抛错的 Proxy——renderer 直接 import 会在 dev/加载期炸。用精确 alias 把这 7 个 specifier 指到同一 shim：claude 路径真正用到的只有 `Buffer.alloc(0)`（模块加载）与函数内的 transcript fallback（调用点已被 try/catch fail-open 包住，shim 抛错等价读失败）。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `src/renderer/src/lib/browser-node-shims.test.ts`：
 
@@ -2982,12 +2982,12 @@ describe('browser node shims for the agent-hook normalization graph', () => {
 })
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `pnpm vitest run src/renderer/src/lib/browser-node-shims.test.ts`
 Expected: 模块不存在 → FAIL
 
-- [ ] **Step 3: 实现 shim 与 alias**
+- [x] **Step 3: 实现 shim 与 alias**
 
 `src/renderer/src/lib/browser-node-shims.ts`：
 
@@ -3129,12 +3129,12 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 4: 运行确认通过**
+- [x] **Step 4: 运行确认通过**
 
 Run: `pnpm vitest run src/renderer/src/lib/browser-node-shims.test.ts && pnpm build:web`
 Expected: 3 tests PASS；build 成功（若出现 node 外置告警，说明 alias 未命中，必须修 regex 直到无 `externalized` 告警）
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add vite.config.ts src/renderer/src/lib/browser-node-shims.ts src/renderer/src/lib/browser-node-shims.test.ts
@@ -3161,7 +3161,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - `getSnapshot`：命令 → 逐条归一化（`restored && state !== 'done'` → `restoredUnconfirmed`）
   - 其余契约方法留 fallback（规格 §2.2/§3.7）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `src/bridge/real/agent-status.test.ts`：
 
@@ -3289,12 +3289,12 @@ describe('agentStatus real bridge', () => {
 })
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `pnpm vitest run src/bridge/real/agent-status.test.ts`
 Expected: 模块不存在 → FAIL
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `src/bridge/real/agent-status.ts`：
 
@@ -3431,17 +3431,17 @@ Rust 事件当前不携带 `env`；TS 侧 `raw.env` 为 undefined 时 `expectedE
 
 - `realApiFor` 增 `case 'agentStatus': return createAgentStatusRealApi()`。
 
-- [ ] **Step 4: 运行确认通过**
+- [x] **Step 4: 运行确认通过**
 
 Run: `pnpm vitest run src/bridge/real/agent-status.test.ts src/bridge/real/parity.test.ts src/bridge/create-api.test.ts src/bridge/mock/boot-namespaces.test.ts`
 Expected: 全绿（parity 的 agentStatus case 断言 real 显式方法与 fallback 拒答）
 
-- [ ] **Step 5: typecheck**
+- [x] **Step 5: typecheck**
 
 Run: `pnpm typecheck`
 Expected: exit 0
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/bridge/real/agent-status.ts src/bridge/real/agent-status.test.ts src/bridge/create-api.ts src/bridge/real/parity.test.ts
@@ -3469,12 +3469,12 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 2. **dismiss**：插件 `removeActive` 只收 32-bit 数字 id，`buildAgentNotificationId` 是字符串稳定 id（规格 §3.8）。用 FNV-1a 32 位哈希把字符串 id 映射为插件 id，`removeActive` 失败/不支持时返回 `{dismissed:0}`（本域无生产消费方，不阻塞验收）。
 3. **playSound**：仅支持 `customSoundId === 'custom'` + `customSoundPath`（内置 9 音效资产不在 2B 范围）；经宿主 `notifications_read_sound` 取字节 → Blob → `Audio`，播放中同路径 → `deduped`。其余情况 `missing-path`。
 
-- [ ] **Step 1: 加 npm 依赖**
+- [x] **Step 1: 加 npm 依赖**
 
 Run: `pnpm add @tauri-apps/plugin-notification@^2`
 Expected: package.json dependencies 出现该包；lockfile 更新
 
-- [ ] **Step 2: 写失败测试**
+- [x] **Step 2: 写失败测试**
 
 `src/bridge/real/notifications.test.ts`（`document` 需要 DOM 环境）：
 
@@ -3661,12 +3661,12 @@ describe('notifications real bridge', () => {
 
 （顶部加 `import { createNotificationsApi } from './notifications-api'`。）
 
-- [ ] **Step 3: 运行确认失败**
+- [x] **Step 3: 运行确认失败**
 
 Run: `pnpm vitest run src/bridge/real/notifications.test.ts`
 Expected: 模块不存在 → FAIL
 
-- [ ] **Step 4: 实现**
+- [x] **Step 4: 实现**
 
 `src/bridge/mock/notifications-api.ts`：
 
@@ -3925,17 +3925,17 @@ export function createNotificationsRealApi(): PreloadApi['notifications'] {
 
 - `realApiFor` 增 `case 'notifications': return createNotificationsRealApi()`。
 
-- [ ] **Step 5: 运行确认通过**
+- [x] **Step 5: 运行确认通过**
 
 Run: `pnpm vitest run src/bridge/real/notifications.test.ts src/bridge/real/parity.test.ts src/bridge/create-api.test.ts src/bridge/mock/boot-namespaces.test.ts`
 Expected: 全绿
 
-- [ ] **Step 6: typecheck**
+- [x] **Step 6: typecheck**
 
 Run: `pnpm typecheck`
 Expected: exit 0（若 `document`/`Audio`/`URL` 在 node 类型下缺失，测试文件用 `// @vitest-environment happy-dom` pragma 或 `vi.stubGlobal`；按报错调整，不得改契约）
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add package.json pnpm-lock.yaml src/bridge/real/notifications.ts src/bridge/real/notifications.test.ts src/bridge/mock/notifications-api.ts src/bridge/create-api.ts src/bridge/real/parity.test.ts src/bridge/mock/boot-namespaces.test.ts
@@ -3956,7 +3956,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - Consumes: 前 11 个 Task 的全部产物
 - Produces: 验收记录（本仓 Phase 记录的最后一环）
 
-- [ ] **Step 1: 全量自动门禁**
+- [x] **Step 1: 全量自动门禁**
 
 Run（并行或顺序）：
 
@@ -3970,6 +3970,8 @@ Expected: 三组全绿 / exit 0
 
 - [ ] **Step 2: 手工验收（规格 §1/§5.3）**
 
+> 待人工执行：本会话仅完成自动化部分（交互式 claude 链无法自动运行）；六步清单与偏差备案见 `docs/phase2b-agent-hooks-notifications-record.md`。
+
 前置：`pnpm dev` 启动；Settings → Agents 确认 `agentStatusHooksEnabled` 开；`~/.claude/settings.json` 出现 12 个托管事件；`~/.ade/agent-hooks/claude-hook.sh` 存在且 0755。
 
 1. 在终端 pane 启动 `claude`，发一条 prompt → tab/侧栏状态变 working（hook `UserPromptSubmit`）
@@ -3981,13 +3983,13 @@ Expected: 三组全绿 / exit 0
 
 任一手工项失败 → 记录到 record 文档的偏差节并修复后重跑对应自动门禁。
 
-- [ ] **Step 3: 写记录文档**
+- [x] **Step 3: 写记录文档**
 
 `docs/phase2b-agent-hooks-notifications-record.md` 按既有记录体例（参考 `docs/phase2a-persistence-session-restore-record.md`）写：交付清单（crate/命令/事件/TS 域/插件）、验收证据（三组门禁输出摘要 + 手工链结果）、规格偏差备案（至少包括：dismiss 字符串 id→32 位哈希映射、playSound 仅 custom、启动关闭 skip/显式 toggle 删除的裁定、probeDelivery `authoritative:false`）、后续（2C/2D/其余 17 源）。
 
-- [ ] **Step 4: 计划勾选同步**
+- [x] **Step 4: 计划勾选同步**
 
-把本计划全部 `- [ ]` 改为 `- [x]`（未执行项保留 `- [ ]` 并在记录文档注明）。
+把本计划全部 `- [x]` 改为 `- [x]`（未执行项保留 `- [x]` 并在记录文档注明）。
 
 - [ ] **Step 5: Commit**
 
