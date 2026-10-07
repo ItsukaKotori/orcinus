@@ -903,3 +903,48 @@ fn git_failure_degrades_to_empty_list_for_that_repo() {
     assert_eq!(all.len(), 1, "the healthy repo is still listed");
     assert_eq!(all[0].repo_id, "r-healthy");
 }
+
+#[test]
+fn update_meta_round_trips_diff_comments() {
+    let _env = hermetic_env();
+    let dir = TestDir::new("update-meta-diff-comments");
+    let repo = init_git_repo(&dir, "my-repo");
+    let meta = WorktreeMetaStore::load(dir.file("worktrees.json"));
+    let fs = FsService::new();
+    let repo_value = repo_row(&repo);
+    let worktree = create_worktree_impl(
+        &repo_value,
+        &settings(&dir),
+        &meta,
+        &fs,
+        &create_args(&repo_value, "fix-auth"),
+    )
+    .unwrap();
+
+    let comments = json!([{
+        "id": "c1",
+        "worktreeId": worktree.id,
+        "filePath": "src/a.ts",
+        "lineNumber": 3,
+        "body": "tighten this",
+        "createdAt": 1_700_000_000_000u64,
+        "updatedAt": 1_700_000_000_000u64,
+        "side": "modified"
+    }]);
+
+    let updated = update_meta_impl(
+        &repo_value,
+        &[],
+        &meta,
+        &fs,
+        &worktree.id,
+        &json!({ "diffComments": comments }),
+    )
+    .unwrap();
+    assert_eq!(updated.diff_comments, Some(comments.clone()));
+
+    // 新进程视角：重新 load 同一文件后列表仍带回注释。
+    let reloaded = WorktreeMetaStore::load(dir.file("worktrees.json"));
+    let listed = read_worktree(&repo_value, &reloaded, &fs, &worktree.id);
+    assert_eq!(listed["diffComments"], comments);
+}

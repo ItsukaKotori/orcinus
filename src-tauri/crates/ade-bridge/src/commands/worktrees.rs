@@ -104,6 +104,11 @@ pub fn apply_worktree_meta(worktree: &mut Worktree, meta: Option<&Value>) {
             worktree.workspace_status = status.to_string();
         }
     }
+    if let Some(diff_comments) = meta.get("diffComments") {
+        if diff_comments.is_array() {
+            worktree.diff_comments = Some(diff_comments.clone());
+        }
+    }
 }
 
 /// Mirrors the `displayName`/`displayNameMode` half of `mergeWorktree`

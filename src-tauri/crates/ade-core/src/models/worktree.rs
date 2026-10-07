@@ -29,6 +29,9 @@ pub struct Worktree {
     pub is_bare: bool,
     pub is_main_worktree: bool,
     pub workspace_status: String,
+    #[cfg_attr(feature = "specta", specta(type = Option<crate::json::Json>))]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub diff_comments: Option<serde_json::Value>,
 }
 
 /// `branchShort = branch.replace(/^refs\/heads\//, '')` (oracle
@@ -81,6 +84,7 @@ impl Worktree {
             is_bare,
             is_main_worktree,
             workspace_status: DEFAULT_WORKSPACE_STATUS.to_string(),
+            diff_comments: None,
         }
     }
 
@@ -112,6 +116,7 @@ impl Worktree {
             is_bare: false,
             is_main_worktree,
             workspace_status: DEFAULT_WORKSPACE_STATUS.to_string(),
+            diff_comments: None,
         }
     }
 }

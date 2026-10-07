@@ -137,11 +137,11 @@ export const commands = {
 	/**  `repos:searchBaseRefDetails`: `[{refName, localBranchName}]`. */
 	reposSearchBaseRefDetails: (args: SearchBaseRefsArgs) => typedError<Json, BridgeError>(__TAURI_INVOKE("repos_search_base_ref_details", { args })),
 	/**  Project the worktrees of one repo. */
-	worktreesList: (args: WorktreesListArgs) => typedError<Worktree[], BridgeError>(__TAURI_INVOKE("worktrees_list", { args })),
+	worktreesList: (args: WorktreesListArgs) => typedError<Worktree_Serialize[], BridgeError>(__TAURI_INVOKE("worktrees_list", { args })),
 	/**  Project every repo's worktrees, merged in registry order. */
-	worktreesListAll: () => typedError<Worktree[], BridgeError>(__TAURI_INVOKE("worktrees_list_all")),
+	worktreesListAll: () => typedError<Worktree_Serialize[], BridgeError>(__TAURI_INVOKE("worktrees_list_all")),
 	/**  Create a worktree and persist its metadata; broadcasts `worktrees:changed`. */
-	worktreesCreate: (args: WorktreesCreateArgs) => typedError<WorktreesCreateResult, BridgeError>(__TAURI_INVOKE("worktrees_create", { args })),
+	worktreesCreate: (args: WorktreesCreateArgs) => typedError<WorktreesCreateResult_Serialize, BridgeError>(__TAURI_INVOKE("worktrees_create", { args })),
 	/**  Remove a worktree, revoke its root when unused, and broadcast the change. */
 	worktreesRemove: (args: WorktreesRemoveArgs) => typedError<WorktreesRemoveResult_Serialize, BridgeError>(__TAURI_INVOKE("worktrees_remove", { args })),
 	/**  Drop a workspace's metadata and authorization without touching disk or git. */
@@ -152,7 +152,7 @@ export const commands = {
 	 *  Merge whitelisted metadata and return the merged projection row. No event:
 	 *  the renderer applies this update optimistically.
 	 */
-	worktreesUpdateMeta: (args: WorktreesUpdateMetaArgs) => typedError<Worktree, BridgeError>(__TAURI_INVOKE("worktrees_update_meta", { args })),
+	worktreesUpdateMeta: (args: WorktreesUpdateMetaArgs) => typedError<Worktree_Serialize, BridgeError>(__TAURI_INVOKE("worktrees_update_meta", { args })),
 	/**  Persist the manual worktree order (`sortOrder` = index in `orderedIds`). */
 	worktreesPersistSortOrder: (args: WorktreesPersistSortOrderArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("worktrees_persist_sort_order", { args })),
 	/**  Read the projects registry's project groups (spec §5.2). */
@@ -1940,7 +1940,18 @@ export type UiRecordFeatureInteractionArgs = {
  *  Minimal worktree projection (spec §5.3): the fields the renderer contract
  *  requires, with the oracle defaults for everything A does not persist.
  */
-export type Worktree = {
+export type Worktree = Worktree_Serialize | Worktree_Deserialize;
+
+/**  Payload for [`WORKTREES_CHANGED`] (spec §5.3). */
+export type WorktreeChangedPayload = {
+	repoId: string,
+};
+
+/**
+ *  Minimal worktree projection (spec §5.3): the fields the renderer contract
+ *  requires, with the oracle defaults for everything A does not persist.
+ */
+export type Worktree_Deserialize = {
 	id: string,
 	repoId: string,
 	displayName: string,
@@ -1960,11 +1971,34 @@ export type Worktree = {
 	isBare: boolean,
 	isMainWorktree: boolean,
 	workspaceStatus: string,
+	diffComments: Json | null,
 };
 
-/**  Payload for [`WORKTREES_CHANGED`] (spec §5.3). */
-export type WorktreeChangedPayload = {
+/**
+ *  Minimal worktree projection (spec §5.3): the fields the renderer contract
+ *  requires, with the oracle defaults for everything A does not persist.
+ */
+export type Worktree_Serialize = {
+	id: string,
 	repoId: string,
+	displayName: string,
+	displayNameMode: string,
+	comment: string,
+	linkedIssue: number | null,
+	linkedPR: number | null,
+	linkedLinearIssue: string | null,
+	isArchived: boolean,
+	isUnread: boolean,
+	isPinned: boolean,
+	sortOrder: number,
+	lastActivityAt: number,
+	path: string,
+	head: string,
+	branch: string,
+	isBare: boolean,
+	isMainWorktree: boolean,
+	workspaceStatus: string,
+	diffComments?: Json | null,
 };
 
 export type WorktreesCreateArgs = {
@@ -1984,8 +2018,26 @@ export type WorktreesCreateArgs = {
  *  metadata, so the field is omitted entirely rather than emitted with the
  *  wrong shape; follow-up config failures are logged only.
  */
-export type WorktreesCreateResult = {
-	worktree: Worktree,
+export type WorktreesCreateResult = WorktreesCreateResult_Serialize | WorktreesCreateResult_Deserialize;
+
+/**
+ *  `{ worktree }` (spec §4.4 minimal subset). The TS `CreateWorktreeResult`
+ *  declares `warnings` as `WorktreeLineageWarning[]`, and B has no lineage
+ *  metadata, so the field is omitted entirely rather than emitted with the
+ *  wrong shape; follow-up config failures are logged only.
+ */
+export type WorktreesCreateResult_Deserialize = {
+	worktree: Worktree_Deserialize,
+};
+
+/**
+ *  `{ worktree }` (spec §4.4 minimal subset). The TS `CreateWorktreeResult`
+ *  declares `warnings` as `WorktreeLineageWarning[]`, and B has no lineage
+ *  metadata, so the field is omitted entirely rather than emitted with the
+ *  wrong shape; follow-up config failures are logged only.
+ */
+export type WorktreesCreateResult_Serialize = {
+	worktree: Worktree_Serialize,
 };
 
 export type WorktreesForceDeleteArgs = {
