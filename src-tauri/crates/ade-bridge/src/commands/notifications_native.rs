@@ -168,9 +168,33 @@ pub mod macos {
         .map_err(|error| {
             BridgeError::message(format!("request authorization: dispatch failed: {error}"))
         })?;
-        let granted = rx
-            .recv_timeout(CALLBACK_TIMEOUT)
-            .map_err(|_| BridgeError::message("request authorization: callback timed out"))?;
+        // 契约：本命令绝不因「用户尚未应答系统弹窗」而失败。完成回调只在用户
+        // 作答后触发，人类应答常超过 CALLBACK_TIMEOUT；超时不是错误，而是
+        // 「仍在等待」的常态，此时以权威读口兜底（读到什么就报什么，读口也
+        // 失败则保守报 not-determined），始终保持 available: true 的同形状结果。
+        let granted = match rx.recv_timeout(CALLBACK_TIMEOUT) {
+            Ok(granted) => granted,
+            Err(_) => {
+                eprintln!(
+                    "[ade-bridge] request authorization: callback timed out; falling back to a status read"
+                );
+                return match read_status_once(app) {
+                    Ok(status) => Ok(NotificationAuthorizationResult {
+                        status,
+                        available: true,
+                    }),
+                    Err(error) => {
+                        eprintln!(
+                            "[ade-bridge] request authorization: status read after timeout failed: {error}"
+                        );
+                        Ok(NotificationAuthorizationResult {
+                            status: NotificationAuthorizationStatus::NotDetermined,
+                            available: true,
+                        })
+                    }
+                };
+            }
+        };
         // 以权威读口为准（用户点「稍后」会留在 not-determined）；读口失败时退回 granted 布尔。
         match read_status_once(app) {
             Ok(status) => Ok(NotificationAuthorizationResult {
