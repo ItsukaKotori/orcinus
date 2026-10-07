@@ -644,4 +644,36 @@ describe('fetchWorktrees', () => {
     expect(store.getState().sortEpoch).toBe(7)
     expect(result).toBe(false)
   })
+
+  it('keeps persisted diff comments from the fetched catalog', async () => {
+    const store = createTestStore()
+    const worktreeId = 'repo1::/path/wt1'
+    const existing = makeWorktree({ id: worktreeId, repoId: 'repo1', path: '/path/wt1' })
+    const comments = [
+      {
+        id: 'c1',
+        worktreeId,
+        filePath: 'src/a.ts',
+        lineNumber: 3,
+        body: 'tighten this',
+        createdAt: 1_700_000_000_000,
+        updatedAt: 1_700_000_000_000,
+        side: 'modified' as const
+      }
+    ]
+    const fetched = {
+      ...makeWorktree({ id: worktreeId, repoId: 'repo1', path: '/path/wt1' }),
+      diffComments: comments
+    }
+    const detected = makeDetectedResult('repo1', [fetched])
+    mockApi.worktrees.listDetected.mockResolvedValueOnce(detected)
+    store.setState({
+      worktreesByRepo: { repo1: [existing] },
+      detectedWorktreesByRepo: { repo1: detected }
+    } as Partial<AppState>)
+
+    await store.getState().fetchWorktrees('repo1')
+
+    expect(store.getState().worktreesByRepo.repo1?.[0]?.diffComments).toEqual(comments)
+  })
 })
