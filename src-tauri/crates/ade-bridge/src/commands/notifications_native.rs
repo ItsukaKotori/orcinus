@@ -26,6 +26,12 @@ pub async fn notifications_get_authorization_status(
 ) -> Result<NotificationAuthorizationResult, BridgeError> {
     #[cfg(target_os = "macos")]
     {
+        if !crate::commands::notifications_native::macos::is_bundled_app_process() {
+            return Ok(NotificationAuthorizationResult {
+                status: NotificationAuthorizationStatus::Unknown,
+                available: false,
+            });
+        }
         let app = state.app.clone();
         return crate::commands::run_blocking(move || {
             crate::commands::notifications_native::macos::read_authorization_status(&app)
@@ -49,6 +55,12 @@ pub async fn notifications_request_authorization(
 ) -> Result<NotificationAuthorizationResult, BridgeError> {
     #[cfg(target_os = "macos")]
     {
+        if !crate::commands::notifications_native::macos::is_bundled_app_process() {
+            return Ok(NotificationAuthorizationResult {
+                status: NotificationAuthorizationStatus::Unknown,
+                available: false,
+            });
+        }
         let app = state.app.clone();
         return crate::commands::run_blocking(move || {
             crate::commands::notifications_native::macos::request_authorization(&app)
@@ -84,6 +96,21 @@ pub mod macos {
     use crate::errors::BridgeError;
 
     const CALLBACK_TIMEOUT: Duration = Duration::from_secs(2);
+
+    /// 纯路径判定：只有真实 app bundle 内的可执行文件（`.../Foo.app/Contents/MacOS/...`）
+    /// 才可进入 UN —— 非 .app 进程 `UNUserNotificationCenter.currentNotificationCenter()`
+    /// 会抛 NSInternalInconsistencyException 直接 abort（spike 实证）。
+    pub fn is_bundled_executable_path(path: &std::path::Path) -> bool {
+        path.to_string_lossy().contains(".app/Contents/MacOS/")
+    }
+
+    /// UNUserNotificationCenter 在非 .app 进程里会抛 NSInternalInconsistencyException
+    /// 并直接 abort（spike 实证）；只有打包进程（.../Foo.app/Contents/MacOS/...）才可进入。
+    pub fn is_bundled_app_process() -> bool {
+        std::env::current_exe()
+            .map(|path| is_bundled_executable_path(&path))
+            .unwrap_or(false)
+    }
 
     pub fn map_status(status: UNAuthorizationStatus) -> NotificationAuthorizationStatus {
         if status == UNAuthorizationStatus::Authorized
@@ -167,6 +194,16 @@ pub mod macos {
     #[cfg(test)]
     mod tests {
         use super::*;
+
+        #[test]
+        fn bundled_executable_path_detection_is_pure() {
+            assert!(!is_bundled_executable_path(std::path::Path::new(
+                "/tmp/target/debug/orcinus-app"
+            )));
+            assert!(is_bundled_executable_path(std::path::Path::new(
+                "/Applications/Orcinus.app/Contents/MacOS/orcinus-app"
+            )));
+        }
 
         #[test]
         fn maps_un_status_constants_like_the_oracle() {
