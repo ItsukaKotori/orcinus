@@ -611,6 +611,7 @@ export type GhExecArgs = {
 	cwd?: string | null,
 	timeoutMs?: number | null,
 	maxBuffer?: number | null,
+	stdin?: string | null,
 };
 
 export type GhExecResult = {

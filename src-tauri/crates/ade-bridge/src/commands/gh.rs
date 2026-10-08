@@ -28,6 +28,8 @@ pub struct GhExecArgs {
     pub timeout_ms: Option<u64>,
     #[serde(default)]
     pub max_buffer: Option<usize>,
+    #[serde(default)]
+    pub stdin: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, specta::Type)]
@@ -105,6 +107,7 @@ pub fn gh_exec_impl(
     cwd: Option<&str>,
     timeout: Duration,
     max_buffer: usize,
+    stdin: Option<&str>,
 ) -> Result<GhExecResult, BridgeError> {
     let mut command = Command::new(gh_path);
     command.args(args);
@@ -114,7 +117,10 @@ pub fn gh_exec_impl(
     if std::env::var_os("GH_PROMPT_DISABLED").is_none() {
         command.env("GH_PROMPT_DISABLED", "1");
     }
-    command.stdout(Stdio::piped()).stderr(Stdio::piped());
+    command
+        .stdin(if stdin.is_some() { Stdio::piped() } else { Stdio::null() })
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
     #[cfg(unix)]
     {
         use std::os::unix::process::CommandExt;
@@ -124,6 +130,13 @@ pub fn gh_exec_impl(
     let mut child = command.spawn().map_err(|error| {
         BridgeError::message(format!("gh: command not found (spawn failed: {error})"))
     })?;
+    if let (Some(payload), Some(mut pipe)) = (stdin.map(str::to_owned), child.stdin.take()) {
+        std::thread::spawn(move || {
+            use std::io::Write;
+            let _ = pipe.write_all(payload.as_bytes());
+            // pipe 落域即关闭 stdin，子进程 cat 正常退出
+        });
+    }
     let stdout_pipe = child.stdout.take();
     let stderr_pipe = child.stderr.take();
     let exceeded = Arc::new(AtomicBool::new(false));
@@ -230,7 +243,7 @@ pub async fn gh_exec(state: State<'_, AppState>, args: GhExecArgs) -> Result<GhE
         let gh_path = resolve_gh_path_in(&cache, &extra_dirs)?;
         let timeout = read_timeout_ms(args.timeout_ms);
         let max_buffer = args.max_buffer.unwrap_or(DEFAULT_MAX_BUFFER);
-        gh_exec_impl(&gh_path, &args.args, args.cwd.as_deref(), timeout, max_buffer)
+        gh_exec_impl(&gh_path, &args.args, args.cwd.as_deref(), timeout, max_buffer, args.stdin.as_deref())
     })
     .await
 }

@@ -62,7 +62,7 @@ fn gh_exec_returns_stdout_and_zero_code() {
     let _env = env_lock();
     let dir = TestDir::new("stdout");
     let gh = dir.write_executable("gh", "#!/bin/sh\necho hello\n");
-    let result = gh_exec_impl(&gh, &[], None, Duration::from_secs(5), 1024).unwrap();
+    let result = gh_exec_impl(&gh, &[], None, Duration::from_secs(5), 1024, None).unwrap();
     assert_eq!(result.stdout.trim(), "hello");
     assert_eq!(result.stderr, "");
     assert_eq!(result.code, Some(0));
@@ -73,7 +73,7 @@ fn gh_exec_keeps_nonzero_exit_as_result() {
     let _env = env_lock();
     let dir = TestDir::new("nonzero");
     let gh = dir.write_executable("gh", "#!/bin/sh\necho boom >&2\nexit 3\n");
-    let result = gh_exec_impl(&gh, &[], None, Duration::from_secs(5), 1024).unwrap();
+    let result = gh_exec_impl(&gh, &[], None, Duration::from_secs(5), 1024, None).unwrap();
     assert_eq!(result.code, Some(3));
     assert!(result.stderr.contains("boom"));
 }
@@ -89,7 +89,7 @@ fn gh_exec_kills_process_group_on_timeout() {
     );
     let gh = dir.write_executable("gh", &script);
     let started = Instant::now();
-    let error = gh_exec_impl(&gh, &[], None, Duration::from_millis(400), 1024).unwrap_err();
+    let error = gh_exec_impl(&gh, &[], None, Duration::from_millis(400), 1024, None).unwrap_err();
     assert!(started.elapsed() < Duration::from_secs(5), "must not wait for sleep 300");
     assert!(error.to_string().contains("timed out"));
     let pid: i32 = std::fs::read_to_string(&pid_file).unwrap().trim().parse().unwrap();
@@ -107,7 +107,7 @@ fn gh_exec_enforces_max_buffer() {
     let _env = env_lock();
     let dir = TestDir::new("maxbuffer");
     let gh = dir.write_executable("gh", "#!/bin/sh\nhead -c 100000 /dev/zero | tr '\\0' 'a'\n");
-    let error = gh_exec_impl(&gh, &[], None, Duration::from_secs(5), 4096).unwrap_err();
+    let error = gh_exec_impl(&gh, &[], None, Duration::from_secs(5), 4096, None).unwrap_err();
     assert!(error.to_string().contains("max buffer"));
 }
 
@@ -117,7 +117,7 @@ fn gh_exec_injects_prompt_disabled() {
     std::env::remove_var("GH_PROMPT_DISABLED");
     let dir = TestDir::new("prompt");
     let gh = dir.write_executable("gh", "#!/bin/sh\nprintf '%s' \"$GH_PROMPT_DISABLED\"\n");
-    let result = gh_exec_impl(&gh, &[], None, Duration::from_secs(5), 1024).unwrap();
+    let result = gh_exec_impl(&gh, &[], None, Duration::from_secs(5), 1024, None).unwrap();
     assert_eq!(result.stdout, "1");
 }
 
@@ -156,7 +156,7 @@ fn gh_gate_limits_concurrency() {
             let gate = gate.clone();
             std::thread::spawn(move || {
                 let _guard = gate.acquire();
-                gh_exec_impl(&gh, &[], None, Duration::from_secs(5), 1024).unwrap()
+                gh_exec_impl(&gh, &[], None, Duration::from_secs(5), 1024, None).unwrap()
             })
         })
         .collect();
@@ -185,6 +185,25 @@ fn gh_env_probe_reports_token() {
     assert_eq!(gh_env_probe_impl().token.as_deref(), Some("GH_TOKEN"));
     std::env::remove_var("GH_TOKEN");
     std::env::remove_var("GITHUB_TOKEN");
+}
+
+#[test]
+fn gh_exec_pipes_stdin_to_child() {
+    let _env = env_lock();
+    let dir = TestDir::new("stdin");
+    let gh = dir.write_executable("gh", "#!/bin/sh\ncat\n");
+    let result = gh_exec_impl(&gh, &[], None, Duration::from_secs(5), 1024, Some("body text")).unwrap();
+    assert_eq!(result.stdout, "body text");
+    assert_eq!(result.code, Some(0));
+}
+
+#[test]
+fn gh_exec_without_stdin_leaves_child_stdin_closed() {
+    let _env = env_lock();
+    let dir = TestDir::new("no-stdin");
+    let gh = dir.write_executable("gh", "#!/bin/sh\ncat\n");
+    let result = gh_exec_impl(&gh, &[], None, Duration::from_secs(5), 1024, None).unwrap();
+    assert_eq!(result.stdout, "");
 }
 
 #[test]
