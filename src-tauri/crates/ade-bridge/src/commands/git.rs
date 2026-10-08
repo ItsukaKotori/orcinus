@@ -629,6 +629,98 @@ pub async fn git_remote_urls(
     run_blocking(move || remote_urls_impl(&args.worktree_path)).await
 }
 
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitReadArgs {
+    pub worktree_path: String,
+    pub args: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitReadResult {
+    pub stdout: String,
+    pub stderr: String,
+    pub code: Option<i32>,
+}
+
+const GIT_READ_ALLOWED_SUBCOMMANDS: &[&str] = &[
+    "config",
+    "rev-parse",
+    "symbolic-ref",
+    "show-ref",
+    "check-ref-format",
+];
+const GIT_CONFIG_READ_FLAGS: &[&str] = &["--get", "--get-all", "--get-regexp", "--list"];
+const GIT_CONFIG_WRITE_FLAGS: &[&str] = &[
+    "--unset",
+    "--unset-all",
+    "--add",
+    "--replace-all",
+    "--edit",
+    "--rename-section",
+    "--remove-section",
+    "--set",
+];
+
+/// 只读 git 命令白名单：首参必须受支持；`config` 仅允许读形式（含 `--get*`/`--list`，
+/// 且拒绝任何写标志与裸写位置参数）。
+pub fn is_allowed_git_read_args(args: &[String]) -> bool {
+    let Some(subcommand) = args.first().map(String::as_str) else {
+        return false;
+    };
+    if !GIT_READ_ALLOWED_SUBCOMMANDS.contains(&subcommand) {
+        return false;
+    }
+    if subcommand != "config" {
+        return true;
+    }
+    if args.iter().any(|arg| {
+        GIT_CONFIG_WRITE_FLAGS
+            .iter()
+            .any(|flag| arg == flag || arg.starts_with(&format!("{flag}=")))
+    }) {
+        return false;
+    }
+    let has_read_flag = args
+        .iter()
+        .any(|arg| GIT_CONFIG_READ_FLAGS.contains(&arg.as_str()));
+    // 裸写形式：`config <key> <value>`（≥2 个非选项位置参数）且无读标志。
+    let positional = args[1..].iter().filter(|arg| !arg.starts_with('-')).count();
+    has_read_flag && positional <= 2
+}
+
+pub fn git_read_impl(worktree_path: &str, args: &[String]) -> Result<GitReadResult, BridgeError> {
+    if !is_allowed_git_read_args(args) {
+        return Err(BridgeError::message(format!(
+            "git read rejected: {}",
+            args.first().cloned().unwrap_or_default()
+        )));
+    }
+    let borrowed: Vec<&str> = args.iter().map(String::as_str).collect();
+    let output = ade_git::runner::run_git_in(
+        worktree_path,
+        &borrowed,
+        std::time::Duration::from_secs(120),
+        None,
+    )?;
+    Ok(GitReadResult {
+        stdout: String::from_utf8_lossy(&output.stdout).into_owned(),
+        stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
+        code: output.status.code(),
+    })
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_read(
+    state: State<'_, AppState>,
+    args: GitReadArgs,
+) -> Result<GitReadResult, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    run_blocking(move || git_read_impl(&args.worktree_path, &args.args)).await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

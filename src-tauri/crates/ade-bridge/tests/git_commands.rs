@@ -7,8 +7,9 @@ use std::process::Command;
 use ade_bridge::commands::git::{
     branch_compare_impl, branch_diff_impl, bulk_discard_impl, bulk_stage_impl, bulk_unstage_impl,
     commit_compare_impl, commit_diff_impl, commit_impl, conflict_operation_impl, diff_impl,
-    discard_impl, history_impl, remote_urls_impl, require_authorized_worktree, stage_impl,
-    status_impl, unstage_impl, upstream_status_impl, GitStatusArgs,
+    discard_impl, git_read_impl, history_impl, is_allowed_git_read_args, remote_urls_impl,
+    require_authorized_worktree, stage_impl, status_impl, unstage_impl, upstream_status_impl,
+    GitStatusArgs,
 };
 use ade_bridge::state::GitCancelRegistry;
 use ade_fs::FsService;
@@ -396,6 +397,58 @@ fn remote_urls_is_empty_without_remotes() {
     let dir = TestDir::new("remote-urls-empty");
     init_repo(&dir);
     assert!(remote_urls_impl(dir.path_str()).unwrap().is_empty());
+}
+
+#[test]
+fn git_read_whitelist_accepts_only_read_forms() {
+    let ok = |args: &[&str]| {
+        is_allowed_git_read_args(&args.iter().map(|s| s.to_string()).collect::<Vec<_>>())
+    };
+    assert!(ok(&["rev-parse", "--abbrev-ref", "HEAD"]));
+    assert!(ok(&["symbolic-ref", "--quiet", "refs/remotes/origin/HEAD"]));
+    assert!(ok(&["show-ref", "--verify", "--quiet", "refs/heads/main"]));
+    assert!(ok(&["check-ref-format", "--branch", "feature/x"]));
+    assert!(ok(&["config", "--get", "branch.main.remote"]));
+    assert!(ok(&["config", "--get-all", "remote.origin.fetch"]));
+    assert!(ok(&["config", "--get-regexp", "^branch\\."]));
+    assert!(ok(&["config", "--list"]));
+    // 写形式一律拒绝
+    assert!(!ok(&["config", "user.name", "x"]));
+    assert!(!ok(&["config", "--unset", "branch.main.remote"]));
+    assert!(!ok(&["config", "--add", "remote.origin.fetch", "+refs/x"]));
+    assert!(!ok(&["config", "--replace-all", "a", "b"]));
+    assert!(!ok(&["config", "--edit"]));
+    assert!(!ok(&["config", "--rename-section", "a", "b"]));
+    assert!(!ok(&["config", "--remove-section", "a"]));
+    // 非白名单子命令
+    assert!(!ok(&["fetch", "--prune"]));
+    assert!(!ok(&["status", "--porcelain"]));
+    assert!(!ok(&["push", "origin", "HEAD"]));
+    assert!(!ok(&[]));
+}
+
+#[test]
+fn git_read_runs_real_reads_and_passes_through_nonzero() {
+    let dir = TestDir::new("git-read");
+    init_repo(&dir);
+    commit_file(&dir, "a.txt", "one\n", "init");
+    let path = dir.path_str();
+
+    let args: Vec<String> = ["rev-parse", "--abbrev-ref", "HEAD"]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    let branch = git_read_impl(path, &args).unwrap();
+    assert_eq!(branch.code, Some(0));
+    assert!(!branch.stdout.trim().is_empty());
+
+    let args: Vec<String> = ["show-ref", "--verify", "--quiet", "refs/heads/nope"]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    let missing = git_read_impl(path, &args).unwrap();
+    assert_ne!(missing.code, Some(0));
+    assert_eq!(missing.stdout, "");
 }
 
 #[test]
