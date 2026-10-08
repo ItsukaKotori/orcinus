@@ -711,6 +711,8 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - Modify: `src/renderer/src/lib/github/hosted-review-create.ts`
 - Modify: `src/renderer/src/lib/github/hosted-review-create.test.ts`
 - Modify: `src/renderer/src/lib/github/hosted-review.ts`（导出 `invalidate`）
+- Modify: `src/renderer/src/lib/github/gh-exec-client.ts`（`GhExecOptions` 增加 `stdin?: string` 并在 `defaultGhExecutor` 透传）
+- Modify: `src/renderer/src/lib/github/gh-exec-client.test.ts`（stdin 透传断言）
 
 **Interfaces:**
 - Consumes: Task 5 工厂；`gh_exec` stdin（Task 2）；模板经注入的 `readTemplate`（bridge 侧用 `fs_read_file`）。
@@ -727,6 +729,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 5. 失败分类表逐条（auth/`already exists`/timeout→`unknown_completion`/`validation failed`/其它→`unknown`）；`already_exists` 带 existingReview（来自回退查询）。
 6. 成功 → `reviewLookup.invalidate` 被调用一次。
 7. blockers 映射：blockedReason→结果码/文案逐字表（auth_required/unsupported_provider/dirty/detached_head/default_branch/no_upstream/needs_push/needs_sync/fork_head_unsupported/base_not_on_remote/空 blocker）。
+8. `gh-exec-client`：`GhExecOptions.stdin` 透传——`defaultGhExecutor` 在 `gh_exec` 参数中带 `stdin`（缺省省略）；断言调用参数。
 
 - [ ] **Step 2: 跑测试确认失败**
 
