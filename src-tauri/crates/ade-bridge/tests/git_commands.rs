@@ -7,8 +7,8 @@ use std::process::Command;
 use ade_bridge::commands::git::{
     branch_compare_impl, branch_diff_impl, bulk_discard_impl, bulk_stage_impl, bulk_unstage_impl,
     commit_compare_impl, commit_diff_impl, commit_impl, conflict_operation_impl, diff_impl,
-    discard_impl, history_impl, require_authorized_worktree, stage_impl, status_impl, unstage_impl,
-    upstream_status_impl, GitStatusArgs,
+    discard_impl, history_impl, remote_urls_impl, require_authorized_worktree, stage_impl,
+    status_impl, unstage_impl, upstream_status_impl, GitStatusArgs,
 };
 use ade_bridge::state::GitCancelRegistry;
 use ade_fs::FsService;
@@ -363,6 +363,39 @@ fn worktree_authorization_guard_requires_an_authorized_root() {
         "unexpected error: {error}"
     );
     assert!(require_authorized_worktree(&fs, "/etc").is_err());
+}
+
+#[test]
+fn remote_urls_returns_fetch_urls_deduped() {
+    let dir = TestDir::new("remote-urls");
+    init_repo(&dir);
+    git(
+        &dir.path,
+        &["remote", "add", "origin", "git@github.com:owner/repo.git"],
+    );
+    git(
+        &dir.path,
+        &[
+            "remote",
+            "add",
+            "upstream",
+            "https://github.com/up/repo.git",
+        ],
+    );
+
+    let urls = remote_urls_impl(dir.path_str()).unwrap();
+    assert_eq!(urls.len(), 2);
+    assert_eq!(urls[0].name, "origin");
+    assert_eq!(urls[0].url, "git@github.com:owner/repo.git");
+    assert_eq!(urls[1].name, "upstream");
+    assert_eq!(urls[1].url, "https://github.com/up/repo.git");
+}
+
+#[test]
+fn remote_urls_is_empty_without_remotes() {
+    let dir = TestDir::new("remote-urls-empty");
+    init_repo(&dir);
+    assert!(remote_urls_impl(dir.path_str()).unwrap().is_empty());
 }
 
 #[test]

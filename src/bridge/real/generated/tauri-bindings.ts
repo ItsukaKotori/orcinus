@@ -263,6 +263,7 @@ export const commands = {
 	gitBranchDiff: (args: GitBranchDiffArgs) => typedError<GitDiffResult_Serialize, BridgeError>(__TAURI_INVOKE("git_branch_diff", { args })),
 	gitCommitDiff: (args: GitCommitDiffArgs) => typedError<GitDiffResult_Serialize, BridgeError>(__TAURI_INVOKE("git_commit_diff", { args })),
 	gitHistory: (args: GitHistoryArgs) => typedError<GitHistoryResult_Serialize, BridgeError>(__TAURI_INVOKE("git_history", { args })),
+	gitRemoteUrls: (args: GitWorktreeArgs) => typedError<GitRemoteUrl[], BridgeError>(__TAURI_INVOKE("git_remote_urls", { args })),
 	ghExec: (args: GhExecArgs) => typedError<GhExecResult, BridgeError>(__TAURI_INVOKE("gh_exec", { args })),
 	ghEnvProbe: () => typedError<GhEnvProbe, BridgeError>(__TAURI_INVOKE("gh_env_probe")),
 };
@@ -999,6 +1000,11 @@ export type GitHistoryResult_Serialize = {
 	hasOutgoingChanges: boolean,
 	hasMore: boolean,
 	limit: number,
+};
+
+export type GitRemoteUrl = {
+	name: string,
+	url: string,
 };
 
 export type GitStagingArea = "staged" | "unstaged" | "untracked";

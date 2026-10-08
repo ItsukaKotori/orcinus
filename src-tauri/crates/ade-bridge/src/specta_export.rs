@@ -134,6 +134,7 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::git::git_branch_diff,
                 commands::git::git_commit_diff,
                 commands::git::git_history,
+                commands::git::git_remote_urls,
                 commands::gh::gh_exec,
                 commands::gh::gh_env_probe,
             ])
@@ -312,6 +313,7 @@ mod tests {
             "git_branch_diff",
             "git_commit_diff",
             "git_history",
+            "git_remote_urls",
             "gh_exec",
             "gh_env_probe",
         ] {

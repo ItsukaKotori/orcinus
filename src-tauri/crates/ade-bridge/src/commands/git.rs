@@ -127,6 +127,13 @@ impl From<ade_git::staging::CommitOutcome> for GitCommitOutcome {
     }
 }
 
+#[derive(Debug, Clone, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitRemoteUrl {
+    pub name: String,
+    pub url: String,
+}
+
 #[derive(Debug, Clone, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct GitWorktreeArgs {
@@ -325,6 +332,38 @@ pub fn history_impl(
     base_ref: Option<&str>,
 ) -> Result<GitHistoryResult, BridgeError> {
     Ok(ade_git::history::history(worktree_path, limit, base_ref)?)
+}
+
+/// `git remote -v` 的 fetch URL，按 remote 名首次出现去重。
+pub fn parse_remote_urls(stdout: &str) -> Vec<GitRemoteUrl> {
+    let mut seen = std::collections::HashSet::new();
+    let mut rows = Vec::new();
+    for line in stdout.lines() {
+        let Some((name, rest)) = line.split_once('\t') else {
+            continue;
+        };
+        let Some((url, kind)) = rest.rsplit_once(' ') else {
+            continue;
+        };
+        if kind != "(fetch)" || !seen.insert(name.to_string()) {
+            continue;
+        }
+        rows.push(GitRemoteUrl {
+            name: name.to_string(),
+            url: url.to_string(),
+        });
+    }
+    rows
+}
+
+pub fn remote_urls_impl(worktree_path: &str) -> Result<Vec<GitRemoteUrl>, BridgeError> {
+    let output = ade_git::runner::run_git_in(
+        worktree_path,
+        &["remote", "-v"],
+        std::time::Duration::from_secs(10),
+        None,
+    )?;
+    Ok(parse_remote_urls(&String::from_utf8_lossy(&output.stdout)))
 }
 
 // ─── authorization guards ────────────────────────────────────────────────────
@@ -580,6 +619,16 @@ pub async fn git_history(
         .await
 }
 
+#[tauri::command]
+#[specta::specta]
+pub async fn git_remote_urls(
+    state: State<'_, AppState>,
+    args: GitWorktreeArgs,
+) -> Result<Vec<GitRemoteUrl>, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    run_blocking(move || remote_urls_impl(&args.worktree_path)).await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -698,5 +747,24 @@ mod tests {
             serde_json::to_value(&outcome).unwrap(),
             json!({ "success": false, "error": "boom" })
         );
+    }
+
+    #[test]
+    fn parse_remote_urls_keeps_fetch_lines_and_dedupes_by_name() {
+        let stdout = concat!(
+            "origin\tgit@github.com:owner/repo.git (fetch)\n",
+            "origin\tgit@github.com:owner/repo.git (push)\n",
+            "origin\tgit@github.com:other/repo.git (fetch)\n",
+            "upstream\thttps://github.com/up/repo.git (fetch)\n",
+            "malformed line without a tab\n",
+        );
+
+        let urls = parse_remote_urls(stdout);
+
+        assert_eq!(urls.len(), 2);
+        assert_eq!(urls[0].name, "origin");
+        assert_eq!(urls[0].url, "git@github.com:owner/repo.git");
+        assert_eq!(urls[1].name, "upstream");
+        assert_eq!(urls[1].url, "https://github.com/up/repo.git");
     }
 }
