@@ -1,6 +1,6 @@
 # Phase 2D.1 GitHub 连接与只读基础 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 接真 GitHub 只读面：gh 执行器 + 连接/身份 + PR-for-branch + checks + 速率快照 + hosted review + preflight，点亮现有渲染层 UI。
 
@@ -42,7 +42,7 @@
   - 命令 `gh_env_probe() -> {token: string|null}`（`'GH_TOKEN' | 'GITHUB_TOKEN' | null`）
   - `AppState.gh_gate: Arc<GhConcurrencyGate>`、`AppState.gh_path_cache: GhPathCache`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 创建 `src-tauri/crates/ade-bridge/tests/gh_exec.rs`（环境锁 + PATH EnvGuard 模式；fake gh 脚本用 preflight.rs:338-348 的 write_executable 写法）：
 
@@ -242,12 +242,12 @@ fn gh_exec_reports_missing_binary() {
 
 注意：测试需要 `libc` 与 `ade_bridge` 作为 dev 依赖可访问（`libc` 加在 `[dependencies]`，集成测试可直接 `libc::kill`；若 `ade_bridge` 库未导出 `commands::gh`，需在 `ade-bridge/src/lib.rs` 保持 `pub mod commands;` 已有前提下工作）。
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run（workdir src-tauri）: `cargo test -p ade-bridge --test gh_exec`
 Expected: 编译失败（`commands::gh` 不存在）。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `Cargo.toml` 的 `[dependencies]` 加 `libc = "0.2.189"`。
 
@@ -553,18 +553,18 @@ pub async fn gh_env_probe() -> Result<GhEnvProbe, BridgeError> {
 
 `commands/mod.rs` 加 `pub mod gh;`。`specta_export.rs`：`collect_commands!` 加 `commands::gh::gh_exec, commands::gh::gh_env_probe,`，`export_lists_every_command` 清单加 `"gh_exec", "gh_env_probe",`。
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `cargo test -p ade-bridge --test gh_exec`
 Expected: 9 条全 PASS（并发闸用例约 0.5s）。
 
-- [ ] **Step 5: 重生成 bindings + 全 crate 测试**
+- [x] **Step 5: 重生成 bindings + 全 crate 测试**
 
 Run: `cargo run -p ade-bridge --bin export-bindings`
 Run: `cargo test -p ade-bridge`
 Expected: `bindings_are_fresh` 绿，全部既有测试不回归。
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add src-tauri/crates/ade-bridge/Cargo.toml \
@@ -593,7 +593,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - Consumes: `ade_git::runner::run_git_in(cwd: &str, args: &[&str], timeout: Duration, cancel: Option<&CancelToken>) -> Result<GitOutput, CoreError>`（`ade-git/src/runner.rs:40`，pub）；`require_authorized_worktree`、`GitWorktreeArgs`、`run_blocking`。
 - Produces: 命令 `git_remote_urls({worktreePath: string}) -> {name: string, url: string}[]`（仅 fetch URL，按首次出现去重）。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `tests/git_commands.rs` 末尾追加（该文件已有 `TestDir`/`git()`/`init_git_repo` 辅助）：
 
@@ -623,12 +623,12 @@ fn remote_urls_is_empty_without_remotes() {
 
 （若 `git_commands.rs` 的 `init_git_repo` 返回 `PathBuf`，按该文件现有用法调整；`git()` 是既有辅助。）
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `cargo test -p ade-bridge --test git_commands remote_urls`
 Expected: 编译失败（`remote_urls_impl` 不存在）。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `git.rs` 追加：
 
@@ -678,13 +678,13 @@ pub async fn git_remote_urls(
 
 注意 `git.rs` 顶部 import 需补 `serde::Serialize`（若未引入）与 `specta` 相关（该文件已有其它 `specta::Type` 结构体，按现有 import 补）。`specta_export.rs` 注册 `commands::git::git_remote_urls` + 名称清单。
 
-- [ ] **Step 4: 跑测试 + bindings**
+- [x] **Step 4: 跑测试 + bindings**
 
 Run: `cargo test -p ade-bridge --test git_commands remote_urls`
 Run: `cargo run -p ade-bridge --bin export-bindings && cargo test -p ade-bridge`
 Expected: 全绿。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src-tauri/crates/ade-bridge/src/commands/git.rs \
@@ -716,7 +716,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - `parseAuthStatus(text: string): GhAuthAccount[]`、`computeAuthDiagnostic(input): GhAuthDiagnostic`（纯函数）
   - `classifyPRRefreshError(error: unknown): PRRefreshErrorType`、`safePRRefreshErrorMessage(type): string`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `gh-exec-client.test.ts`：
 
@@ -841,12 +841,12 @@ describe('computeAuthDiagnostic', () => {
 
 `gh-error-classification.test.ts`：逐类断言（至少 8 条）：`HTTP 429`→rate_limited、`HTTP 404`→repo_unavailable、`HTTP 503`→server_error、`ECONNRESET`→network、`HTTP 403 resource not accessible`→permission、`spawn gh ENOENT`→gh_unavailable、`HTTP 401 bad credentials`→auth、`something else`→unknown；另断言 `safePRRefreshErrorMessage` 对每类返回稳定文案（逐字使用参照文案，见实现）。
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm vitest run src/renderer/src/lib/github`
 Expected: FAIL（模块不存在）。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `gh-exec-client.ts`：
 
@@ -978,13 +978,13 @@ export function computeAuthDiagnostic(input: {
 
 `gh-error-classification.ts`（逐字移植 `orca:src/main/github/pr-refresh-error-classification.ts:20-143` + `safePRRefreshErrorMessage`；`extractExecError` 的等价物：从 `GhRunError`/`unknown` 读 `stderr/stdout/message/code`；`classifyGitHubUnavailable` 直接 import 端口已有 `../../../../shared/github/api-availability`）。分类顺序与正则一字不改。
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm vitest run src/renderer/src/lib/github`
 Run: `pnpm typecheck`
 Expected: 全绿。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/renderer/src/lib/github/gh-exec-client.ts \
@@ -1015,7 +1015,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
     - `getRepoSlug(worktreePath): Promise<GitHubRepoIdentity | null>`
     - `getRepoUpstream(worktreePath): Promise<GitHubRepoIdentity | null>`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
 import { describe, expect, it, vi } from 'vitest'
@@ -1124,12 +1124,12 @@ describe('repo identity', () => {
 
 （测试写法以实际实现接口为准微调；核心断言不变。负缓存用例中删掉无意义的 readSpy 行。）
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm vitest run src/renderer/src/lib/github/repo-identity.test.ts`
 Expected: FAIL。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `repo-identity.ts` 要点（执行者按此实现，行为对齐参照）：
 
@@ -1144,13 +1144,13 @@ Expected: FAIL。
   2. upstream 候选与 origin 不同 → 返回 upstream。
   3. 否则 `client.runOrThrow(['repo','view', hostPrefix+`${origin.owner}/${origin.repo}`, '--json','isFork,parent'], { timeoutMs: 10_000 })`（hostPrefix = origin.host ? `${origin.host}/` : ''）；解析 `{isFork,parent}`；`isFork && parent.owner.login && parent.name` → `{owner, repo, host: origin.host}`；异常/不满足 → null。
 
-- [ ] **Step 4: 跑测试 + typecheck**
+- [x] **Step 4: 跑测试 + typecheck**
 
 Run: `pnpm vitest run src/renderer/src/lib/github/repo-identity.test.ts`
 Run: `pnpm typecheck`
 Expected: 全绿。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/renderer/src/lib/github/repo-identity.ts src/renderer/src/lib/github/repo-identity.test.ts
@@ -1175,7 +1175,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - `createPRForBranchLookup(deps): { getPRForBranch(args): Promise<PRInfo | null>; getPRForBranchOutcome(args): Promise<PRRefreshOutcome> }`
   - 入参 `args = { worktreePath: string; branch: string; linkedPRNumber?: number|null; fallbackPRNumber?: number|null; acceptMergedFallbackPR?: boolean; currentHeadOid?: string|null }`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 覆盖（fake executor 断言 argv 序列与结果）：
 1. 空 branch 且无 linked/fallback → `no-pr`（不 spawn）。
@@ -1197,11 +1197,11 @@ expect(executor).toHaveBeenCalledWith(
 )
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm vitest run src/renderer/src/lib/github/pr-for-branch.test.ts`
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 逐字/行为对齐移植（参照路径为 oracle）：
 - `mapPRState`（`orca:src/main/github/mappers.ts:112-124`，逐字）：MERGED→merged、CLOSED→closed、isDraft→draft、否则 open。
@@ -1214,11 +1214,11 @@ Run: `pnpm vitest run src/renderer/src/lib/github/pr-for-branch.test.ts`
 - `conflictSummary`：移植 `orca:src/main/github/client/lookup/branch-lookup-derived-data.ts`（该文件较小；照抄其条件与字段，输入为 lookup data + mergeStateStatus）。
 - 错误包装：`catch → { kind:'upstream-error', errorType: classifyPRRefreshError(err), message: safePRRefreshErrorMessage(type), fetchedAt: Date.now(), ...(rate_limited 且 stderr 有 Retry-After 时 nextAutoRetryAt/retryDisabledUntil) }`（参照 `gh-error-predicates.ts:23-43`；`parseRetryAfterMs` 移植自 `orca:src/main/git/exec-error.ts:53-67`）。
 
-- [ ] **Step 4: 跑测试 + typecheck**
+- [x] **Step 4: 跑测试 + typecheck**
 
 Run: `pnpm vitest run src/renderer/src/lib/github/pr-for-branch.test.ts && pnpm typecheck`
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/renderer/src/lib/github/pr-for-branch.ts src/renderer/src/lib/github/pr-for-branch.test.ts
@@ -1243,7 +1243,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - `args.getPRChecks = { repo: GitHubRepoIdentity; prNumber: number; headSha?: string; noCache?: boolean }`
   - `args.getPRCheckDetails = { repo: GitHubRepoIdentity; checkRunId?: number; workflowRunId?: number; checkName?: string; url?: string }`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `pr-checks.test.ts` 覆盖：
 1. GraphQL 成功：断言 argv 含 `['api','graphql','--cache','60s','-f','owner=org','-f','repo=repo','-F','pr=7','-f',`query=${PR_CHECKS_ROLLUP_QUERY}`]`；fixture 返回 CheckRun + StatusContext + action_required suite → 断言 `PRCheckDetail[]`（checkRunId/workflowRunId 从 `checkSuite.workflowRun.databaseId` 与 URL 解析、legacy status 名称去重、action_required 合成条目名称含 suite id）。
@@ -1258,20 +1258,20 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 3. jobs 过滤：存在与 checkName 精确匹配的 job → 只返回匹配项。
 4. 超时：executor 永不返回 + `timeoutMs:25_000` 被传递；fake 用 fake timers 触发 → 抛出精确消息 `Timed out loading check details.`（常量 `GITHUB_CHECK_DETAILS_HOST_TIMEOUT_MS = 25_000` 移植到本模块或 `shared/github/check-details-deadline.ts`——端口尚无该文件，创建 `src/shared/github/check-details-deadline.ts` 逐字移植 `orca:src/shared/github/check-details-deadline.ts`）。
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm vitest run src/renderer/src/lib/github/pr-checks.test.ts src/renderer/src/lib/github/pr-check-details.test.ts`
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 - `pr-checks.ts`：GraphQL 查询逐字（`orca:.../check/pr-checks-graphql-query.ts:1-53`）；argv 逐字（`get-pr-checks.ts:183-200`，`-f owner`/`-f repo`/`-F pr`/`-f query`，`--cache 60s` 条件）；REST 兜底 argv 逐字（`:45-92`，含 `per_page=100`、legacy 去重、`action_required` suite 合成）；`gh pr checks` 兜底 argv 逐字（`:146-166`）与 `no checks reported` 处理；映射函数逐字移植（`mappers.ts` + `pr-checks-response-mapping.ts:31-186`，含 `getPendingApprovalCheckSuiteName/Url`、`githubRepositoryWebHost`（`repository.host ?? 'github.com'`）、`parseActionsRunId`）。
 - `pr-check-details.ts`：argv 逐字（`get-pr-check-details.ts:57-95`）；25s 宿主死线（`Promise.race`/`setTimeout` + 抛精确消息）；annotations/jobs 失败非致命；映射逐字（`check-detail-field-mapping.ts:10-71`，`logTail: null`，`mapWorkflowJobs` 的 checkName 精确过滤）；**不移植** log tails（spec §2.2）。
 
-- [ ] **Step 4: 跑测试 + typecheck**
+- [x] **Step 4: 跑测试 + typecheck**
 
 Run: `pnpm vitest run src/renderer/src/lib/github && pnpm typecheck`
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/shared/github/check-details-deadline.ts \
@@ -1299,27 +1299,27 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - `createHostedReviewClient(deps): { forBranch(args: HostedReviewForBranchArgs & { repoPath: string }): Promise<HostedReviewInfo | null> }`
   - `createGhReadinessProbe(deps): () => Promise<{installed: boolean; authenticated: boolean}>`（60s 缓存）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 - rate-limit：快照映射（`resources.core/search/graphql` → `{remaining,limit,resetAt}`，缺失字段 0/now）；30s 内二次调用不 spawn；`force:true` 绕过；失败返回 `{ok:false,error}` 并负缓存 30s。
 - hosted-review：GitHub 命中 → `hostedReviewInfoFromGitHubPRInfo` 字段（provider/number/title/state/url/status/updatedAt/mergeable/headSha/githubRepository）；无 PR → null；found 缓存 60s、none 15min、active none 60s（用 `now` 注入推进）；merged 且 head 变化 → 缓存失效重查；非 GitHub repo → null。
 - preflight-gh：`gh auth status` 有 active 账号 → `{installed:true, authenticated:true}`；gh 缺失（executor 抛 `gh: command not found`）→ `{installed:false, authenticated:false}`；无账号 → installed true / authenticated false；60s 缓存。
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm vitest run src/renderer/src/lib/github/rate-limit.test.ts src/renderer/src/lib/github/hosted-review.test.ts src/renderer/src/lib/github/preflight-gh.test.ts`
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 - `rate-limit.ts`：逐字移植 `orca:src/main/github/rate-limit.ts:277-324` 的缓存/force/单飞与 `parseBucket`（`:40-55`）；argv 固定 `['api','rate_limit']`（host 固定：本端口 `gh_exec` 暂无 host 参数——**不传 host**，在报告中披露与参照的差异）。
 - `hosted-review.ts`：`forBranch(args)`：分支去 `refs/heads/`；空 branch 且无 linked → null；`resolveCandidates`（非 GitHub → null）；`lookup.getPRForBranchOutcome({worktreePath: args.repoPath, branch, linkedPRNumber: args.linkedGitHubPR, fallbackPRNumber: args.linkedGitHubPR == null ? args.fallbackGitHubPR : null, acceptMergedFallbackPR: fallback !== null, currentHeadOid: args.currentHeadOid})`；`upstream-error` → 抛 `Error(`GitHub PR lookup failed (${errorType}): ${message}`)`（参照 `forge-provider.ts:134-141`）；found → `hostedReviewInfoFromGitHubPRInfo(pr)`；no-pr → null。缓存 TTL：found 60s / none（active?60s:15min），key 含 repoPath+branch+linked ids；merged 条目 head-sensitive（`headOid !== currentHeadOid` → miss）。
 - `preflight-gh.ts`：60s 缓存；`client.run(['auth','status'])`（非零也解析）→ `parseAuthStatus(stdout+stderr)`；`installed` = 调用未抛 spawn 类错误；`authenticated` = 存在 `active` 账号；executor 抛 `gh: command not found` → installed false。
 
-- [ ] **Step 4: 跑测试 + typecheck**
+- [x] **Step 4: 跑测试 + typecheck**
 
 Run: `pnpm vitest run src/renderer/src/lib/github && pnpm typecheck`
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/renderer/src/lib/github/rate-limit.ts src/renderer/src/lib/github/rate-limit.test.ts \
@@ -1347,7 +1347,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - Consumes: Tasks 3–7 全部工厂与 `defaultGhExecutor`；`invokeCommand`；`withMethodFallback`；`noopUnsubscribe` 模式（`real/ui.ts:5-6`）。
 - Produces: `createGhRealApi()`、`createHostedReviewRealApi()`；`RealDomains` 加入 `'gh' | 'hostedReview'`。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `real/gh.test.ts`（模式照 `real/preflight.test.ts`：mock `@tauri-apps/api/core`）：
 
@@ -1415,11 +1415,11 @@ describe('gh real api', () => {
 
 `real/hosted-review.test.ts`：`forBranch` 走真实现（mock gh_exec 返回 PR JSON）返回 `HostedReviewInfo`；`create` 仍 reject unimplemented。
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm vitest run src/bridge/real/gh.test.ts src/bridge/real/hosted-review.test.ts`
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `real/gh.ts`：
 
@@ -1485,13 +1485,13 @@ export function createGhRealApi(): PreloadApi['gh'] {
 
 `create-api.test.ts`：原 `hostedReview.forBranch resolves null` 断言改为断言真域路由（mock invoke 返回 `[]`/null 后解析 null）；新增 gh 域路由断言（`diagnoseAuth` → 触发 `gh_exec`/`gh_env_probe`）。
 
-- [ ] **Step 4: 跑测试 + typecheck + 全量**
+- [x] **Step 4: 跑测试 + typecheck + 全量**
 
 Run: `pnpm vitest run src/bridge && pnpm typecheck`
 Run（提交前）: `pnpm test`（全量；性能类抖动单独复跑）
 Expected: 全绿。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/bridge/real/gh.ts src/bridge/real/gh.test.ts \
@@ -1511,13 +1511,13 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - Create: `docs/phase2d1-github-readonly-record.md`
 - Modify: `docs/superpowers/plans/2026-10-08-phase2d1-github-readonly.md`（勾选复选框）
 
-- [ ] **Step 1: 全量门禁**
+- [x] **Step 1: 全量门禁**
 
 Run: `cargo test --workspace`（workdir src-tauri）
 Run: `rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm build:web`
 Run: `pnpm test`（性能类失败隔离复跑记 flake；其它失败 STOP + BLOCKED）
 
-- [ ] **Step 2: 写收尾记录**
+- [x] **Step 2: 写收尾记录**
 
 结构照 `docs/phase2c-diff-annotations-review-record.md`：§1 范围与验收、§2 提交清单、§3 门禁证据（命令 + 精确数字）、§4 手工验收（下列 5 项，标注待用户复核）、§5 偏差与边界备案（spec §7 十条 + 实现中发现的新偏差，特别记录：`gh_exec` 无 host 参数 → rate_limit 未固定 host；合并隐藏/stack/merge-queue 的裁剪范围）、§6 已知边界与后续（2D.2 创建 PR、后台协调器、日志尾、SSH 别名、Windows/WSL、速率熔断）。
 
@@ -1528,7 +1528,7 @@ Run: `pnpm test`（性能类失败隔离复跑记 flake；其它失败 STOP + BL
 4. Landing/Onboarding：gh 就绪状态正确（已装/已登录 → ready）；
 5. 无 PR 分支：无 pill、无报错 toast。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add docs/phase2d1-github-readonly-record.md docs/superpowers/plans/2026-10-08-phase2d1-github-readonly.md
