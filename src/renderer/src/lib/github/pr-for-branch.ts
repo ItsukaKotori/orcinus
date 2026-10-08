@@ -8,6 +8,7 @@ import type {
   PRReviewDecision
 } from '../../../../shared/github/pull-request-types'
 import { derivePRCheckStatusFromRollup } from '../../../../shared/pr-check-status'
+import { isDefaultGitHubHost } from '../../../../shared/github/repository-identity-key'
 import { classifyPRRefreshError, safePRRefreshErrorMessage } from './gh-error-classification'
 import type { GhExecClient, GitHubRepoIdentity, RepoIdentityResolver } from './repo-identity'
 
@@ -581,7 +582,17 @@ export function createPRForBranchLookup(deps: PRForBranchLookupDeps): PRForBranc
     if (!branchName && typeof linkedPRNumber !== 'number' && typeof fallbackPRNumber !== 'number') {
       return { kind: 'no-pr', fetchedAt: Date.now() }
     }
-    const { candidates, headRepo } = await deps.identity.resolveCandidates(args.worktreePath)
+    const resolved = await deps.identity.resolveCandidates(args.worktreePath)
+    // Why: GHES is identity-only in 2D.1 — gh_exec has no host parameter, so a
+    // non-default-host candidate must never be queried as github.com (and its
+    // owner must not be used as a github.com head owner).
+    const candidates = resolved.candidates.filter((candidate) =>
+      isDefaultGitHubHost(candidate.host)
+    )
+    const headRepo =
+      resolved.headRepo && isDefaultGitHubHost(resolved.headRepo.host)
+        ? resolved.headRepo
+        : null
     let data: PullRequestLookupData | null = null
     let dataRepo: GitHubRepoIdentity | null = null
     const dataHeadRepo: GitHubRepoIdentity | null = headRepo

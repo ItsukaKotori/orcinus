@@ -321,6 +321,27 @@ describe('pr-for-branch lookup', () => {
     ).resolves.toMatchObject({ kind: 'found', pr: { number: 42, state: 'merged' } })
   })
 
+  it('returns no-pr without spawning when the identity resolver yields no candidates', async () => {
+    const { lookup, executor } = createHarness({ candidates: [] })
+    const outcome = await lookup.getPRForBranchOutcome({
+      worktreePath: '/repo',
+      branch: 'feature'
+    })
+    expect(outcome).toMatchObject({ kind: 'no-pr' })
+    expect(executor).not.toHaveBeenCalled()
+  })
+
+  it('never queries gh for non-default-host candidates', async () => {
+    const ghes: GitHubRepoIdentity = { owner: 'org', repo: 'repo', host: 'ghe.internal:8443' }
+    const { lookup, executor } = createHarness({ candidates: [ghes], headRepo: ghes })
+    const outcome = await lookup.getPRForBranchOutcome({
+      worktreePath: '/repo',
+      branch: 'feature'
+    })
+    expect(outcome).toMatchObject({ kind: 'no-pr' })
+    expect(executor).not.toHaveBeenCalled()
+  })
+
   it('classifies a permission failure as upstream-error.permission', async () => {
     const { lookup } = createHarness({
       candidates: [ORG_REPO],

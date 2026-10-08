@@ -1,7 +1,9 @@
+import { isDefaultGitHubHost } from '../../shared/github/repository-identity-key'
 import type { PreloadApi } from '../../shared/preload-api/api-types'
 import { withMethodFallback } from '../unimplemented-fallback'
 import { computeAuthDiagnostic, parseAuthStatus } from '@/lib/github/auth-diagnose'
 import { createGhExecClient, defaultGhExecutor } from '@/lib/github/gh-exec-client'
+import { isGhMissingError } from '@/lib/github/preflight-gh'
 import { createPRChecksClient } from '@/lib/github/pr-checks'
 import { createPRForBranchLookup } from '@/lib/github/pr-for-branch'
 import { createRateLimitClient } from '@/lib/github/rate-limit'
@@ -35,16 +37,28 @@ export function createGhRealApi(): PreloadApi['gh'] {
       try {
         const result = await client.run(['auth', 'status'])
         accounts = parseAuthStatus(`${result.stdout}\n${result.stderr}`)
-      } catch {
-        ghAvailable = false
+      } catch (err) {
+        // Why: only a spawn-class launch failure proves gh is absent; a timeout
+        // or IPC failure must keep ghAvailable true with empty accounts
+        // (spec §4 never-throw; mirrors preflight-gh's classification).
+        if (isGhMissingError(err)) {
+          ghAvailable = false
+        }
       }
-      const env = await invokeCommand<{ token: 'GH_TOKEN' | 'GITHUB_TOKEN' | null }>(
-        'gh_env_probe'
-      )
+      let envTokenInProcess: 'GH_TOKEN' | 'GITHUB_TOKEN' | null = null
+      try {
+        const env = await invokeCommand<{ token: 'GH_TOKEN' | 'GITHUB_TOKEN' | null }>(
+          'gh_env_probe'
+        )
+        envTokenInProcess = env.token
+      } catch {
+        // Why: the diagnostic must never reject; a failed probe degrades to "no env token".
+        envTokenInProcess = null
+      }
       return computeAuthDiagnostic({
         accounts,
         ghAvailable,
-        envTokenInProcess: env.token,
+        envTokenInProcess,
         requiredHost: host ?? null
       })
     },
@@ -63,6 +77,12 @@ export function createGhRealApi(): PreloadApi['gh'] {
       }),
     refreshPRNow: (args) => {
       const candidate = args.candidate
+      // Why: a merged fallback PR is only legitimate context while the
+      // fallback source proves a live link (same derivation as the web path).
+      const acceptMergedFallbackPR =
+        candidate.linkedPRNumber == null &&
+        candidate.fallbackPRNumber != null &&
+        candidate.fallbackPRSource != null
       return lookup.getPRForBranchOutcome({
         worktreePath: candidate.repoPath,
         branch: candidate.branch,
@@ -72,6 +92,7 @@ export function createGhRealApi(): PreloadApi['gh'] {
         ...(candidate.fallbackPRNumber !== undefined
           ? { fallbackPRNumber: candidate.fallbackPRNumber }
           : {}),
+        ...(acceptMergedFallbackPR ? { acceptMergedFallbackPR: true } : {}),
         ...(candidate.currentHeadOid !== undefined
           ? { currentHeadOid: candidate.currentHeadOid }
           : {})
@@ -79,7 +100,9 @@ export function createGhRealApi(): PreloadApi['gh'] {
     },
     prChecks: async (args) => {
       const repo = args.prRepo ?? (await identity.getRepoSlug(args.repoPath))
-      if (!repo) {
+      // Why: GHES is identity-only in 2D.1 — `gh_exec` cannot target a
+      // non-default host, so a GHES repo must never be queried as github.com.
+      if (!repo || !isDefaultGitHubHost(repo.host)) {
         return []
       }
       return checks.getPRChecks({
@@ -91,7 +114,7 @@ export function createGhRealApi(): PreloadApi['gh'] {
     },
     prCheckDetails: async (args) => {
       const repo = args.prRepo ?? (await identity.getRepoSlug(args.repoPath))
-      if (!repo) {
+      if (!repo || !isDefaultGitHubHost(repo.host)) {
         return null
       }
       return checks.getPRCheckDetails({

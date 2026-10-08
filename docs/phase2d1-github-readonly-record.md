@@ -72,7 +72,7 @@
 1. **无后台协调器**：`enqueuePRRefresh` 维持 false、无刷新事件；PR 状态更新依赖渲染层现有轮询/手动刷新与 `refreshPRNow`。后续切片（2D.2+）按需补。
 2. **无速率熔断**：命中限制时分类报错不预阻断；高频轮询下可能重复触发限流文案。
 3. **SSH 别名不展开**：`github-work:` 等别名 remote 视为非 GitHub；负结果不缓存（避免把 indeterminate 长缓存），每次重新解析。
-4. **GHES 最小支持**：host/port 精确匹配 auth inventory；端口歧义（同 host 多端点）→ 视为未鉴权。
+4. **GHES 边界（终审定稿）**：host/port 精确匹配 auth inventory；端口歧义（同 host 多端点）→ 视为未鉴权。GHES 仅身份解析（`repoSlug`/`repoUpstream`）；PR/checks/review 查询在 2D.1 不支持，非默认 host 返回空/null，绝不按 github.com 查询；host 线程化留待后续切片。
 5. **无 check 日志尾**：详情含 jobs/steps 但无 `logTail`；失败详情的信息密度低于参照版。
 6. **PATH 探测限常见目录**：不做登录 shell 探测（`zsh -lic`）；非常规安装位置会报 `gh_unavailable`。
 7. **缓存位置**：身份/auth inventory/速率快照缓存在渲染层模块作用域（单窗口有效）；多窗口需上移。
@@ -85,11 +85,21 @@
 1. **T1（Rust 执行器）**：并发闸为近似 FIFO（`Condvar` 唤醒顺序不保证）；子进程退出后的管道排空阶段不设上限（若后代进程持有 stdout，可能长期占住 permit）；spawn 失败统一折叠为 `gh: command not found (spawn failed: …)` 文案；`#[cfg(not(unix))]` 回退分支在 POSIX-only 令下为死代码。
 2. **T2（`git_remote_urls`）**：命令参数名为 `worktreePath`（spec 文本写作 repoPath，实际对齐既有 `GitWorktreeArgs.worktree_path`）；git 非零退出降级为 `Ok([])`（不抛）。
 3. **T3（gh 执行客户端与分类）**：非瞬态 executor 异常不包装直接透传（分类器按 `Exception` 读取 message）；`Retry-After` 存在时永不重试。
-4. **T4（仓库身份）**：GHES 测试 fixture 用 https（SCP + 端口为非法语法）；`getRepoUpstream` 也套用 GHES 鉴权门（spec 要求、任务简报遗漏）；缓存住在 resolver 闭包内（模块内单窗口作用域）；一个与 origin 不同的 GHES upstream 可在未鉴权情况下逃逸给调用方（模块内绝不传给 gh）；auth inventory 按 host 缓存。
+4. **T4（仓库身份）**：GHES 测试 fixture 用 https（SCP + 端口为非法语法）；缓存住在 resolver 闭包内（模块内单窗口作用域）；一个与 origin 不同的 GHES upstream 原可在未鉴权情况下逃逸给调用方，终审已修复（`resolveCandidates` 候选门 + `getRepoUpstream` 上游门，未鉴权 → null，见 §5.3）；auth inventory 按 host 缓存。
 5. **T5（PR-for-branch）**：candidates 为空的裸 `gh pr view` 路径被裁掉（无 repo cwd；全部调用显式携带 repo）；所有 gh 调用使用 `{}` options（无 cwd/host 固定）；`conflictSummary` 仅经可选注入依赖产出，默认省略（spec §3.3 裁剪）；headRepo 未知阶梯在 fix 轮 1（`78042fa1`）对齐 oracle（`gh pr list` 优先）；`isNoPullRequestError` 为死代码；hydrate 失败多花一次 REST 调用。**特别备案**：2D.1 仅实现 single-PR 阶梯，参照版的 stack / merge-queue 分支整体裁剪（随 §7.9 工作项面留待后续切片）。
 6. **T6（checks）**：`identity` 依赖被接受但未使用；25s 竞速后落败方的工作仍在后台继续（`gh_exec` 无 `AbortSignal`）；JS 定时器与 Rust 超时之间存在理论竞态。
-7. **T7（速率 / hosted review / preflight）**：速率探针未固定 host（F2；`gh_exec` 无 host 参数，正是 spec §3.1 signature 所限）；hosted-review 缓存仅 TTL，无容量上限/single-flight/backoff/stale-on-error；未鉴权 GHES remote 可经 `resolveCandidates` 触达默认 host 的 gh 查询（鉴权门只在 `getRepoSlug`/`getRepoUpstream`）——同样适用于 Task 5 的查询路径。
-8. **T8（桥接接线）**：`diagnoseAuth` 的 env 探针位于 try/catch 之外（IPC 失败会拒绝整个诊断）；`refreshPRNow` 未从 `candidate.fallbackPRSource` 推导 `acceptMergedFallbackPR`（计划级缺口；merged fallback PR 可能被隐藏）；`prChecks`/`prCheckDetails` 会传播身份解析拒绝。
+7. **T7（速率 / hosted review / preflight）**：速率探针未固定 host（`gh_exec` 无 host 参数，正是 spec §3.1 signature 所限）；hosted-review 缓存仅 TTL，无容量上限/single-flight/backoff/stale-on-error；未鉴权 GHES remote 原可经 `resolveCandidates` 触达默认 host 的 gh 查询（鉴权门只在 `getRepoSlug`/`getRepoUpstream`）——同样适用于 Task 5 的查询路径，终审已按 §5.3 的 GHES 边界全面拦截（未鉴权与已鉴权 GHES 均不再触达默认 host 查询）。
+8. **T8（桥接接线）**：终审已修复（见 §5.3）：`diagnoseAuth` 永不抛（env 探针包裹；仅 spawn-class 错误置 `ghAvailable:false`，超时/IPC 失败保持 true）；`refreshPRNow` 从 `candidate.fallbackPRSource` 推导 `acceptMergedFallbackPR`（对齐 web 路径；merged fallback PR 不再被隐藏）；`prChecks`/`prCheckDetails` 对非默认 host 返回 `[]`/`null`，但仍会传播身份解析（`git_remote_urls`）拒绝。
+
+### 5.3 终审（whole-branch review）修复备案（2026-10-08）
+
+| # | 级别 | 修复 |
+|---|---|---|
+| F1 | Important | `refreshPRNow` 按 `linkedPRNumber == null && fallbackPRNumber != null && fallbackPRSource != null` 推导 `acceptMergedFallbackPR`（对齐 `web-github-api.ts` 既有推导）；merged fallback PR 在原生路径不再被隐藏。 |
+| F2 | Important | `diagnoseAuth` 包裹 `gh_env_probe`（失败 → `envTokenInProcess:null`）；`gh auth status` 失败仅 spawn-class（`isGhMissingError`）置 `ghAvailable:false`，超时/IPC 失败保持 `true`（永不抛）。 |
+| F3 | Important | GHES 边界收紧：`resolveCandidates` 对非默认 host 候选套用 auth 门（未鉴权丢弃）；`pr-for-branch` 跳过非默认 host 候选与 headRepo；`hosted-review` 首候选非默认 host → null；桥接 `prChecks`/`prCheckDetails` 非默认 host → `[]`/`null`；GHES 绝不按 github.com 查询。 |
+| F4 | Important | `getRepoUpstream` 的 distinct upstream 在返回前套用 `ensureHostAuthenticated`（非默认 host 未鉴权 → null）。 |
+| F5 | Minor | `read_timeout_ms` 钳制到 `[1, 600_000]` ms，防止 `Instant::now() + Duration` 溢出 panic。 |
 
 ## 6. 已知边界与后续
 

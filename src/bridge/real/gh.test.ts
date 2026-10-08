@@ -42,7 +42,7 @@ const EMPTY_CHECKS_RESPONSE = JSON.stringify({
   }
 })
 
-const PR_VIEW_42 = JSON.stringify({
+const PR_VIEW_42_DATA = {
   number: 42,
   title: 'Add widget',
   state: 'OPEN',
@@ -58,7 +58,11 @@ const PR_VIEW_42 = JSON.stringify({
   headRefName: 'feature',
   baseRefOid: 'base-sha',
   headRefOid: 'head-sha'
-})
+}
+
+const PR_VIEW_42 = JSON.stringify(PR_VIEW_42_DATA)
+
+const MERGED_PR_VIEW_42 = JSON.stringify({ ...PR_VIEW_42_DATA, state: 'MERGED' })
 
 function ghExecResult(stdout: string, code = 0) {
   return { stdout, stderr: '', code }
@@ -164,6 +168,121 @@ describe('gh real api', () => {
         }
       })
     ).resolves.toMatchObject({ kind: 'found', pr: { number: 42 } })
+  })
+
+  it('keeps a merged fallback PR when the candidate carries a fallbackPRSource', async () => {
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'git_remote_urls') return [originRemote]
+      if (command === 'gh_exec') return ghExecResult(MERGED_PR_VIEW_42)
+      throw new Error(`unexpected ${command}`)
+    })
+    const api = createGhRealApi()
+    await expect(
+      api.refreshPRNow({
+        candidate: {
+          cacheKey: 'k',
+          repoId: 'r1',
+          repoPath: '/repo',
+          branch: '',
+          repoKind: 'git',
+          fallbackPRNumber: 42,
+          fallbackPRSource: 'explicit'
+        }
+      })
+    ).resolves.toMatchObject({ kind: 'found', pr: { number: 42, state: 'merged' } })
+  })
+
+  it('hides a merged fallback PR when the candidate has no fallbackPRSource', async () => {
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'git_remote_urls') return [originRemote]
+      if (command === 'gh_exec') return ghExecResult(MERGED_PR_VIEW_42)
+      throw new Error(`unexpected ${command}`)
+    })
+    const api = createGhRealApi()
+    await expect(
+      api.refreshPRNow({
+        candidate: {
+          cacheKey: 'k',
+          repoId: 'r1',
+          repoPath: '/repo',
+          branch: '',
+          repoKind: 'git',
+          fallbackPRNumber: 42
+        }
+      })
+    ).resolves.toMatchObject({ kind: 'no-pr' })
+  })
+
+  it('resolves diagnoseAuth with a null env token when the env probe rejects', async () => {
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'gh_exec') return ghExecResult(AUTH_STATUS)
+      if (command === 'gh_env_probe') throw new Error('env probe failed')
+      throw new Error(`unexpected ${command}`)
+    })
+    const api = createGhRealApi()
+    await expect(api.diagnoseAuth()).resolves.toMatchObject({
+      ghAvailable: true,
+      activeAccount: { user: 'alice' },
+      envTokenInProcess: null
+    })
+  })
+
+  it('keeps gh available when the auth status runner times out', async () => {
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'gh_exec') throw new Error('gh exec timed out')
+      if (command === 'gh_env_probe') return { token: null }
+      throw new Error(`unexpected ${command}`)
+    })
+    const api = createGhRealApi()
+    await expect(api.diagnoseAuth()).resolves.toMatchObject({
+      ghAvailable: true,
+      accounts: [],
+      activeAccount: null
+    })
+  })
+
+  it('keeps gh available when the auth status runner fails without a spawn signature', async () => {
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'gh_exec') throw new Error('ipc transport failed')
+      if (command === 'gh_env_probe') return { token: null }
+      throw new Error(`unexpected ${command}`)
+    })
+    const api = createGhRealApi()
+    await expect(api.diagnoseAuth()).resolves.toMatchObject({
+      ghAvailable: true,
+      accounts: [],
+      activeAccount: null
+    })
+  })
+
+  it('returns no checks for a non-default host repo without touching gh', async () => {
+    invokeMock.mockImplementation(async (command: string) => {
+      throw new Error(`unexpected ${command}`)
+    })
+    const api = createGhRealApi()
+    await expect(
+      api.prChecks({
+        repoPath: '/repo',
+        prNumber: 7,
+        prRepo: { owner: 'org', repo: 'repo', host: 'ghe.internal:8443' }
+      })
+    ).resolves.toEqual([])
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it('returns null check details for a non-default host repo without touching gh', async () => {
+    invokeMock.mockImplementation(async (command: string) => {
+      throw new Error(`unexpected ${command}`)
+    })
+    const api = createGhRealApi()
+    await expect(
+      api.prCheckDetails({
+        repoPath: '/repo',
+        prRepo: { owner: 'org', repo: 'repo', host: 'ghe.internal:8443' },
+        checkRunId: 5
+      })
+    ).resolves.toBeNull()
+    expect(invokeMock).not.toHaveBeenCalled()
   })
 
   it('routes prCheckDetails through the REST check-run endpoint', async () => {

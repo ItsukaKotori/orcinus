@@ -13,6 +13,8 @@ use crate::errors::BridgeError;
 use crate::state::{AppState, GhPathCache};
 
 const DEFAULT_TIMEOUT_MS: u64 = 30_000;
+/// 渲染层可传 `timeoutMs`；钳制上限防止 `Instant::now() + Duration` 溢出 panic。
+const MAX_TIMEOUT_MS: u64 = 600_000;
 const DEFAULT_MAX_BUFFER: usize = 10 * 1024 * 1024;
 const POLL_INTERVAL: Duration = Duration::from_millis(10);
 
@@ -93,7 +95,7 @@ pub fn read_timeout_ms(value: Option<u64>) -> Duration {
                 .and_then(|raw| raw.trim().parse::<u64>().ok())
         })
         .unwrap_or(DEFAULT_TIMEOUT_MS);
-    Duration::from_millis(millis.max(1))
+    Duration::from_millis(millis.clamp(1, MAX_TIMEOUT_MS))
 }
 
 /// 运行 gh：非零退出是 Ok 结果；spawn/超时/超限是 Err。

@@ -142,6 +142,21 @@ describe('repo identity', () => {
     expect(client.run).toHaveBeenCalledWith(['auth', 'status'])
   })
 
+  it('drops unauthenticated GHES candidates from resolveCandidates', async () => {
+    const { resolver, client } = makeResolver({
+      '/repo': [{ name: 'origin', url: 'https://ghe.internal:8443/org/repo.git' }]
+    })
+    client.run.mockResolvedValueOnce({
+      stdout: '',
+      stderr: 'You are not logged into any GitHub hosts.',
+      code: 1
+    })
+    await expect(resolver.resolveCandidates('/repo')).resolves.toEqual({
+      candidates: [],
+      headRepo: null
+    })
+  })
+
   it('treats unauthenticated GHES hosts as non-GitHub', async () => {
     const { resolver, client } = makeResolver({
       '/repo': [{ name: 'origin', url: 'https://ghe.internal:8443/org/repo.git' }]
@@ -210,6 +225,22 @@ describe('repo identity', () => {
       repo: 'repo',
       host: undefined
     })
+    expect(client.runOrThrow).not.toHaveBeenCalled()
+  })
+
+  it('returns null for an unauthenticated GHES upstream without probing repo view', async () => {
+    const { resolver, client } = makeResolver({
+      '/repo': [
+        { name: 'origin', url: 'https://ghe.internal:8443/me/fork.git' },
+        { name: 'upstream', url: 'https://ghe.internal:8443/org/repo.git' }
+      ]
+    })
+    client.run.mockResolvedValue({
+      stdout: '',
+      stderr: 'You are not logged into any GitHub hosts.',
+      code: 1
+    })
+    await expect(resolver.getRepoUpstream('/repo')).resolves.toBeNull()
     expect(client.runOrThrow).not.toHaveBeenCalled()
   })
 

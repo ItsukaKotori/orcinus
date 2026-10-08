@@ -16,6 +16,7 @@ import type {
   HostedReviewForBranchArgs,
   HostedReviewInfo
 } from '../../../../shared/hosted-review'
+import { isDefaultGitHubHost } from '../../../../shared/github/repository-identity-key'
 import { hostedReviewInfoFromGitHubPRInfo } from '../../../../shared/hosted-review-github'
 import type { PRForBranchLookup } from './pr-for-branch'
 import type { RepoIdentityResolver } from './repo-identity'
@@ -104,7 +105,9 @@ export function createHostedReviewClient(deps: HostedReviewClientDeps): HostedRe
       return null
     }
     const { candidates } = await deps.identity.resolveCandidates(args.repoPath)
-    if (candidates.length === 0) {
+    // Why: GHES is identity-only in 2D.1 — hosted review is unsupported on a
+    // non-default host, and gh_exec cannot route the query to it.
+    if (candidates.length === 0 || !isDefaultGitHubHost(candidates[0]?.host)) {
       return null
     }
     const outcome = await deps.lookup.getPRForBranchOutcome({

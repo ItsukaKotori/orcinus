@@ -54,7 +54,7 @@ impl Drop for TestDir {
     fn drop(&mut self) { let _ = std::fs::remove_dir_all(&self.path); }
 }
 
-use ade_bridge::commands::gh::{gh_env_probe_impl, gh_exec_impl, resolve_gh_path_in};
+use ade_bridge::commands::gh::{gh_env_probe_impl, gh_exec_impl, read_timeout_ms, resolve_gh_path_in};
 use ade_bridge::state::{GhConcurrencyGate, GhPathCache};
 
 #[test]
@@ -164,6 +164,13 @@ fn gh_gate_limits_concurrency() {
     let elapsed = started.elapsed();
     assert!(elapsed >= Duration::from_millis(450), "6 calls / 4 permits must take >=2 batches: {elapsed:?}");
     assert!(elapsed < Duration::from_millis(1500), "gate must not serialize: {elapsed:?}");
+}
+
+#[test]
+fn read_timeout_ms_clamps_extreme_values() {
+    assert_eq!(read_timeout_ms(Some(u64::MAX)), Duration::from_millis(600_000));
+    assert_eq!(read_timeout_ms(Some(600_001)), Duration::from_millis(600_000));
+    assert_eq!(read_timeout_ms(Some(1_500)), Duration::from_millis(1_500));
 }
 
 #[test]

@@ -184,11 +184,44 @@ export function createRepoIdentityResolver(deps: RepoIdentityResolverDeps): Repo
     return authenticated
   }
 
+  // Why: 2D.1's gh surface is host-less (no `gh_exec` host param), so a GHES
+  // candidate must be dropped unless `gh auth status` proves credentials for
+  // its exact host; default-host candidates are untouched. Applied after the
+  // candidate cache so a later login can be picked up once the (shorter) auth
+  // inventory TTL expires.
+  async function gateCandidates(
+    result: RepoIdentityCandidates
+  ): Promise<RepoIdentityCandidates> {
+    const hostDecisions = new Map<string, boolean>()
+    const allowed = async (identity: GitHubRepoIdentity): Promise<boolean> => {
+      if (isDefaultGitHubHost(identity.host)) {
+        return true
+      }
+      const host = identity.host ?? ''
+      const decided = hostDecisions.get(host)
+      if (decided !== undefined) {
+        return decided
+      }
+      const authenticated = await ensureHostAuthenticated(host)
+      hostDecisions.set(host, authenticated)
+      return authenticated
+    }
+    const candidates: GitHubRepoIdentity[] = []
+    for (const identity of result.candidates) {
+      if (await allowed(identity)) {
+        candidates.push(identity)
+      }
+    }
+    const headRepoAllowed = result.headRepo ? await allowed(result.headRepo) : false
+    const headRepo = headRepoAllowed ? result.headRepo : null
+    return { candidates, headRepo }
+  }
+
   async function resolveCandidates(worktreePath: string): Promise<RepoIdentityCandidates> {
     const cacheKey = `${worktreePath}\0candidates`
     const cached = candidateCache.get(cacheKey)
     if (cached && cached.expiresAt > now()) {
-      return cloneResult(cached.result)
+      return cloneResult(await gateCandidates(cached.result))
     }
 
     const rows = await readRemoteUrls(worktreePath)
@@ -217,7 +250,7 @@ export function createRepoIdentityResolver(deps: RepoIdentityResolverDeps): Repo
       const ttl = candidates.length > 0 ? POSITIVE_TTL_MS : NEGATIVE_TTL_MS
       candidateCache.set(cacheKey, { result, expiresAt: now() + ttl })
     }
-    return cloneResult(result)
+    return cloneResult(await gateCandidates(result))
   }
 
   async function getRepoSlug(worktreePath: string): Promise<GitHubRepoIdentity | null> {
@@ -241,6 +274,14 @@ export function createRepoIdentityResolver(deps: RepoIdentityResolverDeps): Repo
       (candidate) => githubRepoIdentityKey(candidate) !== originKey
     )
     if (upstream) {
+      // Why: the distinct upstream returns before the origin fork probe, but a
+      // GHES upstream must still pass the same host gate (spec §4 候选 → GHES 门).
+      if (
+        !isDefaultGitHubHost(upstream.host) &&
+        !(await ensureHostAuthenticated(upstream.host ?? ''))
+      ) {
+        return null
+      }
       return upstream
     }
     if (!isDefaultGitHubHost(origin.host) && !(await ensureHostAuthenticated(origin.host ?? ''))) {

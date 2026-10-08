@@ -127,6 +127,14 @@ describe('hosted review forBranch', () => {
     expect(getPRForBranchOutcome).not.toHaveBeenCalled()
   })
 
+  it('returns null for a non-default-host candidate without a lookup', async () => {
+    const { client, getPRForBranchOutcome } = createHarness({
+      candidates: [{ owner: 'org', repo: 'repo', host: 'ghe.internal:8443' }]
+    })
+    await expect(client.forBranch({ repoPath: '/repo', branch: 'feature' })).resolves.toBeNull()
+    expect(getPRForBranchOutcome).not.toHaveBeenCalled()
+  })
+
   it('throws the wrapped upstream error', async () => {
     const { client, getPRForBranchOutcome } = createHarness()
     getPRForBranchOutcome.mockResolvedValueOnce({
