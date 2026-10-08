@@ -46,7 +46,9 @@ import { createAgentStatusRealApi } from './real/agent-status'
 import { createAppRealApi } from './real/app'
 import { createFolderWorkspacesRealApi } from './real/folder-workspaces'
 import { createFsRealApi } from './real/fs'
+import { createGhRealApi } from './real/gh'
 import { createGitRealApi } from './real/git'
+import { createHostedReviewRealApi } from './real/hosted-review'
 import { createNotificationsRealApi } from './real/notifications'
 import { createOnboardingRealApi } from './real/onboarding'
 import { createPlatformRealApi } from './real/platform'
@@ -73,7 +75,9 @@ type RealDomains = Pick<
   | 'app'
   | 'folderWorkspaces'
   | 'fs'
+  | 'gh'
   | 'git'
+  | 'hostedReview'
   | 'notifications'
   | 'onboarding'
   | 'platform'
@@ -147,7 +151,9 @@ function createRealDomains(): RealDomains {
     app: createAppRealApi(),
     folderWorkspaces: createFolderWorkspacesRealApi(),
     fs: createFsRealApi(),
+    gh: createGhRealApi(),
     git: createGitRealApi(),
+    hostedReview: createHostedReviewRealApi(),
     notifications: createNotificationsRealApi(),
     onboarding: createOnboardingRealApi(),
     platform: createPlatformRealApi(),

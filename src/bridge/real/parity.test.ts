@@ -10,6 +10,8 @@ import { UnimplementedBridgeError } from '../unimplemented-fallback'
 import { createAgentStatusRealApi } from './agent-status'
 import { createAppRealApi } from './app'
 import { createFsRealApi } from './fs'
+import { createGhRealApi } from './gh'
+import { createHostedReviewRealApi } from './hosted-review'
 import { createNotificationsRealApi } from './notifications'
 import { createOnboardingRealApi } from './onboarding'
 import { createPlatformRealApi } from './platform'
@@ -253,6 +255,81 @@ const ptyManagementSurface = Object.keys({
 
 const ptySurfaceMethods = (disposition: PtyMethodDisposition): string[] =>
   Object.entries(ptySurfaceDispositions)
+    .filter(([, value]) => value === disposition)
+    .map(([method]) => method)
+
+/**
+ * gh 扁平契约方法的处置全集（Task 8）。`satisfies Record<keyof …>` 把契约键集
+ * 锁死：`GithubPullRequestApi`/`GithubWorkItemApi` 新增方法而不在此处置时
+ * `pnpm typecheck` 直接失败。2D.1 只接线只读方法，其余（创建/变更/项目查询）
+ * 保持 rejecting fallback。
+ */
+type GhMethodDisposition = 'explicit' | 'missing'
+
+const ghSurfaceDispositions = {
+  diagnoseAuth: 'explicit',
+  rateLimit: 'explicit',
+  repoSlug: 'explicit',
+  repoUpstream: 'explicit',
+  prForBranch: 'explicit',
+  refreshPRNow: 'explicit',
+  prChecks: 'explicit',
+  prCheckDetails: 'explicit',
+  onPRRefreshEvent: 'explicit',
+  viewer: 'missing',
+  enqueuePRRefresh: 'missing',
+  reportVisiblePRRefreshCandidates: 'missing',
+  prFileContents: 'missing',
+  rerunPRChecks: 'missing',
+  prComments: 'missing',
+  setPRCommentReaction: 'missing',
+  resolveReviewThread: 'missing',
+  setPRFileViewed: 'missing',
+  updatePRTitle: 'missing',
+  mergePR: 'missing',
+  setPRAutoMerge: 'missing',
+  updatePRState: 'missing',
+  markPRReadyForReview: 'missing',
+  requestPRReviewers: 'missing',
+  removePRReviewers: 'missing',
+  addPRReviewCommentReply: 'missing',
+  addPRReviewComment: 'missing',
+  checkOrcaStarred: 'missing',
+  starOrca: 'missing',
+  issue: 'missing',
+  workItem: 'missing',
+  workItemByOwnerRepo: 'missing',
+  workItemDetails: 'missing',
+  notifyWorkItemMutated: 'missing',
+  listIssues: 'missing',
+  createIssue: 'missing',
+  countWorkItems: 'missing',
+  listWorkItems: 'missing',
+  updateIssue: 'missing',
+  addIssueComment: 'missing',
+  listLabels: 'missing',
+  listAssignableUsers: 'missing',
+  onWorkItemMutated: 'missing',
+  listAccessibleProjects: 'missing',
+  resolveProjectRef: 'missing',
+  listProjectViews: 'missing',
+  getProjectViewTable: 'missing',
+  projectWorkItemDetailsBySlug: 'missing',
+  updateProjectItemField: 'missing',
+  clearProjectItemField: 'missing',
+  updateIssueBySlug: 'missing',
+  updatePullRequestBySlug: 'missing',
+  addIssueCommentBySlug: 'missing',
+  updateIssueCommentBySlug: 'missing',
+  deleteIssueCommentBySlug: 'missing',
+  listLabelsBySlug: 'missing',
+  listAssignableUsersBySlug: 'missing',
+  listIssueTypesBySlug: 'missing',
+  updateIssueTypeBySlug: 'missing'
+} satisfies Record<keyof PreloadApi['gh'], GhMethodDisposition>
+
+const ghSurfaceMethods = (disposition: GhMethodDisposition): string[] =>
+  Object.entries(ghSurfaceDispositions)
     .filter(([, value]) => value === disposition)
     .map(([method]) => method)
 
@@ -500,6 +577,16 @@ const surfaceCases: SurfaceCase[] = [
       'playSound'
     ],
     missing: []
+  },
+  {
+    domain: 'gh',
+    explicit: ghSurfaceMethods('explicit'),
+    missing: ghSurfaceMethods('missing')
+  },
+  {
+    domain: 'hostedReview',
+    explicit: ['forBranch'],
+    missing: ['getCreationEligibility', 'create', 'createStacked']
   }
 ]
 
@@ -824,6 +911,10 @@ function realApiFor(domain: keyof PreloadApi): unknown {
       return createPlatformRealApi()
     case 'notifications':
       return createNotificationsRealApi()
+    case 'gh':
+      return createGhRealApi()
+    case 'hostedReview':
+      return createHostedReviewRealApi()
     default:
       throw new Error(`no real factory for ${domain}`)
   }

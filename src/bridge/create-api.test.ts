@@ -123,7 +123,7 @@ describe('createAdeApi real assembly', () => {
 
   it('keeps the unported acceptance namespaces benign in real mode', async () => {
     // Regression: namespace-level fabricated rejections produced the false
-    // "check failed" setup card, empty hosted badges, and SCM console errors.
+    // "check failed" setup card and SCM console errors.
     const api = createAdeApi()
     await expect(api.hooks.check({ repoId: 'repo-1' })).resolves.toEqual({
       status: 'ok',
@@ -132,10 +132,44 @@ describe('createAdeApi real assembly', () => {
       mayNeedUpdate: false
     })
     await expect(api.hooks.inspectSetupScriptImports({ repoId: 'repo-1' })).resolves.toEqual([])
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it('routes the hostedReview domain through the real worktree identity lookup', async () => {
+    const api = createAdeApi()
+    invokeMock.mockResolvedValue([])
     await expect(
       api.hostedReview.forBranch({ repoPath: '/repo', branch: 'main' })
     ).resolves.toBeNull()
-    expect(invokeMock).not.toHaveBeenCalled()
+    expect(invokeMock).toHaveBeenCalledWith('git_remote_urls', {
+      args: { worktreePath: '/repo' }
+    })
+  })
+
+  it('routes the gh domain through its commands', async () => {
+    const api = createAdeApi()
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'gh_exec') {
+        return {
+          stdout: [
+            'github.com',
+            '  ✓ Logged in to github.com account alice (keyring)',
+            '  - Active account: true',
+            "  - Token scopes: 'project', 'read:org', 'repo'",
+            ''
+          ].join('\n'),
+          stderr: '',
+          code: 0
+        }
+      }
+      if (command === 'gh_env_probe') return { token: null }
+      throw new Error(`unexpected ${command}`)
+    })
+    await api.gh.diagnoseAuth()
+    expect(invokeMock.mock.calls.map(([command]) => command)).toEqual([
+      'gh_exec',
+      'gh_env_probe'
+    ])
   })
 
   it('routes the git domain through its commands', async () => {
