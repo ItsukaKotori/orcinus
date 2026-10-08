@@ -39,7 +39,8 @@
 | 421ad1bb | feat(renderer): PR checks 列表三阶降级与详情（无日志尾） |
 | 4520d8a2 | feat(renderer): 速率快照、hosted review forBranch 与 gh 就绪探针 |
 | 65f7ab3a | feat(bridge): gh/hostedReview 真实域接线与 preflight gh 探针 |
-| 本记录提交 | docs: Phase 2D.1 实施记录与门禁证据（GitHub 只读基础）——Task 9，含本文件与计划勾选 |
+| 9cf5e89d | docs: Phase 2D.1 实施记录与门禁证据（GitHub 只读基础）——Task 9，含本文件与计划勾选 |
+| ba435a07 | fix(renderer): 终审修复——merged fallback、诊断永不抛、GHES 边界与超时钳制（终审 5 项；§5.3 已更新） |
 
 ## 3. 门禁证据（自动化）
 
@@ -52,6 +53,8 @@
 | TS 全量 | `pnpm test`（仓库根） | **exit 0，全绿**：`Test Files 3871 passed / 0 failed / 8 skipped (3879)`；`Tests 34471 passed / 0 failed / 122 skipped (34593)`；Duration **458.42s**。**本轮无性能抖动失败**（无需隔离复跑） |
 
 过程说明：Task 8 提交前已跑过一次全量 `pnpm test`（3871 文件 / 34471 测试 / 0 失败），Task 9 在终态树上复跑结果一致，即终态证据与过程中证据无差异。日志留存于本机临时目录（`cargo-test-phase2d1.log` / `pnpm-test-phase2d1.log` / `build-web-phase2d1.log`）。
+
+终审修复波次（`ba435a07`）后的最终树复跑：`pnpm test` **exit 0**（`Test Files 3871 passed / 0 failed / 8 skipped`；`Tests 34483 passed / 0 failed`，较上表 +12 条新增回归测试）；`cargo test -p ade-bridge --test gh_exec` 10/10（+1 超时钳制）；`pnpm typecheck` exit 0。终审结论：4 项 Important（merged fallback 隐藏、诊断可抛、GHES 查询边界、upstream 鉴权门）+ 1 项 Minor 加固（超时钳制）全部修复并经 scoped 复审确认；GHES 边界见 §5.3。
 
 ## 4. 手工验收清单（待用户复核）
 
