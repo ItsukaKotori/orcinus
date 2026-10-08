@@ -27,6 +27,21 @@ function ghFail(stderr: string): GhExecResult {
 const ORG_REPO: GitHubRepoIdentity = { owner: 'org', repo: 'repo' }
 const FORK: GitHubRepoIdentity = { owner: 'me', repo: 'fork' }
 
+const PR_LIST_ARGV: string[] = [
+  'pr',
+  'list',
+  '--repo',
+  'org/repo',
+  '--head',
+  'feature',
+  '--state',
+  'all',
+  '--limit',
+  '1',
+  '--json',
+  PR_BRANCH_LIST_JSON_FIELDS
+]
+
 const SUCCESS_PR = {
   number: 42,
   title: 'Feature',
@@ -164,12 +179,45 @@ describe('pr-for-branch lookup', () => {
     expect(outcome).toMatchObject({ kind: 'found', pr: { number: 42, checksStatus: 'success' } })
   })
 
-  it('falls back to gh pr list when the REST branch lookup fails without a known head repo', async () => {
+  it('finds a fork PR through gh pr list first when the head repo is unknown', async () => {
+    const { lookup, executor } = createHarness({
+      candidates: [ORG_REPO],
+      steps: [ghOk([{ ...SUCCESS_PR }]), ghOk(SUCCESS_PR)]
+    })
+    const outcome = await lookup.getPRForBranchOutcome({
+      worktreePath: '/repo',
+      branch: 'feature'
+    })
+    expect(executor).toHaveBeenNthCalledWith(1, PR_LIST_ARGV, {})
+    expect(executor).toHaveBeenNthCalledWith(
+      2,
+      ['pr', 'view', '42', '--repo', 'org/repo', '--json', PR_LOOKUP_JSON_FIELDS],
+      {}
+    )
+    expect(executor).toHaveBeenCalledTimes(2)
+    expect(outcome).toMatchObject({ kind: 'found', pr: { number: 42 } })
+  })
+
+  it('retries REST with the candidate owner only when gh pr list fails without a known head repo', async () => {
     const { lookup, executor } = createHarness({
       candidates: [ORG_REPO],
       steps: [
         ghFail('boom'),
-        ghOk([{ ...SUCCESS_PR, statusCheckRollup: [] }]),
+        ghOk([
+          {
+            number: 42,
+            title: 'Feature',
+            state: 'open',
+            html_url: 'https://github.com/org/repo/pull/42',
+            updated_at: '2026-10-06T00:00:00Z',
+            draft: false,
+            merged_at: null,
+            mergeable: true,
+            mergeable_state: 'clean',
+            base: { ref: 'main', sha: 'base1' },
+            head: { ref: 'feature', sha: 'head1' }
+          }
+        ]),
         ghOk(SUCCESS_PR)
       ]
     })
@@ -177,27 +225,10 @@ describe('pr-for-branch lookup', () => {
       worktreePath: '/repo',
       branch: 'feature'
     })
-    expect(executor).toHaveBeenNthCalledWith(
-      1,
-      ['api', 'repos/org/repo/pulls?head=org%3Afeature&state=all&per_page=1'],
-      {}
-    )
+    expect(executor).toHaveBeenNthCalledWith(1, PR_LIST_ARGV, {})
     expect(executor).toHaveBeenNthCalledWith(
       2,
-      [
-        'pr',
-        'list',
-        '--repo',
-        'org/repo',
-        '--head',
-        'feature',
-        '--state',
-        'all',
-        '--limit',
-        '1',
-        '--json',
-        PR_BRANCH_LIST_JSON_FIELDS
-      ],
+      ['api', 'repos/org/repo/pulls?head=org%3Afeature&state=all&per_page=1'],
       {}
     )
     expect(executor).toHaveBeenNthCalledWith(

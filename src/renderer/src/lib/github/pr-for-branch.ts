@@ -479,11 +479,11 @@ export function createPRForBranchLookup(deps: PRForBranchLookupDeps): PRForBranc
     let hasPendingError = false
     for (const candidate of args.candidates) {
       try {
-        const branchData = await getRestPRForBranch(
-          candidate,
-          args.headRepo ? args.headRepo.owner : candidate.owner,
-          args.branchName
-        )
+        // Why: with an unknown head owner, `gh pr list --head` matches fork PRs
+        // by branch name where REST `owner:branch` cannot guess the owner.
+        const branchData = args.headRepo
+          ? await getRestPRForBranch(candidate, args.headRepo.owner, args.branchName)
+          : await getFallbackPRListForBranch(candidate, args.branchName)
         // Why: REST branch lookup identifies the PR cheaply; exact `gh pr view` carries review and auto-merge state.
         const data = await hydrateBranchLookupWithExactPR(candidate, branchData)
         if (data) {
@@ -498,7 +498,7 @@ export function createPRForBranchLookup(deps: PRForBranchLookupDeps): PRForBranc
           hasPendingError = true
         }
         try {
-          const branchData = await getFallbackPRListForBranch(candidate, args.branchName)
+          const branchData = await getRestPRForBranch(candidate, candidate.owner, args.branchName)
           const data = await hydrateBranchLookupWithExactPR(candidate, branchData)
           if (data) {
             return { data, dataRepo: candidate }
