@@ -662,10 +662,27 @@ const GIT_CONFIG_WRITE_FLAGS: &[&str] = &[
     "--remove-section",
     "--set",
 ];
+/// `config` 越权读入口：`--file`/`--blob` 的长选项名（用于识别缩写与 `=value`）。
+const GIT_CONFIG_CONTAINMENT_FLAGS: &[&str] = &["file", "blob"];
+/// `symbolic-ref` 仅允许这些精确读标志（长选项缩写一律拒绝）。
+const GIT_SYMBOLIC_REF_READ_FLAGS: &[&str] = &["-q", "--quiet", "--short", "--no-recurse"];
+
+/// `config` 的越权读入口判定：`--file`/`--blob`、其任意无歧义长选项缩写与
+/// `=value` 形式，以及 `-f`（含 `-f<path>` 与组合短选项中的 `f`）。
+fn is_config_containment_bypass(arg: &str) -> bool {
+    if let Some(rest) = arg.strip_prefix("--") {
+        let name = rest.split('=').next().unwrap_or(rest);
+        return name.len() >= 2
+            && GIT_CONFIG_CONTAINMENT_FLAGS
+                .iter()
+                .any(|flag| flag.starts_with(name));
+    }
+    arg.starts_with('-') && arg[1..].contains('f')
+}
 
 /// 只读 git 命令白名单：首参必须受支持；`config` 仅允许读形式（含 `--get*`/`--list`，
-/// 且拒绝任何写标志与裸写位置参数）；`symbolic-ref` 仅允许读形式（拒绝 `--delete`/`-d`
-/// 与第二个位置参数——`symbolic-ref <ref> <target>` 会写符号引用）。
+/// 且拒绝任何写标志、裸写位置参数与越权读入口）；`symbolic-ref` 仅允许精确读标志，
+/// 其余任何以 `-` 开头的参数或第二个位置参数（写形式）一律拒绝。
 pub fn is_allowed_git_read_args(args: &[String]) -> bool {
     let Some(subcommand) = args.first().map(String::as_str) else {
         return false;
@@ -674,7 +691,10 @@ pub fn is_allowed_git_read_args(args: &[String]) -> bool {
         return false;
     }
     if subcommand == "symbolic-ref" {
-        if args.iter().any(|arg| arg == "--delete" || arg == "-d") {
+        if args[1..]
+            .iter()
+            .any(|arg| arg.starts_with('-') && !GIT_SYMBOLIC_REF_READ_FLAGS.contains(&arg.as_str()))
+        {
             return false;
         }
         let positional = args[1..].iter().filter(|arg| !arg.starts_with('-')).count();
@@ -688,6 +708,9 @@ pub fn is_allowed_git_read_args(args: &[String]) -> bool {
             .iter()
             .any(|flag| arg == flag || arg.starts_with(&format!("{flag}=")))
     }) {
+        return false;
+    }
+    if args.iter().any(|arg| is_config_containment_bypass(arg)) {
         return false;
     }
     let has_read_flag = args

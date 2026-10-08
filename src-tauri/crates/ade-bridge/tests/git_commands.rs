@@ -440,6 +440,28 @@ fn git_read_whitelist_restricts_symbolic_ref_to_read_forms() {
 }
 
 #[test]
+fn git_read_whitelist_rejects_write_and_containment_escapes() {
+    let ok = |args: &[&str]| {
+        is_allowed_git_read_args(&args.iter().map(|s| s.to_string()).collect::<Vec<_>>())
+    };
+    // symbolic-ref：仅精确读标志；组合短选项与长选项缩写一律拒绝。
+    assert!(!ok(&["symbolic-ref", "-dq", "refs/heads/alias"]));
+    assert!(!ok(&["symbolic-ref", "--del", "refs/x"]));
+    assert!(!ok(&["symbolic-ref", "-d", "refs/x"]));
+    assert!(!ok(&["symbolic-ref", "HEAD", "refs/heads/x"]));
+    assert!(ok(&["symbolic-ref", "--quiet", "refs/remotes/origin/HEAD"]));
+    assert!(ok(&["symbolic-ref", "--quiet", "--short", "HEAD"]));
+    // config：越权读入口（--file/-f/--blob 及缩写/紧贴形式）拒绝。
+    assert!(!ok(&["config", "--file", "/tmp/x", "--get", "a"]));
+    assert!(!ok(&["config", "-f", "/tmp/x", "--list"]));
+    assert!(!ok(&["config", "--blob", "abc", "--get", "a"]));
+    assert!(!ok(&["config", "--fil", "/tmp/x", "--get", "a"]));
+    assert!(!ok(&["config", "--blob=abc", "--get", "a"]));
+    assert!(!ok(&["config", "-f/tmp/x", "--list"]));
+    assert!(ok(&["config", "--get", "branch.main.remote"]));
+}
+
+#[test]
 fn git_read_runs_real_reads_and_passes_through_nonzero() {
     let dir = TestDir::new("git-read");
     init_repo(&dir);
