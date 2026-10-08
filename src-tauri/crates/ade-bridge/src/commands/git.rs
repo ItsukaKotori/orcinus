@@ -664,13 +664,21 @@ const GIT_CONFIG_WRITE_FLAGS: &[&str] = &[
 ];
 
 /// 只读 git 命令白名单：首参必须受支持；`config` 仅允许读形式（含 `--get*`/`--list`，
-/// 且拒绝任何写标志与裸写位置参数）。
+/// 且拒绝任何写标志与裸写位置参数）；`symbolic-ref` 仅允许读形式（拒绝 `--delete`/`-d`
+/// 与第二个位置参数——`symbolic-ref <ref> <target>` 会写符号引用）。
 pub fn is_allowed_git_read_args(args: &[String]) -> bool {
     let Some(subcommand) = args.first().map(String::as_str) else {
         return false;
     };
     if !GIT_READ_ALLOWED_SUBCOMMANDS.contains(&subcommand) {
         return false;
+    }
+    if subcommand == "symbolic-ref" {
+        if args.iter().any(|arg| arg == "--delete" || arg == "-d") {
+            return false;
+        }
+        let positional = args[1..].iter().filter(|arg| !arg.starts_with('-')).count();
+        return positional <= 1;
     }
     if subcommand != "config" {
         return true;

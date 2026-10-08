@@ -428,6 +428,18 @@ fn git_read_whitelist_accepts_only_read_forms() {
 }
 
 #[test]
+fn git_read_whitelist_restricts_symbolic_ref_to_read_forms() {
+    let ok = |args: &[&str]| {
+        is_allowed_git_read_args(&args.iter().map(|s| s.to_string()).collect::<Vec<_>>())
+    };
+    assert!(ok(&["symbolic-ref", "--quiet", "refs/remotes/origin/HEAD"]));
+    assert!(ok(&["symbolic-ref", "--quiet", "--short", "HEAD"]));
+    // 两个位置参数是写形式；`--delete`/`-d` 删除符号引用。
+    assert!(!ok(&["symbolic-ref", "HEAD", "refs/heads/x"]));
+    assert!(!ok(&["symbolic-ref", "--delete", "refs/x"]));
+}
+
+#[test]
 fn git_read_runs_real_reads_and_passes_through_nonzero() {
     let dir = TestDir::new("git-read");
     init_repo(&dir);
