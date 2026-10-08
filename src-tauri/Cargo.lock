@@ -21,6 +21,7 @@ dependencies = [
  "base64 0.22.1",
  "block2",
  "filetime",
+ "libc",
  "objc2",
  "objc2-foundation",
  "objc2-user-notifications",

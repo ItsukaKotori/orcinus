@@ -134,6 +134,8 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::git::git_branch_diff,
                 commands::git::git_commit_diff,
                 commands::git::git_history,
+                commands::gh::gh_exec,
+                commands::gh::gh_env_probe,
             ])
             .typ::<crate::state::BootstrapPayload>()
             .typ::<crate::events::PtySpawnedPayload>()
@@ -310,6 +312,8 @@ mod tests {
             "git_branch_diff",
             "git_commit_diff",
             "git_history",
+            "gh_exec",
+            "gh_env_probe",
         ] {
             assert!(
                 bindings.contains(&format!("\"{command}\"")),

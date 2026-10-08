@@ -3,6 +3,7 @@ pub mod agent_status;
 pub mod app;
 pub mod folder_workspaces;
 pub mod fs;
+pub mod gh;
 pub mod git;
 pub mod notifications;
 pub mod notifications_native;

@@ -263,6 +263,8 @@ export const commands = {
 	gitBranchDiff: (args: GitBranchDiffArgs) => typedError<GitDiffResult_Serialize, BridgeError>(__TAURI_INVOKE("git_branch_diff", { args })),
 	gitCommitDiff: (args: GitCommitDiffArgs) => typedError<GitDiffResult_Serialize, BridgeError>(__TAURI_INVOKE("git_commit_diff", { args })),
 	gitHistory: (args: GitHistoryArgs) => typedError<GitHistoryResult_Serialize, BridgeError>(__TAURI_INVOKE("git_history", { args })),
+	ghExec: (args: GhExecArgs) => typedError<GhExecResult, BridgeError>(__TAURI_INVOKE("gh_exec", { args })),
+	ghEnvProbe: () => typedError<GhEnvProbe, BridgeError>(__TAURI_INVOKE("gh_env_probe")),
 };
 
 /* Types */
@@ -596,6 +598,23 @@ export type FsWriteFileArgs = {
 export type GetBaseRefDefaultArgs = {
 	repoId: string,
 	hostId?: string | null,
+};
+
+export type GhEnvProbe = {
+	token: string | null,
+};
+
+export type GhExecArgs = {
+	args: string[],
+	cwd?: string | null,
+	timeoutMs?: number | null,
+	maxBuffer?: number | null,
+};
+
+export type GhExecResult = {
+	stdout: string,
+	stderr: string,
+	code: number | null,
 };
 
 /**  Mirrors `GitBranchChangeEntry` in `src/shared/git-diff-compare-types.ts`. */

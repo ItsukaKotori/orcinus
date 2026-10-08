@@ -11,6 +11,7 @@ ade-hooks = { path = "../ade-hooks" }
 ade-pty = { path = "../ade-pty" }
 ade-store = { path = "../ade-store" }
 base64 = "0.22"
+libc = "0.2.189"
 rfd = "0.16"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

@@ -405,6 +405,46 @@ impl Default for GitCancelRegistry {
     }
 }
 
+/// gh 子进程并发闸（全局 4，FIFO 近似——Condvar 唤醒不保证顺序，可接受）。
+pub struct GhConcurrencyGate {
+    permits: Mutex<usize>,
+    available: Condvar,
+}
+
+impl GhConcurrencyGate {
+    pub fn new(max: usize) -> Self {
+        Self { permits: Mutex::new(max), available: Condvar::new() }
+    }
+
+    pub fn acquire(&self) -> GhGateGuard<'_> {
+        let mut permits = lock(&self.permits);
+        while *permits == 0 {
+            permits = self.available.wait(permits).unwrap_or_else(|poisoned| poisoned.into_inner());
+        }
+        *permits -= 1;
+        GhGateGuard { gate: self }
+    }
+}
+
+pub struct GhGateGuard<'a> { gate: &'a GhConcurrencyGate }
+
+impl Drop for GhGateGuard<'_> {
+    fn drop(&mut self) {
+        let mut permits = lock(&self.gate.permits);
+        *permits += 1;
+        self.gate.available.notify_one();
+    }
+}
+
+/// gh 可执行文件解析结果的进程内缓存（成功才写；失败每次重试）。
+#[derive(Clone, Default)]
+pub struct GhPathCache(Arc<Mutex<Option<std::path::PathBuf>>>);
+
+impl GhPathCache {
+    pub fn get(&self) -> Option<std::path::PathBuf> { lock(&self.0).clone() }
+    pub fn set(&self, value: std::path::PathBuf) { *lock(&self.0) = Some(value); }
+}
+
 /// Shared backend state for every command. Initialized once in `setup` with the
 /// app data directory before the main window is built.
 pub struct AppState {
@@ -436,6 +476,10 @@ pub struct AppState {
     pub home: String,
     /// 登录 shell PATH 水合的进程内缓存（Task 11）：进程生命周期内最多水合一次。
     pub path_hydration_cache: PathHydrationCache,
+    /// gh 执行器并发闸（规格 §3.1；全局 4）。
+    pub gh_gate: Arc<GhConcurrencyGate>,
+    /// gh 可执行文件解析缓存（成功才写）。
+    pub gh_path_cache: GhPathCache,
     pub git_cancels: GitCancelRegistry,
     settings_writer: WriteScheduler,
     ui_writer: WriteScheduler,
@@ -538,6 +582,8 @@ impl AppState {
             close_flush_latch: CloseFlushLatch::default(),
             home,
             path_hydration_cache: PathHydrationCache::default(),
+            gh_gate: Arc::new(GhConcurrencyGate::new(4)),
+            gh_path_cache: GhPathCache::default(),
             git_cancels: GitCancelRegistry::new(),
             settings_writer,
             ui_writer,
