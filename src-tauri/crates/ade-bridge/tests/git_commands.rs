@@ -462,6 +462,21 @@ fn git_read_whitelist_rejects_write_and_containment_escapes() {
 }
 
 #[test]
+fn git_read_whitelist_rejects_config_options_after_positionals() {
+    let ok = |args: &[&str]| {
+        is_allowed_git_read_args(&args.iter().map(|s| s.to_string()).collect::<Vec<_>>())
+    };
+    // STOP_AT_NON_OPTION：位置参数之后的选项会被 git 当作 `<name> <value>` 写形式。
+    assert!(!ok(&["config", "core.hooksPath", "/tmp/evil", "--get"]));
+    assert!(!ok(&["config", "alpha.beta", "--get", "x"]));
+    assert!(!ok(&["config", "k", "v", "--list"]));
+    assert!(ok(&["config", "--get", "branch.main.remote"]));
+    assert!(ok(&["config", "--get-regexp", "^branch\\."]));
+    assert!(ok(&["config", "--get-all", "remote.origin.fetch"]));
+    assert!(ok(&["config", "--list"]));
+}
+
+#[test]
 fn git_read_runs_real_reads_and_passes_through_nonzero() {
     let dir = TestDir::new("git-read");
     init_repo(&dir);

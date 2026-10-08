@@ -713,6 +713,19 @@ pub fn is_allowed_git_read_args(args: &[String]) -> bool {
     if args.iter().any(|arg| is_config_containment_bypass(arg)) {
         return false;
     }
+    // `git config` 在首个位置参数处 STOP_AT_NON_OPTION：其后的选项会被当作
+    // `<name> <value>` 的一部分（例如 `config core.hooksPath /tmp/evil --get`
+    // 会写入），因此位置参数之后不允许再出现任何以 `-` 开头的参数。
+    let mut seen_positional = false;
+    for arg in &args[1..] {
+        if arg.starts_with('-') {
+            if seen_positional {
+                return false;
+            }
+        } else {
+            seen_positional = true;
+        }
+    }
     let has_read_flag = args
         .iter()
         .any(|arg| GIT_CONFIG_READ_FLAGS.contains(&arg.as_str()));
