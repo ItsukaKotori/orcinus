@@ -265,6 +265,7 @@ export const commands = {
 	gitHistory: (args: GitHistoryArgs) => typedError<GitHistoryResult_Serialize, BridgeError>(__TAURI_INVOKE("git_history", { args })),
 	gitRemoteUrls: (args: GitWorktreeArgs) => typedError<GitRemoteUrl[], BridgeError>(__TAURI_INVOKE("git_remote_urls", { args })),
 	gitRead: (args: GitReadArgs) => typedError<GitReadResult, BridgeError>(__TAURI_INVOKE("git_read", { args })),
+	gitPush: (args: GitPushArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_push", { args })),
 	ghExec: (args: GhExecArgs) => typedError<GhExecResult, BridgeError>(__TAURI_INVOKE("gh_exec", { args })),
 	ghEnvProbe: () => typedError<GhEnvProbe, BridgeError>(__TAURI_INVOKE("gh_env_probe")),
 };
@@ -1002,6 +1003,13 @@ export type GitHistoryResult_Serialize = {
 	hasOutgoingChanges: boolean,
 	hasMore: boolean,
 	limit: number,
+};
+
+export type GitPushArgs = {
+	worktreePath: string,
+	remote?: string | null,
+	refspec?: string | null,
+	forceWithLease?: boolean,
 };
 
 export type GitReadArgs = {

@@ -136,6 +136,7 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::git::git_history,
                 commands::git::git_remote_urls,
                 commands::git::git_read,
+                commands::git::git_push,
                 commands::gh::gh_exec,
                 commands::gh::gh_env_probe,
             ])
@@ -316,6 +317,7 @@ mod tests {
             "git_history",
             "git_remote_urls",
             "git_read",
+            "git_push",
             "gh_exec",
             "gh_env_probe",
         ] {

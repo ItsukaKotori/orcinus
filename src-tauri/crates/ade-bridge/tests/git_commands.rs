@@ -7,9 +7,9 @@ use std::process::Command;
 use ade_bridge::commands::git::{
     branch_compare_impl, branch_diff_impl, bulk_discard_impl, bulk_stage_impl, bulk_unstage_impl,
     commit_compare_impl, commit_diff_impl, commit_impl, conflict_operation_impl, diff_impl,
-    discard_impl, git_read_impl, history_impl, is_allowed_git_read_args, remote_urls_impl,
-    require_authorized_worktree, stage_impl, status_impl, unstage_impl, upstream_status_impl,
-    GitStatusArgs,
+    discard_impl, git_push_impl, git_read_impl, history_impl, is_allowed_git_read_args, push_args,
+    remote_urls_impl, require_authorized_worktree, stage_impl, status_impl, unstage_impl,
+    upstream_status_impl, GitStatusArgs,
 };
 use ade_bridge::state::GitCancelRegistry;
 use ade_fs::FsService;
@@ -498,6 +498,65 @@ fn git_read_runs_real_reads_and_passes_through_nonzero() {
     let missing = git_read_impl(path, &args).unwrap();
     assert_ne!(missing.code, Some(0));
     assert_eq!(missing.stdout, "");
+}
+
+#[test]
+fn push_args_builds_expected_argv() {
+    assert_eq!(
+        push_args(Some("origin"), Some("HEAD:feature"), false),
+        vec!["push", "--set-upstream", "origin", "HEAD:feature"]
+    );
+    assert_eq!(
+        push_args(Some("fork"), Some("HEAD:feature"), true),
+        vec![
+            "push",
+            "--force-with-lease",
+            "--set-upstream",
+            "fork",
+            "HEAD:feature"
+        ]
+    );
+    assert_eq!(
+        push_args(None, None, false),
+        vec!["push", "--set-upstream", "origin", "HEAD"]
+    );
+}
+
+#[test]
+fn push_rejects_unsafe_remote_and_refspec() {
+    let dir = TestDir::new("push-validate");
+    init_repo(&dir);
+    let path = dir.path_str();
+    assert!(git_push_impl(path, Some("bad remote"), Some("HEAD:x"), false).is_err());
+    assert!(git_push_impl(path, Some("origin"), Some("-danger"), false).is_err());
+    assert!(git_push_impl(path, Some("origin"), Some(""), false).is_err());
+}
+
+#[test]
+fn push_sets_upstream_on_local_bare_remote() {
+    let dir = TestDir::new("push-real");
+    init_repo(&dir);
+    commit_file(&dir, "a.txt", "one\n", "init");
+    let bare = dir.path.join("origin.git");
+    std::process::Command::new("git")
+        .args(["init", "--bare"])
+        .arg(&bare)
+        .output()
+        .unwrap();
+    git(
+        &dir.path,
+        &["remote", "add", "origin", bare.to_str().unwrap()],
+    );
+    let path = dir.path_str();
+    git_push_impl(path, Some("origin"), Some("HEAD:feature"), false).unwrap();
+    let upstream = std::process::Command::new("git")
+        .args(["-C", path, "rev-parse", "--abbrev-ref", "HEAD@{upstream}"])
+        .output()
+        .unwrap();
+    assert_eq!(
+        String::from_utf8_lossy(&upstream.stdout).trim(),
+        "origin/feature"
+    );
 }
 
 #[test]

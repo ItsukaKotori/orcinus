@@ -765,6 +765,109 @@ pub async fn git_read(
     run_blocking(move || git_read_impl(&args.worktree_path, &args.args)).await
 }
 
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitPushArgs {
+    pub worktree_path: String,
+    #[serde(default)]
+    pub remote: Option<String>,
+    #[serde(default)]
+    pub refspec: Option<String>,
+    #[serde(default)]
+    pub force_with_lease: bool,
+}
+
+/// 安全 remote 名：1–100、按 `/` 分段每段非空且非 `.`/`..`、段首字母数字。
+pub fn is_safe_remote_name(name: &str) -> bool {
+    if name.is_empty() || name.len() > 100 {
+        return false;
+    }
+    name.split('/').all(|segment| {
+        !segment.is_empty()
+            && segment != "."
+            && segment != ".."
+            && segment
+                .chars()
+                .next()
+                .is_some_and(|first| first.is_ascii_alphanumeric())
+            && segment
+                .chars()
+                .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '.' | '_' | '-'))
+    })
+}
+
+pub fn push_args(
+    remote: Option<&str>,
+    refspec: Option<&str>,
+    force_with_lease: bool,
+) -> Vec<String> {
+    let mut args = vec!["push".to_string()];
+    if force_with_lease {
+        args.push("--force-with-lease".to_string());
+    }
+    args.push("--set-upstream".to_string());
+    match (remote, refspec) {
+        (Some(remote), Some(refspec)) => {
+            args.push(remote.to_string());
+            args.push(refspec.to_string());
+        }
+        _ => {
+            args.push("origin".to_string());
+            args.push("HEAD".to_string());
+        }
+    }
+    args
+}
+
+pub fn git_push_impl(
+    worktree_path: &str,
+    remote: Option<&str>,
+    refspec: Option<&str>,
+    force_with_lease: bool,
+) -> Result<(), BridgeError> {
+    if let Some(remote) = remote {
+        if !is_safe_remote_name(remote) {
+            return Err(BridgeError::message(
+                "git push rejected: unsafe remote name",
+            ));
+        }
+    }
+    if let Some(refspec) = refspec {
+        if refspec.is_empty() || refspec.starts_with('-') {
+            return Err(BridgeError::message("git push rejected: unsafe refspec"));
+        }
+    }
+    let args = push_args(remote, refspec, force_with_lease);
+    let borrowed: Vec<&str> = args.iter().map(String::as_str).collect();
+    let output = ade_git::runner::run_git_in(
+        worktree_path,
+        &borrowed,
+        std::time::Duration::from_secs(120),
+        None,
+    )?;
+    if output.status.success() {
+        return Ok(());
+    }
+    Err(BridgeError::message(
+        String::from_utf8_lossy(&output.stderr).trim().to_string(),
+    ))
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_push(state: State<'_, AppState>, args: GitPushArgs) -> Result<(), BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    run_blocking(move || {
+        git_push_impl(
+            &args.worktree_path,
+            args.remote.as_deref(),
+            args.refspec.as_deref(),
+            args.force_with_lease,
+        )
+    })
+    .await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
