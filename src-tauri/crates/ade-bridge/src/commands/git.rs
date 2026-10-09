@@ -650,6 +650,7 @@ const GIT_READ_ALLOWED_SUBCOMMANDS: &[&str] = &[
     "symbolic-ref",
     "show-ref",
     "check-ref-format",
+    "remote",
 ];
 const GIT_CONFIG_READ_FLAGS: &[&str] = &["--get", "--get-all", "--get-regexp", "--list"];
 const GIT_CONFIG_WRITE_FLAGS: &[&str] = &[
@@ -699,6 +700,10 @@ pub fn is_allowed_git_read_args(args: &[String]) -> bool {
         }
         let positional = args[1..].iter().filter(|arg| !arg.starts_with('-')).count();
         return positional <= 1;
+    }
+    // `remote` 仅允许纯读形式：`remote`、`remote -v`、`remote --verbose`。
+    if subcommand == "remote" {
+        return args.len() == 1 || (args.len() == 2 && (args[1] == "-v" || args[1] == "--verbose"));
     }
     if subcommand != "config" {
         return true;

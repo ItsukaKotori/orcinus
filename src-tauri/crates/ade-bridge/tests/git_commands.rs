@@ -477,6 +477,40 @@ fn git_read_whitelist_rejects_config_options_after_positionals() {
 }
 
 #[test]
+fn git_read_whitelist_allows_only_remote_verbose() {
+    let ok = |args: &[&str]| {
+        is_allowed_git_read_args(&args.iter().map(|s| s.to_string()).collect::<Vec<_>>())
+    };
+    assert!(ok(&["remote", "-v"]));
+    assert!(ok(&["remote", "--verbose"]));
+    assert!(ok(&["remote"]));
+    assert!(!ok(&["remote", "add", "origin", "url"]));
+    assert!(!ok(&["remote", "set-url", "origin", "x"]));
+    assert!(!ok(&["remote", "show", "origin"]));
+    assert!(!ok(&["remote", "-v", "extra"]));
+    assert!(!ok(&["remote", "-vv"]));
+}
+
+#[test]
+fn git_read_impl_runs_remote_verbose() {
+    let dir = TestDir::new("git-read-remote");
+    init_repo(&dir);
+    git(
+        &dir.path,
+        &["remote", "add", "origin", "git@github.com:owner/repo.git"],
+    );
+
+    let args: Vec<String> = ["remote", "-v"].iter().map(|s| s.to_string()).collect();
+    let output = git_read_impl(dir.path_str(), &args).unwrap();
+    assert_eq!(output.code, Some(0));
+    assert!(
+        output.stdout.contains("origin"),
+        "stdout: {}",
+        output.stdout
+    );
+}
+
+#[test]
 fn git_read_runs_real_reads_and_passes_through_nonzero() {
     let dir = TestDir::new("git-read");
     init_repo(&dir);
