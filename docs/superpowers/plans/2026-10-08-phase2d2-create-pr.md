@@ -35,7 +35,7 @@
 - Consumes: `ade_git::runner::run_git_in`（`ade-git/src/runner.rs:40`）、`require_authorized_worktree`、`run_blocking`、既有 `TestDir`/`git()` 测试辅助。
 - Produces: 命令 `git_read({worktreePath: string, args: string[]}) -> {stdout: string, stderr: string, code: number|null}`；`pub fn is_allowed_git_read_args(args: &[String]) -> bool`（导出供测试）。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/git_commands.rs` 追加（沿用该文件既有 `TestDir`/`git()`/`init_git_repo`）：
 
@@ -86,12 +86,12 @@ fn git_read_runs_real_reads_and_passes_through_nonzero() {
 }
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run（workdir src-tauri）: `cargo test -p ade-bridge --test git_commands git_read`
 Expected: 编译失败（函数不存在）。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `git.rs` 追加：
 
@@ -181,13 +181,13 @@ pub async fn git_read(
 
 注意 `run_git_in` 返回的 `GitOutput.status` 为 `std::process::ExitStatus`；`code()` 在信号终止时为 None。`specta_export.rs` 注册 `commands::git::git_read` + 名称清单。
 
-- [ ] **Step 4: 跑测试 + bindings**
+- [x] **Step 4: 跑测试 + bindings**
 
 Run: `cargo test -p ade-bridge --test git_commands git_read`
 Run: `cargo run -p ade-bridge --bin export-bindings && cargo test -p ade-bridge`
 Expected: 全绿。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src-tauri/crates/ade-bridge/src/commands/git.rs \
@@ -212,7 +212,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - Consumes: Task 1 无关；既有 `gh_exec_impl`/`GhExecArgs`/fake-gh 测试辅助。
 - Produces: `GhExecArgs.stdin: Option<String>`；`gh_exec_impl` 签名增加 `stdin: Option<&str>`。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/gh_exec.rs` 追加（沿用既有 `TestDir`/`env_lock`）：
 
@@ -239,12 +239,12 @@ fn gh_exec_without_stdin_leaves_child_stdin_closed() {
 
 （既有 9 条测试的调用需同步加 `None` 参数。）
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `cargo test -p ade-bridge --test gh_exec stdin`
 Expected: 编译失败。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `gh.rs`：
 
@@ -278,12 +278,12 @@ if let (Some(payload), Some(mut pipe)) = (stdin, child.stdin.take()) {
 
 命令包装传入 `args.stdin.as_deref()`。既有 9 条测试调用补 `None`。
 
-- [ ] **Step 4: 跑测试 + bindings**
+- [x] **Step 4: 跑测试 + bindings**
 
 Run: `cargo test -p ade-bridge --test gh_exec`
 Run: `cargo run -p ade-bridge --bin export-bindings && cargo test -p ade-bridge`
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src-tauri/crates/ade-bridge/src/commands/gh.rs \
@@ -307,7 +307,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 **Interfaces:**
 - Produces: 命令 `git_push({worktreePath, remote?, refspec?, forceWithLease?}) -> null`；`pub fn is_safe_remote_name(name: &str) -> bool`、`pub fn push_args(remote: Option<&str>, refspec: Option<&str>, force_with_lease: bool) -> Vec<String>`（导出供测试）。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```rust
 #[test]
@@ -355,12 +355,12 @@ fn push_sets_upstream_on_local_bare_remote() {
 
 （`git()` 辅助按该文件现有签名使用；`init_git_repo` 需产生至少一个提交——按现有辅助行为调整。）
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `cargo test -p ade-bridge --test git_commands push`
 Expected: 编译失败。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 ```rust
 #[derive(Debug, Clone, Deserialize, specta::Type)]
@@ -461,12 +461,12 @@ pub async fn git_push(state: State<'_, AppState>, args: GitPushArgs) -> Result<(
 
 `specta_export.rs` 注册 + 名称清单。
 
-- [ ] **Step 4: 跑测试 + bindings**
+- [x] **Step 4: 跑测试 + bindings**
 
 Run: `cargo test -p ade-bridge --test git_commands push`
 Run: `cargo run -p ade-bridge --bin export-bindings && cargo test -p ade-bridge`
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src-tauri/crates/ade-bridge/src/commands/git.rs \
@@ -495,7 +495,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - `class GitReadError extends Error { code: number|null; stderr: string }`
   - `defaultGitReadExecutor(worktreePath: string): GitReadExecutor`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `git-read-client.test.ts`：
 
@@ -562,11 +562,11 @@ it('validates an explicit push target before pushing', async () => {
 })
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm vitest run src/renderer/src/lib/github/git-read-client.test.ts src/bridge/real/git.test.ts`
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `git-read-client.ts`：
 
@@ -633,11 +633,11 @@ push: async (args) => {
 
 （`git_push` 参数缺省时 Rust 走 `origin HEAD`；TS 传 `remote/refspec` 为 `null` 时需省略或传 `null`——按 serde `Option` 语义传 `null` 可反序列化为 `None`，保持 `null` 即可。）
 
-- [ ] **Step 4: 跑测试 + typecheck**
+- [x] **Step 4: 跑测试 + typecheck**
 
 Run: `pnpm vitest run src/renderer/src/lib/github/git-read-client.test.ts src/bridge/real/git.test.ts && pnpm typecheck`
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/renderer/src/lib/github/git-read-client.ts \
@@ -663,7 +663,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
   - `deps = { client, identity, reviewLookup, makeRunGit: (worktreePath: string) => RunGit, readStatus, readUpstream, readTemplate?, now? }`（`makeRunGit` 每 worktree 构造一次；`RunGit = (args: string[]) => Promise<{stdout: string}>`）
   - `getDefaultBaseRef(runGit): Promise<string|null>`、`baseRefExistsOnRemote(runGit, base): Promise<boolean>`（导出供测试）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 覆盖（fake deps 注入；文案断言逐字）：
 
@@ -674,11 +674,11 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 5. auth：`client.run(['auth','status','--hostname','github.com'])` 非零但 stdout 有 active → 通过；spawn 失败 → `auth_required`。
 6. `reviewLookup` 抛错 → `reviewLookupOutcome:'unavailable'` 且 `canCreate:false`。
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm vitest run src/renderer/src/lib/github/hosted-review-create.test.ts`
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 要点（决策序与文案逐字对齐参照 `orca:src/main/source-control/hosted-review-creation.ts:161-238` 与 `hosted-review-creation-blocking.ts`）：
 
@@ -689,11 +689,11 @@ Run: `pnpm vitest run src/renderer/src/lib/github/hosted-review-create.test.ts`
 - blockers 顺序与返回字段按 spec §3.3 逐条；`defaultBaseRef` 为保留原样的 candidate 或探测值。
 - auth：`client.run(['auth','status','--hostname','github.com'])`（结果非零也解析 `stdout+stderr`）；`parseAuthStatus` 存在 active → 通过；spawn 类失败（`gh: command not found`）→ 不通过。
 
-- [ ] **Step 4: 跑测试 + typecheck**
+- [x] **Step 4: 跑测试 + typecheck**
 
 Run: `pnpm vitest run src/renderer/src/lib/github/hosted-review-create.test.ts && pnpm typecheck`
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/renderer/src/lib/github/hosted-review-create.ts \
@@ -718,7 +718,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - Consumes: Task 5 工厂；`gh_exec` stdin（Task 2）；模板经注入的 `readTemplate`（bridge 侧用 `fs_read_file`）。
 - Produces: `create(args: CreateHostedReviewArgs): Promise<CreateHostedReviewResult>`；`hosted-review.ts` 客户端新增 `invalidate(repoPath: string): void`。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 覆盖：
 
@@ -731,22 +731,22 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 7. blockers 映射：blockedReason→结果码/文案逐字表（auth_required/unsupported_provider/dirty/detached_head/default_branch/no_upstream/needs_push/needs_sync/fork_head_unsupported/base_not_on_remote/空 blocker）。
 8. `gh-exec-client`：`GhExecOptions.stdin` 透传——`defaultGhExecutor` 在 `gh_exec` 参数中带 `stdin`（缺省省略）；断言调用参数。
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm vitest run src/renderer/src/lib/github/hosted-review-create.test.ts`
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 - `create` 流程按 spec §3.3 与参照 `hosted-review-creation.ts:44-287`；错误分类移植 `orca:src/main/github/client/create/create-pr-error-classification.ts:3-74`（顺序与文案逐字；`already_exists`/`unknown_completion` 带 head 时执行回退查询）；blockers 映射移植 `hosted-review-creation-blocking.ts:9-102` 文案表。
 - `gh pr list` 回退 argv 逐字：`['pr','list','--repo',`${owner}/${repo}`,'--head',head,'--base',base,'--state','open','--limit','2','--json','number,url']`（恰好 1 条才接受）。
 - 成功路径：`reviewLookup.invalidate(args.repoPath)`（2D.1 客户端导出：清空该 repoPath 前缀的 TTL 条目）。
 - 模板路径序（`readTemplate` 由 bridge 注入）：`.github/pull_request_template.md`、`.github/PULL_REQUEST_TEMPLATE.md`、`pull_request_template.md`、`PULL_REQUEST_TEMPLATE.md`、`docs/pull_request_template.md`、`docs/PULL_REQUEST_TEMPLATE.md`。
 
-- [ ] **Step 4: 跑测试 + typecheck**
+- [x] **Step 4: 跑测试 + typecheck**
 
 Run: `pnpm vitest run src/renderer/src/lib/github && pnpm typecheck`
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/renderer/src/lib/github/hosted-review-create.ts \
@@ -771,18 +771,18 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - Consumes: Task 5/6 工厂、Task 4 `defaultGitReadExecutor`、2D.1 `createHostedReviewClient`（`forBranch` + 新 `invalidate`）、`createRepoIdentityResolver`、`defaultGhExecutor`、`invokeCommand('fs_read_file')`、`invokeCommand('git_status')`、`invokeCommand('git_upstream_status')`。
 - Produces: `getCreationEligibility`/`create` 真实路由；`createStacked` 维持 fallback。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `real/hosted-review.test.ts` 追加：mock invoke——
 - `git_read`（symbolic-ref/config/check-ref-format/show-ref 分支）→ `getCreationEligibility` 返回 `canCreate:true`（clean、upstream、ahead 0）；
 - `gh_exec`（auth status 有 active）→ 通过；无 → `auth_required`；
 - `create`：`gh_exec` 返回 `{"number":7,"url":"https://github.com/o/r/pull/7"}` → `{ok:true,number:7,url}`；`createStacked` 仍 reject unimplemented。
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm vitest run src/bridge/real/hosted-review.test.ts`
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `real/hosted-review.ts` 构造：
 
@@ -803,12 +803,12 @@ const creation = createHostedReviewCreation({
 
 `parity.test.ts`：hostedReview `explicit` 增加 `getCreationEligibility`、`create`（`forBranch` 已在），`missing` 仅剩 `createStacked`；`create-api.test.ts` 更新对应断言。
 
-- [ ] **Step 4: 跑测试 + typecheck + 全量**
+- [x] **Step 4: 跑测试 + typecheck + 全量**
 
 Run: `pnpm vitest run src/bridge && pnpm typecheck`
 Run（提交前）: `pnpm test`（全量；性能类抖动隔离复跑；其它失败 STOP + BLOCKED）
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/bridge/real/hosted-review.ts src/bridge/real/hosted-review.test.ts \
@@ -826,13 +826,13 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 - Create: `docs/phase2d2-create-pr-record.md`
 - Modify: `docs/superpowers/plans/2026-10-08-phase2d2-create-pr.md`（勾选复选框）
 
-- [ ] **Step 1: 全量门禁**
+- [x] **Step 1: 全量门禁**
 
 Run: `cargo test --workspace`（workdir src-tauri）
 Run: `rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm build:web`
 Run: `pnpm test`（性能类失败隔离复跑记 flake；其它失败 STOP + BLOCKED）
 
-- [ ] **Step 2: 写收尾记录**
+- [x] **Step 2: 写收尾记录**
 
 结构照 `docs/phase2d1-github-readonly-record.md`：§1 范围与验收 / §2 提交清单 / §3 门禁证据 / §4 手工验收（6 项，待用户复核）/ §5 偏差与边界备案（spec §7 九条 + 实现中发现的新偏差）/ §6 已知边界与后续（stacked 2D.2.1、fetch/pull/fast-forward、fork 物化、resolvePrBase、非 GitHub provider、PR 刷新协调器）。
 
@@ -844,7 +844,7 @@ Run: `pnpm test`（性能类失败隔离复跑记 flake；其它失败 STOP + BL
 5. dirty → dirty blocker；主分支 → default_branch；
 6. 无 gh 登录 → auth_required。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add docs/phase2d2-create-pr-record.md docs/superpowers/plans/2026-10-08-phase2d2-create-pr.md
