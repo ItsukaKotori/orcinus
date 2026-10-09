@@ -29,6 +29,30 @@ describe('gh exec client', () => {
     vi.useRealTimers()
   })
 
+  it('keeps the 250ms/1000ms backoff between default retry attempts', async () => {
+    vi.useFakeTimers()
+    try {
+      const executor = vi
+        .fn()
+        .mockResolvedValueOnce({ stdout: '', stderr: 'HTTP 502 Bad Gateway', code: 1 })
+        .mockResolvedValueOnce({ stdout: '', stderr: 'HTTP 503 Service Unavailable', code: 1 })
+        .mockResolvedValueOnce({ stdout: 'ok', stderr: '', code: 0 })
+      const client = createGhExecClient(executor)
+      const pending = client.run(['api', 'rate_limit'])
+      await vi.advanceTimersByTimeAsync(200)
+      expect(executor).toHaveBeenCalledTimes(1)
+      await vi.advanceTimersByTimeAsync(100)
+      expect(executor).toHaveBeenCalledTimes(2)
+      await vi.advanceTimersByTimeAsync(900)
+      expect(executor).toHaveBeenCalledTimes(2)
+      await vi.advanceTimersByTimeAsync(100)
+      expect(executor).toHaveBeenCalledTimes(3)
+      await expect(pending).resolves.toMatchObject({ stdout: 'ok' })
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('performs exactly one attempt when retry is false', async () => {
     const executor = vi
       .fn()
@@ -41,6 +65,25 @@ describe('gh exec client', () => {
       code: 1
     })
     expect(executor).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not sleep after the only attempt when retry is false', async () => {
+    vi.useFakeTimers()
+    try {
+      const executor = vi.fn(async () => ({ stdout: '', stderr: 'HTTP 502 Bad Gateway', code: 1 }))
+      const client = createGhExecClient(executor)
+      const pending = client.run(['pr', 'create'], { retry: false })
+      await vi.advanceTimersByTimeAsync(0)
+      expect(executor).toHaveBeenCalledTimes(1)
+      expect(vi.getTimerCount()).toBe(0)
+      await expect(pending).resolves.toEqual({
+        stdout: '',
+        stderr: 'HTTP 502 Bad Gateway',
+        code: 1
+      })
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('does not retry a thrown timeout when retry is false', async () => {

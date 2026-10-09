@@ -4,6 +4,7 @@ import type {
   CreateHostedReviewArgs,
   HostedReviewCreationBlockedReason,
   HostedReviewCreationEligibility,
+  HostedReviewForBranchArgs,
   HostedReviewInfo
 } from '../../../../shared/hosted-review'
 import type { GhExecResult } from './gh-exec-client'
@@ -23,7 +24,6 @@ import type { GitHubRepoIdentity } from './repo-identity'
 type RunGit = (args: string[]) => Promise<{ stdout: string }>
 
 const ORG_REPO: GitHubRepoIdentity = { owner: 'org', repo: 'repo' }
-const NOW = 1_700_000_000_000
 
 const FOUND_REVIEW: HostedReviewInfo = {
   provider: 'github',
@@ -65,6 +65,7 @@ const BASE_ARGS: HostedReviewCreationEligibilityInput = {
 
 type HarnessOptions = {
   slug?: GitHubRepoIdentity | null
+  slugError?: Error
   review?: HostedReviewInfo | null
   reviewError?: Error
   authResult?: GhExecResult
@@ -106,8 +107,13 @@ function createHarness(options: HarnessOptions = {}) {
         return { stdout: '' }
       })
   )
-  const getRepoSlug = vi.fn(async () => (options.slug === undefined ? ORG_REPO : options.slug))
-  const forBranch = vi.fn(async () => {
+  const getRepoSlug = vi.fn(async () => {
+    if (options.slugError) {
+      throw options.slugError
+    }
+    return options.slug === undefined ? ORG_REPO : options.slug
+  })
+  const forBranch = vi.fn(async (_args: HostedReviewForBranchArgs) => {
     if (options.reviewError) {
       throw options.reviewError
     }
@@ -160,8 +166,7 @@ function createHarness(options: HarnessOptions = {}) {
     },
     readStatus,
     readUpstream,
-    readTemplate,
-    now: () => NOW
+    readTemplate
   })
   return {
     creation,
@@ -210,7 +215,7 @@ describe('getCreationEligibility blockers', () => {
       reviewLookupOutcome: 'found'
     })
     expect(forBranch).toHaveBeenCalledWith({
-      repoPath: '/worktree',
+      repoPath: '/repo',
       branch: 'feature',
       currentHeadOid: null,
       active: true,
@@ -374,7 +379,7 @@ describe('getCreationEligibility wiring', () => {
     expect(getRepoSlug).toHaveBeenCalledWith('/worktree')
     expect(makeRunGitPaths).toEqual(['/worktree'])
     expect(forBranch).toHaveBeenCalledWith({
-      repoPath: '/worktree',
+      repoPath: '/repo',
       branch: 'feature',
       currentHeadOid: 'abc123',
       active: true,
@@ -382,6 +387,27 @@ describe('getCreationEligibility wiring', () => {
       fallbackGitHubPR: 9
     })
     expect(result.head).toBe('feature')
+  })
+
+  it('uses the repoPath as the review cache key when the worktree path differs', async () => {
+    const { creation, forBranch, invalidate } = createHarness()
+    await creation.getCreationEligibility(BASE_ARGS)
+    expect(forBranch).toHaveBeenCalledWith(expect.objectContaining({ repoPath: '/repo' }))
+    await creation.create(CREATE_ARGS)
+    expect(invalidate).toHaveBeenCalledWith('/repo')
+    expect(forBranch.mock.calls.every(([args]) => args.repoPath === '/repo')).toBe(true)
+  })
+
+  it('degrades a rejected identity lookup to unsupported_provider', async () => {
+    const { creation } = createHarness({ slugError: new Error('git_remote_urls failed') })
+    const result = await creation.getCreationEligibility(BASE_ARGS)
+    expect(result).toMatchObject({
+      provider: 'unsupported',
+      review: null,
+      canCreate: false,
+      blockedReason: 'unsupported_provider',
+      nextAction: null
+    })
   })
 
   it('falls back to repoPath when no worktree path is given', async () => {
@@ -1126,6 +1152,15 @@ describe('create', () => {
         error: 'Creating pull requests requires a GitHub remote.'
       })
       expect(getRepoSlug).toHaveBeenCalledWith('/worktree')
+    })
+
+    it('degrades a rejected identity lookup to unsupported_provider', async () => {
+      const { creation } = createHarness({ slugError: new Error('git_remote_urls failed') })
+      await expect(creation.create(CREATE_ARGS)).resolves.toEqual({
+        ok: false,
+        code: 'unsupported_provider',
+        error: 'Creating pull requests requires a GitHub remote.'
+      })
     })
 
     it('rejects a non-default GitHub host', async () => {

@@ -46,7 +46,7 @@ stacked 创建（`createStacked` 维持 fallback、`stackedCreationSupported:fal
 ### 3.1 Rust（ade-bridge）
 
 - **`git_read(args:{worktreePath: string, args: string[]}) -> {stdout, stderr, code}`**
-  - 白名单首参（仅本阶段所需五项）：`config`、`rev-parse`、`symbolic-ref`、`show-ref`、`check-ref-format`；其余首参拒绝（`BridgeError`）。
+  - 白名单首参（仅本阶段所需六项）：`config`、`rev-parse`、`symbolic-ref`、`show-ref`、`check-ref-format`、`remote`（仅裸形/`-v`/`--verbose`）；其余首参拒绝（`BridgeError`）。
   - `config` 仅允许读形式：argv 必须含 `--get|--get-all|--get-regexp|--list` 之一；拒绝 `--unset*|--add|--replace-all|--edit|--rename-section|--remove-section|--set` 及任何「非选项位置参数 ≥2」的裸写形式。
   - 执行：`run_git_in(worktreePath, args, 120s, None)`（对齐参照读命令超时）；10MiB maxBuffer 由 runner 提供；`require_authorized_worktree` 守卫；**非零退出是结果**（`{code, stdout, stderr}`），仅 spawn/超时为 Err。
 - **`git_push(args:{worktreePath: string, remote?: string, refspec?: string, forceWithLease?: boolean}) -> null`**
@@ -72,7 +72,7 @@ stacked 创建（`createStacked` 维持 fallback、`stackedCreationSupported:fal
   1. provider：`identity.getRepoSlug(worktreePath)`（上游优先、origin 兜底；非默认 host 或 null → `unsupported_provider`，`canCreate:false`）。
   2. base：`candidateBase = args.base?.trim() || null`；`candidateBaseOnRemote`（`baseRefExistsOnRemote`）；命中 → `defaultBaseRef = candidateBase`；否则 `defaultBaseRef = getDefaultBaseRef() ?? candidateBase`。
   3. 已有 review：`reviewLookup.forBranch({...})`；抛错 → `lookupFailed`（`reviewLookupOutcome:'unavailable'`）；null → `not_found`；有值 → `found`。
-  4. `stackedCreationSupported: false`（本阶段不做）。
+  4. `stackedCreationSupported` 省略不物化（本阶段不做；对 `=== true` 消费方行为等价于 `false`）。
   5. blockers（顺序）：`!branch || branch === 'HEAD'` → `detached_head`；review found → `existing_review` + `nextAction:'open_existing_review'`；provider 不支持 → `unsupported_provider`；`baseBranch` 大小写不敏感等于 branch → `default_branch`；`args.hasUncommittedChanges` → `dirty`+`'commit'`；`hasUpstream === false` → `no_upstream`+`'publish'`；`hasUpstream !== true` → `canCreate:false, blockedReason:null`；`behind > 0` → `needs_sync`+`'sync'`；auth 失败 → `auth_required`+`'authenticate'`；`ahead > 0` → `needs_push`+`'push'`；`enforceBaseOnRemote && candidateBase && !candidateBaseOnRemote` → `base_not_on_remote`；否则 `canCreate = !lookupFailed && Boolean(baseBranch)`。
   - `getDefaultBaseRef`（移植 `repo-default-base-ref.ts:21-26,95-115`）：`symbolic-ref --quiet refs/remotes/origin/HEAD`（`rev-parse --verify --quiet` 校验）→ `refs/remotes/origin/main` → `refs/remotes/origin/master` → `refs/heads/main` → `refs/heads/master`。
   - `baseRefExistsOnRemote`（移植 `hosted-review-creation-git-state.ts:185-249`）：归一化（剥 `refs/heads/`、`refs/remotes/<r>/`、`origin/`、`upstream/`）；`isSafeGitRefName` 不通过 → false；精确探测 `refs/remotes/<base>`（base 含 `/` 时）与 `refs/remotes/{origin,upstream}/<base>`（`show-ref --verify --quiet`）；后缀扫描 `show-ref -- <base>`（仅接受 `refs/remotes/<单段>/<base>`）；**未知错误 fail-open true**，exit-1 无匹配 → 确定 false。

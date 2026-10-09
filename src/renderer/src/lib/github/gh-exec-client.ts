@@ -73,9 +73,11 @@ export function createGhExecClient(executor: GhExecutor): {
           throw error
         }
       }
-      const delay = RETRY_DELAYS_MS[attempt]
-      if (delay !== undefined) {
-        await new Promise<void>((resolve) => setTimeout(resolve, delay))
+      if (attempt < maxAttempts - 1) {
+        const delay = RETRY_DELAYS_MS[attempt]
+        if (delay !== undefined) {
+          await new Promise<void>((resolve) => setTimeout(resolve, delay))
+        }
       }
     }
     return last ?? { stdout: '', stderr: 'gh exec failed', code: null }

@@ -59,7 +59,6 @@ export type HostedReviewCreationDeps = {
   readStatus: HostedReviewCreationReadStatus
   readUpstream: HostedReviewCreationReadUpstream
   readTemplate?: HostedReviewCreationReadTemplate
-  now?: () => number
 }
 
 // `enforceBaseOnRemote` is set only by the create-time preflight; the renderer
@@ -515,7 +514,7 @@ export function createHostedReviewCreation(
     const worktreePath = args.worktreePath?.trim() || args.repoPath
     const runGit = deps.makeRunGit(worktreePath)
 
-    const slug = await deps.identity.getRepoSlug(worktreePath)
+    const slug = await deps.identity.getRepoSlug(worktreePath).catch(() => null)
     const provider: HostedReviewProvider =
       slug && isDefaultGitHubHost(slug.host) ? 'github' : 'unsupported'
 
@@ -538,7 +537,7 @@ export function createHostedReviewCreation(
     let lookupFailed = false
     try {
       review = await deps.reviewLookup.forBranch({
-        repoPath: worktreePath,
+        repoPath: args.repoPath,
         branch,
         currentHeadOid: args.currentHeadOid ?? null,
         active: true,
@@ -845,7 +844,7 @@ export function createHostedReviewCreation(
     }
     // Why: creation targets the origin owning the unqualified head branch;
     // 2D.2 supports default-host GitHub only (spec §3.3 step 1).
-    const origin = await deps.identity.getRepoSlug(worktreePath)
+    const origin = await deps.identity.getRepoSlug(worktreePath).catch(() => null)
     if (!origin || args.provider !== 'github' || !isDefaultGitHubHost(origin.host)) {
       const copy = reviewCopy(args.provider)
       return {
