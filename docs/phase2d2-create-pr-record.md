@@ -42,6 +42,7 @@
 | cdac1adc | feat(renderer): PR 创建执行（preflight/模板/回退/分类）（Task 6） |
 | 9dbbf744 | fix(renderer): PR 创建禁用瞬态重试（非幂等写）（Task 6 fix） |
 | 6ca82212 | feat(bridge): hostedReview 创建面接线（eligibility/create）（Task 7） |
+| f6305da9 | fix(renderer): 终审修复——失效键一致、getRepoSlug 降级、去死代码与重试睡眠（终审 1 Important + 4 Minor；spec §3.1/§3.3 文本同步修订） |
 
 ## 3. 门禁证据（自动化）
 
@@ -54,6 +55,8 @@
 | TS 全量 | `pnpm test`（仓库根） | **exit 0，全绿**：`Test Files 3873 passed / 0 failed / 8 skipped (3881)`；`Tests 34592 passed / 0 failed / 122 skipped (34714)`；Duration **608.92s**。**本轮无性能抖动失败**（已知 `browser-history-match.performance.test.ts` 未触发，无隔离复跑需要） |
 
 日志留存于本机临时目录（`cargo-test-phase2d2.log` / `build-web-phase2d2.log` / `pnpm-test-phase2d2.log`）。
+
+终审修复波次（`f6305da9`）后的最终树复跑：`pnpm test` **exit 0**（`Tests 34597 passed / 0 failed`，较上表 +5 条新增回归测试）；`pnpm typecheck` exit 0；`pnpm build:web` `✓ built in 3.42s`（仅既有 chunk-size 警告）；Rust 无代码改动（区间 `cargo test --workspace` 维持 707/0）。终审结论：1 项 Important（worktree/repo 缓存失效键不一致 → 查找与失效统一使用 `repoPath`）+ 4 项 Minor（`getRepoSlug` 降级、移除未用 `now` 依赖、单次尝试路径 250ms 空等、spec 文本同步）全部修复并经 scoped 复审确认；§5.2-7 所记空等偏差已由 `f6305da9` 修复（保留为历史记录）。
 
 ## 4. 手工验收清单（待用户复核）
 
