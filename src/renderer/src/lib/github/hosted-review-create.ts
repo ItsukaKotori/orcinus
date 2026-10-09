@@ -785,7 +785,9 @@ export function createHostedReviewCreation(
 
     let result: GhExecResult
     try {
-      result = await deps.client.run(createArgs, { timeoutMs: 60_000, stdin: body })
+      // Why: a write that may have reached GitHub must not be re-issued
+      // (orca passes idempotent: false for gh pr create).
+      result = await deps.client.run(createArgs, { timeoutMs: 60_000, stdin: body, retry: false })
     } catch (error) {
       result = {
         stdout: '',

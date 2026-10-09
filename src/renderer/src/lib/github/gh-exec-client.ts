@@ -7,6 +7,11 @@ export type GhExecOptions = {
   timeoutMs?: number
   maxBuffer?: number
   stdin?: string
+  /**
+   * Set `false` for a non-idempotent write (e.g. `gh pr create`): a request that
+   * may have reached the server must never be re-issued.
+   */
+  retry?: boolean
 }
 export type GhExecutor = (args: string[], options?: GhExecOptions) => Promise<GhExecResult>
 
@@ -47,7 +52,8 @@ export function createGhExecClient(executor: GhExecutor): {
 } {
   const run = async (args: string[], options?: GhExecOptions): Promise<GhExecResult> => {
     let last: GhExecResult | null = null
-    for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    const maxAttempts = options?.retry === false ? 1 : RETRY_DELAYS_MS.length + 1
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         const result = await executor(args, options)
         if (result.code === 0 && result.code !== null) {

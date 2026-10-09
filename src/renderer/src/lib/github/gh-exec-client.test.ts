@@ -29,6 +29,33 @@ describe('gh exec client', () => {
     vi.useRealTimers()
   })
 
+  it('performs exactly one attempt when retry is false', async () => {
+    const executor = vi
+      .fn()
+      .mockResolvedValueOnce({ stdout: '', stderr: 'HTTP 502 Bad Gateway', code: 1 })
+      .mockResolvedValueOnce({ stdout: 'ok', stderr: '', code: 0 })
+    const client = createGhExecClient(executor)
+    await expect(client.run(['pr', 'create'], { retry: false })).resolves.toEqual({
+      stdout: '',
+      stderr: 'HTTP 502 Bad Gateway',
+      code: 1
+    })
+    expect(executor).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not retry a thrown timeout when retry is false', async () => {
+    const executor = vi.fn(async () => {
+      throw new Error('timed out')
+    })
+    const client = createGhExecClient(executor)
+    await expect(client.run(['pr', 'create'], { retry: false })).resolves.toEqual({
+      stdout: '',
+      stderr: 'timed out',
+      code: null
+    })
+    expect(executor).toHaveBeenCalledTimes(1)
+  })
+
   it('does not retry rate-limit stderr with Retry-After', async () => {
     const executor = vi.fn(async () => ({
       stdout: '',
@@ -73,6 +100,15 @@ describe('defaultGhExecutor', () => {
     await executor(['auth', 'status'])
     expect(invokeCommandMock).toHaveBeenCalledWith('gh_exec', {
       args: { args: ['auth', 'status'] }
+    })
+  })
+
+  it('does not forward retry to the gh_exec args', async () => {
+    invokeCommandMock.mockClear()
+    const executor = defaultGhExecutor()
+    await executor(['pr', 'create'], { retry: false, stdin: 'body' })
+    expect(invokeCommandMock).toHaveBeenCalledWith('gh_exec', {
+      args: { args: ['pr', 'create'], stdin: 'body' }
     })
   })
 })

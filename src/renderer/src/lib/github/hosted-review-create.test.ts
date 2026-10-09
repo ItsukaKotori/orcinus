@@ -714,7 +714,7 @@ describe('create', () => {
           '--body-file',
           '-'
         ],
-        { timeoutMs: 60_000, stdin: 'Body' }
+        { timeoutMs: 60_000, stdin: 'Body', retry: false }
       )
       expect(readStatus).toHaveBeenCalledWith('/worktree')
       expect(readUpstream).toHaveBeenCalledWith('/worktree')
@@ -742,7 +742,7 @@ describe('create', () => {
           'feature',
           '--draft'
         ],
-        { timeoutMs: 60_000, stdin: 'Body' }
+        { timeoutMs: 60_000, stdin: 'Body', retry: false }
       )
     })
 
@@ -769,14 +769,18 @@ describe('create', () => {
           '--head',
           'feature'
         ],
-        { timeoutMs: 60_000, stdin: 'Body' }
+        { timeoutMs: 60_000, stdin: 'Body', retry: false }
       )
     })
 
     it('sends an empty stdin when there is no body', async () => {
       const { creation, run } = createHarness()
       await creation.create({ ...CREATE_ARGS, body: undefined })
-      expect(run).toHaveBeenCalledWith(expect.any(Array), { timeoutMs: 60_000, stdin: '' })
+      expect(run).toHaveBeenCalledWith(expect.any(Array), {
+        timeoutMs: 60_000,
+        stdin: '',
+        retry: false
+      })
     })
 
     it('rejects a missing base or title before calling gh pr create', async () => {
@@ -805,7 +809,8 @@ describe('create', () => {
       expect(readTemplate).toHaveBeenCalledWith('/worktree', '.github/pull_request_template.md')
       expect(run).toHaveBeenCalledWith(expect.any(Array), {
         timeoutMs: 60_000,
-        stdin: 'Template body'
+        stdin: 'Template body',
+        retry: false
       })
     })
 
@@ -821,7 +826,11 @@ describe('create', () => {
         'docs/pull_request_template.md',
         'docs/PULL_REQUEST_TEMPLATE.md'
       ])
-      expect(run).toHaveBeenCalledWith(expect.any(Array), { timeoutMs: 60_000, stdin: '' })
+      expect(run).toHaveBeenCalledWith(expect.any(Array), {
+        timeoutMs: 60_000,
+        stdin: '',
+        retry: false
+      })
     })
 
     it('skips binary templates', async () => {
@@ -838,7 +847,8 @@ describe('create', () => {
       await creation.create({ ...CREATE_ARGS, body: undefined, useTemplate: true })
       expect(run).toHaveBeenCalledWith(expect.any(Array), {
         timeoutMs: 60_000,
-        stdin: 'Markdown body'
+        stdin: 'Markdown body',
+        retry: false
       })
     })
 
@@ -849,7 +859,11 @@ describe('create', () => {
       const { creation, run } = createHarness({ template: readTemplate })
       await creation.create({ ...CREATE_ARGS, useTemplate: true })
       expect(readTemplate).not.toHaveBeenCalled()
-      expect(run).toHaveBeenCalledWith(expect.any(Array), { timeoutMs: 60_000, stdin: 'Body' })
+      expect(run).toHaveBeenCalledWith(expect.any(Array), {
+        timeoutMs: 60_000,
+        stdin: 'Body',
+        retry: false
+      })
     })
   })
 
