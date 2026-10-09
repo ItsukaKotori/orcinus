@@ -94,6 +94,34 @@ describe('git real adapter push', () => {
   const readGitArgs = (payload: unknown): string[] =>
     (payload as { args: { args: string[] } }).args.args
 
+  /** Reads from a fake config table; missing keys answer `code: 1` (git's "not set"). */
+  const makeGitReadMock = (options: {
+    config?: Record<string, string>
+    remoteVerbose?: string
+  }): void => {
+    const config = options.config ?? {}
+    invokeMock.mockImplementation(async (command: string, payload?: unknown) => {
+      if (command === 'git_read') {
+        const args = readGitArgs(payload)
+        if (args[0] === 'symbolic-ref') return { stdout: 'feature\n', stderr: '', code: 0 }
+        if (args[0] === 'config' && args[1] === '--get') {
+          const key = args[2]
+          if (key === undefined) return { stdout: '', stderr: '', code: 1 }
+          const value = config[key]
+          return value === undefined
+            ? { stdout: '', stderr: '', code: 1 }
+            : { stdout: `${value}\n`, stderr: '', code: 0 }
+        }
+        if (args[0] === 'remote' && args[1] === '-v' && options.remoteVerbose !== undefined) {
+          return { stdout: options.remoteVerbose, stderr: '', code: 0 }
+        }
+        throw new Error(`unexpected git_read ${args.join(' ')}`)
+      }
+      if (command === 'git_push') return null
+      throw new Error(`unexpected ${command}`)
+    })
+  }
+
   it('falls back to origin HEAD when no push target is configured', async () => {
     invokeMock.mockImplementation(async (command: string, payload?: unknown) => {
       if (command === 'git_read') {
@@ -127,6 +155,92 @@ describe('git real adapter push', () => {
       throw new Error(`unexpected ${command}`)
     })
     await createGitRealApi().push({ worktreePath: '/repo' })
+    expect(invokeMock).toHaveBeenCalledWith('git_push', {
+      args: { worktreePath: '/repo', remote: 'origin', refspec: 'HEAD:feature', forceWithLease: false }
+    })
+  })
+
+  it('prefers branch.<branch>.pushRemote over remote.pushDefault', async () => {
+    makeGitReadMock({
+      config: {
+        'branch.feature.pushRemote': 'fork',
+        'remote.pushDefault': 'upstream',
+        'branch.feature.merge': 'refs/heads/feature'
+      }
+    })
+    await createGitRealApi().push({ worktreePath: '/repo' })
+    expect(invokeMock).toHaveBeenCalledWith('git_push', {
+      args: { worktreePath: '/repo', remote: 'fork', refspec: 'HEAD:feature', forceWithLease: false }
+    })
+  })
+
+  it('falls back to remote.pushDefault when the branch has no pushRemote', async () => {
+    makeGitReadMock({
+      config: {
+        'remote.pushDefault': 'upstream',
+        'branch.feature.merge': 'refs/heads/feature'
+      }
+    })
+    await createGitRealApi().push({ worktreePath: '/repo' })
+    expect(invokeMock).toHaveBeenCalledWith('git_push', {
+      args: {
+        worktreePath: '/repo',
+        remote: 'upstream',
+        refspec: 'HEAD:feature',
+        forceWithLease: false
+      }
+    })
+  })
+
+  it('falls back to origin HEAD when the push remote does not own the merge branch', async () => {
+    makeGitReadMock({
+      config: {
+        'branch.feature.remote': 'origin',
+        'branch.feature.pushRemote': 'fork',
+        'branch.feature.merge': 'refs/heads/other'
+      }
+    })
+    await createGitRealApi().push({ worktreePath: '/repo' })
+    // Guard check `canPushConfiguredMergeBranch`: branchRef !== branch and the
+    // pushRemote differs from the branch remote, so `fork`/`HEAD:other` must be
+    // rejected and the plain `origin HEAD` first-publish fallback used instead.
+    expect(invokeMock).toHaveBeenCalledWith('git_push', {
+      args: { worktreePath: '/repo', remote: 'origin', refspec: 'HEAD', forceWithLease: false }
+    })
+  })
+
+  it('falls back to origin HEAD when branch.<branch>.base targets the merge branch', async () => {
+    makeGitReadMock({
+      config: {
+        'branch.feature.pushRemote': 'fork',
+        'branch.feature.merge': 'refs/heads/feature',
+        'branch.feature.base': 'refs/heads/feature'
+      }
+    })
+    await createGitRealApi().push({ worktreePath: '/repo' })
+    // Guard check `branchMergeTargetsConfiguredBase`: a base pointing at the
+    // merge branch suppresses the configured `fork`/`HEAD:feature` push.
+    expect(invokeMock).toHaveBeenCalledWith('git_push', {
+      args: { worktreePath: '/repo', remote: 'origin', refspec: 'HEAD', forceWithLease: false }
+    })
+  })
+
+  it('resolves a URL-valued configured remote to its named remote via remote -v', async () => {
+    makeGitReadMock({
+      config: {
+        'branch.feature.remote': 'https://github.com/o/r.git',
+        'branch.feature.merge': 'refs/heads/feature'
+      },
+      remoteVerbose: [
+        'origin\thttps://github.com/o/r.git (fetch)',
+        'origin\thttps://github.com/o/r.git (push)',
+        ''
+      ].join('\n')
+    })
+    await createGitRealApi().push({ worktreePath: '/repo' })
+    expect(invokeMock).toHaveBeenCalledWith('git_read', {
+      args: { worktreePath: '/repo', args: ['remote', '-v'] }
+    })
     expect(invokeMock).toHaveBeenCalledWith('git_push', {
       args: { worktreePath: '/repo', remote: 'origin', refspec: 'HEAD:feature', forceWithLease: false }
     })
