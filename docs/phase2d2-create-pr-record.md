@@ -98,7 +98,7 @@
 
 ## 6. 已知边界与后续
 
-- **2D.2.1 stacked 创建**：`createStacked` 维持 fallback、`stackedCreationSupported:false`（UI 开关隐藏）。
+- **2D.2.1 stacked 创建（用户决定不做，2026-10-08）**：`createStacked` 维持 fallback、`stackedCreationSupported:false`（UI 开关隐藏）；参照实现细节已归档在 brainstorming 探索报告中，如未来需要可随时立项（含 stack 可见性另行评估）。
 - **fetch/pull/fast-forward**：`git_fetch`/`git_pull`/`git_fast_forward`/`syncFork`/`rebaseFromBase` 未接；`needs_sync`/快进分支与 push 自动 fetch 恢复不可用。
 - **fork 物化与 `resolvePrBase`**：`pushTarget.remoteUrl` 出现即报错；pushTarget 自动恢复路径无生产者。
 - **非 GitHub provider / GHES 创建**：非默认 host → `unsupported_provider`；身份解析仍可用。
