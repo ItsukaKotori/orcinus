@@ -2,7 +2,12 @@ import { invokeCommand } from '../../../../bridge/real/invoke'
 import type { GhAuthAccount, GhAuthDiagnostic } from '../../../../shared/github/auth-types'
 
 export type GhExecResult = { stdout: string; stderr: string; code: number | null }
-export type GhExecOptions = { cwd?: string; timeoutMs?: number; maxBuffer?: number }
+export type GhExecOptions = {
+  cwd?: string
+  timeoutMs?: number
+  maxBuffer?: number
+  stdin?: string
+}
 export type GhExecutor = (args: string[], options?: GhExecOptions) => Promise<GhExecResult>
 
 export class GhRunError extends Error {
@@ -86,7 +91,8 @@ export function defaultGhExecutor(): GhExecutor {
         args,
         ...(options?.cwd !== undefined ? { cwd: options.cwd } : {}),
         ...(options?.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
-        ...(options?.maxBuffer !== undefined ? { maxBuffer: options.maxBuffer } : {})
+        ...(options?.maxBuffer !== undefined ? { maxBuffer: options.maxBuffer } : {}),
+        ...(options?.stdin !== undefined ? { stdin: options.stdin } : {})
       }
     })
 }

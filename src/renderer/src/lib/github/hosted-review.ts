@@ -39,6 +39,7 @@ export type HostedReviewClientDeps = {
 
 export type HostedReviewClient = {
   forBranch: (args: HostedReviewForBranchArgs) => Promise<HostedReviewInfo | null>
+  invalidate: (repoPath: string) => void
 }
 
 type CacheEntry = {
@@ -141,5 +142,16 @@ export function createHostedReviewClient(deps: HostedReviewClientDeps): HostedRe
     return review
   }
 
-  return { forBranch }
+  // Why (#11532): a no-review answer stays fresh for far longer than a poll
+  // interval, so creating a review must retire this repo path's entries at once.
+  function invalidate(repoPath: string): void {
+    const prefix = `${repoPath}${KEY_SEPARATOR}`
+    for (const key of entries.keys()) {
+      if (key.startsWith(prefix)) {
+        entries.delete(key)
+      }
+    }
+  }
+
+  return { forBranch, invalidate }
 }

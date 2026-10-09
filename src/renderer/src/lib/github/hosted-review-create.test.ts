@@ -1,13 +1,23 @@
-import { describe, expect, it, vi } from 'vitest'
-import type { HostedReviewInfo } from '../../../../shared/hosted-review'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { GitStatusEntry, GitUpstreamStatus } from '../../../../shared/git-status-types'
+import type {
+  CreateHostedReviewArgs,
+  HostedReviewCreationBlockedReason,
+  HostedReviewCreationEligibility,
+  HostedReviewInfo
+} from '../../../../shared/hosted-review'
 import type { GhExecResult } from './gh-exec-client'
 import { GitReadError } from './git-read-client'
 import {
   baseRefExistsOnRemote,
+  blockedEligibilityToCreateResult,
   createHostedReviewCreation,
   getDefaultBaseRef
 } from './hosted-review-create'
-import type { HostedReviewCreationEligibilityInput } from './hosted-review-create'
+import type {
+  HostedReviewCreationEligibilityInput,
+  HostedReviewCreationReadTemplate
+} from './hosted-review-create'
 import type { GitHubRepoIdentity } from './repo-identity'
 
 type RunGit = (args: string[]) => Promise<{ stdout: string }>
@@ -60,11 +70,42 @@ type HarnessOptions = {
   authResult?: GhExecResult
   authError?: Error
   runGit?: RunGit
+  currentBranch?: string
+  status?: { entries: readonly GitStatusEntry[] } | Error
+  upstream?: GitUpstreamStatus | Error
+  template?: HostedReviewCreationReadTemplate
+  createResult?: GhExecResult | Error
+  listResult?: GhExecResult | Error
+}
+
+const PR_URL = 'https://github.com/org/repo/pull/7'
+
+const CREATED_JSON: GhExecResult = {
+  stdout: JSON.stringify({ number: 7, url: PR_URL }),
+  stderr: '',
+  code: 0
+}
+
+const CREATE_ARGS: CreateHostedReviewArgs = {
+  repoPath: '/repo',
+  worktreePath: '/worktree',
+  provider: 'github',
+  base: 'main',
+  title: 'Add feature',
+  body: 'Body'
 }
 
 function createHarness(options: HarnessOptions = {}) {
   const makeRunGitPaths: string[] = []
-  const runGit = vi.fn<RunGit>(options.runGit ?? (async () => ({ stdout: '' })))
+  const runGit = vi.fn<RunGit>(
+    options.runGit ??
+      (async (args) => {
+        if (args[0] === 'rev-parse' && args[1] === '--abbrev-ref') {
+          return { stdout: `${options.currentBranch ?? 'feature'}\n` }
+        }
+        return { stdout: '' }
+      })
+  )
   const getRepoSlug = vi.fn(async () => (options.slug === undefined ? ORG_REPO : options.slug))
   const forBranch = vi.fn(async () => {
     if (options.reviewError) {
@@ -72,25 +113,68 @@ function createHarness(options: HarnessOptions = {}) {
     }
     return options.review ?? null
   })
-  const run = vi.fn(async () => {
-    if (options.authError) {
-      throw options.authError
+  const invalidate = vi.fn()
+  const run = vi.fn(async (args: string[]) => {
+    if (args[0] === 'auth') {
+      if (options.authError) {
+        throw options.authError
+      }
+      return options.authResult ?? ACTIVE_AUTH
     }
-    return options.authResult ?? ACTIVE_AUTH
+    if (args[0] === 'pr' && args[1] === 'create') {
+      if (options.createResult instanceof Error) {
+        throw options.createResult
+      }
+      return options.createResult ?? CREATED_JSON
+    }
+    if (args[0] === 'pr' && args[1] === 'list') {
+      if (options.listResult instanceof Error) {
+        throw options.listResult
+      }
+      return options.listResult ?? { stdout: '[]', stderr: '', code: 0 }
+    }
+    throw new Error(`unexpected gh call: ${args.join(' ')}`)
   })
+  const readStatus = vi.fn(async () => {
+    if (options.status instanceof Error) {
+      throw options.status
+    }
+    return options.status ?? { entries: [] }
+  })
+  const readUpstream = vi.fn(async () => {
+    if (options.upstream instanceof Error) {
+      throw options.upstream
+    }
+    return options.upstream ?? { hasUpstream: true, ahead: 0, behind: 0 }
+  })
+  const readTemplate = vi.fn<HostedReviewCreationReadTemplate>(
+    options.template ?? (async () => null)
+  )
   const creation = createHostedReviewCreation({
     client: { run },
     identity: { getRepoSlug },
-    reviewLookup: { forBranch },
+    reviewLookup: { forBranch, invalidate },
     makeRunGit: (worktreePath) => {
       makeRunGitPaths.push(worktreePath)
       return runGit
     },
-    readStatus: async () => ({ entries: [] }),
-    readUpstream: async () => ({ hasUpstream: true, ahead: 0, behind: 0 }),
+    readStatus,
+    readUpstream,
+    readTemplate,
     now: () => NOW
   })
-  return { creation, runGit, getRepoSlug, forBranch, run, makeRunGitPaths }
+  return {
+    creation,
+    runGit,
+    getRepoSlug,
+    forBranch,
+    run,
+    makeRunGitPaths,
+    invalidate,
+    readStatus,
+    readUpstream,
+    readTemplate
+  }
 }
 
 describe('getCreationEligibility blockers', () => {
@@ -539,5 +623,634 @@ describe('review lookup outcomes', () => {
     } finally {
       warn.mockRestore()
     }
+  })
+})
+
+describe('create', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  describe('preflight', () => {
+    it('blocks creation when the checked-out branch differs from the selected head', async () => {
+      const { creation, run, runGit, makeRunGitPaths } = createHarness({ currentBranch: 'other' })
+      const result = await creation.create({ ...CREATE_ARGS, head: 'feature' })
+      expect(result).toEqual({
+        ok: false,
+        code: 'validation',
+        error:
+          'Create PR failed: switch back to the selected branch before creating a pull request.'
+      })
+      expect(makeRunGitPaths).toEqual(['/worktree'])
+      expect(runGit).toHaveBeenCalledWith(['rev-parse', '--abbrev-ref', 'HEAD'])
+      expect(run).not.toHaveBeenCalled()
+    })
+
+    it('blocks creation from a dirty worktree', async () => {
+      const { creation } = createHarness({
+        status: { entries: [{ path: 'a.ts', status: 'modified', area: 'unstaged' }] }
+      })
+      const result = await creation.create(CREATE_ARGS)
+      expect(result).toEqual({
+        ok: false,
+        code: 'validation',
+        error:
+          'Create PR failed: commit or discard local changes before creating a pull request.'
+      })
+    })
+
+    it('blocks creation without an upstream', async () => {
+      const { creation } = createHarness({
+        upstream: { hasUpstream: false, ahead: 0, behind: 0 }
+      })
+      const result = await creation.create(CREATE_ARGS)
+      expect(result).toEqual({
+        ok: false,
+        code: 'validation',
+        error: 'Create PR failed: publish this branch before creating a pull request.'
+      })
+    })
+
+    it('refuses creation when the review lookup is unavailable', async () => {
+      const { creation } = createHarness({ reviewError: new Error('GitHub PR lookup failed') })
+      const result = await creation.create(CREATE_ARGS)
+      expect(result).toEqual({
+        ok: false,
+        code: 'validation',
+        error:
+          'Create PR failed: Orca could not confirm whether this branch already has a pull request. Retry once the GitHub lookup succeeds.'
+      })
+    })
+
+    it('reports a validation failure when branch status cannot be read', async () => {
+      const { creation } = createHarness({ status: new Error('git status failed') })
+      const result = await creation.create(CREATE_ARGS)
+      expect(result).toEqual({
+        ok: false,
+        code: 'validation',
+        error:
+          'Create PR failed: could not verify branch status. Refresh source control and try again.'
+      })
+    })
+  })
+
+  describe('argv and assignment', () => {
+    it('runs gh pr create with the verbatim argv and pipes the body to stdin', async () => {
+      const { creation, run, invalidate, readStatus, readUpstream } = createHarness()
+      const result = await creation.create(CREATE_ARGS)
+      expect(run).toHaveBeenCalledWith(
+        [
+          'pr',
+          'create',
+          '--repo',
+          'org/repo',
+          '--base',
+          'main',
+          '--title',
+          'Add feature',
+          '--body-file',
+          '-'
+        ],
+        { timeoutMs: 60_000, stdin: 'Body' }
+      )
+      expect(readStatus).toHaveBeenCalledWith('/worktree')
+      expect(readUpstream).toHaveBeenCalledWith('/worktree')
+      expect(result).toEqual({ ok: true, number: 7, url: PR_URL })
+      expect(invalidate).toHaveBeenCalledTimes(1)
+      expect(invalidate).toHaveBeenCalledWith('/repo')
+    })
+
+    it('appends --head and --draft when selected', async () => {
+      const { creation, run } = createHarness()
+      await creation.create({ ...CREATE_ARGS, head: 'feature', draft: true })
+      expect(run).toHaveBeenCalledWith(
+        [
+          'pr',
+          'create',
+          '--repo',
+          'org/repo',
+          '--base',
+          'main',
+          '--title',
+          'Add feature',
+          '--body-file',
+          '-',
+          '--head',
+          'feature',
+          '--draft'
+        ],
+        { timeoutMs: 60_000, stdin: 'Body' }
+      )
+    })
+
+    it('normalizes the base, head, and title before building the argv', async () => {
+      const { creation, run } = createHarness()
+      await creation.create({
+        ...CREATE_ARGS,
+        base: 'origin/main',
+        head: 'refs/heads/feature',
+        title: '  Add feature  '
+      })
+      expect(run).toHaveBeenCalledWith(
+        [
+          'pr',
+          'create',
+          '--repo',
+          'org/repo',
+          '--base',
+          'main',
+          '--title',
+          'Add feature',
+          '--body-file',
+          '-',
+          '--head',
+          'feature'
+        ],
+        { timeoutMs: 60_000, stdin: 'Body' }
+      )
+    })
+
+    it('sends an empty stdin when there is no body', async () => {
+      const { creation, run } = createHarness()
+      await creation.create({ ...CREATE_ARGS, body: undefined })
+      expect(run).toHaveBeenCalledWith(expect.any(Array), { timeoutMs: 60_000, stdin: '' })
+    })
+
+    it('rejects a missing base or title before calling gh pr create', async () => {
+      const { creation, run } = createHarness()
+      await expect(creation.create({ ...CREATE_ARGS, title: '   ' })).resolves.toEqual({
+        ok: false,
+        code: 'validation',
+        error: 'Create PR failed: base branch and title are required.'
+      })
+      await expect(creation.create({ ...CREATE_ARGS, body: undefined, base: '' })).resolves.toEqual({
+        ok: false,
+        code: 'validation',
+        error: 'Create PR failed: base branch and title are required.'
+      })
+      expect(run.mock.calls.filter(([argv]) => argv.includes('create'))).toEqual([])
+    })
+  })
+
+  describe('template body', () => {
+    it('reads the first conventional template path and pipes it to stdin', async () => {
+      const readTemplate = vi.fn<HostedReviewCreationReadTemplate>(async (_path, relativePath) =>
+        relativePath === '.github/pull_request_template.md' ? { content: 'Template body' } : null
+      )
+      const { creation, run } = createHarness({ template: readTemplate })
+      await creation.create({ ...CREATE_ARGS, body: undefined, useTemplate: true })
+      expect(readTemplate).toHaveBeenCalledWith('/worktree', '.github/pull_request_template.md')
+      expect(run).toHaveBeenCalledWith(expect.any(Array), {
+        timeoutMs: 60_000,
+        stdin: 'Template body'
+      })
+    })
+
+    it('tries the six conventional paths in order and falls back to an empty body', async () => {
+      const readTemplate = vi.fn<HostedReviewCreationReadTemplate>(async () => null)
+      const { creation, run } = createHarness({ template: readTemplate })
+      await creation.create({ ...CREATE_ARGS, body: '', useTemplate: true })
+      expect(readTemplate.mock.calls.map(([, relativePath]) => relativePath)).toEqual([
+        '.github/pull_request_template.md',
+        '.github/PULL_REQUEST_TEMPLATE.md',
+        'pull_request_template.md',
+        'PULL_REQUEST_TEMPLATE.md',
+        'docs/pull_request_template.md',
+        'docs/PULL_REQUEST_TEMPLATE.md'
+      ])
+      expect(run).toHaveBeenCalledWith(expect.any(Array), { timeoutMs: 60_000, stdin: '' })
+    })
+
+    it('skips binary templates', async () => {
+      const readTemplate = vi.fn<HostedReviewCreationReadTemplate>(async (_path, relativePath) => {
+        if (relativePath === '.github/pull_request_template.md') {
+          return { content: 'binary', isBinary: true }
+        }
+        if (relativePath === '.github/PULL_REQUEST_TEMPLATE.md') {
+          return { content: 'Markdown body' }
+        }
+        return null
+      })
+      const { creation, run } = createHarness({ template: readTemplate })
+      await creation.create({ ...CREATE_ARGS, body: undefined, useTemplate: true })
+      expect(run).toHaveBeenCalledWith(expect.any(Array), {
+        timeoutMs: 60_000,
+        stdin: 'Markdown body'
+      })
+    })
+
+    it('prefers an explicit body over the template', async () => {
+      const readTemplate = vi.fn<HostedReviewCreationReadTemplate>(async () => ({
+        content: 'Template body'
+      }))
+      const { creation, run } = createHarness({ template: readTemplate })
+      await creation.create({ ...CREATE_ARGS, useTemplate: true })
+      expect(readTemplate).not.toHaveBeenCalled()
+      expect(run).toHaveBeenCalledWith(expect.any(Array), { timeoutMs: 60_000, stdin: 'Body' })
+    })
+  })
+
+  describe('stdout parsing and fallback', () => {
+    it('parses a pull request URL from stdout on any host', async () => {
+      const { creation } = createHarness({
+        createResult: {
+          stdout: 'https://ghe.corp.example/org/repo/pull/12\n',
+          stderr: '',
+          code: 0
+        }
+      })
+      await expect(creation.create(CREATE_ARGS)).resolves.toEqual({
+        ok: true,
+        number: 12,
+        url: 'https://ghe.corp.example/org/repo/pull/12'
+      })
+    })
+
+    it('falls back to gh pr list when stdout has no parsable payload', async () => {
+      const { creation, run, invalidate } = createHarness({
+        createResult: {
+          stdout: 'Creating pull request for feature into main\n',
+          stderr: '',
+          code: 0
+        },
+        listResult: {
+          stdout: JSON.stringify([{ number: 5, url: 'https://github.com/org/repo/pull/5' }]),
+          stderr: '',
+          code: 0
+        }
+      })
+      await expect(creation.create({ ...CREATE_ARGS, head: 'feature' })).resolves.toEqual({
+        ok: true,
+        number: 5,
+        url: 'https://github.com/org/repo/pull/5'
+      })
+      expect(run).toHaveBeenCalledWith([
+        'pr',
+        'list',
+        '--repo',
+        'org/repo',
+        '--head',
+        'feature',
+        '--base',
+        'main',
+        '--state',
+        'open',
+        '--limit',
+        '2',
+        '--json',
+        'number,url'
+      ])
+      expect(invalidate).toHaveBeenCalledTimes(1)
+    })
+
+    it('reports unknown_completion when the fallback finds no open review', async () => {
+      const { creation, invalidate } = createHarness({
+        createResult: { stdout: 'noise', stderr: '', code: 0 },
+        listResult: { stdout: '[]', stderr: '', code: 0 }
+      })
+      await expect(creation.create({ ...CREATE_ARGS, head: 'feature' })).resolves.toEqual({
+        ok: false,
+        code: 'unknown_completion',
+        error: 'PR creation may have completed. Refreshing branch review state...'
+      })
+      expect(invalidate).not.toHaveBeenCalled()
+    })
+
+    it('reports unknown_completion when the fallback finds more than one review', async () => {
+      const { creation } = createHarness({
+        createResult: { stdout: 'noise', stderr: '', code: 0 },
+        listResult: {
+          stdout: JSON.stringify([
+            { number: 5, url: 'https://github.com/org/repo/pull/5' },
+            { number: 6, url: 'https://github.com/org/repo/pull/6' }
+          ]),
+          stderr: '',
+          code: 0
+        }
+      })
+      await expect(creation.create({ ...CREATE_ARGS, head: 'feature' })).resolves.toEqual({
+        ok: false,
+        code: 'unknown_completion',
+        error: 'PR creation may have completed. Refreshing branch review state...'
+      })
+    })
+
+    it('does not query gh pr list without a head branch', async () => {
+      const { creation, run } = createHarness({
+        createResult: { stdout: 'noise', stderr: '', code: 0 }
+      })
+      await expect(creation.create(CREATE_ARGS)).resolves.toEqual({
+        ok: false,
+        code: 'unknown_completion',
+        error: 'PR creation may have completed. Refreshing branch review state...'
+      })
+      expect(run.mock.calls.filter(([argv]) => argv[1] === 'list')).toEqual([])
+    })
+  })
+
+  describe('error classification', () => {
+    it('classifies an auth failure verbatim', async () => {
+      const { creation, invalidate } = createHarness({
+        createResult: {
+          stdout: '',
+          stderr: 'You are not logged into any GitHub hosts. To log in, run: gh auth login',
+          code: 1
+        }
+      })
+      await expect(creation.create(CREATE_ARGS)).resolves.toEqual({
+        ok: false,
+        code: 'auth_required',
+        error:
+          'Create PR failed: GitHub is not authenticated. Next step: run gh auth login in this environment.'
+      })
+      expect(invalidate).not.toHaveBeenCalled()
+    })
+
+    it('classifies a failure printed on stdout', async () => {
+      const { creation } = createHarness({
+        createResult: { stdout: 'HTTP 401: Unauthorized', stderr: '', code: 1 }
+      })
+      await expect(creation.create(CREATE_ARGS)).resolves.toEqual({
+        ok: false,
+        code: 'auth_required',
+        error:
+          'Create PR failed: GitHub is not authenticated. Next step: run gh auth login in this environment.'
+      })
+    })
+
+    it('resolves already_exists through the fallback review', async () => {
+      const { creation, run } = createHarness({
+        createResult: {
+          stdout: '',
+          stderr: 'a pull request already exists for branch feature',
+          code: 1
+        },
+        listResult: {
+          stdout: JSON.stringify([{ number: 9, url: 'https://github.com/org/repo/pull/9' }]),
+          stderr: '',
+          code: 0
+        }
+      })
+      await expect(creation.create({ ...CREATE_ARGS, head: 'feature' })).resolves.toEqual({
+        ok: false,
+        code: 'already_exists',
+        error: 'A pull request already exists for this branch.',
+        existingReview: { number: 9, url: 'https://github.com/org/repo/pull/9' }
+      })
+      expect(run).toHaveBeenCalledWith([
+        'pr',
+        'list',
+        '--repo',
+        'org/repo',
+        '--head',
+        'feature',
+        '--base',
+        'main',
+        '--state',
+        'open',
+        '--limit',
+        '2',
+        '--json',
+        'number,url'
+      ])
+    })
+
+    it('keeps already_exists without a fallback hit', async () => {
+      const { creation } = createHarness({
+        createResult: {
+          stdout: '',
+          stderr: 'a pull request already exists for branch feature',
+          code: 1
+        }
+      })
+      const result = await creation.create({ ...CREATE_ARGS, head: 'feature' })
+      expect(result).toEqual({
+        ok: false,
+        code: 'already_exists',
+        error: 'A pull request already exists for this branch.'
+      })
+      expect(result).not.toHaveProperty('existingReview')
+    })
+
+    it('resolves unknown_completion through the fallback review after a timeout', async () => {
+      const { creation } = createHarness({
+        createResult: { stdout: '', stderr: 'command timed out after 60s', code: null },
+        listResult: {
+          stdout: JSON.stringify([{ number: 9, url: 'https://github.com/org/repo/pull/9' }]),
+          stderr: '',
+          code: 0
+        }
+      })
+      await expect(creation.create({ ...CREATE_ARGS, head: 'feature' })).resolves.toEqual({
+        ok: false,
+        code: 'already_exists',
+        error: 'A pull request already exists for this branch.',
+        existingReview: { number: 9, url: 'https://github.com/org/repo/pull/9' }
+      })
+    })
+
+    it('keeps unknown_completion when a timeout finds no fallback review', async () => {
+      const { creation } = createHarness({
+        createResult: { stdout: '', stderr: 'command timed out after 60s', code: null }
+      })
+      await expect(creation.create({ ...CREATE_ARGS, head: 'feature' })).resolves.toEqual({
+        ok: false,
+        code: 'unknown_completion',
+        error: 'PR creation may have completed. Refreshing branch review state...'
+      })
+    })
+
+    it('classifies a validation failure verbatim', async () => {
+      const { creation } = createHarness({
+        createResult: {
+          stdout: '',
+          stderr: 'GraphQL: Validation failed (HTTP 422)',
+          code: 1
+        }
+      })
+      await expect(creation.create(CREATE_ARGS)).resolves.toEqual({
+        ok: false,
+        code: 'validation',
+        error:
+          'Create PR failed: GitHub rejected the pull request. Check the base branch and branch state, then try again.'
+      })
+    })
+
+    it('classifies anything else as unknown', async () => {
+      const { creation } = createHarness({
+        createResult: { stdout: '', stderr: 'something exploded', code: 1 }
+      })
+      await expect(creation.create(CREATE_ARGS)).resolves.toEqual({
+        ok: false,
+        code: 'unknown',
+        error:
+          'Create PR failed: GitHub could not create the pull request. Try again in a moment.'
+      })
+    })
+  })
+
+  describe('provider guard', () => {
+    it('rejects a provider without creation support before any lookup', async () => {
+      const { creation, run, forBranch } = createHarness()
+      await expect(creation.create({ ...CREATE_ARGS, provider: 'unsupported' })).resolves.toEqual({
+        ok: false,
+        code: 'unsupported_provider',
+        error: 'Creating reviews for this provider is not supported yet.'
+      })
+      expect(run).not.toHaveBeenCalled()
+      expect(forBranch).not.toHaveBeenCalled()
+    })
+
+    it('requires a GitHub origin remote', async () => {
+      const { creation, getRepoSlug } = createHarness({ slug: null })
+      await expect(creation.create(CREATE_ARGS)).resolves.toEqual({
+        ok: false,
+        code: 'unsupported_provider',
+        error: 'Creating pull requests requires a GitHub remote.'
+      })
+      expect(getRepoSlug).toHaveBeenCalledWith('/worktree')
+    })
+
+    it('rejects a non-default GitHub host', async () => {
+      const { creation } = createHarness({
+        slug: { owner: 'org', repo: 'repo', host: 'ghe.corp.example' }
+      })
+      await expect(creation.create(CREATE_ARGS)).resolves.toEqual({
+        ok: false,
+        code: 'unsupported_provider',
+        error: 'Creating pull requests requires a GitHub remote.'
+      })
+    })
+
+    it('rejects a mismatched provider with its own copy', async () => {
+      const { creation } = createHarness()
+      await expect(creation.create({ ...CREATE_ARGS, provider: 'gitlab' })).resolves.toEqual({
+        ok: false,
+        code: 'unsupported_provider',
+        error: 'Creating merge requests requires a GitLab remote.'
+      })
+    })
+  })
+})
+
+function eligibilityFor(
+  blockedReason: HostedReviewCreationBlockedReason,
+  overrides: Partial<HostedReviewCreationEligibility> = {}
+): HostedReviewCreationEligibility {
+  return {
+    provider: 'github',
+    review: null,
+    canCreate: false,
+    blockedReason,
+    nextAction: null,
+    reviewLookupOutcome: 'not_found',
+    ...overrides
+  }
+}
+
+const BLOCKED_COPY_ROWS = [
+  {
+    reason: 'auth_required',
+    code: 'auth_required',
+    error:
+      'Create PR failed: GitHub is not authenticated. Next step: Run gh auth login in this environment.'
+  },
+  {
+    reason: 'unsupported_provider',
+    code: 'unsupported_provider',
+    error: 'Creating pull requests requires a GitHub remote.'
+  },
+  {
+    reason: 'dirty',
+    code: 'validation',
+    error:
+      'Create PR failed: commit or discard local changes before creating a pull request.'
+  },
+  {
+    reason: 'detached_head',
+    code: 'validation',
+    error: 'Create PR failed: switch to a branch before creating a pull request.'
+  },
+  {
+    reason: 'default_branch',
+    code: 'validation',
+    error: 'Create PR failed: choose a feature branch before creating a pull request.'
+  },
+  {
+    reason: 'no_upstream',
+    code: 'validation',
+    error: 'Create PR failed: publish this branch before creating a pull request.'
+  },
+  {
+    reason: 'needs_push',
+    code: 'validation',
+    error: 'Create PR failed: push this branch before creating a pull request.'
+  },
+  {
+    reason: 'needs_sync',
+    code: 'validation',
+    error: 'Create PR failed: sync this branch before creating a pull request.'
+  },
+  {
+    reason: 'fork_head_unsupported',
+    code: 'validation',
+    error: 'Create PR failed: refresh source control status and try again.'
+  },
+  {
+    reason: 'base_not_on_remote',
+    code: 'validation',
+    error:
+      'Create PR failed: the base branch "release" hasn\'t been pushed to the remote. Choose a pushed base or push it first.'
+  }
+] as const satisfies readonly {
+  reason: NonNullable<HostedReviewCreationBlockedReason>
+  code: string
+  error: string
+}[]
+
+describe('blockedEligibilityToCreateResult', () => {
+  for (const row of BLOCKED_COPY_ROWS) {
+    it(`maps ${row.reason} to ${row.code} with verbatim copy`, () => {
+      expect(blockedEligibilityToCreateResult(eligibilityFor(row.reason), 'release')).toEqual({
+        ok: false,
+        code: row.code,
+        error: row.error
+      })
+    })
+  }
+
+  it('returns null when creation is allowed', () => {
+    expect(blockedEligibilityToCreateResult(eligibilityFor(null, { canCreate: true }))).toBeNull()
+  })
+
+  it('maps an empty blocker to the refresh copy', () => {
+    expect(blockedEligibilityToCreateResult(eligibilityFor(null))).toEqual({
+      ok: false,
+      code: 'validation',
+      error: 'Create PR failed: refresh source control status and try again.'
+    })
+  })
+
+  it('maps an existing review to already_exists with the review summary', () => {
+    const review = { number: 7, url: PR_URL }
+    expect(blockedEligibilityToCreateResult(eligibilityFor('existing_review', { review }))).toEqual({
+      ok: false,
+      code: 'already_exists',
+      error: 'A pull request already exists for this branch.',
+      existingReview: review
+    })
+  })
+
+  it('uses the provider copy for a non-GitHub provider', () => {
+    expect(
+      blockedEligibilityToCreateResult(eligibilityFor('unsupported_provider', { provider: 'gitlab' }))
+    ).toEqual({
+      ok: false,
+      code: 'unsupported_provider',
+      error: 'Creating merge requests requires a GitLab remote.'
+    })
   })
 })

@@ -207,3 +207,32 @@ describe('hosted review forBranch', () => {
     expect(getPRForBranchOutcome).toHaveBeenCalledTimes(2)
   })
 })
+
+describe('hosted review invalidate', () => {
+  it('re-queries the branch after invalidating its repo path', async () => {
+    const { client, getPRForBranchOutcome } = createHarness()
+    await client.forBranch({ repoPath: '/repo', branch: 'feature' })
+    client.invalidate('/repo')
+    await client.forBranch({ repoPath: '/repo', branch: 'feature' })
+    expect(getPRForBranchOutcome).toHaveBeenCalledTimes(2)
+  })
+
+  it('leaves entries for other repo paths cached', async () => {
+    const { client, getPRForBranchOutcome } = createHarness()
+    await client.forBranch({ repoPath: '/repo', branch: 'feature' })
+    await client.forBranch({ repoPath: '/other', branch: 'feature' })
+    client.invalidate('/repo')
+    await client.forBranch({ repoPath: '/other', branch: 'feature' })
+    expect(getPRForBranchOutcome).toHaveBeenCalledTimes(2)
+    await client.forBranch({ repoPath: '/repo', branch: 'feature' })
+    expect(getPRForBranchOutcome).toHaveBeenCalledTimes(3)
+  })
+
+  it('does not clear a repo path that only shares a prefix', async () => {
+    const { client, getPRForBranchOutcome } = createHarness()
+    await client.forBranch({ repoPath: '/repo', branch: 'feature' })
+    client.invalidate('/rep')
+    await client.forBranch({ repoPath: '/repo', branch: 'feature' })
+    expect(getPRForBranchOutcome).toHaveBeenCalledTimes(1)
+  })
+})

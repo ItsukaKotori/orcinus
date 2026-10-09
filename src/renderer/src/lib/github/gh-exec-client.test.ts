@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createGhExecClient, GhRunError } from './gh-exec-client'
+import { createGhExecClient, defaultGhExecutor, GhRunError } from './gh-exec-client'
+
+const { invokeCommandMock } = vi.hoisted(() => ({
+  invokeCommandMock: vi.fn(async () => ({ stdout: '', stderr: '', code: 0 }))
+}))
+
+vi.mock('../../../../bridge/real/invoke', () => ({ invokeCommand: invokeCommandMock }))
 
 describe('gh exec client', () => {
   it('returns the executor result on success', async () => {
@@ -43,6 +49,30 @@ describe('gh exec client', () => {
       name: 'GhRunError',
       stderr: 'boom',
       code: 2
+    })
+  })
+})
+
+describe('defaultGhExecutor', () => {
+  it('passes stdin through to the gh_exec args', async () => {
+    invokeCommandMock.mockClear()
+    const executor = defaultGhExecutor()
+    await executor(['pr', 'create', '--body-file', '-'], { timeoutMs: 60_000, stdin: 'body text' })
+    expect(invokeCommandMock).toHaveBeenCalledWith('gh_exec', {
+      args: {
+        args: ['pr', 'create', '--body-file', '-'],
+        timeoutMs: 60_000,
+        stdin: 'body text'
+      }
+    })
+  })
+
+  it('omits stdin when it is absent', async () => {
+    invokeCommandMock.mockClear()
+    const executor = defaultGhExecutor()
+    await executor(['auth', 'status'])
+    expect(invokeCommandMock).toHaveBeenCalledWith('gh_exec', {
+      args: { args: ['auth', 'status'] }
     })
   })
 })
