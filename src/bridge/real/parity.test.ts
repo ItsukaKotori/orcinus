@@ -585,8 +585,8 @@ const surfaceCases: SurfaceCase[] = [
   },
   {
     domain: 'hostedReview',
-    explicit: ['forBranch'],
-    missing: ['getCreationEligibility', 'create', 'createStacked']
+    explicit: ['forBranch', 'getCreationEligibility', 'create'],
+    missing: ['createStacked']
   }
 ]
 

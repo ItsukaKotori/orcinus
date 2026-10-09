@@ -146,6 +146,25 @@ describe('createAdeApi real assembly', () => {
     })
   })
 
+  it('routes hostedReview creation eligibility through the real probes', async () => {
+    const api = createAdeApi()
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'git_remote_urls') return []
+      if (command === 'git_read') return { stdout: '', stderr: '', code: 1 }
+      throw new Error(`unexpected ${command}`)
+    })
+    await expect(
+      api.hostedReview.getCreationEligibility({ repoPath: '/repo', branch: 'main' })
+    ).resolves.toMatchObject({
+      provider: 'unsupported',
+      canCreate: false,
+      blockedReason: 'unsupported_provider'
+    })
+    expect(invokeMock).toHaveBeenCalledWith('git_remote_urls', {
+      args: { worktreePath: '/repo' }
+    })
+  })
+
   it('routes the gh domain through its commands', async () => {
     const api = createAdeApi()
     invokeMock.mockImplementation(async (command: string) => {
