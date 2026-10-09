@@ -20,11 +20,11 @@
 | create | preflight/模板 6 路径/argv/`--body-file -` stdin/JSON-URL-回退解析/分类表/blockers 映射/成功后 `reviewLookup.invalidate`；非幂等写 `retry:false` | cdac1adc + 9dbbf744 |
 | 桥接接线 | `real/hosted-review.ts` creation 装配（client/identity/reviewLookup/makeRunGit/readStatus/readUpstream/readTemplate）；parity/create-api（creation `missing`→`explicit`，仅剩 `createStacked`） | 6ca82212 |
 
-验收口径（spec §6.3）：真实 gh + 有远端仓库下，新分支 push → 作曲家创建 PR（普通/草稿/模板）成功并在 GitHub 可见；已有 PR 的分支显示 `existing_review` + 链接；dirty/no_upstream/needs_push 等 blockers 正确显示。自动门禁三组全绿（§3）。终态变更规模：**21 个文件，+3343 / −31**（4 个新增均为 TS：`git-read-client(.test).ts`、`hosted-review-create(.test).ts`；区间内另含计划补丁 `33fa4511`）。
+验收口径（spec §6.3）：真实 gh + 有远端仓库下，新分支 push → 作曲家创建 PR（普通/草稿/模板）成功并在 GitHub 可见；已有 PR 的分支显示 `existing_review` + 链接；dirty/no_upstream/needs_push 等 blockers 正确显示。自动门禁三组全绿（§3）。终态变更规模（净树差异，`git diff --shortstat 6d736b01..6ca82212`）：**21 个文件，+3343 / −31**（4 个新增均为 TS：`git-read-client(.test).ts`、`hosted-review-create(.test).ts`；区间内另含计划补丁 `33fa4511`）。若按各提交 stat 行累计（churn，fix 轮对同一批行重复计入）则为 **+3380 / −68**（`git log --numstat` 求和），故任何「逐包求和」重建（约 +3379 / −67）会高于净树差异。
 
 ## 2. 提交清单
 
-`git log --oneline 6d736b01..HEAD`（spec 提交 `43282eea` 与计划提交 `6d736b01` 为区间下界，不列入；区间内 docs 提交 `33fa4511` 为计划补丁，列入；本记录由 Task 8 提交追加，SHA 见提交后 `git log`）：
+`git log --oneline 6d736b01..6ca82212`（spec 提交 `43282eea` 与计划提交 `6d736b01` 为区间下界，不列入；区间内 docs 提交 `33fa4511` 为计划补丁，列入；本记录由 Task 8 提交追加，SHA 见提交后 `git log`）：
 
 | 提交 | 内容 |
 |---|---|
@@ -33,10 +33,10 @@
 | 7bf84b64 | fix(bridge): git_read 拒绝 symbolic-ref 写形式（T1 fix 1） |
 | f7733426 | fix(bridge): git_read symbolic-ref/config 白名单收紧（写形式与越权读拒绝）（T1 fix 2） |
 | da6c21bc | fix(bridge): git_read config 拒绝位置参数之后的选项（写绕过）（T1 fix 3） |
-| c5b7cd42 | fix(bridge): git_read 允许 remote -v（push 目标 URL 归一化）（T1 fix 4） |
 | b2c91be5 | feat(bridge): gh_exec 支持 stdin（--body-file - 语义）（Task 2） |
 | 28bded63 | feat(bridge): git_push 命令（argv 执行 + 防御校验）（Task 3） |
 | 2593c3ea | feat(renderer): git_read 客户端与 git.push 目标解析接线（Task 4） |
+| c5b7cd42 | fix(bridge): git_read 允许 remote -v（push 目标 URL 归一化）（T1 fix 4） |
 | 8b78dd26 | test(renderer): push 目标配置解析矩阵（pushRemote/pushDefault/守卫）（Task 4） |
 | 1974369d | feat(renderer): PR 创建 eligibility（blockers/base/auth）（Task 5） |
 | cdac1adc | feat(renderer): PR 创建执行（preflight/模板/回退/分类）（Task 6） |
@@ -86,12 +86,12 @@
 
 1. **T1 fix 轮 1–4（`git_read` 白名单收紧）**：`symbolic-ref` 写形式最初仅拒字面 `-d/--delete`，随后改为「仅允许精确只读旗标 allowlist」以覆盖组合/缩写形式（`7bf84b64`→`f7733426`）；`config` 拒绝 `--file/-f/--blob*`（越权读 containment）；`config` 拒绝任何位置参数之后的选项（git `STOP_AT_NON_OPTION` 写绕过，`da6c21bc`）；`remote` 仅允许裸形/`-v`/`--verbose`（Task 4 URL→name 归一化所需，`c5b7cd42`）。
 2. **T1 minor**：`--get-urlmatch` 未放行（无需求）；个别 exotic 旗标顺序会被保守误拒；评审报告条数曾出现计数滑误（不影响结论）。
-3. **T2（`gh_exec` stdin）**：stdin 载荷用 owned 字符串实现（计划为 `&str`，借用检查适配）；`child.stdin.take()` 为 `None` 时仍有一个冗余 clone 分支（当前不可达）；无 >64KiB 长管道测试。
+3. **T2（`gh_exec` stdin）**：stdin 载荷用 owned 字符串实现（计划为 `&str`，借用检查适配）；`child.stdin.take()` 为 `None` 时仍有一个冗余 clone 分支（当前不可达）；无 >64KiB 长管道测试。另有空字符串 stdin（`Some("")`）路径未测试。
 4. **T3（`git_push`）**：本地测试辅助与 `Vec<u8>` 适配既有 helper；「错误上抛契约」（spawn/超时 vs 非零退出结果）未直接测试；`is_safe_remote_name` 边界测试较薄。
 5. **T4（TS git 面）**：首次派发因 SSE 超时中止（无代码落地，已重新派发）；无 target 兜底显式传 `origin`+`HEAD`（Rust `None` 同义，线上调用自描述）；URL 形态的已配置 remote 起初降级，经 `remote -v` 白名单修复；`resolveConfiguredGitPushTarget` 的正向守卫路径与 URL 形态 pushRemote/pushDefault 归一化未测试。
-6. **T5（eligibility）**：`stackedCreationSupported` 未物化（spec 字面 false；对 `=== true` 消费方行为等价）；`defaultBaseRef`/`head` 显式物化 null（参照逐字）；happy-path-no-candidate 未测试。
-7. **T6（create）**：非幂等创建用 `retry:false`（参照 `idempotent:false`）；单次尝试路径有一次 250ms 空转 sleep；GHES create → `unsupported_provider`；正文走 stdin（非临时 `--body-file` 文件）；`enforceBaseOnRemote` 仅存在于模块局部类型。
-8. **T7（桥接接线）**：已知负载下性能 flake（`browser-history-match.performance.test.ts`），隔离复跑 4/4；adapter 层模板读取未测试（`readTemplate` 注入）；`TemplateFileContent` 手工重复定义。
+6. **T5（eligibility）**：`stackedCreationSupported` 未物化（spec 字面 false；对 `=== true` 消费方行为等价）；`defaultBaseRef`/`head` 显式物化 null（参照逐字）；happy-path-no-candidate 未测试。另文件内个别超长行仅为观感问题（无 lint 约束）。
+7. **T6（create）**：非幂等创建用 `retry:false`（参照 `idempotent:false`）；单次尝试路径有一次 250ms 空转 sleep；GHES create → `unsupported_provider`；正文走 stdin（非临时 `--body-file` 文件）；`enforceBaseOnRemote` 仅存在于模块局部类型。另有第三份 `iterateGitOutputLines` 复制与 `head === base` 复制路径未测试。
+8. **T7（桥接接线）**：已知负载下性能 flake（`browser-history-match.performance.test.ts`），隔离复跑 4/4；adapter 层模板读取未测试（`readTemplate` 注入）；`TemplateFileContent` 手工重复定义。另有 executor 抛错时的转换路径未测试、mock 断言仅宽松匹配信封（未逐字段）。
 
 ## 6. 已知边界与后续
 
