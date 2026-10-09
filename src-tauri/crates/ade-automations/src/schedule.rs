@@ -112,15 +112,21 @@ pub fn is_valid_schedule(text: &str) -> bool {
     }
 }
 
-/// First occurrence strictly after `after_ms` and at or after `dtstart_ms`;
-/// `None` when the schedule is invalid or has no occurrence in the scan window.
+/// First occurrence at or after `dtstart_ms` and past `after_ms`; `None` when
+/// the schedule is invalid, a timestamp is outside `chrono`'s representable
+/// range, or there is no occurrence in the scan window.
+///
+/// TS parity (#20154): during the ambiguous hour of a DST fall-back the hourly
+/// branch may return exactly `after_ms` — the wall time's earliest instance is
+/// at or before `after_ms`, and the `+1h` adjustment lands on the second one.
 pub fn next_occurrence_after(text: &str, dtstart_ms: i64, after_ms: i64) -> Option<i64> {
     let parsed = parse_schedule(text, false).ok()?;
     next_occurrence_after_parsed(&parsed, dtstart_ms, after_ms).ok()
 }
 
 /// Latest occurrence at or before `now_ms` and at or after `dtstart_ms`; `None`
-/// when `now_ms < dtstart_ms`, the schedule is invalid, or none was found.
+/// when `now_ms < dtstart_ms`, the schedule is invalid, a timestamp is outside
+/// `chrono`'s representable range, or none was found.
 pub fn latest_occurrence_at_or_before(text: &str, dtstart_ms: i64, now_ms: i64) -> Option<i64> {
     if now_ms < dtstart_ms {
         return None;
@@ -138,16 +144,18 @@ fn next_occurrence_after_parsed(
         ParsedSchedule::Cron(cron) => next_cron_occurrence(cron, dtstart_ms, after_ms),
         ParsedSchedule::Rrule(rule) => match rule.frequency {
             RruleFrequency::Hourly => {
-                let start = local_datetime(dtstart_ms.max(after_ms));
+                let start =
+                    local_datetime(dtstart_ms.max(after_ms)).ok_or(ScheduleError::NoOccurrence)?;
                 let mut candidate =
-                    from_local_parts(start.date_naive(), start.hour(), rule.by_minute);
+                    from_local_parts(start.date_naive(), start.hour(), rule.by_minute)
+                        .ok_or(ScheduleError::NoOccurrence)?;
                 if candidate <= after_ms || candidate < dtstart_ms {
-                    candidate += HOUR_MS;
+                    candidate = candidate.saturating_add(HOUR_MS);
                 }
                 Ok(candidate)
             }
             RruleFrequency::Daily | RruleFrequency::Weekly => {
-                scan_rrule_day_candidates(rule, (dtstart_ms - 1).max(after_ms), 1)
+                scan_rrule_day_candidates(rule, dtstart_ms.saturating_sub(1).max(after_ms), 1)
             }
         },
     }
@@ -162,10 +170,11 @@ fn latest_occurrence_parsed(
         ParsedSchedule::Cron(cron) => latest_cron_occurrence(cron, dtstart_ms, now_ms),
         ParsedSchedule::Rrule(rule) => match rule.frequency {
             RruleFrequency::Hourly => {
-                let now = local_datetime(now_ms);
-                let mut candidate = from_local_parts(now.date_naive(), now.hour(), rule.by_minute);
+                let now = local_datetime(now_ms).ok_or(ScheduleError::NoOccurrence)?;
+                let mut candidate = from_local_parts(now.date_naive(), now.hour(), rule.by_minute)
+                    .ok_or(ScheduleError::NoOccurrence)?;
                 if candidate > now_ms {
-                    candidate -= HOUR_MS;
+                    candidate = candidate.saturating_sub(HOUR_MS);
                 }
                 if candidate >= dtstart_ms {
                     Ok(candidate)
@@ -207,6 +216,9 @@ fn parse_rrule(rrule: &str) -> Result<ParsedRrule, ScheduleError> {
             entries.insert(key.to_uppercase(), value.to_string());
         }
     }
+    // TS parity: unknown RRULE keys (INTERVAL, COUNT, ...) are collected and then
+    // ignored — only FREQ/BYDAY/BYHOUR/BYMINUTE are consumed. (The plan's "未知键
+    // 拒绝" wording is looser than the renderer, which tolerates them.)
     let frequency = match entries.get("FREQ").map(String::as_str) {
         Some("HOURLY") => RruleFrequency::Hourly,
         Some("DAILY") => RruleFrequency::Daily,
@@ -503,11 +515,10 @@ fn trim_js_whitespace(text: &str) -> &str {
     text.trim_matches(is_js_whitespace)
 }
 
-fn local_datetime(timestamp_ms: i64) -> DateTime<Local> {
-    Local
-        .timestamp_millis_opt(timestamp_ms)
-        .single()
-        .expect("timestamp within chrono's representable range")
+/// `None` when the timestamp falls outside `chrono`'s representable range, so
+/// the public API stays total for any `i64` that reaches it via IPC.
+fn local_datetime(timestamp_ms: i64) -> Option<DateTime<Local>> {
+    Local.timestamp_millis_opt(timestamp_ms).single()
 }
 
 /// Local wall clock -> absolute instant, matching the renderer's `Date`
@@ -519,60 +530,61 @@ fn local_datetime(timestamp_ms: i64) -> DateTime<Local> {
 /// whose local time round-trips are real (two of them means ambiguous, take the
 /// earliest); when none round-trips the wall time is in a gap, and applying the
 /// smallest (pre-transition) offset shifts it forward by exactly the gap.
-fn from_local_naive(naive: NaiveDateTime) -> i64 {
+fn from_local_naive(naive: NaiveDateTime) -> Option<i64> {
     let utc_guess_ms = naive.and_utc().timestamp_millis();
-    let mut offsets = vec![
-        offset_seconds_at(utc_guess_ms - 26 * HOUR_MS),
-        offset_seconds_at(utc_guess_ms),
-        offset_seconds_at(utc_guess_ms + 26 * HOUR_MS),
-    ];
+    let mut offsets = Vec::with_capacity(3);
+    for sample in [
+        utc_guess_ms - 26 * HOUR_MS,
+        utc_guess_ms,
+        utc_guess_ms + 26 * HOUR_MS,
+    ] {
+        if let Some(offset) = offset_seconds_at(sample) {
+            offsets.push(offset);
+        }
+    }
     offsets.sort_unstable();
     offsets.dedup();
     let matches: Vec<i64> = offsets
         .iter()
         .filter_map(|offset| {
             let candidate = utc_guess_ms - offset * 1000;
-            (local_datetime(candidate).naive_local() == naive).then_some(candidate)
+            (local_datetime(candidate)?.naive_local() == naive).then_some(candidate)
         })
         .collect();
     if let Some(earliest) = matches.iter().min() {
-        return *earliest;
+        return Some(*earliest);
     }
-    utc_guess_ms - offsets[0] * 1000
+    let offset = *offsets.first()?;
+    Some(utc_guess_ms - offset * 1000)
 }
 
-fn offset_seconds_at(instant_ms: i64) -> i64 {
-    local_datetime(instant_ms).offset().fix().local_minus_utc() as i64
+fn offset_seconds_at(instant_ms: i64) -> Option<i64> {
+    Some(local_datetime(instant_ms)?.offset().fix().local_minus_utc() as i64)
 }
 
-fn from_local_parts(date: NaiveDate, hour: u32, minute: u32) -> i64 {
-    let naive = date
-        .and_hms_opt(hour, minute, 0)
-        .expect("hour and minute validated by the schedule parser");
+fn from_local_parts(date: NaiveDate, hour: u32, minute: u32) -> Option<i64> {
+    let naive = date.and_hms_opt(hour, minute, 0)?;
     from_local_naive(naive)
 }
 
-fn start_of_local_day(timestamp_ms: i64) -> i64 {
-    let local = local_datetime(timestamp_ms);
+fn start_of_local_day(timestamp_ms: i64) -> Option<i64> {
+    let local = local_datetime(timestamp_ms)?;
     from_local_parts(local.date_naive(), 0, 0)
 }
 
-fn start_of_next_local_day(timestamp_ms: i64) -> i64 {
-    let local = local_datetime(timestamp_ms);
-    let next_date = local
-        .date_naive()
-        .succ_opt()
-        .expect("date within chrono's representable range");
+fn start_of_next_local_day(timestamp_ms: i64) -> Option<i64> {
+    let local = local_datetime(timestamp_ms)?;
+    let next_date = local.date_naive().succ_opt()?;
     from_local_parts(next_date, 0, 0)
 }
 
-fn at_local_time(day_ms: i64, hour: u32, minute: u32) -> i64 {
-    let local = local_datetime(day_ms);
+fn at_local_time(day_ms: i64, hour: u32, minute: u32) -> Option<i64> {
+    let local = local_datetime(day_ms)?;
     from_local_parts(local.date_naive(), hour, minute)
 }
 
-fn floor_to_minute(timestamp_ms: i64) -> i64 {
-    let local = local_datetime(timestamp_ms);
+fn floor_to_minute(timestamp_ms: i64) -> Option<i64> {
+    let local = local_datetime(timestamp_ms)?;
     from_local_parts(local.date_naive(), local.hour(), local.minute())
 }
 
@@ -581,16 +593,17 @@ fn scan_rrule_day_candidates(
     anchor_ms: i64,
     direction: i64,
 ) -> Result<i64, ScheduleError> {
-    let mut day_ms = start_of_local_day(anchor_ms);
+    let mut day_ms = start_of_local_day(anchor_ms).ok_or(ScheduleError::NoOccurrence)?;
     for _ in 0..RRULE_SCAN_DAYS {
-        let candidate = at_local_time(day_ms, rule.by_hour, rule.by_minute);
+        let candidate = at_local_time(day_ms, rule.by_hour, rule.by_minute)
+            .ok_or(ScheduleError::NoOccurrence)?;
         if rrule_day_matches(rule, candidate)
             && ((direction == 1 && candidate > anchor_ms)
                 || (direction == -1 && candidate <= anchor_ms))
         {
             return Ok(candidate);
         }
-        day_ms += direction * DAY_MS;
+        day_ms = day_ms.saturating_add(direction * DAY_MS);
     }
     Err(ScheduleError::NoOccurrence)
 }
@@ -599,30 +612,31 @@ fn rrule_day_matches(rule: &ParsedRrule, candidate_ms: i64) -> bool {
     if rule.frequency == RruleFrequency::Daily {
         return true;
     }
-    let code = DAY_CODES[local_datetime(candidate_ms)
-        .weekday()
-        .num_days_from_sunday() as usize];
+    let Some(local) = local_datetime(candidate_ms) else {
+        return false;
+    };
+    let code = DAY_CODES[local.weekday().num_days_from_sunday() as usize];
     rule.by_day.iter().any(|day| day.as_str() == code)
 }
 
-fn cron_date_matches(cron: &ParsedCron, timestamp_ms: i64) -> bool {
-    let local = local_datetime(timestamp_ms);
+fn cron_date_matches(cron: &ParsedCron, timestamp_ms: i64) -> Option<bool> {
+    let local = local_datetime(timestamp_ms)?;
     if !cron.months.contains(&local.month()) {
-        return false;
+        return Some(false);
     }
     let day_of_month_matches = cron.days_of_month.contains(&local.day());
     let day_of_week_matches = cron
         .days_of_week
         .contains(&local.weekday().num_days_from_sunday());
     if cron.day_of_month_restricted && cron.day_of_week_restricted {
-        return day_of_month_matches || day_of_week_matches;
+        return Some(day_of_month_matches || day_of_week_matches);
     }
-    day_of_month_matches && day_of_week_matches
+    Some(day_of_month_matches && day_of_week_matches)
 }
 
-fn cron_time_matches(cron: &ParsedCron, timestamp_ms: i64) -> bool {
-    let local = local_datetime(timestamp_ms);
-    cron.hours.contains(&local.hour()) && cron.minutes.contains(&local.minute())
+fn cron_time_matches(cron: &ParsedCron, timestamp_ms: i64) -> Option<bool> {
+    let local = local_datetime(timestamp_ms)?;
+    Some(cron.hours.contains(&local.hour()) && cron.minutes.contains(&local.minute()))
 }
 
 /// Minute scan with one optimization: when the current local date cannot match,
@@ -633,26 +647,27 @@ fn next_cron_occurrence(
     dtstart_ms: i64,
     after_ms: i64,
 ) -> Result<i64, ScheduleError> {
-    let mut candidate = floor_to_minute(dtstart_ms.max(after_ms));
+    let mut candidate =
+        floor_to_minute(dtstart_ms.max(after_ms)).ok_or(ScheduleError::NoOccurrence)?;
     if candidate <= after_ms {
-        candidate += MINUTE_MS;
+        candidate = candidate.saturating_add(MINUTE_MS);
     }
     if candidate < dtstart_ms {
-        candidate = floor_to_minute(dtstart_ms);
+        candidate = floor_to_minute(dtstart_ms).ok_or(ScheduleError::NoOccurrence)?;
         if candidate < dtstart_ms {
-            candidate += MINUTE_MS;
+            candidate = candidate.saturating_add(MINUTE_MS);
         }
     }
     let mut remaining = CRON_SCAN_MINUTES;
     while remaining > 0 {
-        if cron_date_matches(cron, candidate) {
-            if cron_time_matches(cron, candidate) {
+        if cron_date_matches(cron, candidate).ok_or(ScheduleError::NoOccurrence)? {
+            if cron_time_matches(cron, candidate).ok_or(ScheduleError::NoOccurrence)? {
                 return Ok(candidate);
             }
-            candidate += MINUTE_MS;
+            candidate = candidate.saturating_add(MINUTE_MS);
             remaining -= 1;
         } else {
-            let next_day = start_of_next_local_day(candidate);
+            let next_day = start_of_next_local_day(candidate).ok_or(ScheduleError::NoOccurrence)?;
             remaining -= (next_day - candidate) / MINUTE_MS;
             candidate = next_day;
         }
@@ -665,17 +680,19 @@ fn latest_cron_occurrence(
     dtstart_ms: i64,
     now_ms: i64,
 ) -> Result<i64, ScheduleError> {
-    let mut candidate = floor_to_minute(now_ms);
+    let mut candidate = floor_to_minute(now_ms).ok_or(ScheduleError::NoOccurrence)?;
     let mut remaining = CRON_SCAN_MINUTES;
     while remaining > 0 && candidate >= dtstart_ms {
-        if cron_date_matches(cron, candidate) {
-            if cron_time_matches(cron, candidate) {
+        if cron_date_matches(cron, candidate).ok_or(ScheduleError::NoOccurrence)? {
+            if cron_time_matches(cron, candidate).ok_or(ScheduleError::NoOccurrence)? {
                 return Ok(candidate);
             }
-            candidate -= MINUTE_MS;
+            candidate = candidate.saturating_sub(MINUTE_MS);
             remaining -= 1;
         } else {
-            let previous_day_end = start_of_local_day(candidate) - MINUTE_MS;
+            let previous_day_end = start_of_local_day(candidate)
+                .ok_or(ScheduleError::NoOccurrence)?
+                .saturating_sub(MINUTE_MS);
             remaining -= (candidate - previous_day_end) / MINUTE_MS;
             candidate = previous_day_end;
         }
@@ -931,5 +948,116 @@ mod tests {
             latest_occurrence_at_or_before("0 9 * * *", dtstart, now),
             None
         );
+    }
+
+    #[test]
+    fn oversized_cron_steps_are_rejected_only_as_input() {
+        // TS #15895 input gate: a step wider than the field's domain is refused.
+        assert!(!is_valid_schedule("*/90 * * * *"));
+        assert!(!is_valid_schedule("0 */25 * * *"));
+        assert!(!is_valid_schedule("0 9 */32 * *"));
+        assert!(!is_valid_schedule("0 9 * */13 *"));
+        // Day of week spans 0-7 but holds seven days, so 8 is oversized.
+        assert!(!is_valid_schedule("0 9 * * */8"));
+
+        assert!(is_valid_schedule("*/15 * * * *"));
+        assert!(is_valid_schedule("*/60 * * * *"));
+        assert!(is_valid_schedule("0 */24 * * *"));
+        assert!(is_valid_schedule("0 9 */31 * *"));
+        assert!(is_valid_schedule("0 9 * */12 *"));
+        assert!(is_valid_schedule("0 9 * * */7"));
+
+        // Persisted rows keep running an oversized step, degenerating it to its
+        // single value.
+        let next = next_occurrence_after(
+            "*/90 * * * *",
+            local_ms(2026, 5, 1, 0, 0),
+            local_ms(2026, 5, 15, 9, 5),
+        )
+        .unwrap();
+        assert_eq!(next, local_ms(2026, 5, 15, 10, 0));
+    }
+
+    #[test]
+    fn out_of_range_timestamps_do_not_panic() {
+        let beyond_chrono = 8_600_000_000_000_000_i64;
+        let now = local_ms(2026, 10, 9, 12, 0);
+
+        // The task 5 IPC example: a persisted out-of-range dtstart.
+        assert_eq!(
+            next_occurrence_after("FREQ=DAILY;BYHOUR=9", beyond_chrono, now),
+            None
+        );
+        assert_eq!(
+            next_occurrence_after("FREQ=DAILY;BYHOUR=9", now, beyond_chrono),
+            None
+        );
+        assert_eq!(
+            next_occurrence_after("FREQ=HOURLY;BYMINUTE=0", beyond_chrono, now),
+            None
+        );
+        assert_eq!(
+            next_occurrence_after("30 9 * * 1-5", beyond_chrono, beyond_chrono),
+            None
+        );
+
+        // i64 extremes: no overflow on the `dtstart - 1` anchor, no panic.
+        assert_eq!(
+            next_occurrence_after("FREQ=DAILY;BYHOUR=9", i64::MIN, i64::MIN),
+            None
+        );
+        assert_eq!(
+            next_occurrence_after(
+                "FREQ=WEEKLY;BYDAY=SU;BYHOUR=9;BYMINUTE=0",
+                i64::MIN,
+                i64::MIN
+            ),
+            None
+        );
+        assert_eq!(
+            next_occurrence_after("30 9 * * 1-5", i64::MIN, i64::MIN),
+            None
+        );
+        assert_eq!(
+            next_occurrence_after("30 9 * * 1-5", i64::MAX, i64::MAX),
+            None
+        );
+        assert_eq!(
+            next_occurrence_after("0 0 29 2 *", i64::MAX, i64::MAX),
+            None
+        );
+
+        assert_eq!(
+            latest_occurrence_at_or_before("FREQ=DAILY;BYHOUR=9", now, beyond_chrono),
+            None
+        );
+        assert_eq!(
+            latest_occurrence_at_or_before("FREQ=HOURLY;BYMINUTE=0", now, beyond_chrono),
+            None
+        );
+        assert_eq!(
+            latest_occurrence_at_or_before(
+                "FREQ=WEEKLY;BYDAY=SU;BYHOUR=8;BYMINUTE=0",
+                now,
+                beyond_chrono
+            ),
+            None
+        );
+        assert_eq!(
+            latest_occurrence_at_or_before("30 9 * * 1-5", i64::MIN, i64::MIN),
+            None
+        );
+        assert_eq!(
+            latest_occurrence_at_or_before("30 9 * * 1-5", i64::MAX, i64::MAX),
+            None
+        );
+        assert_eq!(
+            latest_occurrence_at_or_before("30 9 * * 1-5", 0, i64::MAX),
+            None
+        );
+
+        // `is_valid_schedule` takes no timestamp; it stays total on any input.
+        assert!(is_valid_schedule("FREQ=DAILY;BYHOUR=9"));
+        assert!(!is_valid_schedule("0 0 31 2 *"));
     }
 }
