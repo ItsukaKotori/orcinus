@@ -13,18 +13,18 @@
 //! and leaves every other field untouched.
 //!
 //! Semantics ported from the Electron reference (orca) store operations:
-//! - `create_run` dedupes on `(automationId, scheduledFor)` and assigns the next
-//!   `runNumber` from the highest retained number (or the retained count for
-//!   legacy unnumbered rows), so numbering survives retention pruning.
+//! - `create_run` dedupes on `(automationId, scheduledFor)`; a fresh insert
+//!   assigns the next `runNumber` from the highest retained number (or the
+//!   retained count for legacy unnumbered rows), so numbering survives
+//!   retention pruning, and advances the parent automation's `lastRunAt`.
 //! - `update_run` never overwrites a run that has reached a final status.
 //! - `runs_page` is a keyset cursor (`"<createdAt>:<id>"`, or a legacy bare
 //!   offset) over runs ordered `createdAt desc, id asc`, capped at
 //!   [`MAX_RUNS_PER_AUTOMATION`] per page.
 //! - `prune_runs` keeps the newest [`MAX_RUNS_PER_AUTOMATION`] final runs per
 //!   automation and never evicts an in-flight run.
-//! - `snapshot_workspace_name` writes the display name into the newest run (in
-//!   `createdAt desc, id asc` order) still pointing at that workspace — only a
-//!   single run is updated, per the Task 2 brief.
+//! - `snapshot_workspace_name` writes the display name into every run still
+//!   pointing at that workspace (walked newest first).
 //! - Loading normalizes legacy runs: unnumbered rows are backfilled above the
 //!   highest number they share an automation with, then each automation is
 //!   pruned, and the repaired state is written back.
@@ -241,9 +241,12 @@ impl AutomationStore {
     }
 
     /// Persists a run. `(automationId, scheduledFor)` is the dedupe key: a
-    /// second insert returns the existing row with `created == false`.
-    /// `runNumber` is always assigned by the store; `createdAt` is assigned
-    /// only when absent. Retention pruning runs after the insert.
+    /// second insert returns the existing row with `created == false` and
+    /// leaves the parent automation untouched. `runNumber` is always assigned
+    /// by the store; `createdAt` is assigned only when absent. Retention
+    /// pruning runs after the insert, and the parent automation's `lastRunAt`
+    /// (plus `updatedAt`) advances to the run's `createdAt`, falling back to
+    /// `scheduledFor` when that timestamp is unreadable.
     pub fn create_run(&self, run: Value) -> Result<(Value, bool), StoreError> {
         let mut record = run.as_object().cloned().ok_or_else(|| {
             StoreError::InvalidInput("automation run must be a JSON object".into())
@@ -277,10 +280,14 @@ impl AutomationStore {
             record.insert("createdAt".to_string(), Value::from(now_millis()));
         }
         let record = Value::Object(record);
+        // The parent automation's "last run" marker follows the run's creation
+        // time; a deduped insert returns above and never touches it.
+        let touched_at = i64_field(&record, "createdAt").unwrap_or(scheduled_for);
 
         let mut next = inner.clone();
         next.runs.push(record.clone());
         prune_runs_for(&mut next.runs, &automation_id);
+        touch_automation(&mut next.automations, &automation_id, touched_at);
         self.persist_state(&next)?;
         *inner = next;
         Ok((record, true))
@@ -389,39 +396,47 @@ impl AutomationStore {
             .collect()
     }
 
-    /// Writes `display_name` into the newest run (in `createdAt desc, id asc`
-    /// order) whose `workspaceId` matches. Returns the number of runs updated
-    /// (0 or 1). Empty/whitespace names are ignored.
+    /// Writes `display_name` into every run whose `workspaceId` matches,
+    /// newest first (in `createdAt desc, id asc` order). Runs already carrying
+    /// the normalized name are skipped. Returns the number of runs updated.
+    /// Empty/whitespace names are ignored.
     pub fn snapshot_workspace_name(&self, workspace_id: &str, display_name: &str) -> usize {
         let normalized = display_name.trim();
         if normalized.is_empty() {
             return 0;
         }
         let mut inner = self.lock();
-        let Some(index) = inner
+        let mut matching: Vec<usize> = inner
             .runs
             .iter()
             .enumerate()
             .filter(|(_, run)| string_field(run, "workspaceId") == Some(workspace_id))
-            .min_by(|(_, left), (_, right)| compare_runs_newest_first(left, right))
             .map(|(index, _)| index)
-        else {
-            return 0;
-        };
-        if string_field(&inner.runs[index], "workspaceDisplayName").map(str::trim)
-            == Some(normalized)
-        {
-            return 0;
-        }
+            .collect();
+        matching.sort_by(|&left, &right| {
+            compare_runs_newest_first(&inner.runs[left], &inner.runs[right])
+        });
         let mut next = inner.clone();
-        if let Some(record) = next.runs[index].as_object_mut() {
-            record.insert("workspaceDisplayName".to_string(), Value::from(normalized));
+        let mut updated = 0;
+        for index in matching {
+            if string_field(&next.runs[index], "workspaceDisplayName").map(str::trim)
+                == Some(normalized)
+            {
+                continue;
+            }
+            if let Some(record) = next.runs[index].as_object_mut() {
+                record.insert("workspaceDisplayName".to_string(), Value::from(normalized));
+                updated += 1;
+            }
+        }
+        if updated == 0 {
+            return 0;
         }
         if self.persist_state(&next).is_err() {
             return 0;
         }
         *inner = next;
-        1
+        updated
     }
 
     fn lock(&self) -> MutexGuard<'_, Inner> {
@@ -475,6 +490,21 @@ fn merge_field(record: &mut Map<String, Value>, key: &str, value: &Value) {
         record.remove(key);
     } else {
         record.insert(key.to_string(), value.clone());
+    }
+}
+
+/// Advances the parent automation's `lastRunAt` and `updatedAt` when a run is
+/// created. No-op when the automation is gone.
+fn touch_automation(automations: &mut [Value], automation_id: &str, at_ms: i64) {
+    let Some(automation) = automations
+        .iter_mut()
+        .find(|automation| string_field(automation, "id") == Some(automation_id))
+    else {
+        return;
+    };
+    if let Some(record) = automation.as_object_mut() {
+        record.insert("lastRunAt".to_string(), Value::from(at_ms));
+        record.insert("updatedAt".to_string(), Value::from(at_ms));
     }
 }
 
@@ -1365,7 +1395,7 @@ mod tests {
     }
 
     #[test]
-    fn snapshot_workspace_name_updates_the_newest_matching_run_only() {
+    fn snapshot_workspace_name_updates_every_matching_run() {
         let dir = TestDir::new("store-snapshot");
         let store = load_store(&dir);
         let automation = create_automation(&store);
@@ -1402,13 +1432,14 @@ mod tests {
             }))
             .unwrap();
 
-        assert_eq!(store.snapshot_workspace_name("wt1", "  Renamed  "), 1);
+        // Every run of the workspace is stamped so history stays consistent.
+        assert_eq!(store.snapshot_workspace_name("wt1", "  Renamed  "), 2);
         let runs = collect_runs(&store, Some(automation_id));
         let newest = runs.iter().find(|run| run["id"] == "wt1-new").unwrap();
         let older = runs.iter().find(|run| run["id"] == "wt1-old").unwrap();
         let other = runs.iter().find(|run| run["id"] == "wt2").unwrap();
         assert_eq!(newest["workspaceDisplayName"], "Renamed");
-        assert!(older.get("workspaceDisplayName").is_none());
+        assert_eq!(older["workspaceDisplayName"], "Renamed");
         assert!(other.get("workspaceDisplayName").is_none());
         // Re-snapshotting the same name is a no-op.
         assert_eq!(store.snapshot_workspace_name("wt1", "Renamed"), 0);
@@ -1419,7 +1450,69 @@ mod tests {
         let reloaded = load_store(&dir);
         let runs = collect_runs(&reloaded, Some(automation_id));
         let newest = runs.iter().find(|run| run["id"] == "wt1-new").unwrap();
+        let older = runs.iter().find(|run| run["id"] == "wt1-old").unwrap();
         assert_eq!(newest["workspaceDisplayName"], "Renamed");
+        assert_eq!(older["workspaceDisplayName"], "Renamed");
+    }
+
+    #[test]
+    fn create_run_updates_parent_last_run_at_but_dedupe_does_not() {
+        let dir = TestDir::new("store-touch-automation");
+        let store = load_store(&dir);
+        let automation = create_automation(&store);
+        let automation_id = automation["id"].as_str().unwrap();
+        assert_eq!(automation["updatedAt"], 1_000i64);
+        assert!(automation.get("lastRunAt").is_none());
+
+        let (run, created) = store
+            .create_run(json!({
+                "automationId": automation_id,
+                "scheduledFor": 4_000,
+                "status": "pending",
+                "createdAt": 5_000
+            }))
+            .unwrap();
+        assert!(created);
+        let touched = store.get(automation_id).unwrap();
+        assert_eq!(touched["lastRunAt"], 5_000i64);
+        assert_eq!(touched["updatedAt"], 5_000i64);
+
+        // A deduped insert returns the existing row and leaves the automation alone.
+        let (duplicate, created) = store
+            .create_run(json!({
+                "automationId": automation_id,
+                "scheduledFor": 4_000,
+                "status": "completed",
+                "createdAt": 9_999
+            }))
+            .unwrap();
+        assert!(!created);
+        assert_eq!(duplicate, run);
+        let untouched = store.get(automation_id).unwrap();
+        assert_eq!(untouched["lastRunAt"], 5_000i64);
+        assert_eq!(untouched["updatedAt"], 5_000i64);
+
+        // Without a caller-provided createdAt the store-assigned one is used.
+        let (assigned, created) = store
+            .create_run(json!({
+                "automationId": automation_id,
+                "scheduledFor": 6_000,
+                "status": "pending"
+            }))
+            .unwrap();
+        assert!(created);
+        let assigned_at = assigned["createdAt"].as_i64().unwrap();
+        assert!(assigned_at > 0);
+        let touched = store.get(automation_id).unwrap();
+        assert_eq!(touched["lastRunAt"], assigned_at);
+        assert_eq!(touched["updatedAt"], assigned_at);
+
+        // The touch is persisted.
+        let reloaded = load_store(&dir);
+        assert_eq!(
+            reloaded.get(automation_id).unwrap()["lastRunAt"],
+            assigned_at
+        );
     }
 
     #[test]
