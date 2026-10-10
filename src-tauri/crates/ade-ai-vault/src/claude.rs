@@ -78,12 +78,20 @@ pub fn scan_claude_sessions(projects_root: &Path, limit: usize) -> (Vec<Value>, 
     }
 
     rows.sort_by(|left, right| {
-        let left = left["modifiedAt"].as_str().unwrap_or("");
-        let right = right["modifiedAt"].as_str().unwrap_or("");
+        let left = effective_recency(left);
+        let right = effective_recency(right);
         right.cmp(left)
     });
     rows.truncate(limit);
     (rows, issues)
+}
+
+fn effective_recency(row: &Value) -> &str {
+    row["updatedAt"]
+        .as_str()
+        .filter(|value| !value.is_empty())
+        .or_else(|| row["modifiedAt"].as_str().filter(|value| !value.is_empty()))
+        .unwrap_or("")
 }
 
 fn collect_session_files(dir: &Path, files: &mut Vec<PathBuf>, issues: &mut Vec<ScanIssue>) {
@@ -158,11 +166,13 @@ struct SessionFold {
     model: Option<String>,
     created_at: Option<(i64, String)>,
     updated_at: Option<(i64, String)>,
+    latest_timestamp_ms: i64,
     message_count: u64,
     total_tokens: u64,
     preview_messages: Vec<PreviewMessage>,
     preview_messages_truncated: bool,
     queued_message_count: u64,
+    last_user_prompt: Option<String>,
 }
 
 fn fold_session(content: &str, session_id: String) -> SessionFold {
@@ -177,11 +187,13 @@ fn fold_session(content: &str, session_id: String) -> SessionFold {
         model: None,
         created_at: None,
         updated_at: None,
+        latest_timestamp_ms: 0,
         message_count: 0,
         total_tokens: 0,
         preview_messages: Vec::new(),
         preview_messages_truncated: false,
         queued_message_count: 0,
+        last_user_prompt: None,
     };
 
     for line in content.lines() {
@@ -196,12 +208,7 @@ fn fold_session(content: &str, session_id: String) -> SessionFold {
             fold.session_id = id.to_string();
         }
         update_timeline(&mut fold, record.get("timestamp"));
-        if let Some(cwd) = extract_string(record.get("cwd")) {
-            fold.cwd = Some(cwd.to_string());
-        }
-        if let Some(branch) = extract_string(record.get("gitBranch")) {
-            fold.branch = Some(branch.to_string());
-        }
+        update_location(&mut fold, record);
 
         match record.get("type").and_then(Value::as_str) {
             Some("custom-title") => {
@@ -219,6 +226,13 @@ fn fold_session(content: &str, session_id: String) -> SessionFold {
                 if fold.ai_title.is_none() && fold.meta_title.is_none() {
                     fold.meta_title =
                         normalize_title_text(extract_string(record.get("agentName")).unwrap_or(""));
+                }
+            }
+            Some("last-prompt") => {
+                if let Some(prompt) =
+                    normalize_content_text(record.get("lastPrompt"), PREVIEW_TEXT_LIMIT)
+                {
+                    fold.last_user_prompt = Some(prompt);
                 }
             }
             Some("queue-operation") => match record.get("operation").and_then(Value::as_str) {
@@ -286,7 +300,7 @@ fn fold_session(content: &str, session_id: String) -> SessionFold {
 }
 
 fn update_timeline(fold: &mut SessionFold, timestamp: Option<&Value>) {
-    let Some(raw) = timestamp.and_then(Value::as_str) else {
+    let Some(raw) = extract_string(timestamp) else {
         return;
     };
     let Some(parsed) = parse_timestamp_ms(raw) else {
@@ -305,6 +319,28 @@ fn update_timeline(fold: &mut SessionFold, timestamp: Option<&Value>) {
         .is_none_or(|(current, _)| parsed >= *current)
     {
         fold.updated_at = Some((parsed, raw.to_string()));
+        fold.latest_timestamp_ms = parsed;
+    }
+}
+
+fn update_location(fold: &mut SessionFold, record: &serde_json::Map<String, Value>) {
+    if fold.cwd.is_none() {
+        if let Some(cwd) = extract_string(record.get("cwd")) {
+            fold.cwd = Some(cwd.to_string());
+        }
+    }
+    let parsed = match extract_string(record.get("timestamp")) {
+        Some(timestamp) => match parse_timestamp_ms(timestamp) {
+            Some(parsed) => parsed,
+            None => return,
+        },
+        None => fold.latest_timestamp_ms,
+    };
+    if parsed < fold.latest_timestamp_ms {
+        return;
+    }
+    if let Some(branch) = extract_string(record.get("gitBranch")) {
+        fold.branch = Some(branch.to_string());
     }
 }
 
@@ -376,6 +412,9 @@ fn build_row(path: &Path, modified_at: &str, fold: SessionFold) -> Value {
     });
     if fold.preview_messages_truncated {
         row["previewMessagesTruncated"] = Value::Bool(true);
+    }
+    if let Some(last_user_prompt) = fold.last_user_prompt {
+        row["lastUserPrompt"] = Value::String(last_user_prompt);
     }
     row
 }
@@ -1128,6 +1167,7 @@ mod tests {
             }])
         );
         assert!(row.get("previewMessagesTruncated").is_none());
+        assert!(row.get("lastUserPrompt").is_none());
     }
 
     #[test]
@@ -1167,7 +1207,7 @@ mod tests {
     }
 
     #[test]
-    fn cwd_branch_and_model_use_the_last_recorded_value() {
+    fn cwd_keeps_the_start_directory_after_drift() {
         let root = tempfile::tempdir().unwrap();
         write_jsonl(
             root.path(),
@@ -1186,18 +1226,66 @@ mod tests {
                     "sessionId": "drift",
                     "timestamp": "2026-05-01T10:05:00.000Z",
                     "cwd": "/repo/app/services/api",
-                    "gitBranch": "feature/drift",
+                    "gitBranch": "main",
                     "message": { "role": "user", "content": "now in a subdirectory" }
+                }),
+            ],
+        );
+
+        let (rows, issues) = scan(&root, 100);
+        assert!(issues.is_empty());
+        let row = &rows[0];
+        assert_eq!(row["cwd"], json!("/repo/app"));
+        assert_eq!(
+            row["resumeCommand"],
+            json!("cd '/repo/app' && claude --resume 'drift'")
+        );
+    }
+
+    #[test]
+    fn branch_and_model_follow_the_oracle_timestamp_gating() {
+        let root = tempfile::tempdir().unwrap();
+        write_jsonl(
+            root.path(),
+            "project/gated.jsonl",
+            &[
+                json!({
+                    "type": "user",
+                    "sessionId": "gated",
+                    "timestamp": "2026-05-01T10:00:00.000Z",
+                    "cwd": "/repo/app",
+                    "gitBranch": "main",
+                    "message": { "role": "user", "content": "start here" }
+                }),
+                json!({
+                    "type": "user",
+                    "sessionId": "gated",
+                    "timestamp": "2026-05-01T10:05:00.000Z",
+                    "gitBranch": "feature/current",
+                    "message": { "role": "user", "content": "on the branch" }
+                }),
+                json!({
+                    "type": "user",
+                    "sessionId": "gated",
+                    "gitBranch": "no-timestamp",
+                    "message": { "role": "user", "content": "no timestamp yet" }
+                }),
+                json!({
+                    "type": "user",
+                    "sessionId": "gated",
+                    "timestamp": "2026-05-01T10:02:00.000Z",
+                    "gitBranch": "stale",
+                    "message": { "role": "user", "content": "late arrival" }
                 }),
                 json!({
                     "type": "assistant",
-                    "sessionId": "drift",
+                    "sessionId": "gated",
                     "timestamp": "2026-05-01T10:06:00.000Z",
                     "message": { "model": "claude-opus-4-1" }
                 }),
                 json!({
                     "type": "assistant",
-                    "sessionId": "drift",
+                    "sessionId": "gated",
                     "timestamp": "2026-05-01T10:07:00.000Z",
                     "message": { "model": "claude-sonnet-4-5" }
                 }),
@@ -1207,13 +1295,67 @@ mod tests {
         let (rows, issues) = scan(&root, 100);
         assert!(issues.is_empty());
         let row = &rows[0];
-        assert_eq!(row["cwd"], json!("/repo/app/services/api"));
-        assert_eq!(row["branch"], json!("feature/drift"));
+        assert_eq!(row["cwd"], json!("/repo/app"));
+        assert_eq!(row["branch"], json!("no-timestamp"));
         assert_eq!(row["model"], json!("claude-sonnet-4-5"));
-        assert_eq!(
-            row["resumeCommand"],
-            json!("cd '/repo/app/services/api' && claude --resume 'drift'")
+    }
+
+    #[test]
+    fn emits_the_latest_last_prompt_record() {
+        let root = tempfile::tempdir().unwrap();
+        write_jsonl(
+            root.path(),
+            "project/last-prompt.jsonl",
+            &[
+                json!({
+                    "type": "user",
+                    "sessionId": "last-prompt",
+                    "message": { "role": "user", "content": "first" }
+                }),
+                json!({ "type": "last-prompt", "lastPrompt": "queued the follow-up" }),
+                json!({ "type": "last-prompt", "lastPrompt": "latest keep" }),
+                json!({ "type": "last-prompt", "lastPrompt": "   " }),
+                json!({ "type": "last-prompt", "lastPrompt": 42 }),
+            ],
         );
+
+        let (rows, issues) = scan(&root, 100);
+        assert!(issues.is_empty());
+        assert_eq!(rows[0]["lastUserPrompt"], json!("latest keep"));
+    }
+
+    #[test]
+    fn last_user_prompt_uses_preview_truncation_and_hidden_block_stripping() {
+        let root = tempfile::tempdir().unwrap();
+        write_jsonl(
+            root.path(),
+            "project/hidden-prompt.jsonl",
+            &[json!({
+                "type": "last-prompt",
+                "lastPrompt": "hello <system-reminder>secret</system-reminder> world"
+            })],
+        );
+        write_jsonl(
+            root.path(),
+            "project/long-prompt.jsonl",
+            &[json!({
+                "type": "last-prompt",
+                "lastPrompt": "a".repeat(250)
+            })],
+        );
+
+        let (rows, issues) = scan(&root, 100);
+        assert!(issues.is_empty());
+        let prompt_of = |session: &str| {
+            rows.iter()
+                .find(|row| row["sessionId"] == json!(session))
+                .unwrap()["lastUserPrompt"]
+                .as_str()
+                .unwrap()
+                .to_string()
+        };
+        assert_eq!(prompt_of("hidden-prompt"), "hello world");
+        assert_eq!(prompt_of("long-prompt"), format!("{}...", "a".repeat(217)));
     }
 
     #[test]
@@ -1376,44 +1518,76 @@ mod tests {
     }
 
     #[test]
-    fn sorts_rows_by_modified_at_desc() {
+    fn sorts_rows_by_effective_recency_desc() {
         let root = tempfile::tempdir().unwrap();
-        let record = |session: &str| {
-            json!({
+        let record = |session: &str, timestamp: Option<&str>| {
+            let mut value = json!({
                 "type": "user",
                 "sessionId": session,
-                "timestamp": "2026-05-01T10:00:00.000Z",
                 "message": { "role": "user", "content": "hi" }
-            })
+            });
+            if let Some(timestamp) = timestamp {
+                value["timestamp"] = json!(timestamp);
+            }
+            value
         };
         let base = 1_700_000_000_000;
-        let a = write_jsonl(root.path(), "a.jsonl", &[record("a")]);
-        let b = write_jsonl(root.path(), "b.jsonl", &[record("b")]);
-        let c = write_jsonl(root.path(), "c.jsonl", &[record("c")]);
-        set_mtime(&a, base + 1_000);
-        set_mtime(&b, base + 3_000);
+        let a = write_jsonl(
+            root.path(),
+            "a.jsonl",
+            &[record("a", Some("2026-05-01T10:00:00.000Z"))],
+        );
+        let b = write_jsonl(
+            root.path(),
+            "b.jsonl",
+            &[record("b", Some("2026-05-01T10:02:00.000Z"))],
+        );
+        let c = write_jsonl(
+            root.path(),
+            "c.jsonl",
+            &[record("c", Some("2026-05-01T10:01:00.000Z"))],
+        );
+        let d = write_jsonl(root.path(), "d.jsonl", &[record("d", None)]);
+        set_mtime(&a, base + 3_000);
+        set_mtime(&b, base + 1_000);
         set_mtime(&c, base + 2_000);
+        set_mtime(&d, base + 4_000);
 
         let (rows, _) = scan(&root, 10);
 
-        assert_eq!(session_ids(&rows), vec!["b", "c", "a"]);
+        assert_eq!(session_ids(&rows), vec!["b", "c", "a", "d"]);
     }
 
     #[test]
     fn caps_rows_at_the_limit_after_sorting() {
         let root = tempfile::tempdir().unwrap();
-        let record = |session: &str| {
-            json!({
+        let record = |session: &str, timestamp: Option<&str>| {
+            let mut value = json!({
                 "type": "user",
                 "sessionId": session,
-                "timestamp": "2026-05-01T10:00:00.000Z",
                 "message": { "role": "user", "content": "hi" }
-            })
+            });
+            if let Some(timestamp) = timestamp {
+                value["timestamp"] = json!(timestamp);
+            }
+            value
         };
         let base = 1_700_000_000_000;
-        let a = write_jsonl(root.path(), "a.jsonl", &[record("a")]);
-        let b = write_jsonl(root.path(), "b.jsonl", &[record("b")]);
-        let c = write_jsonl(root.path(), "c.jsonl", &[record("c")]);
+        let a = write_jsonl(
+            root.path(),
+            "a.jsonl",
+            &[record("a", Some("2026-05-01T10:00:00.000Z"))],
+        );
+        let b = write_jsonl(
+            root.path(),
+            "b.jsonl",
+            &[record("b", Some("2026-05-01T10:02:00.000Z"))],
+        );
+        let c = write_jsonl(
+            root.path(),
+            "c.jsonl",
+            &[record("c", Some("2026-05-01T10:01:00.000Z"))],
+        );
         set_mtime(&a, base + 1_000);
         set_mtime(&b, base + 3_000);
         set_mtime(&c, base + 2_000);
