@@ -39,6 +39,7 @@
 | fccaa124 | feat(renderer): local automation RPC 拦截（CRUD 映射）（Task 6） |
 | 5b3cf718 | fix(renderer): local automation RPC 补 Tauri args 包装（T6 fix 1） |
 | 1c29079e | feat(bridge): automations real 域接线与 parity（Task 7） |
+| 7656005e | fix(automations): 创建时补齐 executionTarget 字段（local 默认）（终审修复） |
 | （本提交） | docs: Phase 2E automations 实施记录与门禁证据（Task 8） |
 
 ## 3. 门禁证据（自动化）
@@ -52,6 +53,8 @@
 | TS 全量 | `pnpm test`（仓库根） | **exit 0，全绿**：`Test Files 3875 passed / 0 failed / 8 skipped (3883)`；`Tests 34631 passed / 0 failed / 122 skipped (34753)`；Duration **447.18s**。**本轮无性能抖动失败**（已知 `browser-history-match.performance.test.ts` 未触发，无隔离复跑需要） |
 
 日志留存于本机临时目录（`cargo-test-phase2e.log` / `build-web-phase2e.log` / `pnpm-test-phase2e.log`）。
+
+终审结论（`1e52723f..a6c9cd98`，15 提交）：**WITH-FIXES** —— 1 项 Important（创建时缺 `executionTargetType/executionTargetId`，违反共享 `Automation` 契约）已修复（`7656005e`：缺省补 `'local'`、显式值保留，新增 2 条测试）；全部 deferred minors 经 triage 判定为 defer（时区窗口边角、超容量瞬时、setsid 逃逸、通知冗余、标题竞态等，均披露上文 §5.2）。终审修复波次（`7656005e`）后的最终树复跑：`cargo test --workspace` **exit 0**（44 suite，**788 passed / 0 failed**，较 §3 的 786 增 2 条新增测试）；TS 无改动（`pnpm test` 34631/0、typecheck/build:web 维持 §3 结果）。
 
 ## 4. 手工验收清单（待用户复核）
 
