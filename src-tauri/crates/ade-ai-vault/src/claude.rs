@@ -17,7 +17,7 @@ const FIELD_BLANK_SCAN_LIMIT: usize = 1024;
 const HARNESS_CLASSIFY_HEAD_LIMIT: usize = 256;
 const HARNESS_CLASSIFY_LEADING_WS_LIMIT: usize = 64;
 
-const PRUNED_DIR_NAMES: [&str; 3] = ["subagents", "file-history", "session-env"];
+pub(crate) const PRUNED_DIR_NAMES: [&str; 3] = ["subagents", "file-history", "session-env"];
 
 const HIDDEN_TEXT_BLOCKS: [(&str, &str); 3] = [
     ("system-reminder", "</system-reminder>"),
@@ -148,7 +148,7 @@ fn collect_session_files(dir: &Path, files: &mut Vec<PathBuf>, issues: &mut Vec<
     }
 }
 
-fn has_jsonl_extension(path: &Path) -> bool {
+pub(crate) fn has_jsonl_extension(path: &Path) -> bool {
     path.extension()
         .is_some_and(|extension| extension.to_string_lossy().eq_ignore_ascii_case("jsonl"))
 }
