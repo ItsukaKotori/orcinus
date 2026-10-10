@@ -38,6 +38,7 @@ dependencies = [
 name = "ade-bridge"
 version = "0.0.1"
 dependencies = [
+ "ade-ai-vault",
  "ade-automations",
  "ade-core",
  "ade-fs",

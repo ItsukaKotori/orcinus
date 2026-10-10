@@ -268,6 +268,20 @@ export const commands = {
 	gitPush: (args: GitPushArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_push", { args })),
 	ghExec: (args: GhExecArgs) => typedError<GhExecResult, BridgeError>(__TAURI_INVOKE("gh_exec", { args })),
 	ghEnvProbe: () => typedError<GhEnvProbe, BridgeError>(__TAURI_INVOKE("gh_env_probe")),
+	/**  `aiVault.listSessions`: `unlimited` is accepted and ignored (spec §5). */
+	aiVaultListSessions: (args: {
+	limit?: number | null,
+	force?: boolean | null,
+	scopePaths?: string[] | null,
+	/**  Accepted and ignored: the scan stays capped at the default 1000. */
+	unlimited?: boolean | null,
+	requestToken?: string | null,
+} | null) => typedError<AiVaultListResult_Serialize, BridgeError>(__TAURI_INVOKE("ai_vault_list_sessions", { args })),
+	aiVaultResolveSessionTitles: (args: AiVaultSessionTitlesArgs) => typedError<AiVaultSessionTitlesResult, BridgeError>(__TAURI_INVOKE("ai_vault_resolve_session_titles", { args })),
+	/**  `aiVault.cancelListSessions`: unknown token is a silent no-op. */
+	aiVaultCancelListSessions: (args: AiVaultCancelListSessionsArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("ai_vault_cancel_list_sessions", { args })),
+	aiVaultPrepareSessionResume: (args: AiVaultPrepareSessionResumeArgs) => typedError<AiVaultPrepareSessionResumeResult_Serialize, BridgeError>(__TAURI_INVOKE("ai_vault_prepare_session_resume", { args })),
+	aiVaultDeleteSession: (args: AiVaultDeleteSessionArgs) => typedError<AiVaultDeleteSessionResult, BridgeError>(__TAURI_INVOKE("ai_vault_delete_session", { args })),
 	/**  All automation definitions (fenced selector/expectedOwner ignored). */
 	automationsList: () => typedError<Json[], BridgeError>(__TAURI_INVOKE("automations_list")),
 	/**
@@ -408,6 +422,104 @@ export type AgentSessionsResolveCaptureArgs = {
 	agentKind: string,
 	windowFromMs: number,
 	windowToMs: number,
+};
+
+export type AiVaultCancelListSessionsArgs = {
+	requestToken: string,
+};
+
+export type AiVaultDeleteSessionArgs = {
+	agent: string,
+	filePath: string,
+	sessionId?: string | null,
+	executionHostId?: string | null,
+};
+
+export type AiVaultDeleteSessionResult = { outcome: "deleted" } | { outcome: "rejected"; agent: string; reason: string } | { outcome: "failed"; agent: string; error: string };
+
+export type AiVaultListArgs = {
+	limit?: number | null,
+	force?: boolean | null,
+	scopePaths?: string[] | null,
+	/**  Accepted and ignored: the scan stays capped at the default 1000. */
+	unlimited?: boolean | null,
+	requestToken?: string | null,
+};
+
+export type AiVaultListResult = AiVaultListResult_Serialize | AiVaultListResult_Deserialize;
+
+export type AiVaultListResult_Deserialize = {
+	sessions: Json[],
+	issues: AiVaultScanIssue_Deserialize[],
+	scannedAt: string,
+	cancelled: boolean | null,
+};
+
+export type AiVaultListResult_Serialize = {
+	sessions: Json[],
+	issues: AiVaultScanIssue_Serialize[],
+	scannedAt: string,
+	cancelled?: boolean | null,
+};
+
+export type AiVaultPrepareSessionResumeArgs = {
+	agent: string,
+	filePath: string,
+	codexHome?: string | null,
+	sessionId?: string | null,
+	executionHostId?: string | null,
+};
+
+export type AiVaultPrepareSessionResumeResult = AiVaultPrepareSessionResumeResult_Serialize | AiVaultPrepareSessionResumeResult_Deserialize;
+
+export type AiVaultPrepareSessionResumeResult_Deserialize = {
+	useRealCodexHome: boolean,
+	substituteCodexHome: string | null,
+};
+
+export type AiVaultPrepareSessionResumeResult_Serialize = {
+	useRealCodexHome: boolean,
+	substituteCodexHome?: string | null,
+};
+
+export type AiVaultScanIssue = AiVaultScanIssue_Serialize | AiVaultScanIssue_Deserialize;
+
+export type AiVaultScanIssue_Deserialize = {
+	executionHostId?: string | null,
+	agent: string,
+	kind?: string | null,
+	path: string,
+	message: string,
+};
+
+export type AiVaultScanIssue_Serialize = {
+	executionHostId?: string | null,
+	agent: string,
+	kind?: string | null,
+	path: string,
+	message: string,
+};
+
+export type AiVaultSessionTitle = {
+	agent: string,
+	sessionId: string,
+	title: string,
+};
+
+export type AiVaultSessionTitleRequest = {
+	agent: string,
+	sessionId: string,
+	transcriptPath?: string | null,
+};
+
+export type AiVaultSessionTitlesArgs = {
+	/**  Accepted and ignored: this bridge is local-only. */
+	executionHostScope?: string | null,
+	requests: AiVaultSessionTitleRequest[],
+};
+
+export type AiVaultSessionTitlesResult = {
+	titles: AiVaultSessionTitle[],
 };
 
 /**

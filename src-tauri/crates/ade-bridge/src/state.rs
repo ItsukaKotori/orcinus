@@ -5,6 +5,7 @@ use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
+use ade_ai_vault::VaultConfig;
 use ade_automations::{AutomationService, AutomationStore};
 use ade_core::defaults::{onboarding_defaults, settings_defaults, ui_state_defaults};
 use ade_fs::{FsService, FsWatcher};
@@ -22,6 +23,7 @@ use serde::Serialize;
 use serde_json::Value;
 use tauri::{AppHandle, Manager};
 
+use crate::commands::ai_vault::AiVaultService;
 use crate::commands::platform::{platform_info, PlatformInfo};
 use crate::commands::preflight::PathHydrationCache;
 use crate::errors::BridgeError;
@@ -509,6 +511,9 @@ pub struct AppState {
     /// gh 可执行文件解析缓存（成功才写）。
     pub gh_path_cache: GhPathCache,
     pub git_cancels: GitCancelRegistry,
+    /// AI vault 会话历史（Phase 2F 规格 §3.2）：roots 配置 + 60s 列表缓存
+    /// + 扫描取消注册表；无后台任务。
+    pub ai_vault: Arc<AiVaultService>,
     settings_writer: WriteScheduler,
     ui_writer: WriteScheduler,
 }
@@ -559,6 +564,10 @@ impl AppState {
         };
         let ui = Arc::new(Mutex::new(persisted.ui));
         let onboarding = Arc::new(Mutex::new(persisted.onboarding));
+
+        // AI vault 会话历史（规格 §3.2）：roots 从启动时解析的 home 与进程
+        // 环境（XDG/OPENCODE_DB 覆盖）解析；无后台任务。
+        let ai_vault = Arc::new(AiVaultService::new(VaultConfig::from_env(home.clone())));
 
         // automations（规格 §3.1/§4）：定义/历史先加载，服务先起（60s tick
         // 空转）；`armed` 等渲染层 `automations_renderer_ready` 再武装并追赶。
@@ -625,6 +634,7 @@ impl AppState {
             gh_gate: Arc::new(GhConcurrencyGate::new(4)),
             gh_path_cache: GhPathCache::default(),
             git_cancels: GitCancelRegistry::new(),
+            ai_vault,
             settings_writer,
             ui_writer,
         })

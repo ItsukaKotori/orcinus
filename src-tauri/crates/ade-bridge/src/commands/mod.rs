@@ -1,5 +1,6 @@
 pub mod agent_sessions;
 pub mod agent_status;
+pub mod ai_vault;
 pub mod app;
 pub mod automations;
 pub mod folder_workspaces;
