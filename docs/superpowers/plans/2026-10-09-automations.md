@@ -37,7 +37,7 @@
   - `pub fn latest_occurrence_at_or_before(text: &str, dtstart_ms: i64, now_ms: i64) -> Option<i64>`
   - `pub enum ScheduleError { Invalid, NoOccurrence }`（或等价）
 
-- [ ] **Step 1: 创建 crate**
+- [x] **Step 1: 创建 crate**
 
 `Cargo.toml`（镜像 ade-hooks）：
 
@@ -57,7 +57,7 @@ thiserror = "2"
 
 `lib.rs`：`pub mod schedule;`（后续任务追加模块）。workspace 自动收编（members = `crates/*`）。
 
-- [ ] **Step 2: 写失败测试**
+- [x] **Step 2: 写失败测试**
 
 `schedule.rs` 测试模块，对齐 `src/shared/automation-schedules.test.ts` 场景（实现时逐条对应）：
 
@@ -134,12 +134,12 @@ mod tests {
 
 （勿固定成列出的示例文本即可；执行者按 TS 测试补足场景：闰日、DOM/DOW OR/AND、off-minute dtstart、malformed BYDAY。）
 
-- [ ] **Step 3: 跑测试确认失败**
+- [x] **Step 3: 跑测试确认失败**
 
 Run（workdir src-tauri）: `cargo test -p ade-automations`
 Expected: 编译失败（模块不存在）。
 
-- [ ] **Step 4: 实现**
+- [x] **Step 4: 实现**
 
 逐字语义移植（来源：`src/shared/automation-schedule-parsing.ts`、`automation-schedule-occurrences.ts`、`automation-cron-occurrence.ts`；只看语义与常量，不照搬 JS 结构）：
 
@@ -148,7 +148,7 @@ Expected: 编译失败（模块不存在）。
 - 时间：**本地墙钟**（chrono `Local`）；扫描上限 9×366 天 / 370 天（对齐 TS 常量）；`from_local` 对不存在时刻取当日后继合法时刻、对歧义时刻取最早实例（在模块文档注释固定该选择）。
 - `next_occurrence_after`：`base = max(dtstart, after)` 对齐分钟后 +1 分钟起扫；`latest_...`：自 `now` 对齐分钟后向前扫；无解 → None。
 
-- [ ] **Step 5: 跑测试确认通过并提交**
+- [x] **Step 5: 跑测试确认通过并提交**
 
 Run: `cargo test -p ade-automations`
 
@@ -189,7 +189,7 @@ impl AutomationStore {
 }
 ```
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 覆盖（fake 时钟传入 `now_ms`）：
 1. create 自动生成 `id`/`createdAt`/`updatedAt`/`schedulerOwner:'local_host_service'`/`missedRunPolicy:'run_once_within_grace'`/`enabled` 默认 true/`nextRunAt` 由 service 提供（store 不计算；create 入参须带）；
@@ -203,18 +203,18 @@ impl AutomationStore {
 9. 损坏文件：`load` 时备份 `.corrupt-<ts>` 并重建空 store；
 10. `snapshot_workspace_name`：仅更新匹配 workspaceId 的运行（新→旧首条），返回更新条数。
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `cargo test -p ade-automations store`
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 - 文件形态 `{ "schemaVersion": 1, "automations": [...], "runs": [...] }`；原子写（tmp + rename，目录 fsync 可省）；每次变更整写（文件有界：定义数小 + 100×runs）。
 - 记录为 `serde_json::Value`（opaque；Rust 只读取调度字段 `id/enabled/rrule/dtstart/nextRunAt/missedRunGraceMinutes` 与 run 的 `id/automationId/scheduledFor/status/createdAt`）。
 - 分页游标：`<createdAt>:<id>` base64 或明文（实现自定，测试锚定稳定性）。
 - 保留常量 `MAX_RUNS_PER_AUTOMATION: usize = 100`（对齐 `shared/automation-run-retention.ts:3`）。
 
-- [ ] **Step 4: 跑测试 + 提交**
+- [x] **Step 4: 跑测试 + 提交**
 
 Run: `cargo test -p ade-automations`
 
@@ -234,7 +234,7 @@ git commit -m "feat(automations): AutomationStore（CRUD/去重/保留/分页/�
 **Interfaces:**
 - Produces: `pub fn run_precheck(command: &str, cwd: Option<&str>, timeout_seconds: Option<u64>) -> serde_json::Value`（返回 `AutomationPrecheckResult` JSON：`command/exitCode/timedOut/durationMs/stdout/stderr/stdoutTruncated/stderrTruncated/error/startedAt/completedAt`）。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 1. 成功：`echo hello` → exit 0、stdout 含 hello；
 2. 非零：`exit 3` → exitCode 3；
@@ -242,11 +242,11 @@ git commit -m "feat(automations): AutomationStore（CRUD/去重/保留/分页/�
 4. 截断：输出 > 4000 字符 → 尾 4000 + `stdoutTruncated: true`（stderr 同理）；
 5. 默认/上限：`None` → 60s；`Some(9999)` → clamp 600（用极短超时测试只验证 clamp 函数，不真等）。
 
-- [ ] **Step 2: 跑测试确认失败 → 实现**
+- [x] **Step 2: 跑测试确认失败 → 实现**
 
 实现要点：`Command::new("sh").arg("-c").arg(command)`；`cwd` 存在则设置；`process_group(0)`；stdout/stderr piped，读取线程收集：内存保留上限 1MiB（超出即丢弃最旧缓冲、始终保留尾部），完成后各取最后 4000 字符并置 `*Truncated`；超时 `libc::kill(-pid, SIGTERM)` → 2s → `SIGKILL`；`exitCode=status.code()`；`error` 填 spawn/IO 错误文案；`startedAt/completedAt` 毫秒。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add src-tauri/crates/ade-automations
@@ -281,7 +281,7 @@ impl AutomationService {
 }
 ```
 
-- [ ] **Step 1: 写失败测试（FakeSink + 临时 store + 注入时钟）**
+- [x] **Step 1: 写失败测试（FakeSink + 临时 store + 注入时钟）**
 
 1. 未 armed：tick 不派发、不写 `dispatching`；
 2. armed 后 due：`nextRunAt<=now` → 创建 run（`status:'dispatching'`、`trigger:'scheduled'`、`title:"<name> run <n>"`）→ 发一次 `dispatch_requested`（payload 含 `automation/run/dispatchToken`）→ `nextRunAt` 前移（`next_occurrence_after(now)`，无回填）；
@@ -292,11 +292,11 @@ impl AutomationService {
 7. 对账：service 启动前存在非终态 run → `renderer_ready` 后首 tick 不立即杀（结算窗内），注入时钟推进 2 分钟后 tick → `dispatch_failed` + 固定 stranded 文案（逐字移植 `orca:src/main/automations/run-completion-watcher.ts:26-31` 的句子）；
 8. 重入：tick 内再入直接返回。
 
-- [ ] **Step 2: 实现**
+- [x] **Step 2: 实现**
 
 要点：`armed: AtomicBool`；`evaluating: Mutex<()>`（try_lock 失败即返回）；`started_at = now()`；`armed_at: Mutex<Option<i64>>`；tick 顺序 = 对账（仅 armed 后首次且 `now-armed_at>=120_000` 时执行一次，`reconciled` 旗标）→ 到期评估（遍历 `store.list()`，读取调度字段；`enabled==true` 且 `nextRunAt<=now`）。`dispatchToken`：`new_uuid()`；不持久化（内存 Set + 30 分钟惰性清理）。每次写入后 `sink.automations_changed("run"/"definition")`。测试的可控时钟：测试文件用 `static NOW_MS: AtomicI64`，`now` 传入读取该静态量的自由函数。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add src-tauri/crates/ade-automations
@@ -331,24 +331,24 @@ git commit -m "feat(automations): AutomationService（tick/grace/advance/对账�
   `automations_snapshot_workspace_name({workspaceId, displayName}) -> {updated: number}`、
   `automations_renderer_ready() -> null`。
 
-- [ ] **Step 1: 写失败测试（tests/automations.rs，state-free 层）**
+- [x] **Step 1: 写失败测试（tests/automations.rs，state-free 层）**
 
 用临时 store + 直接调用 `*_impl`（沿 `git_commands.rs` 风格）：
 create（合法 rrule 通过 / 非法拒绝且不落盘）、list、update、delete 级联、run_now（disabled 也创建）、runs 分页、mark_dispatch_result 终态守卫、run_precheck 落盘（`echo ok`）。
 
-- [ ] **Step 2: 实现**
+- [x] **Step 2: 实现**
 
 - `ServiceEventSink` 实现 `EventSink`：持有 `AppHandle`，`automations_changed` → `emit_json(app, "automations:changed", json!({"reason": reason}))`；`dispatch_requested` → `emit_json(app, "automations:dispatch-requested", payload)`。
 - `state.rs::AppState::initialize`：`AutomationStore::load(app_data.join("automations.json"))` → `AutomationService::new(store, sink, now)`，并**在 initialize 内调用 `service.start()`**（60s tick 先起、`armed` 等待 `renderer_ready`——对齐参照「服务先起、武装等渲染层」）。
 - `automations_create`：以 crate 提供的 `validate_definition(input)`（Task 1 的 `is_valid_schedule` + 字段校验，放 service 或 store 模块）先行校验；`nextRunAt` 由命令用 `next_occurrence_after(rrule, dtstart, now)` 计算后写入。
 - specta 注册 + 名称清单（10 命令）；bindings 重生成。
 
-- [ ] **Step 3: 跑测试 + bindings**
+- [x] **Step 3: 跑测试 + bindings**
 
 Run: `cargo test -p ade-bridge --test automations`
 Run: `cargo run -p ade-bridge --bin export-bindings && cargo test -p ade-bridge`
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add src-tauri/crates/ade-bridge src/bridge/real/generated/tauri-bindings.ts
@@ -369,7 +369,7 @@ git commit -m "feat(bridge): automations 命令面与 changed/dispatch-requested
 - Consumes: Task 5 命令（`invokeCommand`）。
 - Produces: `isLocalAutomationRpcMethod(method)`；`callLocalAutomationRpc<T>(method, params)`。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 - method 集 = `automation.list/create/update/delete/runNow/runs`（其余 false）；
 - `automation.list`：接收 `{}` 或 `{selector}`（忽略）→ invoke `automations_list` → 返回 `{automations, items}`（items 构造 `{automationId, selector:{kind:'self'}}`；如 Rust 直接返回同形则透传）；
@@ -379,7 +379,7 @@ git commit -m "feat(bridge): automations 命令面与 changed/dispatch-requested
 - `automation.runs`：`{automationId, limit, cursor}`（剥离 `expectedOwner`）→ `automations_runs` → `{runs, nextCursor}`；
 - runtime-rpc-client 新增路由测试：local + `automation.list` 不进 `window.api.runtime.call`；非 automation 方法行为不变。
 
-- [ ] **Step 2: 实现**
+- [x] **Step 2: 实现**
 
 `runtime-rpc-client.ts` local 分支追加（在 terminal 拦截旁）：
 
@@ -391,7 +391,7 @@ if (target.kind === 'local' && isLocalAutomationRpcMethod(method)) {
 
 映射细节以既有客户端测试锚定（见上）；fencing 字段**剥离而非透传**。
 
-- [ ] **Step 3: 跑测试 + typecheck + 提交**
+- [x] **Step 3: 跑测试 + typecheck + 提交**
 
 Run: `pnpm vitest run src/renderer/src/runtime/local-automation-rpc.test.ts src/renderer/src/runtime/runtime-rpc-client.test.ts && pnpm typecheck`
 
@@ -416,7 +416,7 @@ git commit -m "feat(renderer): local automation RPC 拦截（CRUD 映射）"
 - Consumes: Task 5 命令；`subscribeToEvent`；`withMethodFallback`。
 - Produces: `createAutomationsRealApi(): PreloadApi['automations']`。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 - `runPrecheck` → `invokeCommand('automations_run_precheck', {args:{automationId, runId}})` 且返回 `{result}` 解包；
 - `markDispatchResult` → `automations_mark_dispatch_result`，返回 `{run}` 解包；
@@ -424,16 +424,16 @@ git commit -m "feat(renderer): local automation RPC 拦截（CRUD 映射）"
 - `onChanged`/`onDispatchRequested` → `subscribeToEvent('automations:changed'|'automations:dispatch-requested')` 转发；
 - external 五方法仍 reject `UnimplementedBridgeError`。
 
-- [ ] **Step 2: 实现**
+- [x] **Step 2: 实现**
 
 `real/automations.ts` 用 `withMethodFallback` 提供 9 个真方法；`create-api.ts` `RealDomains` 加 `'automations'` + 工厂；parity 增加 `automations` surfaceCase（explicit 9 / missing 5：external 五方法）。
 
-- [ ] **Step 3: 全量回归**
+- [x] **Step 3: 全量回归**
 
 Run: `pnpm vitest run src/bridge && pnpm typecheck`
 Run: `pnpm test`（全量；性能抖动隔离复跑；其它失败 STOP + BLOCKED）
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add src/bridge/real/automations.ts src/bridge/real/automations.test.ts \
@@ -449,19 +449,19 @@ git commit -m "feat(bridge): automations real 域接线与 parity"
 - Create: `docs/phase2e-automations-record.md`
 - Modify: `docs/superpowers/plans/2026-10-09-automations.md`（勾选复选框）
 
-- [ ] **Step 1: 全量门禁**
+- [x] **Step 1: 全量门禁**
 
 Run: `cargo test --workspace`（workdir src-tauri）
 Run: `rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm build:web`
 Run: `pnpm test`
 
-- [ ] **Step 2: 写收尾记录**
+- [x] **Step 2: 写收尾记录**
 
 结构照 `docs/phase2d2-create-pr-record.md`：§1 范围与验收 / §2 提交清单 / §3 门禁证据 / §4 手工验收（6 项，待用户复核）/ §5 偏差与边界备案（spec §7 九条 + 实现中发现的新偏差）/ §6 已知边界与后续（external managers、SSH 多宿主、owner fencing、usage 计费、CLI、headless serve、skip 折叠、live-run watchdog、`automation.show`）。
 
 手工验收清单（写入记录）：创建 hourly 自动化到点执行；Run Now；precheck 失败 skipped_precheck；new_per_run 工作区；重启保留；超 grace skipped_missed。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add docs/phase2e-automations-record.md docs/superpowers/plans/2026-10-09-automations.md
