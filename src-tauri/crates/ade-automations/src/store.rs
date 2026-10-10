@@ -3,8 +3,9 @@
 //! The whole state lives in one `automations.json` file shaped
 //! `{ "schemaVersion": 1, "automations": [...], "runs": [...] }`. Every mutation
 //! rewrites the file atomically (tmp file + rename); a file that cannot be
-//! parsed — or whose top level is not an object — is renamed to
-//! `automations.json.corrupt-<epoch-ms>` and the store starts empty.
+//! parsed, whose top level is not an object, or whose `automations`/`runs`
+//! sections are present but not arrays is quarantined as
+//! `automations.json.corrupt-<epoch-ms>-<pid>-<n>` and the store starts empty.
 //!
 //! Records are opaque [`serde_json::Value`]s. The store only reads and
 //! normalizes the identity/scheduling fields it needs (`id`, `enabled`,
@@ -16,22 +17,29 @@
 //! - `create_run` dedupes on `(automationId, scheduledFor)`; a fresh insert
 //!   assigns the next `runNumber` from the highest retained number (or the
 //!   retained count for legacy unnumbered rows), so numbering survives
-//!   retention pruning, and advances the parent automation's `lastRunAt`.
-//! - `update_run` never overwrites a run that has reached a final status.
-//! - `runs_page` is a keyset cursor (`"<createdAt>:<id>"`, or a legacy bare
-//!   offset) over runs ordered `createdAt desc, id asc`, capped at
-//!   [`MAX_RUNS_PER_AUTOMATION`] per page.
+//!   retention pruning, and monotonically advances the parent automation's
+//!   `lastRunAt`/`updatedAt`.
+//! - `update_run` never overwrites a run that has reached a final status, and
+//!   never writes or clears the store-owned identity/ordering fields
+//!   ([`PROTECTED_RUN_FIELDS`]).
+//! - `runs_page` is a keyset cursor (`"<createdAt>:<id>"`, an empty-id
+//!   `<createdAt>:` legacy boundary, or a legacy bare offset) over runs ordered
+//!   `createdAt desc, id asc`, capped at [`MAX_RUNS_PER_AUTOMATION`] per page.
+//!   A present-but-undecodable cursor ends the page instead of silently
+//!   restarting it.
 //! - `prune_runs` keeps the newest [`MAX_RUNS_PER_AUTOMATION`] final runs per
-//!   automation and never evicts an in-flight run.
+//!   automation and never evicts an in-flight run or the run just inserted.
 //! - `snapshot_workspace_name` writes the display name into every run still
 //!   pointing at that workspace (walked newest first).
-//! - Loading normalizes legacy runs: unnumbered rows are backfilled above the
-//!   highest number they share an automation with, then each automation is
-//!   pruned, and the repaired state is written back.
+//! - Loading normalizes legacy runs: rows without an `id` get one, unnumbered
+//!   rows are backfilled above the highest number they share an automation
+//!   with, then each automation is pruned, and the repaired state is written
+//!   back.
 
 use std::collections::{HashMap, HashSet};
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, MutexGuard};
 
 use serde_json::{Map, Value};
@@ -51,6 +59,16 @@ const FINAL_RUN_STATUSES: [&str; 6] = [
     "skipped_missed",
     "skipped_unavailable",
     "skipped_needs_interactive_auth",
+];
+
+/// Run fields owned by the store: identity, dedupe key, numbering, and page
+/// order. `update_run` never writes or removes them.
+const PROTECTED_RUN_FIELDS: [&str; 5] = [
+    "id",
+    "automationId",
+    "createdAt",
+    "runNumber",
+    "scheduledFor",
 ];
 
 #[derive(Debug, thiserror::Error)]
@@ -271,9 +289,18 @@ impl AutomationStore {
         }) {
             return Ok((existing.clone(), false));
         }
-        if record.get("id").and_then(Value::as_str).is_none() {
+        if !record
+            .get("id")
+            .and_then(Value::as_str)
+            .is_some_and(|id| !id.is_empty())
+        {
             record.insert("id".to_string(), Value::from(ade_core::ids::new_uuid()));
         }
+        let run_id = record
+            .get("id")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_string();
         let run_number = next_run_number(&inner.runs, &automation_id);
         record.insert("runNumber".to_string(), Value::from(run_number));
         if record.get("createdAt").and_then(Value::as_i64).is_none() {
@@ -286,16 +313,19 @@ impl AutomationStore {
 
         let mut next = inner.clone();
         next.runs.push(record.clone());
-        prune_runs_for(&mut next.runs, &automation_id);
+        // The freshly inserted run is never a retention candidate, even when
+        // its caller-supplied createdAt predates every retained run.
+        prune_runs_for(&mut next.runs, &automation_id, Some(run_id.as_str()));
         touch_automation(&mut next.automations, &automation_id, touched_at);
         self.persist_state(&next)?;
         *inner = next;
         Ok((record, true))
     }
 
-    /// Shallow-merges `fields` into the run, removing keys set to `null`. A run
-    /// that already holds a final status is returned untouched. Returns `None`
-    /// when the run is gone.
+    /// Shallow-merges `fields` into the run, removing keys set to `null`.
+    /// Identity/ordering fields ([`PROTECTED_RUN_FIELDS`]) are never touched. A
+    /// run that already holds a final status is returned untouched. Returns
+    /// `None` when the run is gone.
     pub fn update_run(&self, run_id: &str, fields: Value) -> Result<Option<Value>, StoreError> {
         let fields = fields.as_object().ok_or_else(|| {
             StoreError::InvalidInput("automation run updates must be a JSON object".into())
@@ -314,7 +344,7 @@ impl AutomationStore {
         let mut next = inner.clone();
         if let Some(record) = next.runs[index].as_object_mut() {
             for (key, value) in fields {
-                if key == "id" || key == "automationId" {
+                if PROTECTED_RUN_FIELDS.contains(&key.as_str()) {
                     continue;
                 }
                 merge_field(record, key, value);
@@ -378,7 +408,8 @@ impl AutomationStore {
     pub fn prune_runs(&self, automation_id: &str) {
         let mut inner = self.lock();
         let mut next = inner.clone();
-        if prune_runs_for(&mut next.runs, automation_id) && self.persist_state(&next).is_ok() {
+        if prune_runs_for(&mut next.runs, automation_id, None) && self.persist_state(&next).is_ok()
+        {
             *inner = next;
         }
     }
@@ -494,7 +525,8 @@ fn merge_field(record: &mut Map<String, Value>, key: &str, value: &Value) {
 }
 
 /// Advances the parent automation's `lastRunAt` and `updatedAt` when a run is
-/// created. No-op when the automation is gone.
+/// created. Both markers are monotonic, so a backdated `createdAt` cannot move
+/// them backwards. No-op when the automation is gone.
 fn touch_automation(automations: &mut [Value], automation_id: &str, at_ms: i64) {
     let Some(automation) = automations
         .iter_mut()
@@ -503,8 +535,18 @@ fn touch_automation(automations: &mut [Value], automation_id: &str, at_ms: i64) 
         return;
     };
     if let Some(record) = automation.as_object_mut() {
-        record.insert("lastRunAt".to_string(), Value::from(at_ms));
-        record.insert("updatedAt".to_string(), Value::from(at_ms));
+        let last_run_at = record
+            .get("lastRunAt")
+            .and_then(Value::as_i64)
+            .unwrap_or(at_ms)
+            .max(at_ms);
+        let updated_at = record
+            .get("updatedAt")
+            .and_then(Value::as_i64)
+            .unwrap_or(at_ms)
+            .max(at_ms);
+        record.insert("lastRunAt".to_string(), Value::from(last_run_at));
+        record.insert("updatedAt".to_string(), Value::from(updated_at));
     }
 }
 
@@ -533,6 +575,26 @@ fn next_run_number(runs: &[Value], automation_id: &str) -> i64 {
         highest = highest.max(i64_field(run, "runNumber").unwrap_or(0));
     }
     highest.max(count) + 1
+}
+
+/// Stamps `id` onto legacy rows that lack a usable one, so every run stays
+/// addressable by keyset cursors. Returns whether any row changed.
+fn backfill_run_ids(runs: &mut [Value]) -> bool {
+    let mut changed = false;
+    for run in runs.iter_mut() {
+        if run
+            .get("id")
+            .and_then(Value::as_str)
+            .is_some_and(|id| !id.is_empty())
+        {
+            continue;
+        }
+        if let Some(record) = run.as_object_mut() {
+            record.insert("id".to_string(), Value::from(ade_core::ids::new_uuid()));
+            changed = true;
+        }
+    }
+    changed
 }
 
 /// Stamps `runNumber` onto legacy rows that predate the field, continuing above
@@ -568,14 +630,16 @@ fn backfill_run_numbers(runs: &mut [Value]) -> bool {
 }
 
 /// Evicts final runs past the cap for one automation. Survivors keep their
-/// original append order; in-flight and other-automation runs are untouched.
-/// Returns whether anything was evicted.
-fn prune_runs_for(runs: &mut Vec<Value>, automation_id: &str) -> bool {
+/// original append order; in-flight, other-automation, and `protected_id` runs
+/// are never candidates. Returns whether anything was evicted.
+fn prune_runs_for(runs: &mut Vec<Value>, automation_id: &str, protected_id: Option<&str>) -> bool {
     let candidates: Vec<usize> = runs
         .iter()
         .enumerate()
         .filter(|(_, run)| {
-            string_field(run, "automationId") == Some(automation_id) && is_final_run(run)
+            string_field(run, "automationId") == Some(automation_id)
+                && is_final_run(run)
+                && !protected_id.is_some_and(|id| string_field(run, "id") == Some(id))
         })
         .map(|(index, _)| index)
         .collect();
@@ -618,7 +682,7 @@ fn prune_all_automation_runs(runs: &mut Vec<Value>) -> bool {
     let mut changed = false;
     for automation_id in automation_ids {
         if seen.insert(automation_id.clone()) {
-            changed |= prune_runs_for(runs, &automation_id);
+            changed |= prune_runs_for(runs, &automation_id, None);
         }
     }
     changed
@@ -627,9 +691,8 @@ fn prune_all_automation_runs(runs: &mut Vec<Value>) -> bool {
 fn decode_cursor(cursor: &str) -> Option<Cursor> {
     if let Some((created_at, id)) = cursor.split_once(':') {
         let created_at = created_at.parse::<i64>().ok()?;
-        if id.is_empty() {
-            return None;
-        }
+        // An empty id is accepted: legacy id-less runs emitted `<ts>:` cursors,
+        // and the boundary fallback still resumes at the right place.
         Some(Cursor::Key {
             created_at,
             id: id.to_string(),
@@ -645,8 +708,14 @@ fn decode_cursor(cursor: &str) -> Option<Cursor> {
 }
 
 fn page_start(runs: &[Value], cursor: Option<&str>) -> usize {
-    let Some(cursor) = cursor.and_then(decode_cursor) else {
+    let Some(raw) = cursor else {
         return 0;
+    };
+    let Some(cursor) = decode_cursor(raw) else {
+        // A present-but-undecodable cursor must not silently restart the page at
+        // the beginning (that loops forever). End pagination instead; malformed
+        // entries are skipped rather than re-served.
+        return runs.len();
     };
     match cursor {
         Cursor::Offset(offset) => offset.min(runs.len()),
@@ -686,13 +755,24 @@ fn load_state(path: &Path) -> (Inner, bool) {
         return (Inner::empty(), false);
     };
     let schema_version = object.get("schemaVersion").and_then(Value::as_u64);
-    let (automations, automations_changed) = records_from(object.get("automations"));
-    let (mut runs, runs_changed) = records_from(object.get("runs"));
+    let Some((automations, automations_changed)) = section_records(object.get("automations"))
+    else {
+        // A present-but-malformed section is structural corruption: quarantine
+        // the file instead of silently emptying the section and rewriting it.
+        backup_corrupt(path);
+        return (Inner::empty(), false);
+    };
+    let Some((mut runs, runs_changed)) = section_records(object.get("runs")) else {
+        backup_corrupt(path);
+        return (Inner::empty(), false);
+    };
+    let ids_backfilled = backfill_run_ids(&mut runs);
     let backfilled = backfill_run_numbers(&mut runs);
     let pruned = prune_all_automation_runs(&mut runs);
     let changed = schema_version != Some(SCHEMA_VERSION)
         || automations_changed
         || runs_changed
+        || ids_backfilled
         || backfilled
         || pruned;
     let inner = Inner {
@@ -703,9 +783,11 @@ fn load_state(path: &Path) -> (Inner, bool) {
     (inner, changed)
 }
 
-fn records_from(value: Option<&Value>) -> (Vec<Value>, bool) {
+/// Records of one top-level section. `None` means the section exists but is
+/// not an array — a structural corruption the caller quarantines.
+fn section_records(value: Option<&Value>) -> Option<(Vec<Value>, bool)> {
     match value {
-        None => (Vec::new(), false),
+        None => Some((Vec::new(), false)),
         Some(Value::Array(records)) => {
             let filtered: Vec<Value> = records
                 .iter()
@@ -713,18 +795,46 @@ fn records_from(value: Option<&Value>) -> (Vec<Value>, bool) {
                 .cloned()
                 .collect();
             let changed = filtered.len() != records.len();
-            (filtered, changed)
+            Some((filtered, changed))
         }
-        Some(_) => (Vec::new(), true),
+        Some(_) => None,
     }
 }
 
+/// Moves a corrupt file aside to `automations.json.corrupt-<epoch-ms>-<pid>-<n>`.
+/// Rename failure falls back to copy + remove; if that also fails the bytes are
+/// left in place and the failure is logged rather than swallowed.
 fn backup_corrupt(path: &Path) {
     let timestamp = now_millis();
+    let unique = CORRUPT_COUNTER.fetch_add(1, Ordering::Relaxed);
     let mut backup = path.as_os_str().to_os_string();
-    backup.push(format!(".corrupt-{timestamp}"));
-    let _ = std::fs::rename(path, PathBuf::from(backup));
+    backup.push(format!(
+        ".corrupt-{timestamp}-{}-{unique}",
+        std::process::id()
+    ));
+    let backup = PathBuf::from(backup);
+    if std::fs::rename(path, &backup).is_ok() {
+        return;
+    }
+    match std::fs::copy(path, &backup) {
+        Ok(_) => {
+            if let Err(error) = std::fs::remove_file(path) {
+                eprintln!(
+                    "automations store: copied corrupt file to {} but could not remove the original: {error}",
+                    backup.display()
+                );
+            }
+        }
+        Err(error) => {
+            eprintln!(
+                "automations store: failed to quarantine corrupt file {}: {error}",
+                path.display()
+            );
+        }
+    }
 }
+
+static CORRUPT_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 #[cfg(test)]
 mod tests {
@@ -1048,7 +1158,9 @@ mod tests {
         assert_eq!(overflow["runNumber"], 104);
 
         let runs = collect_runs(&store, Some(automation_id));
-        assert_eq!(runs.len(), 102);
+        // The just-inserted run is never its own pruning candidate, so a fresh
+        // insert can momentarily leave the automation one final run over the cap.
+        assert_eq!(runs.len(), 103);
         let mut numbers: Vec<i64> = runs
             .iter()
             .map(|run| run["runNumber"].as_i64().unwrap())
@@ -1069,6 +1181,41 @@ mod tests {
             }))
             .unwrap();
         assert_eq!(next["runNumber"], 105);
+    }
+
+    #[test]
+    fn create_run_never_prunes_the_run_being_returned() {
+        let dir = TestDir::new("store-protect-new-run");
+        let store = load_store(&dir);
+        let automation = create_automation(&store);
+        let automation_id = automation["id"].as_str().unwrap();
+        for index in 0..100 {
+            store
+                .create_run(json!({
+                    "id": format!("final-{index:03}"),
+                    "automationId": automation_id,
+                    "scheduledFor": 1_000 + index,
+                    "status": "completed",
+                    "createdAt": 1_000 + index
+                }))
+                .unwrap();
+        }
+
+        // Backdated past every candidate: it must survive its own insert.
+        let (backdated, created) = store
+            .create_run(json!({
+                "id": "backdated",
+                "automationId": automation_id,
+                "scheduledFor": 1,
+                "status": "completed",
+                "createdAt": 1
+            }))
+            .unwrap();
+        assert!(created);
+        assert_eq!(backdated["id"], "backdated");
+        let runs = collect_runs(&store, Some(automation_id));
+        assert_eq!(runs.len(), 101);
+        assert!(runs.iter().any(|run| run["id"] == "backdated"));
     }
 
     #[test]
@@ -1179,6 +1326,76 @@ mod tests {
     }
 
     #[test]
+    fn update_run_never_overwrites_identity_or_ordering_fields() {
+        let dir = TestDir::new("store-update-run-protected");
+        let store = load_store(&dir);
+        let automation = create_automation(&store);
+        let automation_id = automation["id"].as_str().unwrap();
+        let (run, _) = store
+            .create_run(json!({
+                "id": "run-1",
+                "automationId": automation_id,
+                "scheduledFor": 100,
+                "status": "pending",
+                "createdAt": 50
+            }))
+            .unwrap();
+        assert_eq!(run["runNumber"], 1);
+
+        let updated = store
+            .update_run(
+                "run-1",
+                json!({
+                    "id": "hacked",
+                    "automationId": "hacked",
+                    "createdAt": 999,
+                    "runNumber": 999,
+                    "scheduledFor": 999,
+                    "status": "dispatched"
+                }),
+            )
+            .unwrap()
+            .unwrap();
+        assert_eq!(updated["id"], "run-1");
+        assert_eq!(updated["automationId"], automation_id);
+        assert_eq!(updated["createdAt"], 50i64);
+        assert_eq!(updated["runNumber"], 1);
+        assert_eq!(updated["scheduledFor"], 100i64);
+        // Mutable fields still merge.
+        assert_eq!(updated["status"], "dispatched");
+
+        // Null attempts to clear protected fields are ignored as well.
+        let updated = store
+            .update_run(
+                "run-1",
+                json!({
+                    "id": null,
+                    "automationId": null,
+                    "createdAt": null,
+                    "runNumber": null,
+                    "scheduledFor": null
+                }),
+            )
+            .unwrap()
+            .unwrap();
+        assert_eq!(updated["id"], "run-1");
+        assert_eq!(updated["automationId"], automation_id);
+        assert_eq!(updated["createdAt"], 50i64);
+        assert_eq!(updated["runNumber"], 1);
+        assert_eq!(updated["scheduledFor"], 100i64);
+        // Dedupe on the original occurrence still returns this run.
+        let (duplicate, created) = store
+            .create_run(json!({
+                "automationId": automation_id,
+                "scheduledFor": 100,
+                "status": "pending"
+            }))
+            .unwrap();
+        assert!(!created);
+        assert_eq!(duplicate["id"], "run-1");
+    }
+
+    #[test]
     fn runs_page_orders_created_at_desc_then_id_asc() {
         let dir = TestDir::new("store-runs-order");
         let store = load_store(&dir);
@@ -1200,6 +1417,106 @@ mod tests {
         let page = store.runs_page(Some(automation_id), 100, None);
         assert_eq!(run_ids(&page.runs), vec!["c", "a", "b"]);
         assert!(page.next_cursor.is_none());
+    }
+
+    #[test]
+    fn id_less_legacy_runs_are_backfilled_and_pagination_terminates() {
+        let dir = TestDir::new("store-legacy-id");
+        let path = dir.file("automations.json");
+        std::fs::write(
+            &path,
+            serde_json::to_string(&json!({
+                "schemaVersion": 1,
+                "automations": [{"id": "a1"}],
+                "runs": [
+                    {"id": "a", "automationId": "a1", "scheduledFor": 4, "status": "completed", "createdAt": 4},
+                    {"automationId": "a1", "scheduledFor": 3, "status": "completed", "createdAt": 3},
+                    {"id": "c", "automationId": "a1", "scheduledFor": 2, "status": "completed", "createdAt": 2},
+                    {"id": "d", "automationId": "a1", "scheduledFor": 1, "status": "completed", "createdAt": 1}
+                ]
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+
+        let store = AutomationStore::load(path);
+        let page1 = store.runs_page(Some("a1"), 1, None);
+        assert_eq!(run_ids(&page1.runs), vec!["a"]);
+        let page2 = store.runs_page(Some("a1"), 1, page1.next_cursor.as_deref());
+        let backfilled_id = page2.runs[0]["id"].as_str().unwrap().to_string();
+        assert!(!backfilled_id.is_empty());
+        let page3 = store.runs_page(Some("a1"), 1, page2.next_cursor.as_deref());
+        assert_eq!(run_ids(&page3.runs), vec!["c"]);
+        let page4 = store.runs_page(Some("a1"), 1, page3.next_cursor.as_deref());
+        assert_eq!(run_ids(&page4.runs), vec!["d"]);
+        assert!(page4.next_cursor.is_none());
+
+        let mut seen = vec![
+            "a".to_string(),
+            backfilled_id.clone(),
+            "c".to_string(),
+            "d".to_string(),
+        ];
+        seen.sort();
+        seen.dedup();
+        assert_eq!(seen.len(), 4, "each run must appear exactly once");
+
+        // The backfilled id was persisted with the rest of the normalization.
+        let reloaded = load_store(&dir);
+        let ids = run_ids(&collect_runs(&reloaded, Some("a1")));
+        assert_eq!(ids.len(), 4);
+        assert!(ids.contains(&backfilled_id));
+    }
+
+    #[test]
+    fn malformed_or_id_less_cursors_do_not_restart_pagination() {
+        let dir = TestDir::new("store-cursor-malformed");
+        let store = load_store(&dir);
+        let automation = create_automation(&store);
+        let automation_id = automation["id"].as_str().unwrap();
+        for (id, created_at) in [("a", 1), ("b", 2), ("c", 3)] {
+            store
+                .create_run(json!({
+                    "id": id,
+                    "automationId": automation_id,
+                    "scheduledFor": created_at,
+                    "status": "pending",
+                    "createdAt": created_at
+                }))
+                .unwrap();
+        }
+
+        // A cursor that cannot be decoded ends the page instead of restarting it.
+        let page = store.runs_page(None, 10, Some("not-a-cursor"));
+        assert!(page.runs.is_empty());
+        assert!(page.next_cursor.is_none());
+
+        // An empty-id keyset cursor resumes at the first run the total order
+        // places after the boundary instead of dead-looping to the start.
+        let page = store.runs_page(None, 10, Some("2:"));
+        assert_eq!(run_ids(&page.runs), vec!["b", "a"]);
+    }
+
+    #[test]
+    fn create_run_replaces_an_empty_id() {
+        let dir = TestDir::new("store-empty-id");
+        let store = load_store(&dir);
+        let automation = create_automation(&store);
+        let automation_id = automation["id"].as_str().unwrap();
+
+        let (run, created) = store
+            .create_run(json!({
+                "id": "",
+                "automationId": automation_id,
+                "scheduledFor": 1,
+                "status": "pending"
+            }))
+            .unwrap();
+        assert!(created);
+        let assigned = run["id"].as_str().unwrap();
+        assert!(!assigned.is_empty());
+        let page = store.runs_page(Some(automation_id), 100, None);
+        assert_eq!(run_ids(&page.runs), vec![assigned.to_string()]);
     }
 
     #[test]
@@ -1395,6 +1712,31 @@ mod tests {
     }
 
     #[test]
+    fn malformed_sections_are_quarantined_without_data_loss() {
+        let dir = TestDir::new("store-corrupt-section");
+        let path = dir.file("automations.json");
+        let payload = r#"{"schemaVersion":1,"automations":{"oops":true},"runs":[]}"#;
+        std::fs::write(&path, payload).unwrap();
+
+        let store = AutomationStore::load(path.clone());
+        assert!(store.list().is_empty());
+        assert!(store.runs_page(None, 100, None).runs.is_empty());
+        let backups = dir.files_with_prefix("automations.json.corrupt-");
+        assert_eq!(backups.len(), 1);
+        assert_eq!(std::fs::read_to_string(&backups[0]).unwrap(), payload);
+        assert!(!path.exists());
+
+        // A non-array `runs` section quarantines the same way.
+        let payload = r#"{"schemaVersion":1,"automations":[],"runs":"nope"}"#;
+        std::fs::write(&path, payload).unwrap();
+        let store = AutomationStore::load(path.clone());
+        assert!(store.runs_page(None, 100, None).runs.is_empty());
+        let backups = dir.files_with_prefix("automations.json.corrupt-");
+        assert_eq!(backups.len(), 2);
+        assert_eq!(std::fs::read_to_string(&backups[1]).unwrap(), payload);
+    }
+
+    #[test]
     fn snapshot_workspace_name_updates_every_matching_run() {
         let dir = TestDir::new("store-snapshot");
         let store = load_store(&dir);
@@ -1513,6 +1855,19 @@ mod tests {
             reloaded.get(automation_id).unwrap()["lastRunAt"],
             assigned_at
         );
+
+        // A backdated createdAt cannot move the markers backwards.
+        store
+            .create_run(json!({
+                "automationId": automation_id,
+                "scheduledFor": 7_000,
+                "status": "pending",
+                "createdAt": 10
+            }))
+            .unwrap();
+        let touched = store.get(automation_id).unwrap();
+        assert_eq!(touched["lastRunAt"], assigned_at);
+        assert_eq!(touched["updatedAt"], assigned_at);
     }
 
     #[test]
