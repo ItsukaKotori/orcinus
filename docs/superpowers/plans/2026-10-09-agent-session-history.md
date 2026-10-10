@@ -95,7 +95,7 @@ git commit -m "feat(ai-vault): crate 骨架、roots 与 Claude 会话解析"
 - Produces:
   - `opencode::scan_opencode_sessions(data_dir: &Path, limit: usize) -> (Vec<Value>, Vec<ScanIssue>)`
   - `opencode::opencode_db_paths(data_dir: &Path, env_db: Option<&str>) -> Vec<PathBuf>`（`opencode.db` 优先 + `opencode-*.db`；`env_db == ":memory:"` → 空集合）
-  - 行 `agent:"opencode"`；`filePath`：旧版 = session JSON 路径，SQLite = **DB 路径**；同 id 去重 SQLite 压旧版（scanner 层也去重，此处保证跨 DB 取最新）。
+  - 行 `agent:"opencode"`；`filePath`：旧版 = session JSON 路径，SQLite = **DB 路径**；跨形态去重在 Task 3 scanner 按 `agent+sessionId` 完成（SQLite 行压旧版），本任务只需保证各自解析正确。
 
 - [ ] **Step 1: 写失败测试**
 
@@ -138,7 +138,7 @@ git commit -m "feat(ai-vault): OpenCode 解析（旧版文件 + SQLite 只读）
   - `pub fn scan_sessions(config: &VaultConfig, request: &ScanRequest, cancel: &CancelFlag) -> Value`（返回 `AiVaultListResult` JSON：`{sessions, issues, scannedAt, cancelled?}`）
   - `pub struct ListCache { /* 60s TTL */ } impl ListCache { pub fn get_or_scan(...); pub fn invalidate(&self); }`
   - 取消注册表：`pub struct CancelRegistry`（`register(token) -> CancelFlag`、`cancel(token)`、`finish(token)`；沿 `ade-bridge` `GitCancelRegistry` 模式）。
-  - 合并规则：两源 rows 拼接 → 按 `id` 去重（`opencode` SQLite 行优先于旧版，同一 agent 内按规则；跨 agent 不冲突）→ `modifiedAt` 降序 → `limit` 截断；`scopePaths`（≤64）：Claude 行 `cwd` 命中 scope 的候选不受 limit 截断（scope 保证）；`limit*2` 候选上限；扫描中每文件前检查 `cancel` → 命中则返回 `{..., cancelled:true}`（不抛）。
+  - 合并规则：两源 rows 拼接 → 去重按 **`agent + sessionId`** 分组（OpenCode 组内存在 `filePath` 以 `.db` 结尾的 SQLite 行时取之，压过同 id 旧版文件；其余保留）→ `modifiedAt` 降序 → `limit` 截断；`scopePaths`（≤64）：Claude 行 `cwd` 命中 scope 的候选不受 limit 截断（scope 保证）；`limit*2` 候选上限；扫描中每文件前检查 `cancel` → 命中则返回 `{..., cancelled:true}`（不抛）。
 
 - [ ] **Step 1: 写失败测试**
 
