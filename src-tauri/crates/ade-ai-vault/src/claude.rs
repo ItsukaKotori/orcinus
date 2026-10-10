@@ -153,6 +153,16 @@ pub(crate) fn has_jsonl_extension(path: &Path) -> bool {
         .is_some_and(|extension| extension.to_string_lossy().eq_ignore_ascii_case("jsonl"))
 }
 
+/// The title this transcript names, without the scanner's generated fallback:
+/// custom-title > latest ai-title > first non-injected user text > agent-name.
+/// `None` when the file cannot be read or names no title at all.
+pub fn read_claude_title(path: &Path) -> Option<String> {
+    let bytes = fs::read(path).ok()?;
+    let content = String::from_utf8_lossy(&bytes);
+    let fold = fold_session(&content, session_id_from_file_name(path));
+    extracted_title(&fold)
+}
+
 fn read_session_row(path: &Path) -> Result<Value, String> {
     let metadata = fs::metadata(path).map_err(|error| error.to_string())?;
     let modified_at = metadata
@@ -380,18 +390,23 @@ fn push_preview(
     });
 }
 
+/// The transcript's own title chain, shared by the scanner row builder (which
+/// appends a generated fallback) and [`read_claude_title`] (which does not).
+fn extracted_title(fold: &SessionFold) -> Option<String> {
+    fold.custom_title
+        .clone()
+        .or_else(|| fold.ai_title.clone())
+        .or_else(|| fold.first_user_title.clone())
+        .or_else(|| fold.meta_title.clone())
+}
+
 fn build_row(path: &Path, modified_at: &str, fold: SessionFold) -> Value {
     let file_path = path.to_string_lossy().into_owned();
-    let session_id = fold.session_id;
+    let session_id = fold.session_id.clone();
     let id = format!("local:claude:{session_id}:{file_path}");
     let resume_command = resume_command(fold.cwd.as_deref(), &session_id);
     let subagent_transcript_count = count_subagent_transcripts(path);
-    let title = fold
-        .custom_title
-        .or(fold.ai_title)
-        .or(fold.first_user_title)
-        .or(fold.meta_title)
-        .unwrap_or_else(|| generated_session_title(&session_id));
+    let title = extracted_title(&fold).unwrap_or_else(|| generated_session_title(&session_id));
     let preview_messages: Vec<Value> = fold
         .preview_messages
         .iter()
@@ -2090,5 +2105,70 @@ mod tests {
             system_time_to_iso(SystemTime::UNIX_EPOCH + Duration::from_millis(1_777_629_600_123)),
             "2026-05-01T10:00:00.123Z"
         );
+    }
+
+    #[test]
+    fn read_claude_title_returns_the_extracted_title() {
+        let root = tempfile::tempdir().unwrap();
+        let file = write_jsonl(
+            root.path(),
+            "project/titled.jsonl",
+            &[
+                json!({
+                    "type": "user",
+                    "sessionId": "titled",
+                    "message": { "role": "user", "content": "First prompt" }
+                }),
+                json!({ "type": "ai-title", "aiTitle": "Generated name" }),
+                json!({ "type": "custom-title", "customTitle": "User set name" }),
+            ],
+        );
+
+        assert_eq!(read_claude_title(&file), Some("User set name".to_string()));
+    }
+
+    #[test]
+    fn read_claude_title_falls_back_to_the_first_user_prompt() {
+        let root = tempfile::tempdir().unwrap();
+        let file = write_jsonl(
+            root.path(),
+            "project/prompt-title.jsonl",
+            &[json!({
+                "type": "user",
+                "sessionId": "prompt-title",
+                "message": {
+                    "role": "user",
+                    "content": "Fix <system-reminder>noise</system-reminder> resume picker"
+                }
+            })],
+        );
+
+        assert_eq!(
+            read_claude_title(&file),
+            Some("Fix resume picker".to_string())
+        );
+    }
+
+    #[test]
+    fn read_claude_title_is_none_without_title_records() {
+        let root = tempfile::tempdir().unwrap();
+        let file = write_jsonl(
+            root.path(),
+            "project/bare.jsonl",
+            &[json!({
+                "type": "assistant",
+                "sessionId": "bare",
+                "message": { "model": "claude-sonnet-4-5", "content": "no title here" }
+            })],
+        );
+
+        assert_eq!(read_claude_title(&file), None);
+    }
+
+    #[test]
+    fn read_claude_title_is_none_for_a_missing_file() {
+        let root = tempfile::tempdir().unwrap();
+
+        assert_eq!(read_claude_title(&root.path().join("nope.jsonl")), None);
     }
 }
