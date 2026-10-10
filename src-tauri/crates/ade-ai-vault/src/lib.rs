@@ -2,11 +2,13 @@
 //! the scanner that unifies them for the Agent Session History panel.
 
 pub mod claude;
+pub mod opencode;
 pub mod roots;
 
 use serde::Serialize;
 
 pub use claude::scan_claude_sessions;
+pub use opencode::{opencode_db_paths, scan_opencode_sessions};
 pub use roots::{claude_projects_root, opencode_data_dir};
 
 /// A non-fatal scan problem. Rows keep flowing; the panel renders issues as

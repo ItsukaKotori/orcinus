@@ -7,7 +7,7 @@ use serde_json::{json, Value};
 use crate::ScanIssue;
 
 const PREVIEW_MESSAGE_LIMIT: usize = 5;
-const PREVIEW_TEXT_LIMIT: usize = 220;
+pub(crate) const PREVIEW_TEXT_LIMIT: usize = 220;
 const TITLE_TEXT_LIMIT: usize = 96;
 const ELLIPSIS: &str = "...";
 const HIDDEN_BLOCK_CLOSE_SCAN_LIMIT: usize = 256 * 1024;
@@ -86,7 +86,7 @@ pub fn scan_claude_sessions(projects_root: &Path, limit: usize) -> (Vec<Value>, 
     (rows, issues)
 }
 
-fn effective_recency(row: &Value) -> &str {
+pub(crate) fn effective_recency(row: &Value) -> &str {
     row["updatedAt"]
         .as_str()
         .filter(|value| !value.is_empty())
@@ -431,7 +431,7 @@ fn resume_command(cwd: Option<&str>, session_id: &str) -> String {
     }
 }
 
-fn quote_posix(value: &str) -> String {
+pub(crate) fn quote_posix(value: &str) -> String {
     format!("'{}'", value.replace('\'', "'\\''"))
 }
 
@@ -488,14 +488,14 @@ fn uuid_suffix(value: &str) -> Option<String> {
     valid.then(|| candidate.to_string())
 }
 
-fn extract_string(value: Option<&Value>) -> Option<&str> {
+pub(crate) fn extract_string(value: Option<&Value>) -> Option<&str> {
     value
         .and_then(Value::as_str)
         .map(str::trim)
         .filter(|text| !text.is_empty())
 }
 
-fn timestamp_iso(value: Option<&Value>) -> Option<String> {
+pub(crate) fn timestamp_iso(value: Option<&Value>) -> Option<String> {
     match value {
         Some(Value::String(raw)) => {
             let trimmed = raw.trim();
@@ -522,7 +522,7 @@ fn extract_preview_content_text(content: Option<&Value>) -> Option<String> {
     normalize_content_text(content, PREVIEW_TEXT_LIMIT)
 }
 
-fn normalize_title_text(value: &str) -> Option<String> {
+pub(crate) fn normalize_title_text(value: &str) -> Option<String> {
     let mut builder = TextBuilder::new(TITLE_TEXT_LIMIT);
     append_normalized_string(
         &mut builder,
@@ -532,7 +532,7 @@ fn normalize_title_text(value: &str) -> Option<String> {
     finalize_normalized_text(builder)
 }
 
-fn normalize_content_text(value: Option<&Value>, limit: usize) -> Option<String> {
+pub(crate) fn normalize_content_text(value: Option<&Value>, limit: usize) -> Option<String> {
     match value {
         Some(Value::String(text)) => {
             let mut builder = TextBuilder::new(limit);
@@ -604,7 +604,7 @@ fn claude_usage_total(usage: Option<&Value>) -> u64 {
         + number_value(usage.get("cache_creation_input_tokens"))
 }
 
-fn number_value(value: Option<&Value>) -> u64 {
+pub(crate) fn number_value(value: Option<&Value>) -> u64 {
     let Some(value) = value else {
         return 0;
     };
@@ -895,7 +895,7 @@ fn slice_at_code_unit_limit(value: &str, limit: usize) -> String {
     String::from_utf16_lossy(&units[..end])
 }
 
-fn parse_timestamp_ms(value: &str) -> Option<i64> {
+pub(crate) fn parse_timestamp_ms(value: &str) -> Option<i64> {
     let bytes = value.as_bytes();
     if bytes.len() < 10 {
         return None;
@@ -1002,7 +1002,7 @@ fn is_leap_year(year: i64) -> bool {
     year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
 }
 
-fn system_time_to_iso(time: SystemTime) -> String {
+pub(crate) fn system_time_to_iso(time: SystemTime) -> String {
     let duration = time.duration_since(UNIX_EPOCH).unwrap_or_default();
     let seconds = duration.as_secs() as i64;
     let millis = duration.subsec_millis();
