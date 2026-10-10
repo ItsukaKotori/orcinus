@@ -380,6 +380,11 @@ fn mark_dispatch_result_whitelists_fields_and_guards_terminal_runs() {
     assert_eq!(dispatched["status"], "dispatched");
     assert_eq!(dispatched["terminalSessionId"], "t1");
     assert_eq!(
+        dispatched["startedAt"], TEST_NOW,
+        "the dispatched transition is stamped host-side"
+    );
+    assert_eq!(dispatched["dispatchedAt"], TEST_NOW);
+    assert_eq!(
         dispatched["runNumber"], 1,
         "store-owned fields are protected"
     );
@@ -404,6 +409,27 @@ fn mark_dispatch_result_whitelists_fields_and_guards_terminal_runs() {
     .unwrap()
     .expect("run exists");
     assert_eq!(completed["status"], "completed");
+    assert_eq!(completed["startedAt"], TEST_NOW, "stamps survive completion");
+
+    // A result that never passed through `dispatched` leaves both stamps absent.
+    let (direct, _) = store
+        .create_run(json!({
+            "automationId": id.as_str(),
+            "scheduledFor": 2,
+            "status": "dispatching",
+            "trigger": "scheduled",
+            "createdAt": 2,
+        }))
+        .unwrap();
+    let direct_completed = mark_dispatch_result_impl(
+        &service,
+        direct["id"].as_str().unwrap(),
+        &json!({"status": "completed"}),
+    )
+    .unwrap()
+    .expect("run exists");
+    assert!(direct_completed.get("startedAt").is_none());
+    assert!(direct_completed.get("dispatchedAt").is_none());
 
     // A late write must never revive a terminal run.
     let guarded = mark_dispatch_result_impl(

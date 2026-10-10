@@ -176,8 +176,13 @@ impl AutomationService {
     }
 
     /// Merges `fields` into a run through the store (final statuses are
-    /// guarded) and broadcasts the change.
+    /// guarded) and broadcasts the change. A transition to `dispatched` also
+    /// stamps the host-side timestamps the renderer never sends
+    /// (`updateAutomationRun`): `dispatchedAt` is refreshed to `now`, and
+    /// `startedAt` is backfilled to `now` only when the run has none. Other
+    /// statuses never fabricate a timestamp.
     pub fn mark_dispatch_result(&self, run_id: &str, fields: Value) -> Option<Value> {
+        let fields = self.with_dispatch_timestamps(run_id, fields);
         match self.store.update_run(run_id, fields) {
             Ok(Some(run)) => {
                 self.sink.automations_changed("run");
@@ -189,6 +194,27 @@ impl AutomationService {
                 None
             }
         }
+    }
+
+    fn with_dispatch_timestamps(&self, run_id: &str, fields: Value) -> Value {
+        let mut fields = match fields {
+            Value::Object(fields) => fields,
+            other => return other,
+        };
+        if fields.get("status").and_then(Value::as_str) != Some("dispatched") {
+            return Value::Object(fields);
+        }
+        let now = (self.now)();
+        let existing_started_at = self
+            .store
+            .get_run(run_id)
+            .and_then(|run| run.get("startedAt").and_then(Value::as_i64));
+        fields.insert(
+            "startedAt".to_string(),
+            Value::from(existing_started_at.unwrap_or(now)),
+        );
+        fields.insert("dispatchedAt".to_string(), Value::from(now));
+        Value::Object(fields)
     }
 
     /// Manual `runNow`: creates a run (`trigger: "manual"`,
@@ -1337,5 +1363,103 @@ mod tests {
         assert_eq!(runs[0]["workspaceDisplayName"], "Nice Name");
         assert!(changed_reasons(&sink).contains(&"run".to_string()));
         assert_eq!(service.snapshot_workspace_name("ws-2", "Other"), 0);
+    }
+
+    #[test]
+    fn service_mark_dispatch_result_stamps_the_dispatched_transition() {
+        static NOW_MS: AtomicI64 = AtomicI64::new(0);
+        fn now() -> i64 {
+            NOW_MS.load(Ordering::SeqCst)
+        }
+
+        let now_ms = local_ms(2026, 10, 9, 12, 34);
+        NOW_MS.store(now_ms, Ordering::SeqCst);
+        let dir = TestDir::new("stamp-dispatched");
+        let store = load_store(&dir);
+        let automation = store
+            .create(
+                automation_input(
+                    "FREQ=HOURLY;BYMINUTE=0",
+                    local_ms(2026, 10, 9, 0, 0),
+                    now_ms,
+                ),
+                now_ms,
+            )
+            .unwrap()
+            .0;
+        let automation_id = automation["id"].as_str().unwrap().to_string();
+        let (run, _) = store
+            .create_run(json!({
+                "automationId": automation_id,
+                "scheduledFor": 1,
+                "status": "dispatching",
+                "trigger": "scheduled",
+                "createdAt": now_ms,
+            }))
+            .unwrap();
+        let run_id = run["id"].as_str().unwrap().to_string();
+        let sink = Arc::new(FakeSink::default());
+        let service = AutomationService::new(store.clone(), sink.clone(), now);
+
+        let dispatched = service
+            .mark_dispatch_result(&run_id, json!({"status": "dispatched"}))
+            .expect("run exists");
+        assert_eq!(dispatched["status"], "dispatched");
+        assert_eq!(dispatched["startedAt"], now_ms);
+        assert_eq!(dispatched["dispatchedAt"], now_ms);
+
+        // A second dispatched write refreshes dispatchedAt but never startedAt.
+        let later = now_ms + 5_000;
+        NOW_MS.store(later, Ordering::SeqCst);
+        let redispatch = service
+            .mark_dispatch_result(&run_id, json!({"status": "dispatched"}))
+            .expect("run exists");
+        assert_eq!(redispatch["startedAt"], now_ms);
+        assert_eq!(redispatch["dispatchedAt"], later);
+    }
+
+    #[test]
+    fn service_mark_dispatch_result_never_fabricates_timestamps_for_other_statuses() {
+        static NOW_MS: AtomicI64 = AtomicI64::new(0);
+        fn now() -> i64 {
+            NOW_MS.load(Ordering::SeqCst)
+        }
+
+        let now_ms = local_ms(2026, 10, 9, 12, 34);
+        NOW_MS.store(now_ms, Ordering::SeqCst);
+        let dir = TestDir::new("stamp-completed");
+        let store = load_store(&dir);
+        let automation = store
+            .create(
+                automation_input(
+                    "FREQ=HOURLY;BYMINUTE=0",
+                    local_ms(2026, 10, 9, 0, 0),
+                    now_ms,
+                ),
+                now_ms,
+            )
+            .unwrap()
+            .0;
+        let automation_id = automation["id"].as_str().unwrap().to_string();
+        let (run, _) = store
+            .create_run(json!({
+                "automationId": automation_id,
+                "scheduledFor": 1,
+                "status": "dispatching",
+                "trigger": "scheduled",
+                "createdAt": now_ms,
+            }))
+            .unwrap();
+        let run_id = run["id"].as_str().unwrap().to_string();
+        let sink = Arc::new(FakeSink::default());
+        let service = AutomationService::new(store.clone(), sink.clone(), now);
+
+        // A run that never passed through `dispatched` keeps both stamps absent.
+        let completed = service
+            .mark_dispatch_result(&run_id, json!({"status": "completed"}))
+            .expect("run exists");
+        assert_eq!(completed["status"], "completed");
+        assert!(completed.get("startedAt").is_none());
+        assert!(completed.get("dispatchedAt").is_none());
     }
 }

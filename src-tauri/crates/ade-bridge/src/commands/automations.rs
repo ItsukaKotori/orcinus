@@ -167,10 +167,11 @@ pub fn create_impl(
     now_ms: i64,
 ) -> Result<Value, BridgeError> {
     validate_definition(&input).map_err(BridgeError::message)?;
-    let mut record = input
-        .as_object()
-        .cloned()
-        .expect("validated definitions are objects");
+    let Some(mut record) = input.as_object().cloned() else {
+        return Err(BridgeError::message(
+            "Automation input must be a JSON object.",
+        ));
+    };
     let rrule = record
         .get("rrule")
         .and_then(Value::as_str)

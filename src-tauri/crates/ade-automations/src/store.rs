@@ -155,6 +155,15 @@ impl AutomationStore {
             .cloned()
     }
 
+    /// One run by id, regardless of its automation.
+    pub fn get_run(&self, run_id: &str) -> Option<Value> {
+        self.lock()
+            .runs
+            .iter()
+            .find(|run| string_field(run, "id") == Some(run_id))
+            .cloned()
+    }
+
     /// Creates an automation from an opaque input object. Identity and
     /// timestamps are store-owned; defaults are applied only when the input
     /// omits them. When `creationKey` matches an existing automation the
