@@ -9,6 +9,7 @@ import { RuntimeRpcCallError, unwrapRuntimeRpcResult } from './runtime-rpc-resul
 import { captureRuntimeEnvironmentRequestRevision } from './runtime-environment-revision'
 import type { RuntimeClientTarget } from './runtime-client-target'
 import { callLocalTerminalRpc, isLocalTerminalRpcMethod } from './local-terminal-rpc'
+import { callLocalAutomationRpc, isLocalAutomationRpcMethod } from './local-automation-rpc'
 
 export {
   getActiveRuntimeTarget,
@@ -82,6 +83,9 @@ export async function callRuntimeRpc<TResult>(
     : params
   if (target.kind === 'local' && isLocalTerminalRpcMethod(method)) {
     return await callLocalTerminalRpc<TResult>(method, nextParams)
+  }
+  if (target.kind === 'local' && isLocalAutomationRpcMethod(method)) {
+    return await callLocalAutomationRpc<TResult>(method, nextParams)
   }
   const response =
     target.kind === 'local'
