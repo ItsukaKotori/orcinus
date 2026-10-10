@@ -4,6 +4,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use serde_json::{json, Value};
 
+use crate::scanner::CancelFlag;
 use crate::ScanIssue;
 
 const PREVIEW_MESSAGE_LIMIT: usize = 5;
@@ -60,12 +61,27 @@ const HARNESS_INJECTED_TURN_PREFIXES: [&str; 7] = [
 ];
 
 pub fn scan_claude_sessions(projects_root: &Path, limit: usize) -> (Vec<Value>, Vec<ScanIssue>) {
+    let (rows, issues, _) = scan_claude_sessions_cancellable(projects_root, limit, None);
+    (rows, issues)
+}
+
+/// Cancellable scan body. The flag is checked before each transcript so a
+/// superseded scan stops walking the project tree instead of parsing the rest
+/// of it; a cancelled scan returns whatever it folded plus `true`.
+pub(crate) fn scan_claude_sessions_cancellable(
+    projects_root: &Path,
+    limit: usize,
+    cancel: Option<&CancelFlag>,
+) -> (Vec<Value>, Vec<ScanIssue>, bool) {
     let mut files = Vec::new();
     let mut issues = Vec::new();
     collect_session_files(projects_root, &mut files, &mut issues);
 
     let mut rows = Vec::new();
     for path in files {
+        if cancel.is_some_and(CancelFlag::is_cancelled) {
+            return (rows, issues, true);
+        }
         match read_session_row(&path) {
             Ok(row) => rows.push(row),
             Err(message) => issues.push(ScanIssue {
@@ -83,7 +99,7 @@ pub fn scan_claude_sessions(projects_root: &Path, limit: usize) -> (Vec<Value>, 
         right.cmp(left)
     });
     rows.truncate(limit);
-    (rows, issues)
+    (rows, issues, false)
 }
 
 pub(crate) fn effective_recency(row: &Value) -> &str {

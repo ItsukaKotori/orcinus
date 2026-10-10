@@ -12,6 +12,7 @@ use crate::claude::{
     effective_recency, extract_string, normalize_content_text, normalize_title_text, number_value,
     parse_timestamp_ms, quote_posix, system_time_to_iso, timestamp_iso, PREVIEW_TEXT_LIMIT,
 };
+use crate::scanner::CancelFlag;
 use crate::ScanIssue;
 
 const PREVIEW_MESSAGE_LIMIT: usize = 5;
@@ -94,19 +95,46 @@ pub(crate) fn scan_opencode_sessions_with_env(
     limit: usize,
     env_db: Option<&str>,
 ) -> (Vec<Value>, Vec<ScanIssue>) {
+    let (rows, issues, _) = scan_opencode_sessions_cancellable(data_dir, limit, env_db, None);
+    (rows, issues)
+}
+
+/// Cancellable scan body. The flag is checked before each legacy transcript and
+/// before each database so a superseded scan stops walking the data dir.
+pub(crate) fn scan_opencode_sessions_cancellable(
+    data_dir: &Path,
+    limit: usize,
+    env_db: Option<&str>,
+    cancel: Option<&CancelFlag>,
+) -> (Vec<Value>, Vec<ScanIssue>, bool) {
     let mut issues = Vec::new();
-    let mut rows = scan_legacy_sessions(data_dir, &mut issues);
+    let (mut rows, legacy_cancelled) = scan_legacy_sessions(data_dir, &mut issues, cancel);
+    if legacy_cancelled {
+        return (rows, issues, true);
+    }
     sort_rows_by_recency(&mut rows);
     rows.truncate(limit);
-    rows.extend(scan_sqlite_sessions(data_dir, env_db, limit, &mut issues));
-    (rows, issues)
+    if cancel.is_some_and(CancelFlag::is_cancelled) {
+        return (rows, issues, true);
+    }
+    let (sqlite_rows, sqlite_cancelled) =
+        scan_sqlite_sessions(data_dir, env_db, limit, &mut issues, cancel);
+    if sqlite_cancelled {
+        return (rows, issues, true);
+    }
+    rows.extend(sqlite_rows);
+    (rows, issues, false)
 }
 
 fn sort_rows_by_recency(rows: &mut [Value]) {
     rows.sort_by(|left, right| effective_recency(right).cmp(effective_recency(left)));
 }
 
-fn scan_legacy_sessions(data_dir: &Path, issues: &mut Vec<ScanIssue>) -> Vec<Value> {
+fn scan_legacy_sessions(
+    data_dir: &Path,
+    issues: &mut Vec<ScanIssue>,
+    cancel: Option<&CancelFlag>,
+) -> (Vec<Value>, bool) {
     let storage_root = data_dir.join("storage");
     let session_root = storage_root.join("session");
     let mut files = Vec::new();
@@ -114,6 +142,9 @@ fn scan_legacy_sessions(data_dir: &Path, issues: &mut Vec<ScanIssue>) -> Vec<Val
     files.sort();
     let mut rows = Vec::new();
     for path in files {
+        if cancel.is_some_and(CancelFlag::is_cancelled) {
+            return (rows, true);
+        }
         match read_legacy_session_row(&path, &storage_root) {
             Ok(Some(row)) => rows.push(row),
             Ok(None) => {}
@@ -125,7 +156,7 @@ fn scan_legacy_sessions(data_dir: &Path, issues: &mut Vec<ScanIssue>) -> Vec<Val
             }),
         }
     }
-    rows
+    (rows, false)
 }
 
 fn collect_legacy_session_files(dir: &Path, files: &mut Vec<PathBuf>, issues: &mut Vec<ScanIssue>) {
@@ -448,10 +479,14 @@ fn scan_sqlite_sessions(
     env_db: Option<&str>,
     limit: usize,
     issues: &mut Vec<ScanIssue>,
-) -> Vec<Value> {
+    cancel: Option<&CancelFlag>,
+) -> (Vec<Value>, bool) {
     let mut entries: Vec<(String, i64, Value)> = Vec::new();
     let mut index: HashMap<String, usize> = HashMap::new();
     for db_path in opencode_db_paths(data_dir, env_db) {
+        if cancel.is_some_and(CancelFlag::is_cancelled) {
+            return (Vec::new(), true);
+        }
         match read_database_sessions(&db_path, limit, issues) {
             Ok(sessions) => {
                 for (session_id, recency, row) in sessions {
@@ -471,7 +506,7 @@ fn scan_sqlite_sessions(
         }
     }
     entries.sort_by_key(|entry| std::cmp::Reverse(entry.1));
-    entries.into_iter().map(|(_, _, row)| row).collect()
+    (entries.into_iter().map(|(_, _, row)| row).collect(), false)
 }
 
 fn read_database_sessions(
