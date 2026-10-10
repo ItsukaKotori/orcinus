@@ -2,6 +2,7 @@
 //! precheck, and startup reconciliation live here. The renderer keeps its
 //! existing dispatch and execution paths unchanged.
 
+pub mod precheck;
 pub mod schedule;
 pub mod store;
 
