@@ -114,31 +114,32 @@ export async function callLocalAutomationRpc<TResult>(
     case 'automation.create': {
       const input = omitKeys(readParams(params), ['destination'])
       const result = await invokeCommand<{ automation: Automation }>('automations_create', {
-        input: toDesktopInput(input)
+        args: { input: toDesktopInput(input) }
       })
       return result as TResult
     }
     case 'automation.update': {
       const { id, updates } = omitKeys(readParams(params), ['expectedOwner', 'destination'])
       const result = await invokeCommand<{ automation: Automation | null }>('automations_update', {
-        id,
-        updates: toDesktopInput(readParams(updates))
+        args: {
+          id,
+          updates: toDesktopInput(readParams(updates))
+        }
       })
       return result as TResult
     }
     case 'automation.delete': {
       const { id } = omitKeys(readParams(params), ['expectedOwner'])
-      return (await invokeCommand('automations_delete', { id })) as TResult
+      return (await invokeCommand('automations_delete', { args: { id } })) as TResult
     }
     case 'automation.runNow': {
       const { id } = omitKeys(readParams(params), ['expectedOwner'])
-      return (await invokeCommand('automations_run_now', { id })) as TResult
+      return (await invokeCommand('automations_run_now', { args: { id } })) as TResult
     }
     case 'automation.runs':
-      return (await invokeCommand(
-        'automations_runs',
-        toRunsArgs(readParams(params))
-      )) as TResult
+      return (await invokeCommand('automations_runs', {
+        args: toRunsArgs(readParams(params))
+      })) as TResult
     default:
       throw localAutomationFailure(
         'method_not_found',

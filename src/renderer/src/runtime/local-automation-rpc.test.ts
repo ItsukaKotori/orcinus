@@ -86,17 +86,19 @@ describe('local automation RPC adapter', () => {
       )
 
       expect(invokeCommandMock).toHaveBeenCalledWith('automations_create', {
-        input: {
-          name: 'Nightly',
-          prompt: 'Do it',
-          agentId: 'claude',
-          workspaceMode: 'existing',
-          projectId: 'repo-1',
-          workspaceId: 'ws-1',
-          timezone: 'UTC',
-          rrule: 'FREQ=HOURLY;INTERVAL=1',
-          dtstart: 1000,
-          creationKey: 'key-1'
+        args: {
+          input: {
+            name: 'Nightly',
+            prompt: 'Do it',
+            agentId: 'claude',
+            workspaceMode: 'existing',
+            projectId: 'repo-1',
+            workspaceId: 'ws-1',
+            timezone: 'UTC',
+            rrule: 'FREQ=HOURLY;INTERVAL=1',
+            dtstart: 1000,
+            creationKey: 'key-1'
+          }
         }
       })
       expect(result).toEqual({ automation })
@@ -113,11 +115,13 @@ describe('local automation RPC adapter', () => {
       })
 
       expect(invokeCommandMock).toHaveBeenCalledWith('automations_create', {
-        input: {
-          name: 'Nightly',
-          workspaceMode: 'new_per_run',
-          projectId: 'repo-1',
-          workspaceId: null
+        args: {
+          input: {
+            name: 'Nightly',
+            workspaceMode: 'new_per_run',
+            projectId: 'repo-1',
+            workspaceId: null
+          }
         }
       })
     })
@@ -139,8 +143,10 @@ describe('local automation RPC adapter', () => {
       )
 
       expect(invokeCommandMock).toHaveBeenCalledWith('automations_update', {
-        id: 'auto-1',
-        updates: { enabled: false, projectId: 'repo-2', workspaceId: 'ws-2' }
+        args: {
+          id: 'auto-1',
+          updates: { enabled: false, projectId: 'repo-2', workspaceId: 'ws-2' }
+        }
       })
       expect(result).toEqual({ automation })
     })
@@ -155,8 +161,10 @@ describe('local automation RPC adapter', () => {
       })
 
       expect(invokeCommandMock).toHaveBeenCalledWith('automations_update', {
-        id: 'auto-1',
-        updates: { workspaceId: null }
+        args: {
+          id: 'auto-1',
+          updates: { workspaceId: null }
+        }
       })
     })
   })
@@ -168,7 +176,9 @@ describe('local automation RPC adapter', () => {
       await expect(
         callLocalAutomationRpc('automation.delete', { id: 'auto-1', expectedOwner: WIRE_OWNER })
       ).resolves.toEqual({ removed: true })
-      expect(invokeCommandMock).toHaveBeenCalledWith('automations_delete', { id: 'auto-1' })
+      expect(invokeCommandMock).toHaveBeenCalledWith('automations_delete', {
+        args: { id: 'auto-1' }
+      })
     })
 
     it('forwards only the id to run now', async () => {
@@ -178,7 +188,9 @@ describe('local automation RPC adapter', () => {
       await expect(
         callLocalAutomationRpc('automation.runNow', { id: 'auto-1', expectedOwner: WIRE_OWNER })
       ).resolves.toEqual({ run })
-      expect(invokeCommandMock).toHaveBeenCalledWith('automations_run_now', { id: 'auto-1' })
+      expect(invokeCommandMock).toHaveBeenCalledWith('automations_run_now', {
+        args: { id: 'auto-1' }
+      })
     })
   })
 
@@ -196,9 +208,11 @@ describe('local automation RPC adapter', () => {
       })
 
       expect(invokeCommandMock).toHaveBeenCalledWith('automations_runs', {
-        automationId: 'auto-1',
-        limit: 25,
-        cursor: 'cursor-1'
+        args: {
+          automationId: 'auto-1',
+          limit: 25,
+          cursor: 'cursor-1'
+        }
       })
       expect(result).toEqual(page)
     })
@@ -208,7 +222,9 @@ describe('local automation RPC adapter', () => {
 
       await callLocalAutomationRpc('automation.runs', { automationId: 'auto-1' })
 
-      expect(invokeCommandMock).toHaveBeenCalledWith('automations_runs', { automationId: 'auto-1' })
+      expect(invokeCommandMock).toHaveBeenCalledWith('automations_runs', {
+        args: { automationId: 'auto-1' }
+      })
     })
   })
 
