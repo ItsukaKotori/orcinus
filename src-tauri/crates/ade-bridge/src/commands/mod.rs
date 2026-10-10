@@ -1,6 +1,7 @@
 pub mod agent_sessions;
 pub mod agent_status;
 pub mod app;
+pub mod automations;
 pub mod folder_workspaces;
 pub mod fs;
 pub mod gh;

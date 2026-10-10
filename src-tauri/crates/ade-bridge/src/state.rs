@@ -5,6 +5,7 @@ use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
+use ade_automations::{AutomationService, AutomationStore};
 use ade_core::defaults::{onboarding_defaults, settings_defaults, ui_state_defaults};
 use ade_fs::{FsService, FsWatcher};
 use ade_git::runner::CancelToken;
@@ -445,6 +446,28 @@ impl GhPathCache {
     pub fn set(&self, value: std::path::PathBuf) { *lock(&self.0) = Some(value); }
 }
 
+/// `ade_automations::EventSink` 的生产实现：把内核的写入/派发转成 Tauri 事件
+/// （`automations:changed` 与 `automations:dispatch-requested`，规格 §3.2）。
+pub struct ServiceEventSink {
+    app: AppHandle,
+}
+
+impl ServiceEventSink {
+    pub fn new(app: AppHandle) -> Self {
+        Self { app }
+    }
+}
+
+impl ade_automations::EventSink for ServiceEventSink {
+    fn automations_changed(&self, reason: &str) {
+        events::emit_automations_changed(&self.app, reason);
+    }
+
+    fn dispatch_requested(&self, payload: Value) {
+        events::emit_automation_dispatch_requested(&self.app, payload);
+    }
+}
+
 /// Shared backend state for every command. Initialized once in `setup` with the
 /// app data directory before the main window is built.
 pub struct AppState {
@@ -466,6 +489,11 @@ pub struct AppState {
     pub session: Arc<Store>,
     /// hook server（规格 §3.1；Task 6）：HTTP 接收 + endpoint 发布 + 状态缓存。
     pub hooks: Arc<AgentHookServer>,
+    /// automations 定义与运行历史（`automations.json`；规格 §3.1）。
+    pub automations: Arc<AutomationStore>,
+    /// 60s tick 服务：写入广播 + 到期派发（armed 由
+    /// `automations_renderer_ready` 置位；规格 §3.1/§4）。
+    pub automation_service: Arc<AutomationService>,
     /// `session:flush-requested` 握手槽（spec §3.4；None = 无等待中的退出编排）。
     pub(crate) session_flush_slot: Mutex<Option<SessionFlushSignal>>,
     /// CloseRequested 重入门闩（spec §3.4）：仅首次（用户发起）close 编排
@@ -532,6 +560,16 @@ impl AppState {
         let ui = Arc::new(Mutex::new(persisted.ui));
         let onboarding = Arc::new(Mutex::new(persisted.onboarding));
 
+        // automations（规格 §3.1/§4）：定义/历史先加载，服务先起（60s tick
+        // 空转）；`armed` 等渲染层 `automations_renderer_ready` 再武装并追赶。
+        let automations = Arc::new(AutomationStore::load(data_dir.join("automations.json")));
+        let automation_service = AutomationService::new(
+            Arc::clone(&automations),
+            Arc::new(ServiceEventSink::new(app.clone())),
+            crate::commands::automations::now_millis,
+        );
+        automation_service.start();
+
         let settings_writer = WriteScheduler::new(WRITE_DEBOUNCE, WRITE_MAX_WAIT, {
             let store = Arc::clone(&settings);
             move || lock(&store).persist()
@@ -578,6 +616,8 @@ impl AppState {
             pty_worktree_ids,
             session,
             hooks,
+            automations,
+            automation_service,
             session_flush_slot: Mutex::new(None),
             close_flush_latch: CloseFlushLatch::default(),
             home,

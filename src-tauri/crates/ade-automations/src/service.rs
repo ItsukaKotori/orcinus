@@ -21,7 +21,7 @@ use std::time::Duration;
 use serde_json::{json, Map, Value};
 
 use crate::precheck::run_precheck;
-use crate::schedule::{latest_occurrence_at_or_before, next_occurrence_after};
+use crate::schedule::{is_valid_schedule, latest_occurrence_at_or_before, next_occurrence_after};
 use crate::store::{AutomationStore, MAX_RUNS_PER_AUTOMATION};
 
 /// `service.ts:34` (`DEFAULT_TICK_MS`).
@@ -41,6 +41,57 @@ const STRANDED_BEFORE_AGENT_START_ERROR: &str =
 /// `run-completion-watcher.ts:30` (verbatim).
 const STRANDED_LOST_TERMINAL_ERROR: &str =
     "Orca lost the terminal for this run before it reported completion.";
+
+/// Validates a renderer-supplied automation definition before it is persisted
+/// (spec §3.1): non-empty `name`/`prompt`/`agentId`, a parseable schedule, a
+/// millisecond `dtstart`, and — when a precheck is configured — a non-empty
+/// command with a timeout inside 1..=600 seconds. Returns the renderer-facing
+/// message for the first invalid field.
+pub fn validate_definition(input: &Value) -> Result<(), String> {
+    let object = input
+        .as_object()
+        .ok_or_else(|| "Automation input must be a JSON object.".to_string())?;
+    require_text(object, "name")?;
+    require_text(object, "prompt")?;
+    require_text(object, "agentId")?;
+    let rrule = require_text(object, "rrule")?;
+    if !is_valid_schedule(rrule) {
+        return Err("Automation schedule is not a valid cron expression or RRULE.".to_string());
+    }
+    if object.get("dtstart").and_then(Value::as_i64).is_none() {
+        return Err("Automation dtstart must be a millisecond timestamp.".to_string());
+    }
+    if let Some(precheck) = object.get("precheck").filter(|value| !value.is_null()) {
+        let precheck = precheck
+            .as_object()
+            .ok_or_else(|| "Automation precheck must be a JSON object.".to_string())?;
+        require_text(precheck, "command")?;
+        if let Some(timeout) = precheck
+            .get("timeoutSeconds")
+            .filter(|value| !value.is_null())
+        {
+            let seconds = timeout.as_u64().ok_or_else(|| {
+                "Automation precheck timeoutSeconds must be a whole number.".to_string()
+            })?;
+            if !(1..=600).contains(&seconds) {
+                return Err(
+                    "Automation precheck timeoutSeconds must be between 1 and 600.".to_string(),
+                );
+            }
+        }
+    }
+    Ok(())
+}
+
+/// A required field must be a string with non-whitespace content.
+fn require_text<'a>(object: &'a Map<String, Value>, key: &str) -> Result<&'a str, String> {
+    object
+        .get(key)
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+        .ok_or_else(|| format!("Automation {key} is required."))
+}
 
 /// Host-side event publication the bridge implements. `automations_changed`
 /// fires after every store write (`"run"` or `"definition"`);
@@ -138,6 +189,39 @@ impl AutomationService {
                 None
             }
         }
+    }
+
+    /// Manual `runNow`: creates a run (`trigger: "manual"`,
+    /// `scheduledFor = now`) and publishes it through the same dispatch event a
+    /// scheduled occurrence uses. Never gated by `enabled`; `None` when the
+    /// automation is gone or the run could not be persisted (logged).
+    ///
+    /// `(automationId, scheduledFor)` still dedupes, so two manual runs in the
+    /// same millisecond hand the existing row to the renderer instead of
+    /// writing a second one.
+    pub fn run_now(&self, automation_id: &str) -> Option<Value> {
+        let automation = self.store.get(automation_id)?;
+        let now = (self.now)();
+        let candidate = self.build_run(&automation, now, "manual", "dispatching", None, now);
+        let run = match self.store.create_run(candidate) {
+            Ok((run, created)) => {
+                if created {
+                    self.sink.automations_changed("run");
+                }
+                run
+            }
+            Err(error) => {
+                eprintln!("automations service: failed to create a manual run: {error}");
+                return None;
+            }
+        };
+        let dispatch_token = self.create_dispatch_token(now);
+        self.sink.dispatch_requested(json!({
+            "automation": automation,
+            "run": run,
+            "dispatchToken": dispatch_token,
+        }));
+        Some(run)
     }
 
     /// Runs the automation's configured precheck for a scheduled run and

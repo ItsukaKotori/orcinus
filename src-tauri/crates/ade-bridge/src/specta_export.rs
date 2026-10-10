@@ -139,6 +139,16 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::git::git_push,
                 commands::gh::gh_exec,
                 commands::gh::gh_env_probe,
+                commands::automations::automations_list,
+                commands::automations::automations_create,
+                commands::automations::automations_update,
+                commands::automations::automations_delete,
+                commands::automations::automations_run_now,
+                commands::automations::automations_runs,
+                commands::automations::automations_run_precheck,
+                commands::automations::automations_mark_dispatch_result,
+                commands::automations::automations_snapshot_workspace_name,
+                commands::automations::automations_renderer_ready,
             ])
             .typ::<crate::state::BootstrapPayload>()
             .typ::<crate::events::PtySpawnedPayload>()
@@ -147,6 +157,8 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
             .typ::<crate::events::WorktreeChangedPayload>()
             .typ::<crate::events::ScanNestedProgressPayload>()
             .typ::<crate::events::AgentHookRawPayload>()
+            .typ::<crate::events::AutomationsChangedPayload>()
+            .typ::<crate::events::AutomationDispatchRequestPayload>()
             .typ::<commands::agent_status::AgentHookSnapshotEntry>()
             .typ::<commands::notifications::NotificationSoundReadResult>()
             .typ::<commands::notifications_native::NotificationAuthorizationStatus>()
@@ -320,6 +332,16 @@ mod tests {
             "git_push",
             "gh_exec",
             "gh_env_probe",
+            "automations_list",
+            "automations_create",
+            "automations_update",
+            "automations_delete",
+            "automations_run_now",
+            "automations_runs",
+            "automations_run_precheck",
+            "automations_mark_dispatch_result",
+            "automations_snapshot_workspace_name",
+            "automations_renderer_ready",
         ] {
             assert!(
                 bindings.contains(&format!("\"{command}\"")),
