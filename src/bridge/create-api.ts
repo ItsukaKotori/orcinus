@@ -44,6 +44,7 @@ import { createWorkspaceSpaceApi } from './mock/workspace-space-api'
 import { createWorktreesApi } from './mock/worktrees-api'
 import { createAgentStatusRealApi } from './real/agent-status'
 import { createAppRealApi } from './real/app'
+import { createAutomationsRealApi } from './real/automations'
 import { createFolderWorkspacesRealApi } from './real/folder-workspaces'
 import { createFsRealApi } from './real/fs'
 import { createGhRealApi } from './real/gh'
@@ -73,6 +74,7 @@ type RealDomains = Pick<
   PreloadApi,
   | 'agentStatus'
   | 'app'
+  | 'automations'
   | 'folderWorkspaces'
   | 'fs'
   | 'gh'
@@ -149,6 +151,7 @@ function createRealDomains(): RealDomains {
   return {
     agentStatus: createAgentStatusRealApi(),
     app: createAppRealApi(),
+    automations: createAutomationsRealApi(),
     folderWorkspaces: createFolderWorkspacesRealApi(),
     fs: createFsRealApi(),
     gh: createGhRealApi(),

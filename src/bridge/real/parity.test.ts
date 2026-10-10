@@ -9,6 +9,7 @@ import { createMockAdeApi } from '../create-api'
 import { UnimplementedBridgeError } from '../unimplemented-fallback'
 import { createAgentStatusRealApi } from './agent-status'
 import { createAppRealApi } from './app'
+import { createAutomationsRealApi } from './automations'
 import { createFsRealApi } from './fs'
 import { createGhRealApi } from './gh'
 import { createHostedReviewRealApi } from './hosted-review'
@@ -333,6 +334,35 @@ const ghSurfaceMethods = (disposition: GhMethodDisposition): string[] =>
     .filter(([, value]) => value === disposition)
     .map(([method]) => method)
 
+/**
+ * automations 契约方法的处置全集（Task 7）。计划文本的「explicit 9 / missing 5」
+ * 与现行契约不符：`AutomationsApi` 共 12 方法，宿主支撑 6（precheck /
+ * markDispatchResult / snapshotWorkspaceName / rendererReady / 两订阅），external
+ * 五方法 + `retainExternalScopes` 共 6 保持 rejecting fallback。`satisfies
+ * Record<keyof …>` 把契约键集锁死：契约新增而此处未处置时 `pnpm typecheck` 失败。
+ */
+type AutomationsMethodDisposition = 'explicit' | 'missing'
+
+const automationsSurfaceDispositions = {
+  runPrecheck: 'explicit',
+  markDispatchResult: 'explicit',
+  snapshotWorkspaceName: 'explicit',
+  rendererReady: 'explicit',
+  onDispatchRequested: 'explicit',
+  onChanged: 'explicit',
+  listExternalManagerForOwner: 'missing',
+  listExternalRunsForOwner: 'missing',
+  createExternalForOwner: 'missing',
+  updateExternalForOwner: 'missing',
+  runExternalActionForOwner: 'missing',
+  retainExternalScopes: 'missing'
+} satisfies Record<keyof PreloadApi['automations'], AutomationsMethodDisposition>
+
+const automationsSurfaceMethods = (disposition: AutomationsMethodDisposition): string[] =>
+  Object.entries(automationsSurfaceDispositions)
+    .filter(([, value]) => value === disposition)
+    .map(([method]) => method)
+
 const surfaceCases: SurfaceCase[] = [
   {
     domain: 'repos',
@@ -582,6 +612,11 @@ const surfaceCases: SurfaceCase[] = [
     domain: 'gh',
     explicit: ghSurfaceMethods('explicit'),
     missing: ghSurfaceMethods('missing')
+  },
+  {
+    domain: 'automations',
+    explicit: automationsSurfaceMethods('explicit'),
+    missing: automationsSurfaceMethods('missing')
   },
   {
     domain: 'hostedReview',
@@ -915,6 +950,8 @@ function realApiFor(domain: keyof PreloadApi): unknown {
       return createGhRealApi()
     case 'hostedReview':
       return createHostedReviewRealApi()
+    case 'automations':
+      return createAutomationsRealApi()
     default:
       throw new Error(`no real factory for ${domain}`)
   }
