@@ -139,6 +139,36 @@ fn create_persists_a_valid_definition_and_computes_next_run() {
 }
 
 #[test]
+fn create_stamps_the_local_execution_target_when_absent() {
+    let dir = TestDir::new("create-target-default");
+    let store = load_store(&dir);
+
+    let automation = create_impl(
+        &store,
+        definition("FREQ=HOURLY;BYMINUTE=0", TEST_NOW - 3_600_000),
+        TEST_NOW,
+    )
+    .unwrap();
+
+    assert_eq!(automation["executionTargetType"], "local");
+    assert_eq!(automation["executionTargetId"], "local");
+}
+
+#[test]
+fn create_preserves_an_explicit_execution_target() {
+    let dir = TestDir::new("create-target-explicit");
+    let store = load_store(&dir);
+    let mut input = definition("FREQ=HOURLY;BYMINUTE=0", TEST_NOW - 3_600_000);
+    input["executionTargetType"] = json!("ssh");
+    input["executionTargetId"] = json!("x");
+
+    let automation = create_impl(&store, input, TEST_NOW).unwrap();
+
+    assert_eq!(automation["executionTargetType"], "ssh");
+    assert_eq!(automation["executionTargetId"], "x");
+}
+
+#[test]
 fn create_rejects_invalid_definitions_without_persisting() {
     let dir = TestDir::new("create-invalid");
     let store = load_store(&dir);

@@ -186,6 +186,12 @@ pub fn create_impl(
     record
         .entry("missedRunGraceMinutes".to_string())
         .or_insert(Value::from(DEFAULT_MISSED_GRACE_MINUTES));
+    record
+        .entry("executionTargetType".to_string())
+        .or_insert_with(|| Value::from("local"));
+    record
+        .entry("executionTargetId".to_string())
+        .or_insert_with(|| Value::from("local"));
     store
         .create(Value::Object(record), now_ms)
         .map(|(automation, _)| automation)
