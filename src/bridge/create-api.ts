@@ -43,6 +43,7 @@ import { createWorkspacePortsApi } from './mock/workspace-ports-api'
 import { createWorkspaceSpaceApi } from './mock/workspace-space-api'
 import { createWorktreesApi } from './mock/worktrees-api'
 import { createAgentStatusRealApi } from './real/agent-status'
+import { createAiVaultRealApi } from './real/ai-vault'
 import { createAppRealApi } from './real/app'
 import { createAutomationsRealApi } from './real/automations'
 import { createFolderWorkspacesRealApi } from './real/folder-workspaces'
@@ -73,6 +74,7 @@ export type AdeApiOptions = {
 type RealDomains = Pick<
   PreloadApi,
   | 'agentStatus'
+  | 'aiVault'
   | 'app'
   | 'automations'
   | 'folderWorkspaces'
@@ -150,6 +152,7 @@ function createMockDomains(): Partial<PreloadApi> {
 function createRealDomains(): RealDomains {
   return {
     agentStatus: createAgentStatusRealApi(),
+    aiVault: createAiVaultRealApi(),
     app: createAppRealApi(),
     automations: createAutomationsRealApi(),
     folderWorkspaces: createFolderWorkspacesRealApi(),

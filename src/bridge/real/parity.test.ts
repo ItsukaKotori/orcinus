@@ -8,6 +8,7 @@ import type { Worktree } from '../../shared/worktree/types'
 import { createMockAdeApi } from '../create-api'
 import { UnimplementedBridgeError } from '../unimplemented-fallback'
 import { createAgentStatusRealApi } from './agent-status'
+import { createAiVaultRealApi } from './ai-vault'
 import { createAppRealApi } from './app'
 import { createAutomationsRealApi } from './automations'
 import { createFsRealApi } from './fs'
@@ -619,6 +620,20 @@ const surfaceCases: SurfaceCase[] = [
     missing: automationsSurfaceMethods('missing')
   },
   {
+    // Task 7（2F）：宿主五命令 + 焦点事件接线；搜索/子代理/首条提示无宿主面，
+    // 保持 rejecting fallback（renderer 以 `typeof` 特征探测）。
+    domain: 'aiVault',
+    explicit: [
+      'listSessions',
+      'resolveSessionTitles',
+      'cancelListSessions',
+      'prepareSessionResume',
+      'deleteSession',
+      'onWindowFocused'
+    ],
+    missing: ['searchSessions', 'searchStatus', 'listSubagentSessions', 'getFirstUserPrompt']
+  },
+  {
     domain: 'hostedReview',
     explicit: ['forBranch', 'getCreationEligibility', 'create'],
     missing: ['createStacked']
@@ -922,6 +937,8 @@ function realApiFor(domain: keyof PreloadApi): unknown {
       return createReposRealApi()
     case 'agentStatus':
       return createAgentStatusRealApi()
+    case 'aiVault':
+      return createAiVaultRealApi()
     case 'session':
       return createSessionRealApi()
     case 'fs':

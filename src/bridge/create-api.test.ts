@@ -82,6 +82,7 @@ describe('createAdeApi real assembly', () => {
     await api.ui.get()
     await api.worktrees.listAll()
     await api.app.getIdentity()
+    await api.aiVault.listSessions()
 
     expect(invokeMock.mock.calls.map(([command]) => command)).toEqual([
       'repos_list',
@@ -92,7 +93,8 @@ describe('createAdeApi real assembly', () => {
       'settings_get',
       'ui_get',
       'worktrees_list_all',
-      'app_get_identity'
+      'app_get_identity',
+      'ai_vault_list_sessions'
     ])
   })
 
