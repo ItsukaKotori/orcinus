@@ -123,41 +123,65 @@ fn build_result(
     })
 }
 
-/// SIGTERM the child's process group, give it 2s to exit, then SIGKILL it.
+/// SIGTERM the child's process group, give the whole group up to 2s to exit,
+/// then SIGKILL the group before the caller joins the reader threads.
+///
+/// The group (not just the shell) must exit before skipping the SIGKILL: a
+/// descendant that ignored SIGTERM can survive the shell's death while still
+/// holding the stdio pipes, which would block the reader joins forever.
 fn terminate_process_group(child: &mut Child) -> Option<ExitStatus> {
     #[cfg(unix)]
     {
         let pid = child.id() as i32;
-        // Why: the child leads its own group (process_group(0)); signaling the
-        // negative pid reaches shell grandchildren too.
-        unsafe {
-            libc::kill(-pid, libc::SIGTERM);
+        signal_process_group(pid, libc::SIGTERM);
+        let deadline = Instant::now() + FORCE_KILL_AFTER;
+        while Instant::now() < deadline {
+            // Reap the shell as soon as it exits so its zombie does not keep
+            // the group probe alive.
+            let _ = child.try_wait();
+            if !process_group_alive(pid) {
+                return child.wait().ok();
+            }
+            std::thread::sleep(POLL_INTERVAL);
         }
-    }
-    let deadline = Instant::now() + FORCE_KILL_AFTER;
-    loop {
-        match child.try_wait() {
-            Ok(Some(status)) => return Some(status),
-            Ok(None) => {}
-            Err(_) => return child.wait().ok(),
-        }
-        if Instant::now() >= deadline {
-            break;
-        }
-        std::thread::sleep(POLL_INTERVAL);
-    }
-    #[cfg(unix)]
-    {
-        let pid = child.id() as i32;
-        unsafe {
-            libc::kill(-pid, libc::SIGKILL);
-        }
+        // Why: SIGKILL is uncatchable, so the remaining group members die and
+        // release the stdio pipes, keeping the total timeout path bounded.
+        signal_process_group(pid, libc::SIGKILL);
+        child.wait().ok()
     }
     #[cfg(not(unix))]
     {
         let _ = child.kill();
+        let deadline = Instant::now() + FORCE_KILL_AFTER;
+        loop {
+            match child.try_wait() {
+                Ok(Some(status)) => return Some(status),
+                Ok(None) => {}
+                Err(_) => break,
+            }
+            if Instant::now() >= deadline {
+                let _ = child.kill();
+                break;
+            }
+            std::thread::sleep(POLL_INTERVAL);
+        }
+        child.wait().ok()
     }
-    child.wait().ok()
+}
+
+#[cfg(unix)]
+fn signal_process_group(pid: i32, signal: libc::c_int) {
+    // Why: the child leads its own group (process_group(0)); signaling the
+    // negative pid reaches shell grandchildren too.
+    unsafe {
+        libc::kill(-pid, signal);
+    }
+}
+
+#[cfg(unix)]
+fn process_group_alive(pid: i32) -> bool {
+    // Signal 0 probes existence without delivering; ESRCH means no members.
+    unsafe { libc::kill(-pid, 0) == 0 }
 }
 
 fn spawn_reader(mut pipe: impl Read + Send + 'static) -> std::thread::JoinHandle<(String, bool)> {
@@ -166,8 +190,10 @@ fn spawn_reader(mut pipe: impl Read + Send + 'static) -> std::thread::JoinHandle
         let mut buffer = [0u8; 8192];
         loop {
             match pipe.read(&mut buffer) {
-                Ok(0) | Err(_) => break,
+                Ok(0) => break,
                 Ok(read) => collector.push(&buffer[..read]),
+                Err(error) if error.kind() == std::io::ErrorKind::Interrupted => continue,
+                Err(_) => break,
             }
         }
         collector.finish()
@@ -225,6 +251,7 @@ fn epoch_ms() -> u64 {
 }
 
 #[cfg(test)]
+#[cfg(unix)]
 mod tests {
     use super::*;
     use std::path::PathBuf;
@@ -257,6 +284,21 @@ mod tests {
     impl Drop for TestDir {
         fn drop(&mut self) {
             let _ = std::fs::remove_dir_all(&self.path);
+        }
+    }
+
+    fn assert_process_dies(pid: i32) {
+        let deadline = Instant::now() + Duration::from_secs(3);
+        loop {
+            let alive = unsafe { libc::kill(pid, 0) } == 0;
+            if !alive {
+                return;
+            }
+            assert!(
+                Instant::now() < deadline,
+                "process {pid} survived the group kill"
+            );
+            std::thread::sleep(Duration::from_millis(50));
         }
     }
 
@@ -307,18 +349,62 @@ mod tests {
             .trim()
             .parse()
             .unwrap();
-        let deadline = Instant::now() + Duration::from_secs(3);
-        loop {
-            let alive = unsafe { libc::kill(pid, 0) } == 0;
-            if !alive {
-                break;
-            }
-            assert!(
-                Instant::now() < deadline,
-                "grandchild {pid} survived the group kill"
-            );
-            std::thread::sleep(Duration::from_millis(50));
-        }
+        assert_process_dies(pid);
+    }
+
+    #[test]
+    fn precheck_timeout_force_kills_sigterm_ignoring_process() {
+        let dir = TestDir::new("sigterm-ignore");
+        let pid_file = dir.file("shell.pid");
+        let command = format!(
+            "trap '' TERM; printf '%s' $$ > '{}'; sleep 300",
+            pid_file.display()
+        );
+        let started = Instant::now();
+        let result = run_precheck(&command, None, Some(1));
+        let elapsed = started.elapsed();
+        assert!(
+            elapsed < Duration::from_secs(4),
+            "timeout path must stay bounded, took {elapsed:?}"
+        );
+        assert_eq!(result["timedOut"], true);
+        assert!(result["exitCode"].is_null());
+        assert_eq!(result["error"], "Precheck timed out after 1s.");
+        let pid: i32 = std::fs::read_to_string(&pid_file)
+            .unwrap()
+            .trim()
+            .parse()
+            .unwrap();
+        assert_process_dies(pid);
+    }
+
+    #[test]
+    fn precheck_timeout_kills_sigterm_ignoring_grandchild_holding_pipes() {
+        let dir = TestDir::new("stubborn-grandchild");
+        let pid_file = dir.file("grandchild.pid");
+        // Outer shell dies on SIGTERM while the background sh execs a `sleep`
+        // that ignores SIGTERM and keeps the stdio pipes open; without the
+        // unconditional group SIGKILL the reader joins would block until the
+        // sleep exits (~300s).
+        let command = format!(
+            "sh -c \"trap '' TERM; printf '%s' \\$\\$ > '{}'; exec sleep 300\" &\nwait",
+            pid_file.display()
+        );
+        let started = Instant::now();
+        let result = run_precheck(&command, None, Some(1));
+        let elapsed = started.elapsed();
+        assert!(
+            elapsed < Duration::from_secs(4),
+            "timeout path must stay bounded, took {elapsed:?}"
+        );
+        assert_eq!(result["timedOut"], true);
+        assert!(result["exitCode"].is_null());
+        let pid: i32 = std::fs::read_to_string(&pid_file)
+            .unwrap()
+            .trim()
+            .parse()
+            .unwrap();
+        assert_process_dies(pid);
     }
 
     #[test]
@@ -341,6 +427,29 @@ mod tests {
         assert!(stderr.chars().all(|value| value == 'b'));
         assert_eq!(result["stderrTruncated"], true);
         assert_eq!(result["stdoutTruncated"], false);
+    }
+
+    #[test]
+    fn precheck_flooding_output_returns_promptly_with_tail_suffix() {
+        let started = Instant::now();
+        let result = run_precheck(
+            "printf '%*s' 3000000 '' | tr ' ' 'x'; printf 'END-MARKER'; sleep 0.5",
+            None,
+            None,
+        );
+        assert!(
+            started.elapsed() < Duration::from_secs(10),
+            "must not deadlock on >1MiB output"
+        );
+        assert_eq!(result["exitCode"], 0);
+        assert_eq!(result["stdoutTruncated"], true);
+        let stdout = result["stdout"].as_str().unwrap();
+        assert_eq!(stdout.chars().count(), MAX_PRECHECK_OUTPUT_CHARS);
+        assert!(stdout.ends_with("END-MARKER"));
+        assert!(stdout
+            .trim_end_matches("END-MARKER")
+            .chars()
+            .all(|value| value == 'x'));
     }
 
     #[test]
