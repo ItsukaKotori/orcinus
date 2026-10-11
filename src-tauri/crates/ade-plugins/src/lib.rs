@@ -20,6 +20,7 @@ pub mod plugin_settings;
 pub mod secrets;
 pub mod storage;
 pub mod types;
+pub mod worker;
 
 pub use artifact::{resolve_declared_artifact, validate_declared_artifacts, ArtifactSet};
 pub use audit::{AuditLog, AuditOutcome, AuditRecord, LogLine, AUDIT_LOG_MAX_BYTES};

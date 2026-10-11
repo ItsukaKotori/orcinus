@@ -15,7 +15,10 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "resources": { "resources/computer-use/": "computer-use/" },
+    "resources": {
+      "resources/computer-use/": "computer-use/",
+      "resources/plugins/": "plugins/"
+    },
     "externalBin": ["binaries/orcinus"],
     "macOS": {
       "infoPlist": "macos-info.plist"
