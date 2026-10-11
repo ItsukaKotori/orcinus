@@ -26,6 +26,7 @@ export type FeatureInteractionId =
   | 'ai-pr-generation'
   | 'claude-account-switching'
   | 'computer-use-setup'
+  | 'computer-use'
   | 'codex-account-switching'
   | 'cookie-import'
   | 'floating-workspace'
@@ -94,6 +95,7 @@ export const FEATURE_INTERACTIONS = [
     id: 'computer-use-setup',
     interaction: 'Computer Use setup or permission flow opened'
   },
+  { id: 'computer-use', interaction: 'computer-use runtime method used' },
   {
     id: 'codex-account-switching',
     interaction: 'Codex managed account added, selected, reauthenticated, or removed'

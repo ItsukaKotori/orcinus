@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
@@ -105,6 +106,16 @@ pub fn resolve_spawn_cwd(
     }
 }
 
+/// spawn env 注入的 CLI 命令路径（规格 §3.7）：打包 `Contents/MacOS/orcinus`、
+/// 开发 `target/{debug,release}/orcinus`——即 app 可执行文件同目录的 `orcinus`；
+/// 仅当该文件存在时返回（存在才注入）。
+pub fn resolve_orcinus_cli_path(current_exe: &Path) -> Option<PathBuf> {
+    let candidate = current_exe
+        .parent()?
+        .join(crate::commands::cli_install::COMMAND_NAME);
+    candidate.is_file().then_some(candidate)
+}
+
 /// spawn env 终态（规格 §3.5）：renderer env 打底 → hook endpoint env 覆盖 →
 /// pane 身份/launchToken 覆盖（宿主是权威，防 renderer 陈旧值）。
 pub fn build_spawn_env(
@@ -114,10 +125,20 @@ pub fn build_spawn_env(
     leaf_id: Option<&str>,
     worktree_id: Option<&str>,
     launch_token: Option<&str>,
+    orcinus_cli_path: Option<&Path>,
 ) -> HashMap<String, String> {
     let mut env = base;
     for (key, value) in hooks_env {
         env.insert(key.clone(), value.clone());
+    }
+    // CLI 路径注入（规格 §3.7）：调用方（或 hook env）已给值则保留，不覆盖。
+    if !env.contains_key("ORCINUS_CLI_COMMAND") {
+        if let Some(path) = orcinus_cli_path {
+            env.insert(
+                "ORCINUS_CLI_COMMAND".to_string(),
+                path.to_string_lossy().into_owned(),
+            );
+        }
     }
     if let (Some(tab_id), Some(leaf_id)) = (tab_id, leaf_id) {
         if !tab_id.is_empty() && !leaf_id.is_empty() {
@@ -513,6 +534,10 @@ pub async fn pty_spawn(
             args.worktree_id
         );
     }
+    // 同目录 orcinus 存在才解析出值（规格 §3.7）；不存在时注入静默跳过。
+    let orcinus_cli_path = std::env::current_exe()
+        .ok()
+        .and_then(|exe| resolve_orcinus_cli_path(&exe));
     let env = build_spawn_env(
         args.env,
         &state.hooks.pty_env(),
@@ -520,6 +545,7 @@ pub async fn pty_spawn(
         args.leaf_id.as_deref(),
         args.worktree_id.as_deref(),
         args.launch_token.as_deref(),
+        orcinus_cli_path.as_deref(),
     );
     let request = ade_pty::SpawnRequest {
         cols: args.cols,
@@ -1274,6 +1300,7 @@ mod tests {
             Some("123e4567-e89b-42d3-a456-426614174000"),
             Some("r1::/wt"),
             Some("launch-1"),
+            None,
         );
         assert_eq!(env.get("K").map(String::as_str), Some("V"));
         assert_eq!(
@@ -1299,13 +1326,14 @@ mod tests {
     fn build_spawn_env_skips_pane_key_without_both_ids_and_overrides_renderer_env() {
         let base = HashMap::from([("ORCA_PANE_KEY".to_string(), "stale".to_string())]);
         let hooks = HashMap::from([("ORCA_AGENT_HOOK_PORT".to_string(), "1".to_string())]);
-        let env = build_spawn_env(base, &hooks, Some("t1"), None, None, None);
+        let env = build_spawn_env(base, &hooks, Some("t1"), None, None, None, None);
         assert_eq!(env.get("ORCA_PANE_KEY").map(String::as_str), Some("stale"));
         let env = build_spawn_env(
             HashMap::new(),
             &hooks,
             Some("t1"),
             Some("leaf-1"),
+            None,
             None,
             None,
         );
@@ -1317,5 +1345,77 @@ mod tests {
             env.get("ORCA_AGENT_HOOK_PORT").map(String::as_str),
             Some("1")
         );
+    }
+
+    #[test]
+    fn resolve_orcinus_cli_path_requires_sibling_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let exe = dir.path().join("orcinus-app");
+        let cli = dir.path().join("orcinus");
+        assert_eq!(resolve_orcinus_cli_path(&exe), None);
+        // 目录不算（`is_file` 语义）：存在才注入。
+        std::fs::create_dir(&cli).unwrap();
+        assert_eq!(resolve_orcinus_cli_path(&exe), None);
+        std::fs::remove_dir(&cli).unwrap();
+        std::fs::write(&cli, b"stub").unwrap();
+        assert_eq!(resolve_orcinus_cli_path(&exe), Some(cli));
+    }
+
+    #[test]
+    fn build_spawn_env_injects_orcinus_cli_command_unless_caller_set_it() {
+        let cli = PathBuf::from("/opt/orcinus/bin/orcinus");
+        // 无既有值 → 注入宿主解析出的路径。
+        let env = build_spawn_env(
+            HashMap::new(),
+            &HashMap::new(),
+            None,
+            None,
+            None,
+            None,
+            Some(cli.as_path()),
+        );
+        assert_eq!(
+            env.get("ORCINUS_CLI_COMMAND").map(String::as_str),
+            Some("/opt/orcinus/bin/orcinus")
+        );
+        // 调用方 env 已有值 → 不覆盖。
+        let env = build_spawn_env(
+            HashMap::from([("ORCINUS_CLI_COMMAND".to_string(), "caller".to_string())]),
+            &HashMap::new(),
+            None,
+            None,
+            None,
+            None,
+            Some(cli.as_path()),
+        );
+        assert_eq!(
+            env.get("ORCINUS_CLI_COMMAND").map(String::as_str),
+            Some("caller")
+        );
+        // hook env（宿主权威）已有值 → 不覆盖。
+        let env = build_spawn_env(
+            HashMap::new(),
+            &HashMap::from([("ORCINUS_CLI_COMMAND".to_string(), "hooks".to_string())]),
+            None,
+            None,
+            None,
+            None,
+            Some(cli.as_path()),
+        );
+        assert_eq!(
+            env.get("ORCINUS_CLI_COMMAND").map(String::as_str),
+            Some("hooks")
+        );
+        // 未解析到 CLI（非打包/同目录缺文件）→ 不注入。
+        let env = build_spawn_env(
+            HashMap::new(),
+            &HashMap::new(),
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        assert!(!env.contains_key("ORCINUS_CLI_COMMAND"));
     }
 }
