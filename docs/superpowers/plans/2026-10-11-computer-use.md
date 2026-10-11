@@ -71,7 +71,7 @@ src-tauri/binaries/
 // 2) 组装 out/Orcinus Computer Use.app/Contents/{MacOS,Info.plist}
 //    Info.plist: CFBundleIdentifier=ORCINUS_COMPUTER_MACOS_BUNDLE_ID||dev.itsuka.orcinus.computer-use,
 //                CFBundleName=Orcinus Computer Use, CFBundleExecutable=orcinus-computer-use-macos,
-//                LSMinimumSystemVersion=14.0（其余键照参照）
+//                LSMinimumSystemVersion=14.0、LSUIElement=true（与 oracle 一致；设置窗由 setActivationPolicy(.regular) 前台化）
 // 3) 拷贝 .build/release/orcinus-computer-use-macos → Contents/MacOS/
 // 4) entitlements 从 orca:resources/build/entitlements.computer-use.mac.plist 拷贝为
 //    config/scripts/entitlements.computer-use.mac.plist（如参照存在）

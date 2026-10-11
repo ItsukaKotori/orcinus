@@ -117,7 +117,7 @@ function infoPlist() {
   <key>LSMinimumSystemVersion</key>
   <string>14.0</string>
   <key>LSUIElement</key>
-  <false/>
+  <true/>
   <key>NSAccessibilityUsageDescription</key>
   <string>Orcinus Computer Use needs Accessibility permission to read and interact with app interfaces when you ask Orcinus to use apps.</string>
   <key>NSScreenCaptureUsageDescription</key>
