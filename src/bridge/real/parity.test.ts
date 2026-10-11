@@ -25,6 +25,7 @@ import { createPtyRealApi } from './pty'
 import { createReposRealApi } from './repos'
 import { createSessionRealApi } from './session'
 import { createSettingsRealApi } from './settings'
+import { createSkillsRealApi } from './skills'
 import { createUiRealApi } from './ui'
 import { createWorktreesRealApi } from './worktrees'
 
@@ -366,6 +367,54 @@ const automationsSurfaceMethods = (disposition: AutomationsMethodDisposition): s
     .filter(([, value]) => value === disposition)
     .map(([method]) => method)
 
+/**
+ * skills 契约方法的处置全集（Task 9，2G）。宿主只接 `discover`（home 技能根
+ * 最小扫描），freshness/install/share/delete/WSL 全部无宿主面，保持 rejecting
+ * fallback（订阅方法回 no-op unsubscriber）。`satisfies Record<keyof …>` 把契约
+ * 键集锁死：`SkillsApi` 新增方法而不在此处置时 `pnpm typecheck` 失败。
+ */
+type SkillsMethodDisposition = 'explicit' | 'missing'
+
+const skillsSurfaceDispositions = {
+  discover: 'explicit',
+  freshnessInventory: 'missing',
+  startUpdateRun: 'missing',
+  cancelUpdateRun: 'missing',
+  acknowledgeUpdateRun: 'missing',
+  getUpdateRun: 'missing',
+  prepareShare: 'missing',
+  publishShare: 'missing',
+  cancelShare: 'missing',
+  releaseShare: 'missing',
+  resolveShare: 'missing',
+  installShare: 'missing',
+  installBundleShare: 'missing',
+  installBundlePackageVersion: 'missing',
+  installPackageVersion: 'missing',
+  cancelInstall: 'missing',
+  previewInstall: 'missing',
+  previewBundleInstall: 'missing',
+  removeInstall: 'missing',
+  deleteSupported: 'missing',
+  previewDelete: 'missing',
+  delete: 'missing',
+  listManagedInstalls: 'missing',
+  getPackage: 'missing',
+  listOwnedShares: 'missing',
+  revokeShare: 'missing',
+  deletePackageVersion: 'missing',
+  deletePackage: 'missing',
+  listWslDistros: 'missing',
+  onInstallProgress: 'missing',
+  onShareProgress: 'missing',
+  onUpdateRun: 'missing'
+} satisfies Record<keyof PreloadApi['skills'], SkillsMethodDisposition>
+
+const skillsSurfaceMethods = (disposition: SkillsMethodDisposition): string[] =>
+  Object.entries(skillsSurfaceDispositions)
+    .filter(([, value]) => value === disposition)
+    .map(([method]) => method)
+
 const surfaceCases: SurfaceCase[] = [
   {
     domain: 'repos',
@@ -659,6 +708,13 @@ const surfaceCases: SurfaceCase[] = [
       'removeWsl'
     ],
     missing: []
+  },
+  {
+    // Task 9（2G）：宿主仅接 skills_discover（home 技能根最小扫描），其余
+    // freshness/install/share/delete/WSL 面维持 rejecting fallback。
+    domain: 'skills',
+    explicit: skillsSurfaceMethods('explicit'),
+    missing: skillsSurfaceMethods('missing')
   }
 ]
 
@@ -995,6 +1051,8 @@ function realApiFor(domain: keyof PreloadApi): unknown {
       return createComputerUsePermissionsRealApi()
     case 'cli':
       return createCliRealApi()
+    case 'skills':
+      return createSkillsRealApi()
     default:
       throw new Error(`no real factory for ${domain}`)
   }

@@ -63,6 +63,7 @@ import { createPtyRealApi } from './real/pty'
 import { createReposRealApi } from './real/repos'
 import { createSessionRealApi } from './real/session'
 import { createSettingsRealApi } from './real/settings'
+import { createSkillsRealApi } from './real/skills'
 import { createUiRealApi } from './real/ui'
 import { createWorktreesRealApi } from './real/worktrees'
 import { withUnimplementedFallback } from './unimplemented-fallback'
@@ -96,6 +97,7 @@ type RealDomains = Pick<
   | 'repos'
   | 'session'
   | 'settings'
+  | 'skills'
   | 'ui'
   | 'worktrees'
 >
@@ -179,6 +181,7 @@ function createRealDomains(): RealDomains {
     // factory's `Pick<PreloadApi, 'session'>` wrapper stays the parity anchor.
     session: createSessionRealApi().session,
     settings: createSettingsRealApi(),
+    skills: createSkillsRealApi(),
     ui: createUiRealApi(),
     worktrees: createWorktreesRealApi()
   }

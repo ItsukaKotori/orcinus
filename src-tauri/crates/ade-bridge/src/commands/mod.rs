@@ -19,6 +19,7 @@ pub mod pty;
 pub mod repos;
 pub mod session;
 pub mod settings;
+pub mod skills;
 pub mod ui;
 pub mod worktrees;
 

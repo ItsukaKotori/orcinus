@@ -343,6 +343,9 @@ export const commands = {
 	cliRemoveWsl: (args: {
 	distro?: string | null,
 } | null) => typedError<CliInstallStatusDto, BridgeError>(__TAURI_INVOKE("cli_remove_wsl", { args })),
+	skillsDiscover: (args: {
+	refresh?: boolean | null,
+} | null) => typedError<SkillDiscoveryResultDto, BridgeError>(__TAURI_INVOKE("skills_discover", { args })),
 };
 
 /* Types */
@@ -2347,6 +2350,21 @@ export type SearchResult_Serialize = {
 	files: SearchFileResult_Serialize[],
 	totalMatches: number,
 	truncated: boolean,
+};
+
+/**  The `{ refresh? }` command args. */
+export type SkillDiscoverArgs = {
+	refresh?: boolean | null,
+};
+
+/**
+ *  `skills.discover` result. `skills`/`sources` stay opaque JSON (the shared
+ *  contract lives in `src/shared/skills.ts`), like `aiVault.listSessions`.
+ */
+export type SkillDiscoveryResultDto = {
+	skills: Json,
+	sources: Json,
+	scannedAt: string,
 };
 
 export type UiRecordFeatureInteractionArgs = {

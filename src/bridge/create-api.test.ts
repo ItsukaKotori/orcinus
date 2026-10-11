@@ -315,6 +315,23 @@ describe('createAdeApi real assembly', () => {
     ])
   })
 
+  it('routes the skills domain through its command and drops host-identifying targets', async () => {
+    const api = createAdeApi()
+    invokeMock.mockResolvedValue({
+      skills: [],
+      sources: [],
+      scannedAt: new Date(0).toISOString()
+    })
+
+    await api.skills.discover()
+    await api.skills.discover({ refresh: true, runtime: 'wsl', wslDistro: 'Ubuntu' })
+
+    expect(invokeMock.mock.calls).toEqual([
+      ['skills_discover', { args: undefined }],
+      ['skills_discover', { args: { refresh: true } }]
+    ])
+  })
+
   it('rejects unknown namespaces with the unimplemented fallback', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const api = createAdeApi() as unknown as { notADomain: { ping: () => Promise<unknown> } }

@@ -163,6 +163,7 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::cli_install::cli_get_wsl_install_status,
                 commands::cli_install::cli_install_wsl,
                 commands::cli_install::cli_remove_wsl,
+                commands::skills::skills_discover,
             ])
             .typ::<crate::state::BootstrapPayload>()
             .typ::<crate::events::PtySpawnedPayload>()
@@ -370,6 +371,7 @@ mod tests {
             "cli_get_wsl_install_status",
             "cli_install_wsl",
             "cli_remove_wsl",
+            "skills_discover",
         ] {
             assert!(
                 bindings.contains(&format!("\"{command}\"")),
