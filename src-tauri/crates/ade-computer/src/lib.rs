@@ -5,6 +5,7 @@
 pub mod availability;
 pub mod client;
 pub mod paths;
+pub mod permissions;
 pub mod protocol;
 pub mod provider;
 pub mod socket;
