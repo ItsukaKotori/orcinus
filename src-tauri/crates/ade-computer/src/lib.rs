@@ -1,0 +1,7 @@
+//! `ade-computer` — computer-use provider core (spec §3.2): protocol types,
+//! helper path resolution, and availability. Pure Rust: no tauri/specta/store
+//! dependencies so the CLI and tests can use it directly.
+
+pub mod availability;
+pub mod paths;
+pub mod protocol;
