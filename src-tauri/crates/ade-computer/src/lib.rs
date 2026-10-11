@@ -8,6 +8,7 @@ pub mod paths;
 pub mod permissions;
 pub mod protocol;
 pub mod provider;
+pub mod rpc;
 pub mod socket;
 pub mod transport;
 pub mod validation;
