@@ -253,8 +253,8 @@ git commit -m "feat(computer): provider client、动作校验与 verification �
   - `permissions::PermissionId { Accessibility, Screenshots }`（serde `accessibility|screenshots`）
   - `permissions::PermissionState { Granted, NotGranted, Unsupported }`（serde `granted|not-granted|unsupported`）
   - `permissions::PermissionStatus { platform, helper_app_path: Option<String>, helper_unavailable_reason: Option<String>, permissions: Vec<PermissionStatusEntry{id,status}> }`
-  - `permissions::OpenSetupResult { opened_settings: bool, launched_helper: bool, permission_id: Option<PermissionId>, next_step: Option<String>, permissions: Option<Vec<Entry>> }`
-  - `permissions::ResetResult { bundle_id: String }`
+  - `permissions::OpenSetupResult { platform, helper_app_path: Option<String>, permission_id: Option<PermissionId>, opened_settings: bool, launched_helper: bool, permissions: Option<Vec<PermissionStatusEntry>>, next_step: Option<String> }`（字段逐字对齐 `src/shared/computer-use-permissions-types.ts:17-25` 的 `ComputerUsePermissionSetupResult`）
+  - `permissions::ResetResult = PermissionStatus + bundle_id: Option<String>`（对齐 `ComputerUsePermissionResetResult`，`bundleId` 可空）
   - `permissions::CommandRunner` trait（`fn run(&self, program: &str, args: &[String]) -> io::Result<CommandOutput{status: i32, stdout: String, stderr: String}>`）+ `SystemRunner`。
   - `permissions::probe_status(runner: &dyn CommandRunner, helper: Option<&Path>) -> PermissionStatus`：写临时 status file → `open -n <helper.app> --args --permission-status-file <tmp>` → 轮询 50×100ms 读 `{accessibility, screenshots}`（值 `granted|not-granted` → 映射；读不到 → 各 `not-granted`）；helper 缺失 → `helperUnavailableReason`（文案取 `orca:src/main/computer/computer-provider-unavailable-message.ts` 语义，替换 Orcinus）。
   - `permissions::open_setup(runner, helper, id: Option<PermissionId>) -> OpenSetupResult`：先 `probe_status` 刷新 → `pkill -f 'orcinus-computer-use-macos --permission(s)?'` → `open -n <helper.app> --args --permission <id>`/`--permissions` → `nextStep` 文案（对齐 `orca:src/main/computer/macos-computer-use-permissions.ts:17-80` 的 nextStep 规则）。
