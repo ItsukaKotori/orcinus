@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tauri dev",
     "build": "tauri build",
+    "build:computer-macos": "node config/scripts/build-computer-macos.mjs",
     "build:web": "vite build",
     "rebuild:node": "node config/scripts/rebuild-node-pty.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
