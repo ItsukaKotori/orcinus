@@ -15,7 +15,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "resources": ["resources/computer-use/**/*"],
+    "resources": { "resources/computer-use/": "computer-use/" },
     "macOS": {
       "infoPlist": "macos-info.plist"
     },
