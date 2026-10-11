@@ -3,7 +3,6 @@ dist/
 src-tauri/target/
 src-tauri/gen/
 src-tauri/native/computer-use-macos/.build/
-src-tauri/resources/computer-use/
 src-tauri/binaries/
 spikes/*/target/
 *.local
