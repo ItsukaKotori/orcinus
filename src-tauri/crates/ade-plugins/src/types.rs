@@ -126,6 +126,9 @@ pub const CONTENT_CHANGED: &str = "content_changed";
 pub const MANIFEST_MISMATCH: &str = "manifest_mismatch";
 pub const CONSENT_STALE: &str = "consent_stale";
 pub const INTEGRITY_MISMATCH: &str = "integrity_mismatch";
+pub const INVALID_PARAMS: &str = "invalid_params";
+pub const ACTION_FAILED: &str = "action_failed";
+pub const UNAVAILABLE: &str = "unavailable";
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 #[error("{message}")]
