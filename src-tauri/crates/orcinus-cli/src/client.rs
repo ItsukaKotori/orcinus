@@ -136,7 +136,6 @@ impl RuntimeClient {
     /// Read metadata and validate it. Missing/unreadable/incomplete metadata →
     /// `runtime_unavailable`; use [`read_metadata`] directly for `status`
     /// synthesis.
-    #[allow(dead_code)]
     pub fn connect() -> Result<Self, CliError> {
         Self::connect_at(&metadata_path())
     }
@@ -167,10 +166,12 @@ impl RuntimeClient {
         })
     }
 
-    /// Send one request with the default 60s timeout. The status/open
-    /// skeleton uses `call_with_timeout` only; the `computer *` slice builds
-    /// on this.
-    #[allow(dead_code)]
+    /// Runtime id from the metadata, used for success envelopes.
+    pub fn runtime_id(&self) -> &str {
+        &self.metadata.runtime_id
+    }
+
+    /// Send one request with the default 60s timeout.
     pub fn call(&self, method: &str, params: Value) -> Result<Value, CliError> {
         self.call_with_timeout(method, params, DEFAULT_REQUEST_TIMEOUT)
     }

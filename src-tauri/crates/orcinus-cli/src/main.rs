@@ -1,15 +1,16 @@
-//! `orcinus` — the Orcinus agent CLI (spec §3.6). This skeleton ships
-//! `status`, `open` and `skills get`; `computer *` lands in the next slice.
+//! `orcinus` — the Orcinus agent CLI (spec §3.6): `status`, `open`,
+//! `skills get` and the 14 `computer *` subcommands.
 //!
 //! Output contract: with `--json`, success prints
 //! `{"id":<uuid>,"ok":true,"result":…,"_meta":{"runtimeId":…}}` and failure
 //! prints `{"id":"local","ok":false,"error":{code,message,data?}}` then exits
 //! 1.
 //!
-//! Human mode prints readable text and exits 1 on any error (and for `status`
-//! when the runtime is unreachable).
+//! Human mode prints readable text; errors print `error <code>: <message>`
+//! and exit 1 (and `status` exits 1 when the runtime is unreachable).
 
 mod client;
+mod computer;
 mod errors;
 mod open;
 mod skills;
@@ -50,6 +51,11 @@ enum Command {
         #[command(subcommand)]
         command: SkillsCommand,
     },
+    /// Drive the computer-use runtime (snapshots, actions, permissions).
+    Computer {
+        #[command(subcommand)]
+        command: Box<computer::ComputerCommand>,
+    },
 }
 
 #[derive(Debug, Subcommand)]
@@ -75,6 +81,7 @@ fn main() {
         Command::Skills {
             command: SkillsCommand::Get { json, .. },
         } => *json,
+        Command::Computer { command } => command.json(),
     };
     match run(cli) {
         Ok(()) => {}
@@ -90,6 +97,7 @@ fn run(cli: Cli) -> Result<(), CliError> {
         Command::Status { json } => run_status(json),
         Command::Open { json } => run_open(json),
         Command::Skills { command } => run_skills(command),
+        Command::Computer { command } => computer::run(*command),
     }
 }
 
@@ -169,6 +177,6 @@ fn report_error(error: &CliError, json_output: bool) {
     if json_output {
         println!("{}", error.envelope());
     } else {
-        eprintln!("{}", error.message);
+        eprintln!("error {}: {}", error.code, error.message);
     }
 }

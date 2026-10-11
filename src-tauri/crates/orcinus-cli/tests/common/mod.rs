@@ -23,6 +23,19 @@ use std::time::{Duration, Instant};
 use ade_computer::protocol::{RuntimeMetadata, RuntimeTransport, RUNTIME_METADATA_FILE};
 use serde_json::{json, Value};
 
+/// A scripted per-method response for the fake runtime. Without one,
+/// `status.get` answers with the fixed snapshot and any other method is
+/// `method_not_found`.
+#[derive(Debug, Clone)]
+pub enum ScriptedResponse {
+    Result(Value),
+    Error {
+        code: String,
+        message: String,
+        data: Option<Value>,
+    },
+}
+
 const ACCEPT_POLL: Duration = Duration::from_millis(2);
 const READ_POLL: Duration = Duration::from_millis(20);
 
@@ -67,6 +80,8 @@ struct ServerState {
     keepalive_frames: AtomicU64,
     /// Delay between those keepalive frames.
     keepalive_delay: std::sync::Mutex<Duration>,
+    /// Per-method scripted responses (task 12: computer method replay).
+    scripted: std::sync::Mutex<std::collections::HashMap<String, ScriptedResponse>>,
 }
 
 /// A fake runtime listening on a real Unix socket with `runtime.json` written.
@@ -91,6 +106,7 @@ impl FakeRuntime {
             auth_token: std::sync::Mutex::new(AUTH_TOKEN.to_string()),
             keepalive_frames: AtomicU64::new(0),
             keepalive_delay: std::sync::Mutex::new(Duration::ZERO),
+            scripted: std::sync::Mutex::new(std::collections::HashMap::new()),
         });
         let (tx, requests) = std::sync::mpsc::channel();
 
@@ -160,6 +176,38 @@ impl FakeRuntime {
     pub fn set_keepalives(&self, frames: u64, delay: Duration) {
         self.state.keepalive_frames.store(frames, Ordering::SeqCst);
         *self.state.keepalive_delay.lock().unwrap() = delay;
+    }
+
+    /// Script a successful result for `method` (task 12: computer replay).
+    pub fn set_method_result(&self, method: &str, result: Value) {
+        self.state
+            .scripted
+            .lock()
+            .unwrap()
+            .insert(method.to_string(), ScriptedResponse::Result(result));
+    }
+
+    /// Script an error frame for `method`.
+    pub fn set_method_error(&self, method: &str, code: &str, message: &str) {
+        self.set_method_error_with_data(method, code, message, None);
+    }
+
+    /// Script an error frame with structured `data` for `method`.
+    pub fn set_method_error_with_data(
+        &self,
+        method: &str,
+        code: &str,
+        message: &str,
+        data: Option<Value>,
+    ) {
+        self.state.scripted.lock().unwrap().insert(
+            method.to_string(),
+            ScriptedResponse::Error {
+                code: code.to_string(),
+                message: message.to_string(),
+                data,
+            },
+        );
     }
 
     pub fn user_data_path(&self) -> &Path {
@@ -297,7 +345,7 @@ fn respond(
     if auth_token.as_deref() != Some(expected.as_str()) {
         write_frame(
             stream,
-            &failure_frame(&id, "unauthorized", "Invalid auth token"),
+            &failure_frame(&id, "unauthorized", "Invalid auth token", None),
         );
         return;
     }
@@ -324,6 +372,23 @@ fn respond(
         thread::sleep(delay);
     }
 
+    let scripted = state.scripted.lock().unwrap().get(&method).cloned();
+    if let Some(scripted) = scripted {
+        match scripted {
+            ScriptedResponse::Result(result) => {
+                write_frame(stream, &success_frame(&id, result));
+            }
+            ScriptedResponse::Error {
+                code,
+                message,
+                data,
+            } => {
+                write_frame(stream, &failure_frame(&id, &code, &message, data));
+            }
+        }
+        return;
+    }
+
     match method.as_str() {
         "status.get" => {
             write_frame(stream, &success_frame(&id, status_result()));
@@ -331,7 +396,12 @@ fn respond(
         other => {
             write_frame(
                 stream,
-                &failure_frame(&id, "method_not_found", &format!("Unknown method: {other}")),
+                &failure_frame(
+                    &id,
+                    "method_not_found",
+                    &format!("Unknown method: {other}"),
+                    None,
+                ),
             );
         }
     }
@@ -363,11 +433,15 @@ fn success_frame(id: &str, result: Value) -> Value {
     })
 }
 
-fn failure_frame(id: &str, code: &str, message: &str) -> Value {
+fn failure_frame(id: &str, code: &str, message: &str, data: Option<Value>) -> Value {
+    let mut error = json!({"code": code, "message": message});
+    if let Some(data) = data {
+        error["data"] = data;
+    }
     json!({
         "id": id,
         "ok": false,
-        "error": {"code": code, "message": message},
+        "error": error,
         "_meta": {"runtimeId": RUNTIME_ID},
     })
 }
