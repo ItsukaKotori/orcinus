@@ -294,6 +294,27 @@ describe('createAdeApi real assembly', () => {
     ])
   })
 
+  it('routes the cli domain through its commands', async () => {
+    const api = createAdeApi()
+    invokeMock.mockResolvedValue({})
+
+    await api.cli.getInstallStatus()
+    await api.cli.install()
+    await api.cli.remove()
+    await api.cli.getWslInstallStatus({ distro: 'Ubuntu' })
+    await api.cli.installWsl()
+    await api.cli.removeWsl({ distro: null })
+
+    expect(invokeMock.mock.calls).toEqual([
+      ['cli_get_install_status'],
+      ['cli_install'],
+      ['cli_remove'],
+      ['cli_get_wsl_install_status', { args: { distro: 'Ubuntu' } }],
+      ['cli_install_wsl', { args: undefined }],
+      ['cli_remove_wsl', { args: { distro: null } }]
+    ])
+  })
+
   it('rejects unknown namespaces with the unimplemented fallback', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const api = createAdeApi() as unknown as { notADomain: { ping: () => Promise<unknown> } }

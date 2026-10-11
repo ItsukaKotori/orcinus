@@ -11,6 +11,7 @@ import { createAgentStatusRealApi } from './agent-status'
 import { createAiVaultRealApi } from './ai-vault'
 import { createAppRealApi } from './app'
 import { createAutomationsRealApi } from './automations'
+import { createCliRealApi } from './cli'
 import { createComputerUsePermissionsRealApi } from './computer-use-permissions'
 import { createFsRealApi } from './fs'
 import { createGhRealApi } from './gh'
@@ -645,6 +646,19 @@ const surfaceCases: SurfaceCase[] = [
     domain: 'computerUsePermissions',
     explicit: ['getStatus', 'openSetup', 'reset'],
     missing: []
+  },
+  {
+    // Task 8（2G）：宿主六命令全接真（桌面三 + WSL 三 stub），无缺失面。
+    domain: 'cli',
+    explicit: [
+      'getInstallStatus',
+      'install',
+      'remove',
+      'getWslInstallStatus',
+      'installWsl',
+      'removeWsl'
+    ],
+    missing: []
   }
 ]
 
@@ -979,6 +993,8 @@ function realApiFor(domain: keyof PreloadApi): unknown {
       return createAutomationsRealApi()
     case 'computerUsePermissions':
       return createComputerUsePermissionsRealApi()
+    case 'cli':
+      return createCliRealApi()
     default:
       throw new Error(`no real factory for ${domain}`)
   }

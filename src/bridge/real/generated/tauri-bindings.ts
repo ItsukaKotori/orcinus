@@ -331,6 +331,18 @@ export const commands = {
 	id?: ComputerUsePermissionId | null,
 } | null) => typedError<ComputerUseOpenSetupResult_Serialize, BridgeError>(__TAURI_INVOKE("computer_use_permissions_open_setup", { args })),
 	computerUsePermissionsReset: () => typedError<ComputerUseResetResult, BridgeError>(__TAURI_INVOKE("computer_use_permissions_reset")),
+	cliGetInstallStatus: () => typedError<CliInstallStatusDto, BridgeError>(__TAURI_INVOKE("cli_get_install_status")),
+	cliInstall: () => typedError<CliInstallStatusDto, BridgeError>(__TAURI_INVOKE("cli_install")),
+	cliRemove: () => typedError<CliInstallStatusDto, BridgeError>(__TAURI_INVOKE("cli_remove")),
+	cliGetWslInstallStatus: (args: {
+	distro?: string | null,
+} | null) => typedError<CliInstallStatusDto, BridgeError>(__TAURI_INVOKE("cli_get_wsl_install_status", { args })),
+	cliInstallWsl: (args: {
+	distro?: string | null,
+} | null) => typedError<CliInstallStatusDto, BridgeError>(__TAURI_INVOKE("cli_install_wsl", { args })),
+	cliRemoveWsl: (args: {
+	distro?: string | null,
+} | null) => typedError<CliInstallStatusDto, BridgeError>(__TAURI_INVOKE("cli_remove_wsl", { args })),
 };
 
 /* Types */
@@ -644,6 +656,43 @@ export type BootstrapPayload = {
 
 export type BridgeError = {
 	message: string,
+};
+
+/**  `CliInstallMethod` union. This slice only ever installs `symlink`. */
+export type CliInstallMethod = "symlink" | "wrapper";
+
+/**
+ *  `CliInstallState` union (`'installed' | 'not_installed' | 'stale' |
+ *  'conflict' | 'unsupported'`).
+ */
+export type CliInstallState = "installed" | "not_installed" | "stale" | "conflict" | "unsupported";
+
+/**  `CliInstallStatus` (`src/shared/cli-install-types.ts`). */
+export type CliInstallStatusDto = {
+	platform: string,
+	commandName: string,
+	commandPath: string | null,
+	pathDirectory: string | null,
+	/**  `None` only when the persisted PATH could not be read. */
+	pathConfigured: boolean | null,
+	launcherPath: string | null,
+	installMethod: CliInstallMethod | null,
+	supported: boolean,
+	state: CliInstallState,
+	currentTarget: string | null,
+	unsupportedReason: CliInstallUnsupportedReason | null,
+	detail: string | null,
+};
+
+/**  `CliInstallUnsupportedReason` union. */
+export type CliInstallUnsupportedReason = "platform_not_supported" | "launcher_missing" | "launch_mode_unavailable";
+
+/**
+ *  `cli.*Wsl` args (`{ distro? }`). The distro is accepted for IPC shape
+ *  parity and ignored by the unsupported stub.
+ */
+export type CliWslInstallArgs = {
+	distro?: string | null,
 };
 
 /**  `computerUsePermissions.openSetup` args (`{ id? }`). */

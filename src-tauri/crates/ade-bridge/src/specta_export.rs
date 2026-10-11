@@ -157,6 +157,12 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::computer_use::computer_use_permissions_get_status,
                 commands::computer_use::computer_use_permissions_open_setup,
                 commands::computer_use::computer_use_permissions_reset,
+                commands::cli_install::cli_get_install_status,
+                commands::cli_install::cli_install,
+                commands::cli_install::cli_remove,
+                commands::cli_install::cli_get_wsl_install_status,
+                commands::cli_install::cli_install_wsl,
+                commands::cli_install::cli_remove_wsl,
             ])
             .typ::<crate::state::BootstrapPayload>()
             .typ::<crate::events::PtySpawnedPayload>()
@@ -358,6 +364,12 @@ mod tests {
             "computer_use_permissions_get_status",
             "computer_use_permissions_open_setup",
             "computer_use_permissions_reset",
+            "cli_get_install_status",
+            "cli_install",
+            "cli_remove",
+            "cli_get_wsl_install_status",
+            "cli_install_wsl",
+            "cli_remove_wsl",
         ] {
             assert!(
                 bindings.contains(&format!("\"{command}\"")),
