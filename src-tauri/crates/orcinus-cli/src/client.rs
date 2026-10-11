@@ -211,7 +211,7 @@ impl RuntimeClient {
             .map_err(|error| CliError::new("runtime_error", error.to_string()))?;
         line.push(b'\n');
 
-        let deadline = Instant::now() + timeout;
+        let mut deadline = Instant::now() + timeout;
         let mut writer = stream
             .try_clone()
             .map_err(|error| CliError::new("runtime_error", error.to_string()))?;
@@ -270,6 +270,10 @@ impl RuntimeClient {
                 )
             })?;
             if value.get("_keepalive") == Some(&Value::Bool(true)) {
+                // Why: the server sends keepalives precisely while a dispatch
+                // outlives the original window, so each one restarts the
+                // timeout (oracle `timeout.refresh()` in transport.ts).
+                deadline = Instant::now() + timeout;
                 continue;
             }
 

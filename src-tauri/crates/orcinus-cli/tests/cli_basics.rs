@@ -206,6 +206,38 @@ fn status_times_out_when_status_get_does_not_answer() {
 }
 
 #[test]
+fn status_keepalives_refresh_the_client_deadline_past_the_original_timeout() {
+    let runtime = FakeRuntime::start();
+    // Client window is 1s (status.get). Ten keepalives every 200ms span ~1.8s
+    // (well past the original 1s deadline) with the result ~2.1s in. Every
+    // inter-frame gap is far under the refreshed 1s window, so only a client
+    // that restarts its deadline on each keepalive survives to the result.
+    runtime.set_keepalives(10, Duration::from_millis(200));
+    runtime.set_response_delay(Duration::from_millis(300));
+
+    let started = std::time::Instant::now();
+    let output = run(runtime.user_data_path(), &["status", "--json"]);
+    let elapsed = started.elapsed();
+
+    assert_eq!(output.exit_code(), 0, "stderr={:?}", output.stderr);
+    let envelope = output.json();
+    assert_eq!(
+        envelope["result"]["runtime"]["reachable"], true,
+        "keepalives must keep the request alive past the original timeout window (elapsed={elapsed:?}, stderr={:?}): {envelope}",
+        output.stderr
+    );
+    assert_eq!(envelope["result"]["runtime"]["state"], "ready");
+    assert!(
+        elapsed > Duration::from_millis(1000),
+        "the result must arrive after the original 1s deadline: {elapsed:?}"
+    );
+    assert!(
+        elapsed < Duration::from_millis(4000),
+        "the test must stay fast: {elapsed:?}"
+    );
+}
+
+#[test]
 fn status_answers_from_metadata_even_when_runtime_is_absent() {
     let runtime = FakeRuntime::start();
     let metadata = std::fs::read_to_string(runtime.metadata_path()).expect("read metadata");
@@ -382,6 +414,10 @@ fn wrong_auth_token_maps_to_runtime_unavailable() {
     let envelope = output.json();
     assert_eq!(envelope["ok"], false);
     assert_eq!(envelope["error"]["code"], "runtime_unavailable");
+    assert_eq!(
+        envelope["_meta"]["runtimeId"], RUNTIME_ID,
+        "readable metadata's runtime id must survive the auth-failure mapping"
+    );
 
     let output = run(runtime.user_data_path(), &["status", "--json"]);
     assert_eq!(

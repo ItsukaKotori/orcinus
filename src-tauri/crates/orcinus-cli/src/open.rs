@@ -20,15 +20,21 @@ pub fn open() -> Result<(StatusSnapshot, String), CliError> {
     match probe_status() {
         Ok((snapshot, runtime_id)) => return Ok((snapshot, runtime_id)),
         // Why: launching cannot fix a token the runtime rejects; surface it as
-        // runtime_unavailable instead of waiting out the open timeout.
+        // runtime_unavailable instead of waiting out the open timeout. The
+        // metadata was readable, so keep its runtime id on the failure
+        // envelope.
         Err(ProbeFailure::AuthFailed(error)) => {
-            return Err(CliError::new(
+            let mut mapped = CliError::new(
                 "runtime_unavailable",
                 format!(
                     "The Orcinus runtime rejected this session's auth token: {}",
                     error.message
                 ),
-            ))
+            );
+            if let Some(runtime_id) = error.runtime_id {
+                mapped = mapped.with_runtime_id(runtime_id);
+            }
+            return Err(mapped);
         }
         Err(ProbeFailure::Unreachable | ProbeFailure::NotRunning) => {}
     }

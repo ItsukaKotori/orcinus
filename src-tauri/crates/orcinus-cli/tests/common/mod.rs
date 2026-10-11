@@ -63,6 +63,10 @@ struct ServerState {
     shutdown: AtomicBool,
     delay: std::sync::Mutex<Duration>,
     auth_token: std::sync::Mutex<String>,
+    /// `{"_keepalive":true}` frames to emit before the final response.
+    keepalive_frames: AtomicU64,
+    /// Delay between those keepalive frames.
+    keepalive_delay: std::sync::Mutex<Duration>,
 }
 
 /// A fake runtime listening on a real Unix socket with `runtime.json` written.
@@ -85,6 +89,8 @@ impl FakeRuntime {
             shutdown: AtomicBool::new(false),
             delay: std::sync::Mutex::new(Duration::ZERO),
             auth_token: std::sync::Mutex::new(AUTH_TOKEN.to_string()),
+            keepalive_frames: AtomicU64::new(0),
+            keepalive_delay: std::sync::Mutex::new(Duration::ZERO),
         });
         let (tx, requests) = std::sync::mpsc::channel();
 
@@ -147,6 +153,13 @@ impl FakeRuntime {
     /// Delay every response (used to drive the CLI 1s status timeout).
     pub fn set_response_delay(&self, delay: Duration) {
         *self.state.delay.lock().unwrap() = delay;
+    }
+
+    /// Emit `frames` `{"_keepalive":true}` frames, `delay` apart, before the
+    /// final response (used to prove the client refreshes its read deadline).
+    pub fn set_keepalives(&self, frames: u64, delay: Duration) {
+        self.state.keepalive_frames.store(frames, Ordering::SeqCst);
+        *self.state.keepalive_delay.lock().unwrap() = delay;
     }
 
     pub fn user_data_path(&self) -> &Path {
@@ -287,6 +300,21 @@ fn respond(
             &failure_frame(&id, "unauthorized", "Invalid auth token"),
         );
         return;
+    }
+
+    // Why: scripted keepalive frames let tests prove the client refreshes its
+    // read deadline. The first frame is immediate and later ones follow every
+    // `keepalive_delay` (the cadence a real runtime uses), so `n` frames span
+    // `(n - 1) * delay` from the request.
+    let keepalive_frames = state.keepalive_frames.swap(0, Ordering::SeqCst);
+    let keepalive_delay = *state.keepalive_delay.lock().unwrap();
+    for frame_index in 0..keepalive_frames {
+        if frame_index > 0 && !keepalive_delay.is_zero() {
+            thread::sleep(keepalive_delay);
+        }
+        if !write_frame(stream, &json!({"_keepalive": true})) {
+            return;
+        }
     }
 
     // Why: delay only the reply so the request is observable immediately while
