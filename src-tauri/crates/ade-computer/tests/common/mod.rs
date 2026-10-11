@@ -49,6 +49,9 @@ pub struct FakeRequest {
     /// The raw line exactly as it arrived, including the trailing newline.
     pub raw: String,
     pub received_at: Instant,
+    /// Identity of the accepted connection this request arrived on (1-based).
+    /// A transport that keeps its helper/connection reuses the same value.
+    pub connection_id: u64,
 }
 
 /// One observed helper process spawn (pid + argv + transport state).
@@ -115,6 +118,7 @@ struct Shared {
     terminated: Mutex<Vec<u32>>,
     requests_tx: Sender<FakeRequest>,
     listeners: Mutex<Vec<JoinHandle<()>>>,
+    next_connection: AtomicU64,
     shutdown: AtomicBool,
 }
 
@@ -156,6 +160,7 @@ impl FakeHelper {
             terminated: Mutex::new(Vec::new()),
             requests_tx,
             listeners: Mutex::new(Vec::new()),
+            next_connection: AtomicU64::new(0),
             shutdown: AtomicBool::new(false),
         });
         let supervisor = thread::spawn({
@@ -242,6 +247,11 @@ impl FakeHelper {
     /// Supervisor thread handle (the server stops when `FakeHelper` drops).
     pub fn join_handle(&self) -> Option<&JoinHandle<()>> {
         self.supervisor.as_ref()
+    }
+
+    /// Pids that have recorded a SIGTERM so far.
+    pub fn terminated_pids(&self) -> Vec<u32> {
+        self.shared.terminated.lock().unwrap().clone()
     }
 
     /// Block until the stub recorded a SIGTERM for `pid`.
@@ -470,6 +480,7 @@ enum Flow {
 }
 
 fn serve_connection(mut stream: UnixStream, shared: &Arc<Shared>) {
+    let connection_id = shared.next_connection.fetch_add(1, Ordering::Relaxed) + 1;
     let _ = stream.set_read_timeout(Some(CONNECTION_READ_TIMEOUT));
     let mut buffer = Vec::new();
     loop {
@@ -484,7 +495,7 @@ fn serve_connection(mut stream: UnixStream, shared: &Arc<Shared>) {
                 while let Some(newline) = buffer.iter().position(|byte| *byte == b'\n') {
                     let line: Vec<u8> = buffer.drain(..=newline).collect();
                     let raw = String::from_utf8_lossy(&line).to_string();
-                    match handle_line(&stream, shared, &raw) {
+                    match handle_line(&stream, shared, &raw, connection_id) {
                         Flow::Continue => {}
                         Flow::Close => {
                             let _ = stream.shutdown(Shutdown::Both);
@@ -506,7 +517,7 @@ fn serve_connection(mut stream: UnixStream, shared: &Arc<Shared>) {
     }
 }
 
-fn handle_line(stream: &UnixStream, shared: &Arc<Shared>, raw: &str) -> Flow {
+fn handle_line(stream: &UnixStream, shared: &Arc<Shared>, raw: &str, connection_id: u64) -> Flow {
     let Ok(value) = serde_json::from_str::<Value>(raw.trim()) else {
         return Flow::Continue;
     };
@@ -528,6 +539,7 @@ fn handle_line(stream: &UnixStream, shared: &Arc<Shared>, raw: &str) -> Flow {
         token: token.clone(),
         raw: raw.to_string(),
         received_at: Instant::now(),
+        connection_id,
     });
 
     let token_valid = {

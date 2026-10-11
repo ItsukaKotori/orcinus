@@ -174,7 +174,7 @@ fn helper_disconnect_fails_the_request_and_restart_recovers() {
 }
 
 #[test]
-fn helper_error_envelope_maps_to_computer_error() {
+fn helper_error_envelope_maps_to_computer_error_and_keeps_the_helper_alive() {
     let fake = FakeHelper::start();
     fake.respond_with([FakeResponse::error(
         "permission_denied",
@@ -182,6 +182,7 @@ fn helper_error_envelope_maps_to_computer_error() {
     )]);
     let mut transport = HelperTransport::start(fake.helper_app(), Duration::from_secs(2))
         .expect("transport starts");
+    let spawn = fake.wait_for_spawn(0);
 
     let error = transport
         .request("click", &json!({"app": "Finder"}))
@@ -189,7 +190,33 @@ fn helper_error_envelope_maps_to_computer_error() {
     assert_eq!(error.code, ComputerErrorCode::PermissionDenied);
     assert_eq!(error.message, "no accessibility permission");
 
-    drop(transport);
+    // A well-formed error envelope is not a transport failure: the next
+    // request must be served by the same process over the same connection.
+    let result = transport
+        .request("handshake", &json!({}))
+        .expect("same helper keeps serving after an error envelope");
+    assert_eq!(result, json!({"method": "handshake", "params": {}}));
+
+    let first = fake.next_request(Duration::from_secs(2));
+    let second = fake.next_request(Duration::from_secs(2));
+    assert_eq!(first.method, "click");
+    assert_eq!(second.method, "handshake");
+    assert_eq!(
+        first.connection_id, second.connection_id,
+        "an error envelope must not reconnect"
+    );
+    assert_eq!(fake.spawns().len(), 1, "an error envelope must not respawn");
+    assert!(
+        fake.terminated_pids().is_empty(),
+        "an error envelope must not SIGTERM the helper: {:?}",
+        fake.terminated_pids()
+    );
+    assert!(
+        common::process_alive(spawn.pid),
+        "helper process must stay alive after an error envelope"
+    );
+
+    transport.shutdown();
 }
 
 #[test]

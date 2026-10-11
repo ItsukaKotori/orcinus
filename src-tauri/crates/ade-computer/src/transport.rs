@@ -90,7 +90,9 @@ impl HelperTransport {
     /// Any IO or timeout failure invalidates the current helper generation
     /// (terminating the process and removing its socket directory); the failed
     /// request returns the mapped error and the next request restarts the
-    /// helper. A late response carrying a different id is ignored.
+    /// helper. A well-formed `ok:false` response is *not* a transport failure:
+    /// it maps to `ComputerError` and the helper/connection stays usable. A
+    /// late response carrying a different id is ignored.
     pub fn request(&mut self, method: &str, params: &Value) -> Result<Value, ComputerError> {
         self.ensure_helper()?;
         let id = self.next_id;
@@ -111,7 +113,9 @@ impl HelperTransport {
         };
         match outcome {
             Ok(result) => Ok(result),
-            Err(error) => {
+            // The helper answered: keep it alive for the next request.
+            Err(ExchangeFailure::Response(error)) => Err(error),
+            Err(ExchangeFailure::Transport(error)) => {
                 self.invalidate_if_current(generation);
                 Err(error)
             }
@@ -276,18 +280,28 @@ impl NativeResponse {
     }
 }
 
+/// Why an `exchange` failed, deciding whether the helper stays alive.
+enum ExchangeFailure {
+    /// The helper returned a well-formed `ok:false` envelope (or an envelope
+    /// that cannot be mapped). The socket is healthy: keep the helper.
+    Response(ComputerError),
+    /// IO, timeout, or closed-connection failure: the current helper
+    /// generation is unusable and must be invalidated/replaced.
+    Transport(ComputerError),
+}
+
 fn exchange(
     active: &mut ActiveHelper,
     timeout: Duration,
     id: u64,
     method: &str,
     line: &str,
-) -> Result<Value, ComputerError> {
+) -> Result<Value, ExchangeFailure> {
     if let Err(error) = active.stream.write_all(line.as_bytes()) {
-        return Err(ComputerError::new(
+        return Err(ExchangeFailure::Transport(ComputerError::new(
             ComputerErrorCode::AccessibilityError,
             format!("failed to write to native macOS helper app: {error}"),
-        ));
+        )));
     }
     let deadline = Instant::now() + timeout;
     loop {
@@ -299,25 +313,25 @@ fn exchange(
                 // Stale response from another request/generation: ignore.
                 continue;
             }
-            return response.resolve();
+            return response.resolve().map_err(ExchangeFailure::Response);
         }
         let remaining = deadline.saturating_duration_since(Instant::now());
         if remaining.is_zero() {
-            return Err(action_timeout(method));
+            return Err(ExchangeFailure::Transport(action_timeout(method)));
         }
         if let Err(error) = active.stream.set_read_timeout(Some(remaining)) {
-            return Err(ComputerError::new(
+            return Err(ExchangeFailure::Transport(ComputerError::new(
                 ComputerErrorCode::AccessibilityError,
                 format!("failed to set native macOS helper read timeout: {error}"),
-            ));
+            )));
         }
         let mut chunk = [0u8; 8192];
         match active.stream.read(&mut chunk) {
             Ok(0) => {
-                return Err(ComputerError::new(
+                return Err(ExchangeFailure::Transport(ComputerError::new(
                     ComputerErrorCode::AccessibilityError,
                     "native macOS helper app connection closed",
-                ))
+                )))
             }
             Ok(read) => active.read_buffer.extend_from_slice(&chunk[..read]),
             Err(error)
@@ -326,13 +340,13 @@ fn exchange(
                     io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
                 ) =>
             {
-                return Err(action_timeout(method));
+                return Err(ExchangeFailure::Transport(action_timeout(method)));
             }
             Err(error) => {
-                return Err(ComputerError::new(
+                return Err(ExchangeFailure::Transport(ComputerError::new(
                     ComputerErrorCode::AccessibilityError,
                     format!("native macOS helper app transport error: {error}"),
-                ))
+                )))
             }
         }
     }
