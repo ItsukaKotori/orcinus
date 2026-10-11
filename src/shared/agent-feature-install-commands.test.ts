@@ -2,39 +2,75 @@ import { describe, expect, it } from 'vitest'
 import {
   buildAgentFeatureSkillInstallArgs,
   buildAgentFeatureSkillInstallCommand,
+  COMPUTER_USE_SKILL_INSTALL_COMMAND,
+  COMPUTER_USE_SKILL_REPOSITORY_URL,
   ORCA_CLI_SKILL_INSTALL_COMMAND,
   buildAgentFeatureSkillUpdateArgs,
   buildAgentFeatureSkillUpdateCommand,
   COMPUTER_USE_SKILL_UPDATE_COMMAND,
+  EPHEMERAL_VMS_SKILL_INSTALL_COMMAND,
   EPHEMERAL_VMS_SKILL_UPDATE_COMMAND,
   LINEAR_TICKETS_SKILL_UPDATE_COMMAND,
+  ORCA_LINEAR_SKILL_INSTALL_COMMAND,
   ORCA_LINEAR_SKILL_UPDATE_COMMAND,
   ORCA_CLI_ORCHESTRATION_SKILL_INSTALL_COMMAND,
   ORCA_CLI_SKILL_UPDATE_COMMAND,
+  ORCA_SKILLS_REPOSITORY_URL,
+  ORCHESTRATION_SKILL_INSTALL_COMMAND,
   ORCHESTRATION_SKILL_UPDATE_COMMAND
 } from './agent-feature-install-commands'
 
 describe('agent feature skill commands', () => {
+  it('routes only computer-use to the fork repository and every other skill upstream', () => {
+    // Why: the fork carries only the computer-use skill. Any other skill must
+    // keep installing from the upstream repo or `skills add` 404s.
+    expect(ORCA_SKILLS_REPOSITORY_URL).toBe('https://github.com/stablyai/orca')
+    expect(COMPUTER_USE_SKILL_REPOSITORY_URL).toBe(
+      'https://github.com/ItsukaKotori/orcinus'
+    )
+    expect(COMPUTER_USE_SKILL_INSTALL_COMMAND).toBe(
+      `npx skills add ${COMPUTER_USE_SKILL_REPOSITORY_URL} --skill computer-use --global`
+    )
+    for (const command of [
+      ORCA_CLI_SKILL_INSTALL_COMMAND,
+      ORCHESTRATION_SKILL_INSTALL_COMMAND,
+      EPHEMERAL_VMS_SKILL_INSTALL_COMMAND,
+      ORCA_LINEAR_SKILL_INSTALL_COMMAND,
+      ORCA_CLI_ORCHESTRATION_SKILL_INSTALL_COMMAND
+    ]) {
+      expect(command).toContain(ORCA_SKILLS_REPOSITORY_URL)
+      expect(command).not.toContain(COMPUTER_USE_SKILL_REPOSITORY_URL)
+    }
+    expect(
+      buildAgentFeatureSkillInstallArgs(['computer-use'], {
+        repositoryUrl: COMPUTER_USE_SKILL_REPOSITORY_URL
+      })[2]
+    ).toBe(COMPUTER_USE_SKILL_REPOSITORY_URL)
+    expect(buildAgentFeatureSkillInstallArgs(['computer-use'])[2]).toBe(
+      ORCA_SKILLS_REPOSITORY_URL
+    )
+  })
+
   it('builds a global install command by default', () => {
     expect(buildAgentFeatureSkillInstallCommand(['orca-cli'])).toBe(
-      'npx skills add https://github.com/ItsukaKotori/orcinus --skill orca-cli --global'
+      'npx skills add https://github.com/stablyai/orca --skill orca-cli --global'
     )
   })
 
   it('drops --global when installing locally', () => {
     expect(buildAgentFeatureSkillInstallCommand(['orca-cli'], { global: false })).toBe(
-      'npx skills add https://github.com/ItsukaKotori/orcinus --skill orca-cli'
+      'npx skills add https://github.com/stablyai/orca --skill orca-cli'
     )
   })
 
   it('repeats --skill per name for multi-skill installs', () => {
     expect(buildAgentFeatureSkillInstallCommand(['orca-cli', 'orchestration'])).toBe(
-      'npx skills add https://github.com/ItsukaKotori/orcinus --skill orca-cli --skill orchestration --global'
+      'npx skills add https://github.com/stablyai/orca --skill orca-cli --skill orchestration --global'
     )
     expect(buildAgentFeatureSkillInstallArgs(['orca-cli', 'orchestration'])).toEqual([
       'skills',
       'add',
-      'https://github.com/ItsukaKotori/orcinus',
+      'https://github.com/stablyai/orca',
       '--skill',
       'orca-cli',
       '--skill',
@@ -76,7 +112,7 @@ describe('agent feature skill commands', () => {
     expect(
       buildAgentFeatureSkillInstallCommand(['orca-cli'], { yes: true, agents: ['universal'] })
     ).toBe(
-      'npx skills add https://github.com/ItsukaKotori/orcinus --skill orca-cli --global --agent universal -y'
+      'npx skills add https://github.com/stablyai/orca --skill orca-cli --global --agent universal -y'
     )
     expect(buildAgentFeatureSkillUpdateCommand(['orca-cli'], { global: false, yes: true })).toBe(
       'npx skills update orca-cli --project -y'
