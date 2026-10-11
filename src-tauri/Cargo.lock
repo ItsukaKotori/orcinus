@@ -40,6 +40,7 @@ version = "0.0.1"
 dependencies = [
  "ade-ai-vault",
  "ade-automations",
+ "ade-computer",
  "ade-core",
  "ade-fs",
  "ade-git",
@@ -53,6 +54,7 @@ dependencies = [
  "objc2",
  "objc2-foundation",
  "objc2-user-notifications",
+ "rand 0.8.8",
  "rfd",
  "serde",
  "serde_json",

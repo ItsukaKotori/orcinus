@@ -154,6 +154,9 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::automations::automations_mark_dispatch_result,
                 commands::automations::automations_snapshot_workspace_name,
                 commands::automations::automations_renderer_ready,
+                commands::computer_use::computer_use_permissions_get_status,
+                commands::computer_use::computer_use_permissions_open_setup,
+                commands::computer_use::computer_use_permissions_reset,
             ])
             .typ::<crate::state::BootstrapPayload>()
             .typ::<crate::events::PtySpawnedPayload>()
@@ -352,6 +355,9 @@ mod tests {
             "automations_mark_dispatch_result",
             "automations_snapshot_workspace_name",
             "automations_renderer_ready",
+            "computer_use_permissions_get_status",
+            "computer_use_permissions_open_setup",
+            "computer_use_permissions_reset",
         ] {
             assert!(
                 bindings.contains(&format!("\"{command}\"")),

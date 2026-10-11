@@ -277,6 +277,23 @@ describe('createAdeApi real assembly', () => {
     warn.mockRestore()
   })
 
+  it('routes the computerUsePermissions domain through its commands', async () => {
+    const api = createAdeApi()
+    invokeMock.mockResolvedValue({})
+
+    await api.computerUsePermissions.getStatus()
+    await api.computerUsePermissions.openSetup({ id: 'accessibility' })
+    await api.computerUsePermissions.openSetup()
+    await api.computerUsePermissions.reset()
+
+    expect(invokeMock.mock.calls).toEqual([
+      ['computer_use_permissions_get_status'],
+      ['computer_use_permissions_open_setup', { args: { id: 'accessibility' } }],
+      ['computer_use_permissions_open_setup', { args: undefined }],
+      ['computer_use_permissions_reset']
+    ])
+  })
+
   it('rejects unknown namespaces with the unimplemented fallback', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const api = createAdeApi() as unknown as { notADomain: { ping: () => Promise<unknown> } }

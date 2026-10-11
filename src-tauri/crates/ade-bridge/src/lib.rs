@@ -1,4 +1,5 @@
 pub mod commands;
+pub mod computer_service;
 pub mod errors;
 pub mod events;
 pub mod json;

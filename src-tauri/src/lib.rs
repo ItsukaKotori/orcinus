@@ -71,6 +71,9 @@ pub fn run() {
                 // 逐会话 kill（带 2s+2s 升级时限）——订阅流随会话退出自然终止
                 // （规格 §3.1：app 退出全量收尾）。
                 state.pty_host.shutdown_all();
+                // computer-use 收尾（规格 §3.5）：RPC server 停 + provider
+                // terminate + `runtime.json`/`runtime.sock` 移除。
+                state.computer.shutdown();
             }
         }
     });

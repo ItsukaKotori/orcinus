@@ -326,6 +326,11 @@ export const commands = {
 	automationsSnapshotWorkspaceName: (args: AutomationsSnapshotWorkspaceNameArgs) => typedError<AutomationsSnapshotWorkspaceNameResult, BridgeError>(__TAURI_INVOKE("automations_snapshot_workspace_name", { args })),
 	/**  Arm the service and run the catch-up tick (renderer boot). */
 	automationsRendererReady: () => typedError<null, BridgeError>(__TAURI_INVOKE("automations_renderer_ready")),
+	computerUsePermissionsGetStatus: () => typedError<ComputerUsePermissionStatusResult, BridgeError>(__TAURI_INVOKE("computer_use_permissions_get_status")),
+	computerUsePermissionsOpenSetup: (args: {
+	id?: ComputerUsePermissionId | null,
+} | null) => typedError<ComputerUseOpenSetupResult_Serialize, BridgeError>(__TAURI_INVOKE("computer_use_permissions_open_setup", { args })),
+	computerUsePermissionsReset: () => typedError<ComputerUseResetResult, BridgeError>(__TAURI_INVOKE("computer_use_permissions_reset")),
 };
 
 /* Types */
@@ -639,6 +644,74 @@ export type BootstrapPayload = {
 
 export type BridgeError = {
 	message: string,
+};
+
+/**  `computerUsePermissions.openSetup` args (`{ id? }`). */
+export type ComputerUseOpenSetupArgs = {
+	id?: ComputerUsePermissionId | null,
+};
+
+/**
+ *  `ComputerUsePermissionSetupResult` (`permissionId`/`permissions` omitted
+ *  when absent; `nextStep` stays nullable).
+ */
+export type ComputerUseOpenSetupResult = ComputerUseOpenSetupResult_Serialize | ComputerUseOpenSetupResult_Deserialize;
+
+/**
+ *  `ComputerUsePermissionSetupResult` (`permissionId`/`permissions` omitted
+ *  when absent; `nextStep` stays nullable).
+ */
+export type ComputerUseOpenSetupResult_Deserialize = {
+	platform: string,
+	helperAppPath: string | null,
+	permissionId: ComputerUsePermissionId | null,
+	openedSettings: boolean,
+	launchedHelper: boolean,
+	permissions: ComputerUsePermissionState[] | null,
+	nextStep: string | null,
+};
+
+/**
+ *  `ComputerUsePermissionSetupResult` (`permissionId`/`permissions` omitted
+ *  when absent; `nextStep` stays nullable).
+ */
+export type ComputerUseOpenSetupResult_Serialize = {
+	platform: string,
+	helperAppPath: string | null,
+	permissionId?: ComputerUsePermissionId | null,
+	openedSettings: boolean,
+	launchedHelper: boolean,
+	permissions?: ComputerUsePermissionState[] | null,
+	nextStep: string | null,
+};
+
+/**  `ComputerUsePermissionId` (`'accessibility' | 'screenshots'`). */
+export type ComputerUsePermissionId = "accessibility" | "screenshots";
+
+/**  `ComputerUsePermissionState` (`{id, status}`). */
+export type ComputerUsePermissionState = {
+	id: ComputerUsePermissionId,
+	status: ComputerUsePermissionStatus,
+};
+
+/**  `ComputerUsePermissionStatus` (`'granted' | 'not-granted' | 'unsupported'`). */
+export type ComputerUsePermissionStatus = "granted" | "not-granted" | "unsupported";
+
+/**  `ComputerUsePermissionStatusResult`. */
+export type ComputerUsePermissionStatusResult = {
+	platform: string,
+	helperAppPath: string | null,
+	helperUnavailableReason: string | null,
+	permissions: ComputerUsePermissionState[],
+};
+
+/**  `ComputerUsePermissionResetResult` (status plus the reset `bundleId`). */
+export type ComputerUseResetResult = {
+	platform: string,
+	helperAppPath: string | null,
+	helperUnavailableReason: string | null,
+	permissions: ComputerUsePermissionState[],
+	bundleId: string | null,
 };
 
 export type DiffLineCountMinimums = {

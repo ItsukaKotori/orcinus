@@ -26,6 +26,7 @@ use tauri::{AppHandle, Manager};
 use crate::commands::ai_vault::AiVaultService;
 use crate::commands::platform::{platform_info, PlatformInfo};
 use crate::commands::preflight::PathHydrationCache;
+use crate::computer_service::{ComputerService, StoreFeatureRecorder, USER_DATA_PATH_ENV};
 use crate::errors::BridgeError;
 use crate::events;
 use crate::json::Json;
@@ -514,15 +515,23 @@ pub struct AppState {
     /// AI vault 会话历史（Phase 2F 规格 §3.2）：roots 配置 + 60s 列表缓存
     /// + 扫描取消注册表；无后台任务。
     pub ai_vault: Arc<AiVaultService>,
+    /// computer-use（Phase 2G 规格 §3.4/§3.5）：provider + TCC 权限面 +
+    /// runtime RPC server（`runtime.json`/`runtime.sock`，Exit 时 shutdown）。
+    pub computer: Arc<ComputerService>,
     settings_writer: WriteScheduler,
-    ui_writer: WriteScheduler,
+    ui_writer: Arc<WriteScheduler>,
 }
 
 impl AppState {
     pub fn initialize(app: &AppHandle, pty_host: Arc<PtyHost>) -> Result<Self, BridgeError> {
-        let data_dir = app.path().app_data_dir().map_err(|error| {
-            BridgeError::message(format!("failed to resolve app data dir: {error}"))
-        })?;
+        // `orcinus` CLI reads `runtime.json` from the same directory; tests can
+        // redirect every store with one env var (spec §3.5).
+        let data_dir = match std::env::var(USER_DATA_PATH_ENV) {
+            Ok(value) if !value.is_empty() => std::path::PathBuf::from(value),
+            _ => app.path().app_data_dir().map_err(|error| {
+                BridgeError::message(format!("failed to resolve app data dir: {error}"))
+            })?,
+        };
         std::fs::create_dir_all(&data_dir)?;
         let session = Arc::new(Store::open(&data_dir.join("ade.sqlite"))?);
         let home = app
@@ -583,10 +592,24 @@ impl AppState {
             let store = Arc::clone(&settings);
             move || lock(&store).persist()
         });
-        let ui_writer = WriteScheduler::new(WRITE_DEBOUNCE, WRITE_MAX_WAIT, {
+        let ui_writer = Arc::new(WriteScheduler::new(WRITE_DEBOUNCE, WRITE_MAX_WAIT, {
             let store = Arc::clone(&ui);
             move || lock(&store).persist()
-        });
+        }));
+
+        // computer-use（规格 §3.4/§3.5）：helper 解析 → provider/RPC server →
+        // TCC 权限面。RPC feature 记录经 `StoreFeatureRecorder` 落 UI store
+        // （内存记录 + 复用 UI 去抖写盘）；helper 缺失也照常装配。
+        let recorder = Arc::new(StoreFeatureRecorder::new(
+            Arc::clone(&ui),
+            Arc::clone(&ui_writer),
+        ));
+        let resource_dir = app.path().resource_dir().ok();
+        let computer = Arc::new(ComputerService::initialize(
+            &data_dir,
+            resource_dir.as_deref(),
+            recorder,
+        )?);
 
         let watchers = FsWatcher::new();
         {
@@ -635,6 +658,7 @@ impl AppState {
             gh_path_cache: GhPathCache::default(),
             git_cancels: GitCancelRegistry::new(),
             ai_vault,
+            computer,
             settings_writer,
             ui_writer,
         })

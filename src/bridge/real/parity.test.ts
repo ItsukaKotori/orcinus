@@ -11,6 +11,7 @@ import { createAgentStatusRealApi } from './agent-status'
 import { createAiVaultRealApi } from './ai-vault'
 import { createAppRealApi } from './app'
 import { createAutomationsRealApi } from './automations'
+import { createComputerUsePermissionsRealApi } from './computer-use-permissions'
 import { createFsRealApi } from './fs'
 import { createGhRealApi } from './gh'
 import { createHostedReviewRealApi } from './hosted-review'
@@ -637,6 +638,13 @@ const surfaceCases: SurfaceCase[] = [
     domain: 'hostedReview',
     explicit: ['forBranch', 'getCreationEligibility', 'create'],
     missing: ['createStacked']
+  },
+  {
+    // Task 7（2G）：宿主三命令全接真；该域没有离线 mock，缺失面为空
+    // （mock 端整体落在 namespace fallback，故显式键只有 real 侧）。
+    domain: 'computerUsePermissions',
+    explicit: ['getStatus', 'openSetup', 'reset'],
+    missing: []
   }
 ]
 
@@ -969,6 +977,8 @@ function realApiFor(domain: keyof PreloadApi): unknown {
       return createHostedReviewRealApi()
     case 'automations':
       return createAutomationsRealApi()
+    case 'computerUsePermissions':
+      return createComputerUsePermissionsRealApi()
     default:
       throw new Error(`no real factory for ${domain}`)
   }

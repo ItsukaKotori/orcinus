@@ -46,6 +46,7 @@ import { createAgentStatusRealApi } from './real/agent-status'
 import { createAiVaultRealApi } from './real/ai-vault'
 import { createAppRealApi } from './real/app'
 import { createAutomationsRealApi } from './real/automations'
+import { createComputerUsePermissionsRealApi } from './real/computer-use-permissions'
 import { createFolderWorkspacesRealApi } from './real/folder-workspaces'
 import { createFsRealApi } from './real/fs'
 import { createGhRealApi } from './real/gh'
@@ -77,6 +78,7 @@ type RealDomains = Pick<
   | 'aiVault'
   | 'app'
   | 'automations'
+  | 'computerUsePermissions'
   | 'folderWorkspaces'
   | 'fs'
   | 'gh'
@@ -155,6 +157,7 @@ function createRealDomains(): RealDomains {
     aiVault: createAiVaultRealApi(),
     app: createAppRealApi(),
     automations: createAutomationsRealApi(),
+    computerUsePermissions: createComputerUsePermissionsRealApi(),
     folderWorkspaces: createFolderWorkspacesRealApi(),
     fs: createFsRealApi(),
     gh: createGhRealApi(),
