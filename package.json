@@ -7,6 +7,7 @@
     "dev": "tauri dev",
     "build": "tauri build",
     "build:computer-macos": "node config/scripts/build-computer-macos.mjs",
+    "build:orcinus-cli": "node config/scripts/build-orcinus-cli.mjs",
     "build:web": "vite build",
     "rebuild:node": "node config/scripts/rebuild-node-pty.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",

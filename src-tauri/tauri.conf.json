@@ -16,6 +16,7 @@
     "active": true,
     "targets": "all",
     "resources": { "resources/computer-use/": "computer-use/" },
+    "externalBin": ["binaries/orcinus"],
     "macOS": {
       "infoPlist": "macos-info.plist"
     },
