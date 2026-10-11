@@ -40,7 +40,7 @@
   - helper 启动参数保持 `--agent <socket> --token-file <token>`；权限参数 `--permission <id>`/`--permissions`/`--permission-status-file <path>`（原样）。
   - handshake 返回 `provider:"orcinus-computer-use-macos"`、`protocolVersion:1`。
 
-- [ ] **Step 1: 拷贝树 + .gitignore**
+- [x] **Step 1: 拷贝树 + .gitignore**
 
 ```bash
 cp -R /Users/itsuka/CodeSpace/orca/native/computer-use-macos src-tauri/native/computer-use-macos
@@ -54,7 +54,7 @@ src-tauri/resources/computer-use/
 src-tauri/binaries/
 ```
 
-- [ ] **Step 2: 改名 + 认证改动（唯一实质逻辑改动）**
+- [x] **Step 2: 改名 + 认证改动（唯一实质逻辑改动）**
 
 在拷贝树中执行（用 Grep 找点，逐处确认）：
 1. **认证放宽**：`Sources/OrcaComputerUseMacOS/main.swift` 对端校验（参照 `orca:native/computer-use-macos/Sources/OrcaComputerUseMacOS/main.swift:4080-4114` 的 `computer-sidecar.js` + `com.stablyai.orca*` 判据）：删除 Electron 命令路径与 bundle ID 判据，保留 **token 严格匹配（主防线）+ `LOCAL_PEERPID` 同 uid 活性检查**；socket 目录 0700/socket 0600 不动。
@@ -62,7 +62,7 @@ src-tauri/binaries/
 3. **显示名/文案**：设置窗与权限文案中的 Orca → Orcinus（`grep -ri "orca" Sources/` 全过一遍；`com.stablyai.orca.computer-use` 默认 bundle ID 若出现在 Swift 内 → 改 `dev.itsuka.orcinus.computer-use`；**产品名/可执行名由构建脚本的 Info.plist/输出路径决定，Swift 内不写死可执行名**）。
 4. `Package.swift` 目标名可保留 `OrcaComputerUseMacOS*`（内部符号，不改动以最小化 diff）——构建脚本产物名与之解耦。
 
-- [ ] **Step 3: 构建脚本**
+- [x] **Step 3: 构建脚本**
 
 `config/scripts/build-computer-macos.mjs`（移植 `orca:config/scripts/build-computer-macos.mjs` 骨架；Electron 特有部分删除）：
 
@@ -82,7 +82,7 @@ src-tauri/binaries/
 
 `package.json` `scripts` 加：`"build:computer-macos": "node config/scripts/build-computer-macos.mjs"`。
 
-- [ ] **Step 4: 验证（本任务专项）**
+- [x] **Step 4: 验证（本任务专项）**
 
 ```bash
 pnpm build:computer-macos
@@ -93,7 +93,7 @@ cd src-tauri/native/computer-use-macos && swift test 2>&1 | tail -5
 
 预期：构建 exit 0、产物存在、`swift test` 全绿（改名/认证后编译通过）。若 `swift test` 存在仅依赖 Electron 身份的用例，删除该用例并在 commit message 记录（不得改断言放水）。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add -A src-tauri/native config/scripts package.json src-tauri/tauri.conf.json .gitignore
@@ -121,7 +121,7 @@ git commit -m "feat(computer): vendor Swift helper 改名 Orcinus Computer Use �
   - `paths::helper_executable(app: &Path) -> PathBuf` = `<app>/Contents/MacOS/orcinus-computer-use-macos`；`paths::helper_bundle_id(app: &Path) -> Option<String>`（读 Info.plist 文本，简单字符串提取；权限模块用）。
   - `availability::provider_unavailable_message(reason: ProviderUnavailable, helper: Option<&Path>) -> String`（平台不支持 / 未构建 helper→提示 `pnpm build:computer-macos`）；`enum ProviderUnavailable { PlatformUnsupported, HelperMissing }`。
 
-- [ ] **Step 1: crate 骨架**
+- [x] **Step 1: crate 骨架**
 
 `Cargo.toml`（镜像 ade-automations 惯例）：
 
@@ -142,7 +142,7 @@ libc = "0.2"
 
 `lib.rs`：`pub mod protocol; pub mod paths; pub mod availability;`（后续任务追加模块）。
 
-- [ ] **Step 2: 写失败测试 → 实现 → 通过**
+- [x] **Step 2: 写失败测试 → 实现 → 通过**
 
 测试锚：
 1. `ComputerErrorCode::as_str()` 15 码与 TS 目录逐字一致（测试内列全比对）。
@@ -152,7 +152,7 @@ libc = "0.2"
 
 Run: `cargo test -p ade-computer`（预期 RED → GREEN）。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add src-tauri/crates/ade-computer src-tauri/Cargo.lock
@@ -180,7 +180,7 @@ git commit -m "feat(computer): ade-computer 骨架、协议类型与 helper 路�
   - `tests/common`：`FakeHelper::start()` → `{socket_path, token_path, join_handle, requests_rx, respond_with(script)}`；支持：握手响应、按方法回显、延迟、断开、拒 token。
 - 语义要点（对齐参照）：重启后旧连接迟到响应按 id+generation 丢弃（`ignore_stale` 语义，`orca:src/main/computer/macos-native-provider-transport.ts:24-46,100-115`）。
 
-- [ ] **Step 1: 写失败测试（fake helper 驱动）**
+- [x] **Step 1: 写失败测试（fake helper 驱动）**
 
 锚：
 1. `start` 后 fake helper 收到 argv `--agent <sock> --token-file <token>`，且 token 文件在连接建立后被删除。
@@ -190,11 +190,11 @@ git commit -m "feat(computer): ade-computer 骨架、协议类型与 helper 路�
 5. 错误响应 `{"ok":false,"error":{"code":"permission_denied",...}}` 原样映射 `ComputerError`。
 6. `shutdown` 后 socket 目录消失、子进程退出。
 
-- [ ] **Step 2: 跑测试确认失败 → 实现 → 通过**
+- [x] **Step 2: 跑测试确认失败 → 实现 → 通过**
 
 Run: `cargo test -p ade-computer`
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add src-tauri/crates/ade-computer
@@ -220,7 +220,7 @@ git commit -m "feat(computer): helper transport（spawn/token/NDJSON/重试/超�
   - `client::ProviderClient`：`new(helper_app: PathBuf, request_timeout) `；`ensure_ready(&mut self) -> Result<Value, ComputerError>`（首次 `handshake`，`protocolVersion!=1` → `provider_incompatible`；缓存 capabilities）；`call(&mut self, method, params) -> Result<Value, ComputerError>`（单飞互斥：内部 `Mutex`，请求串行；动作方法先 `validate`、结果过 `normalize_action_result`）；`shutdown(&mut self)`。
   - `provider::ComputerProvider: Send` trait：`fn capabilities(&mut self) -> Result<serde_json::Value, ComputerError>; fn request(&mut self, method: &str, params: serde_json::Value) -> Result<serde_json::Value, ComputerError>;`；`impl ComputerProvider for ProviderClient`（`capabilities` → `ensure_ready` 的 handshake 结果；`request` → `call`）；**`provider::UnavailableProvider`**（helper 缺失时装配：两方法恒返回 `unsupported_capability`，message 取 `availability::provider_unavailable_message`）。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 锚：
 1. 校验矩阵：每个方法的合法/非法组合（缺 app、window XOR、click 坐标 XOR、非法 mouseButton/direction、hotkey 无修饰、pressKey 带 `+`（除 `+` 本身）、paste 超限）→ 错误码与文案（从 oracle 文件拷贝的字符串断言）。
@@ -228,11 +228,11 @@ git commit -m "feat(computer): helper transport（spawn/token/NDJSON/重试/超�
 3. `client`：fake helper 首握手 `protocolVersion:2` → `provider_incompatible`；正常握手后 `getAppState` 结果补 verification；两次并发 `call` 串行（fake helper 记录请求间隔/顺序）。
 4. capabilities 缓存：第二次 `capabilities` 不再发 handshake。
 
-- [ ] **Step 2: 跑测试确认失败 → 实现 → 通过**
+- [x] **Step 2: 跑测试确认失败 → 实现 → 通过**
 
 Run: `cargo test -p ade-computer`
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add src-tauri/crates/ade-computer
@@ -261,15 +261,15 @@ git commit -m "feat(computer): provider client、动作校验与 verification �
   - `permissions::reset(runner, helper) -> ResetResult`：bundle ID = `helper_bundle_id(helper)`（Task 2）回退 `dev.itsuka.orcinus.computer-use` → `tccutil reset Accessibility <id>` + `tccutil reset ScreenCapture <id>`。
 - 全过程无 helper 时：`probe_status` 返回 unavailable 形状；`open_setup` 返回 `opened_settings:false,next_step:Some(构建/安装提示)`；`reset` 照常执行（bundle ID 回退）。
 
-- [ ] **Step 1: 写失败测试（fake runner 捕获 argv + 状态文件 fixture）**
+- [x] **Step 1: 写失败测试（fake runner 捕获 argv + 状态文件 fixture）**
 
 锚：`open`/`pkill`/`tccutil` argv 逐字断言；状态文件 `{accessibility:"granted",screenshots:"not-granted"}` → 映射；status 文件始终缺失 → 两权限 `not-granted`；helper 缺失分支；bundleId 从 Info.plist fixture 读取 + 回退。
 
-- [ ] **Step 2: 跑测试确认失败 → 实现 → 通过**
+- [x] **Step 2: 跑测试确认失败 → 实现 → 通过**
 
 Run: `cargo test -p ade-computer permissions`
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add src-tauri/crates/ade-computer
@@ -297,7 +297,7 @@ git commit -m "feat(computer): TCC 权限探针、授予与重置"
   - 准入：JSON 解析失败/缺字段 → `bad_request`；`authToken` 不符 → `unauthorized`；行超 `max_message_bytes` → `request_too_large`；连接数超限 → `runtime_busy`；30s 无数据 → 断开；处理耗时 > `keepalive_interval` 时每 10s 向连接写 `{"_keepalive":true}\n`。
   - `computer.capabilities` → `provider.capabilities()`（helper 不可用错误照抛）；其余 `computer.*` → `provider.request(method, params)`；方法成功/失败后按 `feature_id_for_method` 调 `recorder.record`（**仅 `computer.*` 方法记录**；`status.get` 不记）。
 
-- [ ] **Step 1: 写失败测试（fake provider + fake recorder + 临时目录）**
+- [x] **Step 1: 写失败测试（fake provider + fake recorder + 临时目录）**
 
 锚：
 1. metadata 文件写出（0600 + 字段）并在 `shutdown` 后消失。
@@ -307,11 +307,11 @@ git commit -m "feat(computer): TCC 权限探针、授予与重置"
 5. 慢 provider（注入 50ms keepalive + 200ms 延迟）→ 客户端先收到 `{"_keepalive":true}` 再收结果。
 6. 并发超限（max_connections=2）→ 第 3 连接 `runtime_busy`。
 
-- [ ] **Step 2: 跑测试确认失败 → 实现 → 通过**
+- [x] **Step 2: 跑测试确认失败 → 实现 → 通过**
 
 Run: `cargo test -p ade-computer`
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add src-tauri/crates/ade-computer
@@ -344,19 +344,19 @@ git commit -m "feat(computer): runtime RPC server（metadata/socket/信封/分�
   - TS：`createComputerUsePermissionsRealApi()` 3 方法 `invokeCommand`；4 域 parity。
 - 说明：renderer 的 `openSetup` 已自行 `recordFeatureInteraction('computer-use-setup')`，Tauri 命令路径**不重复记录**；RPC（CLI）路径记录在 T6 server。
 
-- [ ] **Step 1: Rust 装配（AppState + 命令）**
+- [x] **Step 1: Rust 装配（AppState + 命令）**
 
 `state.rs initialize`：`app_data_dir` = Tauri `app.path().app_data_dir()`（`dev.itsuka.orcinus`；`ORCINUS_USER_DATA_PATH` 覆盖，测试友好）；`auth_token` = 24 字节随机 hex；`runtime_id` = UUID；`RpcServer::start(...)`；`helper_app` = `paths::helper_app_path(env::var("ORCINUS_COMPUTER_MACOS_HELPER_APP_PATH").ok().as_deref(), resource_dir)`。`Exit` 调 `shutdown()`（RPC 停 + provider terminate + metadata 删除）。
 
-- [ ] **Step 2: 命令 + bindings**
+- [x] **Step 2: 命令 + bindings**
 
 按既有命令惯例（`#[tauri::command]` + `*_impl` 可测函数 + DTO specta derive）；`cargo run -p ade-bridge --bin export-bindings` 重生成；`cargo test -p ade-bridge`（`bindings_are_fresh`）。
 
-- [ ] **Step 3: TS 域 + 测试**
+- [x] **Step 3: TS 域 + 测试**
 
 `real/computer-use-permissions.ts`（模式照 `real/preflight.ts`）；parity `surfaceCases` 加 `computerUsePermissions` 显式 3 / missing 0（该域离线全 fallback）；`pnpm vitest run src/bridge`。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add src-tauri src/bridge
@@ -385,11 +385,11 @@ git commit -m "feat(bridge): computerUsePermissions 三命令与 AppState 装配
   - TS `createCliRealApi()` 6 方法；parity 显式 6 / missing 0。
 - 不做：管理员提权（osascript）、shell profile 改写、Windows 分支（非 macOS → `unsupported`/`platform_not_supported`）。
 
-- [ ] **Step 1: Rust 测试先行（tempdir 全流程）**
+- [x] **Step 1: Rust 测试先行（tempdir 全流程）**
 
 锚：not_installed → install（symlink 存在且指向 launcher）→ installed；他物占位 → conflict 且 install 拒绝；stale（托管目录旧目标）识别；remove 后回 not_installed；`/usr/local/bin` 不可写 → 落 `~/.local/bin`（临时目录模拟可写性）；PATH 探针。
 
-- [ ] **Step 2: 命令 + bindings + TS + 测试 + 提交**
+- [x] **Step 2: 命令 + bindings + TS + 测试 + 提交**
 
 `cargo run -p ade-bridge --bin export-bindings && cargo test -p ade-bridge`；`pnpm vitest run src/bridge`。
 
@@ -417,11 +417,11 @@ git commit -m "feat(bridge): cli 域接真（orcinus PATH 安装/状态/移除�
   - TS `createSkillsRealApi()` 仅 `discover` 显式，其余维持 fallback；parity 1/missing-N。
 - 已知边界（照 spec）：无 repo 根、无 WSL/远端、无 freshness/install/remove。
 
-- [ ] **Step 1: Rust 测试先行（fixture home 树）**
+- [x] **Step 1: Rust 测试先行（fixture home 树）**
 
 锚：claude/codex/agents 根各放一个 skill（frontmatter name 命中/缺失回退）；`.system` → bundled；不存在的根 `exists:false` 且不出 skills；排序；TTL 缓存（同 home 二次不重扫——用扫描计数注入或 mtime 变更断言）与 refresh 绕过。
 
-- [ ] **Step 2: 命令 + bindings + TS + 测试 + 提交**
+- [x] **Step 2: 命令 + bindings + TS + 测试 + 提交**
 
 ```bash
 git add src-tauri src/bridge
@@ -444,12 +444,12 @@ git commit -m "feat(bridge): skills.discover 本地最小真实现（home 技能
   - `build_spawn_env` 在无既有 `ORCINUS_CLI_COMMAND` 时注入该值（存在才注入；不覆盖调用方 env）。
   - catalog：union/`FEATURE_INTERACTIONS`/`expectedIds` 加 `computer-use`（定义文案照 oracle `orca:src/shared/feature-interaction-catalog.ts` 对应条目摘要）；ratchet 生产调用方扫描面扩展为同时接受 `src-tauri/crates/ade-computer/src` 中含字面量 `"computer-use"` 的映射（`feature_id_for_method`）。
 
-- [ ] **Step 1: 测试先行**
+- [x] **Step 1: 测试先行**
 
 Rust：`resolve_orcinus_cli_path`（临时目录造 `orcinus` 文件 → Some；缺 → None）；`build_spawn_env` 注入/不覆盖断言（扩展现有 `pty.rs:1264-1320` 测试样式）。
 TS：`pnpm test src/shared/feature-interactions.test.ts`（RED：缺 id → GREEN）。
 
-- [ ] **Step 2: 实现 + 提交**
+- [x] **Step 2: 实现 + 提交**
 
 ```bash
 git add src-tauri src/shared
@@ -483,16 +483,16 @@ git commit -m "feat: 终端注入 ORCINUS_CLI_COMMAND 与 computer-use 交互 id
   - stub：照 `orca:skills/computer-use/SKILL.md` 骨架，解析顺序 `ORCINUS_CLI_COMMAND` → PATH `orcinus`，**禁止回退 `orca`**；引导 `orcinus skills get computer-use`。
 - `.gitignore` 无需改（无产物）。
 
-- [ ] **Step 1: 测试先行（fake runtime server）**
+- [x] **Step 1: 测试先行（fake runtime server）**
 
 锚：`status --json`（无 metadata → not_running/exit 0；fake server/metadata → reachable true）；错 token → `runtime_unavailable`（连接后 unauthorized 映射）；`open`（`ORCINUS_OPEN_COMMAND=/bin/true` + 无服务 → `runtime_open_timeout`；预可达 → 成功）；`skills get computer-use --json` 形状 + `--full` 等价 + 未知 topic；人读模式 exit code。
 （用 `env!("CARGO_BIN_EXE_orcinus")` + `std::process::Command`。）
 
-- [ ] **Step 2: 跑 RED → 实现 → GREEN + TS 测试**
+- [x] **Step 2: 跑 RED → 实现 → GREEN + TS 测试**
 
 Run: `cargo test -p orcinus-cli`；`pnpm vitest run src/shared/agent-feature-install-commands.test.ts`。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add src-tauri/crates/orcinus-cli skill-guides skills src/shared
@@ -517,11 +517,11 @@ git commit -m "feat(cli): orcinus CLI 骨架（status/open/skills get）与自�
   - `computer permissions [--id …]` → RPC `computer.permissions` 直通。
   - 人读模式（非 `--json`）：错误打印 `error <code>: <message>`、exit 1；成功打印摘要行（`get-app-state`：`app/窗口/元素数` + treeText；动作：`action=<path> verification=<state>`；list/capabilities/permissions/status 打印关键字段）。**不做 nextSteps 映射表**（记录备案为边界）。
 
-- [ ] **Step 1: 测试先行（fake runtime server 回放各方法）**
+- [x] **Step 1: 测试先行（fake runtime server 回放各方法）**
 
 锚：14 子命令各一条合法调用 → 请求方法名/params 断言 + 响应原样输出（信封含 `_meta.runtimeId`）；flag XOR 矩阵（click/drag/scroll/type-text/set-value/press-key/hotkey）错误文案 + exit 1；截图落盘（0600、字段替换、目录清扫）；RPC 错误透传（`element_not_found` 等）+ exit 1。
 
-- [ ] **Step 2: 跑 RED → 实现 → GREEN → 提交**
+- [x] **Step 2: 跑 RED → 实现 → GREEN → 提交**
 
 Run: `cargo test -p orcinus-cli`
 
@@ -543,9 +543,9 @@ git commit -m "feat(cli): orcinus computer 14 子命令与截图落盘"
 - Produces：`build-orcinus-cli.mjs`：`cargo build -p orcinus-cli --release`（workdir `src-tauri`）→ 拷贝 `target/release/orcinus` → `src-tauri/binaries/orcinus-aarch64-apple-darwin`。
 - 验证顺序（手动，记录耗时）：`pnpm build:computer-macos && pnpm build:orcinus-cli && APPLE_SIGNING_IDENTITY=… pnpm tauri build`。
 
-- [ ] **Step 1: 脚本 + 配置**
+- [x] **Step 1: 脚本 + 配置**
 
-- [ ] **Step 2: 验证（本任务专项，耗时长可只跑一次）**
+- [x] **Step 2: 验证（本任务专项，耗时长可只跑一次）**
 
 ```bash
 pnpm build:computer-macos && pnpm build:orcinus-cli
@@ -557,7 +557,7 @@ codesign -dv "…/Orcinus Computer Use.app" 2>&1 | grep Identifier
 
 预期：全部存在且 helper 标识正确。若 `tauri build` 因环境失败（签名/网络），记录错误并降级验证 `tauri.conf.json` 解析（`pnpm tauri info` 或构建日志），在 commit message 说明。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add config/scripts package.json src-tauri/tauri.conf.json
@@ -576,7 +576,7 @@ git commit -m "build: orcinus CLI externalBin 与 computer-use 打包接线"
 - Consumes：spec §6/§7（手工验收清单与偏差备案直接进入记录）。
 - Produces：记录文档，结构镜像 `docs/phase2f-agent-session-history-record.md`（§1 范围与验收/§2 提交清单 `git log --oneline --reverse 3cd628ac..HEAD`/§3 三门禁证据 + T1/T13 专项证据（swift test、tauri build、codesign）/§4 手工验收（待用户复核，spec §6.3 八项）/§5 偏差与边界备案（spec §7 十项 + 实施中新发现）/§6 已知边界与后续）。
 
-- [ ] **Step 1: 三门禁 + bindings**
+- [x] **Step 1: 三门禁 + bindings**
 
 ```bash
 # workdir src-tauri
@@ -589,7 +589,7 @@ pnpm test
 
 预期：全绿（`browser-history-match.performance.test.ts` 性能 flake → 隔离复跑并记录）。
 
-- [ ] **Step 2: 记录 + 勾选 + 提交**
+- [x] **Step 2: 记录 + 勾选 + 提交**
 
 ```bash
 git add docs
