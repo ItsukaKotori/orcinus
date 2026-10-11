@@ -57,7 +57,10 @@ fn manifest_path(root: &Path) -> Result<PathBuf, PluginError> {
     ))
 }
 
-fn reparse_manifest(root: &Path) -> Result<Manifest, PluginError> {
+/// Re-reads and re-parses an installed tree's manifest (`ade-plugin.json`,
+/// falling back to `orca-plugin.json`) with the manifest size bound applied.
+/// Shared with the integrity verifier, which must reparse the same bytes.
+pub fn reparse_manifest(root: &Path) -> Result<Manifest, PluginError> {
     let path = manifest_path(root)?;
     let filename = path
         .file_name()

@@ -123,6 +123,9 @@ pub const TOO_MANY_FILES: &str = "too_many_files";
 pub const CONTENT_TOO_LARGE: &str = "content_too_large";
 pub const UNSUPPORTED_ENTRY: &str = "unsupported_entry";
 pub const CONTENT_CHANGED: &str = "content_changed";
+pub const MANIFEST_MISMATCH: &str = "manifest_mismatch";
+pub const CONSENT_STALE: &str = "consent_stale";
+pub const INTEGRITY_MISMATCH: &str = "integrity_mismatch";
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 #[error("{message}")]
