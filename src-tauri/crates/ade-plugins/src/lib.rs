@@ -19,6 +19,7 @@ pub mod manifest;
 pub mod paths;
 pub mod plugin_settings;
 pub mod secrets;
+pub mod sessions;
 pub mod storage;
 pub mod types;
 pub mod worker;
@@ -45,6 +46,10 @@ pub use paths::{global_roots, project_roots, validate_containment, ScopeRoots};
 pub use plugin_settings::PluginSettingsStore;
 pub use secrets::{
     Keychain, KeychainError, KeychainSecrets, SecretStore, KEYCHAIN_SERVICE, SECRET_VALUE_MAX_BYTES,
+};
+pub use sessions::{
+    SessionBinding, SessionKind, SessionOwner, SessionRegistry, DEFAULT_SESSION_CAP,
+    SESSION_TOKEN_BYTES,
 };
 pub use storage::{
     StorageStore, STORAGE_KEY_LIMIT, STORAGE_TOTAL_MAX_BYTES, STORAGE_VALUE_MAX_BYTES,
