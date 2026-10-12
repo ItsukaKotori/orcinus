@@ -12,10 +12,12 @@ pub mod consent;
 pub mod content_hash;
 pub mod discovery;
 pub mod enablement;
+pub mod git;
 pub mod host;
 pub mod install;
 pub mod integrity;
 pub mod manifest;
+pub mod marketplace;
 pub mod paths;
 pub mod plugin_settings;
 pub mod secrets;
@@ -33,6 +35,7 @@ pub use consent::{
 pub use content_hash::hash_plugin_tree;
 pub use discovery::{discover, DiscoveredPlugin, DiscoveryProjection, PluginSourceKind};
 pub use enablement::{approve, decline, set_enabled};
+pub use git::{CancelToken, GitOutput, GitRunner, DEFAULT_PLUGIN_GIT_TIMEOUT};
 pub use install::lockfile::{LockEntry, LockSource, Lockfile};
 pub use install::publication::publish_install;
 pub use install::staging::{read_install_manifest, stage_plugin_tree};
@@ -42,6 +45,16 @@ pub use install::{
 };
 pub use integrity::{verify_installed, ContentHasher, FsContentHasher, PluginContentVerifier};
 pub use manifest::{engine_satisfies, parse_manifest, Manifest};
+pub use marketplace::installer::{MarketplaceInstaller, MarketplacePreview};
+pub use marketplace::service::{
+    is_official_marketplace_git_source, is_official_organization_git_source,
+    is_official_plugin_identity, is_reserved_plugin_identity, official_marketplace_source,
+    MarketplaceListing, MarketplaceProjection, MarketplaceService, SourceState,
+};
+pub use marketplace::store::{
+    marketplace_source_id, MarketplaceEntry, MarketplaceIndex, MarketplaceSnapshot,
+    MarketplaceSource, MarketplaceStore, RegisteredSource, MARKETPLACE_FILENAME,
+};
 pub use paths::{global_roots, project_roots, validate_containment, ScopeRoots};
 pub use plugin_settings::PluginSettingsStore;
 pub use secrets::{

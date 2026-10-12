@@ -25,6 +25,7 @@ use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::discovery::{is_plugin_content_hash, is_qualified_plugin_key};
+use crate::git::is_allowed_git_url;
 use crate::install::atomic_write::write_atomic;
 use crate::types::{PluginError, INVALID_MANIFEST, IO_ERROR};
 
@@ -155,7 +156,7 @@ impl LockSource {
             }
             LockSource::Git { url, ref_ } => {
                 check_string_length("source.url", url, 1, MAX_SOURCE_URL_LENGTH)?;
-                if !is_plugin_git_url(url) {
+                if !is_allowed_git_url(url) {
                     return Err("git URL must use HTTPS or SSH".to_string());
                 }
                 check_string_length("source.ref", ref_, 0, MAX_REF_LENGTH)
@@ -170,7 +171,7 @@ impl LockSource {
                     1,
                     MAX_SOURCE_URL_LENGTH,
                 )?;
-                if !is_plugin_git_url(&marketplace.url) {
+                if !is_allowed_git_url(&marketplace.url) {
                     return Err("marketplace Git URL must use HTTPS or SSH".to_string());
                 }
                 check_string_length(
@@ -183,7 +184,7 @@ impl LockSource {
                     return Err("invalid marketplace resolved commit".to_string());
                 }
                 check_string_length("source.plugin.url", &plugin.url, 1, MAX_SOURCE_URL_LENGTH)?;
-                if !is_plugin_git_url(&plugin.url) {
+                if !is_allowed_git_url(&plugin.url) {
                     return Err("plugin Git URL must use HTTPS or SSH".to_string());
                 }
                 check_string_length("source.plugin.ref", &plugin.ref_, 1, MAX_REF_LENGTH)
