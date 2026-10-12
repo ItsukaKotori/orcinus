@@ -54,7 +54,7 @@ use crate::install::{ensure_project_gitignore, install_from_local, uninstall};
 use crate::install::{InstallContext, InstallResult};
 use crate::integrity::verify_installed;
 use crate::manifest::engine_satisfies;
-use crate::marketplace::installer::MarketplaceInstaller;
+use crate::marketplace::installer::{MarketplaceInstaller, MarketplacePreview};
 use crate::marketplace::service::{is_official_plugin_identity, MarketplaceService};
 use crate::marketplace::TempWorkspace;
 use crate::panel_shell::build_panel_shell_html;
@@ -351,6 +351,29 @@ pub struct LockState {
     pub repo_id: String,
     pub lockfile_path: String,
     pub entries: Vec<LockStateEntry>,
+}
+
+/// One language-pack catalog an approved plugin contributes (wire shape of
+/// `plugins:list-language-packs`, TS `PluginLanguagePackRegistration`).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LanguagePackRegistration {
+    pub id: String,
+    /// i18next resource id: `plugin` + the UTF-16 hex of `id` (mirrors the
+    /// renderer's `pluginLanguageResourceId` so both sides agree byte-for-byte).
+    pub resource_language: String,
+    pub plugin_key: String,
+    pub locale: String,
+    pub catalog: Value,
+}
+
+/// Renderer-compatible resource language id for a `plugin:<key>:<locale>` id.
+pub fn plugin_language_resource_id(id: &str) -> String {
+    let mut encoded = String::from("plugin");
+    for unit in id.encode_utf16() {
+        encoded.push_str(&format!("{unit:04x}"));
+    }
+    encoded
 }
 
 /// Payload of the `plugins:open-tab` bridge event (emitted by T11b2+).
@@ -1674,6 +1697,162 @@ impl PluginService {
             results.push(result);
         }
         results
+    }
+
+    /// Language-pack catalogs contributed by approved+enabled plugins
+    /// (approved status is the same gate `list`/activation use). Unreadable
+    /// files and malformed catalogs are skipped, never fatal.
+    pub fn language_packs(&self) -> Vec<LanguagePackRegistration> {
+        let active: HashSet<(String, PluginScope, Option<String>)> = self
+            .list()
+            .into_iter()
+            .filter(|entry| {
+                matches!(
+                    entry.status,
+                    PluginStatus::Idle | PluginStatus::Running | PluginStatus::Restarting
+                )
+            })
+            .map(|entry| (entry.plugin_key, entry.scope, entry.repo_id))
+            .collect();
+        if active.is_empty() {
+            return Vec::new();
+        }
+        let mut packs = Vec::new();
+        for discovered in self.discover_all() {
+            let Some(key) = discovered.key.clone() else {
+                continue;
+            };
+            if !discovered.is_valid()
+                || !active.contains(&(key.clone(), discovered.scope, discovered.repo_id.clone()))
+            {
+                continue;
+            }
+            let Some(manifest) = discovered.manifest.as_ref() else {
+                continue;
+            };
+            if manifest.contributes.language_packs.is_empty() {
+                continue;
+            }
+            let Ok(artifacts) =
+                crate::artifact::validate_declared_artifacts(&discovered.root, manifest)
+            else {
+                continue;
+            };
+            for artifact in artifacts.language_packs {
+                let Ok(bytes) = std::fs::read(&artifact.path) else {
+                    continue;
+                };
+                let Ok(catalog) = serde_json::from_slice::<Value>(&bytes) else {
+                    continue;
+                };
+                let id = format!("plugin:{key}:{}", artifact.locale);
+                packs.push(LanguagePackRegistration {
+                    resource_language: plugin_language_resource_id(&id),
+                    id,
+                    plugin_key: key.clone(),
+                    locale: artifact.locale,
+                    catalog,
+                });
+            }
+        }
+        packs
+    }
+
+    /// The marketplace installer owned by the service (bridge command surface).
+    pub fn marketplace(&self) -> &MarketplaceInstaller {
+        &self.marketplace
+    }
+
+    /// Locates an installed-from-marketplace plugin (global first, then any
+    /// registered project) and previews the marketplace's current listing.
+    pub fn preview_marketplace_update(
+        &self,
+        plugin_key: &str,
+    ) -> Result<MarketplacePreview, PluginError> {
+        let (_, entry) = self.installed_lock_entry(plugin_key)?;
+        let LockSource::Marketplace { marketplace, .. } = &entry.source else {
+            return Err(PluginError::new(
+                INVALID_PARAMS,
+                format!("plugin {plugin_key} was not installed from a marketplace"),
+            ));
+        };
+        let source = self
+            .marketplace
+            .service()
+            .list_sources()?
+            .into_iter()
+            .find(|source| {
+                source.source.url == marketplace.url && source.source.ref_ == marketplace.ref_
+            })
+            .ok_or_else(|| {
+                PluginError::new(
+                    UNAVAILABLE,
+                    format!("marketplace source is not registered: {}", marketplace.url),
+                )
+            })?;
+        self.marketplace.preview(&source.id, plugin_key)
+    }
+
+    /// Rolls the installed-from-marketplace plugin back to its previous
+    /// immutable version in the scope it is installed under.
+    pub fn rollback_marketplace_plugin(
+        &self,
+        plugin_key: &str,
+    ) -> Result<InstallResult, PluginError> {
+        let (repo_id, entry) = self.installed_lock_entry(plugin_key)?;
+        if !matches!(entry.source, LockSource::Marketplace { .. }) {
+            return Err(PluginError::new(
+                INVALID_PARAMS,
+                format!("plugin {plugin_key} was not installed from a marketplace"),
+            ));
+        }
+        let target = ScopeTarget {
+            scope: if repo_id.is_none() {
+                PluginScope::Global
+            } else {
+                PluginScope::Project
+            },
+            repo_id,
+        };
+        let roots = self.roots_for_target(&target)?;
+        let result = self
+            .marketplace
+            .rollback(plugin_key, &roots, target.scope)?;
+        self.audit(
+            &roots.data_dir,
+            plugin_key,
+            "plugins.rollback_marketplace_plugin",
+            "rolled back",
+        );
+        self.config.event_sink.plugins_changed(false, true);
+        Ok(result)
+    }
+
+    /// The lock entry of `plugin_key` (global preferred, then projects).
+    fn installed_lock_entry(
+        &self,
+        plugin_key: &str,
+    ) -> Result<(Option<String>, LockEntry), PluginError> {
+        let projects = self
+            .projects
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone();
+        let entries = self.lock_entries(&projects);
+        entries
+            .get(&(None, plugin_key.to_string()))
+            .cloned()
+            .map(|entry| (None, entry))
+            .or_else(|| {
+                entries
+                    .into_iter()
+                    .filter(|((_, key), _)| key == plugin_key)
+                    .min_by_key(|((repo_id, _), _)| repo_id.is_some())
+                    .map(|((repo_id, _), entry)| (repo_id, entry))
+            })
+            .ok_or_else(|| {
+                PluginError::new(UNAVAILABLE, format!("plugin {plugin_key} is not installed"))
+            })
     }
 
     /// Serialized per-plugin-data storage write (panel/host mutation path).

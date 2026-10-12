@@ -15,9 +15,9 @@ use ade_plugins::service::PluginService;
 use ade_plugins::worker::spawn::NODE_PATH_ENV;
 use ade_pty::PtyHost;
 use ade_store::onboarding_store::OnboardingStore;
-use ade_store::sqlite::Store;
 use ade_store::projects_store::ProjectsStore;
 use ade_store::settings_store::SettingsStore;
+use ade_store::sqlite::Store;
 use ade_store::ui_state_store::UiStateStore;
 use ade_store::worktree_meta_store::WorktreeMetaStore;
 use ade_store::SCHEMA_VERSION;
@@ -423,20 +423,28 @@ pub struct GhConcurrencyGate {
 
 impl GhConcurrencyGate {
     pub fn new(max: usize) -> Self {
-        Self { permits: Mutex::new(max), available: Condvar::new() }
+        Self {
+            permits: Mutex::new(max),
+            available: Condvar::new(),
+        }
     }
 
     pub fn acquire(&self) -> GhGateGuard<'_> {
         let mut permits = lock(&self.permits);
         while *permits == 0 {
-            permits = self.available.wait(permits).unwrap_or_else(|poisoned| poisoned.into_inner());
+            permits = self
+                .available
+                .wait(permits)
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
         }
         *permits -= 1;
         GhGateGuard { gate: self }
     }
 }
 
-pub struct GhGateGuard<'a> { gate: &'a GhConcurrencyGate }
+pub struct GhGateGuard<'a> {
+    gate: &'a GhConcurrencyGate,
+}
 
 impl Drop for GhGateGuard<'_> {
     fn drop(&mut self) {
@@ -451,8 +459,12 @@ impl Drop for GhGateGuard<'_> {
 pub struct GhPathCache(Arc<Mutex<Option<std::path::PathBuf>>>);
 
 impl GhPathCache {
-    pub fn get(&self) -> Option<std::path::PathBuf> { lock(&self.0).clone() }
-    pub fn set(&self, value: std::path::PathBuf) { *lock(&self.0) = Some(value); }
+    pub fn get(&self) -> Option<std::path::PathBuf> {
+        lock(&self.0).clone()
+    }
+    pub fn set(&self, value: std::path::PathBuf) {
+        *lock(&self.0) = Some(value);
+    }
 }
 
 /// `ade_automations::EventSink` 的生产实现：把内核的写入/派发转成 Tauri 事件
@@ -769,6 +781,16 @@ impl AppState {
         lock(&self.settings)
     }
 
+    /// `pluginSystemEnabled` (default `false`, spec §3.9): the activation gate
+    /// consulted by the plugin command wrappers.
+    pub fn plugin_system_enabled(&self) -> bool {
+        lock(&self.settings)
+            .get()
+            .get("pluginSystemEnabled")
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
+    }
+
     /// Shared handle to the worktree metadata store (`worktrees.json`).
     pub fn worktree_meta_store(&self) -> Arc<WorktreeMetaStore> {
         Arc::clone(&self.worktree_meta)
@@ -849,7 +871,11 @@ impl AppState {
             return false;
         }
         let signal = arm_session_flush_signal(&self.session_flush_slot);
-        events::emit_json(&self.app, events::SESSION_FLUSH_REQUESTED, serde_json::json!({}));
+        events::emit_json(
+            &self.app,
+            events::SESSION_FLUSH_REQUESTED,
+            serde_json::json!({}),
+        );
         let window_for_thread = window.clone();
         let wait = std::thread::Builder::new()
             .name("session-flush-exit".to_string())
@@ -1170,7 +1196,10 @@ mod tests {
         });
         thread::sleep(Duration::from_millis(50));
         signal_session_flush_ack(&slot);
-        assert!(handle.join().unwrap(), "ack must arrive well before the 2s timeout");
+        assert!(
+            handle.join().unwrap(),
+            "ack must arrive well before the 2s timeout"
+        );
     }
 
     #[test]

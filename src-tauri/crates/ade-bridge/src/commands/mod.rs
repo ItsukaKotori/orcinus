@@ -13,6 +13,7 @@ pub mod notifications;
 pub mod notifications_native;
 pub mod onboarding;
 pub mod platform;
+pub mod plugins;
 pub mod preflight;
 pub mod project_groups;
 pub mod pty;
