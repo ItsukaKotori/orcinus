@@ -108,6 +108,7 @@ pub struct WorkerSupervisor {
     restarts: u32,
     pending_backoff: Option<Duration>,
     last_activity: Instant,
+    ready_commands: Vec<String>,
 }
 
 impl WorkerSupervisor {
@@ -122,6 +123,7 @@ impl WorkerSupervisor {
             restarts: 0,
             pending_backoff: None,
             last_activity: Instant::now(),
+            ready_commands: Vec::new(),
         }
     }
 
@@ -137,6 +139,12 @@ impl WorkerSupervisor {
     /// by [`WorkerSupervisor::stop`] (a fresh activation boundary).
     pub fn restart_count(&self) -> u32 {
         self.restarts
+    }
+
+    /// Commands the worker registered in the `ready` frame of its current
+    /// activation; empty unless `running`.
+    pub fn ready_commands(&self) -> &[String] {
+        &self.ready_commands
     }
 
     pub fn set_frame_sink(&mut self, sink: Option<FrameSink>) {
@@ -279,6 +287,7 @@ impl WorkerSupervisor {
         self.state = WorkerState::Inactive;
         self.restarts = 0;
         self.pending_backoff = None;
+        self.ready_commands.clear();
         self.touch();
     }
 
@@ -411,11 +420,15 @@ impl WorkerSupervisor {
             return Err(error);
         }
         let ready_timeout = self.config.ready_timeout;
-        if let Err(error) = await_ready(&mut active, self.sink.as_mut(), ready_timeout) {
-            active.handle.kill(grace);
-            return Err(error);
-        }
+        let commands = match await_ready(&mut active, self.sink.as_mut(), ready_timeout) {
+            Ok(commands) => commands,
+            Err(error) => {
+                active.handle.kill(grace);
+                return Err(error);
+            }
+        };
         self.worker = Some(active);
+        self.ready_commands = commands;
         Ok(revision)
     }
 
@@ -424,6 +437,7 @@ impl WorkerSupervisor {
             let grace = self.config.grace;
             active.handle.kill(grace);
         }
+        self.ready_commands.clear();
     }
 
     /// Record a crash/timeout failure: arm the next backoff and move to
@@ -507,7 +521,7 @@ fn await_ready(
     active: &mut ActiveWorker,
     mut sink: Option<&mut FrameSink>,
     timeout: Duration,
-) -> Result<(), PluginError> {
+) -> Result<Vec<String>, PluginError> {
     let deadline = Instant::now() + timeout;
     loop {
         let left = remaining(deadline);
@@ -518,7 +532,7 @@ fn await_ready(
             ));
         }
         match wait_frame(active, left)? {
-            Wait::Frame(ChildFrame::Ready { .. }) => return Ok(()),
+            Wait::Frame(ChildFrame::Ready { commands }) => return Ok(commands),
             Wait::Frame(ChildFrame::Fatal { error }) => return Err(fatal_error(&error)),
             Wait::Frame(frame) => {
                 if let Some(sink) = sink.as_deref_mut() {
@@ -691,6 +705,7 @@ rl.on('line', (line) => {
             main_entry: "main.mjs".to_owned(),
             granted_capabilities: vec![Capability::Storage],
             manifest_revision: "rev-1".to_owned(),
+            declared_commands: vec!["echo".to_owned()],
         }
     }
 

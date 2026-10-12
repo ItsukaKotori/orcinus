@@ -38,10 +38,10 @@ use super::supervisor::{FrameSink, ReplyKind, SupervisorConfig, WorkerState, Wor
 /// another plugin's worker.
 pub const WORKER_LIMIT: &str = "worker_limit";
 
-/// Error text `host-entry.mjs` uses when a command was never declared at
-/// `ready`; the protocol has no error code on `commandResult`, so the manager
-/// recognizes the declaration bug by its message.
-const UNDECLARED_COMMAND_ERROR: &str = "no handler registered for command";
+/// Stable error code for an `invoke_command` naming a command outside the
+/// manifest's declared set. Soft failure: the frame is never sent and the
+/// worker keeps running.
+pub const UNKNOWN_COMMAND: &str = "unknown_command";
 
 /// Handles a child `HostCall` frame. `params` is `null` when the frame omits
 /// it. `Err((code, error))` is written back as `hostResult{ok:false}`.
@@ -116,26 +116,33 @@ impl WorkerManager {
     /// Lazily activate `spec.plugin_key`: spawn + `init`/`ready` handshake if
     /// the key is not active, refresh the revision if it changed, and require
     /// [`WORKER_LIMIT`] when starting a *new* key would exceed `max_active`.
-    /// An errored worker (e.g. undeclared command) stays terminal until
-    /// [`WorkerManager::stop`].
+    /// The worker's `ready` command list is checked against
+    /// `spec.declared_commands`: a registered command outside the manifest's
+    /// set parks the worker in `errored` (terminal until
+    /// [`WorkerManager::stop`]) and is returned here.
     pub fn ensure_active(&mut self, spec: WorkerSpec) -> Result<(), PluginError> {
         let node = match &self.node {
             Ok(node) => node.clone(),
             Err(error) => return Err(error.clone()),
         };
         let key = spec.plugin_key.clone();
+        let revision = spec.manifest_revision.clone();
 
         if let Some(entry) = self.workers.get_mut(&key) {
-            *entry.spec.lock().expect("worker spec lock poisoned") = spec.clone();
-            return match entry.supervisor.state() {
-                WorkerState::Running { revision } if revision == spec.manifest_revision => Ok(()),
-                WorkerState::Running { .. } => {
-                    entry.supervisor.set_revision(&spec.manifest_revision)
-                }
-                WorkerState::Errored { reason } => Err(PluginError::new(
+            *entry.spec.lock().expect("worker spec lock poisoned") = spec;
+            let state = entry.supervisor.state();
+            if let WorkerState::Errored { reason } = &state {
+                return Err(PluginError::new(
                     UNAVAILABLE,
                     format!("plugin worker {key} is errored: {reason}"),
-                )),
+                ));
+            }
+            if matches!(&state, WorkerState::Running { revision: current } if *current == revision)
+            {
+                return Ok(());
+            }
+            let result = match &state {
+                WorkerState::Running { .. } => entry.supervisor.set_revision(&revision),
                 _ => {
                     let spawner = make_spawner(
                         Arc::clone(&entry.spec),
@@ -146,6 +153,14 @@ impl WorkerManager {
                     entry.supervisor.start(spawner)
                 }
             };
+            result?;
+            let declared = entry
+                .spec
+                .lock()
+                .expect("worker spec lock poisoned")
+                .declared_commands
+                .clone();
+            return verify_ready_commands(&mut entry.supervisor, &declared);
         }
 
         if self.active_count() >= self.config.max_active {
@@ -158,6 +173,7 @@ impl WorkerManager {
             ));
         }
 
+        let declared = spec.declared_commands.clone();
         let shared = Arc::new(Mutex::new(spec.clone()));
         let writer = Arc::new(Mutex::new(None));
         let sink = make_sink(
@@ -174,7 +190,9 @@ impl WorkerManager {
         );
         let mut supervisor = WorkerSupervisor::new(spec, self.config.supervisor.clone());
         supervisor.set_frame_sink(Some(sink));
-        let result = supervisor.start(spawner);
+        let result = supervisor
+            .start(spawner)
+            .and_then(|()| verify_ready_commands(&mut supervisor, &declared));
         self.workers.insert(
             key,
             WorkerEntry {
@@ -187,10 +205,12 @@ impl WorkerManager {
     }
 
     /// Send `invokeCommand` and await the correlated `commandResult` within
-    /// `invoke`. A `ok:false` reply is passed through as an `action_failed`
-    /// [`PluginError`] whose message is the worker-provided text; a reply that
-    /// reports a never-declared command additionally parks the worker in
-    /// `errored` (terminal). The worker must be active.
+    /// `invoke`. The worker must be active, and `command_id` must be in the
+    /// manifest's declared set ([`UNKNOWN_COMMAND`] otherwise, no kill: the
+    /// worker never receives the frame). An `ok:false` reply is passed through
+    /// as an `action_failed` [`PluginError`] whose message is the
+    /// worker-provided text — worker error text alone never changes lifecycle
+    /// state (undeclared *registrations* are handled in `ensure_active`).
     pub fn invoke_command(
         &mut self,
         plugin_key: &str,
@@ -198,13 +218,26 @@ impl WorkerManager {
         command_id: &str,
         args: Option<Value>,
     ) -> Result<Value, PluginError> {
-        let supervisor = self.workers.get_mut(plugin_key).ok_or_else(|| {
+        let entry = self.workers.get_mut(plugin_key).ok_or_else(|| {
             PluginError::new(
                 UNAVAILABLE,
                 format!("plugin worker {plugin_key} is not active"),
             )
         })?;
-        let reply = supervisor.supervisor.send(
+        let declared = {
+            let spec = entry.spec.lock().expect("worker spec lock poisoned");
+            !spec
+                .declared_commands
+                .iter()
+                .any(|declared| declared == command_id)
+        };
+        if declared {
+            return Err(PluginError::new(
+                UNKNOWN_COMMAND,
+                format!("plugin {plugin_key} does not declare command {command_id}"),
+            ));
+        }
+        let reply = entry.supervisor.send(
             &ParentFrame::InvokeCommand {
                 call_id,
                 command_id: command_id.to_owned(),
@@ -218,13 +251,10 @@ impl WorkerManager {
             } => Ok(value.unwrap_or(Value::Null)),
             ChildFrame::CommandResult {
                 ok: false, error, ..
-            } => {
-                let error = error.unwrap_or_else(|| "plugin command failed".to_owned());
-                if error.contains(UNDECLARED_COMMAND_ERROR) {
-                    supervisor.supervisor.note_undeclared_command();
-                }
-                Err(PluginError::new(ACTION_FAILED, error))
-            }
+            } => Err(PluginError::new(
+                ACTION_FAILED,
+                error.unwrap_or_else(|| "plugin command failed".to_owned()),
+            )),
             other => Err(PluginError::new(
                 ACTION_FAILED,
                 format!("unexpected reply to command {call_id}: {other:?}"),
@@ -394,6 +424,32 @@ fn log_level_str(level: LogLevel) -> &'static str {
     }
 }
 
+/// Check the worker's `ready` command list against the manifest's declared
+/// set (exact string equality). A registered command outside the set is a
+/// declaration bug: the worker is stopped and parked in `errored`.
+fn verify_ready_commands(
+    supervisor: &mut WorkerSupervisor,
+    declared: &[String],
+) -> Result<(), PluginError> {
+    let message = {
+        let undeclared: Vec<&str> = supervisor
+            .ready_commands()
+            .iter()
+            .filter(|command| !declared.iter().any(|declared| declared == *command))
+            .map(String::as_str)
+            .collect();
+        if undeclared.is_empty() {
+            return Ok(());
+        }
+        undeclared.join(", ")
+    };
+    supervisor.note_undeclared_command();
+    Err(PluginError::new(
+        ACTION_FAILED,
+        format!("plugin worker registered undeclared command(s): {message}"),
+    ))
+}
+
 /// Duplicate the worker's stdin write end so the manager can answer host calls
 /// while the supervisor owns the primary handle.
 #[cfg(unix)]
@@ -434,7 +490,7 @@ mod tests {
     /// before `ready`, and `emit-pump` makes it issue a spontaneous `hostCall`
     /// right after `ready` (for the idle-pump test).
     const FAKE_WORKER: &str = r#"import { createInterface } from 'node:readline';
-import { existsSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const write = (frame) => process.stdout.write(JSON.stringify(frame) + '\n');
 const pending = new Map();
@@ -443,7 +499,11 @@ const marker = (name, value) => {
 };
 
 marker('worker.pid', process.pid);
-write({ type: 'ready', commands: ['echo', 'fail', 'undeclared', 'host-call', 'host-call-error'] });
+const extra = existsSync('extra-command') ? [readFileSync('extra-command', 'utf8').trim()] : [];
+write({
+  type: 'ready',
+  commands: ['echo', 'fail', 'undeclared', 'host-call', 'host-call-error', ...extra]
+});
 
 if (existsSync('emit-pump')) {
   pending.set(7000, (value) => marker('pump-ok.marker', JSON.stringify(value)));
@@ -604,6 +664,13 @@ rl.on('line', async (line) => {
                 main_entry: "main.mjs".to_owned(),
                 granted_capabilities: vec![Capability::Storage],
                 manifest_revision: revision.to_owned(),
+                declared_commands: vec![
+                    "echo".to_owned(),
+                    "fail".to_owned(),
+                    "undeclared".to_owned(),
+                    "host-call".to_owned(),
+                    "host-call-error".to_owned(),
+                ],
             }
         }
 
@@ -799,18 +866,64 @@ rl.on('line', async (line) => {
             .unwrap_err();
         assert_eq!(error.message(), "capability_denied:denied by gate");
 
-        // A never-declared command parks the worker in `errored`.
+        // A declared command whose handler reports the undeclared-command
+        // error text is a plain error: worker-controlled text never changes
+        // lifecycle state.
         let error = manager
             .invoke_command("pub.invoke", 5, "undeclared", None)
             .unwrap_err();
         assert_eq!(error.code(), ACTION_FAILED);
+        assert_eq!(
+            error.message(),
+            "no handler registered for command undeclared"
+        );
+        assert!(
+            matches!(manager.state("pub.invoke"), WorkerState::Running { .. }),
+            "declared command error text must not kill the worker"
+        );
+        assert_eq!(manager.active_count(), 1);
+
+        // A command outside the manifest's declared set is rejected before
+        // any frame is sent, and the worker keeps running.
+        let error = manager
+            .invoke_command("pub.invoke", 6, "not-declared", None)
+            .unwrap_err();
+        assert_eq!(error.code(), UNKNOWN_COMMAND);
         assert!(matches!(
             manager.state("pub.invoke"),
+            WorkerState::Running { .. }
+        ));
+        assert_eq!(manager.active_count(), 1);
+        manager.stop_all();
+    }
+
+    #[test]
+    fn ensure_active_rejects_commands_not_in_the_declared_set() {
+        let Some(fixture) = Fixture::new() else {
+            return;
+        };
+        std::fs::write(fixture.root.join("extra-command"), "rogue-command").unwrap();
+        let mut manager = fixture.manager(
+            5,
+            Arc::new(RecordingHostCall::default()),
+            Arc::new(RecordingSink::default()),
+        );
+        let error = manager
+            .ensure_active(fixture.spec("pub.rogue", "rev-1"))
+            .unwrap_err();
+        assert_eq!(error.code(), ACTION_FAILED);
+        assert!(
+            error.message().contains("rogue-command"),
+            "error must name the undeclared registration: {}",
+            error.message()
+        );
+        assert!(matches!(
+            manager.state("pub.rogue"),
             WorkerState::Errored { reason } if reason == "undeclared-command"
         ));
         assert_eq!(manager.active_count(), 0);
         assert!(manager
-            .invoke_command("pub.invoke", 6, "echo", None)
+            .ensure_active(fixture.spec("pub.rogue", "rev-1"))
             .is_err());
     }
 

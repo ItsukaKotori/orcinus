@@ -113,6 +113,9 @@ pub struct WorkerSpec {
     pub main_entry: String,
     pub granted_capabilities: Vec<Capability>,
     pub manifest_revision: String,
+    /// Commands the manifest declares. The manager cross-checks the worker's
+    /// `ready` list against this set (spec §3.2 undeclared-command policy).
+    pub declared_commands: Vec<String>,
 }
 
 /// A spawned `node <host-entry.mjs>` child in its own process group. The
@@ -285,6 +288,7 @@ mod tests {
             main_entry: "main.mjs".to_owned(),
             granted_capabilities: vec![Capability::Storage],
             manifest_revision: "rev-1".to_owned(),
+            declared_commands: vec!["echo".to_owned()],
         }
     }
 
