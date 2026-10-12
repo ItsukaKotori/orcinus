@@ -108,6 +108,11 @@ pub fn node_supports(version_output: &str) -> bool {
 /// Everything the supervisor needs to start (and re-start) one plugin worker.
 #[derive(Debug, Clone)]
 pub struct WorkerSpec {
+    /// Scope-qualified instance identity (`global:<key>` /
+    /// `project:<repoId>:<key>`): the manager's pool key, so a global and a
+    /// project instance of the same plugin never collide.
+    pub instance_key: String,
+    /// Qualified plugin key; logging/audit identity and the child's plugin id.
     pub plugin_key: String,
     pub plugin_root: PathBuf,
     pub main_entry: String,
@@ -283,6 +288,7 @@ mod tests {
 
     fn worker_spec(plugin_root: &Path) -> WorkerSpec {
         WorkerSpec {
+            instance_key: "global:pub.test".to_owned(),
             plugin_key: "pub.test".to_owned(),
             plugin_root: plugin_root.to_path_buf(),
             main_entry: "main.mjs".to_owned(),

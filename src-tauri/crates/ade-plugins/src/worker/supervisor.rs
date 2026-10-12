@@ -700,6 +700,7 @@ rl.on('line', (line) => {
 
     fn worker_spec(plugin_root: &Path) -> WorkerSpec {
         WorkerSpec {
+            instance_key: "global:pub.test".to_owned(),
             plugin_key: "pub.test".to_owned(),
             plugin_root: plugin_root.to_path_buf(),
             main_entry: "main.mjs".to_owned(),

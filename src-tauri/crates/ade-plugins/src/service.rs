@@ -384,6 +384,9 @@ impl MutationLocks {
 /// back by the host-call handler, log ring, and status projection.
 #[derive(Debug, Clone)]
 struct WorkerRecord {
+    /// Scope-qualified instance identity: the `WorkerManager` pool key and
+    /// the `WorkerBridge` lookup key.
+    instance_key: String,
     plugin_key: String,
     scope: PluginScope,
     repo_id: Option<String>,
@@ -395,9 +398,10 @@ struct WorkerRecord {
 }
 
 /// Shared seam between [`PluginService`] and the [`WorkerManager`]: routes
-/// child `hostCall` frames through `host::methods::execute` with the recorded
-/// activation context, and buffers log/fatal frames. It never touches the
-/// manager itself, so it is safe to call while the manager lock is held.
+/// child `hostCall` frames through `host::methods::execute` with the activation
+/// context bound to the calling worker's scope-qualified instance key, and
+/// buffers log/fatal frames. It never touches the manager itself, so it is safe
+/// to call while the manager lock is held.
 struct WorkerBridge {
     records: Mutex<HashMap<String, WorkerRecord>>,
     logs: Mutex<VecDeque<LogLine>>,
@@ -458,15 +462,15 @@ impl PluginAuditSink for ScopeAudit {
 impl HostCallHandler for WorkerBridge {
     fn handle(
         &self,
-        plugin_key: &str,
+        instance_key: &str,
         _call_id: u64,
         method: &str,
         params: Value,
     ) -> Result<Value, (String, String)> {
-        let Some(record) = self.lock_records().get(plugin_key).cloned() else {
+        let Some(record) = self.lock_records().get(instance_key).cloned() else {
             return Err((
                 UNAVAILABLE.to_owned(),
-                format!("plugin {plugin_key} is not active"),
+                format!("plugin worker {instance_key} is not active"),
             ));
         };
         let audit = ScopeAudit {
@@ -490,7 +494,12 @@ impl HostCallHandler for WorkerBridge {
 }
 
 impl FrameEventSink for WorkerBridge {
-    fn on_log(&self, plugin_key: &str, level: &str, message: &str) {
+    fn on_log(&self, instance_key: &str, level: &str, message: &str) {
+        let plugin_key = self
+            .lock_records()
+            .get(instance_key)
+            .map(|record| record.plugin_key.clone())
+            .unwrap_or_else(|| instance_key.to_string());
         self.push_log(AuditRecord {
             ts: now_millis() as i64,
             actor: format!("plugin:{plugin_key}"),
@@ -500,10 +509,13 @@ impl FrameEventSink for WorkerBridge {
         });
     }
 
-    fn on_fatal(&self, plugin_key: &str, error: &str) {
-        if let Some(record) = self.lock_records().get_mut(plugin_key) {
+    fn on_fatal(&self, instance_key: &str, error: &str) {
+        let plugin_key = if let Some(record) = self.lock_records().get_mut(instance_key) {
             record.error = Some(error.to_string());
-        }
+            record.plugin_key.clone()
+        } else {
+            instance_key.to_string()
+        };
         self.push_log(AuditRecord {
             ts: now_millis() as i64,
             actor: format!("plugin:{plugin_key}"),
@@ -605,7 +617,7 @@ impl PluginService {
             removed
         };
         for repo_id in removed {
-            let keys: Vec<String> = self
+            let instances: Vec<(String, String)> = self
                 .bridge
                 .lock_records()
                 .iter()
@@ -613,20 +625,20 @@ impl PluginService {
                     record.scope == PluginScope::Project
                         && record.repo_id.as_deref() == Some(repo_id.as_str())
                 })
-                .map(|(key, _)| key.clone())
+                .map(|(instance_key, record)| (instance_key.clone(), record.plugin_key.clone()))
                 .collect();
-            if keys.is_empty() {
+            if instances.is_empty() {
                 continue;
             }
             {
                 let mut manager = self.manager();
-                for key in &keys {
-                    manager.stop(key);
+                for (instance_key, _) in &instances {
+                    manager.stop(instance_key);
                 }
             }
-            for key in &keys {
-                self.bridge.lock_records().remove(key);
-                self.sessions.invalidate_plugin(key);
+            for (instance_key, plugin_key) in &instances {
+                self.bridge.lock_records().remove(instance_key);
+                self.sessions.invalidate_plugin(plugin_key);
             }
             self.config.event_sink.plugins_changed(false, true);
         }
@@ -696,8 +708,14 @@ impl PluginService {
             manager.reap_idle()
         };
         if !reaped.is_empty() {
-            for key in &reaped {
-                self.sessions.invalidate_plugin(key);
+            for instance_key in &reaped {
+                let plugin_key = self
+                    .bridge
+                    .lock_records()
+                    .get(instance_key)
+                    .map(|record| record.plugin_key.clone())
+                    .unwrap_or_else(|| instance_key.clone());
+                self.sessions.invalidate_plugin(&plugin_key);
             }
             self.config.event_sink.plugins_changed(false, true);
         }
@@ -719,7 +737,7 @@ impl PluginService {
         };
         self.bridge
             .lock_records()
-            .insert(record.plugin_key.clone(), record);
+            .insert(record.instance_key.clone(), record);
         self.manager().ensure_active(spec)
     }
 
@@ -766,9 +784,10 @@ impl PluginService {
             ));
         }
         self.ensure_active(plugin_ref)?;
+        let instance_key = instance_key_of(plugin_ref)?;
         let call_id = self.next_call_id.fetch_add(1, Ordering::SeqCst);
         self.manager()
-            .invoke_command(&plugin_ref.plugin_key, call_id, command_id, args)
+            .invoke_command(&instance_key, call_id, command_id, args)
     }
 
     /// Projects `raw_payload` for the plugin event `name` and delivers it to
@@ -794,6 +813,9 @@ impl PluginService {
                 scope: entry.scope,
                 repo_id: entry.repo_id.clone(),
             };
+            let Ok(instance_key) = instance_key_of(&plugin_ref) else {
+                continue;
+            };
             let static_subscription = find_discovered(&discovered, &plugin_ref)
                 .and_then(|entry| entry.manifest.as_ref())
                 .is_some_and(|manifest| {
@@ -812,7 +834,7 @@ impl PluginService {
                     .iter()
                     .any(|event| event == name)
                     && matches!(
-                        self.manager().state(&entry.plugin_key),
+                        self.manager().state(&instance_key),
                         WorkerState::Running { .. }
                     )
             };
@@ -822,7 +844,7 @@ impl PluginService {
             let event_id = self.next_call_id.fetch_add(1, Ordering::SeqCst);
             if self
                 .manager()
-                .deliver_event(&entry.plugin_key, event_id, name, payload.clone())
+                .deliver_event(&instance_key, event_id, name, payload.clone())
                 .is_ok()
             {
                 delivered += 1;
@@ -1678,17 +1700,18 @@ impl PluginService {
             if entry.status != PluginStatus::Idle {
                 continue;
             }
-            let Some(record) = records.get(&entry.plugin_key) else {
+            let Some(record) = records.values().find(|record| {
+                record.plugin_key == entry.plugin_key
+                    && record.scope == entry.scope
+                    && record.repo_id == entry.repo_id
+            }) else {
                 continue;
             };
-            if record.scope != entry.scope || record.repo_id != entry.repo_id {
-                continue;
-            }
             if let Some(error) = &record.error {
                 entry.status = PluginStatus::Errored;
                 entry.error = Some(error.clone());
             } else {
-                match manager.state(&entry.plugin_key) {
+                match manager.state(&record.instance_key) {
                     WorkerState::Running { .. } => entry.status = PluginStatus::Running,
                     WorkerState::Starting | WorkerState::Restarting => {
                         entry.status = PluginStatus::Restarting;
@@ -1700,7 +1723,7 @@ impl PluginService {
                     WorkerState::Inactive => {}
                 }
             }
-            entry.restarts = manager.restarts(&entry.plugin_key);
+            entry.restarts = manager.restarts(&record.instance_key);
         }
     }
 
@@ -1768,7 +1791,9 @@ impl PluginService {
             .collect();
         let data_dir = self.data_dir_for_ref(plugin_ref)?;
         let revision = manifest_revision(manifest);
+        let instance_key = instance_key_of(plugin_ref)?;
         let spec = WorkerSpec {
+            instance_key: instance_key.clone(),
             plugin_key: plugin_ref.plugin_key.clone(),
             plugin_root: entry.root.clone(),
             main_entry,
@@ -1777,6 +1802,7 @@ impl PluginService {
             declared_commands,
         };
         let record = WorkerRecord {
+            instance_key,
             plugin_key: plugin_ref.plugin_key.clone(),
             scope: plugin_ref.scope,
             repo_id: plugin_ref.repo_id.clone(),
@@ -1789,14 +1815,20 @@ impl PluginService {
     }
 
     /// Stops the worker and invalidates sessions of `plugin_ref` when it owns
-    /// the recorded activation.
+    /// the recorded activation. Only the instance key of this exact scope and
+    /// repo is touched, so a same-key twin in another scope is never disturbed.
     fn deactivate_ref(&self, plugin_ref: &PluginRef) {
-        let removed = self.bridge.lock_records().remove(&plugin_ref.plugin_key);
+        let Ok(instance_key) = instance_key_of(plugin_ref) else {
+            return;
+        };
+        let removed = self.bridge.lock_records().remove(&instance_key);
         let owned = removed.is_some_and(|record| {
-            record.scope == plugin_ref.scope && record.repo_id == plugin_ref.repo_id
+            record.plugin_key == plugin_ref.plugin_key
+                && record.scope == plugin_ref.scope
+                && record.repo_id == plugin_ref.repo_id
         });
         if owned {
-            self.manager().stop(&plugin_ref.plugin_key);
+            self.manager().stop(&instance_key);
             self.sessions.invalidate_plugin(&plugin_ref.plugin_key);
         }
     }
@@ -1815,26 +1847,29 @@ impl PluginService {
             let Some(manifest) = entry.manifest.as_ref() else {
                 continue;
             };
-            let Some(record_revision) = self
-                .bridge
-                .lock_records()
-                .get(key)
-                .map(|record| record.revision.clone())
-            else {
-                continue;
-            };
-            let running = matches!(
-                self.manager().state(key),
-                WorkerState::Running { .. } | WorkerState::Restarting
-            );
-            if !running || record_revision == manifest_revision(manifest) {
-                continue;
-            }
             let plugin_ref = PluginRef {
                 plugin_key: key.to_string(),
                 scope: entry.scope,
                 repo_id: entry.repo_id.clone(),
             };
+            let Ok(instance_key) = instance_key_of(&plugin_ref) else {
+                continue;
+            };
+            let Some(record_revision) = self
+                .bridge
+                .lock_records()
+                .get(&instance_key)
+                .map(|record| record.revision.clone())
+            else {
+                continue;
+            };
+            let running = matches!(
+                self.manager().state(&instance_key),
+                WorkerState::Running { .. } | WorkerState::Restarting
+            );
+            if !running || record_revision == manifest_revision(manifest) {
+                continue;
+            }
             let _ = self.ensure_active(&plugin_ref);
         }
         self.config.event_sink.plugins_changed(false, true);
@@ -1870,6 +1905,13 @@ fn consent_scope_of(scope: PluginScope, repo_id: Option<&str>) -> ConsentKeyScop
             repo_id: repo_id.unwrap_or_default(),
         },
     }
+}
+
+/// Scope-qualified instance identity (`global:<key>` /
+/// `project:<repoId>:<key>`); the same scoped-key format consent records use.
+fn instance_key_of(plugin_ref: &PluginRef) -> Result<String, PluginError> {
+    scoped_key(&plugin_ref.plugin_key, scope_key_scope(plugin_ref)?)
+        .ok_or_else(|| PluginError::new(INVALID_PARAMS, "invalid plugin scope for instance key"))
 }
 
 fn scope_key_scope(plugin_ref: &PluginRef) -> Result<ConsentKeyScope<'_>, PluginError> {
@@ -1990,6 +2032,7 @@ mod tests {
         secrets: FakeSecrets,
         notifications: Mutex<Vec<(String, String, Option<String>)>>,
         subscriptions: Mutex<HashMap<String, Vec<String>>>,
+        open_tabs: Mutex<Vec<(PluginScope, Option<String>, String)>>,
     }
 
     impl Default for FakeHostServices {
@@ -2001,13 +2044,18 @@ mod tests {
                 secrets: FakeSecrets::default(),
                 notifications: Mutex::new(Vec::new()),
                 subscriptions: Mutex::new(HashMap::new()),
+                open_tabs: Mutex::new(Vec::new()),
             }
         }
     }
 
     impl PluginHostServices for FakeHostServices {
         fn active_worktree_context(&self) -> Option<WorktreeContext> {
-            None
+            Some(WorktreeContext {
+                worktree_id: "wt-1".to_string(),
+                branch: "main".to_string(),
+                display_name: "main".to_string(),
+            })
         }
 
         fn list_worktree_terminals(&self, _worktree_id: &str) -> Vec<TerminalRef> {
@@ -2074,14 +2122,21 @@ mod tests {
         fn open_tab(
             &self,
             _plugin_key: &str,
-            _scope: PluginScope,
-            _repo_id: Option<&str>,
-            _tab_id: &str,
+            scope: PluginScope,
+            repo_id: Option<&str>,
+            tab_id: &str,
             _title: Option<&str>,
             _params: Option<Value>,
             _worktree_hint: Option<&str>,
         ) -> Result<crate::host::services::OpenTabResult, HostServiceError> {
-            Err(HostServiceError::new("unavailable", "fake host"))
+            self.open_tabs
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .push((scope, repo_id.map(str::to_string), tab_id.to_string()));
+            Ok(crate::host::services::OpenTabResult {
+                instance_id: format!("{scope:?}::{tab_id}"),
+                worktree_id: "wt-1".to_string(),
+            })
         }
 
         fn declared_tabs(
@@ -2090,7 +2145,7 @@ mod tests {
             _scope: PluginScope,
             _repo_id: Option<&str>,
         ) -> Vec<String> {
-            Vec::new()
+            vec!["board".to_string()]
         }
     }
 
@@ -2898,6 +2953,16 @@ rl.on('line', (line) => {
   try { frame = JSON.parse(line); } catch { return; }
   if (frame.type === 'invokeCommand') {
     if (frame.commandId === 'slow') return;
+    if (frame.commandId === 'open-tab') {
+      void (async () => {
+        const value = await new Promise((resolve) => {
+          pending.set(9200, resolve);
+          write({ type: 'hostCall', callId: 9200, method: 'workspace.openTab', params: { tabId: 'board' } });
+        });
+        write({ type: 'commandResult', callId: frame.callId, ok: true, value: { opened: value } });
+      })();
+      return;
+    }
     if (frame.commandId === 'host-call') {
       void (async () => {
         const value = await new Promise((resolve) => {
@@ -3070,7 +3135,7 @@ rl.on('line', (line) => {
         );
         assert!(
             wait_until(Duration::from_secs(2), || matches!(
-                harness.service.manager().state("orca-samples.gated"),
+                harness.service.manager().state("global:orca-samples.gated"),
                 WorkerState::Inactive
             )),
             "disabling must stop the worker"
@@ -3288,7 +3353,7 @@ rl.on('line', (line) => {
             harness
                 .service
                 .manager()
-                .state("orca-samples.project-worker"),
+                .state("project:repo-1:orca-samples.project-worker"),
             WorkerState::Running { .. }
         ));
 
@@ -3354,7 +3419,7 @@ rl.on('line', (line) => {
             "a manifest revision change must restart the dev worker"
         );
         assert!(matches!(
-            harness.service.manager().state("orca-samples.hot"),
+            harness.service.manager().state("global:orca-samples.hot"),
             WorkerState::Running { .. }
         ));
         let changes = harness
@@ -3420,8 +3485,251 @@ rl.on('line', (line) => {
         );
         assert!(
             logs.iter().any(|line| line.method == "plugins.install"),
-            "the project-scope audit file must be resolved for get_logs: {logs:?}"
+            "the project-scope audit file is resolved for get_logs: {logs:?}"
         );
         harness.service.shutdown();
+    }
+
+    // ------------------------------------------------------------------
+    // T11b2 fix round 1: scope-qualified worker instance identity
+    // ------------------------------------------------------------------
+
+    /// Plugin fixture declaring a worker command plus a `board` tab and the
+    /// `workspace:open-tab` capability (used to observe scope routing).
+    fn write_dual_scope_plugin(root: &Path, id: &str) -> PathBuf {
+        let path = write_plugin(
+            root,
+            id,
+            "1.0.0",
+            ">=1.0.0",
+            json!({
+                "main": "main.mjs",
+                "contributes": {
+                    "commands": [
+                        { "id": "echo", "title": "echo" },
+                        { "id": "open-tab", "title": "open-tab" }
+                    ],
+                    "tabs": [{ "id": "board", "title": "Board", "entry": "tab.html" }]
+                },
+                "capabilities": [{ "kind": "workspace:open-tab" }]
+            }),
+        );
+        std::fs::write(path.join("main.mjs"), b"// fake worker main\n").unwrap();
+        std::fs::write(path.join("tab.html"), b"<h1>board</h1>").unwrap();
+        path
+    }
+
+    /// Approves `plugin_ref` using the raw discovery projection (works even
+    /// when the same-key global entry is masked from `list` by a project one).
+    fn approve_raw(harness: &Harness, plugin_ref: &PluginRef) {
+        let discovered = harness.service.discover_all();
+        let entry = find_discovered(&discovered, plugin_ref).expect("installed plugin");
+        let manifest = entry.manifest.as_ref().unwrap();
+        let content_key = entry
+            .install_hash
+            .clone()
+            .or_else(|| hash_plugin_tree(&entry.root).ok())
+            .unwrap_or_else(|| "unresolved".to_string());
+        let scoped = scoped_key(
+            &plugin_ref.plugin_key,
+            consent_scope_of(plugin_ref.scope, plugin_ref.repo_id.as_deref()),
+        )
+        .unwrap();
+        harness
+            .consent
+            .set_consent(&scoped, &fingerprint(manifest, &content_key));
+    }
+
+    fn dual_scope_harness(temp: &Path) -> (Harness, PathBuf, PluginRef, PluginRef) {
+        install_fake_host_entry(temp);
+        let repo = temp.join("repo");
+        let source = write_dual_scope_plugin(&temp.join("dual-source"), "dual");
+        let harness = harness_with_dev(temp, "1.0.0", vec![source.clone()]);
+        harness
+            .service
+            .set_projects(vec![("repo-1".to_string(), repo.clone())]);
+        install_local(&harness, &source, project_target("repo-1"));
+        let global_ref = global_ref("orca-samples.dual");
+        let project_ref = PluginRef {
+            plugin_key: "orca-samples.dual".to_string(),
+            scope: PluginScope::Project,
+            repo_id: Some("repo-1".to_string()),
+        };
+        approve_raw(&harness, &global_ref);
+        approve_raw(&harness, &project_ref);
+        (harness, repo, global_ref, project_ref)
+    }
+
+    #[test]
+    fn same_key_dual_scope_workers_run_with_independent_instances() {
+        if !node_available() {
+            return;
+        }
+        let temp = tempdir().unwrap();
+        let (harness, _repo, global_ref, project_ref) = dual_scope_harness(temp.path());
+        let service = &harness.service;
+
+        service.ensure_active(&global_ref).unwrap();
+        service.ensure_active(&project_ref).unwrap();
+        assert_eq!(
+            service.manager().active_count(),
+            2,
+            "both scopes hold independent workers"
+        );
+        assert!(matches!(
+            service.manager().state("global:orca-samples.dual"),
+            WorkerState::Running { .. }
+        ));
+        assert!(matches!(
+            service.manager().state("project:repo-1:orca-samples.dual"),
+            WorkerState::Running { .. }
+        ));
+
+        // Both instances answer commands through their own manager entry.
+        assert_eq!(
+            service
+                .invoke_command(&global_ref, "echo", Some(json!({ "scope": "global" })))
+                .unwrap(),
+            json!({ "command": "echo", "args": { "scope": "global" } })
+        );
+        assert_eq!(
+            service
+                .invoke_command(&project_ref, "echo", Some(json!({ "scope": "project" })))
+                .unwrap(),
+            json!({ "command": "echo", "args": { "scope": "project" } })
+        );
+
+        // Both list entries project `running` for the same key.
+        let listed = service.list();
+        let dual: Vec<&PluginListEntry> = listed
+            .iter()
+            .filter(|entry| entry.plugin_key == "orca-samples.dual")
+            .collect();
+        assert_eq!(dual.len(), 1, "the project entry masks the global twin");
+        assert_eq!(dual[0].status, PluginStatus::Running);
+        service.shutdown();
+    }
+
+    #[test]
+    fn project_removal_stops_only_the_project_worker() {
+        if !node_available() {
+            return;
+        }
+        let temp = tempdir().unwrap();
+        let (harness, _repo, global_ref, project_ref) = dual_scope_harness(temp.path());
+        let service = &harness.service;
+        service.ensure_active(&global_ref).unwrap();
+        service.ensure_active(&project_ref).unwrap();
+        assert_eq!(service.manager().active_count(), 2);
+
+        service.set_projects(vec![]);
+        assert_eq!(
+            service.manager().active_count(),
+            1,
+            "only the project instance is stopped"
+        );
+        assert!(matches!(
+            service.manager().state("global:orca-samples.dual"),
+            WorkerState::Running { .. }
+        ));
+        assert_eq!(
+            service.manager().state("project:repo-1:orca-samples.dual"),
+            WorkerState::Inactive
+        );
+
+        // The surviving global worker still serves commands and host calls.
+        assert_eq!(
+            service.invoke_command(&global_ref, "echo", None).unwrap(),
+            json!({ "command": "echo", "args": null })
+        );
+        service.shutdown();
+    }
+
+    #[test]
+    fn pending_project_twin_does_not_disturb_the_running_global_worker() {
+        if !node_available() {
+            return;
+        }
+        let temp = tempdir().unwrap();
+        install_fake_host_entry(temp.path());
+        let repo = temp.path().join("repo");
+        let source = write_dual_scope_plugin(&temp.path().join("dual-source"), "twin");
+        let harness = harness_with_dev(temp.path(), "1.0.0", vec![source.clone()]);
+        harness
+            .service
+            .set_projects(vec![("repo-1".to_string(), repo.clone())]);
+        install_local(&harness, &source, project_target("repo-1"));
+        let global_ref = global_ref("orca-samples.twin");
+        let project_ref = PluginRef {
+            plugin_key: "orca-samples.twin".to_string(),
+            scope: PluginScope::Project,
+            repo_id: Some("repo-1".to_string()),
+        };
+        approve_raw(&harness, &global_ref);
+        harness.service.ensure_active(&global_ref).unwrap();
+        assert_eq!(harness.service.manager().active_count(), 1);
+
+        // The project twin is installed but unapproved: its failed ensure must
+        // not deactivate the running global instance.
+        let error = harness.service.ensure_active(&project_ref).unwrap_err();
+        assert_eq!(error.code(), gate::CONSENT_REQUIRED);
+        assert_eq!(harness.service.manager().active_count(), 1);
+        assert!(matches!(
+            harness.service.manager().state("global:orca-samples.twin"),
+            WorkerState::Running { .. }
+        ));
+        assert_eq!(
+            harness
+                .service
+                .manager()
+                .state("project:repo-1:orca-samples.twin"),
+            WorkerState::Inactive
+        );
+        assert_eq!(
+            harness
+                .service
+                .invoke_command(&global_ref, "echo", None)
+                .unwrap(),
+            json!({ "command": "echo", "args": null })
+        );
+        harness.service.shutdown();
+    }
+
+    #[test]
+    fn host_calls_route_to_the_calling_workers_scope() {
+        if !node_available() {
+            return;
+        }
+        let temp = tempdir().unwrap();
+        let (harness, _repo, global_ref, project_ref) = dual_scope_harness(temp.path());
+        let service = &harness.service;
+        service.ensure_active(&global_ref).unwrap();
+        service.ensure_active(&project_ref).unwrap();
+
+        service
+            .invoke_command(&global_ref, "open-tab", None)
+            .unwrap();
+        service
+            .invoke_command(&project_ref, "open-tab", None)
+            .unwrap();
+
+        let open_tabs = harness
+            .host
+            .open_tabs
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        assert_eq!(
+            open_tabs.as_slice(),
+            [
+                (PluginScope::Global, None, "board".to_string()),
+                (
+                    PluginScope::Project,
+                    Some("repo-1".to_string()),
+                    "board".to_string()
+                )
+            ],
+            "each hostCall must carry its own instance scope/repo context"
+        );
+        service.shutdown();
     }
 }

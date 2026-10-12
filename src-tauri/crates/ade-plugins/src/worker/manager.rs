@@ -1,5 +1,6 @@
 //! Worker manager: the pool that owns at most one [`WorkerSupervisor`] per
-//! active plugin key (spec §3.2: max 5 workers), bridges child `HostCall`
+//! scope-qualified instance key ([`WorkerSpec::instance_key`]; spec §3.2: max
+//! 5 workers), bridges child `HostCall`
 //! frames to a [`HostCallHandler`], and funnels logs/fatal frames to a
 //! [`FrameEventSink`].
 //!
@@ -43,15 +44,15 @@ pub const WORKER_LIMIT: &str = "worker_limit";
 /// worker keeps running.
 pub const UNKNOWN_COMMAND: &str = "unknown_command";
 
-/// Handles a child `HostCall` frame. `plugin_key` is the authenticated
-/// worker identity (the key the frame arrived from, bound by the manager's
-/// per-worker frame sink — never anything the child sent). `params` is `null`
-/// when the frame omits it. `Err((code, error))` is written back as
-/// `hostResult{ok:false}`.
+/// Handles a child `HostCall` frame. `instance_key` is the authenticated
+/// worker identity (the scope-qualified instance key the frame arrived from,
+/// bound by the manager's per-worker frame sink — never anything the child
+/// sent). `params` is `null` when the frame omits it. `Err((code, error))` is
+/// written back as `hostResult{ok:false}`.
 pub trait HostCallHandler: Send + Sync {
     fn handle(
         &self,
-        plugin_key: &str,
+        instance_key: &str,
         call_id: u64,
         method: &str,
         params: Value,
@@ -86,7 +87,7 @@ struct WorkerEntry {
     writer: Arc<Mutex<Option<File>>>,
 }
 
-/// Owns the worker pool for every active plugin key.
+/// Owns the worker pool for every active worker instance key.
 pub struct WorkerManager {
     config: WorkerManagerConfig,
     node: Result<PathBuf, PluginError>,
@@ -122,8 +123,8 @@ impl WorkerManager {
         }
     }
 
-    /// Lazily activate `spec.plugin_key`: spawn + `init`/`ready` handshake if
-    /// the key is not active, refresh the revision if it changed, and require
+    /// Lazily activate `spec.instance_key`: spawn + `init`/`ready` handshake
+    /// if the instance is not active, refresh the revision if it changed, and require
     /// [`WORKER_LIMIT`] when starting a *new* key would exceed `max_active`.
     /// The worker's `ready` command list is checked against
     /// `spec.declared_commands`: a registered command outside the manifest's
@@ -134,7 +135,7 @@ impl WorkerManager {
             Ok(node) => node.clone(),
             Err(error) => return Err(error.clone()),
         };
-        let key = spec.plugin_key.clone();
+        let key = spec.instance_key.clone();
         let revision = spec.manifest_revision.clone();
 
         if let Some(entry) = self.workers.get_mut(&key) {
@@ -222,15 +223,15 @@ impl WorkerManager {
     /// state (undeclared *registrations* are handled in `ensure_active`).
     pub fn invoke_command(
         &mut self,
-        plugin_key: &str,
+        instance_key: &str,
         call_id: u64,
         command_id: &str,
         args: Option<Value>,
     ) -> Result<Value, PluginError> {
-        let entry = self.workers.get_mut(plugin_key).ok_or_else(|| {
+        let entry = self.workers.get_mut(instance_key).ok_or_else(|| {
             PluginError::new(
                 UNAVAILABLE,
-                format!("plugin worker {plugin_key} is not active"),
+                format!("plugin worker {instance_key} is not active"),
             )
         })?;
         let declared = {
@@ -243,7 +244,7 @@ impl WorkerManager {
         if declared {
             return Err(PluginError::new(
                 UNKNOWN_COMMAND,
-                format!("plugin {plugin_key} does not declare command {command_id}"),
+                format!("plugin {instance_key} does not declare command {command_id}"),
             ));
         }
         let reply = entry.supervisor.send(
@@ -275,15 +276,15 @@ impl WorkerManager {
     /// `event_timeout`. The worker must be active.
     pub fn deliver_event(
         &mut self,
-        plugin_key: &str,
+        instance_key: &str,
         event_id: u64,
         event: &str,
         payload: Value,
     ) -> Result<(), PluginError> {
-        let supervisor = self.workers.get_mut(plugin_key).ok_or_else(|| {
+        let supervisor = self.workers.get_mut(instance_key).ok_or_else(|| {
             PluginError::new(
                 UNAVAILABLE,
-                format!("plugin worker {plugin_key} is not active"),
+                format!("plugin worker {instance_key} is not active"),
             )
         })?;
         supervisor.supervisor.send(
@@ -319,7 +320,7 @@ impl WorkerManager {
     }
 
     /// Stop and remove every running worker untouched for at least the
-    /// supervisor's `idle_timeout`; returns the reaped plugin keys. Inactive
+    /// supervisor's `idle_timeout`; returns the reaped instance keys. Inactive
     /// and errored entries are left alone (an errored entry owns no process).
     pub fn reap_idle(&mut self) -> Vec<String> {
         let now = std::time::Instant::now();
@@ -335,18 +336,18 @@ impl WorkerManager {
         keys
     }
 
-    /// Restart count of `plugin_key` in its current activation lifetime;
+    /// Restart count of `instance_key` in its current activation lifetime;
     /// unknown keys report zero.
-    pub fn restarts(&self, plugin_key: &str) -> u32 {
+    pub fn restarts(&self, instance_key: &str) -> u32 {
         self.workers
-            .get(plugin_key)
+            .get(instance_key)
             .map(|entry| entry.supervisor.restart_count())
             .unwrap_or(0)
     }
 
     /// Stop and remove one worker (graceful `shutdown` then group kill).
-    pub fn stop(&mut self, plugin_key: &str) {
-        if let Some(mut entry) = self.workers.remove(plugin_key) {
+    pub fn stop(&mut self, instance_key: &str) {
+        if let Some(mut entry) = self.workers.remove(instance_key) {
             entry.supervisor.stop(self.config.supervisor.grace);
         }
     }
@@ -373,10 +374,10 @@ impl WorkerManager {
             .count()
     }
 
-    /// Lifecycle state of `plugin_key`; unknown keys are `Inactive`.
-    pub fn state(&self, plugin_key: &str) -> WorkerState {
+    /// Lifecycle state of `instance_key`; unknown keys are `Inactive`.
+    pub fn state(&self, instance_key: &str) -> WorkerState {
         self.workers
-            .get(plugin_key)
+            .get(instance_key)
             .map(|entry| entry.supervisor.state())
             .unwrap_or(WorkerState::Inactive)
     }
@@ -627,7 +628,7 @@ rl.on('line', async (line) => {
     impl HostCallHandler for RecordingHostCall {
         fn handle(
             &self,
-            _plugin_key: &str,
+            _instance_key: &str,
             call_id: u64,
             method: &str,
             params: Value,
@@ -695,6 +696,7 @@ rl.on('line', async (line) => {
 
         fn spec(&self, key: &str, revision: &str) -> WorkerSpec {
             WorkerSpec {
+                instance_key: format!("global:{key}"),
                 plugin_key: key.to_owned(),
                 plugin_root: self.root.clone(),
                 main_entry: "main.mjs".to_owned(),
@@ -791,13 +793,13 @@ rl.on('line', async (line) => {
             "construction must not spawn a worker"
         );
         assert_eq!(manager.active_count(), 0);
-        assert_eq!(manager.state("pub.one"), WorkerState::Inactive);
+        assert_eq!(manager.state("global:pub.one"), WorkerState::Inactive);
 
         manager
             .ensure_active(fixture.spec("pub.one", "rev-1"))
             .unwrap();
         assert!(matches!(
-            manager.state("pub.one"),
+            manager.state("global:pub.one"),
             WorkerState::Running { revision } if revision == "rev-1"
         ));
         assert_eq!(manager.active_count(), 1);
@@ -836,10 +838,10 @@ rl.on('line', async (line) => {
             .unwrap_err();
         assert_eq!(error.code(), WORKER_LIMIT);
         assert!(error.message().contains("max_active=5"));
-        assert_eq!(manager.state("pub.six"), WorkerState::Inactive);
+        assert_eq!(manager.state("global:pub.six"), WorkerState::Inactive);
         assert_eq!(manager.active_count(), 5);
 
-        manager.stop("pub.p0");
+        manager.stop("global:pub.p0");
         assert_eq!(manager.active_count(), 4);
         manager
             .ensure_active(fixture.spec("pub.six", "rev-1"))
@@ -863,21 +865,22 @@ rl.on('line', async (line) => {
             .unwrap();
 
         let value = manager
-            .invoke_command("pub.invoke", 1, "echo", Some(json!({ "n": 7 })))
+            .invoke_command("global:pub.invoke", 1, "echo", Some(json!({ "n": 7 })))
             .unwrap();
         assert_eq!(value, json!({ "command": "echo", "args": { "n": 7 } }));
         {
             let logs = sink.logs.lock().unwrap();
             assert!(
-                logs.iter().any(|(key, level, message)| key == "pub.invoke"
-                    && level == "info"
-                    && message == "echo handled"),
+                logs.iter()
+                    .any(|(key, level, message)| key == "global:pub.invoke"
+                        && level == "info"
+                        && message == "echo handled"),
                 "log frames must reach the event sink: {logs:?}"
             );
         }
 
         let error = manager
-            .invoke_command("pub.invoke", 2, "fail", None)
+            .invoke_command("global:pub.invoke", 2, "fail", None)
             .unwrap_err();
         assert_eq!(error.code(), ACTION_FAILED);
         assert_eq!(error.message(), "boom");
@@ -885,7 +888,7 @@ rl.on('line', async (line) => {
         // The worker's host.call is answered by the handler mid-invoke; only
         // then does the command resolve, so the value proves the write-back.
         let value = manager
-            .invoke_command("pub.invoke", 3, "host-call", None)
+            .invoke_command("global:pub.invoke", 3, "host-call", None)
             .unwrap();
         assert_eq!(value, json!({ "hostValue": { "stored": "k" } }));
         {
@@ -898,7 +901,7 @@ rl.on('line', async (line) => {
 
         // Handler failures come back with `ok:false` + `errorCode`.
         let error = manager
-            .invoke_command("pub.invoke", 4, "host-call-error", None)
+            .invoke_command("global:pub.invoke", 4, "host-call-error", None)
             .unwrap_err();
         assert_eq!(error.message(), "capability_denied:denied by gate");
 
@@ -906,7 +909,7 @@ rl.on('line', async (line) => {
         // error text is a plain error: worker-controlled text never changes
         // lifecycle state.
         let error = manager
-            .invoke_command("pub.invoke", 5, "undeclared", None)
+            .invoke_command("global:pub.invoke", 5, "undeclared", None)
             .unwrap_err();
         assert_eq!(error.code(), ACTION_FAILED);
         assert_eq!(
@@ -914,7 +917,10 @@ rl.on('line', async (line) => {
             "no handler registered for command undeclared"
         );
         assert!(
-            matches!(manager.state("pub.invoke"), WorkerState::Running { .. }),
+            matches!(
+                manager.state("global:pub.invoke"),
+                WorkerState::Running { .. }
+            ),
             "declared command error text must not kill the worker"
         );
         assert_eq!(manager.active_count(), 1);
@@ -922,11 +928,11 @@ rl.on('line', async (line) => {
         // A command outside the manifest's declared set is rejected before
         // any frame is sent, and the worker keeps running.
         let error = manager
-            .invoke_command("pub.invoke", 6, "not-declared", None)
+            .invoke_command("global:pub.invoke", 6, "not-declared", None)
             .unwrap_err();
         assert_eq!(error.code(), UNKNOWN_COMMAND);
         assert!(matches!(
-            manager.state("pub.invoke"),
+            manager.state("global:pub.invoke"),
             WorkerState::Running { .. }
         ));
         assert_eq!(manager.active_count(), 1);
@@ -954,7 +960,7 @@ rl.on('line', async (line) => {
             error.message()
         );
         assert!(matches!(
-            manager.state("pub.rogue"),
+            manager.state("global:pub.rogue"),
             WorkerState::Errored { reason } if reason == "undeclared-command"
         ));
         assert_eq!(manager.active_count(), 0);
@@ -978,14 +984,14 @@ rl.on('line', async (line) => {
             .unwrap();
         manager
             .deliver_event(
-                "pub.events",
+                "global:pub.events",
                 3,
                 "worktree.created",
                 json!({ "worktreeId": "wt-1" }),
             )
             .unwrap();
         assert!(manager
-            .deliver_event("pub.other", 4, "worktree.created", json!({}))
+            .deliver_event("global:pub.other", 4, "worktree.created", json!({}))
             .is_err());
         manager.stop_all();
     }
@@ -1029,8 +1035,8 @@ rl.on('line', async (line) => {
             serde_json::from_str(&std::fs::read_to_string(&marker).unwrap()).unwrap();
         assert_eq!(recorded, json!({ "pong": "idle" }));
 
-        manager.pump(Some("pub.pump")).unwrap();
-        manager.pump(Some("pub.absent")).unwrap();
+        manager.pump(Some("global:pub.pump")).unwrap();
+        manager.pump(Some("global:pub.absent")).unwrap();
         manager.stop_all();
     }
 
@@ -1061,7 +1067,7 @@ rl.on('line', async (line) => {
         let second = fixture.pid();
         assert_ne!(second, first);
         assert!(matches!(
-            manager.state("pub.rev"),
+            manager.state("global:pub.rev"),
             WorkerState::Running { revision } if revision == "rev-2"
         ));
         assert_dead(first);
@@ -1069,7 +1075,7 @@ rl.on('line', async (line) => {
 
         manager.stop_all();
         assert_eq!(manager.active_count(), 0);
-        assert_eq!(manager.state("pub.rev"), WorkerState::Inactive);
+        assert_eq!(manager.state("global:pub.rev"), WorkerState::Inactive);
         assert_dead(second);
     }
 
