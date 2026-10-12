@@ -74,6 +74,9 @@ pub fn run() {
                 // computer-use 收尾（规格 §3.5）：RPC server 停 + provider
                 // terminate + `runtime.json`/`runtime.sock` 移除。
                 state.computer.shutdown();
+                // 插件收尾（规格 §3.3）：先停 pump ticker，再 `plugins.shutdown()`
+                // （dev watcher + workers + 面板/主区会话）。
+                state.shutdown_plugins();
             }
         }
     });

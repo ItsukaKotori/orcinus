@@ -45,6 +45,7 @@ dependencies = [
  "ade-fs",
  "ade-git",
  "ade-hooks",
+ "ade-plugins",
  "ade-pty",
  "ade-store",
  "base64 0.22.1",

@@ -11,6 +11,8 @@ use ade_core::defaults::{onboarding_defaults, settings_defaults, ui_state_defaul
 use ade_fs::{FsService, FsWatcher};
 use ade_git::runner::CancelToken;
 use ade_hooks::{AgentHookServer, StartOptions};
+use ade_plugins::service::PluginService;
+use ade_plugins::worker::spawn::NODE_PATH_ENV;
 use ade_pty::PtyHost;
 use ade_store::onboarding_store::OnboardingStore;
 use ade_store::sqlite::Store;
@@ -30,6 +32,10 @@ use crate::computer_service::{ComputerService, StoreFeatureRecorder, USER_DATA_P
 use crate::errors::BridgeError;
 use crate::events;
 use crate::json::Json;
+use crate::plugins_service::{
+    build_plugin_service, keychain_secrets, notification_id, EventEmitter, HostPtyTerminals,
+    NotificationDispatcher, PluginServiceDeps, PluginTicker,
+};
 
 /// Debounce window for settings/ui-state disk writes (spec §4.1).
 pub const WRITE_DEBOUNCE: Duration = Duration::from_millis(1000);
@@ -471,13 +477,57 @@ impl ade_automations::EventSink for ServiceEventSink {
     }
 }
 
+/// 插件服务事件出口：经 `emit_json` 投影到 `plugins:changed` /
+/// `plugins:open-tab`（注入为闭包以便 bridge 单测无需 Tauri runtime）。
+fn plugin_event_emitter(app: AppHandle) -> EventEmitter {
+    Arc::new(move |event: &str, payload: Value| {
+        events::emit_json(&app, event, Json::new(payload));
+    })
+}
+
+/// 插件通知出口（规格 §3.5 notifications.show）：复用 fork 的原生 UN 通道
+/// （`notifications_native::macos::deliver_native`）；非打包进程/失败回 false。
+fn plugin_notification_dispatcher(app: AppHandle) -> NotificationDispatcher {
+    Arc::new(
+        move |plugin_key: &str, title: &str, body: Option<&str>| -> bool {
+            #[cfg(target_os = "macos")]
+            {
+                if !crate::commands::notifications_native::macos::is_bundled_app_process() {
+                    return false;
+                }
+                let delivered = crate::commands::notifications_native::macos::deliver_native(
+                    &app,
+                    notification_id(plugin_key),
+                    title.to_string(),
+                    body.unwrap_or_default().to_string(),
+                    false,
+                );
+                match delivered {
+                    Ok(delivered) => delivered,
+                    Err(error) => {
+                        eprintln!("[ade-bridge] plugin notification delivery failed: {error}");
+                        false
+                    }
+                }
+            }
+            #[cfg(not(target_os = "macos"))]
+            {
+                let _ = (&app, plugin_key, title, body);
+                false
+            }
+        },
+    )
+}
+
 /// Shared backend state for every command. Initialized once in `setup` with the
 /// app data directory before the main window is built.
 pub struct AppState {
     pub settings: Arc<Mutex<SettingsStore>>,
     pub ui: Arc<Mutex<UiStateStore>>,
     pub onboarding: Arc<Mutex<OnboardingStore>>,
-    pub projects: Mutex<ProjectsStore>,
+    /// Projects 注册表（repos/projectGroups/folderWorkspaces）；`Arc` 使插件
+    /// 服务与命令面共享同一实例（插件 scope 发现/`set_projects`）。
+    pub projects: Arc<Mutex<ProjectsStore>>,
     /// Per-worktree metadata (`worktrees.json`), shared with the worktree
     /// commands as an `Arc` so blocking closures can own it.
     pub worktree_meta: Arc<WorktreeMetaStore>,
@@ -518,6 +568,11 @@ pub struct AppState {
     /// computer-use（Phase 2G 规格 §3.4/§3.5）：provider + TCC 权限面 +
     /// runtime RPC server（`runtime.json`/`runtime.sock`，Exit 时 shutdown）。
     pub computer: Arc<ComputerService>,
+    /// 插件内核（Phase 3A 规格 §3.3/§3.9，T12a）：装配好的 PluginService
+    /// 本体；T12b 在其上加命令面。Ticker 每 10s `pump()`（闲置回收）。
+    pub plugins: Arc<PluginService>,
+    /// 插件 pump ticker；退出时先 stop 再 `plugins.shutdown()`。
+    pub plugins_ticker: Mutex<Option<PluginTicker>>,
     settings_writer: WriteScheduler,
     ui_writer: Arc<WriteScheduler>,
 }
@@ -635,13 +690,57 @@ impl AppState {
             }));
         }
 
+        // 插件内核（规格 §3.3/§3.9，T12a）：stores 就绪后装配。缺少
+        // host-entry/node 不视为装配失败（worker 激活时以 errored 呈现）。
+        // 装配失败不 abort 启动：降级到临时 app-data 重试，仍失败才向上报错。
+        let worktree_meta = Arc::new(persisted.worktree_meta);
+        let fs = Arc::new(persisted.fs);
+        let projects = Arc::new(Mutex::new(persisted.projects));
+        let plugins_deps = PluginServiceDeps {
+            app_data_dir: data_dir.clone(),
+            resource_dir,
+            node_override: std::env::var(NODE_PATH_ENV)
+                .ok()
+                .filter(|value| !value.trim().is_empty()),
+            host_version: app.package_info().version.to_string(),
+            settings: Arc::clone(&settings),
+            ui: Arc::clone(&ui),
+            projects: Arc::clone(&projects),
+            worktree_meta: Arc::clone(&worktree_meta),
+            fs: Arc::clone(&fs),
+            pty: Arc::new(HostPtyTerminals::new(
+                Arc::clone(&pty_host),
+                pty_worktree_ids.clone(),
+            )),
+            secrets: keychain_secrets(),
+            notify: plugin_notification_dispatcher(app.clone()),
+            emit: plugin_event_emitter(app.clone()),
+        };
+        let plugins = match build_plugin_service(plugins_deps.clone()) {
+            Ok(service) => service,
+            Err(error) => {
+                eprintln!(
+                    "[ade-bridge] plugin service assembly failed ({error}); running degraded"
+                );
+                let mut degraded = plugins_deps;
+                degraded.app_data_dir = std::env::temp_dir()
+                    .join(format!("orcinus-plugins-degraded-{}", std::process::id()));
+                build_plugin_service(degraded).map_err(|degraded_error| {
+                    BridgeError::message(format!(
+                        "plugin service unavailable: {error}; degraded fallback failed: {degraded_error}"
+                    ))
+                })?
+            }
+        };
+        let plugins_ticker = PluginTicker::spawn(Arc::clone(&plugins));
+
         Ok(Self {
             settings,
             ui,
             onboarding,
-            projects: Mutex::new(persisted.projects),
-            worktree_meta: Arc::new(persisted.worktree_meta),
-            fs: Arc::new(persisted.fs),
+            projects,
+            worktree_meta,
+            fs,
             watchers,
             app: app.clone(),
             pty_host,
@@ -659,6 +758,8 @@ impl AppState {
             git_cancels: GitCancelRegistry::new(),
             ai_vault,
             computer,
+            plugins,
+            plugins_ticker: Mutex::new(Some(plugins_ticker)),
             settings_writer,
             ui_writer,
         })
@@ -713,6 +814,15 @@ impl AppState {
                 eprintln!("[ade-bridge] failed to flush {label} on exit: {error}");
             }
         }
+    }
+
+    /// 插件收尾（规格 §3.3）：先停 pump ticker（通道关闭立即唤醒），再停
+    /// worker/dev watcher/面板会话（`PluginService::shutdown`）。
+    pub fn shutdown_plugins(&self) {
+        if let Some(ticker) = lock(&self.plugins_ticker).take() {
+            ticker.stop();
+        }
+        self.plugins.shutdown();
     }
 
     /// Window-close quit (spec §3.4): request one renderer flush window, wait
