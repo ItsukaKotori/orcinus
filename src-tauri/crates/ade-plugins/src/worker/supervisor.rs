@@ -83,7 +83,7 @@ impl Default for SupervisorConfig {
 /// calls, stale results); the manager installs frame routing here.
 pub type FrameSink = Box<dyn FnMut(&ChildFrame) + Send>;
 
-type SpawnFn = Box<dyn FnMut() -> Result<(WorkerHandle, String), PluginError>>;
+type SpawnFn = Box<dyn FnMut() -> Result<(WorkerHandle, String), PluginError> + Send>;
 
 struct ActiveWorker {
     handle: WorkerHandle,
@@ -160,7 +160,7 @@ impl WorkerSupervisor {
     /// (idempotent start) or while `errored` (terminal until `stop`).
     pub fn start(
         &mut self,
-        mut spawn: impl FnMut() -> Result<(WorkerHandle, String), PluginError> + 'static,
+        mut spawn: impl FnMut() -> Result<(WorkerHandle, String), PluginError> + Send + 'static,
     ) -> Result<(), PluginError> {
         let result = self.start_with(&mut spawn);
         self.spawner = Some(Box::new(spawn));

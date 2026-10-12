@@ -72,7 +72,8 @@ pub use service::{
     MutationLocks, OpenTabRequest, PluginCapabilityProjection, PluginCommandHandler,
     PluginCommandProjection, PluginKeybindingProjection, PluginListEntry, PluginPanelProjection,
     PluginRef, PluginService, PluginSourceProjection, PluginStatus, PluginTabProjection,
-    ScopeTarget, ServiceConfig, ServiceEventSink, PLUGIN_LOG_TAIL_LIMIT,
+    ScopeTarget, ServiceConfig, ServiceEventSink, WorkerRuntimeConfig, PLUGIN_LOG_TAIL_LIMIT,
+    WORKER_LOG_RING_LIMIT,
 };
 pub use sessions::{
     SessionBinding, SessionKind, SessionOwner, SessionRegistry, DEFAULT_SESSION_CAP,

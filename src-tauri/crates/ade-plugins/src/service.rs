@@ -1,11 +1,14 @@
 //! Service orchestration core: discovery/status projection, mutation-locked
 //! install/remove/consent/enablement, lockfile state and batch restore, audit
-//! tailing, and the event-sink seam (spec §3.3/§3.9).
+//! tailing, the event-sink seam (spec §3.3/§3.9), and worker activation
+//! orchestration (T11b2: `WorkerManager` wiring, host-call routing, command
+//! invocation, plugin-event delivery, dev-watcher hot reload, idle reaping).
 //!
-//! This module deliberately stops at the T11b1 boundary: worker activation,
-//! panels/tabs, and watcher wiring arrive in T11b2/T11b3. Everything here is
-//! synchronous and Node-free; the only processes a mutation can spawn are Git
-//! children for `git` install sources.
+//! Panels/tabs and their sessions consume the same session registry in T11b3.
+//!
+//! Everything here is synchronous; the only processes this module spawns are
+//! Git children for `git` install sources and Node workers on explicit
+//! activation.
 //!
 //! ## Mutation serialization
 //!
@@ -20,20 +23,24 @@
 //! concurrent uninstall and `secrets.set` for the same plugin cannot tear the
 //! data directory.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, Mutex, Weak};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::audit::{AuditLog, AuditOutcome, AuditRecord, LogLine};
-use crate::consent::{fingerprint, scoped_key, ConsentKeyScope, ConsentState};
+use crate::consent::{fingerprint, scoped_key, ActivationState, ConsentKeyScope, ConsentState};
 use crate::content_hash::hash_plugin_tree;
 use crate::discovery::{discover, DiscoveredPlugin, DiscoveryProjection, PluginSourceKind};
 use crate::enablement;
+use crate::events::{is_plugin_event_name, project_payload};
 use crate::git::{GitRunner, DEFAULT_PLUGIN_GIT_TIMEOUT};
+use crate::host::gate;
+use crate::host::methods::{self, HostCallContext, Outcome, PluginAuditSink};
 use crate::host::services::PluginHostServices;
 use crate::install::lockfile::{read_lockfile, LockEntry, LockSource};
 use crate::install::publication::publish_install;
@@ -47,11 +54,22 @@ use crate::marketplace::TempWorkspace;
 use crate::paths::{global_roots, project_roots, ScopeRoots};
 use crate::plugin_settings::PluginSettingsStore;
 use crate::secrets::SecretStore;
+use crate::sessions::SessionRegistry;
 use crate::storage::StorageStore;
 use crate::types::{Capability, PluginError, PluginScope, INVALID_PARAMS, UNAVAILABLE};
+use crate::watcher::{DevWatcher, DEV_WATCH_BATCH_TRAILING_MS};
+use crate::worker::manager::{
+    FrameEventSink, HostCallHandler, WorkerManager, WorkerManagerConfig, UNKNOWN_COMMAND,
+};
+use crate::worker::spawn::{resolve_node, WorkerSpec};
+use crate::worker::supervisor::{SupervisorConfig, WorkerState};
 
-/// How many audit lines `get_logs` returns at most.
+/// How many audit lines `get_logs` returns at most (merged: worker log ring
+/// plus per-scope audit tails).
 pub const PLUGIN_LOG_TAIL_LIMIT: usize = 200;
+
+/// Bound of the in-memory worker log ring (spec §3.2 log frames).
+pub const WORKER_LOG_RING_LIMIT: usize = 1000;
 
 /// Locates one plugin instance across the dual-scope model.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -268,6 +286,27 @@ pub trait ServiceEventSink: Send + Sync {
     fn open_tab_requested(&self, request: OpenTabRequest);
 }
 
+/// Worker-pool tunables: pool size, supervision timeouts, dev-watch batching.
+/// Defaults mirror spec §3.2/§3.8; tests inject short timeouts.
+#[derive(Debug, Clone)]
+pub struct WorkerRuntimeConfig {
+    /// Maximum number of workers with a live process (spec §3.2: 5).
+    pub max_active: usize,
+    pub supervisor: SupervisorConfig,
+    /// Trailing-edge debounce of the dev watcher (spec §3.8: 150/500ms).
+    pub watch_batch: Duration,
+}
+
+impl Default for WorkerRuntimeConfig {
+    fn default() -> Self {
+        Self {
+            max_active: 5,
+            supervisor: SupervisorConfig::default(),
+            watch_batch: Duration::from_millis(DEV_WATCH_BATCH_TRAILING_MS),
+        }
+    }
+}
+
 /// Injected dependencies of [`PluginService`]. Storage/settings/audit stores
 /// are derived from `app_data_dir` by the service itself, so only the
 /// main-owned pieces are injected.
@@ -282,6 +321,7 @@ pub struct ServiceConfig {
     pub host_services: Arc<dyn PluginHostServices>,
     pub event_sink: Arc<dyn ServiceEventSink>,
     pub host_version: String,
+    pub workers: WorkerRuntimeConfig,
 }
 
 /// `(data_dir, plugin_key)` identity of a per-plugin data lock.
@@ -340,8 +380,143 @@ impl MutationLocks {
     }
 }
 
+/// Activation facts of one worker, captured at `ensure_active` time and read
+/// back by the host-call handler, log ring, and status projection.
+#[derive(Debug, Clone)]
+struct WorkerRecord {
+    plugin_key: String,
+    scope: PluginScope,
+    repo_id: Option<String>,
+    data_dir: PathBuf,
+    granted: Vec<Capability>,
+    revision: String,
+    /// Last fatal-frame error (kept until the worker is stopped/replaced).
+    error: Option<String>,
+}
+
+/// Shared seam between [`PluginService`] and the [`WorkerManager`]: routes
+/// child `hostCall` frames through `host::methods::execute` with the recorded
+/// activation context, and buffers log/fatal frames. It never touches the
+/// manager itself, so it is safe to call while the manager lock is held.
+struct WorkerBridge {
+    records: Mutex<HashMap<String, WorkerRecord>>,
+    logs: Mutex<VecDeque<LogLine>>,
+    services: Arc<dyn PluginHostServices>,
+    sink: Arc<dyn ServiceEventSink>,
+}
+
+impl WorkerBridge {
+    fn new(services: Arc<dyn PluginHostServices>, sink: Arc<dyn ServiceEventSink>) -> Self {
+        Self {
+            records: Mutex::new(HashMap::new()),
+            logs: Mutex::new(VecDeque::new()),
+            services,
+            sink,
+        }
+    }
+
+    fn lock_records(&self) -> std::sync::MutexGuard<'_, HashMap<String, WorkerRecord>> {
+        self.records
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    fn push_log(&self, record: AuditRecord) {
+        let mut logs = self
+            .logs
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        logs.push_back(record);
+        while logs.len() > WORKER_LOG_RING_LIMIT {
+            logs.pop_front();
+        }
+    }
+
+    fn log_lines(&self, plugin_key: &str) -> Vec<LogLine> {
+        let actor = format!("plugin:{plugin_key}");
+        self.logs
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .iter()
+            .filter(|line| line.actor == actor)
+            .cloned()
+            .collect()
+    }
+}
+
+/// Per-scope audit sink bound for the duration of one host call.
+struct ScopeAudit {
+    log: AuditLog,
+}
+
+impl PluginAuditSink for ScopeAudit {
+    fn record(&self, record: AuditRecord) -> Result<(), PluginError> {
+        self.log.record(record)
+    }
+}
+
+impl HostCallHandler for WorkerBridge {
+    fn handle(
+        &self,
+        plugin_key: &str,
+        _call_id: u64,
+        method: &str,
+        params: Value,
+    ) -> Result<Value, (String, String)> {
+        let Some(record) = self.lock_records().get(plugin_key).cloned() else {
+            return Err((
+                UNAVAILABLE.to_owned(),
+                format!("plugin {plugin_key} is not active"),
+            ));
+        };
+        let audit = ScopeAudit {
+            log: AuditLog::new(&record.data_dir),
+        };
+        let ctx = HostCallContext {
+            plugin_key: &record.plugin_key,
+            granted: Some(&record.granted),
+            via_panel: false,
+            scope: record.scope,
+            repo_id: record.repo_id.as_deref(),
+            worktree_hint: None,
+            services: &*self.services,
+            audit: Some(&audit),
+        };
+        match methods::execute(method, params, &ctx) {
+            Outcome::Ok(value) => Ok(value),
+            Outcome::Err { code, error } => Err((code, error)),
+        }
+    }
+}
+
+impl FrameEventSink for WorkerBridge {
+    fn on_log(&self, plugin_key: &str, level: &str, message: &str) {
+        self.push_log(AuditRecord {
+            ts: now_millis() as i64,
+            actor: format!("plugin:{plugin_key}"),
+            method: format!("worker.{level}"),
+            summary: message.to_string(),
+            outcome: AuditOutcome::Ok,
+        });
+    }
+
+    fn on_fatal(&self, plugin_key: &str, error: &str) {
+        if let Some(record) = self.lock_records().get_mut(plugin_key) {
+            record.error = Some(error.to_string());
+        }
+        self.push_log(AuditRecord {
+            ts: now_millis() as i64,
+            actor: format!("plugin:{plugin_key}"),
+            method: "worker.fatal".to_string(),
+            summary: error.to_string(),
+            outcome: AuditOutcome::Error,
+        });
+        self.sink.plugins_changed(false, true);
+    }
+}
+
 /// Orchestrates discovery, projection, installs, consent, lockfile restore,
-/// and audit reads for both scopes.
+/// audit reads, and worker activation for both scopes.
 pub struct PluginService {
     config: ServiceConfig,
     global: ScopeRoots,
@@ -352,6 +527,11 @@ pub struct PluginService {
     settings: PluginSettingsStore,
     marketplace: MarketplaceInstaller,
     git: GitRunner,
+    bridge: Arc<WorkerBridge>,
+    manager: Mutex<WorkerManager>,
+    sessions: SessionRegistry,
+    watcher: Mutex<Option<DevWatcher>>,
+    next_call_id: AtomicU64,
 }
 
 impl PluginService {
@@ -368,6 +548,25 @@ impl PluginService {
         let marketplace =
             MarketplaceInstaller::new(marketplace_service, config.host_version.clone());
         let projects = config.projects.clone();
+        let bridge = Arc::new(WorkerBridge::new(
+            Arc::clone(&config.host_services),
+            Arc::clone(&config.event_sink),
+        ));
+        // `WorkerManager` resolves the node path once; when resolution fails
+        // here the manager stores a terminal `node_missing` error that every
+        // `ensure_active` reports.
+        let node = resolve_node(config.node_override.as_deref(), None)
+            .unwrap_or_else(|_| PathBuf::from("__ade_missing_node__"));
+        let manager = WorkerManager::new(
+            WorkerManagerConfig {
+                max_active: config.workers.max_active,
+                host_entry_path: config.host_entry_path.clone(),
+                node,
+                supervisor: config.workers.supervisor.clone(),
+            },
+            Arc::clone(&bridge) as Arc<dyn HostCallHandler>,
+            Arc::clone(&bridge) as Arc<dyn FrameEventSink>,
+        );
         Arc::new(Self {
             config,
             global,
@@ -378,16 +577,285 @@ impl PluginService {
             settings,
             marketplace,
             git: GitRunner::new(DEFAULT_PLUGIN_GIT_TIMEOUT),
+            bridge,
+            manager: Mutex::new(manager),
+            sessions: SessionRegistry::new(),
+            watcher: Mutex::new(None),
+            next_call_id: AtomicU64::new(1),
         })
     }
 
-    /// Replaces the registered project set (activation is T11b2).
+    /// Replaces the registered project set and reconciles project-scope
+    /// activation: workers of removed projects are stopped and their sessions
+    /// invalidated, and approved+enabled project plugins of the current set
+    /// are (re)activated (spec §3.3 lifecycle).
     pub fn set_projects(&self, projects: Vec<(String, PathBuf)>) {
-        let mut current = self
-            .projects
+        let removed: Vec<String> = {
+            let mut current = self
+                .projects
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            let next: HashSet<String> = projects.iter().map(|(id, _)| id.clone()).collect();
+            let removed = current
+                .iter()
+                .filter(|(id, _)| !next.contains(id))
+                .map(|(id, _)| id.clone())
+                .collect();
+            *current = projects;
+            removed
+        };
+        for repo_id in removed {
+            let keys: Vec<String> = self
+                .bridge
+                .lock_records()
+                .iter()
+                .filter(|(_, record)| {
+                    record.scope == PluginScope::Project
+                        && record.repo_id.as_deref() == Some(repo_id.as_str())
+                })
+                .map(|(key, _)| key.clone())
+                .collect();
+            if keys.is_empty() {
+                continue;
+            }
+            {
+                let mut manager = self.manager();
+                for key in &keys {
+                    manager.stop(key);
+                }
+            }
+            for key in &keys {
+                self.bridge.lock_records().remove(key);
+                self.sessions.invalidate_plugin(key);
+            }
+            self.config.event_sink.plugins_changed(false, true);
+        }
+        for entry in self.list() {
+            if entry.scope == PluginScope::Project {
+                let _ = self.ensure_active(&PluginRef {
+                    plugin_key: entry.plugin_key.clone(),
+                    scope: entry.scope,
+                    repo_id: entry.repo_id.clone(),
+                });
+            }
+        }
+    }
+
+    /// Starts the service: activates the approved+enabled global plugins and
+    /// installs the dev-path watcher (hot reload on manifest revision change).
+    pub fn start(self: &Arc<Self>) -> Result<(), PluginError> {
+        for entry in self.list() {
+            if entry.scope == PluginScope::Global {
+                let _ = self.ensure_active(&PluginRef {
+                    plugin_key: entry.plugin_key.clone(),
+                    scope: entry.scope,
+                    repo_id: entry.repo_id.clone(),
+                });
+            }
+        }
+        let dev_paths = self.config.dev_paths.clone();
+        if dev_paths.is_empty() {
+            return Ok(());
+        }
+        let weak: Weak<PluginService> = Arc::downgrade(self);
+        let mut watcher = DevWatcher::new(&dev_paths, self.config.workers.watch_batch);
+        watcher.start(move |paths| {
+            if let Some(service) = weak.upgrade() {
+                service.on_dev_change(paths);
+            }
+        })?;
+        *self
+            .watcher
             .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
-        *current = projects;
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(watcher);
+        Ok(())
+    }
+
+    /// Stops the dev watcher, every worker, and every panel/tab session.
+    pub fn shutdown(&self) {
+        if let Some(mut watcher) = self
+            .watcher
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .take()
+        {
+            watcher.stop();
+        }
+        self.manager().stop_all();
+        self.bridge.lock_records().clear();
+        self.sessions.sweep(0);
+    }
+
+    /// One orchestration tick: drains worker frames (host calls, logs, fatal
+    /// frames), reaps workers idle past the supervisor's `idle_timeout`, and
+    /// bounds the session registry.
+    pub fn pump(&self) {
+        let reaped = {
+            let mut manager = self.manager();
+            let _ = manager.pump(None);
+            manager.reap_idle()
+        };
+        if !reaped.is_empty() {
+            for key in &reaped {
+                self.sessions.invalidate_plugin(key);
+            }
+            self.config.event_sink.plugins_changed(false, true);
+        }
+        self.sessions.sweep(crate::sessions::DEFAULT_SESSION_CAP);
+    }
+
+    /// Lazily activates the worker of `plugin_ref`. Only an approved plugin
+    /// activates; every other state stops any stale worker and fails. The
+    /// worker spec carries the manifest's declared worker commands, the
+    /// manifest's granted capabilities, and the manifest hash as revision
+    /// (a revision change restarts a running worker via the manager).
+    pub fn ensure_active(&self, plugin_ref: &PluginRef) -> Result<(), PluginError> {
+        let (spec, record) = match self.worker_spec_for(plugin_ref) {
+            Ok(pair) => pair,
+            Err(error) => {
+                self.deactivate_ref(plugin_ref);
+                return Err(error);
+            }
+        };
+        self.bridge
+            .lock_records()
+            .insert(record.plugin_key.clone(), record);
+        self.manager().ensure_active(spec)
+    }
+
+    /// Invokes a manifest-declared worker command (built-in actions are
+    /// renderer-side and rejected here), activating the worker lazily.
+    pub fn invoke_command(
+        &self,
+        plugin_ref: &PluginRef,
+        command_id: &str,
+        args: Option<Value>,
+    ) -> Result<Value, PluginError> {
+        let discovered = self.discover_all();
+        let entry = find_discovered(&discovered, plugin_ref).ok_or_else(|| {
+            PluginError::new(
+                UNAVAILABLE,
+                format!(
+                    "plugin {} is not installed or is invalid",
+                    plugin_ref.plugin_key
+                ),
+            )
+        })?;
+        let manifest = entry
+            .manifest
+            .as_ref()
+            .expect("valid entries carry a manifest");
+        let command = manifest
+            .contributes
+            .commands
+            .iter()
+            .find(|command| command.id == command_id)
+            .ok_or_else(|| {
+                PluginError::new(
+                    UNKNOWN_COMMAND,
+                    format!(
+                        "plugin {} does not declare command {command_id}",
+                        plugin_ref.plugin_key
+                    ),
+                )
+            })?;
+        if command.action.is_some() {
+            return Err(PluginError::new(
+                INVALID_PARAMS,
+                format!("command {command_id} is a built-in action, not a worker command"),
+            ));
+        }
+        self.ensure_active(plugin_ref)?;
+        let call_id = self.next_call_id.fetch_add(1, Ordering::SeqCst);
+        self.manager()
+            .invoke_command(&plugin_ref.plugin_key, call_id, command_id, args)
+    }
+
+    /// Projects `raw_payload` for the plugin event `name` and delivers it to
+    /// every approved+enabled subscriber (static `events` contributions get
+    /// their worker activated lazily; dynamic subscriptions only reach a
+    /// running worker). Returns the number of delivered events.
+    pub fn deliver_plugin_event(&self, name: &str, raw_payload: Value) -> usize {
+        if !is_plugin_event_name(name) {
+            return 0;
+        }
+        let Some(payload) = project_payload(name, &raw_payload) else {
+            return 0;
+        };
+        let discovered = self.discover_all();
+        let entries = self.project_entries(&discovered);
+        let mut delivered = 0;
+        for entry in &entries {
+            if entry.status != PluginStatus::Idle {
+                continue;
+            }
+            let plugin_ref = PluginRef {
+                plugin_key: entry.plugin_key.clone(),
+                scope: entry.scope,
+                repo_id: entry.repo_id.clone(),
+            };
+            let static_subscription = find_discovered(&discovered, &plugin_ref)
+                .and_then(|entry| entry.manifest.as_ref())
+                .is_some_and(|manifest| {
+                    manifest
+                        .contributes
+                        .events
+                        .iter()
+                        .any(|contribution| contribution.on == name)
+                });
+            let ready = if static_subscription {
+                self.ensure_active(&plugin_ref).is_ok()
+            } else {
+                self.config
+                    .host_services
+                    .subscribed_events(&entry.plugin_key)
+                    .iter()
+                    .any(|event| event == name)
+                    && matches!(
+                        self.manager().state(&entry.plugin_key),
+                        WorkerState::Running { .. }
+                    )
+            };
+            if !ready {
+                continue;
+            }
+            let event_id = self.next_call_id.fetch_add(1, Ordering::SeqCst);
+            if self
+                .manager()
+                .deliver_event(&entry.plugin_key, event_id, name, payload.clone())
+                .is_ok()
+            {
+                delivered += 1;
+            }
+        }
+        delivered
+    }
+
+    /// Convenience entry point for `worktree.created`.
+    pub fn on_worktree_created(&self, payload: crate::events::WorktreeCreatedPayload) -> usize {
+        self.deliver_plugin_event(
+            "worktree.created",
+            serde_json::to_value(payload).unwrap_or(Value::Null),
+        )
+    }
+
+    /// Convenience entry point for `worktree.removed`.
+    pub fn on_worktree_removed(&self, payload: crate::events::WorktreeRemovedPayload) -> usize {
+        self.deliver_plugin_event(
+            "worktree.removed",
+            serde_json::to_value(payload).unwrap_or(Value::Null),
+        )
+    }
+
+    /// Convenience entry point for `agent.status.changed`.
+    pub fn on_agent_status_changed(
+        &self,
+        payload: crate::events::AgentStatusChangedPayload,
+    ) -> usize {
+        self.deliver_plugin_event(
+            "agent.status.changed",
+            serde_json::to_value(payload).unwrap_or(Value::Null),
+        )
     }
 
     /// Discovery plus status projection for every registered context
@@ -396,7 +864,9 @@ impl PluginService {
     /// least one context can still see it).
     pub fn list(&self) -> Vec<PluginListEntry> {
         let discovered = self.discover_all();
-        self.project_entries(&discovered)
+        let mut entries = self.project_entries(&discovered);
+        self.project_runtime_status(&mut entries);
+        entries
     }
 
     /// Installs `source` into `target`, serialized per install root.
@@ -415,6 +885,7 @@ impl PluginService {
     /// lock entry), holding the install-root and plugin-data locks.
     pub fn remove(&self, plugin_ref: PluginRef) -> Result<Vec<PluginListEntry>, PluginError> {
         let roots = self.roots_for_ref(&plugin_ref)?;
+        self.deactivate_ref(&plugin_ref);
         let plugin_key = plugin_ref.plugin_key.clone();
         self.locks.with_install_root(&roots.install_dir, || {
             self.locks
@@ -447,7 +918,10 @@ impl PluginService {
                 &request.reviewed_fingerprint,
                 &current,
             )?,
-            ConsentDecision::Decline => enablement::decline(&*self.config.consent_state, &scoped),
+            ConsentDecision::Decline => {
+                enablement::decline(&*self.config.consent_state, &scoped);
+                self.deactivate_ref(&plugin_ref);
+            }
         }
         let data_dir = self.data_dir_for_ref(&plugin_ref)?;
         self.audit(
@@ -474,6 +948,9 @@ impl PluginService {
             PluginError::new(INVALID_PARAMS, "invalid plugin scope for enablement")
         })?;
         enablement::set_enabled(&*self.config.consent_state, &scoped, enabled);
+        if !enabled {
+            self.deactivate_ref(&plugin_ref);
+        }
         let data_dir = self.data_dir_for_ref(&plugin_ref)?;
         self.audit(
             &data_dir,
@@ -490,10 +967,31 @@ impl PluginService {
         self.list()
     }
 
-    /// Audit tail for one plugin (global scope; project audit lookup is
-    /// extended when panel/tab mutations arrive).
+    /// Merged log tail for one plugin: buffered worker log frames plus the
+    /// audit file of the global data dir and of every registered project data
+    /// dir (a project-scope plugin writes its audit lines under
+    /// `<repo>/.ade/plugin-data`). Chronological, capped at
+    /// [`PLUGIN_LOG_TAIL_LIMIT`].
     pub fn get_logs(&self, plugin_key: &str) -> Vec<LogLine> {
-        self.audit.read_tail(plugin_key, PLUGIN_LOG_TAIL_LIMIT)
+        let mut lines = self.bridge.log_lines(plugin_key);
+        lines.extend(self.audit.read_tail(plugin_key, PLUGIN_LOG_TAIL_LIMIT));
+        let projects = self
+            .projects
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone();
+        for (_, path) in projects {
+            let data_dir = project_roots(&path).data_dir;
+            if data_dir == self.global.data_dir {
+                continue;
+            }
+            lines.extend(AuditLog::new(&data_dir).read_tail(plugin_key, PLUGIN_LOG_TAIL_LIMIT));
+        }
+        lines.sort_by_key(|line| line.ts);
+        if lines.len() > PLUGIN_LOG_TAIL_LIMIT {
+            lines.drain(0..lines.len() - PLUGIN_LOG_TAIL_LIMIT);
+        }
+        lines
     }
 
     /// Classifies the project lockfile against the current install state.
@@ -1161,6 +1659,208 @@ impl PluginService {
         };
         let _ = result;
     }
+
+    fn manager(&self) -> std::sync::MutexGuard<'_, WorkerManager> {
+        self.manager
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    /// Overlays live worker state (and fatal-frame errors) onto the
+    /// consent-derived projection for entries that are approved (`idle`).
+    fn project_runtime_status(&self, entries: &mut [PluginListEntry]) {
+        let records = self.bridge.lock_records().clone();
+        if records.is_empty() {
+            return;
+        }
+        let manager = self.manager();
+        for entry in entries {
+            if entry.status != PluginStatus::Idle {
+                continue;
+            }
+            let Some(record) = records.get(&entry.plugin_key) else {
+                continue;
+            };
+            if record.scope != entry.scope || record.repo_id != entry.repo_id {
+                continue;
+            }
+            if let Some(error) = &record.error {
+                entry.status = PluginStatus::Errored;
+                entry.error = Some(error.clone());
+            } else {
+                match manager.state(&entry.plugin_key) {
+                    WorkerState::Running { .. } => entry.status = PluginStatus::Running,
+                    WorkerState::Starting | WorkerState::Restarting => {
+                        entry.status = PluginStatus::Restarting;
+                    }
+                    WorkerState::Errored { reason } => {
+                        entry.status = PluginStatus::Errored;
+                        entry.error = Some(reason);
+                    }
+                    WorkerState::Inactive => {}
+                }
+            }
+            entry.restarts = manager.restarts(&entry.plugin_key);
+        }
+    }
+
+    /// Builds the worker spec/record for an approved `plugin_ref`, or the
+    /// gate error explaining why it cannot activate.
+    fn worker_spec_for(
+        &self,
+        plugin_ref: &PluginRef,
+    ) -> Result<(WorkerSpec, WorkerRecord), PluginError> {
+        let discovered = self.discover_all();
+        let entry = find_discovered(&discovered, plugin_ref).ok_or_else(|| {
+            PluginError::new(
+                UNAVAILABLE,
+                format!(
+                    "plugin {} is not installed or is invalid",
+                    plugin_ref.plugin_key
+                ),
+            )
+        })?;
+        let manifest = entry
+            .manifest
+            .as_ref()
+            .expect("valid entries carry a manifest");
+        let Some(main_entry) = manifest.main.clone() else {
+            return Err(PluginError::new(
+                INVALID_PARAMS,
+                format!("plugin {} has no worker entry", plugin_ref.plugin_key),
+            ));
+        };
+        if !engine_satisfies(&manifest.engines.orca, &self.config.host_version) {
+            return Err(PluginError::new(
+                crate::types::ENGINE_INCOMPATIBLE,
+                format!(
+                    "plugin {} requires Orca {} (this is {})",
+                    plugin_ref.plugin_key, manifest.engines.orca, self.config.host_version
+                ),
+            ));
+        }
+        let content_key = entry
+            .install_hash
+            .clone()
+            .or_else(|| hash_plugin_tree(&entry.root).ok())
+            .unwrap_or_else(|| "unresolved".to_string());
+        let current_fingerprint = fingerprint(manifest, &content_key);
+        let activation = self.config.consent_state.activation(
+            &plugin_ref.plugin_key,
+            consent_scope_of(plugin_ref.scope, plugin_ref.repo_id.as_deref()),
+            &current_fingerprint,
+        );
+        if activation != Some(ActivationState::Approved) {
+            return Err(PluginError::new(
+                gate::CONSENT_REQUIRED,
+                format!(
+                    "plugin {} is not approved for activation",
+                    plugin_ref.plugin_key
+                ),
+            ));
+        }
+        let declared_commands = manifest
+            .contributes
+            .commands
+            .iter()
+            .filter(|command| command.action.is_none())
+            .map(|command| command.id.clone())
+            .collect();
+        let data_dir = self.data_dir_for_ref(plugin_ref)?;
+        let revision = manifest_revision(manifest);
+        let spec = WorkerSpec {
+            plugin_key: plugin_ref.plugin_key.clone(),
+            plugin_root: entry.root.clone(),
+            main_entry,
+            granted_capabilities: manifest.capabilities.clone(),
+            manifest_revision: revision.clone(),
+            declared_commands,
+        };
+        let record = WorkerRecord {
+            plugin_key: plugin_ref.plugin_key.clone(),
+            scope: plugin_ref.scope,
+            repo_id: plugin_ref.repo_id.clone(),
+            data_dir,
+            granted: manifest.capabilities.clone(),
+            revision,
+            error: None,
+        };
+        Ok((spec, record))
+    }
+
+    /// Stops the worker and invalidates sessions of `plugin_ref` when it owns
+    /// the recorded activation.
+    fn deactivate_ref(&self, plugin_ref: &PluginRef) {
+        let removed = self.bridge.lock_records().remove(&plugin_ref.plugin_key);
+        let owned = removed.is_some_and(|record| {
+            record.scope == plugin_ref.scope && record.repo_id == plugin_ref.repo_id
+        });
+        if owned {
+            self.manager().stop(&plugin_ref.plugin_key);
+            self.sessions.invalidate_plugin(&plugin_ref.plugin_key);
+        }
+    }
+
+    /// Dev-watcher callback: re-discovers and hot-restarts running dev
+    /// workers whose manifest revision changed (spec §3.8).
+    fn on_dev_change(&self, _paths: Vec<PathBuf>) {
+        let discovered = self.discover_all();
+        for entry in discovered
+            .iter()
+            .filter(|entry| entry.is_dev() && entry.is_valid())
+        {
+            let Some(key) = entry.key.as_deref() else {
+                continue;
+            };
+            let Some(manifest) = entry.manifest.as_ref() else {
+                continue;
+            };
+            let Some(record_revision) = self
+                .bridge
+                .lock_records()
+                .get(key)
+                .map(|record| record.revision.clone())
+            else {
+                continue;
+            };
+            let running = matches!(
+                self.manager().state(key),
+                WorkerState::Running { .. } | WorkerState::Restarting
+            );
+            if !running || record_revision == manifest_revision(manifest) {
+                continue;
+            }
+            let plugin_ref = PluginRef {
+                plugin_key: key.to_string(),
+                scope: entry.scope,
+                repo_id: entry.repo_id.clone(),
+            };
+            let _ = self.ensure_active(&plugin_ref);
+        }
+        self.config.event_sink.plugins_changed(false, true);
+    }
+}
+
+/// The discovery entry matching one plugin instance (valid entries only).
+fn find_discovered<'a>(
+    discovered: &'a [DiscoveredPlugin],
+    plugin_ref: &PluginRef,
+) -> Option<&'a DiscoveredPlugin> {
+    discovered.iter().find(|entry| {
+        entry.is_valid()
+            && entry.key.as_deref() == Some(plugin_ref.plugin_key.as_str())
+            && entry.scope == plugin_ref.scope
+            && entry.repo_id == plugin_ref.repo_id
+    })
+}
+
+/// Manifest revision: a stable hash of the serialized manifest. A revision
+/// change (dev manifest edit) restarts a running worker; file edits that do
+/// not touch the manifest (worker logs, pid markers) never do.
+fn manifest_revision(manifest: &crate::manifest::Manifest) -> String {
+    use sha2::{Digest, Sha256};
+    let encoded = serde_json::to_vec(manifest).unwrap_or_default();
+    format!("manifest-sha256-{}", hex::encode(Sha256::digest(encoded)))
 }
 
 fn consent_scope_of(scope: PluginScope, repo_id: Option<&str>) -> ConsentKeyScope<'_> {
@@ -1250,7 +1950,7 @@ mod tests {
     use serde_json::json;
     use std::sync::mpsc;
     use std::thread;
-    use std::time::Duration;
+    use std::time::{Duration, Instant};
     use tempfile::tempdir;
 
     #[derive(Default)]
@@ -1288,6 +1988,21 @@ mod tests {
         storage: StorageStore,
         settings: PluginSettingsStore,
         secrets: FakeSecrets,
+        notifications: Mutex<Vec<(String, String, Option<String>)>>,
+        subscriptions: Mutex<HashMap<String, Vec<String>>>,
+    }
+
+    impl Default for FakeHostServices {
+        fn default() -> Self {
+            let data_dir = std::env::temp_dir().join("ade-fake-host-services");
+            Self {
+                storage: StorageStore::new(&data_dir),
+                settings: PluginSettingsStore::new(&data_dir),
+                secrets: FakeSecrets::default(),
+                notifications: Mutex::new(Vec::new()),
+                subscriptions: Mutex::new(HashMap::new()),
+            }
+        }
     }
 
     impl PluginHostServices for FakeHostServices {
@@ -1310,11 +2025,19 @@ mod tests {
 
         fn dispatch_notification(
             &self,
-            _plugin_key: &str,
-            _title: &str,
-            _body: Option<&str>,
+            plugin_key: &str,
+            title: &str,
+            body: Option<&str>,
         ) -> Result<bool, HostServiceError> {
-            Ok(false)
+            self.notifications
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .push((
+                    plugin_key.to_string(),
+                    title.to_string(),
+                    body.map(str::to_string),
+                ));
+            Ok(true)
         }
 
         fn storage(&self) -> &dyn PluginStorageAccess {
@@ -1329,8 +2052,23 @@ mod tests {
             &self.secrets
         }
 
-        fn subscribe_events(&self, _plugin_key: &str, events: &[String]) -> Vec<String> {
+        fn subscribe_events(&self, plugin_key: &str, events: &[String]) -> Vec<String> {
+            self.subscriptions
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .entry(plugin_key.to_string())
+                .or_default()
+                .extend(events.iter().cloned());
             events.to_vec()
+        }
+
+        fn subscribed_events(&self, plugin_key: &str) -> Vec<String> {
+            self.subscriptions
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .get(plugin_key)
+                .cloned()
+                .unwrap_or_default()
         }
 
         fn open_tab(
@@ -1408,6 +2146,7 @@ mod tests {
         service: Arc<PluginService>,
         consent: Arc<FakeConsentState>,
         sink: Arc<RecordingSink>,
+        host: Arc<FakeHostServices>,
         app_data: PathBuf,
     }
 
@@ -1416,6 +2155,38 @@ mod tests {
     }
 
     fn harness_with_dev(temp: &Path, host_version: &str, dev_paths: Vec<PathBuf>) -> Harness {
+        harness_full(
+            temp,
+            host_version,
+            dev_paths,
+            fast_supervisor(),
+            Duration::from_millis(40),
+        )
+    }
+
+    fn fast_supervisor() -> SupervisorConfig {
+        SupervisorConfig {
+            ready_timeout: Duration::from_secs(2),
+            invoke_timeout: Duration::from_millis(300),
+            event_timeout: Duration::from_millis(300),
+            idle_timeout: Duration::from_secs(30),
+            grace: Duration::from_millis(100),
+            max_restarts: 2,
+            backoff: [
+                Duration::from_millis(10),
+                Duration::from_millis(20),
+                Duration::from_millis(30),
+            ],
+        }
+    }
+
+    fn harness_full(
+        temp: &Path,
+        host_version: &str,
+        dev_paths: Vec<PathBuf>,
+        supervisor: SupervisorConfig,
+        watch_batch: Duration,
+    ) -> Harness {
         let app_data = temp.join("app-data");
         let consent = Arc::new(FakeConsentState::default());
         let sink = Arc::new(RecordingSink::default());
@@ -1424,6 +2195,7 @@ mod tests {
             storage: StorageStore::new(&data_dir),
             settings: PluginSettingsStore::new(&data_dir),
             secrets: FakeSecrets::default(),
+            ..FakeHostServices::default()
         });
         let service = PluginService::new(ServiceConfig {
             app_data_dir: app_data.clone(),
@@ -1433,14 +2205,20 @@ mod tests {
             node_override: None,
             consent_state: consent.clone(),
             secrets: Arc::new(FakeSecrets::default()),
-            host_services: host,
+            host_services: host.clone() as Arc<dyn PluginHostServices>,
             event_sink: sink.clone(),
             host_version: host_version.to_string(),
+            workers: WorkerRuntimeConfig {
+                max_active: 5,
+                supervisor,
+                watch_batch,
+            },
         });
         Harness {
             service,
             consent,
             sink,
+            host,
             app_data,
         }
     }
@@ -2093,5 +2871,557 @@ mod tests {
                 .unwrap(),
             None
         );
+    }
+
+    // ------------------------------------------------------------------
+    // T11b2 worker activation orchestration
+    // ------------------------------------------------------------------
+
+    /// Stand-in for `host-entry.mjs`: registers exactly the manifest's
+    /// worker commands, writes `worker.pid` before `ready`, logs each handled
+    /// command, never replies to `slow`, answers `host-call` through
+    /// `notifications.show`, and appends delivered events to `events.log`.
+    const FAKE_WORKER: &str = r#"import { createInterface } from 'node:readline';
+import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
+
+const write = (frame) => process.stdout.write(JSON.stringify(frame) + '\n');
+const manifest = JSON.parse(readFileSync('ade-plugin.json', 'utf8'));
+const commands = (manifest.contributes?.commands ?? []).map((command) => command.id);
+const pending = new Map();
+
+writeFileSync('worker.pid', String(process.pid));
+write({ type: 'ready', commands });
+
+const rl = createInterface({ input: process.stdin });
+rl.on('line', (line) => {
+  let frame;
+  try { frame = JSON.parse(line); } catch { return; }
+  if (frame.type === 'invokeCommand') {
+    if (frame.commandId === 'slow') return;
+    if (frame.commandId === 'host-call') {
+      void (async () => {
+        const value = await new Promise((resolve) => {
+          pending.set(9100, resolve);
+          write({ type: 'hostCall', callId: 9100, method: 'notifications.show', params: { title: 'plugin says hi' } });
+        });
+        write({ type: 'commandResult', callId: frame.callId, ok: true, value: { host: value } });
+      })();
+      return;
+    }
+    write({ type: 'log', level: 'info', message: `${frame.commandId} handled` });
+    write({ type: 'commandResult', callId: frame.callId, ok: true, value: { command: frame.commandId, args: frame.args ?? null } });
+    return;
+  }
+  if (frame.type === 'deliverEvent') {
+    appendFileSync('events.log', JSON.stringify({ event: frame.event, payload: frame.payload }) + '\n');
+    write({ type: 'eventAck', eventId: frame.eventId });
+    return;
+  }
+  if (frame.type === 'hostResult') {
+    const resolve = pending.get(frame.callId);
+    if (resolve) { pending.delete(frame.callId); resolve(frame.ok ? frame.value : null); }
+    return;
+  }
+  if (frame.type === 'shutdown') process.exit(0);
+});
+"#;
+
+    fn node_available() -> bool {
+        resolve_node(None, None).is_ok()
+    }
+
+    fn install_fake_host_entry(temp: &Path) -> PathBuf {
+        let path = temp.join("host-entry.mjs");
+        std::fs::write(&path, FAKE_WORKER).unwrap();
+        path
+    }
+
+    /// Dev/installed plugin fixture with a worker entry, declared commands,
+    /// event contributions, and capabilities.
+    fn write_worker_plugin(
+        root: &Path,
+        id: &str,
+        commands: &[&str],
+        events: &[&str],
+        capabilities: &[&str],
+    ) -> PathBuf {
+        let commands: Vec<Value> = commands
+            .iter()
+            .map(|id| json!({ "id": id, "title": id }))
+            .collect();
+        let events: Vec<Value> = events.iter().map(|on| json!({ "on": on })).collect();
+        let capabilities: Vec<Value> = capabilities
+            .iter()
+            .map(|kind| json!({ "kind": kind }))
+            .collect();
+        let path = write_plugin(
+            root,
+            id,
+            "1.0.0",
+            ">=1.0.0",
+            json!({
+                "main": "main.mjs",
+                "contributes": { "commands": commands, "events": events },
+                "capabilities": capabilities
+            }),
+        );
+        std::fs::write(path.join("main.mjs"), b"// fake worker main\n").unwrap();
+        path
+    }
+
+    fn approve(harness: &Harness, plugin_ref: &PluginRef) {
+        let entry = harness
+            .service
+            .list()
+            .into_iter()
+            .find(|entry| {
+                entry.plugin_key == plugin_ref.plugin_key
+                    && entry.scope == plugin_ref.scope
+                    && entry.repo_id == plugin_ref.repo_id
+            })
+            .expect("a discovered entry to approve");
+        let scoped = scoped_key(
+            &plugin_ref.plugin_key,
+            consent_scope_of(plugin_ref.scope, plugin_ref.repo_id.as_deref()),
+        )
+        .unwrap();
+        harness
+            .consent
+            .set_consent(&scoped, &entry.consent_fingerprint.unwrap());
+    }
+
+    fn wait_until(deadline: Duration, mut condition: impl FnMut() -> bool) -> bool {
+        let stop = Instant::now() + deadline;
+        while Instant::now() < stop {
+            if condition() {
+                return true;
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        condition()
+    }
+
+    fn worker_pid(root: &Path) -> Option<u32> {
+        std::fs::read_to_string(root.join("worker.pid"))
+            .ok()
+            .and_then(|pid| pid.trim().parse().ok())
+    }
+
+    fn global_ref(key: &str) -> PluginRef {
+        PluginRef {
+            plugin_key: key.to_string(),
+            scope: PluginScope::Global,
+            repo_id: None,
+        }
+    }
+
+    #[test]
+    fn activation_gating_spawns_only_approved_and_projects_status() {
+        if !node_available() {
+            return;
+        }
+        let temp = tempdir().unwrap();
+        install_fake_host_entry(temp.path());
+        let root =
+            write_worker_plugin(&temp.path().join("dev-gated"), "gated", &["echo"], &[], &[]);
+        let harness = harness_with_dev(temp.path(), "1.0.0", vec![root.clone()]);
+        let plugin_ref = global_ref("orca-samples.gated");
+
+        assert_eq!(
+            entry(&harness.service.list(), "orca-samples.gated").status,
+            PluginStatus::Pending
+        );
+        let error = harness.service.ensure_active(&plugin_ref).unwrap_err();
+        assert_eq!(error.code(), gate::CONSENT_REQUIRED);
+        assert!(!root.join("worker.pid").exists());
+
+        harness
+            .consent
+            .set_disabled("global:orca-samples.gated", true);
+        assert_eq!(
+            entry(&harness.service.list(), "orca-samples.gated").status,
+            PluginStatus::Disabled
+        );
+        assert!(harness.service.ensure_active(&plugin_ref).is_err());
+        assert!(!root.join("worker.pid").exists());
+
+        harness
+            .consent
+            .set_disabled("global:orca-samples.gated", false);
+        approve(&harness, &plugin_ref);
+        assert_eq!(
+            entry(&harness.service.list(), "orca-samples.gated").status,
+            PluginStatus::Idle
+        );
+        harness.service.ensure_active(&plugin_ref).unwrap();
+        assert_eq!(
+            entry(&harness.service.list(), "orca-samples.gated").status,
+            PluginStatus::Running
+        );
+        assert!(root.join("worker.pid").exists());
+
+        harness
+            .service
+            .set_enabled(plugin_ref.clone(), false)
+            .unwrap();
+        assert_eq!(
+            entry(&harness.service.list(), "orca-samples.gated").status,
+            PluginStatus::Disabled
+        );
+        assert!(
+            wait_until(Duration::from_secs(2), || matches!(
+                harness.service.manager().state("orca-samples.gated"),
+                WorkerState::Inactive
+            )),
+            "disabling must stop the worker"
+        );
+        harness.service.shutdown();
+    }
+
+    #[test]
+    fn invoke_command_end_to_end_with_timeout_and_undeclared_command() {
+        if !node_available() {
+            return;
+        }
+        let temp = tempdir().unwrap();
+        install_fake_host_entry(temp.path());
+        let _root = write_worker_plugin(
+            &temp.path().join("dev-invoke"),
+            "invoker",
+            &["echo", "slow"],
+            &[],
+            &[],
+        );
+        let harness = harness_with_dev(temp.path(), "1.0.0", vec![_root.clone()]);
+        let plugin_ref = global_ref("orca-samples.invoker");
+        approve(&harness, &plugin_ref);
+
+        let value = harness
+            .service
+            .invoke_command(&plugin_ref, "echo", Some(json!({ "n": 3 })))
+            .unwrap();
+        assert_eq!(value, json!({ "command": "echo", "args": { "n": 3 } }));
+
+        let logs = harness.service.get_logs("orca-samples.invoker");
+        assert!(
+            logs.iter()
+                .any(|line| line.method == "worker.info" && line.summary == "echo handled"),
+            "worker log frames must merge into get_logs: {logs:?}"
+        );
+
+        let error = harness
+            .service
+            .invoke_command(&plugin_ref, "not-declared", None)
+            .unwrap_err();
+        assert_eq!(error.code(), UNKNOWN_COMMAND);
+
+        let error = harness
+            .service
+            .invoke_command(&plugin_ref, "slow", None)
+            .unwrap_err();
+        assert!(
+            error.message().contains("did not reply"),
+            "timeout error must name the missing reply: {}",
+            error.message()
+        );
+        harness.service.shutdown();
+    }
+
+    #[test]
+    fn host_calls_route_through_host_methods_with_the_activation_context() {
+        if !node_available() {
+            return;
+        }
+        let temp = tempdir().unwrap();
+        install_fake_host_entry(temp.path());
+        let _root = write_worker_plugin(
+            &temp.path().join("dev-host-call"),
+            "caller",
+            &["host-call"],
+            &[],
+            &["notifications:show"],
+        );
+        let harness = harness_with_dev(temp.path(), "1.0.0", vec![_root.clone()]);
+        let plugin_ref = global_ref("orca-samples.caller");
+        approve(&harness, &plugin_ref);
+
+        let value = harness
+            .service
+            .invoke_command(&plugin_ref, "host-call", None)
+            .unwrap();
+        assert_eq!(value, json!({ "host": { "delivered": true } }));
+        let notifications = harness
+            .host
+            .notifications
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        assert_eq!(
+            notifications.as_slice(),
+            [(
+                "orca-samples.caller".to_string(),
+                "plugin says hi".to_string(),
+                None
+            )]
+        );
+        harness.service.shutdown();
+    }
+
+    #[test]
+    fn deliver_plugin_event_reaches_subscribers_with_projected_payloads() {
+        if !node_available() {
+            return;
+        }
+        let temp = tempdir().unwrap();
+        install_fake_host_entry(temp.path());
+        let subscriber = write_worker_plugin(
+            &temp.path().join("dev-sub"),
+            "subscriber",
+            &["echo"],
+            &["worktree.created"],
+            &["events:subscribe"],
+        );
+        let other = write_worker_plugin(
+            &temp.path().join("dev-other"),
+            "other",
+            &["echo"],
+            &["worktree.removed"],
+            &["events:subscribe"],
+        );
+        let harness = harness_with_dev(
+            temp.path(),
+            "1.0.0",
+            vec![subscriber.clone(), other.clone()],
+        );
+        let subscriber_ref = global_ref("orca-samples.subscriber");
+        approve(&harness, &subscriber_ref);
+        approve(&harness, &global_ref("orca-samples.other"));
+
+        assert_eq!(
+            harness
+                .service
+                .deliver_plugin_event("plugin.log", json!({})),
+            0
+        );
+        assert_eq!(
+            harness.service.deliver_plugin_event(
+                "worktree.created",
+                json!({ "worktreeId": "", "path": "/tmp/wt", "branch": "main" })
+            ),
+            0,
+            "invalid payloads are dropped before any delivery"
+        );
+
+        let delivered = harness.service.deliver_plugin_event(
+            "worktree.created",
+            json!({
+                "worktreeId": "w1",
+                "path": "/tmp/wt",
+                "branch": "main",
+                "extra": "dropped"
+            }),
+        );
+        assert_eq!(
+            delivered, 1,
+            "only the subscribed plugin receives the event"
+        );
+
+        let marker = subscriber.join("events.log");
+        assert!(
+            wait_until(Duration::from_secs(2), || marker.exists()),
+            "subscriber worker must record the delivery"
+        );
+        let recorded: Value = serde_json::from_str(
+            std::fs::read_to_string(&marker)
+                .unwrap()
+                .lines()
+                .next()
+                .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(recorded["event"], json!("worktree.created"));
+        assert_eq!(
+            recorded["payload"],
+            json!({ "worktreeId": "w1", "path": "/tmp/wt", "branch": "main" }),
+            "the worker receives the bounded projection, not the raw payload"
+        );
+        assert!(
+            !other.join("worker.pid").exists(),
+            "an unsubscribed plugin must not be activated"
+        );
+        harness.service.shutdown();
+    }
+
+    #[test]
+    fn set_projects_activates_and_removal_stops_workers_and_sessions() {
+        if !node_available() {
+            return;
+        }
+        let temp = tempdir().unwrap();
+        install_fake_host_entry(temp.path());
+        let harness = harness_with_dev(temp.path(), "1.0.0", vec![]);
+        let repo = temp.path().join("repo");
+        harness
+            .service
+            .set_projects(vec![("repo-1".to_string(), repo.clone())]);
+
+        let source = write_worker_plugin(
+            &temp.path().join("source"),
+            "project-worker",
+            &["echo"],
+            &[],
+            &[],
+        );
+        install_local(&harness, &source, project_target("repo-1"));
+        let plugin_ref = PluginRef {
+            plugin_key: "orca-samples.project-worker".to_string(),
+            scope: PluginScope::Project,
+            repo_id: Some("repo-1".to_string()),
+        };
+        approve(&harness, &plugin_ref);
+
+        // Re-registering the project activates its approved plugins.
+        harness
+            .service
+            .set_projects(vec![("repo-1".to_string(), repo.clone())]);
+        assert_eq!(harness.service.manager().active_count(), 1);
+        assert!(matches!(
+            harness
+                .service
+                .manager()
+                .state("orca-samples.project-worker"),
+            WorkerState::Running { .. }
+        ));
+
+        let token = harness
+            .service
+            .sessions
+            .issue(crate::sessions::SessionBinding {
+                plugin_key: "orca-samples.project-worker".to_string(),
+                kind: crate::sessions::SessionKind::MainTab,
+                panel_id: None,
+                tab_id: Some("board".to_string()),
+                instance_id: Some("inst-1".to_string()),
+                scope: PluginScope::Project,
+                repo_id: Some("repo-1".to_string()),
+                worktree_id: Some("wt-1".to_string()),
+                manifest_revision: "rev-1".to_string(),
+                owner: crate::sessions::SessionOwner::Worker,
+            });
+        assert_eq!(harness.service.sessions.len(), 1);
+
+        harness.service.set_projects(vec![]);
+        assert!(
+            wait_until(Duration::from_secs(2), || harness
+                .service
+                .manager()
+                .active_count()
+                == 0),
+            "removing a project must stop its workers"
+        );
+        assert_eq!(harness.service.sessions.len(), 0);
+        assert!(harness.service.sessions.resolve(&token).is_none());
+        harness.service.shutdown();
+    }
+
+    #[test]
+    fn dev_watcher_hot_reloads_running_workers_on_revision_change() {
+        if !node_available() {
+            return;
+        }
+        let temp = tempdir().unwrap();
+        install_fake_host_entry(temp.path());
+        let root = write_worker_plugin(&temp.path().join("dev-hot"), "hot", &["echo"], &[], &[]);
+        let harness = harness_with_dev(temp.path(), "1.0.0", vec![root.clone()]);
+        let plugin_ref = global_ref("orca-samples.hot");
+        approve(&harness, &plugin_ref);
+
+        harness.service.start().unwrap();
+        assert!(
+            wait_until(Duration::from_secs(5), || worker_pid(&root).is_some()),
+            "start() must activate the approved global plugin"
+        );
+        let first_pid = worker_pid(&root).unwrap();
+
+        let manifest_path = root.join("ade-plugin.json");
+        let mut manifest: Value =
+            serde_json::from_slice(&std::fs::read(&manifest_path).unwrap()).unwrap();
+        manifest["description"] = json!("revision two");
+        std::fs::write(&manifest_path, serde_json::to_vec(&manifest).unwrap()).unwrap();
+
+        assert!(
+            wait_until(Duration::from_secs(10), || worker_pid(&root)
+                .is_some_and(|pid| pid != first_pid)),
+            "a manifest revision change must restart the dev worker"
+        );
+        assert!(matches!(
+            harness.service.manager().state("orca-samples.hot"),
+            WorkerState::Running { .. }
+        ));
+        let changes = harness
+            .sink
+            .changes
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone();
+        assert!(
+            changes.contains(&(false, true)),
+            "hot reload must announce plugins_changed"
+        );
+        harness.service.shutdown();
+    }
+
+    #[test]
+    fn pump_reaps_idle_workers_and_get_logs_merges_project_audit() {
+        if !node_available() {
+            return;
+        }
+        let temp = tempdir().unwrap();
+        install_fake_host_entry(temp.path());
+        let mut supervisor = fast_supervisor();
+        supervisor.idle_timeout = Duration::from_millis(80);
+        let harness = harness_full(
+            temp.path(),
+            "1.0.0",
+            vec![],
+            supervisor,
+            Duration::from_millis(40),
+        );
+        let repo = temp.path().join("repo");
+        harness
+            .service
+            .set_projects(vec![("repo-1".to_string(), repo.clone())]);
+        let source = write_worker_plugin(&temp.path().join("source"), "idler", &["echo"], &[], &[]);
+        install_local(&harness, &source, project_target("repo-1"));
+        let plugin_ref = PluginRef {
+            plugin_key: "orca-samples.idler".to_string(),
+            scope: PluginScope::Project,
+            repo_id: Some("repo-1".to_string()),
+        };
+        approve(&harness, &plugin_ref);
+        harness.service.ensure_active(&plugin_ref).unwrap();
+        assert_eq!(harness.service.manager().active_count(), 1);
+        harness
+            .service
+            .invoke_command(&plugin_ref, "echo", None)
+            .unwrap();
+
+        std::thread::sleep(Duration::from_millis(140));
+        harness.service.pump();
+        assert_eq!(
+            harness.service.manager().active_count(),
+            0,
+            "pump must reap the idle worker"
+        );
+
+        let logs = harness.service.get_logs("orca-samples.idler");
+        assert!(
+            logs.iter().any(|line| line.method == "worker.info"),
+            "the worker log ring must merge into get_logs: {logs:?}"
+        );
+        assert!(
+            logs.iter().any(|line| line.method == "plugins.install"),
+            "the project-scope audit file must be resolved for get_logs: {logs:?}"
+        );
+        harness.service.shutdown();
     }
 }

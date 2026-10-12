@@ -93,6 +93,11 @@ pub trait PluginHostServices: Send + Sync {
     fn secrets(&self) -> &dyn SecretStore;
     /// Events actually subscribed for the plugin (an unknown name is dropped).
     fn subscribe_events(&self, plugin_key: &str, events: &[String]) -> Vec<String>;
+    /// Events the plugin currently holds a dynamic subscription for. The
+    /// service delivers those only to a running worker (spec §3.1 events).
+    fn subscribed_events(&self, _plugin_key: &str) -> Vec<String> {
+        Vec::new()
+    }
     /// Open (or focus) a plugin tab; dedup, instance caps, and rate limiting
     /// are service-layer concerns reported through [`HostServiceError`].
     #[allow(clippy::too_many_arguments)]

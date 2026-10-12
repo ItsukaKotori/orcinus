@@ -43,10 +43,19 @@ pub const WORKER_LIMIT: &str = "worker_limit";
 /// worker keeps running.
 pub const UNKNOWN_COMMAND: &str = "unknown_command";
 
-/// Handles a child `HostCall` frame. `params` is `null` when the frame omits
-/// it. `Err((code, error))` is written back as `hostResult{ok:false}`.
+/// Handles a child `HostCall` frame. `plugin_key` is the authenticated
+/// worker identity (the key the frame arrived from, bound by the manager's
+/// per-worker frame sink — never anything the child sent). `params` is `null`
+/// when the frame omits it. `Err((code, error))` is written back as
+/// `hostResult{ok:false}`.
 pub trait HostCallHandler: Send + Sync {
-    fn handle(&self, call_id: u64, method: &str, params: Value) -> Result<Value, (String, String)>;
+    fn handle(
+        &self,
+        plugin_key: &str,
+        call_id: u64,
+        method: &str,
+        params: Value,
+    ) -> Result<Value, (String, String)>;
 }
 
 /// Sink for worker frames that are not part of a command/event exchange.
@@ -309,6 +318,32 @@ impl WorkerManager {
         }
     }
 
+    /// Stop and remove every running worker untouched for at least the
+    /// supervisor's `idle_timeout`; returns the reaped plugin keys. Inactive
+    /// and errored entries are left alone (an errored entry owns no process).
+    pub fn reap_idle(&mut self) -> Vec<String> {
+        let now = std::time::Instant::now();
+        let keys: Vec<String> = self
+            .workers
+            .iter()
+            .filter(|(_, entry)| entry.supervisor.is_idle(now))
+            .map(|(key, _)| key.clone())
+            .collect();
+        for key in &keys {
+            self.stop(key);
+        }
+        keys
+    }
+
+    /// Restart count of `plugin_key` in its current activation lifetime;
+    /// unknown keys report zero.
+    pub fn restarts(&self, plugin_key: &str) -> u32 {
+        self.workers
+            .get(plugin_key)
+            .map(|entry| entry.supervisor.restart_count())
+            .unwrap_or(0)
+    }
+
     /// Stop and remove one worker (graceful `shutdown` then group kill).
     pub fn stop(&mut self, plugin_key: &str) {
         if let Some(mut entry) = self.workers.remove(plugin_key) {
@@ -356,7 +391,7 @@ fn make_spawner(
     host_entry: PathBuf,
     node: PathBuf,
     writer: Arc<Mutex<Option<File>>>,
-) -> impl FnMut() -> Result<(WorkerHandle, String), PluginError> + 'static {
+) -> impl FnMut() -> Result<(WorkerHandle, String), PluginError> + Send + 'static {
     move || {
         let spec = spec.lock().expect("worker spec lock poisoned").clone();
         let handle = spawn_worker(&spec, &host_entry, &node, &[])?;
@@ -383,7 +418,7 @@ fn make_sink(
             params,
         } => {
             let params = params.clone().unwrap_or(Value::Null);
-            let result = host_call.handle(*call_id, method, params);
+            let result = host_call.handle(&plugin_key, *call_id, method, params);
             let host_result = match result {
                 Ok(value) => ParentFrame::HostResult {
                     call_id: *call_id,
@@ -592,6 +627,7 @@ rl.on('line', async (line) => {
     impl HostCallHandler for RecordingHostCall {
         fn handle(
             &self,
+            _plugin_key: &str,
             call_id: u64,
             method: &str,
             params: Value,
