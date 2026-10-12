@@ -345,16 +345,20 @@ fn show_notification(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value,
 }
 
 fn storage_get(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
-    let value = ctx
-        .services
-        .storage()
-        .get(ctx.plugin_key, field_str(params, "key"))?;
+    let value = ctx.services.storage().get(
+        ctx.plugin_key,
+        ctx.scope,
+        ctx.repo_id,
+        field_str(params, "key"),
+    )?;
     Ok(serde_json::json!({ "value": value.unwrap_or(Value::Null) }))
 }
 
 fn storage_set(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
     ctx.services.storage().set(
         ctx.plugin_key,
+        ctx.scope,
+        ctx.repo_id,
         field_str(params, "key"),
         field(params, "value").clone(),
     )?;
@@ -362,28 +366,38 @@ fn storage_set(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, Handl
 }
 
 fn storage_delete(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
-    ctx.services
-        .storage()
-        .delete(ctx.plugin_key, field_str(params, "key"))?;
+    ctx.services.storage().delete(
+        ctx.plugin_key,
+        ctx.scope,
+        ctx.repo_id,
+        field_str(params, "key"),
+    )?;
     Ok(serde_json::json!({ "ok": true }))
 }
 
 fn storage_keys(ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
-    let keys = ctx.services.storage().keys(ctx.plugin_key)?;
+    let keys = ctx
+        .services
+        .storage()
+        .keys(ctx.plugin_key, ctx.scope, ctx.repo_id)?;
     Ok(serde_json::json!({ "keys": keys }))
 }
 
 fn secrets_get(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
-    let value = ctx
-        .services
-        .secrets()
-        .get(ctx.plugin_key, field_str(params, "key"))?;
+    let value = ctx.services.secrets().get(
+        ctx.plugin_key,
+        ctx.scope,
+        ctx.repo_id,
+        field_str(params, "key"),
+    )?;
     Ok(serde_json::json!({ "value": value }))
 }
 
 fn secrets_set(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
     ctx.services.secrets().set(
         ctx.plugin_key,
+        ctx.scope,
+        ctx.repo_id,
         field_str(params, "key"),
         field_str(params, "value"),
     )?;
@@ -391,20 +405,28 @@ fn secrets_set(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, Handl
 }
 
 fn secrets_delete(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
-    ctx.services
-        .secrets()
-        .delete(ctx.plugin_key, field_str(params, "key"))?;
+    ctx.services.secrets().delete(
+        ctx.plugin_key,
+        ctx.scope,
+        ctx.repo_id,
+        field_str(params, "key"),
+    )?;
     Ok(serde_json::json!({ "ok": true }))
 }
 
 fn settings_get(ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
-    let settings = ctx.services.settings().get_all(ctx.plugin_key)?;
+    let settings = ctx
+        .services
+        .settings()
+        .get_all(ctx.plugin_key, ctx.scope, ctx.repo_id)?;
     Ok(serde_json::json!({ "settings": settings }))
 }
 
 fn settings_set(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
     ctx.services.settings().set(
         ctx.plugin_key,
+        ctx.scope,
+        ctx.repo_id,
         field_str(params, "key"),
         field(params, "value").clone(),
     )?;
@@ -477,14 +499,27 @@ mod tests {
     }
 
     impl PluginStorageAccess for FakeStorage {
-        fn get(&self, _plugin_key: &str, key: &str) -> Result<Option<Value>, PluginError> {
+        fn get(
+            &self,
+            _plugin_key: &str,
+            _scope: PluginScope,
+            _repo_id: Option<&str>,
+            key: &str,
+        ) -> Result<Option<Value>, PluginError> {
             if *self.broken.lock().unwrap() {
                 return Err(PluginError::new(ACTION_FAILED, "storage is broken"));
             }
             Ok(self.map.lock().unwrap().get(key).cloned())
         }
 
-        fn set(&self, _plugin_key: &str, key: &str, value: Value) -> Result<(), PluginError> {
+        fn set(
+            &self,
+            _plugin_key: &str,
+            _scope: PluginScope,
+            _repo_id: Option<&str>,
+            key: &str,
+            value: Value,
+        ) -> Result<(), PluginError> {
             if *self.broken.lock().unwrap() {
                 return Err(PluginError::new(ACTION_FAILED, "storage is broken"));
             }
@@ -492,12 +527,23 @@ mod tests {
             Ok(())
         }
 
-        fn delete(&self, _plugin_key: &str, key: &str) -> Result<(), PluginError> {
+        fn delete(
+            &self,
+            _plugin_key: &str,
+            _scope: PluginScope,
+            _repo_id: Option<&str>,
+            key: &str,
+        ) -> Result<(), PluginError> {
             self.map.lock().unwrap().remove(key);
             Ok(())
         }
 
-        fn keys(&self, _plugin_key: &str) -> Result<Vec<String>, PluginError> {
+        fn keys(
+            &self,
+            _plugin_key: &str,
+            _scope: PluginScope,
+            _repo_id: Option<&str>,
+        ) -> Result<Vec<String>, PluginError> {
             Ok(self.map.lock().unwrap().keys().cloned().collect())
         }
     }
@@ -508,11 +554,23 @@ mod tests {
     }
 
     impl PluginSettingsAccess for FakeSettings {
-        fn get_all(&self, _plugin_key: &str) -> Result<Map<String, Value>, PluginError> {
+        fn get_all(
+            &self,
+            _plugin_key: &str,
+            _scope: PluginScope,
+            _repo_id: Option<&str>,
+        ) -> Result<Map<String, Value>, PluginError> {
             Ok(self.map.lock().unwrap().clone().into_iter().collect())
         }
 
-        fn set(&self, _plugin_key: &str, key: &str, value: Value) -> Result<(), PluginError> {
+        fn set(
+            &self,
+            _plugin_key: &str,
+            _scope: PluginScope,
+            _repo_id: Option<&str>,
+            key: &str,
+            value: Value,
+        ) -> Result<(), PluginError> {
             self.map.lock().unwrap().insert(key.to_string(), value);
             Ok(())
         }
@@ -524,11 +582,24 @@ mod tests {
     }
 
     impl SecretStore for FakeSecrets {
-        fn get(&self, _plugin_key: &str, key: &str) -> Result<Option<String>, PluginError> {
+        fn get(
+            &self,
+            _plugin_key: &str,
+            _scope: PluginScope,
+            _repo_id: Option<&str>,
+            key: &str,
+        ) -> Result<Option<String>, PluginError> {
             Ok(self.map.lock().unwrap().get(key).cloned())
         }
 
-        fn set(&self, _plugin_key: &str, key: &str, value: &str) -> Result<(), PluginError> {
+        fn set(
+            &self,
+            _plugin_key: &str,
+            _scope: PluginScope,
+            _repo_id: Option<&str>,
+            key: &str,
+            value: &str,
+        ) -> Result<(), PluginError> {
             self.map
                 .lock()
                 .unwrap()
@@ -536,7 +607,13 @@ mod tests {
             Ok(())
         }
 
-        fn delete(&self, _plugin_key: &str, key: &str) -> Result<(), PluginError> {
+        fn delete(
+            &self,
+            _plugin_key: &str,
+            _scope: PluginScope,
+            _repo_id: Option<&str>,
+            key: &str,
+        ) -> Result<(), PluginError> {
             self.map.lock().unwrap().remove(key);
             Ok(())
         }

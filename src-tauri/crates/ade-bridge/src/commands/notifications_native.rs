@@ -62,10 +62,10 @@ pub async fn notifications_get_authorization_status(
             });
         }
         let app = state.app.clone();
-        return crate::commands::run_blocking(move || {
+        crate::commands::run_blocking(move || {
             crate::commands::notifications_native::macos::read_authorization_status(&app)
         })
-        .await;
+        .await
     }
     #[cfg(not(target_os = "macos"))]
     {
@@ -91,10 +91,10 @@ pub async fn notifications_request_authorization(
             });
         }
         let app = state.app.clone();
-        return crate::commands::run_blocking(move || {
+        crate::commands::run_blocking(move || {
             crate::commands::notifications_native::macos::request_authorization(&app)
         })
-        .await;
+        .await
     }
     #[cfg(not(target_os = "macos"))]
     {
@@ -123,7 +123,7 @@ pub async fn notifications_deliver_native(
             });
         }
         let app = state.app.clone();
-        return crate::commands::run_blocking(move || {
+        crate::commands::run_blocking(move || {
             match crate::commands::notifications_native::macos::deliver_native(
                 &app, args.id, args.title, args.body, args.silent,
             ) {
@@ -138,7 +138,7 @@ pub async fn notifications_deliver_native(
                 }),
             }
         })
-        .await;
+        .await
     }
     #[cfg(not(target_os = "macos"))]
     {
@@ -165,7 +165,7 @@ pub async fn notifications_dismiss_native(
             return Ok(NotificationNativeDismissResult { dismissed: 0 });
         }
         let app = state.app.clone();
-        return crate::commands::run_blocking(move || {
+        crate::commands::run_blocking(move || {
             match crate::commands::notifications_native::macos::dismiss_native(&app, args.ids) {
                 Ok(dismissed) => Ok(NotificationNativeDismissResult { dismissed }),
                 Err(error) => {
@@ -174,7 +174,7 @@ pub async fn notifications_dismiss_native(
                 }
             }
         })
-        .await;
+        .await
     }
     #[cfg(not(target_os = "macos"))]
     {

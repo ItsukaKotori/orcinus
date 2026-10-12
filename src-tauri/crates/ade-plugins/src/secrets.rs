@@ -8,15 +8,18 @@
 //! reads as `None` (deleting a missing entry is a no-op).
 //!
 //! Keychain coordinates: service `dev.itsuka.orcinus.plugin-secrets`, account
-//! `<pluginKey>:<key>`. Values are capped at 64 KiB, matching the host-api
-//! `secrets.set` schema. [`Keychain`] is the injectable seam: production uses
-//! [`SystemKeychain`], tests and downstream crates inject in-memory fakes and
-//! never touch the real Keychain.
+//! `<scope identity>:<key>` where the scope identity mirrors the consent keys
+//! (`global:<pluginKey>` / `project:<repoId>:<pluginKey>`), so same-key global
+//! and project installs — and two repos — never share a secret (spec §3.3).
+//! Values are capped at 64 KiB, matching the host-api `secrets.set` schema.
+//! [`Keychain`] is the injectable seam: production uses [`SystemKeychain`],
+//! tests and downstream crates inject in-memory fakes and never touch the real
+//! Keychain.
 
 use std::sync::Arc;
 
 use crate::storage::{validate_plugin_key, validate_storage_key};
-use crate::types::{PluginError, INVALID_PARAMS, UNAVAILABLE};
+use crate::types::{PluginError, PluginScope, INVALID_PARAMS, UNAVAILABLE};
 
 pub const KEYCHAIN_SERVICE: &str = "dev.itsuka.orcinus.plugin-secrets";
 /// Host-api `secrets.set` value cap.
@@ -24,10 +27,33 @@ pub const SECRET_VALUE_MAX_BYTES: usize = 64 * 1024;
 
 /// Plugin-facing secret access; implemented by [`KeychainSecrets`] in
 /// production and by fakes in tests.
+///
+/// Every call carries the caller's scope (spec §3.3): a same-key project
+/// install and global install must not read each other's secrets, and two
+/// repos must not either. `repo_id` is required for project scope.
 pub trait SecretStore: Send + Sync {
-    fn get(&self, plugin_key: &str, key: &str) -> Result<Option<String>, PluginError>;
-    fn set(&self, plugin_key: &str, key: &str, value: &str) -> Result<(), PluginError>;
-    fn delete(&self, plugin_key: &str, key: &str) -> Result<(), PluginError>;
+    fn get(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+    ) -> Result<Option<String>, PluginError>;
+    fn set(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+        value: &str,
+    ) -> Result<(), PluginError>;
+    fn delete(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+    ) -> Result<(), PluginError>;
 }
 
 /// Failure modes a Keychain backend can report. Only `NoEntry` is benign;
@@ -123,10 +149,37 @@ impl KeychainSecrets {
         }
     }
 
-    fn account_for(plugin_key: &str, key: &str) -> Result<String, PluginError> {
+    /// Scope-qualified identity mirroring the consent keys
+    /// (`global:<key>` / `project:<repoId>:<key>`, spec §3.3). Keeps the
+    /// Keychain service global while the account isolates scopes and repos.
+    fn scoped_identity(
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+    ) -> Result<String, PluginError> {
         validate_plugin_key(plugin_key)?;
+        match scope {
+            PluginScope::Global => Ok(format!("global:{plugin_key}")),
+            PluginScope::Project => {
+                let repo_id = repo_id.filter(|id| !id.trim().is_empty()).ok_or_else(|| {
+                    PluginError::new(INVALID_PARAMS, "project scope requires a repo id")
+                })?;
+                Ok(format!("project:{repo_id}:{plugin_key}"))
+            }
+        }
+    }
+
+    fn account_for(
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+    ) -> Result<String, PluginError> {
         validate_storage_key(key)?;
-        Ok(format!("{plugin_key}:{key}"))
+        Ok(format!(
+            "{}:{key}",
+            Self::scoped_identity(plugin_key, scope, repo_id)?
+        ))
     }
 }
 
@@ -135,8 +188,14 @@ fn unavailable_error(reason: &str) -> PluginError {
 }
 
 impl SecretStore for KeychainSecrets {
-    fn get(&self, plugin_key: &str, key: &str) -> Result<Option<String>, PluginError> {
-        let account = Self::account_for(plugin_key, key)?;
+    fn get(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+    ) -> Result<Option<String>, PluginError> {
+        let account = Self::account_for(plugin_key, scope, repo_id, key)?;
         match self.keychain.get(&self.service, &account) {
             Ok(value) => Ok(value),
             Err(KeychainError::NoEntry) => Ok(None),
@@ -144,8 +203,15 @@ impl SecretStore for KeychainSecrets {
         }
     }
 
-    fn set(&self, plugin_key: &str, key: &str, value: &str) -> Result<(), PluginError> {
-        let account = Self::account_for(plugin_key, key)?;
+    fn set(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+        value: &str,
+    ) -> Result<(), PluginError> {
+        let account = Self::account_for(plugin_key, scope, repo_id, key)?;
         if value.len() > SECRET_VALUE_MAX_BYTES {
             return Err(PluginError::new(
                 INVALID_PARAMS,
@@ -161,8 +227,14 @@ impl SecretStore for KeychainSecrets {
         }
     }
 
-    fn delete(&self, plugin_key: &str, key: &str) -> Result<(), PluginError> {
-        let account = Self::account_for(plugin_key, key)?;
+    fn delete(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+    ) -> Result<(), PluginError> {
+        let account = Self::account_for(plugin_key, scope, repo_id, key)?;
         match self.keychain.delete(&self.service, &account) {
             Ok(()) | Err(KeychainError::NoEntry) => Ok(()),
             Err(KeychainError::Unavailable(reason)) => Err(unavailable_error(&reason)),
@@ -274,33 +346,115 @@ mod tests {
     fn round_trips_and_maps_service_and_account() {
         let fake = Arc::new(FakeKeychain::default());
         let store = store_with(&fake);
-        store.set("acme.demo", "token", "top-secret").unwrap();
+        let global = PluginScope::Global;
+        store
+            .set("acme.demo", global, None, "token", "top-secret")
+            .unwrap();
         assert_eq!(
-            store.get("acme.demo", "token").unwrap(),
+            store.get("acme.demo", global, None, "token").unwrap(),
             Some("top-secret".to_string())
         );
         assert_eq!(
-            fake.stored(KEYCHAIN_SERVICE, "acme.demo:token"),
+            fake.stored(KEYCHAIN_SERVICE, "global:acme.demo:token"),
             Some("top-secret".to_string())
         );
         assert!(fake.calls().iter().any(|(operation, service, account)| {
-            operation == "set" && service == KEYCHAIN_SERVICE && account == "acme.demo:token"
+            operation == "set" && service == KEYCHAIN_SERVICE && account == "global:acme.demo:token"
         }));
 
-        store.delete("acme.demo", "token").unwrap();
-        assert_eq!(store.get("acme.demo", "token").unwrap(), None);
+        store.delete("acme.demo", global, None, "token").unwrap();
+        assert_eq!(store.get("acme.demo", global, None, "token").unwrap(), None);
     }
 
     #[test]
     fn isolates_plugin_namespaces() {
         let fake = Arc::new(FakeKeychain::default());
         let store = store_with(&fake);
-        store.set("acme.first", "token", "first").unwrap();
+        let global = PluginScope::Global;
+        store
+            .set("acme.first", global, None, "token", "first")
+            .unwrap();
         assert_eq!(
-            store.get("acme.first", "token").unwrap(),
+            store.get("acme.first", global, None, "token").unwrap(),
             Some("first".to_string())
         );
-        assert_eq!(store.get("acme.second", "token").unwrap(), None);
+        assert_eq!(
+            store.get("acme.second", global, None, "token").unwrap(),
+            None
+        );
+    }
+
+    #[test]
+    fn isolates_scopes_and_repositories() {
+        let fake = Arc::new(FakeKeychain::default());
+        let store = store_with(&fake);
+        let global = PluginScope::Global;
+        let project = PluginScope::Project;
+
+        store
+            .set("acme.demo", global, None, "token", "global")
+            .unwrap();
+        store
+            .set("acme.demo", project, Some("r1"), "token", "repo-1")
+            .unwrap();
+        store
+            .set("acme.demo", project, Some("r2"), "token", "repo-2")
+            .unwrap();
+
+        assert_eq!(
+            store
+                .get("acme.demo", global, None, "token")
+                .unwrap()
+                .as_deref(),
+            Some("global")
+        );
+        assert_eq!(
+            store
+                .get("acme.demo", project, Some("r1"), "token")
+                .unwrap()
+                .as_deref(),
+            Some("repo-1")
+        );
+        assert_eq!(
+            store
+                .get("acme.demo", project, Some("r2"), "token")
+                .unwrap()
+                .as_deref(),
+            Some("repo-2")
+        );
+        assert_eq!(
+            store
+                .get("acme.demo", project, Some("r3"), "token")
+                .unwrap(),
+            None
+        );
+
+        // Accounts mirror the consent scope keys, so same-key scopes and two
+        // repos never collide inside the one Keychain service.
+        assert_eq!(
+            fake.stored(KEYCHAIN_SERVICE, "global:acme.demo:token")
+                .as_deref(),
+            Some("global")
+        );
+        assert_eq!(
+            fake.stored(KEYCHAIN_SERVICE, "project:r1:acme.demo:token")
+                .as_deref(),
+            Some("repo-1")
+        );
+        assert_eq!(
+            fake.stored(KEYCHAIN_SERVICE, "project:r2:acme.demo:token")
+                .as_deref(),
+            Some("repo-2")
+        );
+
+        // Project scope without a repo id is rejected before the Keychain.
+        let before = fake.calls().len();
+        let error = store
+            .set("acme.demo", project, None, "token", "v")
+            .unwrap_err();
+        assert_eq!(error.code(), INVALID_PARAMS);
+        assert!(error.message().contains("repo id"));
+        assert_eq!(fake.calls().len(), before, "keychain must not be touched");
     }
 
     #[test]
@@ -309,10 +463,15 @@ mod tests {
         let store = store_with(&fake);
         fake.fail_with("keychain locked");
 
+        let global = PluginScope::Global;
         let errors = [
-            store.get("acme.demo", "token").unwrap_err(),
-            store.set("acme.demo", "token", "value").unwrap_err(),
-            store.delete("acme.demo", "token").unwrap_err(),
+            store.get("acme.demo", global, None, "token").unwrap_err(),
+            store
+                .set("acme.demo", global, None, "token", "value")
+                .unwrap_err(),
+            store
+                .delete("acme.demo", global, None, "token")
+                .unwrap_err(),
         ];
         for error in errors {
             assert_eq!(error.code(), UNAVAILABLE);
@@ -322,15 +481,22 @@ mod tests {
                 error.message()
             );
         }
-        assert_eq!(fake.stored(KEYCHAIN_SERVICE, "acme.demo:token"), None);
+        assert_eq!(
+            fake.stored(KEYCHAIN_SERVICE, "global:acme.demo:token"),
+            None
+        );
     }
 
     #[test]
     fn no_entry_reads_none_and_delete_is_idempotent() {
         let fake = Arc::new(FakeKeychain::default());
         let store = store_with(&fake);
-        assert_eq!(store.get("acme.demo", "missing").unwrap(), None);
-        store.delete("acme.demo", "missing").unwrap();
+        let global = PluginScope::Global;
+        assert_eq!(
+            store.get("acme.demo", global, None, "missing").unwrap(),
+            None
+        );
+        store.delete("acme.demo", global, None, "missing").unwrap();
     }
 
     #[test]
@@ -360,8 +526,11 @@ mod tests {
         let fake = Arc::new(FakeKeychain::default());
         let store = store_with(&fake);
 
+        let global = PluginScope::Global;
         let oversized = "x".repeat(SECRET_VALUE_MAX_BYTES + 1);
-        let error = store.set("acme.demo", "token", &oversized).unwrap_err();
+        let error = store
+            .set("acme.demo", global, None, "token", &oversized)
+            .unwrap_err();
         assert_eq!(error.code(), INVALID_PARAMS);
         assert_eq!(
             error.message(),
@@ -369,16 +538,18 @@ mod tests {
         );
 
         for reserved in RESERVED_STORAGE_KEYS {
-            let error = store.set("acme.demo", reserved, "v").unwrap_err();
+            let error = store
+                .set("acme.demo", global, None, reserved, "v")
+                .unwrap_err();
             assert_eq!(error.code(), INVALID_PARAMS);
             assert_eq!(error.message(), "reserved storage key");
         }
         assert_eq!(
-            store.get("acme.demo", "").unwrap_err().code(),
+            store.get("acme.demo", global, None, "").unwrap_err().code(),
             INVALID_PARAMS
         );
 
-        let error = store.get("demo", "token").unwrap_err();
+        let error = store.get("demo", global, None, "token").unwrap_err();
         assert_eq!(error.code(), INVALID_PARAMS);
         assert!(error.message().contains("unsafe plugin key"));
 
@@ -389,10 +560,17 @@ mod tests {
     fn accepts_values_at_the_exact_cap() {
         let fake = Arc::new(FakeKeychain::default());
         let store = store_with(&fake);
+        let global = PluginScope::Global;
         let exact = "x".repeat(SECRET_VALUE_MAX_BYTES);
-        store.set("acme.demo", "exact", &exact).unwrap();
+        store
+            .set("acme.demo", global, None, "exact", &exact)
+            .unwrap();
         assert_eq!(
-            store.get("acme.demo", "exact").unwrap().unwrap().len(),
+            store
+                .get("acme.demo", global, None, "exact")
+                .unwrap()
+                .unwrap()
+                .len(),
             SECRET_VALUE_MAX_BYTES
         );
     }

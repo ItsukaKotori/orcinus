@@ -136,7 +136,7 @@ fn resolve_gh_path_falls_back_to_extra_dirs() {
     let empty = dir.file("empty");
     std::fs::create_dir_all(&empty).unwrap();
     let _guard = PathGuard::set(&[&empty]);
-    let resolved = resolve_gh_path_in(&cache, &[extra.clone()]).unwrap();
+    let resolved = resolve_gh_path_in(&cache, std::slice::from_ref(&extra)).unwrap();
     assert_eq!(resolved, gh);
     // 第二次命中缓存（删除文件后仍返回缓存路径）
     std::fs::remove_file(&gh).unwrap();

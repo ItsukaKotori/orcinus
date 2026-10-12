@@ -20,13 +20,16 @@
 //!   stopping it closes the channel so shutdown never waits a full interval.
 //!
 //! The service's `storage`/`settings` stores are file-backed path wrappers
-//! (each operation reads/writes the JSON document); this module opens its own
-//! instances over the same global `plugin-data` root, so they observe exactly
-//! the same bytes the service's instances do. Secrets are shared as one
-//! `Arc<dyn SecretStore>` between the service and the host services.
+//! (each operation reads/writes the JSON document). [`ScopedPluginStores`]
+//! resolves the root per call — global → `<app_data_dir>/plugin-data`,
+//! project → `<repo>/.ade/plugin-data` — so dual-scope installs of one key and
+//! two repos never share bytes (spec §3.3). Secrets are keyed by the same
+//! scope-qualified identity inside one global Keychain service and share one
+//! `Arc<dyn SecretStore>` with the service.
 
 use std::io;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::{self, RecvTimeoutError, Sender};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::thread::{self, JoinHandle};
@@ -40,14 +43,14 @@ use ade_plugins::host::services::{
     HostServiceError, OpenTabResult, PluginHostServices, PluginSettingsAccess, PluginStorageAccess,
     TerminalRef, WorktreeContext,
 };
-use ade_plugins::paths::{global_roots, ScopeRoots};
+use ade_plugins::paths::{global_roots, project_roots, ScopeRoots};
 use ade_plugins::plugin_settings::PluginSettingsStore;
 use ade_plugins::secrets::{KeychainSecrets, SecretStore, KEYCHAIN_SERVICE};
 use ade_plugins::service::{
     OpenTabRequest, PluginRef, PluginService, ServiceConfig, ServiceEventSink, WorkerRuntimeConfig,
 };
 use ade_plugins::storage::StorageStore;
-use ade_plugins::types::PluginScope;
+use ade_plugins::types::{PluginError, PluginScope, INVALID_PARAMS, UNAVAILABLE};
 use ade_pty::PtyHost;
 use ade_store::projects_store::ProjectsStore;
 use ade_store::settings_store::SettingsStore;
@@ -310,10 +313,120 @@ pub struct BridgeHostServicesDeps {
     pub worktrees: Option<Arc<dyn WorktreeContexts>>,
 }
 
+/// Per-scope `storage.*`/`settings.*` store resolution (spec §3.3).
+///
+/// The stores are file-backed path wrappers, so each call opens the store for
+/// the caller's scope: global → `<app_data_dir>/plugin-data`, project →
+/// `<repo>/.ade/plugin-data` with the repo path resolved from the live
+/// projects registry. A project call without a registered repo fails
+/// `unavailable` and never touches global bytes; a project call without a
+/// repo id fails `invalid_params`.
+pub struct ScopedPluginStores {
+    app_data_dir: PathBuf,
+    projects: Arc<Mutex<ProjectsStore>>,
+}
+
+impl ScopedPluginStores {
+    pub fn new(app_data_dir: PathBuf, projects: Arc<Mutex<ProjectsStore>>) -> Self {
+        Self {
+            app_data_dir,
+            projects,
+        }
+    }
+
+    fn data_dir(&self, scope: PluginScope, repo_id: Option<&str>) -> Result<PathBuf, PluginError> {
+        match scope {
+            PluginScope::Global => Ok(global_roots(&self.app_data_dir).data_dir),
+            PluginScope::Project => {
+                let repo_id = repo_id.filter(|id| !id.trim().is_empty()).ok_or_else(|| {
+                    PluginError::new(INVALID_PARAMS, "project scope requires a repo id")
+                })?;
+                let repo_path = project_pairs(&lock(&self.projects))
+                    .into_iter()
+                    .find(|(id, _)| id == repo_id)
+                    .map(|(_, path)| path);
+                let repo_path = repo_path.ok_or_else(|| {
+                    PluginError::new(UNAVAILABLE, format!("unknown project: {repo_id}"))
+                })?;
+                Ok(project_roots(&repo_path).data_dir)
+            }
+        }
+    }
+}
+
+impl PluginStorageAccess for ScopedPluginStores {
+    fn get(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+    ) -> Result<Option<Value>, PluginError> {
+        let store = StorageStore::new(self.data_dir(scope, repo_id)?);
+        store.get(plugin_key, key)
+    }
+
+    fn set(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+        value: Value,
+    ) -> Result<(), PluginError> {
+        let store = StorageStore::new(self.data_dir(scope, repo_id)?);
+        store.set(plugin_key, key, value)
+    }
+
+    fn delete(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+    ) -> Result<(), PluginError> {
+        let store = StorageStore::new(self.data_dir(scope, repo_id)?);
+        store.delete(plugin_key, key)
+    }
+
+    fn keys(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+    ) -> Result<Vec<String>, PluginError> {
+        let store = StorageStore::new(self.data_dir(scope, repo_id)?);
+        store.keys(plugin_key)
+    }
+}
+
+impl PluginSettingsAccess for ScopedPluginStores {
+    fn get_all(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+    ) -> Result<Map<String, Value>, PluginError> {
+        let store = PluginSettingsStore::new(self.data_dir(scope, repo_id)?);
+        store.get_all(plugin_key)
+    }
+
+    fn set(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+        value: Value,
+    ) -> Result<(), PluginError> {
+        let store = PluginSettingsStore::new(self.data_dir(scope, repo_id)?);
+        store.set(plugin_key, key, value)
+    }
+}
+
 /// The bridge-side [`PluginHostServices`] implementation.
 pub struct BridgePluginHostServices {
-    storage: StorageStore,
-    settings: PluginSettingsStore,
+    stores: ScopedPluginStores,
     secrets: Arc<dyn SecretStore>,
     ui: Arc<Mutex<UiStateStore>>,
     worktrees: Arc<dyn WorktreeContexts>,
@@ -324,8 +437,8 @@ pub struct BridgePluginHostServices {
     dev_paths: Vec<PathBuf>,
     /// Bound after the service is constructed (the service owns this adapter,
     /// so a direct `Arc` would be a cycle). `open_tab` only needs it at call
-    /// time. Storage/settings are path wrappers over the same data dir, so
-    /// they need no back-reference.
+    /// time. Stores resolve their directory per call, so they need no
+    /// back-reference.
     service: OnceLock<Arc<PluginService>>,
 }
 
@@ -340,8 +453,7 @@ impl BridgePluginHostServices {
             ))
         });
         Self {
-            storage: StorageStore::new(global_roots.data_dir.clone()),
-            settings: PluginSettingsStore::new(global_roots.data_dir.clone()),
+            stores: ScopedPluginStores::new(deps.app_data_dir.clone(), Arc::clone(&deps.projects)),
             secrets: deps.secrets,
             ui: deps.ui,
             worktrees,
@@ -451,11 +563,11 @@ impl PluginHostServices for BridgePluginHostServices {
     }
 
     fn storage(&self) -> &dyn PluginStorageAccess {
-        &self.storage
+        &self.stores
     }
 
     fn settings(&self) -> &dyn PluginSettingsAccess {
-        &self.settings
+        &self.stores
     }
 
     fn secrets(&self) -> &dyn SecretStore {
@@ -718,11 +830,16 @@ pub fn keychain_secrets() -> Arc<dyn SecretStore> {
     Arc::new(KeychainSecrets::new(KEYCHAIN_SERVICE))
 }
 
-/// Monotonic-ish unique notification id (`plugin:<key>:<millis>`).
+/// Process-local monotonic suffix so ids stay unique even when two
+/// notifications land inside the same millisecond.
+static NOTIFICATION_SEQ: AtomicU64 = AtomicU64::new(0);
+
+/// Unique notification id (`plugin:<key>:<millis>-<seq>`).
 pub fn notification_id(plugin_key: &str) -> String {
     let millis = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_millis())
         .unwrap_or(0);
-    format!("plugin:{plugin_key}:{millis}")
+    let sequence = NOTIFICATION_SEQ.fetch_add(1, Ordering::Relaxed);
+    format!("plugin:{plugin_key}:{millis}-{sequence}")
 }

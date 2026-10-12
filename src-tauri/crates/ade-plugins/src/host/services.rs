@@ -56,18 +56,58 @@ impl HostServiceError {
     }
 }
 
-/// Plugin-private key-value persistence (`storage.*`).
+/// Plugin-private key-value persistence (`storage.*`). Every call carries the
+/// caller's scope so dual-scope installs of one key never share bytes: the
+/// host resolves the store root (`<app_data>/plugin-data` for global,
+/// `<repo>/.ade/plugin-data` for project, spec §3.3). `repo_id` is required
+/// for project scope.
 pub trait PluginStorageAccess: Send + Sync {
-    fn get(&self, plugin_key: &str, key: &str) -> Result<Option<Value>, PluginError>;
-    fn set(&self, plugin_key: &str, key: &str, value: Value) -> Result<(), PluginError>;
-    fn delete(&self, plugin_key: &str, key: &str) -> Result<(), PluginError>;
-    fn keys(&self, plugin_key: &str) -> Result<Vec<String>, PluginError>;
+    fn get(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+    ) -> Result<Option<Value>, PluginError>;
+    fn set(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+        value: Value,
+    ) -> Result<(), PluginError>;
+    fn delete(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+    ) -> Result<(), PluginError>;
+    fn keys(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+    ) -> Result<Vec<String>, PluginError>;
 }
 
-/// Plugin-owned settings (`settings.*`).
+/// Plugin-owned settings (`settings.*`), scoped like [`PluginStorageAccess`].
 pub trait PluginSettingsAccess: Send + Sync {
-    fn get_all(&self, plugin_key: &str) -> Result<Map<String, Value>, PluginError>;
-    fn set(&self, plugin_key: &str, key: &str, value: Value) -> Result<(), PluginError>;
+    fn get_all(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+    ) -> Result<Map<String, Value>, PluginError>;
+    fn set(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+        value: Value,
+    ) -> Result<(), PluginError>;
 }
 
 pub trait PluginHostServices: Send + Sync {
@@ -121,30 +161,70 @@ pub trait PluginHostServices: Send + Sync {
     ) -> Vec<String>;
 }
 
+/// Raw single-directory convenience impl: the store is already bound to one
+/// scope's `plugin-data` root, so `scope`/`repo_id` are ignored. Hosts that
+/// serve both scopes must resolve the directory first (ade-bridge's scoped
+/// adapter) rather than binding this impl.
 impl PluginStorageAccess for StorageStore {
-    fn get(&self, plugin_key: &str, key: &str) -> Result<Option<Value>, PluginError> {
+    fn get(
+        &self,
+        plugin_key: &str,
+        _scope: PluginScope,
+        _repo_id: Option<&str>,
+        key: &str,
+    ) -> Result<Option<Value>, PluginError> {
         StorageStore::get(self, plugin_key, key)
     }
 
-    fn set(&self, plugin_key: &str, key: &str, value: Value) -> Result<(), PluginError> {
+    fn set(
+        &self,
+        plugin_key: &str,
+        _scope: PluginScope,
+        _repo_id: Option<&str>,
+        key: &str,
+        value: Value,
+    ) -> Result<(), PluginError> {
         StorageStore::set(self, plugin_key, key, value)
     }
 
-    fn delete(&self, plugin_key: &str, key: &str) -> Result<(), PluginError> {
+    fn delete(
+        &self,
+        plugin_key: &str,
+        _scope: PluginScope,
+        _repo_id: Option<&str>,
+        key: &str,
+    ) -> Result<(), PluginError> {
         StorageStore::delete(self, plugin_key, key)
     }
 
-    fn keys(&self, plugin_key: &str) -> Result<Vec<String>, PluginError> {
+    fn keys(
+        &self,
+        plugin_key: &str,
+        _scope: PluginScope,
+        _repo_id: Option<&str>,
+    ) -> Result<Vec<String>, PluginError> {
         StorageStore::keys(self, plugin_key)
     }
 }
 
 impl PluginSettingsAccess for PluginSettingsStore {
-    fn get_all(&self, plugin_key: &str) -> Result<Map<String, Value>, PluginError> {
+    fn get_all(
+        &self,
+        plugin_key: &str,
+        _scope: PluginScope,
+        _repo_id: Option<&str>,
+    ) -> Result<Map<String, Value>, PluginError> {
         PluginSettingsStore::get_all(self, plugin_key)
     }
 
-    fn set(&self, plugin_key: &str, key: &str, value: Value) -> Result<(), PluginError> {
+    fn set(
+        &self,
+        plugin_key: &str,
+        _scope: PluginScope,
+        _repo_id: Option<&str>,
+        key: &str,
+        value: Value,
+    ) -> Result<(), PluginError> {
         PluginSettingsStore::set(self, plugin_key, key, value)
     }
 }

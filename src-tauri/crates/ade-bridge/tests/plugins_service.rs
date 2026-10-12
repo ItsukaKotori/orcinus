@@ -11,7 +11,7 @@ use ade_bridge::events::{
     PluginOpenTabPayload, PluginsChangedPayload, PLUGINS_CHANGED, PLUGINS_OPEN_TAB,
 };
 use ade_bridge::plugins_service::{
-    build_plugin_service, resolve_host_entry_path, BridgeHostServicesDeps,
+    build_plugin_service, notification_id, resolve_host_entry_path, BridgeHostServicesDeps,
     BridgePluginHostServices, BridgeServiceEventSink, EventEmitter, PluginServiceDeps,
     PluginTicker, PtySessionInfo, PtyTerminals, SettingsConsentState, WorktreeContexts,
 };
@@ -67,21 +67,64 @@ struct FakeSecrets {
     entries: Mutex<Vec<(String, String)>>,
 }
 
-impl SecretStore for FakeSecrets {
-    fn get(&self, _plugin_key: &str, _key: &str) -> Result<Option<String>, PluginError> {
-        Ok(None)
+impl FakeSecrets {
+    /// Scope-qualified account mirroring the Keychain adapter.
+    fn account(plugin_key: &str, scope: PluginScope, repo_id: Option<&str>, key: &str) -> String {
+        match scope {
+            PluginScope::Global => format!("global:{plugin_key}:{key}"),
+            PluginScope::Project => {
+                format!("project:{}:{plugin_key}:{key}", repo_id.unwrap_or_default())
+            }
+        }
     }
+}
 
-    fn set(&self, plugin_key: &str, key: &str, value: &str) -> Result<(), PluginError> {
-        assert!(value.len() <= SECRET_VALUE_MAX_BYTES);
-        self.entries
+impl SecretStore for FakeSecrets {
+    fn get(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+    ) -> Result<Option<String>, PluginError> {
+        let account = Self::account(plugin_key, scope, repo_id, key);
+        Ok(self
+            .entries
             .lock()
             .unwrap()
-            .push((format!("{plugin_key}:{key}"), value.to_string()));
+            .iter()
+            .find(|(stored, _)| stored == &account)
+            .map(|(_, value)| value.clone()))
+    }
+
+    fn set(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+        value: &str,
+    ) -> Result<(), PluginError> {
+        assert!(value.len() <= SECRET_VALUE_MAX_BYTES);
+        let account = Self::account(plugin_key, scope, repo_id, key);
+        let mut entries = self.entries.lock().unwrap();
+        entries.retain(|(stored, _)| stored != &account);
+        entries.push((account, value.to_string()));
         Ok(())
     }
 
-    fn delete(&self, _plugin_key: &str, _key: &str) -> Result<(), PluginError> {
+    fn delete(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        key: &str,
+    ) -> Result<(), PluginError> {
+        let account = Self::account(plugin_key, scope, repo_id, key);
+        self.entries
+            .lock()
+            .unwrap()
+            .retain(|(stored, _)| stored != &account);
         Ok(())
     }
 }
@@ -169,6 +212,24 @@ fn host_services(
     dev_paths: Vec<PathBuf>,
     notifications: NotificationLog,
 ) -> BridgePluginHostServices {
+    host_services_with_projects(
+        root,
+        projects_store(root),
+        ui,
+        pty,
+        dev_paths,
+        notifications,
+    )
+}
+
+fn host_services_with_projects(
+    root: &Path,
+    projects: Arc<Mutex<ProjectsStore>>,
+    ui: Arc<Mutex<UiStateStore>>,
+    pty: Arc<dyn PtyTerminals>,
+    dev_paths: Vec<PathBuf>,
+    notifications: NotificationLog,
+) -> BridgePluginHostServices {
     let notify = Arc::new(move |plugin_key: &str, title: &str, body: Option<&str>| {
         notifications.lock().unwrap().push((
             plugin_key.to_string(),
@@ -180,7 +241,7 @@ fn host_services(
     BridgePluginHostServices::new(BridgeHostServicesDeps {
         app_data_dir: root.join("app-data"),
         ui,
-        projects: projects_store(root),
+        projects,
         worktree_meta: worktree_meta(root),
         fs: Arc::new(FsService::new()),
         dev_paths,
@@ -189,6 +250,26 @@ fn host_services(
         notify,
         worktrees: Some(Arc::new(FakeWorktrees)),
     })
+}
+
+/// A projects store with the given `(repo_id, path)` registry entries, so
+/// project-scope store resolution can find repo roots.
+fn projects_store_with_repos(root: &Path, repos: &[(&str, &Path)]) -> Arc<Mutex<ProjectsStore>> {
+    let value = json!({
+        "schemaVersion": 1,
+        "repos": repos
+            .iter()
+            .map(|(id, path)| json!({
+                "id": id,
+                "path": path.to_string_lossy(),
+                "kind": "git"
+            }))
+            .collect::<Vec<_>>(),
+        "projectGroups": [],
+        "folderWorkspaces": []
+    });
+    fs::write(root.join("projects.json"), value.to_string()).unwrap();
+    projects_store(root)
 }
 
 /// A valid dev plugin tree declaring one tab and one static event.
@@ -507,6 +588,123 @@ fn open_tab_forwards_to_the_bound_service_and_records_the_sink() {
     assert_eq!(unknown.code(), "invalid_params");
 }
 
+// ===== per-scope store isolation =====
+
+#[test]
+fn storage_and_settings_are_isolated_between_scopes_and_repos() {
+    let root = tempfile::tempdir().unwrap();
+    let repo_one = root.path().join("repo-one");
+    let repo_two = root.path().join("repo-two");
+    let projects = projects_store_with_repos(root.path(), &[("r1", &repo_one), ("r2", &repo_two)]);
+    let services = host_services_with_projects(
+        root.path(),
+        projects,
+        ui_store(root.path(), None),
+        FakePty::with_sessions(Vec::new()),
+        Vec::new(),
+        Arc::new(Mutex::new(Vec::new())),
+    );
+    let key = "orca-samples.demo";
+    let (global, project) = (PluginScope::Global, PluginScope::Project);
+
+    services
+        .storage()
+        .set(key, global, None, "token", json!("global"))
+        .unwrap();
+    services
+        .storage()
+        .set(key, project, Some("r1"), "token", json!("repo-1"))
+        .unwrap();
+    services
+        .storage()
+        .set(key, project, Some("r2"), "token", json!("repo-2"))
+        .unwrap();
+
+    // Same key, three scopes: each read sees only its own bytes.
+    assert_eq!(
+        services.storage().get(key, global, None, "token").unwrap(),
+        Some(json!("global"))
+    );
+    assert_eq!(
+        services
+            .storage()
+            .get(key, project, Some("r1"), "token")
+            .unwrap(),
+        Some(json!("repo-1"))
+    );
+    assert_eq!(
+        services
+            .storage()
+            .get(key, project, Some("r2"), "token")
+            .unwrap(),
+        Some(json!("repo-2"))
+    );
+
+    // Bytes land in the spec §3.3 locations, not in one shared store.
+    let global_file = root
+        .path()
+        .join("app-data/plugin-data/orca-samples.demo/storage.json");
+    let repo_one_file = repo_one.join(".ade/plugin-data/orca-samples.demo/storage.json");
+    assert!(global_file.is_file() && repo_one_file.is_file());
+    assert_eq!(
+        serde_json::from_str::<Value>(&fs::read_to_string(&global_file).unwrap()).unwrap()["token"],
+        json!("global")
+    );
+    assert_eq!(
+        serde_json::from_str::<Value>(&fs::read_to_string(&repo_one_file).unwrap()).unwrap()
+            ["token"],
+        json!("repo-1")
+    );
+
+    // Settings resolve the same way.
+    services
+        .settings()
+        .set(key, global, None, "theme", json!("dark"))
+        .unwrap();
+    services
+        .settings()
+        .set(key, project, Some("r1"), "theme", json!("light"))
+        .unwrap();
+    assert_eq!(
+        services
+            .settings()
+            .get_all(key, global, None)
+            .unwrap()
+            .get("theme"),
+        Some(&json!("dark"))
+    );
+    assert_eq!(
+        services
+            .settings()
+            .get_all(key, project, Some("r1"))
+            .unwrap()
+            .get("theme"),
+        Some(&json!("light"))
+    );
+    assert!(services
+        .settings()
+        .get_all(key, project, Some("r2"))
+        .unwrap()
+        .get("theme")
+        .is_none());
+
+    // A project scope without a registered repo never touches another store.
+    let unknown = services
+        .storage()
+        .get(key, project, Some("missing"), "token")
+        .unwrap_err();
+    assert_eq!(unknown.code(), "unavailable");
+    let missing_repo = services
+        .storage()
+        .get(key, project, None, "token")
+        .unwrap_err();
+    assert_eq!(missing_repo.code(), "invalid_params");
+    assert!(services
+        .settings()
+        .get_all(key, project, Some("missing"))
+        .is_err());
+}
+
 // ===== sink payloads =====
 
 #[test]
@@ -596,14 +794,40 @@ fn host_entry_resolution_prefers_an_existing_packaged_resource() {
 }
 
 #[test]
-fn ticker_stops_cleanly_and_is_idempotent() {
+fn ticker_stop_wakes_immediately_even_with_a_long_interval() {
     let root = tempfile::tempdir().unwrap();
     let service = build_plugin_service(service_deps(root.path())).unwrap();
-    let ticker = PluginTicker::spawn_with_interval(Arc::clone(&service), Duration::from_millis(5));
-    std::thread::sleep(Duration::from_millis(30));
-    ticker.stop();
+    // A stop that only took effect at the interval boundary would block this
+    // test for an hour; the channel close must wake the parked thread at once.
+    let ticker = Arc::new(PluginTicker::spawn_with_interval(
+        Arc::clone(&service),
+        Duration::from_secs(3600),
+    ));
+    std::thread::sleep(Duration::from_millis(20));
+    let (done, finished) = std::sync::mpsc::channel();
+    {
+        let ticker = Arc::clone(&ticker);
+        std::thread::spawn(move || {
+            ticker.stop();
+            let _ = done.send(());
+        });
+    }
+    assert!(
+        finished.recv_timeout(Duration::from_secs(2)).is_ok(),
+        "stop() must wake the ticker immediately, not at the interval boundary"
+    );
     ticker.stop();
     drop(ticker);
     assert!(service.list().is_empty());
     service.shutdown();
+}
+
+#[test]
+fn notification_ids_are_unique_within_a_millisecond() {
+    let ids: Vec<String> = (0..1000)
+        .map(|_| notification_id("orca-samples.demo"))
+        .collect();
+    let unique: std::collections::HashSet<&str> = ids.iter().map(String::as_str).collect();
+    assert_eq!(unique.len(), ids.len());
+    assert!(ids[0].starts_with("plugin:orca-samples.demo:"));
 }

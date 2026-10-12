@@ -1723,7 +1723,13 @@ impl PluginService {
         let data_dir = self.data_dir_for_ref(plugin_ref)?;
         self.locks
             .with_plugin_data(&data_dir, &plugin_ref.plugin_key, || {
-                self.config.secrets.set(&plugin_ref.plugin_key, key, value)
+                self.config.secrets.set(
+                    &plugin_ref.plugin_key,
+                    plugin_ref.scope,
+                    plugin_ref.repo_id.as_deref(),
+                    key,
+                    value,
+                )
             })
     }
 
@@ -1732,7 +1738,12 @@ impl PluginService {
         let data_dir = self.data_dir_for_ref(plugin_ref)?;
         self.locks
             .with_plugin_data(&data_dir, &plugin_ref.plugin_key, || {
-                self.config.secrets.delete(&plugin_ref.plugin_key, key)
+                self.config.secrets.delete(
+                    &plugin_ref.plugin_key,
+                    plugin_ref.scope,
+                    plugin_ref.repo_id.as_deref(),
+                    key,
+                )
             })
     }
 
@@ -2539,28 +2550,69 @@ mod tests {
         values: Mutex<HashMap<String, String>>,
     }
 
+    impl FakeSecrets {
+        /// Scope-qualified account mirroring `KeychainSecrets`.
+        fn account(
+            plugin_key: &str,
+            scope: PluginScope,
+            repo_id: Option<&str>,
+            key: &str,
+        ) -> String {
+            match scope {
+                PluginScope::Global => format!("global:{plugin_key}:{key}"),
+                PluginScope::Project => {
+                    format!("project:{}:{plugin_key}:{key}", repo_id.unwrap_or_default())
+                }
+            }
+        }
+    }
+
     impl SecretStore for FakeSecrets {
-        fn get(&self, plugin_key: &str, key: &str) -> Result<Option<String>, PluginError> {
+        fn get(
+            &self,
+            plugin_key: &str,
+            scope: PluginScope,
+            repo_id: Option<&str>,
+            key: &str,
+        ) -> Result<Option<String>, PluginError> {
             let values = self
                 .values
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
-            Ok(values.get(&format!("{plugin_key}:{key}")).cloned())
+            Ok(values
+                .get(&FakeSecrets::account(plugin_key, scope, repo_id, key))
+                .cloned())
         }
 
-        fn set(&self, plugin_key: &str, key: &str, value: &str) -> Result<(), PluginError> {
+        fn set(
+            &self,
+            plugin_key: &str,
+            scope: PluginScope,
+            repo_id: Option<&str>,
+            key: &str,
+            value: &str,
+        ) -> Result<(), PluginError> {
             self.values
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner())
-                .insert(format!("{plugin_key}:{key}"), value.to_string());
+                .insert(
+                    FakeSecrets::account(plugin_key, scope, repo_id, key),
+                    value.to_string(),
+                );
             Ok(())
         }
 
-        fn delete(&self, plugin_key: &str, key: &str) -> Result<(), PluginError> {
+        fn delete(
+            &self,
+            plugin_key: &str,
+            scope: PluginScope,
+            repo_id: Option<&str>,
+            key: &str,
+        ) -> Result<(), PluginError> {
             self.values
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner())
-                .remove(&format!("{plugin_key}:{key}"));
+                .remove(&FakeSecrets::account(plugin_key, scope, repo_id, key));
             Ok(())
         }
     }
