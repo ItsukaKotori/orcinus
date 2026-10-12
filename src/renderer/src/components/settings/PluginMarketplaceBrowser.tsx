@@ -190,7 +190,8 @@ export function PluginMarketplaceBrowser({
         marketplaceSourceId: preview.marketplaceSourceId,
         marketplaceCommit: preview.marketplaceCommit,
         pluginKey: preview.pluginKey,
-        resolvedCommit: preview.resolvedCommit
+        resolvedCommit: preview.resolvedCommit,
+        scope: 'global'
       })
       if (!result.ok) {
         throw new Error(result.error)

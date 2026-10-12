@@ -188,6 +188,7 @@ impl MarketplaceInstaller {
             consent_fingerprint: context.consent_fingerprint.clone(),
             install_hash: installed_hash,
             scope: context.scope,
+            resolved_commit: Some(preview.resolved_commit.clone()),
         })
     }
 

@@ -11,11 +11,13 @@ use std::sync::{Arc, Mutex};
 
 use ade_bridge::commands::plugins::{
     plugins_consent_impl, plugins_get_logs_impl, plugins_get_project_lock_state_impl,
-    plugins_install_impl, plugins_install_missing_from_lockfile_impl, plugins_list_impl,
+    plugins_install_impl, plugins_install_marketplace_plugin_impl,
+    plugins_install_missing_from_lockfile_impl, plugins_list_impl,
     plugins_list_language_packs_impl, plugins_list_marketplace_plugins_impl,
     plugins_list_marketplaces_impl, plugins_read_panel_entry_impl, plugins_refresh_impl,
     plugins_remove_impl, plugins_set_enabled_impl, PluginConsentDecisionDto,
-    PluginHostInstallSourceDto, PluginsConsentArgs, PluginsGetLogsArgs, PluginsPluginRefArgs,
+    PluginHostInstallSourceDto, PluginInstallResultDto, PluginScopeDto, PluginsConsentArgs,
+    PluginsGetLogsArgs, PluginsInstallMarketplacePluginArgs, PluginsPluginRefArgs,
     PluginsProjectLockArgs, PluginsReadPanelEntryArgs, PluginsSetEnabledArgs,
 };
 use ade_bridge::plugins_service::{
@@ -217,6 +219,13 @@ fn install_fixture(
         result.content_hash.as_deref().map(str::len),
         Some(64),
         "content hash is a full sha256"
+    );
+    assert!(result.resolved_commit.is_none());
+    let value = serde_json::to_value(&result).unwrap();
+    assert_eq!(
+        value["resolvedCommit"],
+        Value::Null,
+        "local installs still serialize resolvedCommit as null"
     );
     plugins_list_impl(service)
 }
@@ -570,6 +579,85 @@ fn marketplace_surface_starts_empty_without_a_runtime() {
         assert!(!source.stale);
     }
     assert!(listings.is_empty());
+}
+
+#[test]
+fn marketplace_install_args_carry_the_chosen_scope_into_the_install_source() {
+    let root = tempfile::tempdir().unwrap();
+    let (service, _) = service(root.path(), &[]);
+    let project: PluginsInstallMarketplacePluginArgs = serde_json::from_value(json!({
+        "marketplaceSourceId": "a".repeat(32),
+        "marketplaceCommit": "b".repeat(40),
+        "pluginKey": PLUGIN_KEY,
+        "resolvedCommit": "c".repeat(40),
+        "scope": "project",
+        "repoId": "r1"
+    }))
+    .unwrap();
+    match project.clone().into_install_source() {
+        PluginHostInstallSourceDto::Marketplace {
+            source_id,
+            plugin_key,
+            scope,
+            repo_id,
+        } => {
+            assert_eq!(source_id, "a".repeat(32));
+            assert_eq!(plugin_key, PLUGIN_KEY);
+            assert_eq!(scope, PluginScopeDto::Project);
+            assert_eq!(repo_id.as_deref(), Some("r1"));
+        }
+        other => panic!("expected a marketplace install source, got {other:?}"),
+    }
+
+    let global: PluginsInstallMarketplacePluginArgs = serde_json::from_value(json!({
+        "marketplaceSourceId": "a".repeat(32),
+        "marketplaceCommit": "b".repeat(40),
+        "pluginKey": PLUGIN_KEY,
+        "resolvedCommit": "c".repeat(40),
+        "scope": "global"
+    }))
+    .unwrap();
+    match global.into_install_source() {
+        PluginHostInstallSourceDto::Marketplace { scope, repo_id, .. } => {
+            assert_eq!(scope, PluginScopeDto::Global);
+            assert_eq!(repo_id, None);
+        }
+        other => panic!("expected a marketplace install source, got {other:?}"),
+    }
+
+    // The command impl accepts the scoped args; without a seeded marketplace
+    // it fails at listing resolution and never fabricates a resolved commit.
+    let result = plugins_install_marketplace_plugin_impl(&service, project);
+    assert!(!result.ok);
+    assert!(result.resolved_commit.is_none());
+
+    let missing_scope = serde_json::from_value::<PluginsInstallMarketplacePluginArgs>(json!({
+        "marketplaceSourceId": "a".repeat(32),
+        "marketplaceCommit": "b".repeat(40),
+        "pluginKey": PLUGIN_KEY,
+        "resolvedCommit": "c".repeat(40)
+    }));
+    assert!(
+        missing_scope.is_err(),
+        "the marketplace install scope is required"
+    );
+}
+
+#[test]
+fn install_result_carries_the_resolved_commit_into_the_dto() {
+    let commit = "d".repeat(40);
+    let dto = PluginInstallResultDto::from(ade_plugins::install::InstallResult {
+        plugin_key: PLUGIN_KEY.to_string(),
+        version: "1.2.3".to_string(),
+        content_hash: "a".repeat(64),
+        consent_fingerprint: "sha256-consent".to_string(),
+        install_hash: "a".repeat(64),
+        scope: PluginScope::Global,
+        resolved_commit: Some(commit.clone()),
+    });
+    assert_eq!(dto.resolved_commit.as_deref(), Some(commit.as_str()));
+    let value = serde_json::to_value(&dto).unwrap();
+    assert_eq!(value["resolvedCommit"], json!(commit));
 }
 
 #[test]

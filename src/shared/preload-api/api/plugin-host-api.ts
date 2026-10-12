@@ -228,7 +228,7 @@ export type PluginsApi = {
     preview: Pick<
       PluginMarketplaceHostInstallPreview,
       'marketplaceSourceId' | 'marketplaceCommit' | 'pluginKey' | 'resolvedCommit'
-    >
+    > & { scope: PluginScope; repoId?: string }
   ) => Promise<PluginHostInstallResult>
   previewMarketplaceUpdate: (args: {
     pluginKey: string

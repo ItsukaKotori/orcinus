@@ -203,7 +203,8 @@ describe('PluginMarketplaceBrowser', () => {
       marketplaceSourceId: SOURCE_ID,
       marketplaceCommit: MARKETPLACE_COMMIT,
       pluginKey: listing.pluginKey,
-      resolvedCommit: PLUGIN_COMMIT
+      resolvedCommit: PLUGIN_COMMIT,
+      scope: 'global'
     })
     expect(onInstalled).toHaveBeenCalledWith(listing.pluginKey)
     act(() => root.unmount())

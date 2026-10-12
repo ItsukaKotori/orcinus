@@ -2013,7 +2013,7 @@ impl PluginService {
             plugin_key: plugin_key.clone(),
             version: staged_manifest.version.clone(),
             source,
-            resolved_commit,
+            resolved_commit: resolved_commit.clone(),
             content_hash: content_hash.clone(),
             consent_fingerprint: context.consent_fingerprint.clone(),
             installed_at: now_millis(),
@@ -2032,6 +2032,7 @@ impl PluginService {
             consent_fingerprint: context.consent_fingerprint.clone(),
             install_hash: content_hash,
             scope: context.scope,
+            resolved_commit,
         })
     }
 

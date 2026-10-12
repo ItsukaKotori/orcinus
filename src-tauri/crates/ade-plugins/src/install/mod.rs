@@ -73,6 +73,9 @@ pub struct InstallResult {
     /// consumers that already speak in pointer terms.
     pub install_hash: String,
     pub scope: PluginScope,
+    /// Exact Git commit the installed bytes came from; `None` for local-path
+    /// installs (the TS ok-shape requires `resolvedCommit: string | null`).
+    pub resolved_commit: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -127,6 +130,7 @@ pub fn install_from_local(
         consent_fingerprint: context.consent_fingerprint.clone(),
         install_hash: content_hash,
         scope: context.scope,
+        resolved_commit: None,
     })
 }
 
@@ -217,6 +221,7 @@ pub fn rollback(
         consent_fingerprint: entry.consent_fingerprint,
         install_hash: content_hash,
         scope,
+        resolved_commit: entry.resolved_commit,
     })
 }
 

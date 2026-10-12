@@ -364,7 +364,7 @@ export const commands = {
 	pluginsRefreshMarketplaces: (args: PluginsRefreshMarketplacesArgs_Deserialize) => typedError<PluginMarketplaceHostSourceStateDto_Serialize[], BridgeError>(__TAURI_INVOKE("plugins_refresh_marketplaces", { args })),
 	pluginsListMarketplacePlugins: () => typedError<PluginMarketplaceHostListingDto_Serialize[], BridgeError>(__TAURI_INVOKE("plugins_list_marketplace_plugins")),
 	pluginsPreviewMarketplacePlugin: (args: PluginsPreviewMarketplacePluginArgs) => typedError<PluginMarketplaceInstallPreviewDto, BridgeError>(__TAURI_INVOKE("plugins_preview_marketplace_plugin", { args })),
-	pluginsInstallMarketplacePlugin: (args: PluginsInstallMarketplacePluginArgs) => typedError<PluginInstallResultDto_Serialize, BridgeError>(__TAURI_INVOKE("plugins_install_marketplace_plugin", { args })),
+	pluginsInstallMarketplacePlugin: (args: PluginsInstallMarketplacePluginArgs_Deserialize) => typedError<PluginInstallResultDto_Serialize, BridgeError>(__TAURI_INVOKE("plugins_install_marketplace_plugin", { args })),
 	pluginsPreviewMarketplaceUpdate: (args: PluginsMarketplacePluginKeyArgs) => typedError<PluginMarketplaceInstallPreviewDto, BridgeError>(__TAURI_INVOKE("plugins_preview_marketplace_update", { args })),
 	pluginsRollbackMarketplacePlugin: (args: PluginsMarketplacePluginKeyArgs) => typedError<PluginInstallResultDto_Serialize, BridgeError>(__TAURI_INVOKE("plugins_rollback_marketplace_plugin", { args })),
 	pluginsRemove: (args: PluginsPluginRefArgs_Deserialize) => typedError<PluginListEntryDto_Serialize[], BridgeError>(__TAURI_INVOKE("plugins_remove", { args })),
@@ -1811,7 +1811,11 @@ export type PluginInstallResultDto_Deserialize = {
 	version?: string | null,
 	contentHash?: string | null,
 	consentFingerprint?: string | null,
-	resolvedCommit?: string | null,
+	/**
+	 *  Always serialized (null included) so the ok-shape carries the
+	 *  `resolvedCommit: string | null` the TS contract requires.
+	 */
+	resolvedCommit: string | null,
 	error?: string | null,
 };
 
@@ -1822,7 +1826,11 @@ export type PluginInstallResultDto_Serialize = {
 	version?: string | null,
 	contentHash?: string | null,
 	consentFingerprint?: string | null,
-	resolvedCommit?: string | null,
+	/**
+	 *  Always serialized (null included) so the ok-shape carries the
+	 *  `resolvedCommit: string | null` the TS contract requires.
+	 */
+	resolvedCommit: string | null,
 	error?: string | null,
 };
 
@@ -2135,13 +2143,34 @@ export type PluginsGetLogsArgs = {
 
 /**
  *  TS `installMarketplacePlugin` argument: the pinned identity the user
- *  reviewed.
+ *  reviewed plus the install scope the user chose (project needs `repoId`).
  */
-export type PluginsInstallMarketplacePluginArgs = {
+export type PluginsInstallMarketplacePluginArgs = PluginsInstallMarketplacePluginArgs_Serialize | PluginsInstallMarketplacePluginArgs_Deserialize;
+
+/**
+ *  TS `installMarketplacePlugin` argument: the pinned identity the user
+ *  reviewed plus the install scope the user chose (project needs `repoId`).
+ */
+export type PluginsInstallMarketplacePluginArgs_Deserialize = {
 	marketplaceSourceId: string,
 	marketplaceCommit: string,
 	pluginKey: string,
 	resolvedCommit: string,
+	scope: PluginScopeDto,
+	repoId?: string | null,
+};
+
+/**
+ *  TS `installMarketplacePlugin` argument: the pinned identity the user
+ *  reviewed plus the install scope the user chose (project needs `repoId`).
+ */
+export type PluginsInstallMarketplacePluginArgs_Serialize = {
+	marketplaceSourceId: string,
+	marketplaceCommit: string,
+	pluginKey: string,
+	resolvedCommit: string,
+	scope: PluginScopeDto,
+	repoId?: string | null,
 };
 
 export type PluginsInvokeCommandArgs = PluginsInvokeCommandArgs_Serialize | PluginsInvokeCommandArgs_Deserialize;

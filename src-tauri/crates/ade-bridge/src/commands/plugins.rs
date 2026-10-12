@@ -482,7 +482,8 @@ pub struct PluginInstallResultDto {
     pub content_hash: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub consent_fingerprint: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    /// Always serialized (null included) so the ok-shape carries the
+    /// `resolvedCommit: string | null` the TS contract requires.
     pub resolved_commit: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
@@ -527,7 +528,7 @@ impl From<ade_plugins::install::InstallResult> for PluginInstallResultDto {
             version: Some(result.version),
             content_hash: Some(result.content_hash),
             consent_fingerprint: Some(result.consent_fingerprint),
-            resolved_commit: None,
+            resolved_commit: result.resolved_commit,
             error: None,
         }
     }
@@ -912,7 +913,7 @@ pub struct PluginsPreviewMarketplacePluginArgs {
 }
 
 /// TS `installMarketplacePlugin` argument: the pinned identity the user
-/// reviewed.
+/// reviewed plus the install scope the user chose (project needs `repoId`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginsInstallMarketplacePluginArgs {
@@ -920,6 +921,22 @@ pub struct PluginsInstallMarketplacePluginArgs {
     pub marketplace_commit: String,
     pub plugin_key: String,
     pub resolved_commit: String,
+    pub scope: PluginScopeDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub repo_id: Option<String>,
+}
+
+impl PluginsInstallMarketplacePluginArgs {
+    /// The marketplace arm of `PluginHostInstallSourceDto` carrying the
+    /// caller-chosen scope into the shared install pipeline.
+    pub fn into_install_source(self) -> PluginHostInstallSourceDto {
+        PluginHostInstallSourceDto::Marketplace {
+            source_id: self.marketplace_source_id,
+            plugin_key: self.plugin_key,
+            scope: self.scope,
+            repo_id: self.repo_id,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
@@ -1107,15 +1124,7 @@ pub fn plugins_install_marketplace_plugin_impl(
             "content_changed: plugin source changed after preview; review the update again",
         );
     }
-    plugins_install_impl(
-        service,
-        PluginHostInstallSourceDto::Marketplace {
-            source_id: args.marketplace_source_id,
-            plugin_key: args.plugin_key,
-            scope: PluginScopeDto::Global,
-            repo_id: None,
-        },
-    )
+    plugins_install_impl(service, args.into_install_source())
 }
 
 pub fn plugins_preview_marketplace_update_impl(

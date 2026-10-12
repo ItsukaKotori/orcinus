@@ -43,4 +43,35 @@ describe('Phase 0 plugins mock', () => {
     expect(entries.every((entry) => entry.tabs.length >= 0)).toBe(true)
     expect(entries.find((entry) => entry.scope === 'project')?.tabs).toHaveLength(1)
   })
+
+  it('scopes marketplace installs and echoes the reviewed identity', async () => {
+    const plugins = createPluginsApi()
+    const preview = {
+      marketplaceSourceId: 'mock-marketplace-1',
+      marketplaceCommit: 'b'.repeat(40),
+      pluginKey: 'example.notes',
+      resolvedCommit: 'c'.repeat(40)
+    }
+
+    await expect(
+      plugins.installMarketplacePlugin({ ...preview, scope: 'project', repoId: 'repo-1' })
+    ).resolves.toEqual({
+      ok: true,
+      pluginKey: 'example.notes',
+      version: '0.0.0-mock',
+      contentHash: 'mock-content-hash',
+      consentFingerprint: 'mock-consent-fingerprint',
+      resolvedCommit: 'c'.repeat(40)
+    })
+
+    await expect(
+      plugins.installMarketplacePlugin({ ...preview, scope: 'project' })
+    ).rejects.toThrow(/repoId/)
+    await expect(
+      plugins.installMarketplacePlugin({
+        ...preview,
+        scope: undefined as unknown as 'global'
+      })
+    ).rejects.toThrow(/scope/)
+  })
 })

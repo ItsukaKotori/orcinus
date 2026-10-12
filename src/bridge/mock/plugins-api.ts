@@ -39,14 +39,22 @@ export function createPluginsApi(): PluginsApi {
     listMarketplacePlugins: async () => [],
     previewMarketplacePlugin: async () =>
       unimplemented('plugins.previewMarketplacePlugin'),
-    installMarketplacePlugin: async () => ({
-      ok: true,
-      pluginKey: 'mock-marketplace',
-      version: '0.0.0-mock',
-      contentHash: 'mock-content-hash',
-      consentFingerprint: 'mock-consent-fingerprint',
-      resolvedCommit: null
-    }),
+    installMarketplacePlugin: async (preview) => {
+      if (preview.scope !== 'global' && preview.scope !== 'project') {
+        throw new Error('plugins.installMarketplacePlugin requires a scope')
+      }
+      if (preview.scope === 'project' && !preview.repoId) {
+        throw new Error('plugins.installMarketplacePlugin requires a repoId for project scope')
+      }
+      return {
+        ok: true,
+        pluginKey: preview.pluginKey,
+        version: '0.0.0-mock',
+        contentHash: 'mock-content-hash',
+        consentFingerprint: 'mock-consent-fingerprint',
+        resolvedCommit: preview.resolvedCommit
+      }
+    },
     previewMarketplaceUpdate: async () =>
       unimplemented('plugins.previewMarketplaceUpdate'),
     rollbackMarketplacePlugin: async () => ({
