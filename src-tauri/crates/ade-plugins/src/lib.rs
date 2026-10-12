@@ -12,6 +12,7 @@ pub mod consent;
 pub mod content_hash;
 pub mod discovery;
 pub mod enablement;
+pub mod events;
 pub mod git;
 pub mod host;
 pub mod install;
@@ -24,6 +25,7 @@ pub mod secrets;
 pub mod sessions;
 pub mod storage;
 pub mod types;
+pub mod watcher;
 pub mod worker;
 
 pub use artifact::{resolve_declared_artifact, validate_declared_artifacts, ArtifactSet};
@@ -35,6 +37,10 @@ pub use consent::{
 pub use content_hash::hash_plugin_tree;
 pub use discovery::{discover, DiscoveredPlugin, DiscoveryProjection, PluginSourceKind};
 pub use enablement::{approve, decline, set_enabled};
+pub use events::{
+    is_plugin_event_name, project_payload, AgentStatusChangedPayload, WorktreeCreatedPayload,
+    WorktreeRemovedPayload, PLUGIN_EVENT_NAMES,
+};
 pub use git::{CancelToken, GitOutput, GitRunner, DEFAULT_PLUGIN_GIT_TIMEOUT};
 pub use install::lockfile::{LockEntry, LockSource, Lockfile};
 pub use install::publication::publish_install;
@@ -68,3 +74,4 @@ pub use storage::{
     StorageStore, STORAGE_KEY_LIMIT, STORAGE_TOTAL_MAX_BYTES, STORAGE_VALUE_MAX_BYTES,
 };
 pub use types::{Capability, PluginError, PluginScope};
+pub use watcher::{DevWatcher, DEV_WATCH_BATCH_MAX_WAIT_MS, DEV_WATCH_BATCH_TRAILING_MS};
