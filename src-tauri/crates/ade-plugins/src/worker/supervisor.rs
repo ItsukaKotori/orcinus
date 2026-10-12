@@ -19,7 +19,7 @@
 
 use std::io::BufReader;
 use std::process::{ChildStdin, ChildStdout};
-use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
+use std::sync::mpsc::{self, Receiver, RecvTimeoutError, TryRecvError};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -202,6 +202,59 @@ impl WorkerSupervisor {
                 Ok(reply)
             }
             Err(error) => Err(self.fail_active(error)),
+        }
+    }
+
+    /// Non-blockingly drain frames the worker has already sent. Unrelated
+    /// frames (host calls, logs, stale results) go to the frame sink; a fatal
+    /// frame, a malformed frame, or a closed stream fails the worker exactly
+    /// like an in-flight [`WorkerSupervisor::send`] (kill + record failure)
+    /// and surfaces one error. Unlike `send`, a drained fatal frame is routed
+    /// to the frame sink before failing, so the manager's sink observes it.
+    /// No-op unless `running`.
+    pub fn drain(&mut self) -> Result<(), PluginError> {
+        if !matches!(self.state, WorkerState::Running { .. }) {
+            return Ok(());
+        }
+        enum Drained {
+            Frame(ChildFrame),
+            Poison(PluginError),
+            Empty,
+            Closed,
+        }
+        loop {
+            let drained = {
+                let active = self.worker.as_mut().expect("running implies a worker");
+                match active.frames.try_recv() {
+                    Ok(Ok(frame)) => Drained::Frame(frame),
+                    Ok(Err(error)) => Drained::Poison(error),
+                    Err(TryRecvError::Empty) => Drained::Empty,
+                    Err(TryRecvError::Disconnected) => Drained::Closed,
+                }
+            };
+            match drained {
+                Drained::Frame(frame) => {
+                    let fatal = matches!(frame, ChildFrame::Fatal { .. });
+                    if let Some(sink) = self.sink.as_mut() {
+                        sink(&frame);
+                    }
+                    if fatal {
+                        let error = match frame {
+                            ChildFrame::Fatal { error } => error,
+                            _ => unreachable!("fatal matched above"),
+                        };
+                        return Err(self.fail_active(fatal_error(&error)));
+                    }
+                    self.touch();
+                }
+                Drained::Poison(error) => return Err(self.fail_active(error)),
+                Drained::Closed => {
+                    return Err(
+                        self.fail_active(PluginError::new(ACTION_FAILED, "plugin worker exited"))
+                    )
+                }
+                Drained::Empty => return Ok(()),
+            }
         }
     }
 

@@ -2,6 +2,7 @@
 //! protocol spoken between the Rust host and the `host-entry.mjs` child
 //! (spawn/supervision arrive in a later task).
 
+pub mod manager;
 pub mod protocol;
 pub mod spawn;
 pub mod supervisor;
