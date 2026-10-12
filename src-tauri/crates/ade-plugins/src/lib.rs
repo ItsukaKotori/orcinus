@@ -22,6 +22,7 @@ pub mod marketplace;
 pub mod paths;
 pub mod plugin_settings;
 pub mod secrets;
+pub mod service;
 pub mod sessions;
 pub mod storage;
 pub mod types;
@@ -65,6 +66,13 @@ pub use paths::{global_roots, project_roots, validate_containment, ScopeRoots};
 pub use plugin_settings::PluginSettingsStore;
 pub use secrets::{
     Keychain, KeychainError, KeychainSecrets, SecretStore, KEYCHAIN_SERVICE, SECRET_VALUE_MAX_BYTES,
+};
+pub use service::{
+    ConsentDecision, ConsentRequest, InstallSource, LockEntryStatus, LockState, LockStateEntry,
+    MutationLocks, OpenTabRequest, PluginCapabilityProjection, PluginCommandHandler,
+    PluginCommandProjection, PluginKeybindingProjection, PluginListEntry, PluginPanelProjection,
+    PluginRef, PluginService, PluginSourceProjection, PluginStatus, PluginTabProjection,
+    ScopeTarget, ServiceConfig, ServiceEventSink, PLUGIN_LOG_TAIL_LIMIT,
 };
 pub use sessions::{
     SessionBinding, SessionKind, SessionOwner, SessionRegistry, DEFAULT_SESSION_CAP,

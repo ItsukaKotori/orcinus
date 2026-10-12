@@ -22,7 +22,7 @@ use crate::types::{PluginError, CONSENT_STALE};
 
 /// Records the user's consent-dialog answer for one scoped plugin.
 pub fn approve(
-    state: &mut impl ConsentState,
+    state: &dyn ConsentState,
     scoped_key: &str,
     reviewed_fingerprint: &str,
     current_fingerprint: &str,
@@ -38,14 +38,14 @@ pub fn approve(
 /// Records a declined consent dialog: the plugin is disabled and no consent
 /// record is written, so it stays disabled (not pending) on later launches
 /// until the user explicitly approves it.
-pub fn decline(state: &mut impl ConsentState, scoped_key: &str) {
+pub fn decline(state: &dyn ConsentState, scoped_key: &str) {
     state.set_disabled(scoped_key, true);
 }
 
 /// Enables or disables an already-consented plugin. Enabling only clears the
 /// disable bit; it never writes a consent record, so a plugin without a
 /// current approval stays pending and must run the consent flow.
-pub fn set_enabled(state: &mut impl ConsentState, scoped_key: &str, enabled: bool) {
+pub fn set_enabled(state: &dyn ConsentState, scoped_key: &str, enabled: bool) {
     state.set_disabled(scoped_key, !enabled);
 }
 
@@ -66,12 +66,12 @@ mod tests {
 
     #[test]
     fn approve_records_the_current_fingerprint_and_clears_disable() {
-        let mut state = FakeConsentState::default();
+        let state = FakeConsentState::default();
         state.set_disabled(KEY, true);
 
-        approve(&mut state, KEY, "sha256-current", "sha256-current").unwrap();
+        approve(&state, KEY, "sha256-current", "sha256-current").unwrap();
 
-        assert_eq!(state.consent_for(KEY), Some("sha256-current"));
+        assert_eq!(state.consent_for(KEY).as_deref(), Some("sha256-current"));
         assert!(!state.is_disabled(KEY));
         assert_eq!(
             activation_state(&state, KEY, "sha256-current"),
@@ -81,9 +81,9 @@ mod tests {
 
     #[test]
     fn approve_refuses_a_fingerprint_race() {
-        let mut state = FakeConsentState::default();
+        let state = FakeConsentState::default();
 
-        let error = approve(&mut state, KEY, "sha256-reviewed", "sha256-current").unwrap_err();
+        let error = approve(&state, KEY, "sha256-reviewed", "sha256-current").unwrap_err();
 
         assert_eq!(error.code(), CONSENT_STALE);
         assert_eq!(
@@ -99,9 +99,9 @@ mod tests {
 
     #[test]
     fn declining_disables_without_recording_consent() {
-        let mut state = FakeConsentState::default();
+        let state = FakeConsentState::default();
 
-        decline(&mut state, KEY);
+        decline(&state, KEY);
 
         assert!(state.is_disabled(KEY));
         assert_eq!(state.consent_for(KEY), None);
@@ -114,8 +114,8 @@ mod tests {
 
     #[test]
     fn enable_never_bypasses_consent() {
-        let mut state = FakeConsentState::default();
-        set_enabled(&mut state, KEY, true);
+        let state = FakeConsentState::default();
+        set_enabled(&state, KEY, true);
 
         assert!(!state.is_disabled(KEY));
         assert_eq!(state.consent_for(KEY), None);
@@ -127,12 +127,12 @@ mod tests {
 
     #[test]
     fn enable_stays_pending_when_the_fingerprint_drifted() {
-        let mut state = FakeConsentState::default();
+        let state = FakeConsentState::default();
         state.set_consent(KEY, "sha256-old");
 
-        set_enabled(&mut state, KEY, true);
+        set_enabled(&state, KEY, true);
 
-        assert_eq!(state.consent_for(KEY), Some("sha256-old"));
+        assert_eq!(state.consent_for(KEY).as_deref(), Some("sha256-old"));
         assert_eq!(
             activation_state(&state, KEY, "sha256-new"),
             ActivationState::Pending
@@ -142,16 +142,16 @@ mod tests {
 
     #[test]
     fn disable_and_reenable_round_trip_for_an_approved_plugin() {
-        let mut state = FakeConsentState::default();
-        approve(&mut state, KEY, "sha256-current", "sha256-current").unwrap();
+        let state = FakeConsentState::default();
+        approve(&state, KEY, "sha256-current", "sha256-current").unwrap();
 
-        set_enabled(&mut state, KEY, false);
+        set_enabled(&state, KEY, false);
         assert_eq!(
             activation_state(&state, KEY, "sha256-current"),
             ActivationState::Disabled
         );
 
-        set_enabled(&mut state, KEY, true);
+        set_enabled(&state, KEY, true);
         assert_eq!(
             activation_state(&state, KEY, "sha256-current"),
             ActivationState::Approved
@@ -160,9 +160,9 @@ mod tests {
 
     #[test]
     fn project_approval_does_not_approve_global() {
-        let mut state = FakeConsentState::default();
+        let state = FakeConsentState::default();
         approve(
-            &mut state,
+            &state,
             "project:repo-1:orca-samples.demo",
             "sha256-current",
             "sha256-current",
@@ -181,11 +181,11 @@ mod tests {
 
     #[test]
     fn approve_after_review_race_recovers_with_the_fresh_fingerprint() {
-        let mut state = FakeConsentState::default();
-        let error = approve(&mut state, KEY, "sha256-reviewed", "sha256-current").unwrap_err();
+        let state = FakeConsentState::default();
+        let error = approve(&state, KEY, "sha256-reviewed", "sha256-current").unwrap_err();
         assert_eq!(error.code(), CONSENT_STALE);
 
-        approve(&mut state, KEY, "sha256-current", "sha256-current").unwrap();
+        approve(&state, KEY, "sha256-current", "sha256-current").unwrap();
         assert_eq!(
             activation_state(&state, KEY, "sha256-current"),
             ActivationState::Approved

@@ -109,11 +109,16 @@ pub enum ActivationState {
 
 /// Main-owned consent/enablement records, injected by ade-bridge. Keys are
 /// [`scoped_key`] values; fingerprints are [`fingerprint`] values.
-pub trait ConsentState {
-    fn consent_for(&self, scoped_key: &str) -> Option<&str>;
+///
+/// Mutators take `&self` and implementations own interior mutability (a mutex
+/// or the settings store's own locking): the service holds the state behind an
+/// `Arc<dyn ConsentState>` and must be able to record decisions through shared
+/// references. Reads return owned fingerprints for the same reason.
+pub trait ConsentState: Send + Sync {
+    fn consent_for(&self, scoped_key: &str) -> Option<String>;
     fn is_disabled(&self, scoped_key: &str) -> bool;
-    fn set_consent(&mut self, scoped_key: &str, fingerprint: &str);
-    fn set_disabled(&mut self, scoped_key: &str, disabled: bool);
+    fn set_consent(&self, scoped_key: &str, fingerprint: &str);
+    fn set_disabled(&self, scoped_key: &str, disabled: bool);
 
     /// Derives the activation state for one plugin at one scope.
     fn activation(
@@ -149,7 +154,7 @@ pub trait ConsentState {
 }
 
 pub fn activation_state(
-    state: &impl ConsentState,
+    state: &(impl ConsentState + ?Sized),
     scoped_key: &str,
     current_fingerprint: &str,
 ) -> ActivationState {
@@ -165,7 +170,7 @@ pub fn activation_state(
 /// True when a consent record exists but no longer matches the current
 /// fingerprint. A first install (no record) is not a re-consent.
 pub fn needs_reconsent(
-    state: &impl ConsentState,
+    state: &(impl ConsentState + ?Sized),
     scoped_key: &str,
     current_fingerprint: &str,
 ) -> bool {
@@ -202,41 +207,56 @@ fn base64(bytes: &[u8]) -> String {
 pub(crate) mod test_support {
     use super::*;
     use std::collections::HashMap;
+    use std::sync::Mutex;
 
     /// In-memory [`ConsentState`] for tests; production records live in
     /// main-owned settings and are injected by ade-bridge.
-    #[derive(Debug, Default, Clone)]
+    #[derive(Debug, Default)]
     pub struct FakeConsentState {
-        consents: HashMap<String, String>,
-        disabled: Vec<String>,
+        consents: Mutex<HashMap<String, String>>,
+        disabled: Mutex<Vec<String>>,
     }
 
     impl FakeConsentState {
         pub fn with_consent(scoped_key: &str, fingerprint: &str) -> Self {
-            let mut state = Self::default();
+            let state = Self::default();
             state.set_consent(scoped_key, fingerprint);
             state
         }
     }
 
     impl ConsentState for FakeConsentState {
-        fn consent_for(&self, scoped_key: &str) -> Option<&str> {
-            self.consents.get(scoped_key).map(String::as_str)
+        fn consent_for(&self, scoped_key: &str) -> Option<String> {
+            self.consents
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .get(scoped_key)
+                .cloned()
         }
 
         fn is_disabled(&self, scoped_key: &str) -> bool {
-            self.disabled.iter().any(|key| key == scoped_key)
+            self.disabled
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .iter()
+                .any(|key| key == scoped_key)
         }
 
-        fn set_consent(&mut self, scoped_key: &str, fingerprint: &str) {
+        fn set_consent(&self, scoped_key: &str, fingerprint: &str) {
             self.consents
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
                 .insert(scoped_key.to_string(), fingerprint.to_string());
         }
 
-        fn set_disabled(&mut self, scoped_key: &str, disabled: bool) {
-            self.disabled.retain(|key| key != scoped_key);
+        fn set_disabled(&self, scoped_key: &str, disabled: bool) {
+            let mut keys = self
+                .disabled
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            keys.retain(|key| key != scoped_key);
             if disabled {
-                self.disabled.push(scoped_key.to_string());
+                keys.push(scoped_key.to_string());
             }
         }
     }
@@ -372,8 +392,7 @@ mod tests {
         let worker_fingerprint = fingerprint(&with_worker, "unresolved");
         assert_ne!(worker_fingerprint, panel_fingerprint);
 
-        let mut state =
-            FakeConsentState::with_consent("global:orca-samples.demo", &panel_fingerprint);
+        let state = FakeConsentState::with_consent("global:orca-samples.demo", &panel_fingerprint);
         assert_eq!(
             activation_state(&state, "global:orca-samples.demo", &worker_fingerprint),
             ActivationState::Pending
@@ -471,7 +490,7 @@ mod tests {
 
     #[test]
     fn activation_state_three_states_and_needs_reconsent() {
-        let mut state = FakeConsentState::with_consent("global:orca-samples.demo", &"a".repeat(64));
+        let state = FakeConsentState::with_consent("global:orca-samples.demo", &"a".repeat(64));
         assert_eq!(
             state.activation(
                 "orca-samples.demo",
@@ -529,7 +548,7 @@ mod tests {
     #[test]
     fn scopes_are_consented_independently() {
         let fingerprint = "sha256-one";
-        let mut state = FakeConsentState::with_consent("global:orca-samples.demo", fingerprint);
+        let state = FakeConsentState::with_consent("global:orca-samples.demo", fingerprint);
         assert_eq!(
             state.activation("orca-samples.demo", ConsentKeyScope::Global, fingerprint),
             Some(ActivationState::Approved)
