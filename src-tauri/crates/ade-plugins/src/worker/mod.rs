@@ -4,6 +4,7 @@
 
 pub mod protocol;
 pub mod spawn;
+pub mod supervisor;
 
 pub use protocol::{
     read_frame, write_frame, ChildFrame, LogLevel, ParentFrame, MAX_FRAME_BYTES, TEXT_MAX_BYTES,
