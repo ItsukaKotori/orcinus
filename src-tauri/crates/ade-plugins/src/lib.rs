@@ -12,6 +12,7 @@ pub mod consent;
 pub mod content_hash;
 pub mod discovery;
 pub mod enablement;
+pub mod host;
 pub mod install;
 pub mod integrity;
 pub mod manifest;
