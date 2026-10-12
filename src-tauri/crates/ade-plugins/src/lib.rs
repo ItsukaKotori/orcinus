@@ -19,6 +19,7 @@ pub mod install;
 pub mod integrity;
 pub mod manifest;
 pub mod marketplace;
+pub mod panel_shell;
 pub mod paths;
 pub mod plugin_settings;
 pub mod secrets;
@@ -62,6 +63,10 @@ pub use marketplace::store::{
     marketplace_source_id, MarketplaceEntry, MarketplaceIndex, MarketplaceSnapshot,
     MarketplaceSource, MarketplaceStore, RegisteredSource, MARKETPLACE_FILENAME,
 };
+pub use panel_shell::{
+    build_panel_shell_html, PANEL_DESIGN_TOKEN_ALLOWLIST, PANEL_SHELL_COLOR_SCHEME_PLACEHOLDER,
+    PANEL_SHELL_TOKENS_PLACEHOLDER, PLUGIN_PANEL_CSP,
+};
 pub use paths::{global_roots, project_roots, validate_containment, ScopeRoots};
 pub use plugin_settings::PluginSettingsStore;
 pub use secrets::{
@@ -69,10 +74,12 @@ pub use secrets::{
 };
 pub use service::{
     ConsentDecision, ConsentRequest, InstallSource, LockEntryStatus, LockState, LockStateEntry,
-    MutationLocks, OpenTabRequest, PluginCapabilityProjection, PluginCommandHandler,
+    MutationLocks, OpenTabRequest, PanelEntry, PluginCapabilityProjection, PluginCommandHandler,
     PluginCommandProjection, PluginKeybindingProjection, PluginListEntry, PluginPanelProjection,
     PluginRef, PluginService, PluginSourceProjection, PluginStatus, PluginTabProjection,
-    ScopeTarget, ServiceConfig, ServiceEventSink, WorkerRuntimeConfig, PLUGIN_LOG_TAIL_LIMIT,
+    ScopeTarget, ServiceConfig, ServiceEventSink, WorkerRuntimeConfig, OPEN_TAB_MAX_INSTANCES,
+    OPEN_TAB_RATE_MAX, OPEN_TAB_RATE_WINDOW, PANEL_ACTION_MAX_PER_WINDOW,
+    PANEL_ACTION_PARAMS_MAX_BYTES, PANEL_ACTION_WINDOW, PLUGIN_LOG_TAIL_LIMIT,
     WORKER_LOG_RING_LIMIT,
 };
 pub use sessions::{

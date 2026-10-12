@@ -129,6 +129,10 @@ pub const INTEGRITY_MISMATCH: &str = "integrity_mismatch";
 pub const INVALID_PARAMS: &str = "invalid_params";
 pub const ACTION_FAILED: &str = "action_failed";
 pub const UNAVAILABLE: &str = "unavailable";
+/// A panel/tab entry the session or request names is no longer declared.
+pub const PANEL_NOT_FOUND: &str = "panel_not_found";
+/// The per-worktree live plugin-tab cap was reached.
+pub const TAB_LIMIT: &str = "tab_limit";
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 #[error("{message}")]

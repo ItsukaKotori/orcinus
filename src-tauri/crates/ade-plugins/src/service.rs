@@ -2,9 +2,12 @@
 //! install/remove/consent/enablement, lockfile state and batch restore, audit
 //! tailing, the event-sink seam (spec §3.3/§3.9), and worker activation
 //! orchestration (T11b2: `WorkerManager` wiring, host-call routing, command
-//! invocation, plugin-event delivery, dev-watcher hot reload, idle reaping).
-//!
-//! Panels/tabs and their sessions consume the same session registry in T11b3.
+//! invocation, plugin-event delivery, dev-watcher hot reload, idle reaping),
+//! plus the T11b3 surface: panel entries + panel action flow (spec §3.6),
+//! the global plugin view, and `workspace.openTab` dedupe/limits over the
+//! same session registry. Scope-qualified instance keys (`global:<key>` /
+//! `project:<repoId>:<key>`) are the unit of worker, session, and tab-tracker
+//! identity, so a same-key dual-scope pair never disturbs its twin.
 //!
 //! Everything here is synchronous; the only processes this module spawns are
 //! Git children for `git` install sources and Node workers on explicit
@@ -27,11 +30,13 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, Weak};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use uuid::Uuid;
 
+use crate::artifact::{resolve_declared_artifact, PLUGIN_PANEL_ENTRY_MAX_BYTES};
 use crate::audit::{AuditLog, AuditOutcome, AuditRecord, LogLine};
 use crate::consent::{fingerprint, scoped_key, ActivationState, ConsentKeyScope, ConsentState};
 use crate::content_hash::hash_plugin_tree;
@@ -41,22 +46,27 @@ use crate::events::{is_plugin_event_name, project_payload};
 use crate::git::{GitRunner, DEFAULT_PLUGIN_GIT_TIMEOUT};
 use crate::host::gate;
 use crate::host::methods::{self, HostCallContext, Outcome, PluginAuditSink};
-use crate::host::services::PluginHostServices;
+use crate::host::services::{OpenTabResult, PluginHostServices};
 use crate::install::lockfile::{read_lockfile, LockEntry, LockSource};
 use crate::install::publication::publish_install;
 use crate::install::staging::read_install_manifest;
 use crate::install::{ensure_project_gitignore, install_from_local, uninstall};
 use crate::install::{InstallContext, InstallResult};
+use crate::integrity::verify_installed;
 use crate::manifest::engine_satisfies;
 use crate::marketplace::installer::MarketplaceInstaller;
 use crate::marketplace::service::{is_official_plugin_identity, MarketplaceService};
 use crate::marketplace::TempWorkspace;
+use crate::panel_shell::build_panel_shell_html;
 use crate::paths::{global_roots, project_roots, ScopeRoots};
 use crate::plugin_settings::PluginSettingsStore;
 use crate::secrets::SecretStore;
-use crate::sessions::SessionRegistry;
+use crate::sessions::{SessionBinding, SessionKind, SessionOwner, SessionRegistry};
 use crate::storage::StorageStore;
-use crate::types::{Capability, PluginError, PluginScope, INVALID_PARAMS, UNAVAILABLE};
+use crate::types::{
+    Capability, PluginError, PluginScope, INVALID_PARAMS, IO_ERROR, PANEL_NOT_FOUND, TAB_LIMIT,
+    UNAVAILABLE,
+};
 use crate::watcher::{DevWatcher, DEV_WATCH_BATCH_TRAILING_MS};
 use crate::worker::manager::{
     FrameEventSink, HostCallHandler, WorkerManager, WorkerManagerConfig, UNKNOWN_COMMAND,
@@ -70,6 +80,87 @@ pub const PLUGIN_LOG_TAIL_LIMIT: usize = 200;
 
 /// Bound of the in-memory worker log ring (spec §3.2 log frames).
 pub const WORKER_LOG_RING_LIMIT: usize = 1000;
+
+/// Main-side panel-action admission window (per session token).
+pub const PANEL_ACTION_WINDOW: Duration = Duration::from_secs(10);
+/// Maximum panel actions per token inside [`PANEL_ACTION_WINDOW`].
+pub const PANEL_ACTION_MAX_PER_WINDOW: usize = 30;
+/// Maximum serialized panel-action params (spec §3.5: ≤64KiB).
+pub const PANEL_ACTION_PARAMS_MAX_BYTES: usize = 64 * 1024;
+/// Maximum live plugin-tab instances per plugin instance per worktree.
+pub const OPEN_TAB_MAX_INSTANCES: usize = 8;
+/// Maximum new plugin tabs per plugin instance per worktree per window.
+pub const OPEN_TAB_RATE_MAX: usize = 4;
+/// Window for [`OPEN_TAB_RATE_MAX`] (spec §3.5: ≤4 per 10s).
+pub const OPEN_TAB_RATE_WINDOW: Duration = Duration::from_secs(10);
+
+/// Wire shape of `readPanelEntry` / the global plugin view: the shell HTML
+/// plus the renderer session token that authorizes subsequent
+/// `panel_action` calls.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PanelEntry {
+    pub html: String,
+    pub session_token: String,
+}
+
+/// One live main-area plugin tab instance, keyed for `(tabId, params)` dedupe.
+#[derive(Debug, Clone)]
+struct TrackedTab {
+    tab_id: String,
+    params: Value,
+    instance_id: String,
+}
+
+/// Per `(plugin instance, worktree)` tab bookkeeping: live instances and the
+/// rolling window of new-tab opens used for rate limiting.
+#[derive(Debug, Default)]
+struct TabTracker {
+    tabs: Vec<TrackedTab>,
+    opens: VecDeque<Instant>,
+}
+
+/// Per-token panel-action admission (size + rate), held main-side on top of
+/// the renderer budgets. A token's bucket is pruned lazily so the map cannot
+/// grow past the token's window of use.
+#[derive(Debug, Default)]
+struct PanelAdmission {
+    hits: Mutex<HashMap<String, VecDeque<Instant>>>,
+}
+
+impl PanelAdmission {
+    fn admit(&self, token: &str, params_bytes: usize) -> Result<(), PluginError> {
+        if params_bytes > PANEL_ACTION_PARAMS_MAX_BYTES {
+            return Err(PluginError::new(
+                INVALID_PARAMS,
+                format!("params must not exceed {PANEL_ACTION_PARAMS_MAX_BYTES} bytes"),
+            ));
+        }
+        let now = Instant::now();
+        let mut hits = self
+            .hits
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        hits.retain(|_, times| {
+            while times
+                .front()
+                .is_some_and(|time| now.duration_since(*time) >= PANEL_ACTION_WINDOW)
+            {
+                times.pop_front();
+            }
+            !times.is_empty()
+        });
+        let times = hits.entry(token.to_string()).or_default();
+        if times.len() >= PANEL_ACTION_MAX_PER_WINDOW {
+            return Err(PluginError::new(
+                gate::RATE_LIMITED,
+                format!("panel action rate limit exceeded ({PANEL_ACTION_MAX_PER_WINDOW} per 10s)"),
+            ));
+        }
+        times.push_back(now);
+        Ok(())
+    }
+}
 
 /// Locates one plugin instance across the dual-scope model.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -405,6 +496,9 @@ struct WorkerRecord {
 struct WorkerBridge {
     records: Mutex<HashMap<String, WorkerRecord>>,
     logs: Mutex<VecDeque<LogLine>>,
+    /// Per-instance dynamic `events.subscribe` sets, recorded when a worker's
+    /// host call succeeds. Delivered only while that worker is running.
+    dynamic_subs: Mutex<HashMap<String, Vec<String>>>,
     services: Arc<dyn PluginHostServices>,
     sink: Arc<dyn ServiceEventSink>,
 }
@@ -414,9 +508,31 @@ impl WorkerBridge {
         Self {
             records: Mutex::new(HashMap::new()),
             logs: Mutex::new(VecDeque::new()),
+            dynamic_subs: Mutex::new(HashMap::new()),
             services,
             sink,
         }
+    }
+
+    fn lock_dynamic_subs(&self) -> std::sync::MutexGuard<'_, HashMap<String, Vec<String>>> {
+        self.dynamic_subs
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    fn record_dynamic_subs(&self, instance_key: &str, events: Vec<String>) {
+        self.lock_dynamic_subs()
+            .insert(instance_key.to_string(), events);
+    }
+
+    fn dynamic_subscribed(&self, instance_key: &str, event: &str) -> bool {
+        self.lock_dynamic_subs()
+            .get(instance_key)
+            .is_some_and(|events| events.iter().any(|entry| entry == event))
+    }
+
+    fn clear_dynamic_subs(&self, instance_key: &str) {
+        self.lock_dynamic_subs().remove(instance_key);
     }
 
     fn lock_records(&self) -> std::sync::MutexGuard<'_, HashMap<String, WorkerRecord>> {
@@ -486,7 +602,23 @@ impl HostCallHandler for WorkerBridge {
             services: &*self.services,
             audit: Some(&audit),
         };
-        match methods::execute(method, params, &ctx) {
+        let outcome = methods::execute(method, params, &ctx);
+        if method == "events.subscribe" {
+            if let Outcome::Ok(value) = &outcome {
+                let events: Vec<String> = value
+                    .get("subscribed")
+                    .and_then(Value::as_array)
+                    .map(|events| {
+                        events
+                            .iter()
+                            .filter_map(|event| event.as_str().map(str::to_string))
+                            .collect()
+                    })
+                    .unwrap_or_default();
+                self.record_dynamic_subs(instance_key, events);
+            }
+        }
+        match outcome {
             Outcome::Ok(value) => Ok(value),
             Outcome::Err { code, error } => Err((code, error)),
         }
@@ -542,6 +674,10 @@ pub struct PluginService {
     bridge: Arc<WorkerBridge>,
     manager: Mutex<WorkerManager>,
     sessions: SessionRegistry,
+    /// `(instance_key, worktree_id) -> tabs` dedupe/limits tracked main-side
+    /// for `workspace.openTab`; pruned on worktree removal and deactivation.
+    tab_trackers: Mutex<HashMap<(String, String), TabTracker>>,
+    panel_admission: PanelAdmission,
     watcher: Mutex<Option<DevWatcher>>,
     next_call_id: AtomicU64,
 }
@@ -592,6 +728,8 @@ impl PluginService {
             bridge,
             manager: Mutex::new(manager),
             sessions: SessionRegistry::new(),
+            tab_trackers: Mutex::new(HashMap::new()),
+            panel_admission: PanelAdmission::default(),
             watcher: Mutex::new(None),
             next_call_id: AtomicU64::new(1),
         })
@@ -602,7 +740,7 @@ impl PluginService {
     /// invalidated, and approved+enabled project plugins of the current set
     /// are (re)activated (spec §3.3 lifecycle).
     pub fn set_projects(&self, projects: Vec<(String, PathBuf)>) {
-        let removed: Vec<String> = {
+        let (removed, previous): (Vec<String>, Vec<(String, PathBuf)>) = {
             let mut current = self
                 .projects
                 .lock()
@@ -613,11 +751,26 @@ impl PluginService {
                 .filter(|(id, _)| !next.contains(id))
                 .map(|(id, _)| id.clone())
                 .collect();
+            let previous = current.clone();
             *current = projects;
-            removed
+            (removed, previous)
         };
         for repo_id in removed {
-            let instances: Vec<(String, String)> = self
+            // Sessions (panel/tab/global-view) can exist without a live
+            // worker, so invalidate by every key the removed repo ever
+            // installed — from the pre-removal discovery and from live worker
+            // records — scoped to exactly this repo so a same-key global twin
+            // keeps its sessions.
+            let mut plugin_keys: Vec<String> =
+                discover(&self.global, &previous, &self.config.dev_paths)
+                    .into_iter()
+                    .filter(|entry| {
+                        entry.scope == PluginScope::Project
+                            && entry.repo_id.as_deref() == Some(repo_id.as_str())
+                    })
+                    .filter_map(|entry| entry.key)
+                    .collect();
+            let instances: Vec<String> = self
                 .bridge
                 .lock_records()
                 .iter()
@@ -625,20 +778,40 @@ impl PluginService {
                     record.scope == PluginScope::Project
                         && record.repo_id.as_deref() == Some(repo_id.as_str())
                 })
-                .map(|(instance_key, record)| (instance_key.clone(), record.plugin_key.clone()))
+                .map(|(instance_key, record)| {
+                    if !plugin_keys.contains(&record.plugin_key) {
+                        plugin_keys.push(record.plugin_key.clone());
+                    }
+                    instance_key.clone()
+                })
                 .collect();
-            if instances.is_empty() {
+            if instances.is_empty() && plugin_keys.is_empty() {
                 continue;
             }
             {
                 let mut manager = self.manager();
-                for (instance_key, _) in &instances {
+                for instance_key in &instances {
                     manager.stop(instance_key);
                 }
             }
-            for (instance_key, plugin_key) in &instances {
+            for instance_key in &instances {
                 self.bridge.lock_records().remove(instance_key);
-                self.sessions.invalidate_plugin(plugin_key);
+                self.bridge.clear_dynamic_subs(instance_key);
+                self.prune_tab_instance(instance_key);
+            }
+            for plugin_key in &plugin_keys {
+                self.sessions.invalidate_plugin_scope(
+                    plugin_key,
+                    PluginScope::Project,
+                    Some(repo_id.as_str()),
+                );
+                if let Ok(instance_key) = instance_key_of(&PluginRef {
+                    plugin_key: plugin_key.clone(),
+                    scope: PluginScope::Project,
+                    repo_id: Some(repo_id.clone()),
+                }) {
+                    self.prune_tab_instance(&instance_key);
+                }
             }
             self.config.event_sink.plugins_changed(false, true);
         }
@@ -695,6 +868,11 @@ impl PluginService {
         }
         self.manager().stop_all();
         self.bridge.lock_records().clear();
+        self.bridge.lock_dynamic_subs().clear();
+        self.tab_trackers
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clear();
         self.sessions.sweep(0);
     }
 
@@ -709,13 +887,19 @@ impl PluginService {
         };
         if !reaped.is_empty() {
             for instance_key in &reaped {
-                let plugin_key = self
-                    .bridge
-                    .lock_records()
-                    .get(instance_key)
-                    .map(|record| record.plugin_key.clone())
-                    .unwrap_or_else(|| instance_key.clone());
-                self.sessions.invalidate_plugin(&plugin_key);
+                let binding = self.bridge.lock_records().get(instance_key).map(|record| {
+                    (
+                        record.plugin_key.clone(),
+                        record.scope,
+                        record.repo_id.clone(),
+                    )
+                });
+                self.bridge.clear_dynamic_subs(instance_key);
+                self.prune_tab_instance(instance_key);
+                if let Some((plugin_key, scope, repo_id)) = binding {
+                    self.sessions
+                        .invalidate_plugin_scope(&plugin_key, scope, repo_id.as_deref());
+                }
             }
             self.config.event_sink.plugins_changed(false, true);
         }
@@ -828,11 +1012,10 @@ impl PluginService {
             let ready = if static_subscription {
                 self.ensure_active(&plugin_ref).is_ok()
             } else {
-                self.config
-                    .host_services
-                    .subscribed_events(&entry.plugin_key)
-                    .iter()
-                    .any(|event| event == name)
+                // Dynamic subscriptions are recorded per instance when the
+                // worker's `events.subscribe` host call succeeds; a stopped
+                // worker keeps no live subscription.
+                self.bridge.dynamic_subscribed(&instance_key, name)
                     && matches!(
                         self.manager().state(&instance_key),
                         WorkerState::Running { .. }
@@ -861,8 +1044,10 @@ impl PluginService {
         )
     }
 
-    /// Convenience entry point for `worktree.removed`.
+    /// Convenience entry point for `worktree.removed`: drops the tab
+    /// dedupe/limit bookkeeping of that worktree before delivering.
     pub fn on_worktree_removed(&self, payload: crate::events::WorktreeRemovedPayload) -> usize {
+        self.prune_tab_worktree(&payload.worktree_id);
         self.deliver_plugin_event(
             "worktree.removed",
             serde_json::to_value(payload).unwrap_or(Value::Null),
@@ -915,6 +1100,9 @@ impl PluginService {
                     uninstall(&plugin_key, &roots)
                 })
         })?;
+        // Full uninstall: unlike scope-limited deactivation, no session of
+        // this key can survive in any scope.
+        self.sessions.invalidate_plugin(&plugin_key);
         self.audit(
             &roots.data_dir,
             &plugin_key,
@@ -987,6 +1175,334 @@ impl PluginService {
     /// Re-discovers and re-projects (settings edits land in T11b2/T12).
     pub fn refresh(&self) -> Vec<PluginListEntry> {
         self.list()
+    }
+
+    /// Reads a declared panel entry, wraps it in the host CSP shell, and
+    /// issues a renderer session token bound to that panel + manifest
+    /// revision + owner window (spec §3.6). Requires approved consent and,
+    /// for installed trees, a passing content-integrity check.
+    pub fn panel_entry(
+        &self,
+        plugin_ref: &PluginRef,
+        panel_id: &str,
+        owner_window: &str,
+    ) -> Result<PanelEntry, PluginError> {
+        self.panel_entry_for(plugin_ref, panel_id, SessionKind::Panel, owner_window)
+    }
+
+    /// The global plugin view (left rail): the first declared panel of the
+    /// global instance of `plugin_key` wrapped in the same shell/session
+    /// contract as `panel_entry`.
+    pub fn global_view_entry(
+        &self,
+        plugin_key: &str,
+        owner_window: &str,
+    ) -> Result<PanelEntry, PluginError> {
+        let plugin_ref = PluginRef {
+            plugin_key: plugin_key.to_string(),
+            scope: PluginScope::Global,
+            repo_id: None,
+        };
+        let discovered = self.discover_all();
+        let entry = find_discovered(&discovered, &plugin_ref).ok_or_else(|| {
+            PluginError::new(
+                UNAVAILABLE,
+                format!("plugin {plugin_key} is not installed or is invalid"),
+            )
+        })?;
+        let manifest = entry
+            .manifest
+            .as_ref()
+            .expect("valid entries carry a manifest");
+        let first = manifest
+            .contributes
+            .panels
+            .first()
+            .ok_or_else(|| {
+                PluginError::new(
+                    PANEL_NOT_FOUND,
+                    format!("plugin {plugin_key} does not declare any panel"),
+                )
+            })?
+            .id
+            .clone();
+        self.panel_entry_for(&plugin_ref, &first, SessionKind::GlobalView, owner_window)
+    }
+
+    fn panel_entry_for(
+        &self,
+        plugin_ref: &PluginRef,
+        panel_id: &str,
+        kind: SessionKind,
+        owner_window: &str,
+    ) -> Result<PanelEntry, PluginError> {
+        let discovered = self.discover_all();
+        let entry = find_discovered(&discovered, plugin_ref).ok_or_else(|| {
+            PluginError::new(
+                UNAVAILABLE,
+                format!(
+                    "plugin {} is not installed or is invalid",
+                    plugin_ref.plugin_key
+                ),
+            )
+        })?;
+        let manifest = entry
+            .manifest
+            .as_ref()
+            .expect("valid entries carry a manifest");
+        if !engine_satisfies(&manifest.engines.orca, &self.config.host_version) {
+            return Err(PluginError::new(
+                crate::types::ENGINE_INCOMPATIBLE,
+                format!(
+                    "plugin {} requires Orca {} (this is {})",
+                    plugin_ref.plugin_key, manifest.engines.orca, self.config.host_version
+                ),
+            ));
+        }
+        let content_key = entry
+            .install_hash
+            .clone()
+            .or_else(|| hash_plugin_tree(&entry.root).ok())
+            .unwrap_or_else(|| "unresolved".to_string());
+        let activation = self.config.consent_state.activation(
+            &plugin_ref.plugin_key,
+            consent_scope_of(plugin_ref.scope, plugin_ref.repo_id.as_deref()),
+            &fingerprint(manifest, &content_key),
+        );
+        if activation != Some(ActivationState::Approved) {
+            return Err(PluginError::new(
+                gate::CONSENT_REQUIRED,
+                format!(
+                    "plugin {} is not approved for activation",
+                    plugin_ref.plugin_key
+                ),
+            ));
+        }
+        let panel = manifest
+            .contributes
+            .panels
+            .iter()
+            .find(|panel| panel.id == panel_id)
+            .ok_or_else(|| {
+                PluginError::new(
+                    PANEL_NOT_FOUND,
+                    format!(
+                        "plugin {} does not declare panel {panel_id}",
+                        plugin_ref.plugin_key
+                    ),
+                )
+            })?;
+        // Installed trees are immutable and hash-addressed; dev trees are
+        // deliberately mutable and skipped (integrity module docs).
+        if !entry.is_dev() {
+            verify_installed(&self.roots_for_ref(plugin_ref)?.install_dir, manifest)?;
+        }
+        let path =
+            resolve_declared_artifact(&entry.root, &panel.entry, PLUGIN_PANEL_ENTRY_MAX_BYTES)?;
+        let bytes = std::fs::read(&path).map_err(|error| {
+            PluginError::new(IO_ERROR, format!("panel entry could not be read: {error}"))
+        })?;
+        let html = String::from_utf8_lossy(&bytes);
+        let token = self.sessions.issue(SessionBinding {
+            plugin_key: plugin_ref.plugin_key.clone(),
+            kind,
+            panel_id: Some(panel_id.to_string()),
+            tab_id: None,
+            instance_id: None,
+            scope: plugin_ref.scope,
+            repo_id: plugin_ref.repo_id.clone(),
+            worktree_id: None,
+            manifest_revision: manifest_revision(manifest),
+            owner: SessionOwner::Renderer {
+                window_label: owner_window.to_string(),
+            },
+        });
+        Ok(PanelEntry {
+            html: build_panel_shell_html(&html),
+            session_token: token,
+        })
+    }
+
+    /// Runs one panel-bridge action (spec §3.6): resolves the session token,
+    /// re-checks approval + manifest revision + declared panel, admits the
+    /// call per token (size/rate), gates it through `host::gate` with
+    /// `via_panel = true` (only the four panel-callable methods pass), and
+    /// executes through `host::methods::execute` with the bound context.
+    pub fn panel_action(&self, token: &str, action: &str, params: Value) -> Outcome {
+        let Some(binding) = self.sessions.resolve(token) else {
+            return Outcome::err(UNAVAILABLE, "panel session is not available");
+        };
+        let plugin_ref = PluginRef {
+            plugin_key: binding.plugin_key.clone(),
+            scope: binding.scope,
+            repo_id: binding.repo_id.clone(),
+        };
+        let discovered = self.discover_all();
+        let Some(entry) = find_discovered(&discovered, &plugin_ref) else {
+            return Outcome::err(
+                UNAVAILABLE,
+                format!(
+                    "plugin {} is not installed or is invalid",
+                    binding.plugin_key
+                ),
+            );
+        };
+        let manifest = entry
+            .manifest
+            .as_ref()
+            .expect("valid entries carry a manifest");
+        if binding.manifest_revision != manifest_revision(manifest) {
+            return Outcome::err(
+                UNAVAILABLE,
+                "panel session predates the current plugin revision",
+            );
+        }
+        if let Some(panel_id) = binding.panel_id.as_deref() {
+            if !manifest
+                .contributes
+                .panels
+                .iter()
+                .any(|panel| panel.id == panel_id)
+            {
+                return Outcome::err(
+                    PANEL_NOT_FOUND,
+                    format!("panel {panel_id} is no longer declared"),
+                );
+            }
+        }
+        if let Some(tab_id) = binding.tab_id.as_deref() {
+            if !manifest.contributes.tabs.iter().any(|tab| tab.id == tab_id) {
+                return Outcome::err(UNAVAILABLE, format!("tab {tab_id} is no longer declared"));
+            }
+        }
+        let content_key = entry
+            .install_hash
+            .clone()
+            .or_else(|| hash_plugin_tree(&entry.root).ok())
+            .unwrap_or_else(|| "unresolved".to_string());
+        let approved = engine_satisfies(&manifest.engines.orca, &self.config.host_version)
+            && self.config.consent_state.activation(
+                &binding.plugin_key,
+                consent_scope_of(binding.scope, binding.repo_id.as_deref()),
+                &fingerprint(manifest, &content_key),
+            ) == Some(ActivationState::Approved);
+        // An unapproved plugin presents no grant set, but the gate still runs
+        // first on `via_panel` so non-panel methods report `panel_forbidden`
+        // exactly like the oracle decision order.
+        let granted: Option<&[Capability]> = approved.then_some(manifest.capabilities.as_slice());
+        if let gate::GateDecision::Denied { code, error } = gate::decide(granted, true, action) {
+            return Outcome::err(code, error);
+        }
+        let params_bytes = serde_json::to_vec(&params)
+            .map(|encoded| encoded.len())
+            .unwrap_or(usize::MAX);
+        if let Err(error) = self.panel_admission.admit(token, params_bytes) {
+            return Outcome::err(error.code(), error.message().to_string());
+        }
+        let Ok(roots) = self.roots_for_ref(&plugin_ref) else {
+            return Outcome::err(UNAVAILABLE, "plugin scope is no longer registered");
+        };
+        let audit = ScopeAudit {
+            log: AuditLog::new(&roots.data_dir),
+        };
+        let ctx = HostCallContext {
+            plugin_key: &binding.plugin_key,
+            granted,
+            via_panel: true,
+            scope: binding.scope,
+            repo_id: binding.repo_id.as_deref(),
+            worktree_hint: binding.worktree_id.as_deref(),
+            services: &*self.config.host_services,
+            audit: Some(&audit),
+        };
+        methods::execute(action, params, &ctx)
+    }
+
+    /// `workspace.openTab` core: validates `tab_id` against the plugin's
+    /// declared tabs, dedupes by `(instance, worktree, tabId, params)`, and
+    /// bounds each plugin instance per worktree (≤8 live instances, ≤4 new
+    /// opens / 10s). Emits [`ServiceEventSink::open_tab_requested`] for new
+    /// instances only; the renderer creates/focuses accordingly.
+    pub fn open_tab(
+        &self,
+        plugin_ref: &PluginRef,
+        tab_id: &str,
+        title: Option<&str>,
+        params: Option<Value>,
+        worktree_id: &str,
+    ) -> Result<OpenTabResult, PluginError> {
+        let declared = self.config.host_services.declared_tabs(
+            &plugin_ref.plugin_key,
+            plugin_ref.scope,
+            plugin_ref.repo_id.as_deref(),
+        );
+        if !declared.iter().any(|declared| declared == tab_id) {
+            return Err(PluginError::new(
+                INVALID_PARAMS,
+                format!("tab is not declared by the plugin: {tab_id}"),
+            ));
+        }
+        let instance_key = instance_key_of(plugin_ref)?;
+        let params_value = params.unwrap_or(Value::Null);
+        let now = Instant::now();
+        let mut trackers = self
+            .tab_trackers
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let tracker = trackers
+            .entry((instance_key.clone(), worktree_id.to_string()))
+            .or_default();
+        if let Some(existing) = tracker
+            .tabs
+            .iter()
+            .find(|tracked| tracked.tab_id == tab_id && tracked.params == params_value)
+        {
+            return Ok(OpenTabResult {
+                instance_id: existing.instance_id.clone(),
+                worktree_id: worktree_id.to_string(),
+            });
+        }
+        while tracker
+            .opens
+            .front()
+            .is_some_and(|opened| now.duration_since(*opened) >= OPEN_TAB_RATE_WINDOW)
+        {
+            tracker.opens.pop_front();
+        }
+        if tracker.opens.len() >= OPEN_TAB_RATE_MAX {
+            return Err(PluginError::new(
+                gate::RATE_LIMITED,
+                format!("plugin tab open rate limit exceeded ({OPEN_TAB_RATE_MAX} per 10s)"),
+            ));
+        }
+        if tracker.tabs.len() >= OPEN_TAB_MAX_INSTANCES {
+            return Err(PluginError::new(
+                TAB_LIMIT,
+                format!("plugin already has {OPEN_TAB_MAX_INSTANCES} tabs open in this worktree"),
+            ));
+        }
+        let instance_id = Uuid::new_v4().to_string();
+        tracker.tabs.push(TrackedTab {
+            tab_id: tab_id.to_string(),
+            params: params_value.clone(),
+            instance_id: instance_id.clone(),
+        });
+        tracker.opens.push_back(now);
+        drop(trackers);
+        self.config.event_sink.open_tab_requested(OpenTabRequest {
+            plugin_key: plugin_ref.plugin_key.clone(),
+            tab_id: tab_id.to_string(),
+            instance_id: instance_id.clone(),
+            title: title.map(str::to_string),
+            params: params_value,
+            worktree_id: worktree_id.to_string(),
+            scope: plugin_ref.scope,
+            repo_id: plugin_ref.repo_id.clone(),
+        });
+        Ok(OpenTabResult {
+            instance_id,
+            worktree_id: worktree_id.to_string(),
+        })
     }
 
     /// Merged log tail for one plugin: buffered worker log frames plus the
@@ -1814,9 +2330,10 @@ impl PluginService {
         Ok((spec, record))
     }
 
-    /// Stops the worker and invalidates sessions of `plugin_ref` when it owns
-    /// the recorded activation. Only the instance key of this exact scope and
-    /// repo is touched, so a same-key twin in another scope is never disturbed.
+    /// Stops the worker, drops dynamic subscriptions and tab bookkeeping, and
+    /// invalidates sessions of `plugin_ref` for exactly its own scope+repo
+    /// (sessions can outlive a worker), so a same-key twin in another scope
+    /// is never disturbed.
     fn deactivate_ref(&self, plugin_ref: &PluginRef) {
         let Ok(instance_key) = instance_key_of(plugin_ref) else {
             return;
@@ -1827,10 +2344,32 @@ impl PluginService {
                 && record.scope == plugin_ref.scope
                 && record.repo_id == plugin_ref.repo_id
         });
+        self.bridge.clear_dynamic_subs(&instance_key);
+        self.prune_tab_instance(&instance_key);
         if owned {
             self.manager().stop(&instance_key);
-            self.sessions.invalidate_plugin(&plugin_ref.plugin_key);
         }
+        self.sessions.invalidate_plugin_scope(
+            &plugin_ref.plugin_key,
+            plugin_ref.scope,
+            plugin_ref.repo_id.as_deref(),
+        );
+    }
+
+    /// Drops the tab dedupe/limit bookkeeping of one worker instance.
+    fn prune_tab_instance(&self, instance_key: &str) {
+        self.tab_trackers
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .retain(|(key, _), _| key != instance_key);
+    }
+
+    /// Drops the tab dedupe/limit bookkeeping of one worktree.
+    fn prune_tab_worktree(&self, worktree_id: &str) {
+        self.tab_trackers
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .retain(|(_, tracked_worktree), _| tracked_worktree != worktree_id);
     }
 
     /// Dev-watcher callback: re-discovers and hot-restarts running dev
@@ -2973,6 +3512,16 @@ rl.on('line', (line) => {
       })();
       return;
     }
+    if (frame.commandId === 'subscribe') {
+      void (async () => {
+        const value = await new Promise((resolve) => {
+          pending.set(9300, resolve);
+          write({ type: 'hostCall', callId: 9300, method: 'events.subscribe', params: { events: ['worktree.created'] } });
+        });
+        write({ type: 'commandResult', callId: frame.callId, ok: true, value: { subscribed: value } });
+      })();
+      return;
+    }
     write({ type: 'log', level: 'info', message: `${frame.commandId} handled` });
     write({ type: 'commandResult', callId: frame.callId, ok: true, value: { command: frame.commandId, args: frame.args ?? null } });
     return;
@@ -3731,5 +4280,533 @@ rl.on('line', (line) => {
             "each hostCall must carry its own instance scope/repo context"
         );
         service.shutdown();
+    }
+
+    // ------------------------------------------------------------------
+    // T11b3 panels, global view, panel actions, open-tab limits
+    // ------------------------------------------------------------------
+
+    fn panel_plugin(root: &Path, id: &str, extra: Value) -> PathBuf {
+        let mut contributes = json!({
+            "panels": [{ "id": "dashboard", "title": "Dashboard", "entry": "panel.html" }]
+        });
+        if let Value::Object(extra) = extra {
+            for (key, value) in extra {
+                contributes[key] = value;
+            }
+        }
+        write_plugin(
+            root,
+            id,
+            "1.0.0",
+            ">=1.0.0",
+            json!({ "contributes": contributes }),
+        )
+    }
+
+    #[test]
+    fn panel_entry_requires_approval_and_issues_scoped_sessions() {
+        let temp = tempdir().unwrap();
+        let root = write_plugin(
+            &temp.path().join("dev-panels"),
+            "paneled",
+            "1.0.0",
+            ">=1.0.0",
+            json!({
+                "contributes": {
+                    "panels": [
+                        { "id": "dashboard", "title": "Dashboard", "entry": "panel.html" },
+                        { "id": "settings", "title": "Settings", "entry": "panel.html" }
+                    ]
+                }
+            }),
+        );
+        let harness = harness_with_dev(temp.path(), "1.0.0", vec![root]);
+        let plugin_ref = global_ref("orca-samples.paneled");
+
+        let error = harness
+            .service
+            .panel_entry(&plugin_ref, "dashboard", "main")
+            .unwrap_err();
+        assert_eq!(error.code(), gate::CONSENT_REQUIRED);
+        assert!(harness.service.sessions.is_empty());
+
+        approve(&harness, &plugin_ref);
+        let panel = harness
+            .service
+            .panel_entry(&plugin_ref, "dashboard", "main")
+            .unwrap();
+        assert!(
+            panel.html.contains(crate::panel_shell::PLUGIN_PANEL_CSP),
+            "shell CSP"
+        );
+        assert!(
+            panel.html.contains("<h1>panel</h1>"),
+            "entry bytes are wrapped"
+        );
+        assert!(panel.html.contains("__ORCA_COLOR_SCHEME__"));
+        let binding = harness
+            .service
+            .sessions
+            .resolve(&panel.session_token)
+            .expect("issued token resolves");
+        assert_eq!(binding.kind, SessionKind::Panel);
+        assert_eq!(binding.panel_id.as_deref(), Some("dashboard"));
+        assert_eq!(binding.scope, PluginScope::Global);
+        assert_eq!(binding.repo_id, None);
+        assert_eq!(
+            binding.owner,
+            SessionOwner::Renderer {
+                window_label: "main".to_string()
+            }
+        );
+        assert!(binding.manifest_revision.starts_with("manifest-sha256-"));
+
+        let missing = harness
+            .service
+            .panel_entry(&plugin_ref, "nope", "main")
+            .unwrap_err();
+        assert_eq!(missing.code(), PANEL_NOT_FOUND);
+
+        let view = harness
+            .service
+            .global_view_entry("orca-samples.paneled", "rail")
+            .unwrap();
+        let view_binding = harness
+            .service
+            .sessions
+            .resolve(&view.session_token)
+            .unwrap();
+        assert_eq!(view_binding.kind, SessionKind::GlobalView);
+        assert_eq!(view_binding.panel_id.as_deref(), Some("dashboard"));
+    }
+
+    #[test]
+    fn global_view_entry_requires_a_declared_panel() {
+        let temp = tempdir().unwrap();
+        let root = write_plugin(
+            &temp.path().join("dev-bare"),
+            "bare",
+            "1.0.0",
+            ">=1.0.0",
+            json!({}),
+        );
+        let harness = harness_with_dev(temp.path(), "1.0.0", vec![root]);
+        let plugin_ref = global_ref("orca-samples.bare");
+        approve(&harness, &plugin_ref);
+
+        let error = harness
+            .service
+            .global_view_entry("orca-samples.bare", "rail")
+            .unwrap_err();
+        assert_eq!(error.code(), PANEL_NOT_FOUND);
+
+        let absent = harness
+            .service
+            .global_view_entry("orca-samples.absent", "rail")
+            .unwrap_err();
+        assert_eq!(absent.code(), UNAVAILABLE);
+    }
+
+    #[test]
+    fn panel_entry_rejects_tampered_trees_and_unsafe_entries() {
+        let temp = tempdir().unwrap();
+        let source = panel_plugin(&temp.path().join("source"), "tampered", json!({}));
+        let harness = harness(temp.path(), "1.0.0");
+        install_local(&harness, &source, global_target());
+        let plugin_ref = global_ref("orca-samples.tampered");
+        approve(&harness, &plugin_ref);
+        let install_hash = harness
+            .service
+            .list()
+            .into_iter()
+            .find(|entry| entry.plugin_key == "orca-samples.tampered")
+            .and_then(|entry| entry.install_hash)
+            .expect("installed content hash");
+        let version_dir = harness
+            .app_data
+            .join("plugins")
+            .join("orca-samples.tampered")
+            .join(install_hash);
+        std::fs::write(version_dir.join("panel.html"), b"<h1>tampered</h1>").unwrap();
+        let error = harness
+            .service
+            .panel_entry(&plugin_ref, "dashboard", "main")
+            .unwrap_err();
+        assert_eq!(error.code(), crate::types::INTEGRITY_MISMATCH);
+
+        // A dev entry that escapes the plugin root is rejected at discovery.
+        let outside = temp.path().join("outside");
+        std::fs::create_dir_all(&outside).unwrap();
+        std::fs::write(outside.join("panel.html"), b"<h1>outside</h1>").unwrap();
+        let escape = panel_plugin(
+            &temp.path().join("dev-escape"),
+            "escape",
+            json!({
+                "panels": [
+                    { "id": "dashboard", "title": "D", "entry": "escape/panel.html" }
+                ]
+            }),
+        );
+        std::os::unix::fs::symlink(&outside, escape.join("escape")).unwrap();
+        let escaped = harness_with_dev(temp.path(), "1.0.0", vec![escape]);
+        let error = escaped
+            .service
+            .panel_entry(&global_ref("orca-samples.escape"), "dashboard", "main")
+            .unwrap_err();
+        assert_eq!(error.code(), UNAVAILABLE);
+
+        // An oversize dev entry is rejected at discovery as well.
+        let big = panel_plugin(&temp.path().join("dev-big"), "big", json!({}));
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(big.join("panel.html"))
+            .unwrap()
+            .set_len(PLUGIN_PANEL_ENTRY_MAX_BYTES + 1)
+            .unwrap();
+        let oversize = harness_with_dev(temp.path(), "1.0.0", vec![big]);
+        let error = oversize
+            .service
+            .panel_entry(&global_ref("orca-samples.big"), "dashboard", "main")
+            .unwrap_err();
+        assert_eq!(error.code(), UNAVAILABLE);
+    }
+
+    #[test]
+    fn panel_action_resolves_gate_admission_and_audit() {
+        let temp = tempdir().unwrap();
+        let root = write_plugin(
+            &temp.path().join("dev-action"),
+            "actor",
+            "1.0.0",
+            ">=1.0.0",
+            json!({
+                "contributes": {
+                    "panels": [{ "id": "dashboard", "title": "D", "entry": "panel.html" }],
+                    "tabs": [{ "id": "board", "title": "Board", "entry": "panel.html" }]
+                },
+                "capabilities": [
+                    { "kind": "workspace:read" },
+                    { "kind": "workspace:open-tab" }
+                ]
+            }),
+        );
+        let harness = harness_with_dev(temp.path(), "1.0.0", vec![root]);
+        let plugin_ref = global_ref("orca-samples.actor");
+        approve(&harness, &plugin_ref);
+        let token = harness
+            .service
+            .panel_entry(&plugin_ref, "dashboard", "main")
+            .unwrap()
+            .session_token;
+
+        assert_eq!(
+            harness
+                .service
+                .panel_action("bogus", "workspace.readContext", json!({})),
+            Outcome::err(UNAVAILABLE, "panel session is not available")
+        );
+
+        match harness
+            .service
+            .panel_action(&token, "storage.get", json!({ "key": "k" }))
+        {
+            Outcome::Err { code, .. } => assert_eq!(code, gate::PANEL_FORBIDDEN),
+            other => panic!("storage.get via panel must be forbidden: {other:?}"),
+        }
+
+        let outcome =
+            harness
+                .service
+                .panel_action(&token, "workspace.openTab", json!({ "tabId": "board" }));
+        assert!(matches!(outcome, Outcome::Ok(_)), "{outcome:?}");
+        let logs = harness.service.get_logs("orca-samples.actor");
+        assert!(
+            logs.iter().any(|line| line.method == "workspace.openTab"),
+            "panel mutations are audited: {logs:?}"
+        );
+
+        let token = harness
+            .service
+            .panel_entry(&plugin_ref, "dashboard", "main")
+            .unwrap()
+            .session_token;
+        for _ in 0..PANEL_ACTION_MAX_PER_WINDOW {
+            assert!(matches!(
+                harness
+                    .service
+                    .panel_action(&token, "workspace.readContext", json!({})),
+                Outcome::Ok(_)
+            ));
+        }
+        match harness
+            .service
+            .panel_action(&token, "workspace.readContext", json!({}))
+        {
+            Outcome::Err { code, .. } => assert_eq!(code, gate::RATE_LIMITED),
+            other => panic!("the 31st action must be rate limited: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn open_tab_dedupes_caps_rates_and_prunes() {
+        let temp = tempdir().unwrap();
+        let root = write_plugin(
+            &temp.path().join("dev-tabs"),
+            "tabber",
+            "1.0.0",
+            ">=1.0.0",
+            json!({
+                "contributes": {
+                    "tabs": [{ "id": "board", "title": "Board", "entry": "panel.html" }]
+                },
+                "capabilities": [{ "kind": "workspace:open-tab" }]
+            }),
+        );
+        let harness = harness_with_dev(temp.path(), "1.0.0", vec![root]);
+        let service = &harness.service;
+        let plugin_ref = global_ref("orca-samples.tabber");
+
+        let undeclared = service
+            .open_tab(&plugin_ref, "nope", None, None, "wt-1")
+            .unwrap_err();
+        assert_eq!(undeclared.code(), INVALID_PARAMS);
+
+        let first = service
+            .open_tab(
+                &plugin_ref,
+                "board",
+                Some("Board"),
+                Some(json!({ "filter": "mine" })),
+                "wt-1",
+            )
+            .unwrap();
+        let again = service
+            .open_tab(
+                &plugin_ref,
+                "board",
+                None,
+                Some(json!({ "filter": "mine" })),
+                "wt-1",
+            )
+            .unwrap();
+        assert_eq!(
+            again.instance_id, first.instance_id,
+            "deep-equal params dedupe"
+        );
+        let second = service
+            .open_tab(
+                &plugin_ref,
+                "board",
+                None,
+                Some(json!({ "filter": "all" })),
+                "wt-1",
+            )
+            .unwrap();
+        assert_ne!(second.instance_id, first.instance_id);
+
+        service
+            .open_tab(
+                &plugin_ref,
+                "board",
+                None,
+                Some(json!({ "page": 3 })),
+                "wt-1",
+            )
+            .unwrap();
+        service
+            .open_tab(
+                &plugin_ref,
+                "board",
+                None,
+                Some(json!({ "page": 4 })),
+                "wt-1",
+            )
+            .unwrap();
+        let limited = service
+            .open_tab(
+                &plugin_ref,
+                "board",
+                None,
+                Some(json!({ "page": 5 })),
+                "wt-1",
+            )
+            .unwrap_err();
+        assert_eq!(limited.code(), gate::RATE_LIMITED);
+
+        let emitted = harness
+            .sink
+            .tabs
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone();
+        assert_eq!(emitted.len(), 4, "only new instances emit openTab requests");
+        assert!(emitted.iter().any(|request| {
+            request.worktree_id == "wt-1"
+                && request.params == json!({ "filter": "mine" })
+                && request.instance_id == first.instance_id
+        }));
+
+        // Cap: seed a saturated tracker (the rate window makes reaching 8
+        // live instances organically impossible in a fast test).
+        let instance_key = instance_key_of(&plugin_ref).unwrap();
+        {
+            let mut trackers = service
+                .tab_trackers
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            let tracker = trackers
+                .entry((instance_key.clone(), "wt-2".to_string()))
+                .or_default();
+            for page in 0..OPEN_TAB_MAX_INSTANCES {
+                tracker.tabs.push(TrackedTab {
+                    tab_id: "board".to_string(),
+                    params: json!({ "page": page }),
+                    instance_id: format!("seeded-{page}"),
+                });
+            }
+        }
+        let capped = service
+            .open_tab(
+                &plugin_ref,
+                "board",
+                None,
+                Some(json!({ "page": 99 })),
+                "wt-2",
+            )
+            .unwrap_err();
+        assert_eq!(capped.code(), TAB_LIMIT);
+
+        // Worktree removal prunes tracked identities (cap and rate reset).
+        service.on_worktree_removed(crate::events::WorktreeRemovedPayload {
+            worktree_id: "wt-2".to_string(),
+            path: "/tmp/wt2".to_string(),
+        });
+        service
+            .open_tab(
+                &plugin_ref,
+                "board",
+                None,
+                Some(json!({ "page": 0 })),
+                "wt-2",
+            )
+            .unwrap();
+
+        // Deactivation prunes that instance's dedupe state.
+        service.set_enabled(plugin_ref.clone(), false).unwrap();
+        let after = service
+            .open_tab(
+                &plugin_ref,
+                "board",
+                None,
+                Some(json!({ "filter": "mine" })),
+                "wt-1",
+            )
+            .unwrap();
+        assert_ne!(
+            after.instance_id, first.instance_id,
+            "deactivation drops tracked tabs"
+        );
+    }
+
+    #[test]
+    fn project_deactivation_keeps_the_global_twins_sessions() {
+        let temp = tempdir().unwrap();
+        let source = panel_plugin(&temp.path().join("source"), "twin", json!({}));
+        let harness = harness(temp.path(), "1.0.0");
+        harness
+            .service
+            .set_projects(vec![("repo-1".to_string(), temp.path().join("repo"))]);
+        install_local(&harness, &source, global_target());
+        install_local(&harness, &source, project_target("repo-1"));
+        let global = global_ref("orca-samples.twin");
+        let project = PluginRef {
+            plugin_key: "orca-samples.twin".to_string(),
+            scope: PluginScope::Project,
+            repo_id: Some("repo-1".to_string()),
+        };
+        approve_raw(&harness, &global);
+        approve_raw(&harness, &project);
+
+        let global_entry = harness
+            .service
+            .panel_entry(&global, "dashboard", "main")
+            .unwrap();
+        let project_entry = harness
+            .service
+            .panel_entry(&project, "dashboard", "main")
+            .unwrap();
+
+        harness.service.set_enabled(project.clone(), false).unwrap();
+        assert!(
+            harness
+                .service
+                .sessions
+                .resolve(&global_entry.session_token)
+                .is_some(),
+            "the global twin keeps its sessions"
+        );
+        assert!(harness
+            .service
+            .sessions
+            .resolve(&project_entry.session_token)
+            .is_none());
+
+        harness.service.remove(global).unwrap();
+        assert!(harness
+            .service
+            .sessions
+            .resolve(&global_entry.session_token)
+            .is_none());
+    }
+
+    #[test]
+    fn dynamic_event_subscriptions_deliver_only_while_the_worker_runs() {
+        if !node_available() {
+            return;
+        }
+        let temp = tempdir().unwrap();
+        install_fake_host_entry(temp.path());
+        let root = write_worker_plugin(
+            &temp.path().join("dev-dynamic"),
+            "dynamic",
+            &["subscribe"],
+            &[],
+            &["events:subscribe"],
+        );
+        let harness = harness_with_dev(temp.path(), "1.0.0", vec![root.clone()]);
+        let plugin_ref = global_ref("orca-samples.dynamic");
+        approve(&harness, &plugin_ref);
+
+        let value = harness
+            .service
+            .invoke_command(&plugin_ref, "subscribe", None)
+            .unwrap();
+        assert_eq!(
+            value,
+            json!({ "subscribed": { "subscribed": ["worktree.created"] } })
+        );
+
+        let payload = json!({ "worktreeId": "w1", "path": "/tmp/wt", "branch": "main" });
+        assert_eq!(
+            harness
+                .service
+                .deliver_plugin_event("worktree.created", payload.clone()),
+            1,
+            "a per-instance dynamic subscription reaches the running worker"
+        );
+        assert!(
+            wait_until(Duration::from_secs(2), || root.join("events.log").exists()),
+            "the worker records the delivered event"
+        );
+
+        harness.service.shutdown();
+        assert_eq!(
+            harness
+                .service
+                .deliver_plugin_event("worktree.created", payload),
+            0,
+            "stopped workers keep no live dynamic subscription"
+        );
     }
 }

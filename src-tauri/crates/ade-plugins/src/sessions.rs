@@ -157,8 +157,26 @@ impl SessionRegistry {
     }
 
     /// Drops every binding for `plugin_key`; returns how many were dropped.
+    /// Reserved for full uninstall: scope-limited lifecycles (disable,
+    /// project removal, idle reap) must use [`Self::invalidate_plugin_scope`]
+    /// so a same-key twin in another scope keeps its sessions.
     pub fn invalidate_plugin(&self, plugin_key: &str) -> usize {
         self.retain(|binding| binding.plugin_key != plugin_key)
+    }
+
+    /// Drops every binding of `plugin_key` in exactly the
+    /// `(scope, repo_id)` context; returns how many were dropped.
+    pub fn invalidate_plugin_scope(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+    ) -> usize {
+        self.retain(|binding| {
+            !(binding.plugin_key == plugin_key
+                && binding.scope == scope
+                && binding.repo_id.as_deref() == repo_id)
+        })
     }
 
     /// Drops every binding of `kind`; returns how many were dropped.
@@ -314,6 +332,95 @@ mod tests {
         assert_eq!(registry.resolve(&a), None);
         assert_eq!(registry.resolve(&b), None);
         assert!(registry.resolve(&c).is_some());
+    }
+
+    fn scoped_binding(
+        plugin: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        owner: SessionOwner,
+    ) -> SessionBinding {
+        SessionBinding {
+            plugin_key: plugin.to_string(),
+            kind: SessionKind::Panel,
+            panel_id: Some("panel-1".to_string()),
+            tab_id: None,
+            instance_id: None,
+            scope,
+            repo_id: repo_id.map(str::to_string),
+            worktree_id: None,
+            manifest_revision: "rev-1".to_string(),
+            owner,
+        }
+    }
+
+    #[test]
+    fn invalidate_plugin_scope_only_drops_the_matching_context() {
+        let registry = SessionRegistry::new();
+        let global = registry.issue(scoped_binding(
+            "acme.hello",
+            PluginScope::Global,
+            None,
+            renderer("main"),
+        ));
+        let project_one = registry.issue(scoped_binding(
+            "acme.hello",
+            PluginScope::Project,
+            Some("repo-1"),
+            renderer("main"),
+        ));
+        let project_two = registry.issue(scoped_binding(
+            "acme.hello",
+            PluginScope::Project,
+            Some("repo-2"),
+            renderer("main"),
+        ));
+        let other = registry.issue(scoped_binding(
+            "other.plugin",
+            PluginScope::Project,
+            Some("repo-1"),
+            renderer("main"),
+        ));
+
+        assert_eq!(
+            registry.invalidate_plugin_scope("acme.hello", PluginScope::Project, Some("repo-1")),
+            1
+        );
+        assert!(registry.resolve(&global).is_some(), "global twin survives");
+        assert_eq!(registry.resolve(&project_one), None);
+        assert!(
+            registry.resolve(&project_two).is_some(),
+            "other repo survives"
+        );
+        assert!(registry.resolve(&other).is_some(), "other key survives");
+    }
+
+    #[test]
+    fn invalidate_plugin_drops_every_scope_for_full_uninstall() {
+        let registry = SessionRegistry::new();
+        let global = registry.issue(scoped_binding(
+            "acme.hello",
+            PluginScope::Global,
+            None,
+            renderer("main"),
+        ));
+        let project = registry.issue(scoped_binding(
+            "acme.hello",
+            PluginScope::Project,
+            Some("repo-1"),
+            renderer("main"),
+        ));
+        let other = registry.issue(scoped_binding(
+            "other.plugin",
+            PluginScope::Global,
+            None,
+            renderer("main"),
+        ));
+
+        assert_eq!(registry.invalidate_plugin("acme.hello"), 2);
+        assert_eq!(registry.resolve(&global), None);
+        assert_eq!(registry.resolve(&project), None);
+        assert!(registry.resolve(&other).is_some());
     }
 
     #[test]
