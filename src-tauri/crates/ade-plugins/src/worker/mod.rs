@@ -3,6 +3,7 @@
 //! (spawn/supervision arrive in a later task).
 
 pub mod protocol;
+pub mod spawn;
 
 pub use protocol::{
     read_frame, write_frame, ChildFrame, LogLevel, ParentFrame, MAX_FRAME_BYTES, TEXT_MAX_BYTES,
