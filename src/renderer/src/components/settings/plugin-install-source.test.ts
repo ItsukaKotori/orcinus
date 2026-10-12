@@ -63,4 +63,44 @@ describe('parsePluginInstallSource', () => {
       source: { kind: 'local-path', path: 'C:\\plugins\\demo', scope: 'global' }
     })
   })
+
+  it('carries project scope and repoId onto both source kinds', () => {
+    expect(
+      parsePluginInstallSource('local-path', '/plugins/demo', {
+        scope: 'project',
+        repoId: 'repo-1'
+      })
+    ).toEqual({
+      ok: true,
+      source: { kind: 'local-path', path: '/plugins/demo', scope: 'project', repoId: 'repo-1' }
+    })
+    expect(
+      parsePluginInstallSource('git', 'https://example.test/plugin.git#v1.2.3', {
+        scope: 'project',
+        repoId: 'repo-1'
+      })
+    ).toEqual({
+      ok: true,
+      source: {
+        kind: 'git',
+        url: 'https://example.test/plugin.git',
+        ref: 'v1.2.3',
+        scope: 'project',
+        repoId: 'repo-1'
+      }
+    })
+  })
+
+  it('rejects project scope without a repoId', () => {
+    expect(parsePluginInstallSource('local-path', '/plugins/demo', { scope: 'project' })).toEqual({
+      ok: false,
+      reason: 'missing-repo-id'
+    })
+    expect(
+      parsePluginInstallSource('git', 'https://example.test/plugin.git#v1.2.3', {
+        scope: 'project',
+        repoId: '   '
+      })
+    ).toEqual({ ok: false, reason: 'missing-repo-id' })
+  })
 })

@@ -27,6 +27,7 @@ import {
   Wrench,
   Zap
 } from 'lucide-react'
+import type { PluginRef } from '../../../../preload/api-types'
 import type { ActivePluginPanel } from '@/store/plugin-panels'
 import type { ActivityBarItem } from './activity-bar-buttons'
 
@@ -77,10 +78,19 @@ export function resolvePluginPanelIcon(iconName: string | undefined): PluginPane
     : Plug
 }
 
-export function filterRightSidebarPluginEntries<T extends { scope?: 'global' | 'project' }>(
-  entries: T[]
+/** The right sidebar is repo context: show only project-scope plugins installed
+ *  into the active repo. Global plugins live in the left rail / global view, and
+ *  another repo's project plugins must not leak into this one. */
+export function filterRightSidebarPluginEntries<T extends PluginRef>(
+  entries: T[],
+  activeRepoId: string | null
 ): T[] {
-  return entries.filter((entry) => (entry.scope ?? 'project') !== 'global')
+  if (!activeRepoId) {
+    return []
+  }
+  return entries.filter(
+    (entry) => entry.scope === 'project' && entry.repoId === activeRepoId
+  )
 }
 
 /** Maps active plugin panel contributions onto right-sidebar activity items. */

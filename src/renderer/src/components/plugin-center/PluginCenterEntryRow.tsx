@@ -1,5 +1,5 @@
 import { Database, FileText, Plug, ScrollText, Trash2, type LucideIcon } from 'lucide-react'
-import type { PluginCenterEntry } from '../../../../bridge/mock/fixtures'
+import type { PluginHostListEntry } from '../../../../preload/api-types'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import { Switch } from '../ui/switch'
@@ -13,7 +13,7 @@ const PLUGIN_ENTRY_ICONS: Record<string, LucideIcon> = {
   plug: Plug
 }
 
-function resolveEntryIcon(entry: PluginCenterEntry): LucideIcon {
+function resolveEntryIcon(entry: PluginHostListEntry): LucideIcon {
   const iconName = entry.panels[0]?.icon
   if (!iconName) {
     return Plug
@@ -26,15 +26,15 @@ function resolveEntryIcon(entry: PluginCenterEntry): LucideIcon {
 }
 
 /** Mirrors PluginSettingsRow: anything that is not explicitly disabled counts as enabled. */
-function isPluginCenterEntryEnabled(entry: PluginCenterEntry): boolean {
+function isPluginCenterEntryEnabled(entry: PluginHostListEntry): boolean {
   return entry.status !== 'disabled'
 }
 
 type PluginCenterEntryRowProps = {
-  entry: PluginCenterEntry
-  onToggle: (entry: PluginCenterEntry, enabled: boolean) => void
-  onOpenLogs: (entry: PluginCenterEntry) => void
-  onRemove?: (entry: PluginCenterEntry) => void
+  entry: PluginHostListEntry
+  onToggle: (entry: PluginHostListEntry, enabled: boolean) => void
+  onOpenLogs: (entry: PluginHostListEntry) => void
+  onRemove?: (entry: PluginHostListEntry) => void
 }
 
 export function PluginCenterEntryRow({

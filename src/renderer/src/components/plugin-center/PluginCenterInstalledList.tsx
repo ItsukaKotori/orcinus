@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Blocks, Loader2 } from 'lucide-react'
 import type { PluginHostLogLine } from '../../../../preload/api-types'
-import type { PluginCenterEntry } from '../../../../bridge/mock/fixtures'
+import type { PluginHostListEntry } from '../../../../preload/api-types'
 import { useAppStore } from '@/store'
 import { PluginCenterEntryRow } from './PluginCenterEntryRow'
 
@@ -65,7 +65,7 @@ export function PluginCenterInstalledList(): React.JSX.Element {
     void useAppStore.getState().loadPluginCenterEntries()
   }
 
-  const handleToggle = (entry: PluginCenterEntry, enabled: boolean): void => {
+  const handleToggle = (entry: PluginHostListEntry, enabled: boolean): void => {
     void window.api.plugins
       .setEnabled({
         pluginKey: entry.pluginKey,
@@ -79,7 +79,7 @@ export function PluginCenterInstalledList(): React.JSX.Element {
       })
   }
 
-  const handleRemove = (entry: PluginCenterEntry): void => {
+  const handleRemove = (entry: PluginHostListEntry): void => {
     void window.api.plugins
       .remove({ pluginKey: entry.pluginKey, scope: entry.scope, repoId: entry.repoId })
       .then(() => {
@@ -91,7 +91,7 @@ export function PluginCenterInstalledList(): React.JSX.Element {
       })
   }
 
-  const handleOpenLogs = (entry: PluginCenterEntry): void => {
+  const handleOpenLogs = (entry: PluginHostListEntry): void => {
     if (openLogsKey === entry.pluginKey) {
       setOpenLogsKey(null)
       return

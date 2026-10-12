@@ -3,7 +3,7 @@
 import { act, useState } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { PluginHostListEntry } from '../../../../preload/api-types'
+import type { PluginHostListEntry, PluginRef } from '../../../../preload/api-types'
 import { getDefaultSettings } from '../../../../shared/constants'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import { PluginsSettingsSection } from './PluginsSettingsSection'
@@ -50,14 +50,22 @@ vi.mock('./PluginConsentDialog', () => ({
     onDecision
   }: {
     plugin: PluginHostListEntry | null
-    onDecision: (key: string, reviewedFingerprint: string, decision: 'approve') => Promise<void>
+    onDecision: (ref: PluginRef, reviewedFingerprint: string, decision: 'approve') => Promise<void>
   }) => {
     const [dirty, setDirty] = useState(false)
     return plugin ? (
       <>
         <button
           onClick={() =>
-            void onDecision(plugin.pluginKey, plugin.consentFingerprint ?? '', 'approve')
+            void onDecision(
+              {
+                pluginKey: plugin.pluginKey,
+                scope: plugin.scope,
+                ...(plugin.repoId ? { repoId: plugin.repoId } : {})
+              },
+              plugin.consentFingerprint ?? '',
+              'approve'
+            )
           }
         >
           Approve

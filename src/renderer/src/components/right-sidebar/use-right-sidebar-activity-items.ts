@@ -50,9 +50,15 @@ export function useRightSidebarActivityItems({
   const isSshRepo = Boolean(activeRepo?.connectionId)
   const pluginSystemEnabled = useAppStore((s) => s.settings?.pluginSystemEnabled === true)
   const pluginCenterEntries = useAppStore((s) => s.pluginCenterEntries)
+  // Why: the active repo id must not depend on the sidebar being open, or the
+  // rail's plugin icons would flicker out whenever the sidebar collapses.
+  const pluginActiveRepoId = useAppStore((s) => s.activeRepoId)
   const projectPluginPanels = useMemo(
-    () => collectActivePluginPanels(filterRightSidebarPluginEntries(pluginCenterEntries)),
-    [pluginCenterEntries]
+    () =>
+      collectActivePluginPanels(
+        filterRightSidebarPluginEntries(pluginCenterEntries, pluginActiveRepoId)
+      ),
+    [pluginCenterEntries, pluginActiveRepoId]
   )
   const visiblePluginPanels = useMemo(
     () => (pluginSystemEnabled ? projectPluginPanels : []),

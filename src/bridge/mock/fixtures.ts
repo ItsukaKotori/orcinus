@@ -1,9 +1,6 @@
-import type { PluginHostListEntry, PluginScope } from '../../preload/api/plugin-host-api'
+import type { PluginHostListEntry } from '../../preload/api/plugin-host-api'
 
-export type { PluginScope }
-export type PluginCenterEntry = PluginHostListEntry & { scope: PluginScope }
-
-export const MOCK_GLOBAL_PLUGINS: PluginCenterEntry[] = [
+export const MOCK_GLOBAL_PLUGINS: PluginHostListEntry[] = [
   {
     pluginKey: 'database-manager',
     name: 'Database Manager',
@@ -60,7 +57,7 @@ export const MOCK_GLOBAL_PLUGINS: PluginCenterEntry[] = [
   }
 ]
 
-export const MOCK_PROJECT_PLUGINS: PluginCenterEntry[] = [
+export const MOCK_PROJECT_PLUGINS: PluginHostListEntry[] = [
   {
     ...MOCK_GLOBAL_PLUGINS[0],
     pluginKey: 'repo-notes',

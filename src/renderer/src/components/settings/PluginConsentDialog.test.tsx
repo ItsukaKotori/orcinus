@@ -3,7 +3,7 @@
 import { act, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { PluginHostListEntry } from '../../../../preload/api-types'
+import type { PluginHostListEntry, PluginRef } from '../../../../preload/api-types'
 import { PluginConsentDialog } from './PluginConsentDialog'
 
 const plugin: PluginHostListEntry = {
@@ -47,7 +47,7 @@ afterEach(() => {
 async function renderConsent(
   entry: PluginHostListEntry,
   onDecision: (
-    key: string,
+    ref: PluginRef,
     reviewedFingerprint: string,
     decision: 'approve' | 'keep-disabled'
   ) => Promise<void>
@@ -60,8 +60,8 @@ async function renderConsent(
     return (
       <PluginConsentDialog
         plugin={selected}
-        onDecision={async (key, reviewedFingerprint, decision) => {
-          await onDecision(key, reviewedFingerprint, decision)
+        onDecision={async (ref, reviewedFingerprint, decision) => {
+          await onDecision(ref, reviewedFingerprint, decision)
           setSelected(null)
         }}
       />
@@ -99,7 +99,8 @@ describe('PluginConsentDialog', () => {
     )
     await act(async () => enable?.dispatchEvent(new MouseEvent('click', { bubbles: true })))
 
-    expect(onDecision).toHaveBeenCalledWith(plugin.pluginKey, plugin.consentFingerprint, 'approve')
+    expect(onDecision).toHaveBeenCalledWith(
+      { pluginKey: plugin.pluginKey, scope: 'global' }, plugin.consentFingerprint, 'approve')
   })
 
   it('shows provenance, capabilities, worker warning, and focuses the safe default', async () => {
@@ -120,6 +121,41 @@ describe('PluginConsentDialog', () => {
     )
     expect(document.querySelector('[role="dialog"]')?.classList).toContain('plugin-security-chrome')
     expect(document.activeElement?.textContent).toContain('Keep Disabled')
+  })
+
+  it('marks global scope and omits the untrusted-project warning', async () => {
+    await renderConsent(plugin, vi.fn().mockResolvedValue(undefined))
+
+    expect(document.body.textContent).toContain('Global scope')
+    expect(document.body.textContent).not.toContain('treated as untrusted')
+  })
+
+  it('warns about untrusted repository code for project scope and names the repo on consent', async () => {
+    const onDecision = vi.fn().mockResolvedValue(undefined)
+    const projectPlugin: PluginHostListEntry = {
+      ...plugin,
+      pluginKey: 'repo.worker',
+      scope: 'project',
+      repoId: 'repo-1'
+    }
+    await renderConsent(projectPlugin, onDecision)
+
+    expect(document.body.textContent).toContain('Project scope')
+    expect(document.body.textContent).toContain('must be treated as untrusted')
+    expect(document.body.textContent).toContain(
+      'Enabling it for the first time requires your explicit confirmation.'
+    )
+
+    const enable = Array.from(document.querySelectorAll('button')).find(
+      (candidate) => candidate.textContent?.trim() === 'Enable plugin'
+    )
+    await act(async () => enable?.dispatchEvent(new MouseEvent('click', { bubbles: true })))
+
+    expect(onDecision).toHaveBeenCalledWith(
+      { pluginKey: 'repo.worker', scope: 'project', repoId: 'repo-1' },
+      projectPlugin.consentFingerprint,
+      'approve'
+    )
   })
 
   it('explains that panel-only plugins have no worker process', async () => {
@@ -232,7 +268,7 @@ describe('PluginConsentDialog', () => {
     })
 
     expect(onDecision).toHaveBeenCalledWith(
-      plugin.pluginKey,
+      { pluginKey: plugin.pluginKey, scope: 'global' },
       plugin.consentFingerprint,
       'keep-disabled'
     )
@@ -253,7 +289,8 @@ describe('PluginConsentDialog', () => {
 
     await act(async () => enable.dispatchEvent(new MouseEvent('click', { bubbles: true })))
 
-    expect(onDecision).toHaveBeenCalledWith(plugin.pluginKey, plugin.consentFingerprint, 'approve')
+    expect(onDecision).toHaveBeenCalledWith(
+      { pluginKey: plugin.pluginKey, scope: 'global' }, plugin.consentFingerprint, 'approve')
   })
 
   it('explains how to recover when the reviewed plugin changed', async () => {

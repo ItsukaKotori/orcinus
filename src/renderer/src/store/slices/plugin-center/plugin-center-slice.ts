@@ -1,8 +1,8 @@
 import type { StateCreator } from 'zustand'
-import type { PluginCenterEntry } from '../../../../../bridge/mock/fixtures'
+import type { PluginHostListEntry } from '../../../../../preload/api-types'
 
 export type PluginCenterSlice = {
-  pluginCenterEntries: PluginCenterEntry[]
+  pluginCenterEntries: PluginHostListEntry[]
   pluginCenterStatus: 'idle' | 'loading' | 'error'
   loadPluginCenterEntries: () => Promise<void>
 }
@@ -13,7 +13,7 @@ export const createPluginCenterSlice: StateCreator<PluginCenterSlice> = (set) =>
   loadPluginCenterEntries: async () => {
     set({ pluginCenterStatus: 'loading' })
     try {
-      const entries: PluginCenterEntry[] = await window.api.plugins.list()
+      const entries: PluginHostListEntry[] = await window.api.plugins.list()
       set({ pluginCenterEntries: entries, pluginCenterStatus: 'idle' })
     } catch {
       set({ pluginCenterStatus: 'error' })

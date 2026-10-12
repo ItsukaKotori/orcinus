@@ -1,6 +1,6 @@
-import type { PluginsApi } from '../../preload/api/plugin-host-api'
+import type { PluginHostListEntry, PluginsApi } from '../../preload/api/plugin-host-api'
 import { UnimplementedBridgeError } from '../unimplemented-fallback'
-import { MOCK_GLOBAL_PLUGINS, MOCK_PROJECT_PLUGINS, type PluginCenterEntry } from './fixtures'
+import { MOCK_GLOBAL_PLUGINS, MOCK_PROJECT_PLUGINS } from './fixtures'
 import { cloneMockValue } from './clone-mock-value'
 
 function unimplemented(path: string): never {
@@ -8,7 +8,7 @@ function unimplemented(path: string): never {
 }
 
 export function createPluginsApi(): PluginsApi {
-  let state: PluginCenterEntry[] = [...MOCK_GLOBAL_PLUGINS, ...MOCK_PROJECT_PLUGINS]
+  let state: PluginHostListEntry[] = [...MOCK_GLOBAL_PLUGINS, ...MOCK_PROJECT_PLUGINS]
   return {
     list: async () => cloneMockValue(state),
     listLanguagePacks: async () => [],

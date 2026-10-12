@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { AlertTriangle, Check, Loader2 } from 'lucide-react'
-import type { PluginHostListEntry } from '../../../../preload/api-types'
+import type { PluginHostListEntry, PluginRef } from '../../../../preload/api-types'
 import { translate } from '@/i18n/i18n'
 import { pluginConsentErrorMessage } from './plugin-error-presentation'
 import { Button } from '../ui/button'
@@ -20,10 +20,18 @@ import {
 type PluginConsentDialogProps = {
   plugin: PluginHostListEntry | null
   onDecision: (
-    pluginKey: string,
+    ref: PluginRef,
     reviewedFingerprint: string,
     decision: 'approve' | 'keep-disabled'
   ) => Promise<void>
+}
+
+/** Consent is tracked per scope instance, so the decision must name the exact
+ *  (pluginKey, scope, repoId) triple the dialog rendered. */
+function pluginRef(plugin: PluginHostListEntry): PluginRef {
+  return plugin.repoId
+    ? { pluginKey: plugin.pluginKey, scope: plugin.scope, repoId: plugin.repoId }
+    : { pluginKey: plugin.pluginKey, scope: plugin.scope }
 }
 
 function trustTier(plugin: PluginHostListEntry): string {
@@ -115,7 +123,7 @@ export function PluginConsentDialog({
     setError(null)
     try {
       // Why: consent is conditional on the exact trust boundary rendered by this dialog.
-      await onDecision(plugin.pluginKey, plugin.consentFingerprint, decision)
+      await onDecision(pluginRef(plugin), plugin.consentFingerprint, decision)
     } catch (cause) {
       console.warn('[plugins] consent update failed:', cause)
       setError(pluginConsentErrorMessage(cause))
@@ -161,12 +169,34 @@ export function PluginConsentDialog({
                 )}
               </p>
             ) : null}
+            {plugin.scope === 'project' ? (
+              <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3.5 py-3 text-sm leading-6">
+                <AlertTriangle className="mt-1 size-4 shrink-0 text-destructive" />
+                <span>
+                  {translate(
+                    'auto.components.settings.PluginConsentDialog.projectUntrustedWarning',
+                    'Project plugin code comes from this repository and must be treated as untrusted. Enabling it for the first time requires your explicit confirmation.'
+                  )}
+                </span>
+              </div>
+            ) : null}
             <div className="flex flex-wrap items-center gap-2">
               <PluginConsentProvenance
                 official={plugin.official}
                 publisher={plugin.publisher}
                 source={plugin.source}
               />
+              <span className="inline-flex items-center rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                {plugin.scope === 'project'
+                  ? translate(
+                      'auto.components.settings.PluginConsentDialog.scopeProject',
+                      'Project scope'
+                    )
+                  : translate(
+                      'auto.components.settings.PluginConsentDialog.scopeGlobal',
+                      'Global scope'
+                    )}
+              </span>
               <span
                 className="inline-flex items-center rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
                 title={trustTier(plugin)}

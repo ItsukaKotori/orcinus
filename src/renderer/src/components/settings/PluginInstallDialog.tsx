@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
-import type { PluginHostInstallSource } from '../../../../preload/api-types'
+import type { PluginHostInstallSource, PluginScope } from '../../../../preload/api-types'
+import { useAppStore } from '@/store'
 import { translate } from '@/i18n/i18n'
+import { SettingsSegmentedControl } from './SettingsFormControls'
 import { Button } from '../ui/button'
 import {
   Dialog,
@@ -35,6 +37,11 @@ function installValidationMessage(reason: string): string {
         'auto.components.settings.PluginInstallDialog.gitUrlRequired',
         'Enter a repository URL.'
       )
+    case 'missing-repo-id':
+      return translate(
+        'auto.components.settings.PluginInstallDialog.repoRequired',
+        'Open a project before installing a project-scoped plugin.'
+      )
     case 'invalid-git-url':
       return translate(
         'auto.components.settings.PluginInstallDialog.gitUrlInvalid',
@@ -54,13 +61,18 @@ export function PluginInstallDialog({
   onInstall
 }: PluginInstallDialogProps): React.JSX.Element {
   const [kind, setKind] = useState<'local-path' | 'git'>('local-path')
+  const [scope, setScope] = useState<PluginScope>('global')
   const [localPath, setLocalPath] = useState('')
   const [gitUrl, setGitUrl] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [installing, setInstalling] = useState(false)
+  const activeRepoId = useAppStore((s) => s.activeRepoId)
 
   const submit = async (): Promise<void> => {
-    const parsed = parsePluginInstallSource(kind, kind === 'git' ? gitUrl : localPath)
+    const parsed = parsePluginInstallSource(kind, kind === 'git' ? gitUrl : localPath, {
+      scope,
+      repoId: activeRepoId ?? undefined
+    })
     if (!parsed.ok) {
       setError(installValidationMessage(parsed.reason))
       return
@@ -98,6 +110,47 @@ export function PluginInstallDialog({
             void submit()
           }}
         >
+          <div className="space-y-2">
+            <p className="text-sm font-medium">
+              {translate('auto.components.settings.PluginInstallDialog.scopeLabel', 'Install scope')}
+            </p>
+            <SettingsSegmentedControl
+              value={scope}
+              onChange={(nextScope) => {
+                setScope(nextScope)
+                setError(null)
+              }}
+              ariaLabel={translate(
+                'auto.components.settings.PluginInstallDialog.scopeLabel',
+                'Install scope'
+              )}
+              options={[
+                {
+                  value: 'global',
+                  label: translate(
+                    'auto.components.settings.PluginInstallDialog.scopeGlobal',
+                    'Global'
+                  )
+                },
+                {
+                  value: 'project',
+                  label: translate(
+                    'auto.components.settings.PluginInstallDialog.scopeProject',
+                    'Current project'
+                  ),
+                  disabled: !activeRepoId
+                }
+              ]}
+            />
+            {activeRepoId ? null : (
+              <p className="text-xs leading-5 text-muted-foreground">
+                {translate(
+                  'auto.components.settings.PluginInstallDialog.scopeProjectDisabled',
+                  'Open a project to install a project-scoped plugin. Project plugins only load in this repository.'
+                )}
+              </p>
+            )}
+          </div>
           <Tabs
             value={kind}
             onValueChange={(value) => {

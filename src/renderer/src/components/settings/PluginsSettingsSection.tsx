@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Plus } from 'lucide-react'
-import type { PluginHostInstallSource, PluginHostListEntry } from '../../../../preload/api-types'
+import type {
+  PluginHostInstallSource,
+  PluginHostListEntry,
+  PluginRef
+} from '../../../../preload/api-types'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import { translate } from '@/i18n/i18n'
 import { Button } from '../ui/button'
@@ -195,17 +199,15 @@ export function PluginsSettingsSection({
   }
 
   const decideConsent = async (
-    pluginKey: string,
+    ref: PluginRef,
     reviewedFingerprint: string,
     decision: 'approve' | 'keep-disabled'
   ): Promise<void> => {
-    const target = plugins.find((plugin) => plugin.pluginKey === pluginKey)
+    const { pluginKey } = ref
     setBusyPluginKeys((current) => new Set(current).add(pluginKey))
     try {
       const nextPlugins = await window.api.plugins.consent({
-        pluginKey,
-        scope: target?.scope ?? 'global',
-        ...(target?.repoId ? { repoId: target.repoId } : {}),
+        ...ref,
         reviewedFingerprint,
         decision
       })
