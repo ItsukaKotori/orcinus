@@ -81,6 +81,7 @@ const preview: PluginMarketplaceHostInstallPreview = {
 function installedPlugin(contentHash = 'different-content'): PluginHostListEntry {
   return {
     pluginKey: listing.pluginKey,
+    scope: 'global',
     consentFingerprint: 'sha256-consent',
     name: 'Worktree Notes',
     version: '1.0.0',
@@ -92,6 +93,7 @@ function installedPlugin(contentHash = 'different-content'): PluginHostListEntry
     bundled: false,
     capabilities: [],
     panels: [],
+    tabs: [],
     commands: [],
     hasWorker: true,
     restarts: 0,

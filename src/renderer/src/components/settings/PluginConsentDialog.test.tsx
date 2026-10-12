@@ -8,6 +8,7 @@ import { PluginConsentDialog } from './PluginConsentDialog'
 
 const plugin: PluginHostListEntry = {
   pluginKey: 'acme.worker',
+  scope: 'global',
   consentFingerprint: 'sha256-acme-worker',
   name: 'Acme Worker',
   version: '1.2.3',
@@ -19,6 +20,7 @@ const plugin: PluginHostListEntry = {
   bundled: false,
   capabilities: [{ kind: 'worker', description: 'Run a background worker process' }],
   panels: [],
+  tabs: [],
   commands: [],
   hasWorker: true,
   restarts: 0,

@@ -21,6 +21,10 @@ export const PANEL_ACTION_TEXT_MAX_LENGTH = 4096
 export const PLUGIN_WORKSPACE_TERMINAL_LIMIT = 50
 export const PLUGIN_WORKSPACE_LABEL_MAX_LENGTH = 512
 export const PLUGIN_TERMINAL_ID_MAX_LENGTH = 1024
+export const PLUGIN_OPEN_TAB_ID_MAX_LENGTH = 256
+export const PLUGIN_OPEN_TAB_TITLE_MAX_LENGTH = 128
+export const PLUGIN_OPEN_TAB_PARAMS_MAX_BYTES = 64 * 1024
+export const PLUGIN_OPEN_TAB_PARAMS_MAX_DEPTH = 64
 
 const workspaceReadContextParams = z.object({}).strict().optional()
 const workspaceReadContextResult = z
@@ -51,6 +55,20 @@ const terminalSendTextParams = z.object({
 })
 const terminalSendTextResult = z.object({ accepted: z.boolean() })
 
+const pluginJsonValueSchema = z.json()
+
+/** Fork extension. `params` stays a JSON value here; the host enforces the
+ *  byte/depth caps and the plugin's declared `contributes.tabs` ids. */
+const workspaceOpenTabParams = z.object({
+  tabId: z.string().min(1).max(PLUGIN_OPEN_TAB_ID_MAX_LENGTH),
+  title: z.string().max(PLUGIN_OPEN_TAB_TITLE_MAX_LENGTH).optional(),
+  params: pluginJsonValueSchema.optional()
+})
+const workspaceOpenTabResult = z.object({
+  instanceId: z.string().min(1),
+  worktreeId: z.string().min(1)
+})
+
 const notificationsShowParams = z.object({
   title: z.string().min(1).max(120),
   body: z.string().max(1000).optional()
@@ -63,7 +81,6 @@ const storageKeySchema = z
   .min(1)
   .max(256)
   .refine((key) => !RESERVED_STORAGE_KEYS.has(key), 'reserved storage key')
-const pluginJsonValueSchema = z.json()
 /** Caps keep per-plugin storage an honest key-value store, not a database. */
 export const PLUGIN_STORAGE_VALUE_MAX_BYTES = 256 * 1024
 export const PLUGIN_STORAGE_TOTAL_MAX_BYTES = 5 * 1024 * 1024
@@ -129,6 +146,16 @@ export const PLUGIN_HOST_API_V0: readonly PluginHostMethodSpec[] = [
     panel: true,
     params: workspaceReadContextParams,
     result: workspaceReadContextResult
+  }),
+  spec({
+    name: 'workspace.openTab',
+    since: '1.0',
+    scope: 'active-worktree',
+    capability: 'workspace:open-tab',
+    mutation: true,
+    panel: true,
+    params: workspaceOpenTabParams,
+    result: workspaceOpenTabResult
   }),
   spec({
     name: 'terminal.sendText',

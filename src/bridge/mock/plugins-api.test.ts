@@ -17,10 +17,30 @@ describe('Phase 0 plugins mock', () => {
 
     const consented = await plugins.consent({
       pluginKey: 'database-manager',
+      scope: 'global',
       reviewedFingerprint: 'mock-fingerprint-db',
       decision: 'approve'
     })
     consented.pop()
     await expect(plugins.refresh()).resolves.toHaveLength(3)
+  })
+
+  it('serves the project lockfile empty state and a no-op open-tab subscription', async () => {
+    const plugins = createPluginsApi()
+
+    await expect(plugins.getProjectLockState({ repoId: 'mock-repo-1' })).resolves.toEqual({
+      repoId: 'mock-repo-1',
+      lockfilePath: '',
+      entries: []
+    })
+    await expect(plugins.installMissingFromLockfile({ repoId: 'mock-repo-1' })).resolves.toEqual([])
+
+    const unsubscribe = plugins.onOpenTab(() => {})
+    expect(typeof unsubscribe).toBe('function')
+    unsubscribe()
+
+    const entries = await plugins.list()
+    expect(entries.every((entry) => entry.tabs.length >= 0)).toBe(true)
+    expect(entries.find((entry) => entry.scope === 'project')?.tabs).toHaveLength(1)
   })
 })

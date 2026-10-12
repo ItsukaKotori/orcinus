@@ -8,6 +8,10 @@ import { z } from 'zod'
 export const pluginConsentRequestSchema = z
   .object({
     pluginKey: z.string().min(1),
+    /** Install/deployment scope the decision applies to; consent is tracked
+     *  per `global:<key>` / `project:<repoId>:<key>`. */
+    scope: z.enum(['global', 'project']),
+    repoId: z.string().min(1).max(256).optional(),
     reviewedFingerprint: z.string().min(1).max(256),
     decision: z.enum(['approve', 'keep-disabled'])
   })

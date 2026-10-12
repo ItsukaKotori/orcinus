@@ -67,7 +67,12 @@ export function PluginCenterInstalledList(): React.JSX.Element {
 
   const handleToggle = (entry: PluginCenterEntry, enabled: boolean): void => {
     void window.api.plugins
-      .setEnabled({ pluginKey: entry.pluginKey, enabled })
+      .setEnabled({
+        pluginKey: entry.pluginKey,
+        scope: entry.scope,
+        repoId: entry.repoId,
+        enabled
+      })
       .then(reload)
       .catch((cause: unknown) => {
         console.warn('[plugin-center] failed to toggle plugin:', cause)
@@ -76,7 +81,7 @@ export function PluginCenterInstalledList(): React.JSX.Element {
 
   const handleRemove = (entry: PluginCenterEntry): void => {
     void window.api.plugins
-      .remove({ pluginKey: entry.pluginKey })
+      .remove({ pluginKey: entry.pluginKey, scope: entry.scope, repoId: entry.repoId })
       .then(() => {
         setOpenLogsKey((current) => (current === entry.pluginKey ? null : current))
         reload()

@@ -160,9 +160,16 @@ export type {
   PluginHostLogLine,
   PluginHostPanel,
   PluginHostStatus,
+  PluginHostTab,
   PluginMarketplaceHostInstallPreview,
   PluginMarketplaceHostListing,
-  PluginMarketplaceHostSourceState
+  PluginMarketplaceHostSourceState,
+  PluginOpenTabRequest,
+  PluginProjectLockEntry,
+  PluginProjectLockState,
+  PluginProjectLockStatus,
+  PluginRef,
+  PluginScope
 } from './api/plugin-host-api'
 export type {
   PreflightApi,

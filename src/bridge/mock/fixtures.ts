@@ -1,6 +1,6 @@
-import type { PluginHostListEntry } from '../../preload/api/plugin-host-api'
+import type { PluginHostListEntry, PluginScope } from '../../preload/api/plugin-host-api'
 
-export type PluginScope = 'global' | 'project'
+export type { PluginScope }
 export type PluginCenterEntry = PluginHostListEntry & { scope: PluginScope }
 
 export const MOCK_GLOBAL_PLUGINS: PluginCenterEntry[] = [
@@ -26,6 +26,7 @@ export const MOCK_GLOBAL_PLUGINS: PluginCenterEntry[] = [
         tabKey: 'plugin:database-manager.main'
       }
     ],
+    tabs: [{ id: 'browser', title: 'Database Browser', icon: 'database' }],
     commands: [],
     hasWorker: true,
     restarts: 0
@@ -52,6 +53,7 @@ export const MOCK_GLOBAL_PLUGINS: PluginCenterEntry[] = [
         tabKey: 'plugin:api-tester.main'
       }
     ],
+    tabs: [{ id: 'workbench', title: 'API Workbench', icon: 'plug' }],
     commands: [],
     hasWorker: true,
     restarts: 0
@@ -67,6 +69,7 @@ export const MOCK_PROJECT_PLUGINS: PluginCenterEntry[] = [
     publisher: 'my-team',
     description: 'Project-scoped notes panel',
     scope: 'project',
+    repoId: 'mock-repo-1',
     consentFingerprint: 'mock-fingerprint-notes',
     panels: [
       {
@@ -75,6 +78,7 @@ export const MOCK_PROJECT_PLUGINS: PluginCenterEntry[] = [
         icon: 'filetext',
         tabKey: 'plugin:repo-notes.main'
       }
-    ]
+    ],
+    tabs: [{ id: 'board', title: 'Repo Board', icon: 'filetext' }]
   }
 ]

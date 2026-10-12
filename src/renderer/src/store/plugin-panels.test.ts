@@ -11,6 +11,7 @@ import {
 function plugin(pluginKey: string): PluginHostListEntry {
   return {
     pluginKey,
+    scope: 'global',
     consentFingerprint: 'sha256-test',
     name: pluginKey,
     version: '1.0.0',
@@ -22,6 +23,7 @@ function plugin(pluginKey: string): PluginHostListEntry {
     bundled: false,
     capabilities: [],
     panels: [],
+    tabs: [],
     commands: [],
     hasWorker: false,
     restarts: 0

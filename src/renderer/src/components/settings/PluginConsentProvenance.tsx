@@ -7,9 +7,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 /** Review dialogs lead with trust, not a metadata table: badge up front, details on demand. */
 
 export type PluginConsentSource = {
-  kind: 'local-path' | 'git' | 'marketplace' | 'bundled'
-  reference: string
-  resolvedCommit: string | null
+  kind: 'local-path' | 'git' | 'marketplace' | 'bundled' | 'dev' | 'installed'
+  reference?: string
+  resolvedCommit?: string | null
   marketplace?: { reference: string; resolvedCommit: string }
 }
 
@@ -94,7 +94,7 @@ export function PluginConsentProvenance(props: PluginConsentProvenanceProps): Re
                 'auto.components.settings.PluginConsentProvenance.sourceLabel',
                 'Source'
               )}
-              value={source.reference}
+              value={source.reference ?? ''}
               fullValue={source.reference}
             />
             <ProvenanceDetail

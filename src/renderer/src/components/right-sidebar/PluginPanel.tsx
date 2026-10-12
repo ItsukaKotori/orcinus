@@ -128,7 +128,12 @@ function PluginPanel({ tabKey }: PluginPanelProps): React.JSX.Element {
     const load = (): void => {
       const generation = ++loadGeneration
       pluginsApi
-        .readPanelEntry({ pluginKey, panelId })
+        .readPanelEntry({
+          pluginKey,
+          panelId,
+          scope: panel?.scope ?? 'global',
+          repoId: panel?.repoId
+        })
         .then((entry) => {
           if (cancelled || generation !== loadGeneration) {
             return

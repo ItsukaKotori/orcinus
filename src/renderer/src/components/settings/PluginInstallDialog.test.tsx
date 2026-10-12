@@ -55,7 +55,11 @@ describe('PluginInstallDialog', () => {
       button('Install').dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
 
-    expect(onInstall).toHaveBeenCalledWith({ kind: 'local-path', path: 'C:\\plugins\\demo' })
+    expect(onInstall).toHaveBeenCalledWith({
+      kind: 'local-path',
+      path: 'C:\\plugins\\demo',
+      scope: 'global'
+    })
     expect(input.value).toBe('C:\\plugins\\demo')
     expect(document.body.textContent).toContain('Plugin installation failed.')
     expect(document.body.textContent).not.toContain('Review permissions')

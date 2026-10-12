@@ -13,6 +13,8 @@ export async function executePluginCommand(
   }
   await window.api.plugins.invokeCommand({
     pluginKey: command.pluginKey,
+    scope: command.scope,
+    repoId: command.repoId,
     commandId: command.id
   })
 }

@@ -8,6 +8,7 @@ function command(context: 'global' | 'worktree'): ActivePluginCommand {
   return {
     pluginKey: 'orca-samples.tasks',
     pluginName: 'Tasks Pack',
+    scope: 'global',
     id: 'open',
     title: 'Open Tasks',
     context,

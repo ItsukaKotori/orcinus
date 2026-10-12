@@ -18,8 +18,7 @@ afterEach(() => {
 describe('createAdeApi mock mode', () => {
   it('exposes mocked namespaces with live data', async () => {
     const api = createAdeApi({ mode: 'mock' })
-    // SAFETY: PluginHostListEntry has no `scope`; the runtime entries contributed by the mock do.
-    const entries = (await api.plugins.list()) as Array<{ scope?: string }>
+    const entries = await api.plugins.list()
     expect(entries.some((entry) => entry.scope === 'global')).toBe(true)
     expect(entries.some((entry) => entry.scope === 'project')).toBe(true)
   })

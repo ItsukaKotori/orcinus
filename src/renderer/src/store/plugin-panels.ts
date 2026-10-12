@@ -1,16 +1,24 @@
 import { useEffect, useMemo } from 'react'
 import { create } from 'zustand'
-import type { PluginHostListEntry, PluginHostPanel } from '../../../preload/api-types'
+import type {
+  PluginHostListEntry,
+  PluginHostPanel,
+  PluginScope
+} from '../../../preload/api-types'
 
 /** A panel contribution from an enabled plugin, flattened for sidebar use. */
 export type ActivePluginPanel = PluginHostPanel & {
   pluginKey: string
   pluginName: string
+  scope: PluginScope
+  repoId?: string
 }
 
 export type ActivePluginCommand = PluginHostListEntry['commands'][number] & {
   pluginKey: string
   pluginName: string
+  scope: PluginScope
+  repoId?: string
 }
 
 export type PluginPanelsFetchStatus = 'idle' | 'loading' | 'ready' | 'error'
@@ -148,7 +156,9 @@ export function collectActivePluginPanels(plugins: PluginHostListEntry[]): Activ
       plugin.panels.map((panel) => ({
         ...panel,
         pluginKey: plugin.pluginKey,
-        pluginName: plugin.name
+        pluginName: plugin.name,
+        scope: plugin.scope,
+        repoId: plugin.repoId
       }))
     )
 }
@@ -174,7 +184,9 @@ export function collectActivePluginCommands(
       plugin.commands.map((command) => ({
         ...command,
         pluginKey: plugin.pluginKey,
-        pluginName: plugin.name
+        pluginName: plugin.name,
+        scope: plugin.scope,
+        repoId: plugin.repoId
       }))
     )
 }
@@ -188,7 +200,9 @@ export function collectEditablePluginCommands(
       plugin.commands.map((command) => ({
         ...command,
         pluginKey: plugin.pluginKey,
-        pluginName: plugin.name
+        pluginName: plugin.name,
+        scope: plugin.scope,
+        repoId: plugin.repoId
       }))
     )
 }

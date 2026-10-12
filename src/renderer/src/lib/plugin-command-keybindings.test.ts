@@ -15,6 +15,7 @@ import {
 const command: ActivePluginCommand = {
   pluginKey: 'orca-samples.tasks',
   pluginName: 'Tasks',
+  scope: 'global',
   id: 'open',
   title: 'Open Tasks',
   context: 'global',

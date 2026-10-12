@@ -15,7 +15,7 @@ export function parsePluginInstallSource(
   const value = input.trim()
   if (kind === 'local-path') {
     return value
-      ? { ok: true, source: { kind: 'local-path', path: value } }
+      ? { ok: true, source: { kind: 'local-path', path: value, scope: 'global' } }
       : { ok: false, reason: 'missing-local-path' }
   }
   if (!value) {
@@ -36,5 +36,5 @@ export function parsePluginInstallSource(
   if (!ref) {
     return { ok: false, reason: 'missing-git-ref' }
   }
-  return { ok: true, source: { kind: 'git', url, ref } }
+  return { ok: true, source: { kind: 'git', url, ref, scope: 'global' } }
 }

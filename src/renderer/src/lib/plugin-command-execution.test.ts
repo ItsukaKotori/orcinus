@@ -16,6 +16,7 @@ function command(handler: ActivePluginCommand['handler']): ActivePluginCommand {
   return {
     pluginKey: 'orca-samples.tasks',
     pluginName: 'Tasks',
+    scope: 'global',
     id: 'open',
     title: 'Open Tasks',
     context: 'global',
@@ -48,6 +49,7 @@ describe('plugin command execution', () => {
 
     expect(invokeCommand).toHaveBeenCalledWith({
       pluginKey: 'orca-samples.tasks',
+      scope: 'global',
       commandId: 'open'
     })
   })

@@ -50,7 +50,8 @@ const dashboardPanel: ActivePluginPanel = {
   icon: 'gauge',
   tabKey: 'plugin:orca-samples.my-plugin/dashboard',
   pluginKey: 'orca-samples.my-plugin',
-  pluginName: 'My Plugin'
+  pluginName: 'My Plugin',
+  scope: 'global'
 }
 
 let container: HTMLDivElement
@@ -121,7 +122,8 @@ describe('PluginPanel', () => {
     expect(initialIframe).not.toBeNull()
     expect(readPanelEntryMock).toHaveBeenCalledWith({
       pluginKey: 'orca-samples.my-plugin',
-      panelId: 'dashboard'
+      panelId: 'dashboard',
+      scope: 'global'
     })
     expect(initialIframe?.getAttribute('srcdoc')).toContain('<h1>Hello plugin</h1>')
     expect(initialIframe?.getAttribute('title')).toBe('Dashboard')

@@ -62,7 +62,10 @@ export function createPluginsApi(): PluginsApi {
       return cloneMockValue(state)
     },
     getLogs: async () => [{ ts: Date.now(), level: 'info', line: 'mock log line' }],
+    getProjectLockState: async ({ repoId }) => ({ repoId, lockfilePath: '', entries: [] }),
+    installMissingFromLockfile: async () => [],
     refresh: async () => cloneMockValue(state),
+    onOpenTab: () => () => {},
     onChanged: () => () => {}
   }
 }

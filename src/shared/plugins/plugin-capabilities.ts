@@ -8,18 +8,20 @@ import { z } from 'zod'
  * conformance path, and tests.
  *
  * v0 is a closed set of unscoped kinds so a typo (or a capability from a newer
- * Orca) fails manifest validation instead of silently granting nothing.
- * Scoped kinds (net:fetch hosts, process:exec globs) arrive in later phases.
+ * Orca) fails manifest validation instead of silently granting nothing. The
+ * fork adds `workspace:open-tab` (8 total); scoped kinds (net:fetch hosts,
+ * process:exec globs) arrive in later phases.
  */
 
 export const PLUGIN_CAPABILITY_KINDS = [
-  'workspace:read',
-  'terminal:send',
-  'notifications:show',
-  'storage',
-  'secrets',
   'events:subscribe',
-  'settings:own'
+  'notifications:show',
+  'secrets',
+  'settings:own',
+  'storage',
+  'terminal:send',
+  'workspace:open-tab',
+  'workspace:read'
 ] as const
 
 export type PluginCapabilityKind = (typeof PLUGIN_CAPABILITY_KINDS)[number]
@@ -33,14 +35,15 @@ export type PluginCapability = z.infer<typeof pluginCapabilitySchema>
 /** Plain-language consent copy per capability. Shown verbatim in the install
  *  preview / consent dialog; keep each line honest about what is enforced. */
 export const PLUGIN_CAPABILITY_DESCRIPTIONS: Record<PluginCapabilityKind, string> = {
-  'workspace:read': 'Read the name, branch, and terminal list of your focused worktree',
-  'terminal:send': 'Type text into a terminal you can see (always a specific terminal)',
-  'notifications:show': 'Show desktop notifications labeled with the plugin name',
-  storage: "Store data in the plugin's own storage folder",
-  secrets: "Store and read secrets in the plugin's own encrypted vault",
   'events:subscribe':
     'Get notified when worktrees are created or removed and when agent status changes',
-  'settings:own': "Read and change the plugin's own settings"
+  'notifications:show': 'Show desktop notifications labeled with the plugin name',
+  secrets: "Store and read secrets in the plugin's own encrypted vault",
+  'settings:own': "Read and change the plugin's own settings",
+  storage: "Store data in the plugin's own storage folder",
+  'terminal:send': 'Type text into a terminal you can see (always a specific terminal)',
+  'workspace:open-tab': 'Open a new tab in the main workspace area',
+  'workspace:read': 'Read the name, branch, and terminal list of your focused worktree'
 }
 
 /**

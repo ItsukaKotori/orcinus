@@ -16,18 +16,33 @@ describe('parsePluginInstallSource', () => {
   it('separates the git URL and ref at the last hash', () => {
     expect(parsePluginInstallSource('git', 'https://example.test/plugin.git#v1.2.3')).toEqual({
       ok: true,
-      source: { kind: 'git', url: 'https://example.test/plugin.git', ref: 'v1.2.3' }
+      source: {
+        kind: 'git',
+        url: 'https://example.test/plugin.git',
+        ref: 'v1.2.3',
+        scope: 'global'
+      }
     })
   })
 
   it('accepts HTTPS and SSH git URLs', () => {
     expect(parsePluginInstallSource('git', 'ssh://git@example.test/acme/plugin.git#main')).toEqual({
       ok: true,
-      source: { kind: 'git', url: 'ssh://git@example.test/acme/plugin.git', ref: 'main' }
+      source: {
+        kind: 'git',
+        url: 'ssh://git@example.test/acme/plugin.git',
+        ref: 'main',
+        scope: 'global'
+      }
     })
     expect(parsePluginInstallSource('git', 'git@example.test:acme/plugin.git#main')).toEqual({
       ok: true,
-      source: { kind: 'git', url: 'git@example.test:acme/plugin.git', ref: 'main' }
+      source: {
+        kind: 'git',
+        url: 'git@example.test:acme/plugin.git',
+        ref: 'main',
+        scope: 'global'
+      }
     })
   })
 
@@ -45,7 +60,7 @@ describe('parsePluginInstallSource', () => {
   it('keeps local paths opaque', () => {
     expect(parsePluginInstallSource('local-path', ' C:\\plugins\\demo ')).toEqual({
       ok: true,
-      source: { kind: 'local-path', path: 'C:\\plugins\\demo' }
+      source: { kind: 'local-path', path: 'C:\\plugins\\demo', scope: 'global' }
     })
   })
 })

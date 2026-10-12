@@ -21,6 +21,7 @@ vi.mock('../ui/dropdown-menu', () => ({
 
 const plugin: PluginHostListEntry = {
   pluginKey: 'stablyai.orca-skills',
+  scope: 'global',
   consentFingerprint: 'sha256-consent',
   name: 'Orca Skills',
   version: '1.0.0',
@@ -32,6 +33,7 @@ const plugin: PluginHostListEntry = {
   bundled: true,
   capabilities: [],
   panels: [],
+  tabs: [],
   commands: [],
   hasWorker: false,
   restarts: 0,

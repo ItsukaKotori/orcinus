@@ -91,6 +91,7 @@ vi.mock('./PluginRollbackDialog', () => ({
 
 const plugin: PluginHostListEntry = {
   pluginKey: 'acme.notes',
+  scope: 'global',
   consentFingerprint: 'sha256-acme-notes',
   name: 'Notes',
   version: '1.0.0',
@@ -102,6 +103,7 @@ const plugin: PluginHostListEntry = {
   bundled: false,
   capabilities: [{ kind: 'panels', description: 'Add a Notes panel' }],
   panels: [],
+  tabs: [],
   commands: [],
   hasWorker: false,
   restarts: 0
@@ -259,11 +261,13 @@ describe('PluginsSettingsSection lifecycle', () => {
     await act(async () => click(pluginSwitch))
     expect(window.api.plugins.setEnabled).toHaveBeenCalledWith({
       pluginKey: plugin.pluginKey,
+      scope: 'global',
       enabled: false
     })
     await act(async () => click(pluginSwitch))
     expect(window.api.plugins.setEnabled).toHaveBeenLastCalledWith({
       pluginKey: plugin.pluginKey,
+      scope: 'global',
       enabled: true
     })
 
@@ -281,7 +285,10 @@ describe('PluginsSettingsSection lifecycle', () => {
       throw new Error('missing remove confirmation')
     }
     await act(async () => click(confirm))
-    expect(window.api.plugins.remove).toHaveBeenCalledWith({ pluginKey: plugin.pluginKey })
+    expect(window.api.plugins.remove).toHaveBeenCalledWith({
+      pluginKey: plugin.pluginKey,
+      scope: 'global'
+    })
   })
 
   it('confirms marketplace rollback before invoking plugin IPC', async () => {

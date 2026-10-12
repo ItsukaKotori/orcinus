@@ -199,10 +199,13 @@ export function PluginsSettingsSection({
     reviewedFingerprint: string,
     decision: 'approve' | 'keep-disabled'
   ): Promise<void> => {
+    const target = plugins.find((plugin) => plugin.pluginKey === pluginKey)
     setBusyPluginKeys((current) => new Set(current).add(pluginKey))
     try {
       const nextPlugins = await window.api.plugins.consent({
         pluginKey,
+        scope: target?.scope ?? 'global',
+        ...(target?.repoId ? { repoId: target.repoId } : {}),
         reviewedFingerprint,
         decision
       })
@@ -232,6 +235,8 @@ export function PluginsSettingsSection({
       const nextEnabled = !enabled
       const nextPlugins = await window.api.plugins.setEnabled({
         pluginKey: plugin.pluginKey,
+        scope: plugin.scope,
+        ...(plugin.repoId ? { repoId: plugin.repoId } : {}),
         enabled: nextEnabled
       })
       applyCompletedMutation(nextPlugins)
@@ -251,9 +256,14 @@ export function PluginsSettingsSection({
   }
 
   const remove = async (pluginKey: string): Promise<void> => {
+    const target = plugins.find((plugin) => plugin.pluginKey === pluginKey)
     setBusyPluginKeys((current) => new Set(current).add(pluginKey))
     try {
-      const nextPlugins = await window.api.plugins.remove({ pluginKey })
+      const nextPlugins = await window.api.plugins.remove({
+        pluginKey,
+        scope: target?.scope ?? 'global',
+        ...(target?.repoId ? { repoId: target.repoId } : {})
+      })
       applyCompletedMutation(nextPlugins)
       if (mountedRef.current) {
         setRemovePluginId(null)

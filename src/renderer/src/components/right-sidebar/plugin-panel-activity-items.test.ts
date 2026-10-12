@@ -8,7 +8,8 @@ const panel: ActivePluginPanel = {
   title: 'Dashboard',
   tabKey: 'plugin:orca-samples.demo/dashboard',
   pluginKey: 'orca-samples.demo',
-  pluginName: 'Demo'
+  pluginName: 'Demo',
+  scope: 'global'
 }
 
 describe('resolvePluginPanelIcon', () => {
