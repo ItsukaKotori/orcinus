@@ -56,6 +56,7 @@ import { createHostedReviewRealApi } from './real/hosted-review'
 import { createNotificationsRealApi } from './real/notifications'
 import { createOnboardingRealApi } from './real/onboarding'
 import { createPlatformRealApi } from './real/platform'
+import { createPluginsRealApi } from './real/plugins'
 import { createPreflightRealApi } from './real/preflight'
 import { createProjectGroupsRealApi } from './real/project-groups'
 import { createProjectsRealApi } from './real/projects'
@@ -90,6 +91,7 @@ type RealDomains = Pick<
   | 'notifications'
   | 'onboarding'
   | 'platform'
+  | 'plugins'
   | 'preflight'
   | 'projectGroups'
   | 'projects'
@@ -171,6 +173,7 @@ function createRealDomains(): RealDomains {
     notifications: createNotificationsRealApi(),
     onboarding: createOnboardingRealApi(),
     platform: createPlatformRealApi(),
+    plugins: createPluginsRealApi(),
     preflight: createPreflightRealApi(),
     projectGroups: createProjectGroupsRealApi(),
     projects: createProjectsRealApi(),

@@ -104,7 +104,7 @@ describe('createAdeApi real assembly', () => {
 
   it('keeps unported namespaces on the mock implementations', async () => {
     const api = createAdeApi()
-    await expect(api.plugins.list()).resolves.toEqual(expect.any(Array))
+    await expect(api.keybindings.get()).resolves.toMatchObject({ exists: false })
     await expect(api.agentAwake.getStatus()).resolves.toEqual({ mode: 'off', active: false })
     expect(invokeMock).not.toHaveBeenCalled()
   })
@@ -328,6 +328,19 @@ describe('createAdeApi real assembly', () => {
     expect(invokeMock.mock.calls).toEqual([
       ['skills_discover', { args: undefined }],
       ['skills_discover', { args: { refresh: true } }]
+    ])
+  })
+
+  it('routes the plugins domain through its real commands', async () => {
+    const api = createAdeApi()
+    invokeMock.mockResolvedValue([])
+
+    await api.plugins.list()
+    await api.plugins.refresh()
+
+    expect(invokeMock.mock.calls.map(([command]) => command)).toEqual([
+      'plugins_list',
+      'plugins_refresh'
     ])
   })
 

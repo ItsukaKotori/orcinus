@@ -19,6 +19,7 @@ import { createHostedReviewRealApi } from './hosted-review'
 import { createNotificationsRealApi } from './notifications'
 import { createOnboardingRealApi } from './onboarding'
 import { createPlatformRealApi } from './platform'
+import { createPluginsRealApi } from './plugins'
 import { createPreflightRealApi } from './preflight'
 import { createProjectsRealApi } from './projects'
 import { createPtyRealApi } from './pty'
@@ -415,6 +416,45 @@ const skillsSurfaceMethods = (disposition: SkillsMethodDisposition): string[] =>
     .filter(([, value]) => value === disposition)
     .map(([method]) => method)
 
+/**
+ * plugins 契约方法的处置全集（Task 14，Phase 3A）。宿主 22 命令 + 2 事件订阅全接真，
+ * 无缺失面；`satisfies Record<keyof …>` 把契约键集锁死：`PluginsApi` 新增方法而
+ * 不在此处置时 `pnpm typecheck` 失败。
+ */
+type PluginsMethodDisposition = 'explicit' | 'missing'
+
+const pluginsSurfaceDispositions = {
+  list: 'explicit',
+  listLanguagePacks: 'explicit',
+  consent: 'explicit',
+  setEnabled: 'explicit',
+  readPanelEntry: 'explicit',
+  invokeCommand: 'explicit',
+  panelAction: 'explicit',
+  install: 'explicit',
+  listMarketplaces: 'explicit',
+  addMarketplace: 'explicit',
+  removeMarketplace: 'explicit',
+  refreshMarketplaces: 'explicit',
+  listMarketplacePlugins: 'explicit',
+  previewMarketplacePlugin: 'explicit',
+  installMarketplacePlugin: 'explicit',
+  previewMarketplaceUpdate: 'explicit',
+  rollbackMarketplacePlugin: 'explicit',
+  remove: 'explicit',
+  getLogs: 'explicit',
+  getProjectLockState: 'explicit',
+  installMissingFromLockfile: 'explicit',
+  refresh: 'explicit',
+  onOpenTab: 'explicit',
+  onChanged: 'explicit'
+} satisfies Record<keyof PreloadApi['plugins'], PluginsMethodDisposition>
+
+const pluginsSurfaceMethods = (disposition: PluginsMethodDisposition): string[] =>
+  Object.entries(pluginsSurfaceDispositions)
+    .filter(([, value]) => value === disposition)
+    .map(([method]) => method)
+
 const surfaceCases: SurfaceCase[] = [
   {
     domain: 'repos',
@@ -715,6 +755,13 @@ const surfaceCases: SurfaceCase[] = [
     domain: 'skills',
     explicit: skillsSurfaceMethods('explicit'),
     missing: skillsSurfaceMethods('missing')
+  },
+  {
+    // Task 14（3A）：22 命令 + `plugins:changed`/`plugins:open-tab` 两订阅全接真，
+    // 无缺失面。契约共 24 方法（任务文本写 23，漏计 refresh）。
+    domain: 'plugins',
+    explicit: pluginsSurfaceMethods('explicit'),
+    missing: pluginsSurfaceMethods('missing')
   }
 ]
 
@@ -766,6 +813,13 @@ describe('mock/real parity: method surface', () => {
       warn.mockRestore()
     }
   )
+
+  it('plugins implements all 24 contract methods (22 commands + 2 subscriptions)', () => {
+    // The brief says 23, but the T13 contract has 24 keys; the `satisfies` lock
+    // above is the authority, this keeps the numeric expectation visible.
+    expect(pluginsSurfaceMethods('explicit')).toHaveLength(24)
+    expect(pluginsSurfaceMethods('missing')).toEqual([])
+  })
 
   it('pty.management implements the full management sub-surface', () => {
     // `management` 嵌套子对象同样以 `satisfies Record<keyof …>` 锁键集（见
@@ -1039,6 +1093,8 @@ function realApiFor(domain: keyof PreloadApi): unknown {
       return createPtyRealApi()
     case 'platform':
       return createPlatformRealApi()
+    case 'plugins':
+      return createPluginsRealApi()
     case 'notifications':
       return createNotificationsRealApi()
     case 'gh':
