@@ -148,4 +148,40 @@ describe('PluginInstallDialog', () => {
     })
     act(() => root.unmount())
   })
+
+  it('resets the scope radio when reopened or when the active repo changes', async () => {
+    useAppStore.setState({ activeRepoId: 'repo-1' })
+    const onInstall = vi
+      .fn<(source: PluginHostInstallSource) => Promise<void>>()
+      .mockResolvedValue(undefined)
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const root = createRoot(container)
+    const render = async (open: boolean): Promise<void> => {
+      await act(async () => {
+        root.render(<PluginInstallDialog open={open} onOpenChange={vi.fn()} onInstall={onInstall} />)
+      })
+    }
+
+    await render(true)
+    await act(async () => {
+      scopeRadio('Current project').dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(scopeRadio('Current project').getAttribute('aria-checked')).toBe('true')
+
+    await render(false)
+    await render(true)
+    expect(scopeRadio('Global').getAttribute('aria-checked')).toBe('true')
+
+    await act(async () => {
+      scopeRadio('Current project').dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(scopeRadio('Current project').getAttribute('aria-checked')).toBe('true')
+
+    await act(async () => {
+      useAppStore.setState({ activeRepoId: 'repo-2' })
+    })
+    expect(scopeRadio('Global').getAttribute('aria-checked')).toBe('true')
+    act(() => root.unmount())
+  })
 })

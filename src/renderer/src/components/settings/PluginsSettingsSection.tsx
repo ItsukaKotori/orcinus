@@ -13,6 +13,7 @@ import { PluginInstallDialog } from './PluginInstallDialog'
 import { PluginRemoveDialog } from './PluginRemoveDialog'
 import { PluginRollbackDialog } from './PluginRollbackDialog'
 import { PluginSettingsOverview } from './PluginSettingsOverview'
+import { matchesPluginRef, pluginRefKey } from './plugin-ref'
 import { getPluginsSectionPresentation } from './plugins-search'
 import { SettingsSection } from './SettingsSection'
 import { usePluginLogs } from './use-plugin-logs'
@@ -38,7 +39,7 @@ export function PluginsSettingsSection({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [installOpen, setInstallOpen] = useState(false)
-  const [consentPluginId, setConsentPluginId] = useState<string | null>(null)
+  const [consentTarget, setConsentTarget] = useState<PluginRef | null>(null)
   const [removePluginId, setRemovePluginId] = useState<string | null>(null)
   const [busyPluginKeys, setBusyPluginKeys] = useState<Set<string>>(() => new Set())
   const [featureBusy, setFeatureBusy] = useState(false)
@@ -52,7 +53,11 @@ export function PluginsSettingsSection({
     setPlugins(nextPlugins)
     setError(null)
     // Why: accepted discovery results own installed-plugin identity and invalidate stale UI state.
-    setConsentPluginId((current) => (current && installedPluginKeys.has(current) ? current : null))
+    // Why ref match, not key match: a same-key twin in another scope must not
+    // keep this dialog alive or get consented in its place.
+    setConsentTarget((current) =>
+      current && nextPlugins.some((plugin) => matchesPluginRef(plugin, current)) ? current : null
+    )
     setRemovePluginId((current) => (current && installedPluginKeys.has(current) ? current : null))
     setBusyPluginKeys(
       (current) => new Set([...current].filter((pluginKey) => installedPluginKeys.has(pluginKey)))
@@ -108,7 +113,7 @@ export function PluginsSettingsSection({
       setLoading(true)
       setError(null)
       setInstallOpen(false)
-      setConsentPluginId(null)
+      setConsentTarget(null)
       setRemovePluginId(null)
       setBusyPluginKeys(new Set())
       setFeatureBusy(false)
@@ -148,7 +153,7 @@ export function PluginsSettingsSection({
     plugins,
     applyCompletedMutation,
     setPluginListError,
-    setConsentPluginId,
+    setConsentTarget,
     setBusyPluginKeys
   })
   const pluginLogs = usePluginLogs(mounted, mountedRef, plugins)
@@ -160,7 +165,7 @@ export function PluginsSettingsSection({
   }
 
   const selectedConsentPlugin =
-    plugins.find((plugin) => plugin.pluginKey === consentPluginId) ?? null
+    plugins.find((plugin) => matchesPluginRef(plugin, consentTarget)) ?? null
   const consentPlugin = selectedConsentPlugin?.consentFingerprint ? selectedConsentPlugin : null
   const removePlugin = plugins.find((plugin) => plugin.pluginKey === removePluginId) ?? null
 
@@ -192,9 +197,14 @@ export function PluginsSettingsSection({
     if (!result.ok) {
       throw new Error(result.error)
     }
-    // Why: installation is not consent; select by id and wait for the authoritative list.
+    // Why: installation is not consent; select the freshly installed scope
+    // instance (the ref used at install) and wait for the authoritative list.
     setInstallOpen(false)
-    setConsentPluginId(result.pluginKey)
+    setConsentTarget({
+      pluginKey: result.pluginKey,
+      scope: source.scope,
+      ...(source.repoId ? { repoId: source.repoId } : {})
+    })
     await loadPluginList(window.api.plugins.refresh())
   }
 
@@ -213,7 +223,7 @@ export function PluginsSettingsSection({
       })
       applyCompletedMutation(nextPlugins)
       if (mountedRef.current) {
-        setConsentPluginId(null)
+        setConsentTarget(null)
       }
     } finally {
       if (mountedRef.current) {
@@ -342,7 +352,7 @@ export function PluginsSettingsSection({
         devPathsBusy={devPathsBusy}
         onToggleFeature={() => void toggleFeature()}
         onRefresh={refresh}
-        onReview={setConsentPluginId}
+        onReview={setConsentTarget}
         onToggleEnabled={(entry) => void toggleEnabled(entry)}
         onToggleLogs={pluginLogs.toggleLogs}
         onMarketplaceInstalled={marketplaceLifecycle.reloadAfterMutation}
@@ -352,7 +362,7 @@ export function PluginsSettingsSection({
       />
       <PluginInstallDialog open={installOpen} onOpenChange={setInstallOpen} onInstall={install} />
       <PluginConsentDialog
-        key={consentPlugin?.pluginKey ?? 'closed'}
+        key={consentTarget ? pluginRefKey(consentTarget) : 'closed'}
         plugin={consentPlugin}
         onDecision={decideConsent}
       />

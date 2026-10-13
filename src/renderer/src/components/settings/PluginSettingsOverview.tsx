@@ -1,11 +1,12 @@
 import { Blocks, Loader2, SearchX } from 'lucide-react'
-import type { PluginHostListEntry } from '../../../../preload/api-types'
+import type { PluginHostListEntry, PluginRef } from '../../../../preload/api-types'
 import { translate } from '@/i18n/i18n'
 import { PluginCatalogEmptyState } from '../plugin-catalog/PluginCatalogEmptyState'
 import { PluginDevelopmentSection } from './PluginDevelopmentSection'
 import { PluginMarketplaceBrowser } from './PluginMarketplaceBrowser'
 import { PluginSettingsRow, type PluginLogsState } from './PluginSettingsRow'
 import { SettingsRow, SettingsSwitch } from './SettingsFormControls'
+import { pluginRefKey, toPluginRef } from './plugin-ref'
 
 type PluginSettingsOverviewProps = {
   featureEnabled: boolean
@@ -21,7 +22,7 @@ type PluginSettingsOverviewProps = {
   devPathsBusy: boolean
   onToggleFeature: () => void
   onRefresh: () => Promise<void>
-  onReview: (pluginKey: string) => void
+  onReview: (ref: PluginRef) => void
   onToggleEnabled: (plugin: PluginHostListEntry) => void
   onToggleLogs: (pluginKey: string) => void
   onMarketplaceInstalled: (pluginKey: string) => Promise<void>
@@ -146,7 +147,7 @@ export function PluginSettingsOverview({
                 <div className="grid gap-3 lg:grid-cols-2">
                   {filteredPlugins.map((plugin) => (
                     <PluginSettingsRow
-                      key={plugin.pluginKey}
+                      key={pluginRefKey(toPluginRef(plugin))}
                       plugin={plugin}
                       busy={busyPluginKeys.has(plugin.pluginKey)}
                       logsOpen={openLogs.has(plugin.pluginKey)}

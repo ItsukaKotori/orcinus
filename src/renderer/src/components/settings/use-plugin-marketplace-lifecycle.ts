@@ -5,8 +5,9 @@ import {
   type MutableRefObject,
   type SetStateAction
 } from 'react'
-import type { PluginHostListEntry } from '../../../../preload/api-types'
+import type { PluginHostListEntry, PluginRef } from '../../../../preload/api-types'
 import { translate } from '@/i18n/i18n'
+import { toPluginRef } from './plugin-ref'
 
 type PluginMarketplaceLifecycleOptions = {
   mounted: boolean
@@ -14,7 +15,7 @@ type PluginMarketplaceLifecycleOptions = {
   plugins: readonly PluginHostListEntry[]
   applyCompletedMutation: (plugins: PluginHostListEntry[]) => void
   setPluginListError: (cause: unknown) => void
-  setConsentPluginId: Dispatch<SetStateAction<string | null>>
+  setConsentTarget: Dispatch<SetStateAction<PluginRef | null>>
   setBusyPluginKeys: Dispatch<SetStateAction<Set<string>>>
 }
 
@@ -24,7 +25,7 @@ export function usePluginMarketplaceLifecycle({
   plugins,
   applyCompletedMutation,
   setPluginListError,
-  setConsentPluginId,
+  setConsentTarget,
   setBusyPluginKeys
 }: PluginMarketplaceLifecycleOptions): {
   rollbackPlugin: PluginHostListEntry | null
@@ -54,7 +55,7 @@ export function usePluginMarketplaceLifecycle({
       applyCompletedMutation(nextPlugins)
       const changedPlugin = nextPlugins.find((plugin) => plugin.pluginKey === pluginKey)
       if (changedPlugin?.needsReconsent || changedPlugin?.status === 'pending') {
-        setConsentPluginId(pluginKey)
+        setConsentTarget(toPluginRef(changedPlugin))
       }
     } catch (cause) {
       if (mountedRef.current) {

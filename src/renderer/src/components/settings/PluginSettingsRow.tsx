@@ -7,10 +7,15 @@ import {
   RotateCcw,
   Trash2
 } from 'lucide-react'
-import type { PluginHostListEntry, PluginHostLogLine } from '../../../../preload/api-types'
+import type {
+  PluginHostListEntry,
+  PluginHostLogLine,
+  PluginRef
+} from '../../../../preload/api-types'
 import { translate } from '@/i18n/i18n'
 import { PluginCatalogAvatar } from '../plugin-catalog/PluginCatalogAvatar'
 import { invalidPluginErrorMessage } from './plugin-error-presentation'
+import { toPluginRef } from './plugin-ref'
 import { cn } from '@/lib/utils'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
@@ -33,7 +38,7 @@ type PluginSettingsRowProps = {
   busy: boolean
   logsOpen: boolean
   logsState?: PluginLogsState
-  onReview: (pluginKey: string) => void
+  onReview: (ref: PluginRef) => void
   onToggleEnabled: (plugin: PluginHostListEntry) => void
   onToggleLogs: (pluginKey: string) => void
   onRollbackRequest: (pluginKey: string) => void
@@ -156,7 +161,7 @@ export function PluginSettingsRow({
       variant="secondary"
       size="sm"
       disabled={busy}
-      onClick={() => onReview(plugin.pluginKey)}
+      onClick={() => onReview(toPluginRef(plugin))}
     >
       {translate('auto.components.settings.PluginSettingsRow.reviewAndEnable', 'Review & enable')}
     </Button>

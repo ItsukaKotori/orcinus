@@ -3,6 +3,7 @@ import { AlertTriangle, Check, Loader2 } from 'lucide-react'
 import type { PluginHostListEntry, PluginRef } from '../../../../preload/api-types'
 import { translate } from '@/i18n/i18n'
 import { pluginConsentErrorMessage } from './plugin-error-presentation'
+import { toPluginRef } from './plugin-ref'
 import { Button } from '../ui/button'
 import { PluginVmRecipeConsentPreview } from './PluginVmRecipeConsentPreview'
 import { PluginKeybindingConsentPreview } from './PluginKeybindingConsentPreview'
@@ -24,14 +25,6 @@ type PluginConsentDialogProps = {
     reviewedFingerprint: string,
     decision: 'approve' | 'keep-disabled'
   ) => Promise<void>
-}
-
-/** Consent is tracked per scope instance, so the decision must name the exact
- *  (pluginKey, scope, repoId) triple the dialog rendered. */
-function pluginRef(plugin: PluginHostListEntry): PluginRef {
-  return plugin.repoId
-    ? { pluginKey: plugin.pluginKey, scope: plugin.scope, repoId: plugin.repoId }
-    : { pluginKey: plugin.pluginKey, scope: plugin.scope }
 }
 
 function trustTier(plugin: PluginHostListEntry): string {
@@ -123,7 +116,7 @@ export function PluginConsentDialog({
     setError(null)
     try {
       // Why: consent is conditional on the exact trust boundary rendered by this dialog.
-      await onDecision(pluginRef(plugin), plugin.consentFingerprint, decision)
+      await onDecision(toPluginRef(plugin), plugin.consentFingerprint, decision)
     } catch (cause) {
       console.warn('[plugins] consent update failed:', cause)
       setError(pluginConsentErrorMessage(cause))

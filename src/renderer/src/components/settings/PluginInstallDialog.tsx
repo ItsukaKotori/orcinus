@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import type { PluginHostInstallSource, PluginScope } from '../../../../preload/api-types'
 import { useAppStore } from '@/store'
@@ -67,6 +67,12 @@ export function PluginInstallDialog({
   const [error, setError] = useState<string | null>(null)
   const [installing, setInstalling] = useState(false)
   const activeRepoId = useAppStore((s) => s.activeRepoId)
+
+  // Why: scope is a per-install decision. A stale project selection must not
+  // silently re-target when the dialog is reopened or the active repo changes.
+  useEffect(() => {
+    setScope('global')
+  }, [open, activeRepoId])
 
   const submit = async (): Promise<void> => {
     const parsed = parsePluginInstallSource(kind, kind === 'git' ? gitUrl : localPath, {
