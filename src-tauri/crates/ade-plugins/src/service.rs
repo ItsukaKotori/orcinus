@@ -36,7 +36,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use uuid::Uuid;
 
-use crate::artifact::{resolve_declared_artifact, PLUGIN_PANEL_ENTRY_MAX_BYTES};
+use crate::artifact::{
+    resolve_declared_artifact, PLUGIN_PANEL_ENTRY_MAX_BYTES, PLUGIN_TAB_ENTRY_MAX_BYTES,
+};
 use crate::audit::{AuditLog, AuditOutcome, AuditRecord, LogLine};
 use crate::consent::{fingerprint, scoped_key, ActivationState, ConsentKeyScope, ConsentState};
 use crate::content_hash::hash_plugin_tree;
@@ -65,7 +67,7 @@ use crate::sessions::{SessionBinding, SessionKind, SessionOwner, SessionRegistry
 use crate::storage::StorageStore;
 use crate::types::{
     Capability, PluginError, PluginScope, INVALID_PARAMS, IO_ERROR, PANEL_NOT_FOUND, TAB_LIMIT,
-    UNAVAILABLE,
+    TAB_NOT_FOUND, UNAVAILABLE,
 };
 use crate::watcher::{DevWatcher, DEV_WATCH_BATCH_TRAILING_MS};
 use crate::worker::manager::{
@@ -1252,6 +1254,68 @@ impl PluginService {
         self.panel_entry_for(&plugin_ref, &first, SessionKind::GlobalView, owner_window)
     }
 
+    /// Reads a declared main-area tab entry, wraps it in the host CSP shell,
+    /// and issues a renderer session token bound to that tab + instance +
+    /// worktree + manifest revision (spec §3.6). Same activation gate as
+    /// [`Self::panel_entry`]; an undeclared tab maps to `tab_not_found`.
+    #[allow(clippy::too_many_arguments)]
+    pub fn tab_entry(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        tab_id: &str,
+        instance_id: &str,
+        worktree_id: Option<&str>,
+        owner_window: &str,
+    ) -> Result<PanelEntry, PluginError> {
+        let plugin_ref = PluginRef {
+            plugin_key: plugin_key.to_string(),
+            scope,
+            repo_id: repo_id.map(str::to_string),
+        };
+        let (entry, manifest) = self.approved_entry(&plugin_ref)?;
+        let tab = manifest
+            .contributes
+            .tabs
+            .iter()
+            .find(|tab| tab.id == tab_id)
+            .ok_or_else(|| {
+                PluginError::new(
+                    TAB_NOT_FOUND,
+                    format!("plugin {plugin_key} does not declare tab {tab_id}"),
+                )
+            })?;
+        // Installed trees are immutable and hash-addressed; dev trees are
+        // deliberately mutable and skipped (integrity module docs).
+        if !entry.is_dev() {
+            verify_installed(&self.roots_for_ref(&plugin_ref)?.install_dir, &manifest)?;
+        }
+        let path = resolve_declared_artifact(&entry.root, &tab.entry, PLUGIN_TAB_ENTRY_MAX_BYTES)?;
+        let bytes = std::fs::read(&path).map_err(|error| {
+            PluginError::new(IO_ERROR, format!("tab entry could not be read: {error}"))
+        })?;
+        let html = String::from_utf8_lossy(&bytes);
+        let token = self.sessions.issue(SessionBinding {
+            plugin_key: plugin_key.to_string(),
+            kind: SessionKind::MainTab,
+            panel_id: None,
+            tab_id: Some(tab_id.to_string()),
+            instance_id: Some(instance_id.to_string()),
+            scope,
+            repo_id: repo_id.map(str::to_string),
+            worktree_id: worktree_id.map(str::to_string),
+            manifest_revision: manifest_revision(&manifest),
+            owner: SessionOwner::Renderer {
+                window_label: owner_window.to_string(),
+            },
+        });
+        Ok(PanelEntry {
+            html: build_panel_shell_html(&html),
+            session_token: token,
+        })
+    }
+
     fn panel_entry_for(
         &self,
         plugin_ref: &PluginRef,
@@ -1259,6 +1323,58 @@ impl PluginService {
         kind: SessionKind,
         owner_window: &str,
     ) -> Result<PanelEntry, PluginError> {
+        let (entry, manifest) = self.approved_entry(plugin_ref)?;
+        let panel = manifest
+            .contributes
+            .panels
+            .iter()
+            .find(|panel| panel.id == panel_id)
+            .ok_or_else(|| {
+                PluginError::new(
+                    PANEL_NOT_FOUND,
+                    format!(
+                        "plugin {} does not declare panel {panel_id}",
+                        plugin_ref.plugin_key
+                    ),
+                )
+            })?;
+        // Installed trees are immutable and hash-addressed; dev trees are
+        // deliberately mutable and skipped (integrity module docs).
+        if !entry.is_dev() {
+            verify_installed(&self.roots_for_ref(plugin_ref)?.install_dir, &manifest)?;
+        }
+        let path =
+            resolve_declared_artifact(&entry.root, &panel.entry, PLUGIN_PANEL_ENTRY_MAX_BYTES)?;
+        let bytes = std::fs::read(&path).map_err(|error| {
+            PluginError::new(IO_ERROR, format!("panel entry could not be read: {error}"))
+        })?;
+        let html = String::from_utf8_lossy(&bytes);
+        let token = self.sessions.issue(SessionBinding {
+            plugin_key: plugin_ref.plugin_key.clone(),
+            kind,
+            panel_id: Some(panel_id.to_string()),
+            tab_id: None,
+            instance_id: None,
+            scope: plugin_ref.scope,
+            repo_id: plugin_ref.repo_id.clone(),
+            worktree_id: None,
+            manifest_revision: manifest_revision(&manifest),
+            owner: SessionOwner::Renderer {
+                window_label: owner_window.to_string(),
+            },
+        });
+        Ok(PanelEntry {
+            html: build_panel_shell_html(&html),
+            session_token: token,
+        })
+    }
+
+    /// Shared renderer-entry gate: discovery + engine check + approved
+    /// activation, returning the discovered tree and its manifest.
+    fn approved_entry(
+        &self,
+        plugin_ref: &PluginRef,
+    ) -> Result<(DiscoveredPlugin, crate::manifest::Manifest), PluginError> {
         let discovered = self.discover_all();
         let entry = find_discovered(&discovered, plugin_ref).ok_or_else(|| {
             PluginError::new(
@@ -1271,7 +1387,7 @@ impl PluginService {
         })?;
         let manifest = entry
             .manifest
-            .as_ref()
+            .clone()
             .expect("valid entries carry a manifest");
         if !engine_satisfies(&manifest.engines.orca, &self.config.host_version) {
             return Err(PluginError::new(
@@ -1290,7 +1406,7 @@ impl PluginService {
         let activation = self.config.consent_state.activation(
             &plugin_ref.plugin_key,
             consent_scope_of(plugin_ref.scope, plugin_ref.repo_id.as_deref()),
-            &fingerprint(manifest, &content_key),
+            &fingerprint(&manifest, &content_key),
         );
         if activation != Some(ActivationState::Approved) {
             return Err(PluginError::new(
@@ -1301,49 +1417,7 @@ impl PluginService {
                 ),
             ));
         }
-        let panel = manifest
-            .contributes
-            .panels
-            .iter()
-            .find(|panel| panel.id == panel_id)
-            .ok_or_else(|| {
-                PluginError::new(
-                    PANEL_NOT_FOUND,
-                    format!(
-                        "plugin {} does not declare panel {panel_id}",
-                        plugin_ref.plugin_key
-                    ),
-                )
-            })?;
-        // Installed trees are immutable and hash-addressed; dev trees are
-        // deliberately mutable and skipped (integrity module docs).
-        if !entry.is_dev() {
-            verify_installed(&self.roots_for_ref(plugin_ref)?.install_dir, manifest)?;
-        }
-        let path =
-            resolve_declared_artifact(&entry.root, &panel.entry, PLUGIN_PANEL_ENTRY_MAX_BYTES)?;
-        let bytes = std::fs::read(&path).map_err(|error| {
-            PluginError::new(IO_ERROR, format!("panel entry could not be read: {error}"))
-        })?;
-        let html = String::from_utf8_lossy(&bytes);
-        let token = self.sessions.issue(SessionBinding {
-            plugin_key: plugin_ref.plugin_key.clone(),
-            kind,
-            panel_id: Some(panel_id.to_string()),
-            tab_id: None,
-            instance_id: None,
-            scope: plugin_ref.scope,
-            repo_id: plugin_ref.repo_id.clone(),
-            worktree_id: None,
-            manifest_revision: manifest_revision(manifest),
-            owner: SessionOwner::Renderer {
-                window_label: owner_window.to_string(),
-            },
-        });
-        Ok(PanelEntry {
-            html: build_panel_shell_html(&html),
-            session_token: token,
-        })
+        Ok((entry.clone(), manifest))
     }
 
     /// Runs one panel-bridge action (spec §3.6): resolves the session token,
@@ -4700,6 +4774,167 @@ rl.on('line', (line) => {
         let error = oversize
             .service
             .panel_entry(&global_ref("orca-samples.big"), "dashboard", "main")
+            .unwrap_err();
+        assert_eq!(error.code(), UNAVAILABLE);
+    }
+
+    #[test]
+    fn tab_entry_requires_approval_and_issues_main_tab_sessions() {
+        let temp = tempdir().unwrap();
+        let root = write_plugin(
+            &temp.path().join("dev-tabbed"),
+            "tabbed",
+            "1.0.0",
+            ">=1.0.0",
+            json!({
+                "contributes": {
+                    "tabs": [
+                        { "id": "board", "title": "Board", "entry": "panel.html" }
+                    ]
+                }
+            }),
+        );
+        let harness = harness_with_dev(temp.path(), "1.0.0", vec![root]);
+        let plugin_ref = global_ref("orca-samples.tabbed");
+
+        let error = harness
+            .service
+            .tab_entry(
+                "orca-samples.tabbed",
+                PluginScope::Global,
+                None,
+                "board",
+                "inst-1",
+                Some("wt-1"),
+                "main",
+            )
+            .unwrap_err();
+        assert_eq!(error.code(), gate::CONSENT_REQUIRED);
+        assert!(harness.service.sessions.is_empty());
+
+        approve(&harness, &plugin_ref);
+        let tab = harness
+            .service
+            .tab_entry(
+                "orca-samples.tabbed",
+                PluginScope::Global,
+                None,
+                "board",
+                "inst-1",
+                Some("wt-1"),
+                "main",
+            )
+            .unwrap();
+        assert!(
+            tab.html.contains(crate::panel_shell::PLUGIN_PANEL_CSP),
+            "shell CSP"
+        );
+        assert!(
+            tab.html.contains("<h1>panel</h1>"),
+            "entry bytes are wrapped"
+        );
+        let binding = harness
+            .service
+            .sessions
+            .resolve(&tab.session_token)
+            .expect("issued token resolves");
+        assert_eq!(binding.kind, SessionKind::MainTab);
+        assert_eq!(binding.panel_id, None);
+        assert_eq!(binding.tab_id.as_deref(), Some("board"));
+        assert_eq!(binding.instance_id.as_deref(), Some("inst-1"));
+        assert_eq!(binding.worktree_id.as_deref(), Some("wt-1"));
+        assert_eq!(binding.scope, PluginScope::Global);
+        assert_eq!(binding.repo_id, None);
+        assert_eq!(
+            binding.owner,
+            SessionOwner::Renderer {
+                window_label: "main".to_string()
+            }
+        );
+        assert!(binding.manifest_revision.starts_with("manifest-sha256-"));
+
+        let missing = harness
+            .service
+            .tab_entry(
+                "orca-samples.tabbed",
+                PluginScope::Global,
+                None,
+                "nope",
+                "inst-1",
+                None,
+                "main",
+            )
+            .unwrap_err();
+        assert_eq!(missing.code(), TAB_NOT_FOUND);
+    }
+
+    #[test]
+    fn tab_entry_rejects_escaping_and_oversize_entries() {
+        let temp = tempdir().unwrap();
+        let outside = temp.path().join("outside-tab");
+        std::fs::create_dir_all(&outside).unwrap();
+        std::fs::write(outside.join("board.html"), b"<h1>outside</h1>").unwrap();
+        let escape = write_plugin(
+            &temp.path().join("dev-tab-escape"),
+            "tabescape",
+            "1.0.0",
+            ">=1.0.0",
+            json!({
+                "contributes": {
+                    "tabs": [
+                        { "id": "board", "title": "Board", "entry": "escape/board.html" }
+                    ]
+                }
+            }),
+        );
+        std::os::unix::fs::symlink(&outside, escape.join("escape")).unwrap();
+        let escaped = harness_with_dev(temp.path(), "1.0.0", vec![escape]);
+        let error = escaped
+            .service
+            .tab_entry(
+                "orca-samples.tabescape",
+                PluginScope::Global,
+                None,
+                "board",
+                "inst-1",
+                None,
+                "main",
+            )
+            .unwrap_err();
+        assert_eq!(error.code(), UNAVAILABLE);
+
+        let big = write_plugin(
+            &temp.path().join("dev-tab-big"),
+            "tabbig",
+            "1.0.0",
+            ">=1.0.0",
+            json!({
+                "contributes": {
+                    "tabs": [
+                        { "id": "board", "title": "Board", "entry": "board.html" }
+                    ]
+                }
+            }),
+        );
+        std::fs::write(big.join("board.html"), b"<h1>board</h1>").unwrap();
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(big.join("board.html"))
+            .unwrap()
+            .set_len(PLUGIN_TAB_ENTRY_MAX_BYTES + 1)
+            .unwrap();
+        let oversize = harness_with_dev(temp.path(), "1.0.0", vec![big]);
+        let error = oversize
+            .service
+            .tab_entry(
+                "orca-samples.tabbig",
+                PluginScope::Global,
+                None,
+                "board",
+                "inst-1",
+                None,
+                "main",
+            )
             .unwrap_err();
         assert_eq!(error.code(), UNAVAILABLE);
     }

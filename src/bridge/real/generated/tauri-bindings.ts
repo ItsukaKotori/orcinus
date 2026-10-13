@@ -355,6 +355,10 @@ export const commands = {
 	html: string,
 	sessionToken: string,
 } | null, BridgeError>(__TAURI_INVOKE("plugins_read_panel_entry", { args })),
+	pluginsReadTabEntry: (args: PluginsReadTabEntryArgs_Deserialize) => typedError<{
+	html: string,
+	sessionToken: string,
+} | null, BridgeError>(__TAURI_INVOKE("plugins_read_tab_entry", { args })),
 	pluginsInvokeCommand: (args: PluginsInvokeCommandArgs_Deserialize) => typedError<Json, BridgeError>(__TAURI_INVOKE("plugins_invoke_command", { args })),
 	pluginsPanelAction: (args: PluginsPanelActionArgs_Deserialize) => __TAURI_INVOKE<PluginPanelActionOutcomeDto_Serialize>("plugins_panel_action", { args }),
 	pluginsInstall: (source: PluginHostInstallSourceDto_Deserialize) => typedError<PluginInstallResultDto_Serialize, BridgeError>(__TAURI_INVOKE("plugins_install", { source })),
@@ -2263,6 +2267,42 @@ export type PluginsReadPanelEntryArgs_Serialize = {
 	repoId?: string | null,
 	/**  Webview label owning the session; defaulted to `main` (the renderer). */
 	ownerWindow?: string | null,
+};
+
+/**
+ *  `readTabEntry` args (spec §3.6): the tab identity plus the instance and
+ *  worktree the renderer materialized it for.
+ */
+export type PluginsReadTabEntryArgs = PluginsReadTabEntryArgs_Serialize | PluginsReadTabEntryArgs_Deserialize;
+
+/**
+ *  `readTabEntry` args (spec §3.6): the tab identity plus the instance and
+ *  worktree the renderer materialized it for.
+ */
+export type PluginsReadTabEntryArgs_Deserialize = {
+	pluginKey: string,
+	tabId: string,
+	instanceId: string,
+	scope: PluginScopeDto,
+	repoId?: string | null,
+	worktreeId?: string | null,
+	/**  Webview label owning the session. */
+	ownerWindow: string,
+};
+
+/**
+ *  `readTabEntry` args (spec §3.6): the tab identity plus the instance and
+ *  worktree the renderer materialized it for.
+ */
+export type PluginsReadTabEntryArgs_Serialize = {
+	pluginKey: string,
+	tabId: string,
+	instanceId: string,
+	scope: PluginScopeDto,
+	repoId?: string | null,
+	worktreeId?: string | null,
+	/**  Webview label owning the session. */
+	ownerWindow: string,
 };
 
 export type PluginsRefreshMarketplacesArgs = PluginsRefreshMarketplacesArgs_Serialize | PluginsRefreshMarketplacesArgs_Deserialize;

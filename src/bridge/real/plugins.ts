@@ -58,7 +58,7 @@ function toPanelActionOutcome(outcome: PluginPanelActionOutcomeDto): PluginPanel
 }
 
 /**
- * Real `plugins` adapter (spec §3.9): all 24 contract methods route to the 22
+ * Real `plugins` adapter (spec §3.9): all 25 contract methods route to the 23
  * `plugins_*` commands plus the `plugins:changed` / `plugins:open-tab` Tauri
  * events. `plugins_install` and `plugins_add_marketplace` take `{ source }`;
  * every other invokable takes the shared `{ args }` envelope.
@@ -70,6 +70,7 @@ export function createPluginsRealApi(): PreloadApi['plugins'] {
     consent: (args) => invokeCommand('plugins_consent', { args }),
     setEnabled: (args) => invokeCommand('plugins_set_enabled', { args }),
     readPanelEntry: (args) => invokeCommand('plugins_read_panel_entry', { args }),
+    readTabEntry: (args) => invokeCommand('plugins_read_tab_entry', { args }),
     invokeCommand: (args) => invokeCommand('plugins_invoke_command', { args }),
     panelAction: (args) =>
       invokeCommand<PluginPanelActionOutcomeDto>('plugins_panel_action', { args }).then(

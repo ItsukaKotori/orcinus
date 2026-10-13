@@ -14,11 +14,12 @@ use ade_bridge::commands::plugins::{
     plugins_install_impl, plugins_install_marketplace_plugin_impl,
     plugins_install_missing_from_lockfile_impl, plugins_list_impl,
     plugins_list_language_packs_impl, plugins_list_marketplace_plugins_impl,
-    plugins_list_marketplaces_impl, plugins_read_panel_entry_impl, plugins_refresh_impl,
-    plugins_remove_impl, plugins_set_enabled_impl, PluginConsentDecisionDto,
+    plugins_list_marketplaces_impl, plugins_read_panel_entry_impl, plugins_read_tab_entry_impl,
+    plugins_refresh_impl, plugins_remove_impl, plugins_set_enabled_impl, PluginConsentDecisionDto,
     PluginHostInstallSourceDto, PluginInstallResultDto, PluginScopeDto, PluginsConsentArgs,
     PluginsGetLogsArgs, PluginsInstallMarketplacePluginArgs, PluginsPluginRefArgs,
-    PluginsProjectLockArgs, PluginsReadPanelEntryArgs, PluginsSetEnabledArgs,
+    PluginsProjectLockArgs, PluginsReadPanelEntryArgs, PluginsReadTabEntryArgs,
+    PluginsSetEnabledArgs,
 };
 use ade_bridge::plugins_service::{
     build_plugin_service, EventEmitter, PluginServiceDeps, PtySessionInfo, PtyTerminals,
@@ -450,6 +451,65 @@ fn read_panel_entry_requires_consent_then_returns_html_and_token() {
 }
 
 #[test]
+fn read_tab_entry_requires_consent_then_returns_html_and_token() {
+    let root = tempfile::tempdir().unwrap();
+    let fixture = write_fixture_plugin(root.path());
+    let (service, _) = service(root.path(), &[]);
+    install_fixture(&service, &fixture);
+
+    let args = PluginsReadTabEntryArgs {
+        plugin_key: PLUGIN_KEY.to_string(),
+        tab_id: "board".to_string(),
+        instance_id: "inst-1".to_string(),
+        scope: ade_bridge::commands::plugins::PluginScopeDto::Global,
+        repo_id: None,
+        worktree_id: Some(WORKTREE.to_string()),
+        owner_window: "main".to_string(),
+    };
+    let error = plugins_read_tab_entry_impl(&service, args.clone()).unwrap_err();
+    assert_eq!(error.code(), "consent_required");
+
+    let reviewed = plugins_list_impl(&service)[0]
+        .consent_fingerprint
+        .clone()
+        .unwrap();
+    plugins_consent_impl(
+        &service,
+        PluginsConsentArgs {
+            plugin_key: PLUGIN_KEY.to_string(),
+            scope: ade_bridge::commands::plugins::PluginScopeDto::Global,
+            repo_id: None,
+            reviewed_fingerprint: reviewed,
+            decision: PluginConsentDecisionDto::Approve,
+        },
+    )
+    .unwrap();
+
+    let entry = plugins_read_tab_entry_impl(&service, args)
+        .unwrap()
+        .expect("tab entry after approval");
+    assert!(entry.html.contains("board"));
+    assert!(entry.html.contains("Content-Security-Policy"));
+    assert!(entry.session_token.len() >= 32);
+
+    // Unknown tabs come back as `null`, not an error.
+    let missing = plugins_read_tab_entry_impl(
+        &service,
+        PluginsReadTabEntryArgs {
+            plugin_key: PLUGIN_KEY.to_string(),
+            tab_id: "nope".to_string(),
+            instance_id: "inst-1".to_string(),
+            scope: ade_bridge::commands::plugins::PluginScopeDto::Global,
+            repo_id: None,
+            worktree_id: None,
+            owner_window: "main".to_string(),
+        },
+    )
+    .unwrap();
+    assert!(missing.is_none());
+}
+
+#[test]
 fn project_lock_state_tracks_install_and_refresh_lists_it() {
     let root = tempfile::tempdir().unwrap();
     let repo = root.path().join("repo");
@@ -662,12 +722,13 @@ fn install_result_carries_the_resolved_commit_into_the_dto() {
 
 #[test]
 fn command_inventory_and_bindings_are_fresh() {
-    const COMMANDS: [&str; 22] = [
+    const COMMANDS: [&str; 23] = [
         "plugins_list",
         "plugins_list_language_packs",
         "plugins_consent",
         "plugins_set_enabled",
         "plugins_read_panel_entry",
+        "plugins_read_tab_entry",
         "plugins_invoke_command",
         "plugins_panel_action",
         "plugins_install",
@@ -696,7 +757,7 @@ fn command_inventory_and_bindings_are_fresh() {
     assert_eq!(
         bindings.matches("\"plugins_").count(),
         COMMANDS.len(),
-        "the plugins command inventory is exactly these 22 names"
+        "the plugins command inventory is exactly these 23 names"
     );
     assert_eq!(
         bindings,

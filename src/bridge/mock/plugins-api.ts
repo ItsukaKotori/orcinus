@@ -22,6 +22,7 @@ export function createPluginsApi(): PluginsApi {
       return cloneMockValue(state)
     },
     readPanelEntry: async () => null,
+    readTabEntry: async () => null,
     invokeCommand: async () => undefined,
     panelAction: async () => ({ ok: true, value: null }),
     install: async () => ({

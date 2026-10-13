@@ -10,7 +10,7 @@
 //!
 //! The setting's default is `false`. Parity with the oracle's
 //! `plugin-service.ts` gate: when the switch is off, *activation* paths
-//! (`plugins_invoke_command`, `plugins_read_panel_entry`, `plugins_panel_action`)
+//! (`plugins_invoke_command`, `plugins_read_panel_entry`, `plugins_read_tab_entry`, `plugins_panel_action`)
 //! fail with the stable `disabled_system` error, while worker-less operations
 //! (list/consent/enable/install/marketplaces/logs/lockfile) stay available so
 //! the UI can still enable and manage the system. The gate is applied in the
@@ -861,6 +861,23 @@ impl PluginsReadPanelEntryArgs {
     }
 }
 
+/// `readTabEntry` args (spec §3.6): the tab identity plus the instance and
+/// worktree the renderer materialized it for.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PluginsReadTabEntryArgs {
+    pub plugin_key: String,
+    pub tab_id: String,
+    pub instance_id: String,
+    pub scope: PluginScopeDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub repo_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub worktree_id: Option<String>,
+    /// Webview label owning the session.
+    pub owner_window: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginsInvokeCommandArgs {
@@ -1000,6 +1017,25 @@ pub fn plugins_read_panel_entry_impl(
     match service.panel_entry(&args.to_ref(), &args.panel_id, owner) {
         Ok(entry) => Ok(Some(entry.into())),
         Err(error) if error.code() == "panel_not_found" => Ok(None),
+        Err(error) => Err(error),
+    }
+}
+
+pub fn plugins_read_tab_entry_impl(
+    service: &ade_plugins::service::PluginService,
+    args: PluginsReadTabEntryArgs,
+) -> Result<Option<PluginPanelEntryDto>, PluginError> {
+    match service.tab_entry(
+        &args.plugin_key,
+        args.scope.into(),
+        args.repo_id.as_deref(),
+        &args.tab_id,
+        &args.instance_id,
+        args.worktree_id.as_deref(),
+        &args.owner_window,
+    ) {
+        Ok(entry) => Ok(Some(entry.into())),
+        Err(error) if error.code() == "tab_not_found" => Ok(None),
         Err(error) => Err(error),
     }
 }
@@ -1253,6 +1289,18 @@ pub fn plugins_read_panel_entry(
         return Err(disabled_system_error());
     }
     plugin_result(plugins_read_panel_entry_impl(&state.plugins, args))
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn plugins_read_tab_entry(
+    state: State<'_, AppState>,
+    args: PluginsReadTabEntryArgs,
+) -> Result<Option<PluginPanelEntryDto>, BridgeError> {
+    if !state.plugin_system_enabled() {
+        return Err(disabled_system_error());
+    }
+    plugin_result(plugins_read_tab_entry_impl(&state.plugins, args))
 }
 
 #[tauri::command]

@@ -169,6 +169,7 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::plugins::plugins_consent,
                 commands::plugins::plugins_set_enabled,
                 commands::plugins::plugins_read_panel_entry,
+                commands::plugins::plugins_read_tab_entry,
                 commands::plugins::plugins_invoke_command,
                 commands::plugins::plugins_panel_action,
                 commands::plugins::plugins_install,

@@ -55,6 +55,37 @@ describe('plugins real adapter routing', () => {
     })
   })
 
+  it('routes readTabEntry with the tab identity and owner window on the args envelope', async () => {
+    const entry = { html: '<html></html>', sessionToken: 'session-token' }
+    invokeMock.mockResolvedValueOnce(entry)
+    const args = {
+      pluginKey: 'acme.tools',
+      scope: 'project' as const,
+      repoId: 'repo-1',
+      tabId: 'board',
+      instanceId: 'inst-1',
+      worktreeId: 'repo-1::/repo',
+      ownerWindow: 'main'
+    }
+    await expect(createPluginsRealApi().readTabEntry(args)).resolves.toEqual(entry)
+    expect(invokeMock).toHaveBeenCalledWith('plugins_read_tab_entry', { args })
+  })
+
+  it('passes readTabEntry bridge errors through as Error instances', async () => {
+    invokeMock.mockRejectedValueOnce({
+      message: 'consent_required: acme.tools is not approved for activation'
+    })
+    await expect(
+      createPluginsRealApi().readTabEntry({
+        pluginKey: 'acme.tools',
+        scope: 'global',
+        tabId: 'board',
+        instanceId: 'inst-1',
+        ownerWindow: 'main'
+      })
+    ).rejects.toThrow('consent_required: acme.tools is not approved for activation')
+  })
+
   it('routes invokeCommand with the nested command args untouched', async () => {
     invokeMock.mockResolvedValueOnce({ echoed: true })
     await expect(

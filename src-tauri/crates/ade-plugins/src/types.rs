@@ -131,6 +131,8 @@ pub const ACTION_FAILED: &str = "action_failed";
 pub const UNAVAILABLE: &str = "unavailable";
 /// A panel/tab entry the session or request names is no longer declared.
 pub const PANEL_NOT_FOUND: &str = "panel_not_found";
+/// A main-area tab entry the request names is not declared.
+pub const TAB_NOT_FOUND: &str = "tab_not_found";
 /// The per-worktree live plugin-tab cap was reached.
 pub const TAB_LIMIT: &str = "tab_limit";
 

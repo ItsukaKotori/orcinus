@@ -206,6 +206,17 @@ export type PluginsApi = {
   /** Returns the panel's CSP-wrapped HTML, or null when the plugin or
    *  panel is missing/disabled. Rendered only inside a sandboxed iframe. */
   readPanelEntry: (args: PluginRef & { panelId: string }) => Promise<PluginPanelEntry | null>
+  /** Returns the main-area tab's CSP-wrapped HTML + session token, or null
+   *  when the plugin or tab is missing/disabled. Rendered only inside a
+   *  sandboxed iframe. */
+  readTabEntry: (
+    args: PluginRef & {
+      tabId: string
+      instanceId: string
+      worktreeId?: string
+      ownerWindow: string
+    }
+  ) => Promise<PluginPanelEntry | null>
   invokeCommand: (args: PluginRef & { commandId: string; args?: unknown }) => Promise<unknown>
   /** Relays a sandboxed panel's bridge request to main, which enforces the
    *  plugin's consented capabilities before executing. */
