@@ -1,8 +1,14 @@
+import { useEffect, useState } from 'react'
 import { AlertTriangle, Check, Loader2 } from 'lucide-react'
-import type { PluginMarketplaceHostInstallPreview } from '../../../../preload/api-types'
+import type {
+  PluginMarketplaceHostInstallPreview,
+  PluginScope
+} from '../../../../preload/api-types'
+import { useAppStore } from '@/store'
 import { translate } from '@/i18n/i18n'
 import { PluginCatalogAvatar } from '../plugin-catalog/PluginCatalogAvatar'
 import { PluginConsentProvenance, type PluginConsentSource } from './PluginConsentProvenance'
+import { SettingsSegmentedControl } from './SettingsFormControls'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import {
@@ -24,7 +30,7 @@ type PluginMarketplacePreviewDialogProps = {
   currentVersion: boolean
   error: string | null
   onClose: () => void
-  onConfirm: () => void
+  onConfirm: (scope: PluginScope, repoId?: string) => void
 }
 
 function contributionSummary(
@@ -137,6 +143,19 @@ export function PluginMarketplacePreviewDialog({
   onClose,
   onConfirm
 }: PluginMarketplacePreviewDialogProps): React.JSX.Element {
+  const [scope, setScope] = useState<PluginScope>('global')
+  const activeRepoId = useAppStore((s) => s.activeRepoId)
+
+  // Why: scope is a per-install decision. A stale project selection must not
+  // silently re-target when the active repo changes mid-review.
+  useEffect(() => {
+    setScope('global')
+  }, [activeRepoId])
+
+  const showScopePicker = mode === 'install' && !currentVersion
+  const confirm = (): void => {
+    onConfirm(scope, scope === 'project' ? (activeRepoId ?? undefined) : undefined)
+  }
   const contributions = preview ? contributionSummary(preview) : []
   const blocked = preview?.blockedByKillList
   const provenanceSource: PluginConsentSource | undefined = preview
@@ -257,6 +276,49 @@ export function PluginMarketplacePreviewDialog({
                 )}
               </p>
             ) : null}
+            {showScopePicker ? (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">
+                  {translate(
+                    'auto.components.settings.PluginMarketplacePreviewDialog.scopeLabel',
+                    'Install scope'
+                  )}
+                </p>
+                <SettingsSegmentedControl
+                  value={scope}
+                  onChange={setScope}
+                  ariaLabel={translate(
+                    'auto.components.settings.PluginMarketplacePreviewDialog.scopeLabel',
+                    'Install scope'
+                  )}
+                  options={[
+                    {
+                      value: 'global',
+                      label: translate(
+                        'auto.components.settings.PluginMarketplacePreviewDialog.scopeGlobal',
+                        'Global'
+                      )
+                    },
+                    {
+                      value: 'project',
+                      label: translate(
+                        'auto.components.settings.PluginMarketplacePreviewDialog.scopeProject',
+                        'Current project'
+                      ),
+                      disabled: !activeRepoId
+                    }
+                  ]}
+                />
+                {activeRepoId ? null : (
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    {translate(
+                      'auto.components.settings.PluginMarketplacePreviewDialog.scopeProjectDisabled',
+                      'Open a project to install a project-scoped plugin. Project plugins only load in this repository.'
+                    )}
+                  </p>
+                )}
+              </div>
+            ) : null}
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <DialogFooter>
               {currentVersion ? (
@@ -274,7 +336,10 @@ export function PluginMarketplacePreviewDialog({
                       'Cancel'
                     )}
                   </Button>
-                  <Button disabled={busy || Boolean(blocked)} onClick={onConfirm}>
+                  <Button
+                    disabled={busy || Boolean(blocked) || (showScopePicker && scope === 'project' && !activeRepoId)}
+                    onClick={confirm}
+                  >
                     {busy ? <Loader2 className="animate-spin" /> : null}
                     {mode === 'update'
                       ? translate(

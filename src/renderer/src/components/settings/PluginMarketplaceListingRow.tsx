@@ -1,4 +1,4 @@
-import { AlertTriangle, BadgeCheck, Check, Loader2 } from 'lucide-react'
+import { AlertTriangle, BadgeCheck, Check, Loader2, RotateCcw } from 'lucide-react'
 import type {
   PluginHostListEntry,
   PluginMarketplaceHostListing
@@ -14,16 +14,19 @@ type PluginMarketplaceListingRowProps = {
   installed: PluginHostListEntry | null
   busy: boolean
   onPreview: (listing: PluginMarketplaceHostListing, update: boolean) => void
+  onRollback?: (installed: PluginHostListEntry) => void
 }
 
 export function PluginMarketplaceListingRow({
   listing,
   installed,
   busy,
-  onPreview
+  onPreview,
+  onRollback
 }: PluginMarketplaceListingRowProps): React.JSX.Element {
   const blocked = listing.blockedByKillList
-  const canCheckUpdate = installed?.source?.kind === 'marketplace'
+  const installedMarketplace = installed?.source?.kind === 'marketplace' ? installed : null
+  const canCheckUpdate = Boolean(installedMarketplace)
   const name = pluginDisplayNameFromKey(listing.pluginKey)
   return (
     <article
@@ -98,19 +101,35 @@ export function PluginMarketplaceListingRow({
             )}
           </Button>
         ) : canCheckUpdate ? (
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-40"
-            disabled={busy}
-            onClick={() => onPreview(listing, true)}
-          >
-            {busy ? <Loader2 className="animate-spin" /> : null}
-            {translate(
-              'auto.components.settings.PluginMarketplaceListingRow.checkUpdate',
-              'Check for update'
-            )}
-          </Button>
+          <div className="flex items-center gap-1">
+            {installedMarketplace && onRollback ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={busy}
+                onClick={() => onRollback(installedMarketplace)}
+              >
+                <RotateCcw />
+                {translate(
+                  'auto.components.settings.PluginMarketplaceListingRow.rollback',
+                  'Roll back'
+                )}
+              </Button>
+            ) : null}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-40"
+              disabled={busy}
+              onClick={() => onPreview(listing, true)}
+            >
+              {busy ? <Loader2 className="animate-spin" /> : null}
+              {translate(
+                'auto.components.settings.PluginMarketplaceListingRow.checkUpdate',
+                'Check for update'
+              )}
+            </Button>
+          </div>
         ) : installed ? null : (
           <Button
             variant="outline"

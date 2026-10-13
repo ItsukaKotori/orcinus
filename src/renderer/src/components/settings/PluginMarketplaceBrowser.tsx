@@ -4,7 +4,8 @@ import type {
   PluginHostListEntry,
   PluginMarketplaceHostInstallPreview,
   PluginMarketplaceHostListing,
-  PluginMarketplaceHostSourceState
+  PluginMarketplaceHostSourceState,
+  PluginScope
 } from '../../../../preload/api-types'
 import { translate } from '@/i18n/i18n'
 import { PluginCatalogEmptyState } from '../plugin-catalog/PluginCatalogEmptyState'
@@ -19,6 +20,7 @@ import {
   type PluginMarketplacePreviewMode
 } from './PluginMarketplacePreviewDialog'
 import { PluginMarketplaceSourceDialog } from './PluginMarketplaceSourceDialog'
+import { PluginRollbackDialog } from './PluginRollbackDialog'
 
 type PluginMarketplaceBrowserProps = {
   installedPlugins: readonly PluginHostListEntry[]
@@ -51,6 +53,9 @@ export function PluginMarketplaceBrowser({
   const [previewBusyKey, setPreviewBusyKey] = useState<string | null>(null)
   const [installBusy, setInstallBusy] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [rollbackTarget, setRollbackTarget] = useState<PluginHostListEntry | null>(null)
+  const [rollbackBusy, setRollbackBusy] = useState(false)
+  const [rollbackError, setRollbackError] = useState<string | null>(null)
   const mountedRef = useRef(false)
   const requestRef = useRef(0)
   const previewRequestRef = useRef(0)
@@ -89,10 +94,14 @@ export function PluginMarketplaceBrowser({
   useEffect(() => {
     mountedRef.current = true
     void loadMarketplaceData()
+    const unsubscribe = window.api.plugins.onChanged(() => {
+      void loadMarketplaceData()
+    })
     return () => {
       mountedRef.current = false
       requestRef.current += 1
       previewRequestRef.current += 1
+      unsubscribe()
     }
   }, [loadMarketplaceData])
 
@@ -179,19 +188,26 @@ export function PluginMarketplaceBrowser({
     }
   }
 
-  const installPreview = async (): Promise<void> => {
+  const installPreview = async (scope: PluginScope, repoId?: string): Promise<void> => {
     if (!preview || installBusy) {
       return
     }
     setInstallBusy(true)
     setActionError(null)
     try {
+      // Why: an update keeps the installed instance's scope; only fresh
+      // installs use the reviewed scope selection.
+      const installed = installedByKey.get(preview.pluginKey)
+      const targetScope = previewMode === 'update' && installed ? installed.scope : scope
+      const targetRepoId =
+        previewMode === 'update' && installed ? installed.repoId : scope === 'project' ? repoId : undefined
       const result = await window.api.plugins.installMarketplacePlugin({
         marketplaceSourceId: preview.marketplaceSourceId,
         marketplaceCommit: preview.marketplaceCommit,
         pluginKey: preview.pluginKey,
         resolvedCommit: preview.resolvedCommit,
-        scope: 'global'
+        scope: targetScope,
+        ...(targetRepoId ? { repoId: targetRepoId } : {})
       })
       if (!result.ok) {
         throw new Error(result.error)
@@ -220,6 +236,41 @@ export function PluginMarketplaceBrowser({
   const currentVersion = Boolean(
     preview && installedByKey.get(preview.pluginKey)?.source?.contentHash === preview.contentHash
   )
+
+  const requestRollback = (plugin: PluginHostListEntry): void => {
+    setRollbackError(null)
+    setRollbackTarget(plugin)
+  }
+
+  const confirmRollback = async (pluginKey: string): Promise<void> => {
+    setRollbackBusy(true)
+    setRollbackError(null)
+    try {
+      const result = await window.api.plugins.rollbackMarketplacePlugin({ pluginKey })
+      if (!result.ok) {
+        throw new Error(result.error)
+      }
+      setRollbackTarget(null)
+      await onInstalled(result.pluginKey)
+      await loadMarketplaceData()
+    } catch (cause) {
+      if (mountedRef.current) {
+        setRollbackError(
+          marketplaceError(
+            cause,
+            translate(
+              'auto.components.settings.PluginMarketplaceBrowser.rollbackFailed',
+              'Could not roll back this plugin. A previous immutable version may not be available.'
+            )
+          )
+        )
+      }
+    } finally {
+      if (mountedRef.current) {
+        setRollbackBusy(false)
+      }
+    }
+  }
 
   return (
     <>
@@ -351,6 +402,7 @@ export function PluginMarketplaceBrowser({
                     installed={installedByKey.get(listing.pluginKey) ?? null}
                     busy={previewBusyKey === listing.pluginKey}
                     onPreview={(entry, update) => void openPreview(entry, update)}
+                    onRollback={requestRollback}
                   />
                 ))}
               </div>
@@ -372,7 +424,14 @@ export function PluginMarketplaceBrowser({
         currentVersion={currentVersion}
         error={actionError}
         onClose={() => setPreview(null)}
-        onConfirm={() => void installPreview()}
+        onConfirm={(scope, repoId) => void installPreview(scope, repoId)}
+      />
+      <PluginRollbackDialog
+        plugin={rollbackTarget}
+        busy={rollbackBusy}
+        error={rollbackError}
+        onCancel={() => setRollbackTarget(null)}
+        onConfirm={(pluginKey) => void confirmRollback(pluginKey)}
       />
     </>
   )

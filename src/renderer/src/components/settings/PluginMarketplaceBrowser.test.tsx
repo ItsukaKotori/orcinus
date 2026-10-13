@@ -9,6 +9,7 @@ import type {
   PluginMarketplaceHostListing,
   PluginMarketplaceHostSourceState
 } from '../../../../preload/api-types'
+import { useAppStore } from '@/store'
 import { PluginMarketplaceBrowser } from './PluginMarketplaceBrowser'
 
 function deferred<T>(): {
@@ -128,6 +129,15 @@ function installApi(overrides: Record<string, unknown> = {}): void {
           consentFingerprint: preview.consentFingerprint,
           resolvedCommit: preview.resolvedCommit
         }),
+        rollbackMarketplacePlugin: vi.fn().mockResolvedValue({
+          ok: true,
+          pluginKey: listing.pluginKey,
+          version: preview.manifest.version,
+          contentHash: preview.contentHash,
+          consentFingerprint: preview.consentFingerprint,
+          resolvedCommit: PLUGIN_COMMIT
+        }),
+        onChanged: vi.fn().mockReturnValue(() => {}),
         addMarketplace: vi.fn(),
         removeMarketplace: vi.fn(),
         ...overrides
@@ -165,9 +175,23 @@ function button(label: string): HTMLButtonElement {
   return match
 }
 
-beforeEach(() => installApi())
+function scopeOption(label: string): HTMLElement {
+  const match = Array.from(document.querySelectorAll<HTMLElement>('[role="radio"]')).find(
+    (candidate) => candidate.textContent?.trim() === label
+  )
+  if (!match) {
+    throw new Error(`missing ${label} scope option`)
+  }
+  return match
+}
+
+beforeEach(() => {
+  useAppStore.setState({ activeRepoId: null })
+  installApi()
+})
 
 afterEach(() => {
+  useAppStore.setState({ activeRepoId: null })
   document.body.innerHTML = ''
   vi.restoreAllMocks()
 })
@@ -305,6 +329,71 @@ describe('PluginMarketplaceBrowser', () => {
 
     expect(document.body.textContent).toContain('Worktree Tasks')
     expect(document.body.textContent).not.toContain('Worktree Notes')
+    act(() => root.unmount())
+  })
+
+  it('disables project scope without an active project', async () => {
+    const { root } = await renderBrowser()
+
+    await act(async () => button('Install').click())
+
+    expect(scopeOption('Current project').getAttribute('aria-disabled')).toBe('true')
+    expect(document.body.textContent).toContain(
+      'Open a project to install a project-scoped plugin.'
+    )
+    act(() => root.unmount())
+  })
+
+  it('installs project-scoped with the active repoId', async () => {
+    useAppStore.setState({ activeRepoId: 'repo-1' })
+    const { root } = await renderBrowser()
+
+    await act(async () => button('Install').click())
+    await act(async () => scopeOption('Current project').click())
+    expect(scopeOption('Current project').getAttribute('aria-checked')).toBe('true')
+
+    await act(async () => button('Install plugin').click())
+
+    expect(window.api.plugins.installMarketplacePlugin).toHaveBeenCalledWith({
+      marketplaceSourceId: SOURCE_ID,
+      marketplaceCommit: MARKETPLACE_COMMIT,
+      pluginKey: listing.pluginKey,
+      resolvedCommit: PLUGIN_COMMIT,
+      scope: 'project',
+      repoId: 'repo-1'
+    })
+    act(() => root.unmount())
+  })
+
+  it('rolls back an installed marketplace plugin after confirmation', async () => {
+    const { root, onInstalled } = await renderBrowser([installedPlugin()])
+
+    await act(async () => button('Roll back').click())
+    await act(async () => button('Roll back plugin').click())
+
+    expect(window.api.plugins.rollbackMarketplacePlugin).toHaveBeenCalledWith({
+      pluginKey: listing.pluginKey
+    })
+    expect(onInstalled).toHaveBeenCalledWith(listing.pluginKey)
+    act(() => root.unmount())
+  })
+
+  it('reloads marketplace data when plugins change', async () => {
+    let changed: (() => void) | undefined
+    installApi({
+      onChanged: vi.fn((callback: () => void) => {
+        changed = callback
+        return () => {}
+      })
+    })
+    const { root } = await renderBrowser()
+    const before = vi.mocked(window.api.plugins.listMarketplacePlugins).mock.calls.length
+
+    await act(async () => changed?.())
+
+    expect(vi.mocked(window.api.plugins.listMarketplacePlugins).mock.calls.length).toBeGreaterThan(
+      before
+    )
     act(() => root.unmount())
   })
 })
