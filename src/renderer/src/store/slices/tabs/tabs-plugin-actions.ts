@@ -55,15 +55,22 @@ export function createTabsPluginActions(
         ...(input.params !== undefined ? { params: input.params } : {})
       }
       const id = openPluginTabBindingId(input)
-      return get().createUnifiedTab(worktreeId, 'plugin', {
+      const shouldActivate = get().activeWorktreeId === worktreeId
+      const created = get().createUnifiedTab(worktreeId, 'plugin', {
         id,
         entityId: id,
         label: openPluginTabLabel({ ...input, titleHint: binding.titleHint }),
         pluginTab: binding,
         // Why: mirrors every other opener — activate only when the target
         // worktree is the one on screen; background worktrees stay untouched.
-        activate: get().activeWorktreeId === worktreeId
+        activate: shouldActivate
       })
+      if (shouldActivate) {
+        // Why: browser/editor openers write `activeTabTypeByWorktree` as part of
+        // activation; createUnifiedTab alone leaves the derived surface stale.
+        set((state) => buildActiveSurfacePatch(state, worktreeId, created.groupId))
+      }
+      return created
     }
   }
 }

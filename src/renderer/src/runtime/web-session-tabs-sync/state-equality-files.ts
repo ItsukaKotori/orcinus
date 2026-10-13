@@ -147,7 +147,11 @@ export function toVisibleTabType(tab: Tab): WebSessionTabsSyncState['activeTabTy
   if (tab.contentType === 'agent-session') {
     return 'agent-session'
   }
-  if (tab.contentType === 'browser' || tab.contentType === 'terminal') {
+  if (
+    tab.contentType === 'browser' ||
+    tab.contentType === 'terminal' ||
+    tab.contentType === 'plugin'
+  ) {
     return tab.contentType
   }
   return 'editor'

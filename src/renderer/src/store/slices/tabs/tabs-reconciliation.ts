@@ -125,6 +125,12 @@ export function projectWorktreeTabModelReconciliation(
     if (tab.contentType === 'agent-session') {
       return true
     }
+    if (tab.contentType === 'plugin') {
+      // Why: a plugin tab is liveness-independent — its binding (not a runtime
+      // object like a PTY/openFile) is the render contract, and reconcile runs
+      // right after open. Dropping it here silently closed every plugin tab.
+      return tab.pluginTab != null
+    }
     return liveEditorIds.has(tab.entityId)
   }
 

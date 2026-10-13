@@ -56,6 +56,9 @@ describe('openPluginTab', () => {
     expect(group?.tabOrder).toEqual([tab?.id])
     expect(group?.activeTabId).toBe(tab?.id)
     expect(store.getState().activeGroupIdByWorktree[WT]).toBe(group?.id)
+    // Why: openers write the derived active surface on activation; create must too.
+    expect(store.getState().activeTabType).toBe('plugin')
+    expect(store.getState().activeTabTypeByWorktree[WT]).toBe('plugin')
   })
 
   it('falls back to titleHint, then tabId, and caps the label at 128 chars', () => {
@@ -109,6 +112,34 @@ describe('openPluginTab', () => {
   })
 })
 
+describe('plugin tab reconciliation', () => {
+  it('keeps the plugin tab through reconcileWorktreeTabModel', () => {
+    const store = makeStore()
+    const tab = store.getState().openPluginTab(baseInput)
+
+    store.getState().reconcileWorktreeTabModel(WT)
+
+    expect(store.getState().getTab(tab!.id)).not.toBeNull()
+    expect(store.getState().unifiedTabsByWorktree[WT]).toHaveLength(1)
+    expect(store.getState().groupsByWorktree[WT]?.[0]?.tabOrder).toEqual([tab!.id])
+  })
+
+  it('survives the last-terminal close reconcile', () => {
+    const store = makeStore()
+    const pluginTab = store.getState().openPluginTab(baseInput)
+    const terminal = store.getState().createTab(WT)
+
+    store.getState().closeTab(terminal.id)
+    // Mirrors terminal-tab-actions.ts: the last close reconciles the model.
+    store.getState().reconcileWorktreeTabModel(WT)
+
+    const kept = store.getState().getTab(pluginTab!.id)
+    expect(kept?.contentType).toBe('plugin')
+    expect(kept?.pluginTab?.instanceId).toBe('inst-1')
+    expect(store.getState().unifiedTabsByWorktree[WT]).toHaveLength(1)
+  })
+})
+
 describe('plugin tab close / recently closed', () => {
   it('records the plugin kind in the recently-closed stack on close', () => {
     const store = makeStore()
@@ -127,6 +158,18 @@ describe('plugin tab close / recently closed', () => {
 
     expect(store.getState().reopenClosedTab(WT)).toBe(false)
     expect(store.getState().recentlyClosedTabKindsByWorktree[WT]).toEqual([])
+  })
+
+  it('copyUnifiedTabToGroup preserves the plugin binding', () => {
+    const store = makeStore()
+    const tab = store.getState().openPluginTab(baseInput)
+    const sourceGroupId = store.getState().activeGroupIdByWorktree[WT]!
+    const targetGroupId = store.getState().createEmptySplitGroup(WT, sourceGroupId, 'right')
+
+    const copy = store.getState().copyUnifiedTabToGroup(tab!.id, targetGroupId!)
+
+    expect(copy?.contentType).toBe('plugin')
+    expect(copy?.pluginTab).toEqual(tab!.pluginTab)
   })
 
   it('pins and unpins plugin tabs generically', () => {
