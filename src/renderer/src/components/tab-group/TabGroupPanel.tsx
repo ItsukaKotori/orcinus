@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import TabBar from '../tab-bar/TabBar'
+import PluginTabContent from '../tabs/PluginTabContent'
 
 import { TabBarQuickCommandsButton } from '../tab-bar/TabBarQuickCommandsButton'
 import { useTabGroupWorkspaceModel } from './useTabGroupWorkspaceModel'
@@ -159,7 +160,8 @@ export default function TabGroupPanel({
       activeFileId={
         activeTab?.contentType === 'terminal' ||
         activeTab?.contentType === 'agent-session' ||
-        activeTab?.contentType === 'browser'
+        activeTab?.contentType === 'browser' ||
+        activeTab?.contentType === 'plugin'
           ? null
           : activeTab?.id
       }
@@ -341,10 +343,21 @@ export default function TabGroupPanel({
             className="pointer-events-none absolute inset-x-0 top-1/4 h-px"
           />
         ) : null}
+        {activeTab?.contentType === 'plugin' ? (
+          <div className="absolute inset-0 flex min-h-0 min-w-0">
+            <PluginTabContent
+              tab={activeTab}
+              onClose={() => {
+                commands.closeItem(activeTab.id)
+              }}
+            />
+          </div>
+        ) : null}
         {activeTab &&
           activeTab.contentType !== 'terminal' &&
           activeTab.contentType !== 'agent-session' &&
-          activeTab.contentType !== 'browser' && (
+          activeTab.contentType !== 'browser' &&
+          activeTab.contentType !== 'plugin' && (
             <div className="absolute inset-0 flex min-h-0 min-w-0">
               {/* Why: split groups render editor content in a plain relative pane body, not the legacy Terminal.tsx flex column. */}
               <Suspense

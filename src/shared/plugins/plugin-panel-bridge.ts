@@ -16,6 +16,10 @@ export const PANEL_ACTION_REQUEST_TYPE = 'orca-panel-action'
 export const PANEL_ACTION_RESULT_TYPE = 'orca-panel-action-result'
 export const PANEL_PING_TYPE = 'orca-panel-ping'
 export const PANEL_PONG_TYPE = 'orca-panel-pong'
+/** Host→guest message carrying the persisted `workspace.openTab` params into a
+ *  mounted plugin tab document. Posted only after the shell's first pong, so
+ *  the guest's message listener is installed before the init arrives. */
+export const PANEL_INIT_TYPE = 'orca-panel-init'
 export const PLUGIN_PANEL_FRAME_NAME_PREFIX = 'orca-plugin-panel:'
 
 /** Per-plugin bridge budgets, enforced host-side. */
@@ -49,6 +53,30 @@ export const panelPongSchema = z.object({
   type: z.literal(PANEL_PONG_TYPE),
   pingId: z.number().int().nonnegative()
 })
+
+export const panelInitMessageSchema = z.object({
+  type: z.literal(PANEL_INIT_TYPE),
+  params: z.unknown()
+})
+
+export type PluginPanelInitMessage = z.infer<typeof panelInitMessageSchema>
+
+/** Builds the host→guest init frame. `params` stays opaque (persisted tab
+ *  binding params; `workspace.openTab` already validated and sized them). */
+export function createPanelInitMessage(params: unknown): PluginPanelInitMessage {
+  return { type: PANEL_INIT_TYPE, params }
+}
+
+export type PanelInitMessageParseResult =
+  | { ok: true; params: unknown }
+  | { ok: false }
+
+/** Validates a raw `message` event payload as an init frame and surfaces the
+ *  opaque params. Guest-side counterpart of `readPanelPongId`. */
+export function parsePanelInitMessage(data: unknown): PanelInitMessageParseResult {
+  const parsed = panelInitMessageSchema.safeParse(data)
+  return parsed.success ? { ok: true, params: parsed.data.params } : { ok: false }
+}
 
 export type PluginPanelActionErrorCode =
   | 'invalid_request'

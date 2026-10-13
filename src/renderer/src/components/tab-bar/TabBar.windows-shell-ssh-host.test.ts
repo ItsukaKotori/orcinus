@@ -6,6 +6,7 @@ import {
   stubEditorFileTab,
   stubEditorLabels,
   stubFocusTerminalTabSurface,
+  stubPluginPanelsStore,
   stubHeadlessReact,
   stubQuickLaunchButton,
   stubShallowSelector,
@@ -37,6 +38,7 @@ vi.mock('./BrowserTab', () => stubBrowserTab())
 vi.mock('./QuickLaunchButton', () => stubQuickLaunchButton())
 vi.mock('./shell-icons', () => stubShellIcons())
 vi.mock('@/lib/focus-terminal-tab-surface', () => stubFocusTerminalTabSurface())
+vi.mock('@/store/plugin-panels', () => stubPluginPanelsStore())
 vi.mock('@/components/ui/dropdown-menu', () => stubDropdownMenu())
 
 describe('TabBar PowerShell launch wiring', () => {

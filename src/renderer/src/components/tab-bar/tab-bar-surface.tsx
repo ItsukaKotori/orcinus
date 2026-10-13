@@ -23,6 +23,7 @@ import type { TabBarItemProjection } from './use-tab-bar-item-projection'
 import type { TabBarItem } from './tab-bar-item-model'
 import { renderTabBarItems } from './tab-bar-item-surface'
 import { TabBarStaticCreateMenu } from './tab-bar-static-create-menu'
+import { TabBarPluginTabMenuItems } from './TabBarPluginTabMenuItems'
 import ClientHostedBrowserTabRows from './ClientHostedBrowserTabRows'
 import type { ClientHostedBrowserRow } from '../../../../shared/client-hosted-browser-rows'
 
@@ -255,6 +256,9 @@ export function renderTabBarSurface({
                 queueNewActiveTerminalFocusAfterNewTabMenuClose
               }
             />
+          ) : null}
+          {showStaticCreateMenuItems && !terminalOnly ? (
+            <TabBarPluginTabMenuItems worktreeId={worktreeId} />
           ) : null}
           {showStaticCreateMenuItems && showAgentLaunchItems ? (
             <>

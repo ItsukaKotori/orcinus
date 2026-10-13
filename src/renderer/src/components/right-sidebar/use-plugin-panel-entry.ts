@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import {
+  createPanelInitMessage,
   PANEL_PING_TYPE,
   PLUGIN_PANEL_FRAME_NAME_PREFIX
 } from '../../../../shared/plugins/plugin-panel-bridge'
@@ -27,11 +28,21 @@ export type PluginPanelHealth = 'healthy' | 'error'
 export type UsePluginPanelEntryOptions = {
   pluginKey: string | null
   panelId: string | null
+  /** Main-area `contributes.tabs` entry id; set instead of `panelId` for
+   *  `PluginTabContent` sessions. */
+  tabId?: string | null
+  /** `PluginTabBinding.instanceId`, forwarded to `readTabEntry`. */
+  instanceId?: string
+  /** Worktree the tab session binds to; forwarded to `readTabEntry`. */
+  worktreeId?: string
   scope: PluginScope
   repoId?: string
   /** Stable identity for the iframe name and watchdog (tab key or `plugin:<key>`). */
   instanceKey: string
   onHealth?: (health: PluginPanelHealth) => void
+  /** Persisted `workspace.openTab` params posted as `orca-panel-init` after the
+   *  mounted document's first pong. Skipped when undefined. */
+  initParams?: unknown
 }
 
 export type UsePluginPanelEntryResult = {
@@ -62,7 +73,7 @@ function fillPanelShell(html: string): string {
 export function usePluginPanelEntry(
   options: UsePluginPanelEntryOptions
 ): UsePluginPanelEntryResult {
-  const { pluginKey, panelId, scope, repoId, instanceKey } = options
+  const { pluginKey, panelId, tabId, instanceId, worktreeId, scope, repoId, instanceKey } = options
   const [entryState, setEntryState] = useState<PluginPanelEntryState>({ status: 'loading' })
   const [sessionToken, setSessionToken] = useState<string | null>(null)
   const [loadedFrameKey, setLoadedFrameKey] = useState<string | null>(null)
@@ -73,6 +84,11 @@ export function usePluginPanelEntry(
   // callback through a ref instead of being rebuilt when the callback changes.
   const onHealthRef = useRef(options.onHealth)
   onHealthRef.current = options.onHealth
+  // Why: the message handler is rebuilt only when the document/session changes;
+  // refs keep it reading the latest init params and frame identity.
+  const initParamsRef = useRef(options.initParams)
+  initParamsRef.current = options.initParams
+  const initPostedFrameKeyRef = useRef<string | null>(null)
 
   const panelShell = entryState.status === 'ready' ? entryState.shellHtml : null
   const panelDocument = panelShell ? fillPanelShell(panelShell) : null
@@ -82,6 +98,10 @@ export function usePluginPanelEntry(
     entryState.status === 'ready'
       ? `${instanceKey}:${entryState.documentRevision}:${themeRevision}`
       : null
+  // Why: pongs can arrive outside render closures; a ref lets the stable
+  // message handler know which document the init frame has already been sent to.
+  const panelFrameKeyRef = useRef(panelFrameKey)
+  panelFrameKeyRef.current = panelFrameKey
   const watchdog = useMemo(
     () =>
       createPanelWatchdog({
@@ -105,7 +125,19 @@ export function usePluginPanelEntry(
       getPanelWindow: () => iframeRef.current?.contentWindow ?? null,
       callPanelAction: callPanelActionViaPreload,
       isActive: () => active,
-      onPong: (pingId) => watchdog.handlePong(pingId)
+      onPong: (pingId) => {
+        watchdog.handlePong(pingId)
+        // Spec §3.6: `orca-panel-init` follows the shell's first pong, proving
+        // the guest listener is installed. Once per mounted document, not per
+        // pong; the frame key changes when srcdoc/theme rebuilds the document.
+        const frameKey = panelFrameKeyRef.current
+        const params = initParamsRef.current
+        if (!frameKey || params === undefined || initPostedFrameKeyRef.current === frameKey) {
+          return
+        }
+        initPostedFrameKeyRef.current = frameKey
+        iframeRef.current?.contentWindow?.postMessage(createPanelInitMessage(params), '*')
+      }
     })
     window.addEventListener('message', handler)
     return () => {
@@ -125,7 +157,7 @@ export function usePluginPanelEntry(
   }, [loadedFrameKey, panelFrameKey, watchdog])
 
   useEffect(() => {
-    if (!pluginKey || !panelId) {
+    if (!pluginKey || (!panelId && !tabId)) {
       return
     }
     let cancelled = false
@@ -134,7 +166,7 @@ export function usePluginPanelEntry(
     setEntryState({ status: 'loading' })
     setSessionToken(null)
     const pluginsApi = window.api?.plugins
-    if (!pluginsApi) {
+    if (!pluginsApi || (tabId && !pluginsApi.readTabEntry)) {
       onHealthRef.current?.('error')
       setEntryState({ status: 'error' })
       return
@@ -142,8 +174,18 @@ export function usePluginPanelEntry(
     let loadGeneration = 0
     const load = (): void => {
       const generation = ++loadGeneration
-      pluginsApi
-        .readPanelEntry({ pluginKey, panelId, scope, repoId })
+      const entryRequest = tabId
+        ? pluginsApi.readTabEntry!({
+            pluginKey,
+            tabId,
+            instanceId: instanceId ?? instanceKey,
+            scope,
+            ...(repoId ? { repoId } : {}),
+            worktreeId,
+            ownerWindow: 'main'
+          })
+        : pluginsApi.readPanelEntry({ pluginKey, panelId: panelId!, scope, repoId })
+      entryRequest
         .then((entry) => {
           if (cancelled || generation !== loadGeneration) {
             return
@@ -185,7 +227,7 @@ export function usePluginPanelEntry(
       loadGeneration += 1
       unsubscribe?.()
     }
-  }, [panelId, pluginKey, repoId, scope])
+  }, [instanceId, panelId, pluginKey, repoId, scope, tabId, worktreeId])
 
   return {
     entryState,
