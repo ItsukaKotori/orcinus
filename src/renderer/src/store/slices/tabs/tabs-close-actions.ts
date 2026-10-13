@@ -8,6 +8,7 @@ import {
   sanitizeRecentTabIds
 } from '../tab-group-state'
 import { buildActiveSurfacePatch } from './tabs-surface'
+import { pushRecentlyClosedTabKind } from '../recently-closed-tabs'
 
 export function createTabsCloseActions(
   set: TabsSliceSet,
@@ -55,6 +56,12 @@ export function createTabsCloseActions(
         const nextTabs = (current.unifiedTabsByWorktree[worktreeId] ?? []).filter(
           (item) => item.id !== tabId
         )
+        // Why: plugin tabs have no per-type close handler, so the unified close
+        // path records their kind in the reopen stack (reopen skips them).
+        const nextRecentlyClosedTabKinds =
+          tab.contentType === 'plugin'
+            ? pushRecentlyClosedTabKind(current.recentlyClosedTabKindsByWorktree, worktreeId, 'plugin')
+            : current.recentlyClosedTabKindsByWorktree
         // Why: close-to-right/others bypass terminals.closeTab, so clear the entityId-keyed unread flag here or a stale dot leaks.
         let nextUnreadTerminalTabs = current.unreadTerminalTabs
         if (terminalEntityId && current.unreadTerminalTabs[terminalEntityId]) {
@@ -105,6 +112,9 @@ export function createTabsCloseActions(
           // Why: skip writing unreadTerminalTabs when the reference is unchanged, avoiding a no-op alloc that re-runs full-state selectors.
           ...(nextUnreadTerminalTabs !== current.unreadTerminalTabs
             ? { unreadTerminalTabs: nextUnreadTerminalTabs }
+            : {}),
+          ...(nextRecentlyClosedTabKinds !== current.recentlyClosedTabKindsByWorktree
+            ? { recentlyClosedTabKindsByWorktree: nextRecentlyClosedTabKinds }
             : {}),
           // Why: closing the last tab can leave the worktree selected but render-empty, so write the landing-state fallback directly.
           ...(shouldDeactivateWorktree

@@ -32,6 +32,7 @@ export type TabsSlice = {
         | 'color'
         | 'isPreview'
         | 'isPinned'
+        | 'pluginTab'
       > & {
         targetGroupId: string
         activate: boolean
@@ -39,6 +40,19 @@ export type TabsSlice = {
       }
     >
   ) => Tab
+  /** Opens (or focuses) a main-area plugin tab. Deduped by `instanceId` within
+   *  the worktree — the backend re-emits `workspace.openTab` with the same
+   *  instance id for the same `(pluginKey, tabId, params)` triple. */
+  openPluginTab: (input: {
+    pluginKey: string
+    tabId: string
+    scope: 'global' | 'project'
+    repoId?: string
+    instanceId: string
+    title?: string
+    params?: unknown
+    worktreeId: string
+  }) => Tab | null
   createUnifiedTabInSplit: (
     worktreeId: string,
     contentType: TabContentType,
@@ -59,6 +73,7 @@ export type TabsSlice = {
         | 'color'
         | 'isPreview'
         | 'isPinned'
+        | 'pluginTab'
       > & {
         activate: boolean
         recordInteraction: boolean

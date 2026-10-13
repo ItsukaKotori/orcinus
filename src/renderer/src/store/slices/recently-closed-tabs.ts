@@ -32,7 +32,7 @@ export type ClosedTerminalTabSnapshot = {
   position?: RecentlyClosedTabPosition
 }
 
-export type RecentlyClosedTabKind = 'terminal' | 'browser' | 'editor'
+export type RecentlyClosedTabKind = 'terminal' | 'browser' | 'editor' | 'plugin'
 
 const MAX_RECENT_CLOSED_TERMINAL_TABS = 10
 // Why: wider than the per-type stacks (10) so cross-type ordering survives a
@@ -194,7 +194,13 @@ export const createRecentlyClosedTabsSlice: StateCreator<
           ? get().reopenClosedTerminalTab(worktreeId)
           : kind === 'browser'
             ? get().reopenClosedBrowserTab(worktreeId) !== null
-            : get().reopenClosedEditorTab(worktreeId)
+            : kind === 'plugin'
+              ? // Why: plugin tabs are owned by the plugin bridge, not by a
+                // renderer snapshot — reopening happens through the tab menu or
+                // a fresh `workspace.openTab`. Skip instead of misrouting to
+                // the editor stack.
+                false
+              : get().reopenClosedEditorTab(worktreeId)
       if (reopened) {
         return true
       }

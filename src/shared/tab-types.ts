@@ -25,8 +25,14 @@ export type TabContentType =
   | 'check-details'
   | 'agent-session'
   | 'browser'
+  | 'plugin'
 
-export type WorkspaceVisibleTabType = 'terminal' | 'editor' | 'agent-session' | 'browser'
+export type WorkspaceVisibleTabType =
+  | 'terminal'
+  | 'editor'
+  | 'agent-session'
+  | 'browser'
+  | 'plugin'
 export type CtrlTabOrderMode = 'mru' | 'sequential'
 
 // Why: many-to-one — every editor-family kind collapses to 'editor'. Never invert it by equality;
@@ -35,11 +41,26 @@ export function toVisibleTabType(contentType: TabContentType): WorkspaceVisibleT
   if (
     contentType === 'agent-session' ||
     contentType === 'browser' ||
-    contentType === 'terminal'
+    contentType === 'terminal' ||
+    contentType === 'plugin'
   ) {
     return contentType
   }
   return 'editor'
+}
+
+/** Binding of a main-area tab to a plugin's `contributes.tabs` entry. The
+ *  instance id is stable across dedupe (same plugin tab reopened focuses the
+ *  existing tab) and survives hydration. */
+export type PluginTabBinding = {
+  pluginKey: string
+  tabId: string
+  scope: 'global' | 'project'
+  repoId?: string
+  instanceId: string
+  titleHint?: string
+  /** Opaque `workspace.openTab` params, forwarded to the iframe init message. */
+  params?: unknown
 }
 
 export type Tab = {
@@ -72,6 +93,9 @@ export type Tab = {
   viewMode?: 'terminal' | 'chat'
   /** Timestamp when the tab was last focused / activated by the user. */
   lastFocusedAt?: number
+  /** Present iff `contentType === 'plugin'`; optional so persisted sessions
+   *  written before plugin tabs existed hydrate unchanged. */
+  pluginTab?: PluginTabBinding
 }
 
 export type TabGroup = {
