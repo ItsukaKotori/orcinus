@@ -54,7 +54,7 @@ use crate::install::publication::publish_install;
 use crate::install::staging::read_install_manifest;
 use crate::install::{ensure_project_gitignore, install_from_local, uninstall};
 use crate::install::{InstallContext, InstallResult};
-use crate::integrity::verify_installed;
+use crate::integrity::{verify_installed, FsContentHasher, PluginContentVerifier};
 use crate::manifest::engine_satisfies;
 use crate::marketplace::installer::{MarketplaceInstaller, MarketplacePreview};
 use crate::marketplace::service::{is_official_plugin_identity, MarketplaceService};
@@ -698,6 +698,11 @@ pub struct PluginService {
     git: GitRunner,
     bridge: Arc<WorkerBridge>,
     manager: Mutex<WorkerManager>,
+    /// Lazy content-integrity verifier for installed worker payloads: each
+    /// immutable `(plugin_key, version_dir, content_hash)` identity is hashed
+    /// exactly once per process, before the first worker start (spec
+    /// §3.1/§3.5; oracle `PluginContentVerifier` parity).
+    verifier: Mutex<PluginContentVerifier<FsContentHasher>>,
     sessions: SessionRegistry,
     /// `(instance_key, worktree_id) -> tabs` dedupe/limits tracked main-side
     /// for `workspace.openTab`; pruned on worktree removal and deactivation.
@@ -752,6 +757,7 @@ impl PluginService {
             git: GitRunner::new(DEFAULT_PLUGIN_GIT_TIMEOUT),
             bridge,
             manager: Mutex::new(manager),
+            verifier: Mutex::new(PluginContentVerifier::new(FsContentHasher)),
             sessions: SessionRegistry::new(),
             tab_trackers: Mutex::new(HashMap::new()),
             panel_admission: PanelAdmission::default(),
@@ -2563,6 +2569,22 @@ impl PluginService {
                 ),
             ));
         }
+        // Installed trees are immutable and hash-addressed: lazily re-verify
+        // the payload's bytes against the current pointer before the first
+        // worker start, so a tampered tree can never execute with granted
+        // capabilities (spec §3.1/§3.5). The verifier keys on the immutable
+        // `(plugin_key, version_dir, install_hash)` identity, so worker
+        // runtime artifacts in the tree cannot fail an already-proven
+        // identity on later activations. Dev trees are live source
+        // directories that change while Orca runs and are skipped here
+        // (oracle parity; see the integrity module docs).
+        if !entry.is_dev() {
+            let content_hash = entry.install_hash.as_deref().unwrap_or_default();
+            self.verifier
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .verify(&plugin_ref.plugin_key, &entry.root, content_hash)?;
+        }
         let declared_commands = manifest
             .contributes
             .commands
@@ -4044,6 +4066,157 @@ rl.on('line', (line) => {
             "timeout error must name the missing reply: {}",
             error.message()
         );
+        harness.service.shutdown();
+    }
+
+    /// Overwrites the immutable installed worker payload of `plugin_key` and
+    /// returns its version directory (the worker's spawn cwd).
+    fn tamper_installed_worker(harness: &Harness, plugin_key: &str) -> PathBuf {
+        let install_hash = harness
+            .service
+            .list()
+            .into_iter()
+            .find(|entry| entry.plugin_key == plugin_key)
+            .and_then(|entry| entry.install_hash)
+            .expect("installed content hash");
+        let version_dir = harness
+            .app_data
+            .join("plugins")
+            .join(plugin_key)
+            .join(install_hash);
+        std::fs::write(version_dir.join("main.mjs"), b"// tampered worker bytes\n").unwrap();
+        version_dir
+    }
+
+    #[test]
+    fn worker_activation_rejects_a_tampered_installed_payload() {
+        let temp = tempdir().unwrap();
+        let source = write_worker_plugin(
+            &temp.path().join("source"),
+            "tampered-worker",
+            &["echo"],
+            &["worktree.created"],
+            &["events:subscribe"],
+        );
+        let harness = harness(temp.path(), "1.0.0");
+        install_local(&harness, &source, global_target());
+        let plugin_ref = global_ref("orca-samples.tampered-worker");
+        approve(&harness, &plugin_ref);
+        let version_dir = tamper_installed_worker(&harness, "orca-samples.tampered-worker");
+
+        let error = harness.service.ensure_active(&plugin_ref).unwrap_err();
+        assert_eq!(error.code(), crate::types::INTEGRITY_MISMATCH);
+        assert!(
+            !version_dir.join("worker.pid").exists(),
+            "a tampered payload must not spawn a worker"
+        );
+        assert!(matches!(
+            harness
+                .service
+                .manager()
+                .state("global:orca-samples.tampered-worker"),
+            WorkerState::Inactive
+        ));
+
+        // Static-event delivery activates subscribers through the same
+        // chokepoint: a tampered subscriber must never be started.
+        assert_eq!(
+            harness.service.deliver_plugin_event(
+                "worktree.created",
+                json!({ "worktreeId": "w1", "path": "/tmp/wt", "branch": "main" })
+            ),
+            0,
+            "a tampered static subscriber must not receive the event"
+        );
+        assert!(!version_dir.join("worker.pid").exists());
+    }
+
+    #[test]
+    fn invoke_command_rejects_a_tampered_installed_payload() {
+        let temp = tempdir().unwrap();
+        let source = write_worker_plugin(
+            &temp.path().join("source"),
+            "tampered-invoker",
+            &["echo"],
+            &[],
+            &[],
+        );
+        let harness = harness(temp.path(), "1.0.0");
+        install_local(&harness, &source, global_target());
+        let plugin_ref = global_ref("orca-samples.tampered-invoker");
+        approve(&harness, &plugin_ref);
+        let version_dir = tamper_installed_worker(&harness, "orca-samples.tampered-invoker");
+
+        let error = harness
+            .service
+            .invoke_command(&plugin_ref, "echo", Some(json!({ "n": 1 })))
+            .unwrap_err();
+        assert_eq!(error.code(), crate::types::INTEGRITY_MISMATCH);
+        assert!(!version_dir.join("worker.pid").exists());
+        assert!(matches!(
+            harness
+                .service
+                .manager()
+                .state("global:orca-samples.tampered-invoker"),
+            WorkerState::Inactive
+        ));
+    }
+
+    #[test]
+    fn healthy_installed_worker_activates_and_invokes() {
+        if !node_available() {
+            return;
+        }
+        let temp = tempdir().unwrap();
+        install_fake_host_entry(temp.path());
+        let source = write_worker_plugin(
+            &temp.path().join("source"),
+            "installed-worker",
+            &["echo"],
+            &[],
+            &[],
+        );
+        let harness = harness(temp.path(), "1.0.0");
+        install_local(&harness, &source, global_target());
+        let plugin_ref = global_ref("orca-samples.installed-worker");
+        approve(&harness, &plugin_ref);
+
+        harness.service.ensure_active(&plugin_ref).unwrap();
+        assert!(matches!(
+            harness
+                .service
+                .manager()
+                .state("global:orca-samples.installed-worker"),
+            WorkerState::Running { .. }
+        ));
+        let value = harness
+            .service
+            .invoke_command(&plugin_ref, "echo", Some(json!({ "n": 1 })))
+            .unwrap();
+        assert_eq!(value, json!({ "command": "echo", "args": { "n": 1 } }));
+        harness.service.shutdown();
+    }
+
+    #[test]
+    fn dev_worker_skips_integrity_verification_for_live_edits() {
+        if !node_available() {
+            return;
+        }
+        let temp = tempdir().unwrap();
+        install_fake_host_entry(temp.path());
+        let root = write_worker_plugin(&temp.path().join("dev-live"), "live", &["echo"], &[], &[]);
+        let harness = harness_with_dev(temp.path(), "1.0.0", vec![root.clone()]);
+        let plugin_ref = global_ref("orca-samples.live");
+        approve(&harness, &plugin_ref);
+
+        // Dev trees are not hash-addressed and change on disk while Orca
+        // runs, so they bypass integrity verification (oracle parity).
+        std::fs::write(root.join("main.mjs"), b"// live dev edit\n").unwrap();
+        harness.service.ensure_active(&plugin_ref).unwrap();
+        assert!(matches!(
+            harness.service.manager().state("global:orca-samples.live"),
+            WorkerState::Running { .. }
+        ));
         harness.service.shutdown();
     }
 
