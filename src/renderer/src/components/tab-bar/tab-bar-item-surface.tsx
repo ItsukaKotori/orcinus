@@ -6,6 +6,7 @@ import { isAgentSessionHandleProvider } from '../../../../shared/agent-session-p
 import SortableTab from './SortableTab'
 import EditorFileTab from './EditorFileTab'
 import BrowserTab from './BrowserTab'
+import { PluginTabLeadingIcon } from './PluginTabLeadingIcon'
 import type { DropIndicator } from './drop-indicator'
 import type { TabDragItemData } from '../tab-group/useTabDragSplit'
 import { getTabDragLabel, type TabBarItem } from './tab-bar-item-model'
@@ -49,6 +50,7 @@ export function renderTabBarItems({
     onCloseFile,
     onActivateBrowserTab,
     onActivateAgentSession,
+    onActivatePlugin,
     onCloseBrowserTab,
     onDuplicateBrowserTab,
     onCloseAllFiles,
@@ -80,7 +82,8 @@ export function renderTabBarItems({
       tabType: item.type,
       label: getTabDragLabel(item, generatedTabTitlesEnabled),
       iconPath: item.type === 'editor' ? item.data.filePath : undefined,
-      color: item.type === 'terminal' ? (item.data.color ?? null) : null
+      color:
+        item.type === 'terminal' || item.type === 'plugin' ? (item.data.color ?? null) : null
     }
     if (item.type === 'terminal') {
       const terminalTab = {
@@ -181,6 +184,52 @@ export function renderTabBarItems({
           isExpanded={false}
           onActivate={() => activateRealTab(onActivateAgentSession)(item.id)}
           onClose={() => onClose(item.id)}
+          onCloseOthers={() => onCloseOthers(item.id)}
+          onCloseToRight={() => onCloseToRight(item.id)}
+          onCloseToLeft={() => onCloseToLeft(item.id)}
+          onSetCustomTitle={onSetCustomTitle}
+          onSetTabColor={onSetTabColor}
+          onTogglePin={() => togglePinned(item)}
+          onToggleExpand={() => {}}
+          canSplitTerminal={false}
+          dragData={dragData}
+          dropIndicator={dropIndicatorByVisibleId.get(item.id) ?? null}
+          includeTopTabBorder={includeTopTabBorder}
+        />
+      )
+    }
+    if (item.type === 'plugin') {
+      // Plugin tabs reuse the terminal row chrome (drag/close/pin/context menu)
+      // through a synthesized runtime tab; the unified id is the visible id.
+      const pluginRowTab: TerminalTab = {
+        id: item.id,
+        ptyId: null,
+        worktreeId,
+        title: item.data.label,
+        customTitle: item.data.customLabel,
+        color: item.data.color,
+        sortOrder: item.data.sortOrder,
+        createdAt: item.data.createdAt
+      }
+      return (
+        <SortableTab
+          key={item.id}
+          tab={pluginRowTab}
+          unifiedTabId={item.unifiedTabId}
+          groupId={resolvedGroupId}
+          tabCount={items.length}
+          hasTabsToRight={index < items.length - 1}
+          hasTabsToLeft={index > 0}
+          isActive={
+            !clientHostedRowOwnsActiveState &&
+            activeTabType === 'plugin' &&
+            item.id === activeTabId
+          }
+          isPinned={item.isPinned}
+          isExpanded={false}
+          leadingIcon={<PluginTabLeadingIcon binding={item.data.pluginTab} />}
+          onActivate={() => activateRealTab(onActivatePlugin)(item.id)}
+          onClose={() => onCloseFile?.(item.id)}
           onCloseOthers={() => onCloseOthers(item.id)}
           onCloseToRight={() => onCloseToRight(item.id)}
           onCloseToLeft={() => onCloseToLeft(item.id)}

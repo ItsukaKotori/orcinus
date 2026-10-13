@@ -58,6 +58,7 @@ export function TabBarPluginTabMenuItems({
                 scope: entry.scope,
                 ...(entry.repoId ? { repoId: entry.repoId } : {}),
                 instanceId: createBrowserUuid(),
+                title: entry.title,
                 worktreeId
               })
             }}

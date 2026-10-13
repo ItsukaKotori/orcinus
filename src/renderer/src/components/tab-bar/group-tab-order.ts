@@ -3,7 +3,7 @@ import type { AppState } from '../../store/types'
 import { reconcileTabOrder } from './reconcile-order'
 
 export type VisibleTabRef = {
-  type: 'terminal' | 'editor' | 'agent-session' | 'browser'
+  type: 'terminal' | 'editor' | 'agent-session' | 'browser' | 'plugin'
   id: string
   tabId?: string
 }
@@ -47,6 +47,11 @@ export function getGroupVisibleTabOrder(
       // Structured chat tabs are self-backed: the unified tab is the entity, so none can be stale.
       return { type: 'agent-session', id: tab.entityId, tabId: tab.id }
     }
+    if (tab.contentType === 'plugin') {
+      // Plugin tabs are self-backed like structured sessions; a missing plugin
+      // renders the closeable unavailable state instead of a stale row.
+      return { type: 'plugin', id: tab.entityId, tabId: tab.id }
+    }
     return editorEntityIds.has(tab.entityId)
       ? { type: 'editor', id: tab.entityId, tabId: tab.id }
       : null
@@ -65,7 +70,8 @@ export function getGroupVisibleTabOrder(
       terminal: new Set<string>(),
       editor: new Set<string>(),
       browser: new Set<string>(),
-      'agent-session': new Set<string>()
+      'agent-session': new Set<string>(),
+      plugin: new Set<string>()
     }
     const result: VisibleTabRef[] = []
     for (const unifiedId of group.tabOrder) {
@@ -94,11 +100,13 @@ export function getGroupVisibleTabOrder(
   const editorIds: string[] = []
   const browserIds: string[] = []
   const agentSessionIds: string[] = []
+  const pluginIds: string[] = []
   const idsByType = {
     terminal: terminalIds,
     editor: editorIds,
     browser: browserIds,
-    'agent-session': agentSessionIds
+    'agent-session': agentSessionIds,
+    plugin: pluginIds
   }
   for (const tab of [...declaredTabs, ...groupTabs]) {
     const visibleId = visibleIdOf(tab)
@@ -114,7 +122,8 @@ export function getGroupVisibleTabOrder(
         terminal: 0,
         editor: 1,
         browser: 2,
-        'agent-session': 3
+        'agent-session': 3,
+        plugin: 4
       } as const
       if (priority[ref.type] > priority[existing.type]) {
         continue
@@ -131,7 +140,8 @@ export function getGroupVisibleTabOrder(
     terminalIds,
     editorIds,
     browserIds,
-    agentSessionIds
+    agentSessionIds,
+    pluginIds
   ).flatMap((visibleId) => {
     const ref = refByVisibleId.get(visibleId)
     return ref ? [ref] : []
@@ -202,17 +212,22 @@ export function getActiveTabNavOrder(
   }
 
   // Legacy fallback: no split-group layout yet for this worktree.
+  const pluginIds = (state.unifiedTabsByWorktree[worktreeId] ?? [])
+    .filter((tab) => tab.contentType === 'plugin')
+    .map((tab) => tab.id)
   const visibleIds = reconcileTabOrder(
     state.tabBarOrderByWorktree[worktreeId],
     terminalIds,
     editorIds,
     browserIds,
-    agentSessionIds
+    agentSessionIds,
+    pluginIds
   )
   const terminalIdSet = new Set(terminalIds)
   const editorIdSet = new Set(editorIds)
   const browserIdSet = new Set(browserIds)
   const agentSessionIdSet = new Set(agentSessionIds)
+  const pluginIdSet = new Set(pluginIds)
   const result: VisibleTabRef[] = []
   for (const id of visibleIds) {
     if (terminalIdSet.has(id)) {
@@ -227,6 +242,13 @@ export function getActiveTabNavOrder(
       )
       if (tab) {
         result.push({ type: 'agent-session', id: tab.entityId, tabId: tab.id })
+      }
+    } else if (pluginIdSet.has(id)) {
+      const tab = (state.unifiedTabsByWorktree[worktreeId] ?? []).find(
+        (candidate) => candidate.id === id && candidate.contentType === 'plugin'
+      )
+      if (tab) {
+        result.push({ type: 'plugin', id: tab.entityId, tabId: tab.id })
       }
     }
   }

@@ -40,6 +40,13 @@ export type TabBarItem =
       isPinned: boolean
       data: Tab & { contentType: 'agent-session' }
     }
+  | {
+      type: 'plugin'
+      id: string
+      unifiedTabId: string
+      isPinned: boolean
+      data: Tab & { contentType: 'plugin' }
+    }
 
 export function getTabDragLabel(item: TabBarItem, generatedTitlesEnabled: boolean): string {
   if (item.type === 'terminal') {
@@ -50,6 +57,9 @@ export function getTabDragLabel(item: TabBarItem, generatedTitlesEnabled: boolea
   }
   if (item.type === 'agent-session') {
     return item.data.label
+  }
+  if (item.type === 'plugin') {
+    return item.data.customLabel ?? item.data.label
   }
   return getEditorDisplayLabel(item.data)
 }
@@ -99,10 +109,12 @@ export function buildOrderedTabItems({
   editorFileIds,
   browserTabIds,
   agentSessionTabIds,
+  pluginTabIds,
   terminalMap,
   editorMap,
   browserMap,
   agentSessionMap,
+  pluginTabMap,
   unifiedTabByVisibleId
 }: {
   tabBarOrder?: string[]
@@ -110,10 +122,12 @@ export function buildOrderedTabItems({
   editorFileIds: string[]
   browserTabIds: string[]
   agentSessionTabIds: string[]
+  pluginTabIds: string[]
   terminalMap: Map<string, TerminalTab & { unifiedTabId?: string }>
   editorMap: Map<string, OpenFile & { tabId?: string }>
   browserMap: Map<string, BrowserTabState & { tabId?: string }>
   agentSessionMap: Map<string, Tab & { contentType: 'agent-session' }>
+  pluginTabMap: Map<string, Tab & { contentType: 'plugin' }>
   unifiedTabByVisibleId: Map<string, Tab>
 }): TabBarItem[] {
   const ids = reconcileTabOrder(
@@ -121,7 +135,8 @@ export function buildOrderedTabItems({
     terminalIds,
     editorFileIds,
     browserTabIds,
-    agentSessionTabIds
+    agentSessionTabIds,
+    pluginTabIds
   )
   const items: TabBarItem[] = []
   for (const id of ids) {
@@ -170,6 +185,18 @@ export function buildOrderedTabItems({
         isPinned: agentSession.isPinned === true,
         data: agentSession
       })
+      continue
+    }
+    const pluginTab = pluginTabMap.get(id)
+    if (pluginTab) {
+      const unifiedTab = unifiedTabByVisibleId.get(id)
+      items.push({
+        type: 'plugin',
+        id,
+        unifiedTabId: pluginTab.id,
+        isPinned: unifiedTab?.isPinned === true,
+        data: pluginTab
+      })
     }
   }
   return items
@@ -209,6 +236,10 @@ export function findActiveVisibleTabId(
       // Reachable only from TabGroupPanel, which passes the structured tab's own id; the store's
       // `activeTabId` names a background terminal here.
       return active.activeTabType === 'agent-session' && item.id === active.activeTabId
+    }
+    if (item.type === 'plugin') {
+      // Plugin rows are self-backed: the visible id is the unified tab id.
+      return active.activeTabType === 'plugin' && item.id === active.activeTabId
     }
     return active.activeTabType === 'editor' && active.activeFileId === item.id
   })

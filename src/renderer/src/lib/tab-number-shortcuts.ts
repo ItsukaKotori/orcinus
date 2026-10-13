@@ -93,6 +93,13 @@ export function activateTabNumberShortcut(index: number): boolean {
     return true
   }
 
+  if (target.contentType === 'plugin') {
+    // Self-backed like agent sessions: activateTab above already moved the
+    // group's active tab; only the visible type has to follow.
+    store.setActiveTabType('plugin')
+    return true
+  }
+
   store.setActiveFile(target.entityId)
   store.setActiveTabType('editor')
   return true

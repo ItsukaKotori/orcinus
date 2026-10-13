@@ -37,6 +37,8 @@ export type TabBarProps = {
   /** The group's own active tab at render time; a client-hosted selection dies when it moves. */
   groupActiveTabId?: string | null
   agentSessionTabs?: (Tab & { contentType: 'agent-session' })[]
+  /** Main-area plugin tabs; self-backed, so the visible id is the unified tab id. */
+  pluginTabs?: (Tab & { contentType: 'plugin' })[]
   activeFileId?: string | null
   activeBrowserTabId?: string | null
   activeTabType?: WorkspaceVisibleTabType
@@ -44,6 +46,7 @@ export type TabBarProps = {
   onCloseFile?: (fileId: string) => void
   onActivateBrowserTab?: (tabId: string) => void
   onActivateAgentSession?: (tabId: string) => void
+  onActivatePlugin?: (tabId: string) => void
   onCloseBrowserTab?: (tabId: string) => void
   onDuplicateBrowserTab?: (tabId: string) => void
   onCloseAllFiles?: () => void

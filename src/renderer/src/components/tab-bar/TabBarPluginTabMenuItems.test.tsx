@@ -153,7 +153,13 @@ describe('TabBarPluginTabMenuItems', () => {
     expect(appState.openPluginTab).toHaveBeenCalledTimes(2)
     const first = appState.openPluginTab.mock.calls[0]![0] as Record<string, unknown>
     const second = appState.openPluginTab.mock.calls[1]![0] as Record<string, unknown>
-    expect(first).toMatchObject({ pluginKey: 'global.one', tabId: 'board', scope: 'global', worktreeId: 'wt1' })
+    expect(first).toMatchObject({
+      pluginKey: 'global.one',
+      tabId: 'board',
+      scope: 'global',
+      title: 'Board',
+      worktreeId: 'wt1'
+    })
     expect(first).not.toHaveProperty('params')
     expect(typeof first.instanceId).toBe('string')
     expect(first.instanceId).not.toBe(second.instanceId)

@@ -15,6 +15,7 @@ import PluginTabContent from '../tabs/PluginTabContent'
 
 import { TabBarQuickCommandsButton } from '../tab-bar/TabBarQuickCommandsButton'
 import { useTabGroupWorkspaceModel } from './useTabGroupWorkspaceModel'
+import { resolveTabGroupActiveSurface } from './tab-group-active-surface'
 import { closeTerminalTab } from '../terminal/terminal-tab-actions'
 import { resolveGroupTabFromVisibleId } from './tab-group-visible-id'
 import { getTabPaneBodyDroppableId, type HoveredTabInsertion } from './useTabDragSplit'
@@ -71,9 +72,11 @@ export default function TabGroupPanel({
     browserItems,
     commands,
     editorItems,
+    pluginItems,
     tabBarOrder,
     terminalTabs
   } = model
+  const activeSurface = useMemo(() => resolveTabGroupActiveSurface(activeTab), [activeTab])
   // Why: one strip owns the worktree's client-hosted rows, or every split repeats them.
   const ownsClientHostedRows = useAppStore(
     (state) =>
@@ -105,13 +108,7 @@ export default function TabGroupPanel({
   const tabBar = (
     <TabBar
       tabs={terminalTabs}
-      activeTabId={
-        activeTab?.contentType === 'terminal'
-          ? activeTab.entityId
-          : activeTab?.contentType === 'agent-session'
-            ? activeTab.id
-            : null
-      }
+      activeTabId={activeSurface.activeTabId}
       groupId={groupId}
       worktreeId={worktreeId}
       expandedPaneByTabId={model.expandedPaneByTabId}
@@ -157,28 +154,15 @@ export default function TabGroupPanel({
       clientHostedBrowserRows={clientHostedRows}
       groupActiveTabId={activeTab?.id ?? null}
       agentSessionTabs={agentSessionItems}
-      activeFileId={
-        activeTab?.contentType === 'terminal' ||
-        activeTab?.contentType === 'agent-session' ||
-        activeTab?.contentType === 'browser' ||
-        activeTab?.contentType === 'plugin'
-          ? null
-          : activeTab?.id
-      }
-      activeBrowserTabId={activeTab?.contentType === 'browser' ? activeTab.entityId : null}
-      activeTabType={
-        activeTab?.contentType === 'terminal'
-          ? 'terminal'
-          : activeTab?.contentType === 'agent-session'
-            ? 'agent-session'
-            : activeTab?.contentType === 'browser'
-              ? 'browser'
-              : 'editor'
-      }
+      pluginTabs={pluginItems}
+      activeFileId={activeSurface.activeFileId}
+      activeBrowserTabId={activeSurface.activeBrowserTabId}
+      activeTabType={activeSurface.activeTabType}
       onActivateFile={commands.activateEditor}
       onCloseFile={commands.closeItem}
       onActivateBrowserTab={commands.activateBrowser}
       onActivateAgentSession={commands.activateAgentSession}
+      onActivatePlugin={commands.activatePlugin}
       onCloseBrowserTab={(browserTabId) => {
         const item = model.groupTabs.find(
           (candidate) => candidate.entityId === browserTabId && candidate.contentType === 'browser'

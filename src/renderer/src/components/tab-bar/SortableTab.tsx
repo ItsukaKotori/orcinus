@@ -52,6 +52,8 @@ type SortableTabProps = {
   dragData: TabDragItemData
   dropIndicator?: DropIndicator
   includeTopTabBorder?: boolean
+  /** Leading glyph override (plugin tabs); defaults to terminal/agent identity. */
+  leadingIcon?: React.ReactNode
   /** True when this agent terminal can switch between the terminal and native chat views; surfaces the "Switch view" context-menu item. */
   /** True when the tab is currently showing the native chat view. */
   /** Toggle the tab between terminal and native chat view. */
@@ -82,6 +84,7 @@ export default function SortableTab({
   dragData,
   dropIndicator,
   includeTopTabBorder = true,
+  leadingIcon,
   canSplitTerminal = true
 }: SortableTabProps): React.JSX.Element {
   // Why: agent-completion unread exists even with terminal-attention off; collapse both sources to one primitive so unrelated tabs don't re-render.
@@ -223,13 +226,17 @@ export default function SortableTab({
         // Why: a real DOM child keeps both drop-indicator pseudo-elements free and pointer events reaching the tab.
         <span aria-hidden className="pointer-events-none absolute inset-0 bg-amber-500/10" />
       )}
-      <TerminalTabLeadingIcon
-        agent={tabAgent}
-        activityStatus={activityStatus}
-        shell={shellForIcon}
-        showUnreadActivity={showUnreadActivity}
-        isActive={isActive}
-      />
+      {leadingIcon !== undefined ? (
+        leadingIcon
+      ) : (
+        <TerminalTabLeadingIcon
+          agent={tabAgent}
+          activityStatus={activityStatus}
+          shell={shellForIcon}
+          showUnreadActivity={showUnreadActivity}
+          isActive={isActive}
+        />
+      )}
       {isPinned && !isEditing && (
         <Pin className="mr-1 size-3 shrink-0 text-muted-foreground" aria-hidden />
       )}

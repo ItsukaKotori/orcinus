@@ -150,11 +150,30 @@ export function useTabGroupActivationCommands({
     [activateTab, focusGroup, setActiveTabType, worktreeId]
   )
 
+  const activatePlugin = useCallback(
+    (tabId: string) => {
+      // Plugin tabs are self-backed: the row id is the unified tab id. The
+      // group's activeTabId drives the rendered surface, so moving it plus the
+      // visible type is the whole activation.
+      const item = groupTabs.find(
+        (candidate) => candidate.id === tabId && candidate.contentType === 'plugin'
+      )
+      if (!item) {
+        return
+      }
+      focusGroup(worktreeId, groupId)
+      activateTab(item.id)
+      setActiveTabType('plugin')
+    },
+    [activateTab, focusGroup, groupId, groupTabs, setActiveTabType, worktreeId]
+  )
+
   return {
     activateTerminal,
     toggleTerminalPaneExpand,
     activateEditor,
     activateBrowser,
-    activateAgentSession
+    activateAgentSession,
+    activatePlugin
   }
 }

@@ -51,6 +51,14 @@ function previewActiveSurfacePatch(
       activeTabTypeByWorktree: nextActiveTabTypeByWorktree('browser')
     }
   }
+  if (unifiedTab.contentType === 'plugin') {
+    // Self-backed plugin tabs have no legacy active id slot; the group's
+    // activeTabId (patched by the caller) drives the rendered surface.
+    return {
+      activeTabType: 'plugin',
+      activeTabTypeByWorktree: nextActiveTabTypeByWorktree('plugin')
+    }
+  }
   return {
     activeFileId: unifiedTab.entityId,
     activeTabType: 'editor',

@@ -8,9 +8,16 @@ export function reconcileTabOrder(
   terminalIds: string[],
   editorIds: string[],
   browserIds: string[] = [],
-  agentSessionIds: string[] = []
+  agentSessionIds: string[] = [],
+  pluginIds: string[] = []
 ): string[] {
-  const validIds = new Set([...terminalIds, ...editorIds, ...browserIds, ...agentSessionIds])
+  const validIds = new Set([
+    ...terminalIds,
+    ...editorIds,
+    ...browserIds,
+    ...agentSessionIds,
+    ...pluginIds
+  ])
   // Why: storedOrder is persisted group tab order and is mutated by many
   // codepaths (drop/move/reorder/hydrate). A stale or racey write can leave
   // the same tab id twice in the list, which surfaces as React's "two
@@ -25,7 +32,7 @@ export function reconcileTabOrder(
       inResult.add(id)
     }
   }
-  for (const id of [...terminalIds, ...editorIds, ...browserIds, ...agentSessionIds]) {
+  for (const id of [...terminalIds, ...editorIds, ...browserIds, ...agentSessionIds, ...pluginIds]) {
     if (!inResult.has(id)) {
       result.push(id)
       inResult.add(id)

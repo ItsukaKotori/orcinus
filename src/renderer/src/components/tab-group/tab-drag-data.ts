@@ -10,7 +10,7 @@ export type TabDragItemData = {
   groupId: string
   unifiedTabId: string
   visibleTabId: string
-  tabType: 'terminal' | 'editor' | 'agent-session' | 'browser'
+  tabType: 'terminal' | 'editor' | 'agent-session' | 'browser' | 'plugin'
   label: string
   iconPath?: string
   color?: string | null

@@ -78,6 +78,13 @@ export function activateCyclableTab(store: AppStoreState, next: TypeCyclableTab)
       store.activateTab?.(next.tabId)
     }
     store.setActiveTabType('agent-session')
+  } else if (next.type === 'plugin') {
+    // Plugin tabs are self-backed: their visible id is the unified tab id, and
+    // the rendered surface follows the group's activeTabId.
+    if (next.tabId) {
+      store.activateTab?.(next.tabId)
+    }
+    store.setActiveTabType('plugin')
   } else {
     // Why: `setActiveFile` targets the file entity (its implicit activateTab
     // picks the first matching tab in the active group); `activateTab(tabId)`
