@@ -41,15 +41,15 @@
   - `manifest::Manifest{ id, publisher, name, version, description, author, repository?, icon?, engines_orca, plugin_api, main?, contributes, capabilities }`；`Contributes{ panels, tabs, commands, events, language_packs, keybindings, vm_recipes, agents }`（`PanelContrib{id,title,icon?,entry}`、`TabContrib` 同形、上限照 oracle + tabs ≤64）；`manifest::parse_manifest(bytes: &[u8]) -> Result<Manifest, PluginError>`（`ade-plugin.json` 主名由调用方定；≤1MiB 由读取层校验）；`Manifest::qualified_key() -> String`；`manifest::engine_satisfies(range, version) -> bool`（仅 `>=x.y.z`）。
   - `content_hash::hash_plugin_tree(root: &Path) -> Result<String, PluginError>`（`orca-plugin-tree-v1\0` + 8B BE 帧 + 排序路径；symlink 拒；跳根 `.git`；≤2000 文件/50MiB）。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
   - manifest：合法样例（含 tabs）解析；缺字段/超长/非法 id/保留名/非 semver/engines 非 `>=`/capability 未知/contribution 超上限/entry 跨 `..` 越界 → 对应 `PluginError.code`（文案抄 `orca:src/shared/plugins/plugin-manifest*.ts` 校验语义）。
   - canonical capability 序列化去重；engine gate 边界（`>=1.0.0` vs pre-release）。
   - content_hash：固定小树（文件/子目录/空文件）对齐 oracle 算法（用 oracle 测试向量或手算）；symbolic link 拒绝；`.git` 跳过；超 2000 文件报错。
-- [ ] **Step 2: RED → 实现 → GREEN**
+- [x] **Step 2: RED → 实现 → GREEN**
 
 Run: `cargo test -p ade-plugins`
 
-- [ ] **Step 3: 提交** `feat(plugins): ade-plugins 骨架、manifest 与内容哈希`
+- [x] **Step 3: 提交** `feat(plugins): ade-plugins 骨架、manifest 与内容哈希`
 
 ---
 
@@ -66,9 +66,9 @@ Run: `cargo test -p ade-plugins`
   - `paths::{ScopeRoots{install_dir,data_dir,lockfile_path}, global_roots(app_data_dir), project_roots(repo_path), validate_containment(base, candidate) -> Result<PathBuf, PluginError>}`（项目根 = `<repo>/.ade`；全局根 = `<app_data_dir>`）。
   - `artifact::validate_declared_artifacts(root, &Manifest) -> Result<ArtifactSet, PluginError>`：realpath 包含 + 单类上限（worker 50MiB/panel 10MiB/**tab 10MiB**/icon 2MiB/languagePack 5MiB/vmRecipe 256KiB/agent 1MiB），返回各产物绝对路径。
   - `discovery::{DiscoveredPlugin{key, scope, repo_id?, root, manifest, source_kind: installed|dev|bundled, install_hash?}, discover(global, projects: &[(repo_id, path)], dev_paths: &[PathBuf]) -> Vec<DiscoveredPlugin>}`：dev 遮罩 installed（同 scope）；项目遮罩全局同 key（投影层标志）；同 scope 同 key 重复 → invalid 项（含 error）；列表投影不泄 dev 绝对路径（`DiscoveryProjection`）。
-- [ ] **Step 1: 写失败测试**：tempdir 三根（全局/两项目/dev 两路径）；遮罩矩阵；重复 key；artifact 越界（symlink 逃逸/超限）；containment。
-- [ ] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
-- [ ] **Step 3: 提交** `feat(plugins): 发现、产物校验与路径安全`
+- [x] **Step 1: 写失败测试**：tempdir 三根（全局/两项目/dev 两路径）；遮罩矩阵；重复 key；artifact 越界（symlink 逃逸/超限）；containment。
+- [x] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
+- [x] **Step 3: 提交** `feat(plugins): 发现、产物校验与路径安全`
 
 ---
 
@@ -87,9 +87,9 @@ Run: `cargo test -p ade-plugins`
   - `install::staging::{stage_plugin_tree(source_root, dest_parent, manifest) -> (hash, staged_dir)}`：过滤 `.git`、cp、rehash、reparse、revalidate；`<hash>` 已存在→校验既有字节。
   - `install::publication::{publish_install(roots, key, hash, provenance, lock_entry, lockfile_path) -> Result<()>}`：provenance→指针→lockfile；lockfile 失败回滚旧指针；保留 current+1 清理其余。
   - `install::{install_from_local(root, roots, scope_ctx) -> InstallResult, rollback(key, roots), uninstall(key, roots) -> {removed_install, removed_data}}`；`InstallResult{plugin_key, version, content_hash, consent_fingerprint, install_hash, scope}`。
-- [ ] **Step 1: 写失败测试**（锚 `orca:src/main/plugins/plugin-install*.test.ts`）：本地安装全流程（staging→发布→指针→lock 条目）；重复安装同 hash 幂等；lockfile 损坏回空；lockfile 写失败指针回滚（注入失败）；回滚（当前+1，其余 prune）；卸载清理+lock 移除；项目根 `.ade/.gitignore` deny 写入（`plugins/`、`plugin-data/`，已存在不覆盖）。
-- [ ] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
-- [ ] **Step 3: 提交** `feat(plugins): 安装管线（staging/发布/lockfile/回滚/卸载）`
+- [x] **Step 1: 写失败测试**（锚 `orca:src/main/plugins/plugin-install*.test.ts`）：本地安装全流程（staging→发布→指针→lock 条目）；重复安装同 hash 幂等；lockfile 损坏回空；lockfile 写失败指针回滚（注入失败）；回滚（当前+1，其余 prune）；卸载清理+lock 移除；项目根 `.ade/.gitignore` deny 写入（`plugins/`、`plugin-data/`，已存在不覆盖）。
+- [x] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
+- [x] **Step 3: 提交** `feat(plugins): 安装管线（staging/发布/lockfile/回滚/卸载）`
 
 ---
 
@@ -106,9 +106,9 @@ Run: `cargo test -p ade-plugins`
   - `consent::{ConsentState trait(注入 main-owned settings), scoped_key(key, scope, repo_id)->String`（`global:<key>`/`project:<repo>:<key>`), fingerprint(manifest, content_key:&str)->String, ActivationState::{Disabled,Pending,Approved}, activation_state(state, scoped_key, fingerprint)}`；指纹算法逐字移植 `orca:src/shared/plugins/plugin-consent-fingerprint.ts`（capabilities 规范化 + `\0trusted-node-worker` + instructional（keybindings/vmRecipes/agents）+ 内容键）。
   - `enablement::{approve(state, scoped_key, reviewed_fingerprint, current_fingerprint)->Result<, PluginError>, set_enabled(state, scoped_key, enabled)}`：approve 指纹不一致拒绝（`consent_stale`）；enable 不绕过。
   - `integrity::verify_installed(install_root, &Manifest) -> Result<(), PluginError>`（重算内容哈希对比 manifest/指针；失败 `integrity_mismatch`）。
-- [ ] **Step 1: 写失败测试**：指纹对照 oracle 测试向量（`orca:src/shared/plugins/plugin-consent-fingerprint.test.ts` 的用例移植）；激活态三态与 needsReconsent；approve 指纹竞态拒绝；integrity 篡改检测。
-- [ ] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
-- [ ] **Step 3: 提交** `feat(plugins): consent 指纹、启用与完整性校验`
+- [x] **Step 1: 写失败测试**：指纹对照 oracle 测试向量（`orca:src/shared/plugins/plugin-consent-fingerprint.test.ts` 的用例移植）；激活态三态与 needsReconsent；approve 指纹竞态拒绝；integrity 篡改检测。
+- [x] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
+- [x] **Step 3: 提交** `feat(plugins): consent 指纹、启用与完整性校验`
 
 ---
 
@@ -127,9 +127,9 @@ Run: `cargo test -p ade-plugins`
   - `plugin_settings::PluginSettingsStore`：per-plugin `settings.json`（0600）；`get_all/set`。
   - `audit::{AuditLog::new(data_dir), record(AuditRecord{ts,actor,method,summary,outcome}), read_tail(key, limit)->Vec<LogLine>}`（JSONL，10MiB 轮转）。
   - `secrets::{SecretStore trait{get,set,delete}, KeychainSecrets::new(service)`（keyring：service `dev.itsuka.orcinus.plugin-secrets`，account `<pluginKey>:<key>`）, fail-closed 错误 `unavailable`}`；set 值 ≤64KiB。
-- [ ] **Step 1: 写失败测试**（fake keychain 内存实现 + tempdir）：storage 限额/保留键/持久化；audit 轮转与读取；secrets 经 trait 的读写删 + keychain 错误映射。
-- [ ] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
-- [ ] **Step 3: 提交** `feat(plugins): 存储、插件设置、审计与 Keychain secrets`
+- [x] **Step 1: 写失败测试**（fake keychain 内存实现 + tempdir）：storage 限额/保留键/持久化；audit 轮转与读取；secrets 经 trait 的读写删 + keychain 错误映射。
+- [x] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
+- [x] **Step 3: 提交** `feat(plugins): 存储、插件设置、审计与 Keychain secrets`
 
 ---
 
@@ -146,13 +146,13 @@ Run: `cargo test -p ade-plugins`
 - Produces：
   - `worker::protocol::{ParentFrame::{Init{plugin_id,plugin_root,main_entry,granted_capabilities},InvokeCommand{call_id,command_id,args},DeliverEvent{event_id,event,payload},HostResult{call_id,ok,value,error_code,error},Shutdown}, ChildFrame::{Ready{commands},CommandResult{call_id,ok,value,error},EventAck{event_id},HostCall{call_id,method,params},Log{level,message},Fatal{error}}, read_frame/write_frame(NDJSON ≤1MiB, error ≤8192 截断)`（字段名照 `orca:src/shared/plugins/plugin-host-protocol.ts`，serde camelCase）。
   - `host-entry.mjs`：stdin 逐行解析 ParentFrame；file-URL import `<pluginRoot>/<mainEntry>`；默认导出/SDK `activate(orca)`；SDK `{commands.register, events.on, host.call, grantedCapabilities, log}`；`ready` 于 activate 后发出；`deactivate` on shutdown 后 exit(0)；未捕获→fatal+exit(1)；`host.call` 经 HostCall/CallResult 关联（超时由父侧控制）。
-- [ ] **Step 1: 写失败测试**：Rust 帧 round-trip 与截断；hello-plugin fixture（临时 JS 插件：activate 注册 1 命令、echo host.call、deactivate 打点）→ 用 `node`（`which node` 可得则跑，缺失则 `#[ignore]` 并记录）断言 ready/commandResult/hostCall/log/shutdown 流。
-- [ ] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`；并验证 `cargo check -p orcinus-app` 仍通过（resources 目录含已提交的 host-entry.mjs）。
-- [ ] **Step 3: 提交** `feat(plugins): worker 帧协议与 host-entry.mjs 宿主`
+- [x] **Step 1: 写失败测试**：Rust 帧 round-trip 与截断；hello-plugin fixture（临时 JS 插件：activate 注册 1 命令、echo host.call、deactivate 打点）→ 用 `node`（`which node` 可得则跑，缺失则 `#[ignore]` 并记录）断言 ready/commandResult/hostCall/log/shutdown 流。
+- [x] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`；并验证 `cargo check -p orcinus-app` 仍通过（resources 目录含已提交的 host-entry.mjs）。
+- [x] **Step 3: 提交** `feat(plugins): worker 帧协议与 host-entry.mjs 宿主`
 
 ---
 
-### Task 7: worker spawn + supervisor + manager
+### Task 7: worker spawn + supervisor + manager（实施拆分为 T7a1/T7a2/T7b：spawn / supervisor / manager，勾选按父任务）
 
 **Files:**
 - Create: `src-tauri/crates/ade-plugins/src/worker/spawn.rs`
@@ -165,9 +165,9 @@ Run: `cargo test -p ade-plugins`
   - `worker::spawn::{resolve_node(env_override, hydrated_path)->Result<PathBuf, PluginError>, node_supports(version)->bool(>=18), WorkerSpec{plugin_key,plugin_root,main_entry,granted_capabilities,manifest_revision}, spawn_worker(spec, host_entry_path, node) -> WorkerHandle{pid, stdin_write, stdout_rx, kill(grace)}`（env 白名单 PATH/HOME/LANG/TZ/TMP*；`Command` 进程组；SIGTERM→2s→SIGKILL，仿 `ade-automations/src/precheck.rs`）。
   - `worker::supervisor::{WorkerSupervisor, state: WorkerState::{Inactive,Running{revision},Restarting,Errored{reason}}, 限额: ready 10s/invoke 30s/event 5min/idle 5min/grace 2s/重启≤3 backoff[500,2000,5000]ms}`。
   - `worker::manager::{WorkerManager, ensure_active(key), invoke_command(key,command_id,args)->Result<Value>, deliver_event(...), stop(key), stop_all(), active_count()<=5, revision 变更重启, undeclared command→deactivate+errored}`。
-- [ ] **Step 1: 写失败测试**（fake node = 测试内联 `.mjs` 脚本，经 env 注入 spawn 参数）：lazy 激活；invoke 超时；event ack 超时；崩溃重启计数与 backoff；超限 errored；max 5 slot；revision 重启；undeclared command 处理；shutdown 清理无泄漏进程。
-- [ ] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
-- [ ] **Step 3: 提交** `feat(plugins): worker spawn、监督与池化`
+- [x] **Step 1: 写失败测试**（fake node = 测试内联 `.mjs` 脚本，经 env 注入 spawn 参数）：lazy 激活；invoke 超时；event ack 超时；崩溃重启计数与 backoff；超限 errored；max 5 slot；revision 重启；undeclared command 处理；shutdown 清理无泄漏进程。
+- [x] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
+- [x] **Step 3: 提交** `feat(plugins): worker spawn、监督与池化`
 
 ---
 
@@ -189,9 +189,9 @@ Run: `cargo test -p ade-plugins`
   - `host::services::PluginHostServices: Send+Sync trait`：`active_worktree_context()->Option<WorktreeContext{worktree_id,branch,display_name}>, list_worktree_terminals(wt)->Vec<TerminalRef{id}> , send_terminal_text(id,text,enter)->{accepted}, dispatch_notification(plugin_key,title,body)->{delivered}, storage/settings/secrets 访问器, subscribe_events(plugin_key,events)->Vec<&str>, open_tab(plugin_key, tab_id,title?,params, scope, repo_id?, wt)->Result<OpenTabResult{instance_id,worktree_id},HostError>}`。
   - `workspace.readContext`/`terminal.sendText` 的 worktree 解析：`ctx.worktree_id` 优先（tab 会话），否则 `services.active_worktree_context()`；终端 id 白名单复核。
   - `workspace.openTab`：校验 tabId ∈ 该插件该 scope 的 contributes.tabs；params ≤64KiB（JSON 深度/大小校验）；title ≤128；去重（`(plugin_key,tab_id,params)` 深比较）→ 由 services 回调实现；限额（8/插件/worktree、4/10s rate）在 service 层。
-- [ ] **Step 1: 写失败测试**（fake services）：gate 矩阵（8 capability × panel/worker × 未知方法）；14 方法参数/结果校验与错误码；readContext/terminal 的 worktree 与白名单；openTab 声明校验/参数限额；audit 顺序（attempt 先于 handler、失败路径 error）。
-- [ ] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
-- [ ] **Step 3: 提交** `feat(plugins): host gate 与 14 个 host methods`
+- [x] **Step 1: 写失败测试**（fake services）：gate 矩阵（8 capability × panel/worker × 未知方法）；14 方法参数/结果校验与错误码；readContext/terminal 的 worktree 与白名单；openTab 声明校验/参数限额；audit 顺序（attempt 先于 handler、失败路径 error）。
+- [x] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
+- [x] **Step 3: 提交** `feat(plugins): host gate 与 14 个 host methods`
 
 ---
 
@@ -204,9 +204,9 @@ Run: `cargo test -p ade-plugins`
 **Interfaces:**
 - Produces：
   - `sessions::{SessionKind::{Panel,MainTab,GlobalView}, SessionBinding{plugin_key, kind, panel_id?, tab_id?, instance_id?, scope, repo_id?, worktree_id?, manifest_revision, owner: SessionOwner}, SessionRegistry::new(), issue(binding)->SessionToken(32B base64url), resolve(token)->Option<SessionBinding>, invalidate_owner(owner), invalidate_plugin(plugin_key), sweep_stale()`}`。
-- [ ] **Step 1: 写失败测试**：签发/解析 round-trip；owner 失效；插件禁用→全部失效；revision 变化→绑定不匹配返回 None；token 唯一性与长度。
-- [ ] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
-- [ ] **Step 3: 提交** `feat(plugins): 面板/主区 tab 会话注册表`
+- [x] **Step 1: 写失败测试**：签发/解析 round-trip；owner 失效；插件禁用→全部失效；revision 变化→绑定不匹配返回 None；token 唯一性与长度。
+- [x] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
+- [x] **Step 3: 提交** `feat(plugins): 面板/主区 tab 会话注册表`
 
 ---
 
@@ -223,13 +223,13 @@ Run: `cargo test -p ade-plugins`
   - `marketplace::store::{MarketplaceStore::new(data_dir), list_sources, add_source{source_id,url,ref}, remove_source, read_snapshot/write_snapshot}`（`plugins-data/marketplaces/`）。
   - `marketplace::service::{MarketplaceService::refresh(source_id?), list_plugins()->Vec<Listing>, 官方种子 `https://github.com/stablyai/orca-plugins.git#main`, official trust 三重校验照 `orca:src/main/plugins/plugin-marketplace-provenance.ts`}`。
   - `marketplace::installer::{preview(source_id, plugin_key, git)->Preview{resolved_commit,content_hash,consent_fingerprint,manifest_projection}, install(preview, scope_ctx)->InstallResult(commit 未变校验), rollback(key, roots)}`。
-- [ ] **Step 1: 写失败测试**（本地临时 git 仓库 ×2：marketplace 仓 + 插件仓，`git init` 脚本化）：add/refresh/snapshot 解析；preview 固定 commit；install 后 commit 漂移→拒绝；rollback；official trust 负例（非 github.com/stablyai）。
-- [ ] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
-- [ ] **Step 3: 提交** `feat(plugins): git runner 与 git 源市场`
+- [x] **Step 1: 写失败测试**（本地临时 git 仓库 ×2：marketplace 仓 + 插件仓，`git init` 脚本化）：add/refresh/snapshot 解析；preview 固定 commit；install 后 commit 漂移→拒绝；rollback；official trust 负例（非 github.com/stablyai）。
+- [x] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
+- [x] **Step 3: 提交** `feat(plugins): git runner 与 git 源市场`
 
 ---
 
-### Task 11: watcher + 事件 + service 编排
+### Task 11: watcher + 事件 + service 编排（实施拆分为 T11a/T11b1/T11b2/T11b3：watcher+events / service 核心 / 激活编排 / 面板与主区 tab，勾选按父任务）
 
 **Files:**
 - Create: `src-tauri/crates/ade-plugins/src/watcher.rs`
@@ -244,13 +244,13 @@ Run: `cargo test -p ade-plugins`
   - `service::{PluginService::new(config: ServiceConfig{app_data_dir, host_entry_path, node_override, event_sink, consent_state, secrets, storage, audit, host_services: Arc<dyn PluginHostServices>}), start(), shutdown(), list(scope_ctx) -> Vec<PluginListEntry>, install(source, scope_ctx), remove(ref), consent(req), set_enabled(ref), invoke_command(ref,command_id,args), panel_entry(ref,panel_id)->PanelEntry{html,session_token}, panel_action(token,action,params)->Outcome, global_view_entry(key)->PanelEntry, get_logs(key)->Vec<LogLine>, refresh(), lockfile_state(repo_id)->LockState, install_missing_from_lockfile(repo_id)->Vec<InstallResult>, on_worktree_created/removed(payload), on_agent_status_changed(payload), open_tab_limits 常量}`。
   - 激活协调：全局启动加载 enabled；`set_projects(projects: Vec<(repo_id, path)>)` 重算项目作用域加载/终止；lazy 激活（commands/events/ensure）；idle reap tick。
   - `PluginListEntry`（对齐 TS `PluginHostListEntry` 字段，含 scope/repo_id/tabs/status/needs_reconsent/capabilities/panels/commands/keybindings/source…）。
-- [ ] **Step 1: 写失败测试**（fake host services + fake node）：list 投影（遮罩/状态）；启用→worker 激活→invoke 全链路；事件源→订阅投递；projects 变更加载/终止；lockfile_state/批量安装（临时插件 + lockfile fixture）；open_tab 回调限额/去重。
-- [ ] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
-- [ ] **Step 3: 提交** `feat(plugins): dev watcher、插件事件与 service 编排`
+- [x] **Step 1: 写失败测试**（fake host services + fake node）：list 投影（遮罩/状态）；启用→worker 激活→invoke 全链路；事件源→订阅投递；projects 变更加载/终止；lockfile_state/批量安装（临时插件 + lockfile fixture）；open_tab 回调限额/去重。
+- [x] **Step 2: RED → 实现 → GREEN**；Run: `cargo test -p ade-plugins`
+- [x] **Step 3: 提交** `feat(plugins): dev watcher、插件事件与 service 编排`
 
 ---
 
-### Task 12: bridge 命令 + AppState + 事件 + bindings
+### Task 12: bridge 命令 + AppState + 事件 + bindings（实施拆分为 T12a/T12b：装配+宿主服务 / 命令+bindings，勾选按父任务）
 
 **Files:**
 - Create: `src-tauri/crates/ade-bridge/src/plugins_service.rs`（PluginService 组装 + `PluginHostServices` 实现 + `ConsentState`/secrets 适配 + `ServiceEventSink`）
@@ -267,8 +267,8 @@ Run: `cargo test -p ade-plugins`
   - 事件：`plugins:changed`（`{contentPacksChanged:bool, pluginsChanged:bool}`）与 **`plugins:open-tab`**（`{pluginKey,tabId,instanceId,title?,params,worktreeId,scope,repoId?}`——renderer 收到后创建主区 tab；去重已在 Rust 侧判定并返回既有 instanceId）。
   - `workspace.openTab` 的 services 回调：生成 instanceId、判定去重、emit `plugins:open-tab`、返回 `{instanceId, worktreeId}`。
   - bindings 重生成 + `bindings_are_fresh`；`tests/plugins.rs`（state-free `*_impl` + tempdir + fake node 脚本）：list/install/consent/set_enabled/panel_entry/panel_action/invoke/lock 状态/命令清单。
-- [ ] **Step 1: 测试先行（bridge 集成）**；`cargo test -p ade-bridge`
-- [ ] **Step 2: 提交** `feat(bridge): 插件服务装配、22 命令与事件`
+- [x] **Step 1: 测试先行（bridge 集成）**；`cargo test -p ade-bridge`
+- [x] **Step 2: 提交** `feat(bridge): 插件服务装配、22 命令与事件`
 
 ---
 
@@ -285,8 +285,8 @@ Run: `cargo test -p ade-plugins`
   - `PluginHostListEntry` 增 `scope:'global'|'project'`、`repoId?: string`、`tabs: PluginHostTab[]`；`PluginRef{pluginKey,scope,repoId?}`；**`consent/setEnabled/remove/readPanelEntry/invokeCommand` 入参带 `PluginRef`**（同一 key 双作用域时定位 worker/实例）；`PluginHostInstallSource` 增 `{scope, repoId?}`。
   - 新类型：`PluginProjectLockState{repoId,lockfilePath,entries:[{pluginKey,version,source,contentHash,status:'installed'|'missing'|'hash-mismatch'|'source-unavailable',detail?}]}`；`PluginsApi` 增 `getProjectLockState({repoId})`、`installMissingFromLockfile({repoId})`、`onOpenTab(cb)=>()=>void`；`PluginOpenTabRequest`。
   - mock fixtures：scope 真字段（删 SAFETY cast 注释）；mock 实现新方法（lock 空态、onOpenTab no-op）。
-- [ ] **Step 1: 契约/测试先行**：更新契约 + mock + `boot-namespaces`/`plugins-api.test`；`pnpm vitest run src/bridge src/shared/plugins`
-- [ ] **Step 2: 提交** `feat(plugins): 契约扩展（scope/tabs/lock/open-tab）与 mock 同步`
+- [x] **Step 1: 契约/测试先行**：更新契约 + mock + `boot-namespaces`/`plugins-api.test`；`pnpm vitest run src/bridge src/shared/plugins`
+- [x] **Step 2: 提交** `feat(plugins): 契约扩展（scope/tabs/lock/open-tab）与 mock 同步`
 
 ---
 
@@ -301,8 +301,8 @@ Run: `cargo test -p ade-plugins`
 **Interfaces:**
 - Consumes：T12 命令名 + T13 契约。
 - Produces：`createPluginsRealApi()` 全 23 方法（21 + lock 2）经 `invokeCommand`；`onChanged`/`onOpenTab` 订阅 Tauri 事件（`subscribeToEvent`），返回退订；panel action 方法名/参数精确。
-- [ ] **Step 1: 测试先行**（路由断言 + 事件订阅/退订 + options 透传）；`pnpm vitest run src/bridge`
-- [ ] **Step 2: 提交** `feat(plugins): real 域接线与 parity`
+- [x] **Step 1: 测试先行**（路由断言 + 事件订阅/退订 + options 透传）；`pnpm vitest run src/bridge`
+- [x] **Step 2: 提交** `feat(plugins): real 域接线与 parity`
 
 ---
 
@@ -316,8 +316,8 @@ Run: `cargo test -p ade-plugins`
 
 **Interfaces:**
 - Produces：安装源解析带 `scope/repoId`（`plugin-install-source.ts`）；对话框作用域单选（global 默认；无活动项目时 project 禁用并解释）；consent 对话框展示 scope 与项目不可信提示；行徽标/右侧栏过滤用真字段。
-- [ ] **Step 1: 测试先行（组件/解析器）**；`pnpm vitest run src/renderer/src/components/settings src/renderer/src/components/right-sidebar src/renderer/src/store`
-- [ ] **Step 2: 提交** `feat(plugins-ui): 作用域真数据、安装选择与 consent 适配`
+- [x] **Step 1: 测试先行（组件/解析器）**；`pnpm vitest run src/renderer/src/components/settings src/renderer/src/components/right-sidebar src/renderer/src/store`
+- [x] **Step 2: 提交** `feat(plugins-ui): 作用域真数据、安装选择与 consent 适配`
 
 ---
 
@@ -331,12 +331,12 @@ Run: `cargo test -p ade-plugins`
 
 **Interfaces:**
 - Produces：活动项目存在时调 `getProjectLockState`；`installed/missing/hash-mismatch/source-unavailable` 逐条渲染 + 「安装缺失」→ `installMissingFromLockfile` → `onChanged` 刷新；无缺失不渲染。`GlobalPluginHostView` 复用 `PluginPanel` 的 shell/桥：`readPanelEntry({pluginKey, panelId: <首个 panel>, scope:'global'})`；无 panel 贡献 → 不可用态（多 panel 全局插件的 rail 选择器为后续项，记录）。
-- [ ] **Step 1: 测试先行（banner 状态矩阵/批量动作/视图加载）**；`pnpm vitest run`
-- [ ] **Step 2: 提交** `feat(plugins-ui): lockfile 提示与全局插件视图接真`
+- [x] **Step 1: 测试先行（banner 状态矩阵/批量动作/视图加载）**；`pnpm vitest run`
+- [x] **Step 2: 提交** `feat(plugins-ui): lockfile 提示与全局插件视图接真`
 
 ---
 
-### Task 17: 渲染层 — 主区插件 Tabs
+### Task 17: 渲染层 — 主区插件 Tabs（实施拆分为 T17a/T17b：tab 模型/store/桥 / 渲染+菜单，勾选按父任务；另含 `plugins_read_tab_entry` 缺口补缺提交）
 
 **Files:**
 - Modify: `src/shared/tab-types.ts`（`TabContentType`/`WorkspaceVisibleTabType` + `'plugin'`；`Tab.pluginTab?`）
@@ -348,8 +348,8 @@ Run: `cargo test -p ade-plugins`
 
 **Interfaces:**
 - Produces：`openPluginTab({pluginKey,tabId,scope,repoId?,instanceId,title?,params,worktreeId})` store action；`onOpenTab` 事件→store action（instanceId 去重）；「+」菜单列出当前 worktree 可用插件 tabs；`PluginTabContent` 会话 token + init 参数下发；插件被禁用/不可用→tab 不可用态可关闭；水合容错（旧状态无字段照常）。
-- [ ] **Step 1: 测试先行（模型/水合/菜单/init 消息）**；`pnpm vitest run src/renderer/src/store/slices/tabs src/renderer/src/components/tab-bar`
-- [ ] **Step 2: 提交** `feat(plugins-ui): 主区插件 Tabs（模型/渲染/菜单/事件）`
+- [x] **Step 1: 测试先行（模型/水合/菜单/init 消息）**；`pnpm vitest run src/renderer/src/store/slices/tabs src/renderer/src/components/tab-bar`
+- [x] **Step 2: 提交** `feat(plugins-ui): 主区插件 Tabs（模型/渲染/菜单/事件）`
 
 ---
 
@@ -362,8 +362,8 @@ Run: `cargo test -p ade-plugins`
 
 **Interfaces:**
 - Produces：市场 tab 调 `listMarketplaces/listMarketplacePlugins/previewMarketplacePlugin/installMarketplacePlugin/previewMarketplaceUpdate/rollbackMarketplacePlugin/refreshMarketplaces`；开发中 tab 调 `list`（dev 源）+ `refresh`。
-- [ ] **Step 1: 测试先行**；`pnpm vitest run`
-- [ ] **Step 2: 提交** `feat(plugins-ui): 市场与开发中 tab 接真`
+- [x] **Step 1: 测试先行**；`pnpm vitest run`
+- [x] **Step 2: 提交** `feat(plugins-ui): 市场与开发中 tab 接真`
 
 ---
 
@@ -377,7 +377,7 @@ Run: `cargo test -p ade-plugins`
 - Consumes：spec §6/§7。
 - Produces：记录（镜像 `docs/phase2g-computer-use-record.md`：§1 范围/§2 提交清单 `git log --oneline --reverse a2c8e021..HEAD`/§3 三门禁证据/§4 手工验收 8 项待复核/§5 偏差备案（spec §7 十二项 + 实施新发现）/§6 后续）。
 
-- [ ] **Step 1: 三门禁 + bindings**
+- [x] **Step 1: 三门禁 + bindings**
 ```bash
 # workdir src-tauri
 cargo test --workspace
@@ -386,7 +386,7 @@ cargo run -p ade-bridge --bin export-bindings && git diff --exit-code src/bridge
 rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm build:web
 pnpm test
 ```
-- [ ] **Step 2: 记录 + 勾选 + 提交** `docs: Phase 3A 插件系统实施记录与门禁证据`
+- [x] **Step 2: 记录 + 勾选 + 提交** `docs: Phase 3A 插件系统实施记录与门禁证据`
 
 ---
 
