@@ -3,6 +3,7 @@ import type { PluginMarketplaceHostSourceState } from '../../../../preload/api-t
 import { useAppStore } from '@/store'
 import { PluginCenterInstalledList } from './PluginCenterInstalledList'
 import { PluginCenterTabs, type PluginCenterTab } from './PluginCenterTabs'
+import { ProjectLockfileNotice } from './ProjectLockfileNotice'
 
 function PluginCenterEmptyState({
   title,
@@ -97,7 +98,14 @@ export function PluginCenterPage(): React.JSX.Element {
       </div>
       <div className="flex flex-1 min-h-0 flex-col gap-4 overflow-y-auto p-5 scrollbar-sleek">
         <PluginCenterTabs value={tab} onValueChange={setTab} />
-        {tab === 'installed' ? <PluginCenterInstalledList /> : null}
+        {tab === 'installed' ? (
+          <>
+            <ProjectLockfileNotice
+              onChanged={() => void useAppStore.getState().loadPluginCenterEntries()}
+            />
+            <PluginCenterInstalledList />
+          </>
+        ) : null}
         {tab === 'market' ? <PluginCenterMarketTab /> : null}
         {tab === 'dev' ? <PluginCenterDevTab /> : null}
       </div>
