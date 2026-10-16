@@ -2,9 +2,7 @@
   "app": {
     "recoverableError": {
       "rootTitle": "Orcinus tuvo un error de renderizado.",
-      "rootDescription": "El shell de la aplicación no pudo terminar de renderizarse. Vuelva a intentar volver a montarlo o reinicie Orcinus si el error persiste.",
-      "webTitle": "Orcinus web tuvo un error de renderizado.",
-      "webDescription": "Vuelva a cargar el cliente web o vuelva a conectarse al servidor Orcinus vinculado."
+      "rootDescription": "El shell de la aplicación no pudo terminar de renderizarse. Vuelva a intentar volver a montarlo o reinicie Orcinus si el error persiste."
     }
   },
   "githubChecks": {
@@ -137,44 +135,14 @@
       "pluginCommandFailed": "No se pudo ejecutar el comando del plugin."
     },
     "web": {
-      "WebConnect": {
-        "b411ec0069": "Conectar",
-        "2cf9e5a294": "Eliminar servidor guardado",
-        "4a4c017be1": "Dirección de conexión:",
-        "27393856e4": "orca://pair?code=...",
-        "7a566540de": "URL o código de emparejamiento",
-        "cb4d287238": "Nombre del servidor",
-        "3affe7de3a": "Pega una URL de emparejamiento de un servidor Orcinus accesible desde este navegador.",
-        "e3bcd082ac": "Conectar con Orcinus",
-        "mobileScopeRejected": "Este código QR solo da acceso limitado para móvil. Para usar la app web completa, abre el enlace para navegador desde Ajustes → Servidores remotos de Orcinus → Comparte este servidor Orcinus → Nuevo enlace."
-      },
-      "webPreloadApi": {
-        "aiVaultUnavailableForHost": "El historial de sesiones de Agents no está disponible para este host de ejecución.",
-        "runtimeEnvironmentManuallyDisconnected": "El entorno de ejecución se ha desconectado manualmente.",
-        "loopbackPairingBlocked": "Este enlace de acceso apunta de nuevo a este dispositivo.",
-        "remotePairingUnreachable": "No se puede acceder a Orcinus en {{endpoint}}.",
-        "remotePairingInvalidDetails": "Este enlace de acceso contiene datos de conexión no válidos."
-      },
+      "WebConnect": {},
+      "webPreloadApi": {},
       "web": {
         "preload": {
-          "api": {
-            "31bfe8ae1a": "No está disponible en el cliente web.",
-            "b8a1618172": "La generación de detalles de pull requests no está disponible en el cliente web.",
-            "e57c82d276": "La detección del modelo para mensajes de commit no está disponible en el cliente web.",
-            "9fc90740b6": "La generación de mensajes de commit no está disponible en el cliente web.",
-            "52bee9d8a0": "Se ignoraron los atajos personalizados en conflicto: {{value0}}.",
-            "32f15bdb0f": "Se ignoró la plataforma desconocida \"{{value0}}\".",
-            "0a69fcd8bc": "platforms debe ser un objeto con secciones darwin, linux o win32.",
-            "10898045f3": "Se ignoró el atajo para \"{{value0}}\": usa un array de strings.",
-            "36761d9604": "Se ignoró la acción de atajo desconocida \"{{value0}}\".",
-            "d2e43e426a": "{{value0}} debe ser un objeto.",
-            "76122208ca": "Se ignoró el atajo para \"{{value0}}\": {{value1}}"
-          }
+          "api": {}
         },
         "runtime": {
-          "environment": {
-            "07f788de83": "WebSocket"
-          }
+          "environment": {}
         }
       }
     },
@@ -354,18 +322,7 @@
           }
         }
       },
-      "remotePairingCopy": {
-        "invalidInput": "Introduce un enlace de acceso de Orcinus o un código de emparejamiento.",
-        "mobileOnly": "Este enlace concede acceso solo para dispositivos móviles. Genera un enlace para otro cliente de Orcinus.",
-        "invalidDestination": "Este enlace de acceso contiene un destino no válido.",
-        "unsupportedDestination": "Este enlace de acceso contiene un destino no compatible.",
-        "nonConnectableDestination": "Este enlace de acceso contiene un destino al que no se puede conectar.",
-        "loopback": "Bucle local",
-        "tailscale": "Dirección de Tailscale",
-        "lan": "Dirección LAN privada",
-        "public": "Dirección pública",
-        "custom": "Nombre de host personalizado"
-      },
+      "remotePairingCopy": {},
       "fix": {
         "checks": {
           "agent": {
@@ -5770,18 +5727,7 @@
           "ccb07dd027": "Guardado",
           "e57dde9d93": "Cambios no guardados"
         },
-        "RuntimeAccessGrantList": {
-          "8b82879581": "Cualquier persona con una concesión activa puede conectarse hasta que la revoques. Revocar el acceso compartido desconecta a los clientes activos inmediatamente.",
-          "68ec21309f": "Revocar acceso",
-          "6f6d5188ed": "Revocar {{value0}}",
-          "87b16cd11d": "Creado ",
-          "434e4a6af6": "Enlace actual",
-          "fd83b94095": "Aún no hay acceso compartido al servidor.",
-          "27cf8507ad": "Actualizar acceso compartido",
-          "f031182867": "Acceso compartido al servidor",
-          "df142657a5": "Aún no se ha usado",
-          "b18d1764ef": "Usado por última vez {{value0}}"
-        },
+        "RuntimeAccessGrantList": {},
         "RuntimeEnvironmentsPane": {
           "aeb26635d2": "Quitar {{value0}}",
           "af53761f31": "Cancelar",
@@ -8729,15 +8675,10 @@
           "loopbackDescription": "Usa {{endpoint}}, que apunta al dispositivo que abre el enlace, no al otro equipo que lo creó.",
           "loopbackRecovery": "En el otro equipo, crea un enlace nuevo con Otro dispositivo y elige su dirección de Tailscale o LAN.",
           "identityMismatch": "El host Orcinus alcanzado no coincide con este enlace de acceso",
-          "identityMismatchHelp": "Orcinus llegó a {{endpoint}}, pero ese host no coincide con este enlace. Genera un enlace nuevo en el otro host.",
           "invalidLink": "Este enlace de acceso ya no es válido",
-          "invalidLinkHelp": "Genera un enlace de acceso nuevo en el otro host e inténtalo de nuevo.",
           "incompatible": "Las versiones de Orcinus no son compatibles",
-          "incompatibleHelp": "Actualiza Orcinus en este dispositivo y en el otro host e inténtalo de nuevo.",
           "interrupted": "Conexión interrumpida",
-          "interruptedHelp": "La conexión se detuvo durante la verificación. Comprueba la red o el túnel SSH e inténtalo de nuevo.",
           "unavailable": "Host no disponible",
-          "unavailableHelp": "Asegúrate de que Orcinus se esté ejecutando en el otro host y de que la red o el túnel SSH puedan acceder a {{endpoint}}.",
           "advanced": "Avanzado",
           "sshTunnel": "Estoy usando un túnel SSH hacia esta dirección local",
           "sshTunnelHelp": "Mantén el túnel activo mientras usas esta conexión.",

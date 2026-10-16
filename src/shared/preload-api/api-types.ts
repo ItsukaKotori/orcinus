@@ -26,7 +26,6 @@ import type { GitOperationApi } from './api/git-operation-api'
 import type { GithubPullRequestApi } from './api/github-pull-request-api'
 import type { GithubWorkItemApi } from './api/github-work-item-api'
 import type { BitbucketApi, HostedReviewApi } from './api/hosted-review-api'
-import type { MobileApi } from './api/mobile-api'
 import type { OnboardingApi, StarNagApi } from './api/onboarding-api'
 import type { OrcaProfileApi } from './api/orca-profile-api'
 import type {
@@ -131,7 +130,6 @@ export type PreloadApi = {
   gitBash: RuntimeApi['gitBash']
   plugins: PluginsApi
   agentStatus: AgentStatusApi
-  mobile: MobileApi
 }
 
 export type { ClaudeUsageApi, CodexUsageApi, OpenCodeUsageApi } from './api/agent-usage-api'

@@ -2,12 +2,6 @@ import { useAppStore } from '../../store'
 import { getConnectionId } from '@/lib/connection-context'
 import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
 import { keybindingMatchesAction } from '../../../../shared/keybindings'
-import {
-  firesNativePasteEvent,
-  getClipboardEventText,
-  isClipboardEventPasteRequired
-} from './terminal-clipboard-event-paste'
-import { assertClipboardTextWithinLimitWithYield } from '../../../../shared/clipboard-text'
 import { pasteTerminalClipboard } from './terminal-clipboard-paste'
 import { APP_MENU_PASTE_EVENT } from '@/lib/app-menu-paste'
 import {
@@ -88,9 +82,6 @@ export function registerTerminalPanePasteListeners({
       }
       return
     }
-    if (isClipboardEventPasteRequired() && firesNativePasteEvent(event, isMac)) {
-      return
-    }
     event.preventDefault()
     event.stopPropagation()
     const manager = managerRef.current
@@ -135,13 +126,6 @@ export function registerTerminalPanePasteListeners({
     }
     const pane = manager.getActivePane() ?? manager.getPanes()[0]
     if (!pane) {
-      return
-    }
-    if (isClipboardEventPasteRequired()) {
-      const eventText = getClipboardEventText(event)
-      pasteFromClipboard(pane, 'paste-event', (options) =>
-        assertClipboardTextWithinLimitWithYield(eventText, options)
-      )
       return
     }
     pasteFromClipboard(pane, 'paste-event')

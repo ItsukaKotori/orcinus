@@ -6,7 +6,6 @@ import { useAppStore } from '../../store'
 import { useSystemPrefersDark } from '@/components/terminal-pane/use-system-prefers-dark'
 import { isMacUserAgent, isWindowsUserAgent } from '@/components/terminal-pane/pane-helpers'
 import { useConfirmationDialog } from '@/components/confirmation-dialog-context'
-import { isWebClientLocation } from '@/hooks/useSettingsNavigationMetadata'
 import {
   COMPUTER_USE_SKILL_NAME,
   ORCHESTRATION_SKILL_NAME
@@ -77,8 +76,7 @@ export function useSettingsStoreModel() {
   const systemPrefersDark = useSystemPrefersDark()
   const isWindows = isWindowsUserAgent()
   const isMac = isMacUserAgent()
-  const isWebClient = isWebClientLocation()
-  const showDesktopOnlySettings = !isWebClient
+  const showDesktopOnlySettings = true
   const activeSkillRuntime = useActiveProjectSkillRuntime()
   const orchestrationSkill = useInstalledAgentSkill(ORCHESTRATION_SKILL_NAME, {
     discoveryTarget: activeSkillRuntime.discoveryTarget,
@@ -152,7 +150,6 @@ export function useSettingsStoreModel() {
     systemPrefersDark,
     isWindows,
     isMac,
-    isWebClient,
     showDesktopOnlySettings,
     orchestrationSkill,
     computerUseSkill,

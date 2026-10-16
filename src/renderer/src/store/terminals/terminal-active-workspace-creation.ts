@@ -3,7 +3,6 @@ import { parseWorkspaceKey } from '../../../../shared/workspace-scope'
 import { focusTerminalTabSurface } from '@/lib/focus-terminal-tab-surface'
 import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
 import { resolveWorktreeOperationRouteResult } from '@/lib/worktree-operation-route'
-import { isWebClientLocation } from '@/lib/web-client-location'
 import type { TerminalSlice, TerminalStoreGet, TerminalStoreSet } from './terminal-state'
 
 export function createActiveWorkspaceTerminalActions(
@@ -36,9 +35,6 @@ export function createActiveWorkspaceTerminalActions(
           targetGroupId: groupId,
           activate: true
         })
-        return
-      }
-      if (isWebClientLocation() && worktreeId !== FLOATING_TERMINAL_WORKTREE_ID) {
         return
       }
       const terminal = get().createTab(worktreeId, groupId)

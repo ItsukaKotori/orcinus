@@ -387,10 +387,6 @@ export type GlobalSettings = {
   /** Preferred mobile pairing path for new QR codes. Missing/'automatic' = Anywhere (Relay + local);
    *  explicit 'local-only' = same-network only. */
   mobilePairingConnectionMode?: 'automatic' | 'local-only'
-  /** Explicit custom address restored when generating future mobile pairing codes. */
-  mobilePairingCustomAddress?: string | null
-  /** Saved custom addresses available in both mobile pairing pickers. */
-  mobilePairingCustomAddresses?: string[]
   /** Experimental: persistent terminal-pane attention ring for bell + agent-completion events. Opt-in while tuning signal/noise. */
   experimentalTerminalAttention: boolean
   /** Experimental: automatically sleep completed, resumable background agent terminals. */

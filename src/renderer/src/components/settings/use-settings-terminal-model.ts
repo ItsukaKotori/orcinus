@@ -20,20 +20,17 @@ export function useSettingsTerminalModel(
     model.settings?.activeRuntimeEnvironmentId
   )
   const runtimeTarget = useMemo(() => getActiveRuntimeTarget(model.settings), [model.settings])
-  const capabilityLoadTarget = useMemo(
-    () => (model.isWebClient ? { kind: 'local' as const } : runtimeTarget),
-    [model.isWebClient, runtimeTarget]
-  )
+  const capabilityLoadTarget = runtimeTarget
   const hasActiveRuntimeEnvironment = Boolean(model.settings?.activeRuntimeEnvironmentId?.trim())
   const needsRepoWindowsRuntimeCapabilities = [...navigation.neededSectionIds].some((sectionId) =>
     sectionId.startsWith('repo-')
   )
   const needsLocalWindowsRuntimeCapabilities =
-    (model.isWindows || model.isWebClient) &&
+    model.isWindows &&
     (navigation.neededSectionIds.has('agents') || navigation.neededSectionIds.has('general'))
   const shouldLoadWindowsTerminalCapabilities =
     hasActiveRuntimeEnvironment ||
-    ((model.isWindows || model.isWebClient) &&
+    (model.isWindows &&
       (navigation.neededSectionIds.has('terminal') ||
         navigation.neededSectionIds.has('accounts') ||
         needsRepoWindowsRuntimeCapabilities ||
@@ -47,26 +44,23 @@ export function useSettingsTerminalModel(
   )
   // Why: global agent and project defaults belong to the desktop, not its active remote.
   const remoteViewLocalWindowsRuntimeCapabilities = useLocalWindowsTerminalCapabilities(
-    needsLocalWindowsRuntimeCapabilities &&
-      runtimeTarget.kind === 'environment' &&
-      !model.isWebClient,
+    needsLocalWindowsRuntimeCapabilities && runtimeTarget.kind === 'environment',
     true,
     'local'
   )
-  const localWindowsRuntimeCapabilities =
-    runtimeTarget.kind === 'local' || model.isWebClient
-      ? windowsTerminalCapabilities
-      : remoteViewLocalWindowsRuntimeCapabilities
+  const localWindowsRuntimeCapabilities = runtimeTarget.kind === 'local'
+    ? windowsTerminalCapabilities
+    : remoteViewLocalWindowsRuntimeCapabilities
   // Why: only supported-but-unavailable WSL (Windows) should render disabled controls, not unsupported WSL (macOS/Linux).
   const runtimeWslSupportedPlatform = isWindowsTerminalCapabilityHost({
     isWindowsRenderer: model.isWindows,
-    isWebClient: model.isWebClient,
+    isWebClient: false,
     target: runtimeTarget,
     hostPlatform: windowsTerminalCapabilities.hostPlatform
   })
   const localWslSupportedPlatform = isWindowsTerminalCapabilityHost({
     isWindowsRenderer: model.isWindows,
-    isWebClient: model.isWebClient,
+    isWebClient: false,
     target: { kind: 'local' },
     hostPlatform: localWindowsRuntimeCapabilities.hostPlatform
   })

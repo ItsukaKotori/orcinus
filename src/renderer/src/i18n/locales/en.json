@@ -10,9 +10,7 @@
   "app": {
     "recoverableError": {
       "rootTitle": "Orcinus hit a renderer error.",
-      "rootDescription": "The app shell could not finish rendering. Retry to remount it, or relaunch Orcinus if the error persists.",
-      "webTitle": "Orcinus web hit a renderer error.",
-      "webDescription": "Retry the web client or reconnect to the paired runtime."
+      "rootDescription": "The app shell could not finish rendering. Retry to remount it, or relaunch Orcinus if the error persists."
     }
   },
   "browser": {
@@ -227,45 +225,14 @@
       "pluginCommandFailed": "Could not run the plugin command."
     },
     "web": {
-      "WebConnect": {
-        "b411ec0069": "Connect",
-        "2cf9e5a294": "Clear saved server",
-        "4a4c017be1": "Endpoint:",
-        "27393856e4": "orca://pair?code=...",
-        "7a566540de": "Pairing URL or code",
-        "cb4d287238": "Server name",
-        "3affe7de3a": "Paste a pairing URL from an Orcinus server that this browser can reach.",
-        "e3bcd082ac": "Connect to Orcinus",
-        "mobileScopeRejected": "This QR code grants limited (mobile) access. To use the full web app, open the browser access link from Settings → Runtime Environments → Share this Orcinus server → New Link."
-      },
-      "webPreloadApi": {
-        "aiVaultUnavailableForHost": "Agent Session History is not available for this execution host.",
-        "runtimeEnvironmentManuallyDisconnected": "Runtime environment is manually disconnected.",
-        "loopbackPairingBlocked": "This access link points back to this device.",
-        "remotePairingUnreachable": "Cannot reach Orcinus at {{endpoint}}.",
-        "remotePairingInvalidDetails": "This access link contains invalid connection details.",
-        "remotePairingSaveFailed": "Orcinus verified the host but could not save it. Check browser storage and try again."
-      },
+      "WebConnect": {},
+      "webPreloadApi": {},
       "web": {
         "preload": {
-          "api": {
-            "31bfe8ae1a": "Unavailable in the web client.",
-            "b8a1618172": "Pull request detail generation is unavailable in the web client.",
-            "e57c82d276": "Commit message model discovery is unavailable in the web client.",
-            "9fc90740b6": "Commit message generation is unavailable in the web client.",
-            "52bee9d8a0": "Conflicting custom shortcuts were ignored: {{value0}}.",
-            "32f15bdb0f": "Unknown platform \"{{value0}}\" was ignored.",
-            "0a69fcd8bc": "platforms must be an object with darwin, linux, or win32 sections.",
-            "10898045f3": "Shortcut for \"{{value0}}\" was ignored: Use a string array.",
-            "36761d9604": "Unknown keybinding action \"{{value0}}\" was ignored.",
-            "d2e43e426a": "{{value0}} must be an object.",
-            "76122208ca": "Shortcut for \"{{value0}}\" was ignored: {{value1}}"
-          }
+          "api": {}
         },
         "runtime": {
-          "environment": {
-            "07f788de83": "WebSocket"
-          }
+          "environment": {}
         }
       }
     },
@@ -489,18 +456,7 @@
           }
         }
       },
-      "remotePairingCopy": {
-        "invalidInput": "Enter an Orcinus access link or bare pairing code.",
-        "mobileOnly": "This link grants mobile-only access. Generate a link for another Orcinus client.",
-        "invalidDestination": "This access link contains an invalid destination.",
-        "unsupportedDestination": "This access link contains an unsupported destination.",
-        "nonConnectableDestination": "This access link contains a non-connectable destination.",
-        "loopback": "Loopback",
-        "tailscale": "Tailscale address",
-        "lan": "Private LAN address",
-        "public": "Public address",
-        "custom": "Custom hostname"
-      },
+      "remotePairingCopy": {},
       "fix": {
         "checks": {
           "agent": {
@@ -6747,18 +6703,7 @@
           "ccb07dd027": "Saved",
           "e57dde9d93": "Unsaved changes"
         },
-        "RuntimeAccessGrantList": {
-          "8b82879581": "Anyone with an active grant can connect until you revoke it. Revoking shared access disconnects active clients immediately.",
-          "68ec21309f": "Revoke access",
-          "6f6d5188ed": "Revoke {{value0}}",
-          "87b16cd11d": "Created",
-          "434e4a6af6": "Current link",
-          "fd83b94095": "No shared server access yet.",
-          "27cf8507ad": "Refresh shared access",
-          "f031182867": "Shared Server Access",
-          "df142657a5": "Not used yet",
-          "b18d1764ef": "Last used {{value0}}"
-        },
+        "RuntimeAccessGrantList": {},
         "RuntimeEnvironmentsPane": {
           "aeb26635d2": "Remove {{value0}}",
           "af53761f31": "Cancel",
@@ -9814,15 +9759,10 @@
           "loopbackDescription": "It uses {{endpoint}}, which points back to the device opening the link—not the other computer that created it.",
           "loopbackRecovery": "On the other computer, create a new link using Another device and choose its Tailscale or LAN address.",
           "identityMismatch": "The reached Orcinus host does not match this access link",
-          "identityMismatchHelp": "Orcinus reached {{endpoint}}, but that host does not match this link. Generate a new link on the other host.",
           "invalidLink": "This access link is no longer valid",
-          "invalidLinkHelp": "Generate a new access link on the other host and try again.",
           "incompatible": "Orcinus versions are not compatible",
-          "incompatibleHelp": "Update Orcinus on this device and the other host, then try again.",
           "interrupted": "Connection interrupted",
-          "interruptedHelp": "The connection stopped during verification. Check the network or SSH tunnel and try again.",
           "unavailable": "Host unavailable",
-          "unavailableHelp": "Make sure Orcinus is running on the other host and that the network or SSH tunnel can reach {{endpoint}}.",
           "advanced": "Advanced",
           "sshTunnel": "I am using an SSH tunnel to this local address",
           "sshTunnelHelp": "Keep the tunnel active while using this connection.",
@@ -9834,8 +9774,7 @@
           "endpointKind": "Endpoint kind",
           "networkConnection": "Network connection",
           "notAttempted": "Not attempted",
-          "saveFailed": "Could not save the host",
-          "saveFailedHelp": "The host was verified, but Orcinus could not save it. Check the name and local settings storage, then try again."
+          "saveFailed": "Could not save the host"
         },
         "CloudVmSetupGuide": {
           "title": "Create a Cloud VM",
@@ -9859,7 +9798,6 @@
           "switchTo": "Switch to build",
           "alreadyRunning": "This is the build you are running.",
           "willSwitch": "{{value0}} → {{value1}}",
-          "webUnavailable": "Switching builds is only available in the desktop app.",
           "devChannelUnsupportedAria": "{{value0}} ({{value1}} only)",
           "devChannelUnsupported": "{{value0}} builds are produced only for {{value1}}. Linux stays on Stable or RC.",
           "downloadInstaller": "Download installer",
@@ -9897,10 +9835,8 @@
           "signInDescription": "Use your Orcinus account to upload artifacts and manage their public links.",
           "signInAgain": "Sign in again",
           "enableStepTitle": "Enable artifact sharing",
-          "enableStepWebDescription": "Open Settings → Artifacts in the Orcinus desktop app on the host device and enable publishing.",
           "enableStepDescription": "Turn on “Allow publishing public artifact links” above.",
           "allowPublishing": "Allow publishing public artifact links",
-          "allowPublishingWebDescription": "Desktop only. Open Settings → Artifacts on the host device to change this setting.",
           "allowPublishingDescription": "Publish HTML and Markdown files as links anyone with the URL can open. Existing links remain until you delete them from Artifacts.",
           "howToDescriptionDisabled": "Enable artifact sharing above to publish HTML or Markdown files as public links.",
           "allowPublishingSearchDescription": "Allow Orcinus to publish HTML and Markdown files as public links.",

@@ -7,7 +7,6 @@ import type {
 } from '../../runtime-types'
 import type { RuntimeRpcResponse } from '../../runtime-rpc-envelope'
 import type { PublicKnownRuntimeEnvironment } from '../../runtime-environments'
-import type { VerifyAndAddRuntimeEnvironmentResult } from '../../remote-pairing-verification'
 import type { RemoteRuntimeSharedConnectionDiagnostics } from '../../remote-runtime-shared-control-types'
 
 export type RuntimeEnvironmentSubscriptionHandle = {
@@ -52,15 +51,6 @@ export type RuntimeApi = {
     getStatusSnapshots: () => Promise<RuntimeHostStatusSnapshot[]>
     onStatusChanged: (callback: (snapshot: RuntimeHostStatusSnapshot) => void) => () => void
     list: () => Promise<PublicKnownRuntimeEnvironment[]>
-    addFromPairingCode: (args: {
-      name: string
-      pairingCode: string
-    }) => Promise<{ environment: PublicKnownRuntimeEnvironment }>
-    verifyAndAddFromPairingCode: (args: {
-      name: string
-      pairingCode: string
-      allowLoopback?: boolean
-    }) => Promise<VerifyAndAddRuntimeEnvironmentResult>
     resolve: (args: { selector: string }) => Promise<PublicKnownRuntimeEnvironment>
     remove: (args: { selector: string }) => Promise<{ removed: PublicKnownRuntimeEnvironment }>
     disconnect: (args: {

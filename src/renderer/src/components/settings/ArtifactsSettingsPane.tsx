@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { SettingsSwitchRow } from './SettingsFormControls'
 import { useOrcaProfileAuthStatusRefresh } from '@/hooks/use-orca-profile-auth-status-refresh'
 import { useAppStore } from '@/store'
-import { isWebClientLocation } from '@/lib/web-client-location'
 import { translate } from '@/i18n/i18n'
 
 type HowToStep = { key: string; title: string; description: string }
@@ -21,9 +20,6 @@ export function ArtifactsSettingsPane({
   const connecting = useAppStore((state) => state.orcaProfileConnecting)
   const connect = useAppStore((state) => state.connectCurrentOrcaProfile)
   const signedIn = authStatus?.state === 'connected'
-  // Why: the capability lives in the desktop host's store and is deliberately absent from the
-  // settings.update allowlist, so a web client can only mirror it — never grant it.
-  const isWebClient = isWebClientLocation()
   const sharingEnabled = settings.artifactSharingEnabled === true
 
   useOrcaProfileAuthStatusRefresh()
@@ -38,15 +34,10 @@ export function ArtifactsSettingsPane({
               'auto.components.settings.artifacts.enableStepTitle',
               'Enable artifact sharing'
             ),
-            description: isWebClient
-              ? translate(
-                  'auto.components.settings.artifacts.enableStepWebDescription',
-                  'Open Settings → Artifacts in the Orca desktop app on the host device and enable publishing.'
-                )
-              : translate(
-                  'auto.components.settings.artifacts.enableStepDescription',
-                  'Turn on “Allow publishing public artifact links” above.'
-                )
+            description: translate(
+              'auto.components.settings.artifacts.enableStepDescription',
+              'Turn on “Allow publishing public artifact links” above.'
+            )
           }
         ]),
     {
@@ -85,19 +76,11 @@ export function ArtifactsSettingsPane({
           'auto.components.settings.artifacts.allowPublishing',
           'Allow publishing public artifact links'
         )}
-        description={
-          isWebClient
-            ? translate(
-                'auto.components.settings.artifacts.allowPublishingWebDescription',
-                'Desktop only. Open Settings → Artifacts on the host device to change this setting.'
-              )
-            : translate(
-                'auto.components.settings.artifacts.allowPublishingDescription',
-                'Publish HTML and Markdown files as links anyone with the URL can open. Existing links remain until you delete them from Artifacts.'
-              )
-        }
+        description={translate(
+          'auto.components.settings.artifacts.allowPublishingDescription',
+          'Publish HTML and Markdown files as links anyone with the URL can open. Existing links remain until you delete them from Artifacts.'
+        )}
         checked={sharingEnabled}
-        disabled={isWebClient}
         onChange={() => void updateSettings({ artifactSharingEnabled: !sharingEnabled })}
       />
       <SettingsSwitchRow

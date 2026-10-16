@@ -2,9 +2,7 @@
   "app": {
     "recoverableError": {
       "rootTitle": "Orcinus 遇到渲染器错误。",
-      "rootDescription": "应用 shell 无法完成渲染。重试以重新挂载，如果错误仍然存在，请重新启动 Orcinus。",
-      "webTitle": "Orcinus Web 遇到渲染器错误。",
-      "webDescription": "重试 Web 客户端或重新连接到配对的运行时。"
+      "rootDescription": "应用 shell 无法完成渲染。重试以重新挂载，如果错误仍然存在，请重新启动 Orcinus。"
     }
   },
   "githubChecks": {
@@ -137,44 +135,14 @@
       "pluginCommandFailed": "无法运行插件命令。"
     },
     "web": {
-      "WebConnect": {
-        "b411ec0069": "连接",
-        "2cf9e5a294": "清除已保存的服务器",
-        "4a4c017be1": "端点：",
-        "27393856e4": "orca://pair?code=...",
-        "7a566540de": "配对 URL 或代码",
-        "cb4d287238": "服务器名称",
-        "3affe7de3a": "粘贴来自该浏览器可以访问的 Orcinus 服务器的配对 URL。",
-        "e3bcd082ac": "连接到 Orcinus",
-        "mobileScopeRejected": "此二维码仅授予受限（移动端）访问权限。若要使用完整 Web 应用，请从设置 → 远程 Orcinus 服务器 → 分享此 Orcinus 服务器 → 新链接打开浏览器访问链接。"
-      },
-      "webPreloadApi": {
-        "aiVaultUnavailableForHost": "此执行主机不支持 Agent 会话历史记录。",
-        "runtimeEnvironmentManuallyDisconnected": "运行时环境已手动断开连接。",
-        "loopbackPairingBlocked": "此访问链接会指回此设备。",
-        "remotePairingUnreachable": "无法连接 {{endpoint}} 上的 Orcinus。",
-        "remotePairingInvalidDetails": "此访问链接包含无效的连接信息。"
-      },
+      "WebConnect": {},
+      "webPreloadApi": {},
       "web": {
         "preload": {
-          "api": {
-            "31bfe8ae1a": "在网络客户端中不可用。",
-            "b8a1618172": "PR详细信息生成在 Web 客户端中不可用。",
-            "e57c82d276": "Commit 消息模型发现在 Web 客户端中不可用。",
-            "9fc90740b6": "Commit 消息生成在 Web 客户端中不可用。",
-            "52bee9d8a0": "冲突的自定义快捷键被忽略：{{value0}}。",
-            "32f15bdb0f": "未知平台“{{value0}}”被忽略。",
-            "0a69fcd8bc": "platform 必须是具有 darwin、linux 或 win32 部分的对象。",
-            "10898045f3": "“{{value0}}”的快捷方式被忽略：使用字符串数组。",
-            "36761d9604": "未知的键绑定操作“{{value0}}”被忽略。",
-            "d2e43e426a": "{{value0}} 必须是一个对象。",
-            "76122208ca": "“{{value0}}”的快捷方式被忽略：{{value1}}"
-          }
+          "api": {}
         },
         "runtime": {
-          "environment": {
-            "07f788de83": "WebSocket"
-          }
+          "environment": {}
         }
       }
     },
@@ -357,18 +325,7 @@
           }
         }
       },
-      "remotePairingCopy": {
-        "invalidInput": "请输入 Orcinus 访问链接或配对代码。",
-        "mobileOnly": "此链接仅授予移动端访问权限。请为另一个 Orcinus 客户端生成链接。",
-        "invalidDestination": "此访问链接包含无效的目标地址。",
-        "unsupportedDestination": "此访问链接包含不受支持的目标地址。",
-        "nonConnectableDestination": "此访问链接包含无法连接的目标地址。",
-        "loopback": "环回地址",
-        "tailscale": "Tailscale 地址",
-        "lan": "专用 LAN 地址",
-        "public": "公网地址",
-        "custom": "自定义主机名"
-      },
+      "remotePairingCopy": {},
       "fix": {
         "checks": {
           "agent": {
@@ -5821,18 +5778,7 @@
           "ccb07dd027": "已保存",
           "e57dde9d93": "未保存的更改"
         },
-        "RuntimeAccessGrantList": {
-          "8b82879581": "任何拥有有效授权的人都可以连接，直到您撤销授权为止。撤销共享访问会立即断开活动客户端的连接。",
-          "68ec21309f": "撤销访问权限",
-          "6f6d5188ed": "撤销 {{value0}}",
-          "87b16cd11d": "已创建",
-          "434e4a6af6": "当前链接",
-          "fd83b94095": "尚无共享服务器访问权限。",
-          "27cf8507ad": "刷新共享访问",
-          "f031182867": "共享服务器访问",
-          "df142657a5": "尚未使用",
-          "b18d1764ef": "最后使用 {{value0}}"
-        },
+        "RuntimeAccessGrantList": {},
         "RuntimeEnvironmentsPane": {
           "aeb26635d2": "删除 {{value0}}",
           "af53761f31": "取消",
@@ -8799,15 +8745,10 @@
           "loopbackDescription": "{{endpoint}} 会指向打开链接的设备，而不是创建链接的另一台计算机。",
           "loopbackRecovery": "在另一台计算机上，使用“其他设备”创建新链接，并选择其 Tailscale 或 LAN 地址。",
           "identityMismatch": "到达的 Orcinus 主机与此访问链接不匹配",
-          "identityMismatchHelp": "已连接到 {{endpoint}} 上的 Orcinus，但该主机与此链接不匹配。请在另一台主机上生成新链接。",
           "invalidLink": "此访问链接不再有效",
-          "invalidLinkHelp": "请在另一台主机上生成新的访问链接，然后重试。",
           "incompatible": "Orcinus 版本不兼容",
-          "incompatibleHelp": "请更新此设备和另一台主机上的 Orcinus，然后重试。",
           "interrupted": "连接中断",
-          "interruptedHelp": "验证期间连接已中断。请检查网络或 SSH 隧道，然后重试。",
           "unavailable": "主机不可用",
-          "unavailableHelp": "请确保 Orcinus 正在另一台主机上运行，并且网络或 SSH 隧道可以连接到 {{endpoint}}。",
           "advanced": "高级",
           "sshTunnel": "我正在使用 SSH 隧道连接到此本地地址",
           "sshTunnelHelp": "使用此连接时保持隧道活跃。",

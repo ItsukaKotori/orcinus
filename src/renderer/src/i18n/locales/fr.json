@@ -2,9 +2,7 @@
   "app": {
     "recoverableError": {
       "rootTitle": "Orcinus a rencontré une erreur de rendu.",
-      "rootDescription": "Le shell de l'application n'a pas pu terminer son rendu. Réessayez pour le remonter, ou relancez Orcinus si l'erreur persiste.",
-      "webTitle": "Orcinus web a rencontré une erreur de rendu.",
-      "webDescription": "Réessayez le client web ou reconnectez-vous au runtime appairé."
+      "rootDescription": "Le shell de l'application n'a pas pu terminer son rendu. Réessayez pour le remonter, ou relancez Orcinus si l'erreur persiste."
     }
   },
   "browser": {
@@ -181,45 +179,14 @@
       "pluginCommandFailed": "Impossible d'exécuter la commande du plugin."
     },
     "web": {
-      "WebConnect": {
-        "b411ec0069": "Se connecter",
-        "2cf9e5a294": "Effacer le serveur enregistré",
-        "4a4c017be1": "Point de terminaison :",
-        "27393856e4": "orca://pair?code=...",
-        "7a566540de": "URL ou code d'appairage",
-        "cb4d287238": "Nom du serveur",
-        "3affe7de3a": "Collez une URL d'appairage provenant d'un serveur Orcinus accessible depuis ce navigateur.",
-        "e3bcd082ac": "Se connecter à Orcinus",
-        "mobileScopeRejected": "Ce code QR accorde un accès limité (mobile). Pour utiliser l'application web complète, ouvrez le lien d'accès navigateur depuis Paramètres → Environnements d'exécution → Partager ce serveur Orcinus → Nouveau lien."
-      },
-      "webPreloadApi": {
-        "aiVaultUnavailableForHost": "L'historique des sessions d'agent n'est pas disponible pour cet hôte d'exécution.",
-        "runtimeEnvironmentManuallyDisconnected": "L'environnement d'exécution est déconnecté manuellement.",
-        "loopbackPairingBlocked": "Ce lien d'accès pointe vers cet appareil lui-même.",
-        "remotePairingUnreachable": "Impossible de joindre Orcinus à l'adresse {{endpoint}}.",
-        "remotePairingInvalidDetails": "Ce lien d'accès contient des détails de connexion invalides.",
-        "remotePairingSaveFailed": "Orcinus a vérifié l'hôte mais n'a pas pu l'enregistrer. Vérifiez le stockage du navigateur et réessayez."
-      },
+      "WebConnect": {},
+      "webPreloadApi": {},
       "web": {
         "preload": {
-          "api": {
-            "31bfe8ae1a": "Indisponible dans le client web.",
-            "b8a1618172": "La génération du détail de pull request est indisponible dans le client web.",
-            "e57c82d276": "La découverte des modèles de messages de commit est indisponible dans le client web.",
-            "9fc90740b6": "La génération des messages de commit est indisponible dans le client web.",
-            "52bee9d8a0": "Des raccourcis personnalisés en conflit ont été ignorés : {{value0}}.",
-            "32f15bdb0f": "Plateforme inconnue « {{value0}} » ignorée.",
-            "0a69fcd8bc": "« platforms » doit être un objet avec des sections darwin, linux ou win32.",
-            "10898045f3": "Raccourci pour « {{value0}} » ignoré : utilisez un tableau de chaînes.",
-            "36761d9604": "Action de raccourci inconnue « {{value0}} » ignorée.",
-            "d2e43e426a": "{{value0}} doit être un objet.",
-            "76122208ca": "Raccourci pour « {{value0}} » ignoré : {{value1}}"
-          }
+          "api": {}
         },
         "runtime": {
-          "environment": {
-            "07f788de83": "WebSocket"
-          }
+          "environment": {}
         }
       }
     },
@@ -433,18 +400,7 @@
           }
         }
       },
-      "remotePairingCopy": {
-        "invalidInput": "Saisissez un lien d'accès Orcinus ou un code d'appairage brut.",
-        "mobileOnly": "Ce lien accorde un accès mobile uniquement. Générez un lien pour un autre client Orcinus.",
-        "invalidDestination": "Ce lien d'accès contient une destination invalide.",
-        "unsupportedDestination": "Ce lien d'accès contient une destination non prise en charge.",
-        "nonConnectableDestination": "Ce lien d'accès contient une destination non joignable.",
-        "loopback": "Boucle locale",
-        "tailscale": "Adresse Tailscale",
-        "lan": "Adresse LAN privée",
-        "public": "Adresse publique",
-        "custom": "Nom d'hôte personnalisé"
-      },
+      "remotePairingCopy": {},
       "fix": {
         "checks": {
           "agent": {
@@ -6542,18 +6498,7 @@
           "ccb07dd027": "Enregistré",
           "e57dde9d93": "Modifications non enregistrées"
         },
-        "RuntimeAccessGrantList": {
-          "8b82879581": "Toute personne disposant d'une autorisation active peut se connecter jusqu'à sa révocation. Révoquer l'accès partagé déconnecte immédiatement les clients actifs.",
-          "68ec21309f": "Révoquer l'accès",
-          "6f6d5188ed": "Révoquer {{value0}}",
-          "87b16cd11d": "Créé",
-          "434e4a6af6": "Lien actuel",
-          "fd83b94095": "Aucun accès serveur partagé pour le moment.",
-          "27cf8507ad": "Actualiser l'accès partagé",
-          "f031182867": "Accès serveur partagé",
-          "df142657a5": "Pas encore utilisé",
-          "b18d1764ef": "Dernière utilisation {{value0}}"
-        },
+        "RuntimeAccessGrantList": {},
         "RuntimeEnvironmentsPane": {
           "aeb26635d2": "Supprimer {{value0}}",
           "af53761f31": "Annuler",
@@ -9484,15 +9429,10 @@
           "loopbackDescription": "Il utilise {{endpoint}}, qui pointe vers l'appareil qui ouvre le lien — et non vers l'autre ordinateur qui l'a créé.",
           "loopbackRecovery": "Sur l'autre ordinateur, créez un nouveau lien avec Autre appareil et choisissez son adresse Tailscale ou LAN.",
           "identityMismatch": "L'hôte Orcinus rejoint ne correspond pas à ce lien d'accès",
-          "identityMismatchHelp": "Orcinus a rejoint {{endpoint}}, mais cet hôte ne correspond pas à ce lien. Générez un nouveau lien sur l'autre hôte.",
           "invalidLink": "Ce lien d'accès n'est plus valide",
-          "invalidLinkHelp": "Générez un nouveau lien d'accès sur l'autre hôte et réessayez.",
           "incompatible": "Les versions d'Orcinus ne sont pas compatibles",
-          "incompatibleHelp": "Mettez à jour Orcinus sur cet appareil et sur l'autre hôte, puis réessayez.",
           "interrupted": "Connexion interrompue",
-          "interruptedHelp": "La connexion s'est arrêtée pendant la vérification. Vérifiez le réseau ou le tunnel SSH et réessayez.",
           "unavailable": "Hôte indisponible",
-          "unavailableHelp": "Vérifiez qu'Orcinus tourne sur l'autre hôte et que le réseau ou le tunnel SSH peut joindre {{endpoint}}.",
           "advanced": "Avancé",
           "sshTunnel": "J'utilise un tunnel SSH vers cette adresse locale",
           "sshTunnelHelp": "Gardez le tunnel actif tant que cette connexion est utilisée.",
@@ -9504,8 +9444,7 @@
           "endpointKind": "Type d'endpoint",
           "networkConnection": "Connexion réseau",
           "notAttempted": "Non tenté",
-          "saveFailed": "Impossible d'enregistrer l'hôte",
-          "saveFailedHelp": "L'hôte a été vérifié, mais Orcinus n'a pas pu l'enregistrer. Vérifiez le nom et le stockage local des paramètres, puis réessayez."
+          "saveFailed": "Impossible d'enregistrer l'hôte"
         },
         "CloudVmSetupGuide": {
           "title": "Créer une VM cloud",
@@ -9529,7 +9468,6 @@
           "switchTo": "Basculer vers le build",
           "alreadyRunning": "C'est le build que vous utilisez.",
           "willSwitch": "{{value0}} → {{value1}}",
-          "webUnavailable": "Le changement de build n'est disponible que dans l'app de bureau.",
           "devChannelUnsupportedAria": "{{value0}} ({{value1}} uniquement)",
           "devChannelUnsupported": "Les builds {{value0}} ne sont produits que pour {{value1}}. Linux reste sur Stable ou RC.",
           "downloadInstaller": "Télécharger l'installateur",
@@ -9567,10 +9505,8 @@
           "signInDescription": "Utilisez votre compte Orcinus pour téléverser des artifacts et gérer leurs liens publics.",
           "signInAgain": "Se reconnecter",
           "enableStepTitle": "Activer le partage d'artifacts",
-          "enableStepWebDescription": "Ouvrez Paramètres → Artifacts dans l'app Orcinus de bureau sur l'appareil hôte et activez la publication.",
           "enableStepDescription": "Activez « Autoriser la publication de liens d'artifacts publics » ci-dessus.",
           "allowPublishing": "Autoriser la publication de liens d'artifacts publics",
-          "allowPublishingWebDescription": "Bureau uniquement. Ouvrez Paramètres → Artifacts sur l'appareil hôte pour modifier ce paramètre.",
           "allowPublishingDescription": "Publiez des fichiers HTML et Markdown sous forme de liens ouvrables par quiconque possède l'URL. Les liens existants demeurent jusqu'à leur suppression dans Artifacts.",
           "howToDescriptionDisabled": "Activez le partage d'artifacts ci-dessus pour publier des fichiers HTML ou Markdown sous forme de liens publics.",
           "allowPublishingSearchDescription": "Autoriser Orcinus à publier des fichiers HTML et Markdown sous forme de liens publics."

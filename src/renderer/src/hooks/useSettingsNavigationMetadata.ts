@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next'
 import { getTerminalPaneSearchEntries } from '@/components/settings/terminal-search'
 import { isMacUserAgent, isWindowsUserAgent } from '@/components/terminal-pane/pane-helpers'
 import type { SettingsNavSection } from '@/lib/settings-navigation-types'
-import { isWebClientLocation } from '@/lib/web-client-location'
 import {
   isWindowsTerminalCapabilityHost,
   useWindowsTerminalCapabilities
@@ -23,8 +22,6 @@ import { buildInterfaceSettingsSections } from './settings-navigation-interface-
 import { buildRemoteSettingsSections } from './settings-navigation-remote-sections'
 import { buildWorkflowSettingsSections } from './settings-navigation-workflow-sections'
 import { useWindowsTerminalCapabilityOwnerKey } from './useWindowsTerminalCapabilityOwnerKey'
-
-export { isWebClientLocation } from '@/lib/web-client-location'
 
 export function buildSettingsNavigationMetadata({
   isMac,
@@ -87,30 +84,27 @@ export function useSettingsNavigationMetadata(): SettingsNavSection[] {
   const settings = useAppStore((state) => state.settings)
   const isMac = isMacUserAgent()
   const isWindows = isWindowsUserAgent()
-  const isWebClient = isWebClientLocation()
   const windowsTerminalCapabilityOwnerKey = useWindowsTerminalCapabilityOwnerKey(
     settings?.activeRuntimeEnvironmentId
   )
   const runtimeTarget = getActiveRuntimeTarget(settings)
-  const capabilityLoadTarget = isWebClient ? { kind: 'local' as const } : runtimeTarget
+  const capabilityLoadTarget = runtimeTarget
   const windowsTerminalCapabilities = useWindowsTerminalCapabilities(
-    isWindows || isWebClient || runtimeTarget.kind === 'environment',
+    isWindows || runtimeTarget.kind === 'environment',
     false,
     windowsTerminalCapabilityOwnerKey,
     capabilityLoadTarget
   )
   const isLocalWindowsHost = isWindowsTerminalCapabilityHost({
     isWindowsRenderer: isWindows,
-    isWebClient,
+    isWebClient: false,
     target: { kind: 'local' },
     hostPlatform:
-      isWebClient || runtimeTarget.kind === 'local'
-        ? windowsTerminalCapabilities.hostPlatform
-        : null
+      runtimeTarget.kind === 'local' ? windowsTerminalCapabilities.hostPlatform : null
   })
   const isWindowsTerminalHost = isWindowsTerminalCapabilityHost({
     isWindowsRenderer: isWindows,
-    isWebClient,
+    isWebClient: false,
     target: runtimeTarget,
     hostPlatform: windowsTerminalCapabilities.hostPlatform
   })
@@ -125,7 +119,7 @@ export function useSettingsNavigationMetadata(): SettingsNavSection[] {
         isWindows,
         isLocalWindowsHost,
         isWindowsTerminalHost,
-        isWebClient,
+        isWebClient: false,
         isDev: import.meta.env.DEV,
         repos
       }),
@@ -135,7 +129,6 @@ export function useSettingsNavigationMetadata(): SettingsNavSection[] {
       isWindows,
       isLocalWindowsHost,
       isWindowsTerminalHost,
-      isWebClient,
       repos,
       activeLocale
     ]

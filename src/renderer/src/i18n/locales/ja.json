@@ -2,9 +2,7 @@
   "app": {
     "recoverableError": {
       "rootTitle": "Orcinus でレンダラーエラーが発生しました。",
-      "rootDescription": "アプリシェルのレンダリングを完了できませんでした。再マウントを試すか、エラーが解決しない場合は Orcinus を再起動してください。",
-      "webTitle": "Orcinus Web でレンダラーエラーが発生しました。",
-      "webDescription": "Web クライアントを再試行するか、ペアリングされたランタイムに再接続します。"
+      "rootDescription": "アプリシェルのレンダリングを完了できませんでした。再マウントを試すか、エラーが解決しない場合は Orcinus を再起動してください。"
     }
   },
   "githubChecks": {
@@ -137,44 +135,14 @@
       "pluginCommandFailed": "プラグインのコマンドを実行できませんでした。"
     },
     "web": {
-      "WebConnect": {
-        "b411ec0069": "接続",
-        "2cf9e5a294": "保存済みサーバーをクリア",
-        "4a4c017be1": "エンドポイント：",
-        "27393856e4": "orca://pair?code=...",
-        "7a566540de": "ペアリング URL またはコード",
-        "cb4d287238": "サーバー名",
-        "3affe7de3a": "このブラウザが到達できる Orcinus サーバーからペアリング URL を貼り付けます。",
-        "e3bcd082ac": "Orcinus に接続",
-        "mobileScopeRejected": "この QR コードでは、モバイル向けの制限付きアクセスのみ利用できます。完全版の Web アプリを使用するには、[設定] → [リモート Orcinus サーバー] → [この Orcinus サーバーを共有する] → [新規リンク] から、ブラウザ用アクセスリンクを開いてください。"
-      },
-      "webPreloadApi": {
-        "aiVaultUnavailableForHost": "この実行ホストでは Agent セッション履歴を使用できません。",
-        "runtimeEnvironmentManuallyDisconnected": "ランタイム環境は手動で切断されています。",
-        "loopbackPairingBlocked": "このアクセスリンクはこのデバイス自身を指しています。",
-        "remotePairingUnreachable": "{{endpoint}} の Orcinus に接続できません。",
-        "remotePairingInvalidDetails": "このアクセスリンクには無効な接続情報が含まれています。"
-      },
+      "WebConnect": {},
+      "webPreloadApi": {},
       "web": {
         "preload": {
-          "api": {
-            "31bfe8ae1a": "Web クライアントでは使用できません。",
-            "b8a1618172": "PR の詳細の生成は、Web クライアントでは使用できません。",
-            "e57c82d276": "コミットメッセージモデルの検出は、Web クライアントでは使用できません。",
-            "9fc90740b6": "コミットメッセージの生成は、Web クライアントでは使用できません。",
-            "52bee9d8a0": "競合するカスタムショートカットは無視されました: {{value0}}。",
-            "32f15bdb0f": "不明なプラットフォーム「{{value0}}」は無視されました。",
-            "0a69fcd8bc": "プラットフォームは、darwin、linux、または win32 セクションを持つオブジェクトである必要があります。",
-            "10898045f3": "「{{value0}}」のショートカットは無視されました: 文字列配列を使用してください。",
-            "36761d9604": "不明なキーバインド 操作「{{value0}}」は無視されました。",
-            "d2e43e426a": "{{value0}} はオブジェクトでなければなりません。",
-            "76122208ca": "「{{value0}}」のショートカットは無視されました: {{value1}}"
-          }
+          "api": {}
         },
         "runtime": {
-          "environment": {
-            "07f788de83": "ウェブソケット"
-          }
+          "environment": {}
         }
       }
     },
@@ -354,18 +322,7 @@
           }
         }
       },
-      "remotePairingCopy": {
-        "invalidInput": "Orcinus のアクセスリンクまたはペアリングコードを入力してください。",
-        "mobileOnly": "このリンクはモバイル専用アクセスを許可します。別の Orcinus クライアント用のリンクを生成してください。",
-        "invalidDestination": "このアクセスリンクには無効な接続先が含まれています。",
-        "unsupportedDestination": "このアクセスリンクには未対応の接続先が含まれています。",
-        "nonConnectableDestination": "このアクセスリンクには接続できない接続先が含まれています。",
-        "loopback": "ループバック",
-        "tailscale": "Tailscale アドレス",
-        "lan": "プライベート LAN アドレス",
-        "public": "パブリックアドレス",
-        "custom": "カスタムホスト名"
-      },
+      "remotePairingCopy": {},
       "fix": {
         "checks": {
           "agent": {
@@ -5792,18 +5749,7 @@
           "ccb07dd027": "保存済み",
           "e57dde9d93": "未保存の変更"
         },
-        "RuntimeAccessGrantList": {
-          "8b82879581": "アクティブな許可を持っている人は誰でも、許可を取り消すまで接続できます。共有アクセスを取り消すと、アクティブなクライアントはただちに切断されます。",
-          "68ec21309f": "アクセスを取り消す",
-          "6f6d5188ed": "{{value0}}を取り消す",
-          "87b16cd11d": "作成日時",
-          "434e4a6af6": "現在のリンク",
-          "fd83b94095": "共有サーバーへのアクセスはまだありません。",
-          "27cf8507ad": "共有アクセスを更新する",
-          "f031182867": "共有サーバーアクセス",
-          "df142657a5": "まだ使用されていません",
-          "b18d1764ef": "最後に使用したのは {{value0}}"
-        },
+        "RuntimeAccessGrantList": {},
         "RuntimeEnvironmentsPane": {
           "aeb26635d2": "{{value0}} を削除",
           "af53761f31": "キャンセル",
@@ -8729,15 +8675,10 @@
           "loopbackDescription": "{{endpoint}} はリンクを開いたデバイス自身を指し、リンクを作成したもう一方のコンピュータには接続しません。",
           "loopbackRecovery": "もう一方のコンピュータで「別のデバイス」を使って新規リンクを作成し、Tailscale または LAN アドレスを選んでください。",
           "identityMismatch": "接続した Orcinus ホストがこのアクセスリンクと一致しません",
-          "identityMismatchHelp": "{{endpoint}} の Orcinus に接続しましたが、そのホストはこのリンクと一致しません。もう一方のホストで新規リンクを生成してください。",
           "invalidLink": "このアクセスリンクは無効になっています",
-          "invalidLinkHelp": "もう一方のホストで新規アクセスリンクを生成し、もう一度お試しください。",
           "incompatible": "Orcinus のバージョンに互換性がありません",
-          "incompatibleHelp": "このデバイスともう一方のホストの Orcinus を更新し、もう一度お試しください。",
           "interrupted": "接続が中断されました",
-          "interruptedHelp": "検証中に接続が停止しました。ネットワークまたは SSH トンネルを確認して、もう一度お試しください。",
           "unavailable": "ホストを利用できません",
-          "unavailableHelp": "もう一方のホストで Orcinus が実行中であり、ネットワークまたは SSH トンネルから {{endpoint}} に到達できることを確認してください。",
           "advanced": "詳細設定",
           "sshTunnel": "このローカルアドレスへの SSH トンネルを使用しています",
           "sshTunnelHelp": "この接続を使用している間はトンネルを維持してください。",

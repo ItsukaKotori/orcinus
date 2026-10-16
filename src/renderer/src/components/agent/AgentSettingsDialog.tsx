@@ -13,8 +13,6 @@ import {
   isWindowsTerminalCapabilityHost,
   useLocalWindowsTerminalCapabilities
 } from '@/lib/windows-terminal-capabilities'
-import { isWebClientLocation } from '@/lib/web-client-location'
-import { useWindowsTerminalCapabilityOwnerKey } from '@/hooks/useWindowsTerminalCapabilityOwnerKey'
 
 type AgentSettingsDialogProps = {
   open: boolean
@@ -29,19 +27,14 @@ export default function AgentSettingsDialog({
   const updateSettings = useAppStore((s) => s.updateSettings)
   const isWindowsRenderer =
     typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows')
-  const isWebClient = isWebClientLocation()
-  const runtimeCapabilityOwnerKey = useWindowsTerminalCapabilityOwnerKey(
-    settings?.activeRuntimeEnvironmentId
-  )
-  const localCapabilityOwnerKey = isWebClient ? runtimeCapabilityOwnerKey : 'local'
   const localWindowsTerminalCapabilities = useLocalWindowsTerminalCapabilities(
-    open && (isWindowsRenderer || isWebClient),
+    open && isWindowsRenderer,
     false,
-    localCapabilityOwnerKey
+    'local'
   )
   const wslSupportedPlatform = isWindowsTerminalCapabilityHost({
     isWindowsRenderer,
-    isWebClient,
+    isWebClient: false,
     target: { kind: 'local' },
     hostPlatform: localWindowsTerminalCapabilities.hostPlatform
   })
