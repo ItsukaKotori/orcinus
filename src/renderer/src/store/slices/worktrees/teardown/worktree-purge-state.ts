@@ -36,8 +36,6 @@ export function buildWorktreePurgeState(
     omitRetiredDirectSshLedgerByTabId,
     omitByPtyId,
     omitByPaneKeyTabPrefix,
-    omitByBrowserWorkspaceId,
-    omitByPageId,
     omitByFileId
   } = createWorktreePurgeOmitters(s, worktreeIdSet, doomed)
 
@@ -126,22 +124,6 @@ export function buildWorktreePurgeState(
     remoteBranchConflictByWorktreeId: omitByWorktree(s.remoteBranchConflictByWorktreeId),
     // File search
     fileSearchStateByWorktree: omitByWorktree(s.fileSearchStateByWorktree),
-    // Browser state
-    browserTabsByWorktree: omitByWorktree(s.browserTabsByWorktree),
-    browserPagesByWorkspace: omitByBrowserWorkspaceId(s.browserPagesByWorkspace),
-    recentlyClosedBrowserTabsByWorktree: omitByWorktree(s.recentlyClosedBrowserTabsByWorktree),
-    activeBrowserTabIdByWorktree: omitByWorktree(s.activeBrowserTabIdByWorktree),
-    // Why: keyed by page/workspace id, only cleaned by closeBrowserTab on the single-removal path; the bulk reconcile missed them, orphaning an entry per page of externally-removed worktrees.
-    browserAnnotationsByPageId: omitByPageId(s.browserAnnotationsByPageId),
-    remoteBrowserPageHandlesByPageId: omitByPageId(s.remoteBrowserPageHandlesByPageId),
-    pendingAddressBarFocusByPageId: omitByPageId(s.pendingAddressBarFocusByPageId),
-    // createBrowserTab writes both the workspace id and the page id into this map.
-    pendingAddressBarFocusByTabId: omitByPageId(
-      omitByBrowserWorkspaceId(s.pendingAddressBarFocusByTabId)
-    ),
-    recentlyClosedBrowserPagesByWorkspace: omitByBrowserWorkspaceId(
-      s.recentlyClosedBrowserPagesByWorkspace
-    ),
     // Editor state
     activeFileIdByWorktree: omitByWorktree(s.activeFileIdByWorktree),
     activeTabTypeByWorktree: omitByWorktree(s.activeTabTypeByWorktree),
@@ -209,7 +191,6 @@ export function buildWorktreePurgeState(
         : s.activeWorkspaceKey
     })(),
     activeFileId: activeFileCleared ? null : s.activeFileId,
-    activeBrowserTabId: removedActive ? null : s.activeBrowserTabId,
     activeTabId: activeTabCleared ? null : s.activeTabId,
     activeTabType: removedActive || activeFileCleared ? 'terminal' : s.activeTabType
   }

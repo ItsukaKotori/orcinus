@@ -62,27 +62,6 @@ describe('buildPullRequestFieldsPrompt', () => {
     expect(prompt).toContain('use `Refs #12398`')
   })
 
-  it('uses GitLab-specific issue references', () => {
-    const prompt = buildPullRequestFieldsPrompt(
-      {
-        ...context,
-        provider: 'gitlab',
-        linkedIssueDetails: {
-          provider: 'gitlab',
-          number: 42,
-          title: 'Fix runner polling',
-          description: 'The runner checks paths that cannot exist.'
-        }
-      },
-      ''
-    )
-
-    expect(prompt).toContain('Linked GitLab issue: #42 Fix runner polling')
-    expect(prompt).toContain('`Closes #42` only for a complete fix')
-    expect(prompt).toContain('use `Related to #42`')
-    expect(prompt).not.toContain('GitHub issue')
-  })
-
   it('uses the active provider when no issue is linked', () => {
     const prompt = buildPullRequestFieldsPrompt({ ...context, provider: 'bitbucket' }, '')
 

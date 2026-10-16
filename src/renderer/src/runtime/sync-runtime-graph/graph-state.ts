@@ -7,8 +7,6 @@ import type {
 } from '../../../../shared/runtime-types'
 import type {
   AgentStatusProjectionCache,
-  BrowserPagesProjectionCache,
-  BrowserWorkspacesProjectionCache,
   EditorDraftHashCache,
   MobileSessionWorktreeInputs,
   OpenFileIndexes,
@@ -21,14 +19,10 @@ export const NO_TRANSPORT_GRACE_MS = 10_000
 export const AGENT_STATUS_SYNC_UPDATED_AT_BUCKET_MS = 30_000
 export const RUNTIME_GRAPH_SYNC_COALESCE_MS = 16
 
-export const EMPTY_ACTIVE_BROWSER_TAB_ID_BY_WORKTREE: AppState['activeBrowserTabIdByWorktree'] = {}
-export const EMPTY_BROWSER_TABS_BY_WORKTREE: AppState['browserTabsByWorktree'] = {}
-export const EMPTY_BROWSER_PAGES_BY_WORKSPACE: AppState['browserPagesByWorkspace'] = {}
 export const EMPTY_LAYOUT_BY_WORKTREE: AppState['layoutByWorktree'] = {}
 export const EMPTY_AGENT_STATUS_BY_PANE_KEY: AppState['agentStatusByPaneKey'] = {}
 export const EMPTY_NARROWED_BY_KEY: ReadonlyMap<string, never> = new Map<string, never>()
 export const EMPTY_WORKTREE_TERMINAL_TABS: AppState['tabsByWorktree'][string] = []
-export const EMPTY_WORKTREE_BROWSER_WORKSPACES: AppState['browserTabsByWorktree'][string] = []
 export const EMPTY_WORKTREE_UNIFIED_TABS: AppState['unifiedTabsByWorktree'][string] = []
 export const EMPTY_WORKTREE_TAB_GROUPS: AppState['groupsByWorktree'][string] = []
 export const EMPTY_WORKTREE_OPEN_FILE_IDS: readonly string[] = []
@@ -59,8 +53,6 @@ export const graphState = {
   cachedTabsProjection: null as TabsProjectionCache | null,
   cachedAgentStatusProjection: null as AgentStatusProjectionCache | null,
   cachedOpenFilesProjection: null as OpenFilesProjectionCache | null,
-  cachedBrowserWorkspacesProjection: null as BrowserWorkspacesProjectionCache | null,
-  cachedBrowserPagesProjection: null as BrowserPagesProjectionCache | null,
   cachedOpenFileIndexesSource: null as AppState['openFiles'] | null,
   cachedOpenFileIndexes: null as OpenFileIndexes | null,
   cachedEditorDraftHashes: null as EditorDraftHashCache | null,

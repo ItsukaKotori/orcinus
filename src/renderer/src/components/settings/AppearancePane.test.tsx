@@ -492,17 +492,17 @@ describe('AppearancePane', () => {
   it('expands status bar controls for a section-label search', async () => {
     mocks.state.availableStatusBarToggles = [
       {
-        id: 'ports',
-        title: 'Ports',
-        description: 'Show live workspace ports in the status bar.',
-        toggleDescription: 'Show Ports in the status bar.',
-        keywords: ['status bar', 'ports']
+        id: 'ssh',
+        title: 'SSH',
+        description: 'Show the SSH connection status in the status bar.',
+        toggleDescription: 'Show SSH in the status bar.',
+        keywords: ['status bar', 'ssh']
       }
     ]
     mocks.state.settingsSearchQuery = 'status bar'
     const container = await renderAppearancePane(getDefaultSettings('/tmp'))
 
-    expect(container.querySelector('button[role="switch"][aria-label="Ports"]')).not.toBeNull()
+    expect(container.querySelector('button[role="switch"][aria-label="SSH"]')).not.toBeNull()
   })
 
   it('records Resource Manager status bar toggles as resource-manager interactions', async () => {

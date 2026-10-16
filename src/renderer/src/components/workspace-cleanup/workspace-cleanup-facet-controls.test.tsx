@@ -45,7 +45,7 @@ const OPTIONS: WorkspaceCleanupFacetOptions = {
     { id: 'repo-1', label: 'Alpha' },
     { id: 'repo-2', label: 'Beta' }
   ],
-  reviewProviders: ['github', 'gitlab']
+  reviewProviders: ['github', 'bitbucket']
 }
 
 function render(node: ReactNode): void {
@@ -150,7 +150,7 @@ describe('workspace cleanup facet controls', () => {
   it('offers the hosts and providers discovered in the fleet, not a hardcoded list', () => {
     renderFacets(createDefaultWorkspaceCleanupFilterState(), createPatchMock())
 
-    expect(control('GitLab')).not.toBeNull()
+    expect(control('Bitbucket')).not.toBeNull()
     expect(container?.textContent).toContain('Alpha')
     expect(container?.textContent).toContain('In progress')
   })

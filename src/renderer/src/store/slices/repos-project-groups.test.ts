@@ -572,8 +572,7 @@ describe('project group store routing', () => {
       activeWorktreeId: workspaceKey,
       activeWorkspaceKey: workspaceKey,
       activeTabId: 'terminal-tab-1',
-      activeBrowserTabId: 'browser-tab-1',
-      activeTabType: 'browser',
+      activeTabType: 'terminal',
       tabsByWorktree: {
         [workspaceKey]: [
           {
@@ -595,39 +594,6 @@ describe('project group store routing', () => {
           expandedLeafId: null
         }
       },
-      browserTabsByWorktree: {
-        [workspaceKey]: [
-          {
-            id: 'browser-tab-1',
-            worktreeId: workspaceKey,
-            url: 'https://example.com',
-            title: 'Example',
-            loading: false,
-            faviconUrl: null,
-            canGoBack: false,
-            canGoForward: false,
-            loadError: null,
-            createdAt: 1
-          }
-        ]
-      },
-      browserPagesByWorkspace: {
-        'browser-tab-1': [
-          {
-            id: 'page-1',
-            workspaceId: 'browser-tab-1',
-            worktreeId: workspaceKey,
-            url: 'https://example.com',
-            title: 'Example',
-            loading: false,
-            faviconUrl: null,
-            canGoBack: false,
-            canGoForward: false,
-            loadError: null,
-            createdAt: 1
-          }
-        ]
-      },
       openFiles: [
         {
           id: 'file-1',
@@ -642,8 +608,7 @@ describe('project group store routing', () => {
       ],
       editorDrafts: { 'file-1': 'draft' },
       activeFileIdByWorktree: { [workspaceKey]: 'file-1' },
-      activeTabTypeByWorktree: { [workspaceKey]: 'browser' },
-      activeBrowserTabIdByWorktree: { [workspaceKey]: 'browser-tab-1' },
+      activeTabTypeByWorktree: { [workspaceKey]: 'terminal' },
       lastVisitedAtByWorktreeId: { [workspaceKey]: 10 }
     })
 
@@ -655,12 +620,9 @@ describe('project group store routing', () => {
     expect(state.activeWorkspaceKey).toBeNull()
     expect(state.tabsByWorktree[workspaceKey]).toBeUndefined()
     expect(state.terminalLayoutsByTabId['terminal-tab-1']).toBeUndefined()
-    expect(state.browserTabsByWorktree[workspaceKey]).toBeUndefined()
-    expect(state.browserPagesByWorkspace['browser-tab-1']).toBeUndefined()
     expect(state.openFiles).toEqual([])
     expect(state.editorDrafts).toEqual({})
     expect(state.activeFileIdByWorktree[workspaceKey]).toBeUndefined()
-    expect(state.activeBrowserTabIdByWorktree[workspaceKey]).toBeUndefined()
     expect(state.lastVisitedAtByWorktreeId[workspaceKey]).toBeUndefined()
   })
 

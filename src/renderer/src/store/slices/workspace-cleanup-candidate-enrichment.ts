@@ -193,7 +193,7 @@ function getWorkspaceCleanupLocalStateSignature(
     runtimePaneTitlesByTabId,
     terminalLayoutsByTabId,
     openFiles,
-    browserTabCount: (state.browserTabsByWorktree[worktreeId] ?? []).length,
+    browserTabCount: 0,
     retainedDoneAgentPaneKeys,
     agentStatuses,
     lastVisitedAt:
@@ -219,7 +219,6 @@ async function enrichWorkspaceCleanupCandidate(
     (file) => file.isDirty || state.editorDrafts[file.id] !== undefined
   )
   const cleanEditorTabCount = openFiles.length - dirtyEditorBuffers.length
-  const browserTabCount = (state.browserTabsByWorktree[candidate.worktreeId] ?? []).length
   const retainedDoneAgentCount =
     projection.retainedDoneAgentPaneKeysByWorktreeId.get(candidate.worktreeId)?.length ?? 0
   const blockers = candidate.blockers.filter((blocker) => blocker !== 'dismissed')
@@ -250,7 +249,7 @@ async function enrichWorkspaceCleanupCandidate(
       id: candidate.worktreeId,
       hostId: getWorkspaceCleanupCandidateHostId(candidate)
     }) ?? 0
-  const hasVisibleContext = cleanEditorTabCount > 0 || browserTabCount > 0
+  const hasVisibleContext = cleanEditorTabCount > 0
   if (
     hasVisibleContext &&
     !preserveCleanupInspection &&
@@ -267,7 +266,7 @@ async function enrichWorkspaceCleanupCandidate(
       ...candidate.localContext,
       terminalTabCount: tabs.length,
       cleanEditorTabCount,
-      browserTabCount,
+      browserTabCount: 0,
       retainedDoneAgentCount
     }
   })

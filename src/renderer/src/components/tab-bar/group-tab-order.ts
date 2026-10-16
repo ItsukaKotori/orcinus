@@ -3,7 +3,7 @@ import type { AppState } from '../../store/types'
 import { reconcileTabOrder } from './reconcile-order'
 
 export type VisibleTabRef = {
-  type: 'terminal' | 'editor' | 'agent-session' | 'browser' | 'plugin'
+  type: 'terminal' | 'editor' | 'agent-session' | 'plugin'
   id: string
   tabId?: string
 }
@@ -11,7 +11,6 @@ export type VisibleTabRef = {
 export type ActiveTabNavOrderIds = {
   terminalIds?: string[]
   editorIds?: string[]
-  browserIds?: string[]
   agentSessionIds?: string[]
 }
 
@@ -28,7 +27,6 @@ export function getGroupVisibleTabOrder(
   groupTabs: readonly Tab[],
   terminalEntityIds: ReadonlySet<string>,
   editorEntityIds: ReadonlySet<string>,
-  browserEntityIds: ReadonlySet<string>,
   preserveTypeCollisions = false
 ): VisibleTabRef[] {
   const tabsById = new Map(groupTabs.map((t) => [t.id, t]))
@@ -36,11 +34,6 @@ export function getGroupVisibleTabOrder(
     if (tab.contentType === 'terminal') {
       return terminalEntityIds.has(tab.entityId)
         ? { type: 'terminal', id: tab.entityId, tabId: tab.id }
-        : null
-    }
-    if (tab.contentType === 'browser') {
-      return browserEntityIds.has(tab.entityId)
-        ? { type: 'browser', id: tab.entityId, tabId: tab.id }
         : null
     }
     if (tab.contentType === 'agent-session') {
@@ -56,12 +49,10 @@ export function getGroupVisibleTabOrder(
       ? { type: 'editor', id: tab.entityId, tabId: tab.id }
       : null
   }
-  // Why: the strip keys terminals/browsers by entity id and editors by unified tab id
+  // Why: the strip keys terminals by entity id and editors by unified tab id
   // (see useTabGroupItemProjections) — reconcileTabOrder must see that same id domain.
   const visibleIdOf = (tab: Tab): string =>
-    tab.contentType === 'terminal' ||
-    tab.contentType === 'browser' ||
-    tab.contentType === 'agent-session'
+    tab.contentType === 'terminal' || tab.contentType === 'agent-session'
       ? tab.entityId
       : tab.id
 
@@ -69,7 +60,6 @@ export function getGroupVisibleTabOrder(
     const seenByType = {
       terminal: new Set<string>(),
       editor: new Set<string>(),
-      browser: new Set<string>(),
       'agent-session': new Set<string>(),
       plugin: new Set<string>()
     }
@@ -98,13 +88,11 @@ export function getGroupVisibleTabOrder(
   const refByVisibleId = new Map<string, VisibleTabRef>()
   const terminalIds: string[] = []
   const editorIds: string[] = []
-  const browserIds: string[] = []
   const agentSessionIds: string[] = []
   const pluginIds: string[] = []
   const idsByType = {
     terminal: terminalIds,
     editor: editorIds,
-    browser: browserIds,
     'agent-session': agentSessionIds,
     plugin: pluginIds
   }
@@ -117,13 +105,12 @@ export function getGroupVisibleTabOrder(
     const existing = refByVisibleId.get(visibleId)
     if (existing) {
       // Keep the same type precedence as buildOrderedTabItems, whose terminal map wins over
-      // editor/browser maps when visible ids collide across content types.
+      // editor maps when visible ids collide across content types.
       const priority = {
         terminal: 0,
         editor: 1,
-        browser: 2,
-        'agent-session': 3,
-        plugin: 4
+        'agent-session': 2,
+        plugin: 3
       } as const
       if (priority[ref.type] > priority[existing.type]) {
         continue
@@ -139,7 +126,6 @@ export function getGroupVisibleTabOrder(
     declaredTabs.map(visibleIdOf),
     terminalIds,
     editorIds,
-    browserIds,
     agentSessionIds,
     pluginIds
   ).flatMap((visibleId) => {
@@ -171,7 +157,6 @@ export function getActiveTabNavOrder(
     | 'tabBarOrderByWorktree'
     | 'tabsByWorktree'
     | 'openFiles'
-    | 'browserTabsByWorktree'
   >,
   worktreeId: string,
   ids: ActiveTabNavOrderIds = {}
@@ -179,8 +164,6 @@ export function getActiveTabNavOrder(
   const terminalIds = ids.terminalIds ?? (state.tabsByWorktree[worktreeId] ?? []).map((t) => t.id)
   const editorIds =
     ids.editorIds ?? state.openFiles.filter((f) => f.worktreeId === worktreeId).map((f) => f.id)
-  const browserIds =
-    ids.browserIds ?? (state.browserTabsByWorktree?.[worktreeId] ?? []).map((t) => t.id)
   const agentSessionIds =
     ids.agentSessionIds ??
     (state.unifiedTabsByWorktree[worktreeId] ?? [])
@@ -202,13 +185,7 @@ export function getActiveTabNavOrder(
       ...terminalIds,
       ...groupTabs.filter((tab) => tab.contentType === 'terminal').map((tab) => tab.entityId)
     ])
-    return getGroupVisibleTabOrder(
-      group,
-      groupTabs,
-      groupTerminalIds,
-      new Set(editorIds),
-      new Set(browserIds)
-    )
+    return getGroupVisibleTabOrder(group, groupTabs, groupTerminalIds, new Set(editorIds))
   }
 
   // Legacy fallback: no split-group layout yet for this worktree.
@@ -219,13 +196,11 @@ export function getActiveTabNavOrder(
     state.tabBarOrderByWorktree[worktreeId],
     terminalIds,
     editorIds,
-    browserIds,
     agentSessionIds,
     pluginIds
   )
   const terminalIdSet = new Set(terminalIds)
   const editorIdSet = new Set(editorIds)
-  const browserIdSet = new Set(browserIds)
   const agentSessionIdSet = new Set(agentSessionIds)
   const pluginIdSet = new Set(pluginIds)
   const result: VisibleTabRef[] = []
@@ -234,8 +209,6 @@ export function getActiveTabNavOrder(
       result.push({ type: 'terminal', id })
     } else if (editorIdSet.has(id)) {
       result.push({ type: 'editor', id })
-    } else if (browserIdSet.has(id)) {
-      result.push({ type: 'browser', id })
     } else if (agentSessionIdSet.has(id)) {
       const tab = (state.unifiedTabsByWorktree[worktreeId] ?? []).find(
         (candidate) => candidate.id === id && candidate.contentType === 'agent-session'

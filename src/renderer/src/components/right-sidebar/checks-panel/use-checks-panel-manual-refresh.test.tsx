@@ -43,7 +43,6 @@ describe('useChecksPanelManualRefresh ordering', () => {
     })
     const input: RefreshInput = {
       activeConnectionId: null,
-      activeGitLabReview: null,
       activeWorktreeId: null,
       activeWorktreePath: null,
       activeWorktreePushTarget: null,
@@ -51,7 +50,6 @@ describe('useChecksPanelManualRefresh ordering', () => {
       branch: 'main',
       expireGitHubPRRefreshState: vi.fn(),
       fallbackGitHubPRNumber: null,
-      fetchGitLabDetails: vi.fn(),
       fetchHostedReviewForBranch: vi.fn(),
       fetchPRChecks: vi.fn(async () => {
         refresh.calls.push('checks')
@@ -68,11 +66,9 @@ describe('useChecksPanelManualRefresh ordering', () => {
       gitStatusSnapshot: null,
       isCurrentAsyncResult: () => true,
       isFolder: false,
-      isGitLabReviewContext: false,
       linkedAzureDevOpsPR: null,
       linkedBitbucketPR: null,
       linkedGiteaPR: null,
-      linkedGitLabMR: null,
       linkedPR: null,
       ownerSettings: null,
       panelContextKey: 'repo-1::worktree-1::main',

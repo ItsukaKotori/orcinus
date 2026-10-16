@@ -21,7 +21,7 @@ export type SnapshottedThreadResolverDeps = {
       prRepo?: PendingPRCommentAiAckGithubResolveTarget['prRepo']
     }
   ) => Promise<boolean>
-  resolveGitLabDiscussion: (args: {
+  resolveGitLabDiscussion?: (args: {
     repoPath: string
     repoId: string
     iid: number
@@ -61,18 +61,6 @@ async function resolveOnHost(
   threadId: string
 ): Promise<SnapshottedThreadResolveOutcome> {
   try {
-    if (deps.provider === 'gitlab') {
-      if (!deps.gitlabTarget) {
-        return { ok: false }
-      }
-      return await deps.resolveGitLabDiscussion({
-        repoPath: deps.gitlabTarget.repoPath,
-        repoId: deps.gitlabTarget.repoId,
-        iid: deps.gitlabTarget.iid,
-        discussionId: threadId,
-        resolved: true
-      })
-    }
     if (deps.provider !== 'github' || !deps.githubResolveTarget) {
       return { ok: false }
     }

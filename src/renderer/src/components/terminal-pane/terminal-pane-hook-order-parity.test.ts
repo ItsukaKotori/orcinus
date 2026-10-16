@@ -20,8 +20,10 @@ const TERMINAL_PANE_HOOK_SOURCE_PATTERN =
 // (last host layout leaf set, retired leaf set) (209 hooks, still 8 useMemo).
 // Native chat removal deleted the chat-state stage and moved its surviving store
 // reads into store-bindings (185 hooks, 6 useMemo).
+// Link-routing preference dialog removal dropped its provider hook plus the
+// startup-actions preference ref/callback (182 hooks, still 6 useMemo).
 const PRE_REFACTOR_HOOK_ORDER_SHA256 =
-  '9e9c2528dfcc6c70739c73d3fdbaddeb4f8fe75369d80e2d2f7e7aed20bff128'
+  '243db27f300003d2acf571942a29c931c5a33c92e5599832b38e5c99dc69ab77'
 
 const sourceFiles = readdirSync(__dirname)
   .filter((name) => TERMINAL_PANE_HOOK_SOURCE_PATTERN.test(name))
@@ -86,7 +88,7 @@ function readFlattenedHookOrder(): string[] {
 describe('TerminalPane refactor hook parity', () => {
   it('preserves the recursively flattened render hook order', () => {
     const hooks = readFlattenedHookOrder()
-    expect(hooks).toHaveLength(185)
+    expect(hooks).toHaveLength(182)
     expect(hooks.filter((hook) => hook === 'useMemo')).toHaveLength(6)
     expect(createHash('sha256').update(hooks.join('\n')).digest('hex')).toBe(
       PRE_REFACTOR_HOOK_ORDER_SHA256

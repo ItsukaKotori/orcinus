@@ -4,8 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { isImeCompositionKeyDown } from '@/lib/ime-composition-keyboard-event'
-import { isBlockingJiraUrlIntent } from './smart-workspace-source-results'
-import { isBlockingLinearUrlIntent } from '../../../../shared/new-workspace/smart-workspace-linear-intent'
 import { isComposerFieldToFieldFocus } from './smart-workspace-source-popover-focus'
 import { replaceCompletedWorkspaceEmojiShortcode } from '@/lib/workspace-emoji-shortcodes'
 import { cn } from '@/lib/utils'
@@ -48,11 +46,7 @@ export function renderSmartWorkspaceNameInput(
     rows,
     resolvedCommandValue,
     handleSelect,
-    jiraSource,
     placeholder,
-    jiraStatusId,
-    linearStatusId,
-    unresolvedLinearUrlIntent,
     blockingTaskUrlResolution
   } = controller
 
@@ -201,22 +195,6 @@ export function renderSmartWorkspaceNameInput(
             setOpen(true)
           }
         }}
-        onPaste={(event) => {
-          // Why: a pasted issue URL is the whole intent, not a name fragment.
-          const pasted = event.clipboardData.getData('text')
-          if (
-            !pasted ||
-            (!isBlockingJiraUrlIntent(mode, pasted) && !isBlockingLinearUrlIntent(mode, pasted))
-          ) {
-            return
-          }
-          event.preventDefault()
-          onValueChange(pasted)
-          if (!disabled && mode !== 'text') {
-            markSourcePopoverUserEngaged()
-            setOpen(true)
-          }
-        }}
         onFocus={(event) => {
           // Why: dialog autofocus stays suppressed; only field-to-field focus opens results.
           if (!isComposerFieldToFieldFocus(event)) {
@@ -261,7 +239,7 @@ export function renderSmartWorkspaceNameInput(
               handleEmojiSelect(selectedEmojiSuggestion)
               return
             }
-            if (unresolvedLinearUrlIntent || blockingTaskUrlResolution) {
+            if (blockingTaskUrlResolution) {
               event.preventDefault()
               return
             }
@@ -272,10 +250,6 @@ export function renderSmartWorkspaceNameInput(
                 handleSelect(row)
                 return
               }
-            }
-            if (mode === 'jira' || jiraSource.intent) {
-              event.preventDefault()
-              return
             }
             onPlainEnter?.()
           }
@@ -297,10 +271,7 @@ export function renderSmartWorkspaceNameInput(
         }}
         placeholder={placeholder}
         disabled={disabled}
-        aria-busy={(jiraSource.intent && jiraSource.loading) || unresolvedLinearUrlIntent}
-        aria-describedby={
-          jiraSource.intent ? jiraStatusId : unresolvedLinearUrlIntent ? linearStatusId : undefined
-        }
+        aria-busy={showSearchSpinner}
         // Why: match adjacent comboboxes' solid background in light mode.
         className="h-9 bg-background pl-8 text-sm"
       />

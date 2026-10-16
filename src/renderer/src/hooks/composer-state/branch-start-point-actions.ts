@@ -2,7 +2,6 @@ import type { ComposerModel } from './composer-model'
 
 type BranchStartPointActionsInput = Pick<
   ComposerModel,
-  | 'applyLinkedGitLabWorkItem'
   | 'applyLinkedWorkItem'
   | 'branchAutoNameRef'
   | 'handleRepoChange'
@@ -32,11 +31,9 @@ import type { SparsePreset } from '../../../../shared/worktree/create-types'
 import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import type { GitPushTarget } from '../../../../shared/worktree/types'
 import { resolveGitHubWorkItemIdentity } from '@/lib/github-work-item-identity'
-import type { GitLabWorkItem } from '../../../../shared/gitlab-types'
 
 export function useBranchStartPointActions(input: BranchStartPointActionsInput) {
   const {
-    applyLinkedGitLabWorkItem,
     applyLinkedWorkItem,
     branchAutoNameRef,
     handleRepoChange,
@@ -158,44 +155,6 @@ export function useBranchStartPointActions(input: BranchStartPointActionsInput) 
     ]
   )
 
-  // Why: GitLab parallel of handleBaseBranchPrSelect; note prefill uses GitLab's `!N` MR convention so the sidebar makes the provider obvious.
-  const handleBaseBranchMrSelect = useCallback(
-    (
-      nextBaseBranch: string,
-      item: GitLabWorkItem,
-      nextPushTarget?: GitPushTarget,
-      nextCompareBaseRef?: string
-    ): void => {
-      setBaseBranch(nextBaseBranch)
-      setCompareBaseRef(nextCompareBaseRef)
-      setPushTarget(nextPushTarget)
-      setBranchNameOverride(undefined)
-      branchAutoNameRef.current = ''
-      setStartFromResetHint(null)
-      applyLinkedGitLabWorkItem(item)
-      if (item.type === 'mr') {
-        const suggestedNote = `MR !${item.number} — ${item.title}`
-        const currentNote = noteRef.current
-        if (!currentNote.trim() || currentNote === lastAutoNoteRef.current) {
-          setNote(suggestedNote)
-          lastAutoNoteRef.current = suggestedNote
-        }
-      }
-    },
-    [
-      applyLinkedGitLabWorkItem,
-      branchAutoNameRef,
-      lastAutoNoteRef,
-      noteRef,
-      setBaseBranch,
-      setBranchNameOverride,
-      setCompareBaseRef,
-      setNote,
-      setPushTarget,
-      setStartFromResetHint
-    ]
-  )
-
   const selectAddedProjectRepo = useCallback(
     (nextRepoId: string): void => {
       initialProjectGroupAppliedRef.current = true
@@ -211,7 +170,6 @@ export function useBranchStartPointActions(input: BranchStartPointActionsInput) 
     handleSparseSelectPreset,
     handleBaseBranchChange,
     handleBaseBranchPrSelect,
-    handleBaseBranchMrSelect,
     selectAddedProjectRepo
   }
 }

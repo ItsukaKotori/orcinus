@@ -23,11 +23,9 @@ export type ComposerSourceContextModel = {
   linkedWorkItemSeedIdentity: GitHubWorkItemIdentity | null
   linkedWorkItem: LinkedWorkItemSummary | null
   setLinkedWorkItem: React.Dispatch<React.SetStateAction<LinkedWorkItemSummary | null>>
-  initialLinearBranchName: string | undefined
   linkedTaskSourceContext: TaskSourceContext | null
   setLinkedTaskSourceContext: React.Dispatch<React.SetStateAction<TaskSourceContext | null>>
   derivedGitHubTaskSourceContext: TaskSourceContext | null
   taskSourceContext: TaskSourceContext | null
   selectedRepoGitHubSourceContext: TaskSourceContext | null
-  smartNameJiraSourceContext: TaskSourceContext | null
 }

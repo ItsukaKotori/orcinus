@@ -7,7 +7,6 @@ import { GitHubPRStackMap } from '../GitHubPRStackMap'
 import { SourceControlAgentActionDialog } from '../SourceControlAgentActionDialog'
 import { ChecksPanelUpdatedAtMetadata } from '../checks-panel-updated-at-metadata'
 import { getChecksPanelRefreshErrorBannerLine } from '../github-refresh-error-copy'
-import { resolveChecksPanelHostedReviewModifierDestination } from '../checks-panel-hosted-review-click-routing'
 import { readSourceControlLaunchRecipeAgentId } from '@/lib/source-control-launch-agent-selection'
 import { resolveSourceControlActionRecipe } from '../../../../../shared/source-control-ai'
 import { clearPendingPRCommentAiAck } from '../pr-comments-ai-launch-ack'
@@ -18,13 +17,11 @@ import { ChecksList } from './checks-list'
 import { PRCommentsList } from './comments-list'
 import { translate } from '@/i18n/i18n'
 import type { ChecksPanelReview } from '../checks-panel-review'
-import type { ChecksPanelHostedReviewModifierDestination } from '../checks-panel-hosted-review-click-routing'
 import type { ChecksPanelActiveContentModel } from './active-content-props'
 type ReviewHeaderComponentProps = {
   review: ChecksPanelReview
   isRefreshing: boolean
   canUnlinkReview: boolean
-  modifierHintDestination: ChecksPanelHostedReviewModifierDestination
   onRefresh: () => void
   onOpenReview: (event: React.MouseEvent<HTMLButtonElement>) => void
   onUnlinkReview: () => void
@@ -41,7 +38,6 @@ export function ChecksPanelActiveContent({
   const {
     activeConnectionId,
     activeConflictReview,
-    activeGitLabReview,
     activeReview,
     activeSourceControlLaunchPlatform,
     activeWorktree,
@@ -61,7 +57,6 @@ export function ChecksPanelActiveContent({
     consumeClaimedCommentResolutionAfterDeliveryRef,
     detachedHeadDisplay,
     editingTitle,
-    getGitLabProjectRef,
     handleAddPRComment,
     handleCancelEdit,
     handleDeleteComment,
@@ -86,7 +81,6 @@ export function ChecksPanelActiveContent({
     isFixingChecksWithAI,
     isRefreshing,
     isResolvingConflictsWithAI,
-    linkedGitLabMR,
     pendingCommentResolutionRef,
     pr,
     prRefreshState,
@@ -107,13 +101,9 @@ export function ChecksPanelActiveContent({
   if (!activeReview) {
     return null
   }
-  const reviewShortLabel = activeReview.provider === 'gitlab' ? 'MR' : 'PR'
+  const reviewShortLabel = 'PR'
   const shouldShowReviewTriageStrip =
     activeConflictReview !== null || getBrokenChecks(checks).length > 0
-  const hostedReviewModifierHintDestination = resolveChecksPanelHostedReviewModifierDestination(
-    settings,
-    Boolean(activeWorktreeId)
-  )
   return (
     <div ref={setChecksPanelContentRef} className="flex-1 overflow-auto scrollbar-sleek">
       {/* Why: surface a background-refresh failure over stale cached PR data so a GitHub outage doesn't look like a normal panel. GitHub-only. */}
@@ -131,8 +121,7 @@ export function ChecksPanelActiveContent({
         <ReviewHeaderComponent
           review={activeReview}
           isRefreshing={isRefreshing}
-          canUnlinkReview={activeReview.provider === 'github' ? true : linkedGitLabMR !== null}
-          modifierHintDestination={hostedReviewModifierHintDestination}
+          canUnlinkReview={activeReview.provider === 'github'}
           onRefresh={() => void handleRefresh()}
           onOpenReview={handleOpenPR}
           onUnlinkReview={handleUnlinkReview}
@@ -245,7 +234,6 @@ export function ChecksPanelActiveContent({
           checkDetailsContextKey={stateRequestKey}
           onLoadCheckDetails={handleLoadCheckDetails}
           githubRepository={pr?.prRepo ?? null}
-          getGitLabProjectRef={getGitLabProjectRef}
         />
       )}
       <PRCommentsList
@@ -263,7 +251,7 @@ export function ChecksPanelActiveContent({
           sourceControlAiActionsVisible ? handleResolveCommentsWithAI : undefined
         }
         onReply={pr ? handleReplyToComment : undefined}
-        onResolve={pr || activeGitLabReview ? handleResolve : undefined}
+        onResolve={pr ? handleResolve : undefined}
         onEditComment={pr ? handleEditComment : undefined}
         onDeleteComment={pr ? handleDeleteComment : undefined}
         onSetReaction={canTargetPRComments ? handleSetReaction : undefined}

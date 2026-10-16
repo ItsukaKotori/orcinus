@@ -105,7 +105,6 @@ describe('store selectors', () => {
         createdAt: 1
       }
     ] as AppState['tabsByWorktree'][string]
-    const browserTabs = [{ id: 'browser-1' }] as AppState['browserTabsByWorktree'][string]
     let openFileScans = 0
     const fileEntries = [
       {
@@ -147,15 +146,6 @@ describe('store selectors', () => {
         createdAt: 1
       },
       {
-        id: 'unified-browser-1',
-        entityId: 'browser-1',
-        worktreeId,
-        contentType: 'browser',
-        label: 'Browser',
-        sortOrder: 1,
-        createdAt: 2
-      },
-      {
         id: 'unified-file-1',
         entityId: 'file-1',
         worktreeId,
@@ -176,15 +166,14 @@ describe('store selectors', () => {
     ] as AppState['unifiedTabsByWorktree'][string]
     const state = {
       tabsByWorktree: { [worktreeId]: terminalTabs },
-      browserTabsByWorktree: { [worktreeId]: browserTabs },
       openFiles,
       unifiedTabsByWorktree: { [worktreeId]: unifiedTabs }
     } satisfies Parameters<typeof selectFloatingVisibleTabCount>[0]
 
-    expect(selectFloatingVisibleTabCount(state)).toBe(3)
+    expect(selectFloatingVisibleTabCount(state)).toBe(2)
     expect(openFileScans).toBe(1)
 
-    expect(selectFloatingVisibleTabCount({ ...state })).toBe(3)
+    expect(selectFloatingVisibleTabCount({ ...state })).toBe(2)
     expect(openFileScans).toBe(1)
   })
 

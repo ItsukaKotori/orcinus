@@ -23,7 +23,6 @@ import {
 // Provider-general: every hosted-review provider is selectable, never a GitHub special case.
 const REVIEW_PROVIDER_VALUES: HostedReviewProvider[] = [
   'github',
-  'gitlab',
   'bitbucket',
   'azure-devops',
   'gitea',

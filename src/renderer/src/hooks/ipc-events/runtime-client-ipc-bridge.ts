@@ -104,6 +104,10 @@ export function registerRuntimeClientIpcBridge(
       applyRuntimeEnvironmentSshStateChanged(environmentId, event.targetId, event.state, generation)
       return
     }
+    if (event.type === 'linearLinkedIssueUpdated') {
+      // Legacy event from retired Linear support; nothing subscribes to it now.
+      return
+    }
     if (event.type === 'worktreesChanged') {
       void ensureRuntimeEventRepoKnown(environmentId, event.repoId).then(() =>
         worktreeChangeRefreshQueue.enqueue({
@@ -111,15 +115,6 @@ export function registerRuntimeClientIpcBridge(
           executionHostId: toRuntimeExecutionHostId(environmentId)
         })
       )
-      return
-    }
-    if (event.type === 'linearLinkedIssueUpdated') {
-      void useAppStore
-        .getState()
-        .refreshLinearIssue(event.identifier, event.workspaceId)
-        .catch((error) => {
-          console.error('Failed to refresh updated Linear issue:', error)
-        })
       return
     }
     void ensureRuntimeEventRepoKnown(environmentId, event.repoId)

@@ -11,7 +11,6 @@ import {
   getPairedDeviceIdsByEnvironment
 } from '../../workspace-creator-visibility'
 import {
-  getVisibleWorktreeBrowserActivityTabs,
   getVisibleWorktreeTerminalActivityTabs
 } from '../../visible-worktree-activity-inputs'
 import type { SortBy } from '../../smart-sort'
@@ -67,9 +66,6 @@ export function useVisibleSidebarWorktrees(args: {
     needsActivityMaps ? getVisibleWorktreeTerminalActivityTabs(s.tabsByWorktree) : null
   )
   const ptyIdsByTabId = useAppStore((s) => (needsActivityMaps ? s.ptyIdsByTabId : null))
-  const browserTabsByWorktree = useAppStore((s) =>
-    !showSleepingWorkspaces ? getVisibleWorktreeBrowserActivityTabs(s.browserTabsByWorktree) : null
-  )
 
   const recomputedVisibleWorktrees = useMemo(() => {
     // Keyed on the epoch, not `agentStatusNow`: two bumps in one millisecond
@@ -80,7 +76,6 @@ export function useVisibleSidebarWorktrees(args: {
       showSleepingWorkspaces,
       tabsByWorktree,
       ptyIdsByTabId,
-      browserTabsByWorktree,
       // Why snapshot on agentStatusEpoch: update membership immediately without repainting on every hook ping.
       worktreeIdsWithLiveAgent: showSleepingWorkspaces
         ? EMPTY_WORKTREE_ID_SET
@@ -123,7 +118,6 @@ export function useVisibleSidebarWorktrees(args: {
     repoMap,
     tabsByWorktree,
     ptyIdsByTabId,
-    browserTabsByWorktree,
     sortedIds,
     worktreeLineageById,
     worktreesByRepo,

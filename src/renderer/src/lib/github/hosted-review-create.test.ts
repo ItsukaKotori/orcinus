@@ -1174,14 +1174,6 @@ describe('create', () => {
       })
     })
 
-    it('rejects a mismatched provider with its own copy', async () => {
-      const { creation } = createHarness()
-      await expect(creation.create({ ...CREATE_ARGS, provider: 'gitlab' })).resolves.toEqual({
-        ok: false,
-        code: 'unsupported_provider',
-        error: 'Creating merge requests requires a GitLab remote.'
-      })
-    })
   })
 })
 
@@ -1295,11 +1287,13 @@ describe('blockedEligibilityToCreateResult', () => {
 
   it('uses the provider copy for a non-GitHub provider', () => {
     expect(
-      blockedEligibilityToCreateResult(eligibilityFor('unsupported_provider', { provider: 'gitlab' }))
+      blockedEligibilityToCreateResult(
+        eligibilityFor('unsupported_provider', { provider: 'bitbucket' })
+      )
     ).toEqual({
       ok: false,
       code: 'unsupported_provider',
-      error: 'Creating merge requests requires a GitLab remote.'
+      error: 'Creating pull requests requires a Bitbucket remote.'
     })
   })
 })

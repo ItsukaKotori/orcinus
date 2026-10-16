@@ -291,7 +291,6 @@ export const createSettingsSlice: StateCreator<AppState, [], [], SettingsSlice> 
       await get().fetchRepos()
       await get().fetchAllWorktrees()
       await get().fetchWorktreeLineage()
-      await get().fetchBrowserSessionProfiles()
       return true
     } catch (err) {
       console.error('Failed to switch runtime environment:', err)

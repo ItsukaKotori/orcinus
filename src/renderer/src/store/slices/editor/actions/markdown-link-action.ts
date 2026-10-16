@@ -75,7 +75,7 @@ export function createMarkdownLinkAction(
         return
       }
       if (target.kind === 'external') {
-        openHttpLink(target.url, { worktreeId: ctx.worktreeId, sourceOwner })
+        openHttpLink(target.url, { sourceOwner })
         return
       }
       if (target.kind === 'file') {

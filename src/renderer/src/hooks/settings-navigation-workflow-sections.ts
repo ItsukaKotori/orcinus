@@ -1,6 +1,5 @@
 import { getArtifactsSettingsSearchEntries } from '@/components/settings/artifacts-settings-search'
 import { getAutomationsSettingsSearchEntries } from '@/components/settings/automations-settings-search'
-import { getBrowserPaneCombinedSearchEntries } from '@/components/settings/browser-pane-search'
 import { getCommitMessageAiPaneSearchEntries } from '@/components/settings/commit-message-ai-search'
 import { getFloatingWorkspaceSearchEntries } from '@/components/settings/floating-workspace-search'
 import { getGitProviderApiBudgetSearchEntries } from '@/components/settings/git-provider-api-budget-search'
@@ -13,7 +12,6 @@ import {
   CalendarClock,
   Files,
   GitBranch,
-  Globe,
   ListChecks,
   PanelsTopLeft,
   Play,
@@ -103,21 +101,6 @@ export function buildWorkflowSettingsSections(
       searchEntries: getQuickCommandsPaneSearchEntries(),
       group: 'workflows'
     },
-    ...(showDesktopOnlySettings
-      ? [
-          {
-            id: 'browser',
-            title: translate('auto.hooks.useSettingsNavigationMetadata.8c197f74a1', 'Browser'),
-            description: translate(
-              'auto.hooks.useSettingsNavigationMetadata.e815fd01bd',
-              'Home page, link routing, and session cookies.'
-            ),
-            icon: Globe,
-            searchEntries: getBrowserPaneCombinedSearchEntries(),
-            group: 'workflows'
-          }
-        ]
-      : []),
     {
       id: 'floating-workspace',
       title: translate('auto.hooks.useSettingsNavigationMetadata.65b19f5bde', 'Floating Workspace'),
@@ -125,7 +108,7 @@ export function buildWorkflowSettingsSections(
         ? translate(
             'auto.hooks.useSettingsNavigationMetadata.2d0659f6f0',
             'Global terminal, browser, and markdown tabs.'
-          )
+          ).replace('browser, and', 'and').replace('browser,', '')
         : translate(
             'auto.hooks.useSettingsNavigationMetadata.floatingWorkspaceWebDescription',
             'Global terminal and markdown tabs.'

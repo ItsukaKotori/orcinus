@@ -35,14 +35,12 @@ export function useTabBarItemProjection({
   const {
     tabs,
     editorFiles,
-    browserTabs,
     agentSessionTabs,
     pluginTabs,
     tabBarOrder,
     hoveredTabInsertion,
     activeTabId,
     activeFileId,
-    activeBrowserTabId,
     activeTabType,
     expandedPaneByTabId
   } = props
@@ -50,10 +48,6 @@ export function useTabBarItemProjection({
   const editorMap = useMemo(
     () => new Map((editorFiles ?? []).map((file) => [file.tabId ?? file.id, file])),
     [editorFiles]
-  )
-  const browserMap = useMemo(
-    () => new Map((browserTabs ?? []).map((tab) => [tab.id, tab])),
-    [browserTabs]
   )
   const agentSessionMap = useMemo(
     () => new Map((agentSessionTabs ?? []).map((tab) => [tab.id, tab])),
@@ -68,7 +62,6 @@ export function useTabBarItemProjection({
     () => editorFiles?.map((file) => file.tabId ?? file.id) ?? [],
     [editorFiles]
   )
-  const browserTabIds = useMemo(() => browserTabs?.map((tab) => tab.id) ?? [], [browserTabs])
   const agentSessionTabIds = useMemo(
     () => agentSessionTabs?.map((tab) => tab.id) ?? [],
     [agentSessionTabs]
@@ -80,12 +73,10 @@ export function useTabBarItemProjection({
         tabBarOrder,
         terminalIds,
         editorFileIds,
-        browserTabIds,
         agentSessionTabIds,
         pluginTabIds,
         terminalMap,
         editorMap,
-        browserMap,
         agentSessionMap,
         pluginTabMap,
         unifiedTabByVisibleId
@@ -94,12 +85,10 @@ export function useTabBarItemProjection({
       tabBarOrder,
       terminalIds,
       editorFileIds,
-      browserTabIds,
       agentSessionTabIds,
       pluginTabIds,
       terminalMap,
       editorMap,
-      browserMap,
       agentSessionMap,
       pluginTabMap,
       unifiedTabByVisibleId
@@ -117,10 +106,9 @@ export function useTabBarItemProjection({
       findActiveVisibleTabId(orderedItems, {
         activeTabId,
         activeFileId,
-        activeBrowserTabId,
         activeTabType
       }),
-    [activeBrowserTabId, activeFileId, activeTabId, activeTabType, orderedItems]
+    [activeFileId, activeTabId, activeTabType, orderedItems]
   )
   const tabStripLayoutKey = useMemo(
     () =>

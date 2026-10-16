@@ -22,13 +22,7 @@ export function createRuntimeApi(): PreloadApi['runtime'] {
     syncWindowGraph: async () => cloneMockValue(LOCAL_RUNTIME_STATUS),
     getTerminalFitOverrides: async () => [],
     getTerminalDrivers: async () => [],
-    getBrowserDrivers: async () => [],
-    getBrowserRemoteViewerPages: async () => [],
-    getClientHostedBrowserRows: async () => [],
     onTerminalFitOverrideChanged: () => noopUnsubscribe,
     onTerminalDriverChanged: () => noopUnsubscribe,
-    onBrowserDriverChanged: () => noopUnsubscribe,
-    onBrowserRemoteViewersChanged: () => noopUnsubscribe,
-    onClientHostedBrowserRowsChanged: () => noopUnsubscribe
   })
 }

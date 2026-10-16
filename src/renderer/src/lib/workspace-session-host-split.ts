@@ -243,21 +243,6 @@ export function splitWorkspaceSessionByHost(
           ctx
         )
         break
-      case 'browserWorkspaceKeyed':
-        assignKeyedByResolvedWorktree(
-          slices,
-          templates,
-          field,
-          value,
-          (_workspaceId, pages) => {
-            const first = Array.isArray(pages)
-              ? (pages[0] as { worktreeId?: string } | undefined)
-              : undefined
-            return first?.worktreeId
-          },
-          ctx
-        )
-        break
       case 'sleepingAgentKeyed':
         assignKeyedByResolvedWorktree(
           slices,

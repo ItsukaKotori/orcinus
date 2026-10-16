@@ -13,7 +13,6 @@ import {
   toWebTerminalSurfaceTabId
 } from '../web-runtime-session'
 import type {
-  ReadyBrowserSurface,
   ReadyEditorSurface,
   ReadyTerminalSurface,
   TerminalSurface,
@@ -35,12 +34,6 @@ export function isTerminalSurfaceTab(
   tab: RuntimeMobileSessionTabsResult['tabs'][number]
 ): tab is TerminalSurface {
   return tab.type === 'terminal'
-}
-
-export function isReadyBrowserTab(
-  tab: RuntimeMobileSessionTabsResult['tabs'][number]
-): tab is ReadyBrowserSurface {
-  return tab.type === 'browser' && typeof tab.browserPageId === 'string' && tab.browserPageId !== ''
 }
 
 export function isReadyEditorTab(

@@ -22,16 +22,14 @@ export { getProjectHostSetupProjectionFromState } from './project-host-setup-sel
 
 const EMPTY_WORKTREES: Worktree[] = []
 const EMPTY_TABS: TerminalTab[] = []
-const EMPTY_BROWSER_TABS: NonNullable<AppState['browserTabsByWorktree'][string]> = []
 const EMPTY_UNIFIED_TABS: NonNullable<AppState['unifiedTabsByWorktree'][string]> = []
 
 type FloatingVisibleTabCountState = Pick<
   AppState,
-  'browserTabsByWorktree' | 'openFiles' | 'tabsByWorktree' | 'unifiedTabsByWorktree'
+  'openFiles' | 'tabsByWorktree' | 'unifiedTabsByWorktree'
 >
 type FloatingVisibleTabCountCache = {
   terminalTabs: NonNullable<AppState['tabsByWorktree'][string]>
-  browserTabs: NonNullable<AppState['browserTabsByWorktree'][string]>
   openFiles: AppState['openFiles']
   unifiedTabs: NonNullable<AppState['unifiedTabsByWorktree'][string]>
   count: number
@@ -55,15 +53,12 @@ function getCachedHasAnyWorktrees(worktreesByRepo: AppState['worktreesByRepo']):
 
 export function selectFloatingVisibleTabCount(state: FloatingVisibleTabCountState): number {
   const terminalTabs = state.tabsByWorktree[FLOATING_TERMINAL_WORKTREE_ID] ?? EMPTY_TABS
-  const browserTabs =
-    state.browserTabsByWorktree[FLOATING_TERMINAL_WORKTREE_ID] ?? EMPTY_BROWSER_TABS
   const unifiedTabs =
     state.unifiedTabsByWorktree[FLOATING_TERMINAL_WORKTREE_ID] ?? EMPTY_UNIFIED_TABS
   const cached = floatingVisibleTabCountCache
   if (
     cached &&
     cached.terminalTabs === terminalTabs &&
-    cached.browserTabs === browserTabs &&
     cached.openFiles === state.openFiles &&
     cached.unifiedTabs === unifiedTabs
   ) {
@@ -73,10 +68,6 @@ export function selectFloatingVisibleTabCount(state: FloatingVisibleTabCountStat
   const terminalIds = new Set<string>()
   for (const tab of terminalTabs) {
     terminalIds.add(tab.id)
-  }
-  const browserIds = new Set<string>()
-  for (const tab of browserTabs) {
-    browserIds.add(tab.id)
   }
   const editorIds = new Set<string>()
   for (const file of state.openFiles) {
@@ -89,8 +80,6 @@ export function selectFloatingVisibleTabCount(state: FloatingVisibleTabCountStat
   for (const tab of unifiedTabs) {
     if (tab.contentType === 'terminal') {
       count += terminalIds.has(tab.entityId) ? 1 : 0
-    } else if (tab.contentType === 'browser') {
-      count += browserIds.has(tab.entityId) ? 1 : 0
     } else {
       count += editorIds.has(tab.entityId) ? 1 : 0
     }
@@ -98,7 +87,6 @@ export function selectFloatingVisibleTabCount(state: FloatingVisibleTabCountStat
 
   floatingVisibleTabCountCache = {
     terminalTabs,
-    browserTabs,
     openFiles: state.openFiles,
     unifiedTabs,
     count

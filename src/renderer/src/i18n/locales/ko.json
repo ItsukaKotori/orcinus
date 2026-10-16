@@ -159,10 +159,6 @@
         "preload": {
           "api": {
             "31bfe8ae1a": "웹 클라이언트에서는 사용할 수 없습니다.",
-            "67ec964791": "웹 클라이언트에서는 쿠키 가져오기를 사용할 수 없습니다.",
-            "275a776357": "웹 클라이언트에서는 호버 추출을 사용할 수 없습니다.",
-            "8dfcb7a351": "웹 클라이언트에서는 선택 스크린샷을 사용할 수 없습니다.",
-            "31bea294d5": "웹 클라이언트에서는 그랩 모드를 사용할 수 없습니다.",
             "b8a1618172": "웹 클라이언트에서는 PR 세부 정보 생성을 사용할 수 없습니다.",
             "e57c82d276": "웹 클라이언트에서는 Commit 메시지 모델 검색을 사용할 수 없습니다.",
             "9fc90740b6": "웹 클라이언트에서는 Commit 메시지 생성을 사용할 수 없습니다.",
@@ -184,11 +180,7 @@
     },
     "store": {
       "slices": {
-        "browser": {
-          "d175274b6d": "새 브라우저 탭",
-          "08fc23631d": "브라우저",
-          "remoteCookieImportUnavailable": "Manual cookie file import is unavailable while a remote runtime is active."
-        },
+        "browser": {},
         "editor": {
           "dcb521ed29": "이 파일은 충돌 상태에 있지만 편집할 수 있는 작업 트리 파일이 없습니다.",
           "conflictPlaceholderGuidance": "Git에서 충돌을 해결하거나 한쪽을 복원한 후 다시 여세요.",
@@ -288,12 +280,8 @@
           "66e3bd7ce6": "{{value0}}(으)로 보냄",
           "53883b7bc3": "{{value0}}(으)로 보낼 수 없습니다."
         },
-        "jira": {
-          "856083302c": "더 새로운 요청이 있어 Jira 연결 요청을 건너뛰었습니다."
-        },
-        "linear": {
-          "37d36984d0": "더 새로운 요청이 있어 Linear 연결 요청을 건너뛰었습니다."
-        },
+        "jira": {},
+        "linear": {},
         "orca": {
           "profiles": {
             "612f7f6861": "프로필을 생성하지 못했습니다",
@@ -554,10 +542,7 @@
         },
         "browser": {
           "tab": {
-            "open": {
-              "urlFailed": "URL을 열 수 없습니다.",
-              "searchFailed": "{{value0}}에서 검색할 수 없습니다."
-            }
+            "open": {}
           }
         }
       },
@@ -624,29 +609,11 @@
       },
       "linear": {
         "usage": {
-          "examples": {
-            "readTicket": "Read the linked ticket",
-            "postUpdate": "Post a progress update",
-            "moveState": "Move the ticket forward",
-            "attachPr": "리뷰 링크 첨부",
-            "triageFollowups": "Triage and create follow-ups",
-            "readTicketSummary": "Pull the linked Linear issue's full context before starting work.",
-            "readTicketPrompt": "Use {{value0}} to read the linked Linear issue for this worktree, then summarize the goal and acceptance criteria before you start.",
-            "postUpdateSummary": "Comment progress or a completion summary back to the Linear issue.",
-            "postUpdatePrompt": "Use {{value0}} to post a completion update on the linked Linear issue with what changed and how it was verified.",
-            "moveStateSummary": "Advance the Linear workflow state as the work progresses.",
-            "moveStatePrompt": "Use {{value0}} to move the linked Linear issue to In Review now that the change is ready.",
-            "attachPrSummary": "풀 또는 머지 리퀘스트를 만들 때 Linear 이슈에 연결하세요.",
-            "attachPrPrompt": "{{value0}}을 사용해 이 풀 또는 머지 리퀘스트를 연결된 Linear 이슈에 첨부하세요.",
-            "triageFollowupsSummary": "Set assignee, priority, or estimate, and file parented follow-up tickets.",
-            "triageFollowupsPrompt": "Use {{value0}} to triage the linked Linear issue — set priority and estimate — and create a parented follow-up ticket for the deferred cleanup."
-          }
+          "examples": {}
         },
         "issue": {
           "workspace": {
-            "open": {
-              "4f2c1d8a3b": "이 이슈에 연결된 워크스페이스를 열 수 없습니다."
-            }
+            "open": {}
           }
         }
       },
@@ -661,10 +628,7 @@
       "browser": {
         "cookie": {
           "import": {
-            "toast": {
-              "restartFallbackUnavailableNone": "None of the {{value0}} cookies could be loaded, and the restart fallback was unavailable. The previous cookies for this profile were replaced. Try the import again.",
-              "restartFallbackUnavailablePartial": "Imported {{value0}} of {{value1}} cookies. The rest could not be loaded, and the restart fallback was unavailable. Try the import again."
-            }
+            "toast": {}
           }
         }
       },
@@ -688,8 +652,7 @@
         "chooseOrAddProjectBeforeWorkspace": "워크스페이스를 만들기 전에 프로젝트를 선택하거나 추가하세요.",
         "folderWorkspaceCreateFailedTitle": "폴더 워크스페이스를 만들지 못했습니다",
         "folderWorkspaceCreateFailedMessage": "폴더 워크스페이스를 만들 수 없습니다. 위의 오류 세부 정보를 확인한 뒤 다시 시도하세요.",
-        "setupAgentStartupPolicySaveFailed": "시작 동작 저장 실패",
-        "5f3d2c8a1b": "MR베이스 확인 실패"
+        "setupAgentStartupPolicySaveFailed": "시작 동작 저장 실패"
       },
       "useGlobalFileDrop": {
         "38c9f034ff": "드롭한 파일을 업로드하지 못했습니다.",
@@ -702,11 +665,6 @@
         "ownerChanged": "Couldn't verify which host owns this workspace. Try again after it reconnects."
       },
       "useIpcEvents": {
-        "0e3cf53060": "브라우저 탭 {{value0}}을(를) 찾을 수 없습니다",
-        "2f6637fe6c": "브라우저 탭 {{value0}}이(가) 고정되어 있습니다",
-        "a8d2bf8e9e": "닫을 활성 브라우저 탭이 없습니다.",
-        "291c8ed902": "원격 런타임이 활성화된 동안에는 브라우저 탭을 사용할 수 없습니다.",
-        "f45fa2b03c": "원격 런타임이 활성화된 동안에는 브라우저 프로필을 사용할 수 없습니다.",
         "f000b2ff76": "활성 작업 트리 없음",
         "56d3ec4203": "제목 없는 markdown 파일을 생성하지 못했습니다.",
         "f6300deb8b": "새 브라우저 탭",
@@ -1006,104 +964,17 @@
         "checkActionRequiredHint": "머지가 해제되려면 이 검사에 대해 GitHub에서 수동 작업(예: 워크플로우 실행 승인)이 필요합니다."
       },
       "GitLabItemDialog": {
-        "65e784c1f1": "다시 열기",
-        "a199eb364b": "닫기",
-        "16b3412570": "병합",
-        "131865e231": "워크스페이스 만들기",
-        "f2e64d1c20": "GitLab에서 열기",
-        "84012fa8fb": "댓글",
-        "c08e1d5a57": "{{value0}}{{value1}}에 댓글 달기…",
-        "f11e3e7675": "이 MR에 실행된 파이프라인이 없습니다.",
-        "808b1ca1ba": "변경된 파일이 없습니다.",
-        "007423f585": "차이점 콘텐츠를 사용할 수 없습니다.",
-        "a7eb4f4916": "이전 경로: ",
-        "21f8dde18a": "인라인 댓글",
-        "7a7204417f": "줄",
-        "ceb08a733d": "파일",
-        "85a8170279": "아직 댓글이 없습니다.",
-        "14423484db": "설명이 없습니다.",
-        "da4174b00f": "편집",
-        "93f79a3fc1": "저장",
-        "f72fad3b16": "취소",
-        "717b706849": "라벨 로드 중",
-        "3c0b6ccca7": "버그, 백엔드",
-        "dde24ade55": "라벨",
-        "908d8d2a73": "설명",
-        "89f3f19368": "제목",
-        "7a2117129a": "추가",
-        "05939e977d": "리뷰어 추가",
-        "474b50d988": "리뷰어가 없습니다.",
-        "1b19cdc510": "리뷰어 삭제 {{value0}}",
-        "cb55b0390f": "관리",
-        "4f9313984d": "리뷰어",
-        "02cbe2de44": "파이프라인",
-        "be3d291837": "파일",
-        "c996e2962c": "대화",
-        "b3c156dd51": "새로고침",
-        "9bfb4a24d7": "작성자",
-        "30c97083c2": "GitLab 작업 항목 세부정보",
-        "e089f62594": "MR !{{value0}}을(를) 병합했습니다.",
-        "865ea2703e": "MR !{{value0}}을(를) 다시 열었습니다.",
-        "9b11cd233f": "MR !{{value0}}을(를) 닫았습니다.",
-        "60c13320c4": "인라인 댓글이 추가되었습니다.",
-        "ffdd9a78e1": "인라인 댓글에는 MR diff 참조를 사용할 수 없습니다.",
-        "00d0d25825": "파일, 줄, 댓글이 필요합니다.",
-        "ceaf7c30c7": "이 GitLab 사용자의 리뷰어 ID를 사용할 수 없습니다.",
-        "f7cb495a12": "{{value0}}을(를) 다시 시도했습니다.",
-        "98718490e4": "MR 제목이 필요합니다.",
-        "d600c2619a": "로그 로드 중",
-        "028bde664e": "숨기기",
-        "2f9b27f838": "작업 로그",
-        "032ae1312b": "GitLab에서 작업 열기",
-        "fa3e042203": "다시 시도",
-        "f23ea85341": "해결됨",
         "4186685c78": "다시 열기",
         "cae2712a23": "닫기",
         "881e522e04": "병합",
-        "6de8ce0cc6": "{{value0}} 필요",
-        "22511537d2": "승인됨",
-        "00f3bab87b": " / 총 {{value0}}개 필요",
-        "11384f99aa": "숫자",
-        "40c56b95e2": "{{value0}} 승인{{value1}} 남음",
-        "3a051b8ade": "작업 항목",
-        "32f8bef818": "로그 출력이 없습니다.",
-        "4168eb2c51": "해결",
-        "commentTooLarge": "댓글이 너무 길어 안전하게 제출할 수 없습니다."
+        "11384f99aa": "숫자"
       },
       "JiraIssueWorkspace": {
-        "b0b92666c9": "댓글",
-        "a585fd204e": "Jira 댓글 추가...",
-        "2441be6f9f": "워크스페이스 시작",
-        "9178090e26": "아직 댓글이 없습니다.",
-        "5cd09beaf9": "다시 시도",
-        "9a980b06b9": "댓글",
-        "c4889a47e4": "설명이 제공되지 않았습니다.",
-        "0f3c07a901": "백엔드, 버그",
-        "aee97b6913": "라벨",
-        "444865b4a8": "제목",
-        "0b6b5646ed": "할당되지 않음",
-        "51bed73f88": "우선순위 없음",
-        "7a96985ca0": "닫기",
-        "76513c7898": "Jira 이슈 미리보기 닫기",
-        "857bd2f88f": "선택한 이슈를 미리보기하고, 편집하고, 작업을 시작하세요.",
-        "0cc62bd690": "프롬프트 복사",
-        "80efa101c5": "추천 브랜치 이름 복사",
-        "38839801e8": "키 복사",
-        "779bb91ee0": "URL 복사",
-        "69da9a208c": "Jira에서 열기",
-        "fa132c8aed": "댓글을 추가하지 못했습니다.",
-        "ea21952aa3": "Jira 이슈를 업데이트하지 못했습니다.",
-        "6c41a9bcea": "{{value0}}을(를) 복사하지 못했습니다.",
-        "2ff69a3545": "{{value0}} 복사됨",
-        "666cfdd835": "알 수 없음",
         "9ebee71962": "라벨",
         "def3d0e824": "제목",
         "b8e2079d96": "담당자",
-        "54649eaeab": "+ 담당자",
         "2a829a2f00": "우선순위",
-        "693be070d0": "전환",
-        "ef21405c6d": "Jira 이슈",
-        "commentTooLarge": "댓글이 너무 길어 안전하게 제출할 수 없습니다."
+        "693be070d0": "전환"
       },
       "Landing": {
         "76a95f7f47": "생성",
@@ -1127,118 +998,17 @@
         "157bb5ecbb": "GitHub 열기",
         "preflightDismiss": "닫기"
       },
-      "LinearIssueMarkdownDescriptionEditor": {
-        "d9c47069ef": "Markdown",
-        "a7301a11f3": "저장",
-        "632096eb1c": "링크",
-        "340160f4e8": "링크 삭제",
-        "9eaf02ac01": "인용",
-        "e2a0267c8c": "체크리스트",
-        "d6b2f3d35b": "번호가 매겨진 목록",
-        "c82917e06e": "글머리 기호 목록",
-        "ad1869bd54": "인라인 코드",
-        "28fd951b83": "취소선",
-        "5666b4493d": "기울임",
-        "caa88f50d0": "굵게",
-        "dddaa7a0a6": "제목 2",
-        "e3f741d258": "제목 1",
-        "68a41d5665": "본문 텍스트",
-        "7c52151156": "이슈 설명 형식",
-        "5c16ec8f14": "링크 URL",
-        "4f2fddc2b7": "설명이 제공되지 않았습니다."
-      },
+      "LinearIssueMarkdownDescriptionEditor": {},
       "LinearIssueTextEditor": {
-        "947ba2d6f4": "저장",
-        "04d73b72dc": "이슈 제목",
-        "e8ff595db3": "{{value0}}을(를) 업데이트하지 못했습니다.",
-        "1e08a1ec80": "제목은 필수 항목입니다.",
         "00fa439dc7": "제목",
         "75294b07d1": "설명"
       },
       "LinearIssueWorkspace": {
-        "ad5dec37b7": "선택한 이슈를 미리보기하고, 편집하고, 작업을 시작하세요.",
-        "c23e79e5c0": "작업",
-        "b0eac92d85": "다시 시도",
-        "fabbd3f974": "이슈를 업데이트했습니다 ·",
-        "543970c87a": "활동",
-        "df4c86ed12": "닫기",
-        "7a4997d8bb": "Linear 이슈 미리보기 닫기",
-        "e1e0a9bca9": "워크스페이스 시작",
-        "30a7f56c0a": "이슈에서 워크스페이스 시작",
-        "30c1242f3a": "식별자 복사",
         "9e3c49beb8": "이슈 식별자 복사",
-        "9a9a884236": "URL 복사",
-        "97c19a84f1": "Linear URL 복사",
-        "f63ef94ea8": "이슈",
-        "f6c6381593": "프롬프트 복사",
-        "5d670ec8dc": "추천 브랜치 이름 복사",
-        "937ba6ad9a": "프로젝트 로드 중",
-        "db3f269d98": "프로젝트 검색",
-        "b51276c8d6": "프로젝트",
-        "8b5b593053": "프로젝트를 업데이트하지 못했습니다.",
-        "f9d4ef9807": "프로젝트가 업데이트되었습니다.",
-        "38b80780c2": "프로젝트를 로드하지 못했습니다.",
-        "42589845bc": "생성",
-        "c182e02de5": "하위 이슈 제목",
-        "8c55d6696a": "하위 이슈 추가",
-        "b25e453c9d": "하위 이슈를 생성하지 못했습니다.",
-        "aeed19d003": "{{value0}}을(를) 생성했습니다.",
-        "9a1317cdd3": "하위 이슈를 로드하지 못했습니다.",
-        "9bcbaa2737": "{{value0}}을(를) 복사하지 못했습니다.",
-        "7835483c43": "{{value0}} 복사됨",
-        "61f424f8ca": "Linear 이슈",
-        "ca8778c124": "알 수 없음",
-        "8a33c85e9c": "누군가",
         "f5a6b38a14": "시트",
-        "65239a714b": "Linear",
-        "af6e02c44a": "페이지",
-        "76ffd3c937": "추가할 프로젝트를 검색하세요.",
-        "c11b4e3cc2": "프로젝트를 찾을 수 없습니다.",
-        "519c3587f3": "프로젝트에 추가",
-        "openAttachedWorkspace": "이슈에 연결된 워크스페이스 열기",
-        "openWorkspace": "워크스페이스 열기",
-        "openOnLinear": "Linear에서 열기",
-        "moreWorkspaceActions": "이슈 워크스페이스 작업 더 보기",
-        "startNewWorkspace": "새 워크스페이스 시작",
-        "workspaceSection": "워크스페이스",
-        "noWorkspaceYet": "아직 없음"
+        "af6e02c44a": "페이지"
       },
-      "LinearItemDrawer": {
-        "04008e6c46": "이슈에서 워크스페이스 시작",
-        "a4fcc57522": "아직 댓글이 없습니다.",
-        "fde849b2b6": "댓글",
-        "9dc54172db": "닫기 · Esc",
-        "0190b760c1": "Linear에서 열기",
-        "04a442f796": "선택한 Linear 이슈를 미리보기하고 편집합니다.",
-        "d369841269": "댓글 보내기",
-        "2fcff829a8": "댓글 추가…",
-        "2820f0f0f0": "댓글을 남겨주세요...",
-        "6ab35eafd5": "댓글을 추가하지 못했습니다.",
-        "367f828482": "라벨을 찾을 수 없습니다.",
-        "cddd9b04a7": "라벨 로드 중",
-        "23886c7eec": "라벨 추가",
-        "7f7b89b631": "라벨: {{value0}}",
-        "b2376d0179": "멤버 로드 중",
-        "866316f22c": "할당되지 않음",
-        "b5675b0694": "저장",
-        "ceeb8c6153": "지우기",
-        "fbb90300e2": "사용자 지정 추정치",
-        "780ea6ed89": "상태를 찾을 수 없습니다.",
-        "59b6cd3706": "상태 로드 중",
-        "64bfffc4dd": "라벨",
-        "dd304de85a": "속성",
-        "0be31fef8e": "추정치는 음수가 아닌 정수여야 합니다.",
-        "48e17e8cbd": "알 수 없음",
-        "858d0630da": "미리보기 닫기",
-        "39883467f4": "Linear 이슈",
-        "fda549766e": "댓글을 달려면 {{value0}}",
-        "d71cd3003e": "+ 담당자",
-        "commentTooLarge": "댓글이 너무 길어 안전하게 제출할 수 없습니다.",
-        "openAttachedWorkspace": "이슈에 연결된 워크스페이스 열기",
-        "openWorkspace": "워크스페이스 열기",
-        "moreWorkspaceActions": "이슈 워크스페이스 작업 더 보기",
-        "startNewWorkspace": "새 워크스페이스 시작"
-      },
+      "LinearItemDrawer": {},
       "NewWorkspaceComposerCard": {
         "cbb47ee0dc": "로컬 Git 프로젝트에만 사용할 수 있습니다.",
         "d861de981b": "스파스 체크아웃",
@@ -1308,7 +1078,6 @@
         "perWorkspaceEnvHint": "레시피에서 온디맨드 환경 프로비저닝",
         "branchName": "브랜치 이름",
         "branchNamePlaceholder": "feature/my-branch",
-        "connectTimedOut": "Connection timed out. It may still be connecting in the background.",
         "connectingHost": "Connecting…",
         "connectHost": "Connect",
         "addHost": "Add host",
@@ -1528,16 +1297,8 @@
         "92b0f9d921": "인증된 후 다시 시도하세요.",
         "cd8c34aac1": "gh",
         "cf82170065": "repo에 스타를 표시할 수 없습니다. 다음을 확인하세요",
-        "30c36231c1": "Orcinus는 오픈 소스입니다. 오늘 도움이 되었다면 GitHub 스타가 다른 개발자가 Orcinus를 찾는 데 도움이 됩니다.",
-        "b5e685e4d9": "닫기",
-        "5f6df21046": "Orcinus를 즐기고 있나요?",
-        "2d67b6c849": "GitHub에서 별표 주기",
-        "af3c9bbb37": "스타 표시 중…",
         "68a41bc3aa": "별표를 추가할 수 없음:",
         "996bf76e46": "브라우저에서 GitHub를 열어 완료하세요.",
-        "d32015fec7": "여는 중...",
-        "157bb5ecbb": "GitHub 열기",
-        "8c967b4d15": "나중에",
         "73dfd4eb8d": "다시 묻지 않기"
       },
       "TaskPage": {
@@ -1553,104 +1314,23 @@
         "60f806ce99": "Jira 사이트 연결",
         "8ff6fdc368": "만드는 중…",
         "fc0d8a1fa4": "제출.",
-        "919a20dd5b": "{{value0}}을(를) 입력하세요",
-        "56cdb413a2": "쉼표로 구분된 값",
-        "1f0fce91e3": "{{value0}}을(를) 선택하세요",
-        "cbcdcbe244": "필수 Jira 필드 로드 중…",
         "34d97ca682": "무슨 일이 있나요?",
-        "f161bf9ede": "설명(선택사항)",
         "578f730c16": "간략한 요약",
         "16cba35bee": "제목",
-        "ae592fee62": "이슈 유형",
-        "7d63e2626e": "로드 중...",
-        "93c57f15e5": "프로젝트를 찾을 수 없습니다.",
-        "cfb56a7868": "프로젝트 검색...",
         "00022ec0ba": "프로젝트",
-        "0c11ca0b6d": "새 Jira 이슈",
         "d0ca4aa1d0": "라벨",
-        "1742eafc14": "프로젝트 없음",
-        "69591944e7": "낮음",
-        "7fd59c18d8": "중간",
-        "345b169f1f": "높음",
-        "f373ab1a4f": "긴급",
-        "713179dfdc": "우선순위 없음",
-        "c8d5bec5f7": "우선순위",
         "42a9160321": "할당되지 않음",
-        "d2a876ca53": "담당자",
         "154b0fa623": "상태",
-        "9bc8aea407": "설명 추가...",
-        "d9151fd4e9": "이슈 제목",
-        "4f3cb99f41": "팀 전환",
-        "c11105dac5": "새로운 이슈",
-        "1b59a07674": "만드는 중...",
-        "cf72580c04": "설명을 작성하거나, 프로젝트 개요를 작성하거나, 아이디어를 수집하세요.",
-        "2ea1c701b6": "목표일",
-        "7da41c9225": "목표",
-        "09623359b9": "시작일",
         "7d08e8be0f": "시작",
-        "af9e877f30": "라벨 없음",
-        "d6cda23ef1": "멤버",
-        "cfaadb6b22": "리드 없음",
-        "34da8ac06c": "리드",
-        "579f98afcd": "간단한 요약 추가...",
-        "ecbcc83140": "프로젝트 이름",
-        "b6795e65fd": "닫기",
-        "a98cbe7664": "팀",
-        "02f67c0d09": "새 프로젝트",
-        "bdebffcbfe": "선택한 팀에 대한 Linear 프로젝트를 만듭니다.",
-        "1361275ec3": "새로운 Linear 프로젝트",
         "7f3f7b4c18": "설명(선택사항, markdown)",
         "9f2b4c03a6": "등록 위치: ",
         "d3d0998b7d": "새 GitHub 이슈",
-        "d1e243795c": "이슈",
-        "be8cf68d9f": "이슈 보기",
-        "67662ade50": "프로젝트 이슈",
-        "6244a02f46": "Linear에서 열기",
         "606a85c774": "열기",
-        "5e8061b088": "{{value0}} {{value1}}에서 워크스페이스 시작",
-        "592a55611b": "더 많은 팀을 선택하거나 새로고침해 보세요. 팀 필터는 현재 가져온 이슈 세트에 적용됩니다.",
-        "618107fab3": "선택한 팀과 일치하는 가져온 이슈가 없습니다",
-        "903c7af49f": "Linear 이슈를 찾을 수 없습니다.",
-        "5ed38a49e5": "아래 워크스페이스 오류를 확인한 후 새로고침하세요.",
-        "cc8795e07c": "Linear 이슈를 로드할 수 없습니다.",
         "f362667d55": "업데이트됨",
         "b1eaa18ace": "이슈",
-        "37e7ee311e": "키",
-        "b7bae28b6a": "표시됨",
-        "a26a48252e": "표시 속성",
-        "5d2d835467": "정렬 순서",
-        "5659da12fc": "그룹화",
         "9c57663908": "보기",
-        "af377b13b1": "{{value0}} 보기",
-        "d47248df4d": "Linear 보기 모드",
-        "f397d513e3": "뒤로",
-        "b39fe6511d": "프로젝트",
-        "8675cd6188": "Linear",
-        "733b8f2421": "Linear / 보기",
-        "bc06ed0fb0": "보기로 돌아가기",
-        "3cb855080f": "보기",
-        "b4e10f096e": "소유자",
-        "a04fe7ba73": "공개 범위",
-        "0aa8525950": "모델",
         "dfc0c79bd8": "이슈",
-        "8a07f21e76": "건강도",
-        "851017590d": "Linear 액세스 추가",
-        "228b25028f": "여기에서 직접 할당된 Linear 이슈를 찾아보고 작업을 시작하세요.",
-        "6d56559467": "Linear 계정 연결",
-        "eee68073b2": "Jira에서 열기",
-        "9497f2787c": "워크스페이스 시작",
-        "eba87f2edb": "Jira 이슈가 발견되지 않았습니다.",
-        "63b2abd3aa": "Jira 이슈",
-        "e7115334aa": "Jira 숨기기",
-        "83bce6be5c": "Jira 연결",
-        "b518ae6307": "여기에서 직접 Jira 이슈를 찾아보고, 편집하고, 생성하고, 작업을 시작하세요.",
-        "a150c59da7": "Jira 사이트 연결",
-        "bcdc1330b2": "GitLab에서 열기",
-        "00b7ffb952": "유형 / 상태",
         "eb10c32872": "ID",
-        "e9b6955dcd": "이슈 #{{value0}}",
-        "a0544fb653": "MR !{{value0}}",
-        "8396825a14": "작업",
         "c1d1600362": "브라우저에서 열기",
         "b6329379ca": "새 워크스페이스 시작",
         "054bf695cc": "초안",
@@ -1665,17 +1345,8 @@
         "f6fa3c97d0": "리뷰어",
         "8aba10579d": "담당자",
         "5eccb3c841": "제목 / 맥락",
-        "d4c2830063": "GitLab 작업 항목 새로 고침",
-        "c679af7ad9": "내 할 일 새로 고침",
         "dfd72673e7": "프로젝트 선택을 저장하지 못했습니다.",
         "b797bdd7c3": "검색 지우기",
-        "99c2755218": "Jira JQL, 예: project = ABC AND statusCategory != Done",
-        "2ff9fd71fd": "Jira 이슈 새로 고침",
-        "0b65d3fb2c": "Linear 프로젝트 검색...",
-        "eec0c5c079": "Linear 이슈 검색...",
-        "8964184a8b": "Linear 새로고침",
-        "3feb524d42": "새 Linear 이슈",
-        "0cbf7e5cf3": "Linear 작업 모드",
         "ff53631e6f": "GitHub 작업 새로 고침",
         "6ffa6be99f": "GitHub 작업 새로 고침",
         "b15ceb409d": "GitHub 이슈 검색...",
@@ -1688,18 +1359,10 @@
         "1a06219d5c": "작업 닫기",
         "3f594861a5": "팀 선택을 저장하지 못했습니다.",
         "d0d570b306": "Linear 워크스페이스를 전환하지 못했습니다.",
-        "cb98f0350c": "{{value0}}을(를) 생성했습니다.",
-        "1e1b2ad8f2": "이 이슈를 등록하기 전에 프로젝트 워크스페이스에서 팀을 선택하세요.",
-        "3ca9b424a3": "프로젝트를 생성하지 못했습니다.",
         "3f9604efc7": "이슈 #{{value0}}을 열었습니다",
         "585dba2989": "이 이슈에 첨부된 워크스페이스를 열 수 없습니다.",
         "534a9c6017": "이 PR에 연결된 워크스페이스를 열 수 없습니다.",
         "fe380f306c": "기본 작업 보기를 저장하지 못했습니다.",
-        "af2a8371de": "Jira 이슈 유형을 로드하지 못했습니다.",
-        "6775c05483": "Linear 상태를 업데이트할 수 없습니다",
-        "745ae567d4": "{{value1}}에는 \"{{value0}}\"을(를) 사용할 수 없습니다.",
-        "669e419d65": "Linear 보기에 워크스페이스 컨텍스트가 없습니다.",
-        "cba2a2b7fb": "Linear 프로젝트에 워크스페이스 컨텍스트가 없습니다.",
         "f4374519ae": "선호하는 이슈 소스(upstream)가 더 이상 {{value0}}에 구성되어 있지 않습니다. origin을 사용합니다.",
         "e9139db03f": "{{value0}}을 숨기지 못했습니다.",
         "b73717af92": "다음",
@@ -1742,9 +1405,6 @@
         "5ebff3a0aa": "없음",
         "d09bf34db7": "닫힘",
         "1c893195ac": "상태를 업데이트하지 못했습니다.",
-        "afc68824ff": "상태를 찾을 수 없습니다.",
-        "cc13109b5d": "상태 로드 중",
-        "d45a910c4a": "{{value0}}에서 Linear 상태 변경",
         "d8a517ad89": "식별자",
         "50387522d7": "그룹화 없음",
         "d747aed72f": "보드",
@@ -1769,28 +1429,15 @@
         "6459faa8b3": "오류",
         "e15ba2d2eb": "이슈 생성",
         "3b11c8e8fc": "배열",
-        "e178c0a953": "이슈를 생성하기 전에 Jira 프로젝트를 선택하세요.",
-        "0f7b0d964a": "{{value0}}에 새로운 이슈를 생성합니다.",
-        "eff9800d4b": "{{value0}} 라벨{{value1}}",
-        "d7f16d0e32": "팀 선택",
-        "5301ca0f20": "프로젝트 생성",
-        "7719d8daa9": "{{value0}} 멤버{{value1}}",
-        "5af6f0ae5b": "팀 선택",
         "cfb730b73e": "이슈",
         "3659f9792a": "보드",
         "d079be2dc8": "할당된 이슈가 없습니다. 검색해 보세요.",
-        "2bdefbcac3": "다른 검색어를 사용해 보세요.",
-        "25ff84769a": "이 Linear 컨텍스트와 일치하는 이슈가 없습니다.",
         "cbce2bc9cd": "없음",
         "51411113df": "목록",
-        "60f68a2ef4": "Linear 이슈",
         "b2007ba885": "프로젝트",
         "6edf402e11": "개요",
         "9ae151b26b": "Linear",
-        "94d900518d": "선택한 프리셋과 일치하는 이슈가 없습니다.",
-        "f51e254d35": "다른 JQL 쿼리를 시도해 보세요.",
         "4645a7814f": "Jira",
-        "e224d76876": "MR",
         "bbec4717ee": "MR",
         "d6d08c1650": "GitLab 작업 항목을 보려면 프로젝트를 선택하세요.",
         "f294c500ef": "이 필터와 일치하는 GitLab 작업이 없습니다.",
@@ -1799,8 +1446,6 @@
         "a9f256ecea": "이 필터와 일치하는 GitLab 이슈가 없습니다.",
         "2007e14d95": "gitlab",
         "456b8512da": "MR",
-        "03da966159": "GitLab에 인증할 수 있도록 프로젝트를 선택하세요.",
-        "d591aac6ae": "대기 중인 할 일이 없습니다. 모두 따라잡았네요!",
         "33a4bd7f5c": "해야 할 일",
         "66ae7330f6": "추가 작업",
         "93d5f21fc1": "PR",
@@ -1820,16 +1465,11 @@
         "bc46d8204e": "GitHub에서 열 프로젝트 하나를 선택하세요.",
         "d1132848f8": "GitHub에서 열 GitHub 프로젝트 하나를 선택하세요.",
         "2af3ab5c58": "Linear에서 열 팀을 하나 선택하세요",
-        "aec5feeb69": "Jira 이슈를 생성하지 못했습니다.",
         "7437e340b4": "이슈를 생성하지 못했습니다.",
         "9e03c17847": "현재 리뷰어를 보려면 PR 세부정보를 엽니다.",
         "3b7f34282f": "닫힘",
-        "246bd64aed": "Linear에서 {{value0}} 열기",
-        "ff90d0abc7": "{{value0}}에서 워크스페이스 시작",
         "fe28c9821f": "보기",
         "8d1e17a3ef": "GitHub에서 {{value0}} 열기",
-        "4ac8ff2275": "Jira에서 {{value0}} 열기",
-        "40eaf2c27c": "세부 정보",
         "closeAsCompleted": "완료로 닫기",
         "closeAsCompletedDescription": "완료, 닫힘, 수정됨, 해결됨",
         "closeAsNotPlanned": "계획 없음으로 닫기",
@@ -1848,21 +1488,6 @@
         "useIssueNumber": "이슈 #{{value0}} 사용",
         "noMatchingIssuesLoaded": "일치하는 이슈를 불러오지 않았습니다.",
         "editReviewersWithCurrent": "리뷰어 편집: {{value0}}",
-        "linearEmptyAttributeFilter": "선택한 필터와 일치하는 이슈가 없습니다. 필터를 지우거나 다른 조건을 시도하세요.",
-        "linearEmptyUnfilteredScope": "이 워크트리 범위에 이슈가 없습니다. 검색하거나 팀을 조정해 보세요.",
-        "linearFetchMore": "더 불러오기",
-        "linearHasWorktreeLoadFailed": "Orcinus 워크스페이스에 연결된 Linear 이슈를 불러올 수 없습니다.",
-        "linearHasWorktreePartialLoadFailed": "Orcinus 워크스페이스에 연결된 일부 Linear 이슈를 불러올 수 없습니다. 새로 고쳐 다시 시도하세요.",
-        "linearHasWorktreeSearchPlaceholder": "Orcinus 워크스페이스에 연결된 이슈 필터...",
-        "linearModeHasWorktree": "워크스페이스 있음",
-        "linearModeHasWorktreeTooltip": "Orcinus 워크스페이스에 연결된 Linear 티켓",
-        "linearEmptyHasWorktree": "아직 Orcinus 워크스페이스에 연결된 Linear 티켓이 없습니다. Linear 이슈에서 작업을 시작하면 여기에 표시됩니다.",
-        "linearOpenAttachedWorkspace": "{{value0}}에 연결된 워크스페이스 열기",
-        "linearWorktreesColumn": "워크스페이스",
-        "jiraSortAscending": "오름차순",
-        "jiraSortDescending": "내림차순",
-        "jiraSortBy": "정렬 기준",
-        "jiraToggleSortDirection": "{{value0}}으로 정렬",
         "75a38d7df8": "GitHub data is temporarily unavailable. Its API may be down, rate-limited, or unreachable. Please try again shortly.",
         "noGithubSourceDetected": "No GitHub source detected for",
         "noGithubSourceDetectedHint": "it may have no GitHub remote, or the source could not be resolved.",
@@ -1898,52 +1523,9 @@
         "e07012f26e": "검색..."
       },
       "UpdateCard": {
-        "68b235d264": "업데이트하려면 다시 시작하세요.",
-        "6714206e5a": "Orcinus v{{value0}}이(가) 다운로드되었습니다. 준비가 되면 다시 시작하세요.",
-        "93794ea932": "Orcinus v{{value0}}을(를) 다운로드 중입니다.",
-        "8acbdd3961": "상태 표시줄로 최소화",
-        "17412483da": "설치 준비 완료",
-        "47126bcf57": "수동으로 다운로드",
-        "3553a8672f": "마지막 오류",
-        "90559b14e3": "다시 시작한 후 프로세스 전체의 Electron 네트워킹 스위치가 켜집니다. HTTP/2 업데이트 다운로드를 거부하는 기업 VPN 또는 프록시에 사용하세요.",
-        "6e45bfa2e0": "다운로드 중...",
-        "558842597d": "업데이트 다운로드 중",
-        "f58b5c57a6": "새 소식:",
-        "ec8fe71cfc": "업데이트",
-        "44324ef542": "릴리스 노트",
-        "fdd4a364fa": "세션은 중단되지 않습니다.",
-        "05ad78a6d1": "Orcinus v{{value0}}이(가) 준비되었습니다.",
-        "318d3b4bc7": "업데이트 닫기",
-        "9abc59f814": "업데이트 가능",
-        "aad383aecc": "전체 릴리스 노트 읽기",
-        "ccd8b0a793": "마지막 업데이트 이후 추가됨",
-        "b1d867f4fb": "업데이트 중에 terminal 세션이 중단되지 않습니다.",
-        "09a55c39b5": "설치 중...",
-        "ea2a41adbe": "최신 버전을 사용 중입니다.",
-        "ba5ffc949c": "업데이트 확인 중...",
-        "2c2d3e03ca": "다시 시도",
-        "4cf109845a": "업데이트 오류",
-        "6b0085010d": "재확인",
-        "48565a32bc": "다운로드 재시도",
-        "933c6fdf5b": "활성화 및 다시 시작",
-        "1339b82cee": "HTTP/2 다운로드가 차단됨",
-        "7274ef6e59": "도움말 닫기",
-        "a726967bd3": "닫기",
         "d5253b54af": "오류",
         "7ffc08506e": "확인",
-        "522df222b9": "스피너",
-        "e944c2de43": "업데이트 확인이 차단됨",
-        "5b309b19f3": "업데이트가 설치되지 않음",
-        "092f09fc14": "설치 프로그램의 게시자가 Orcinus와 일치하지 않아 업데이트를 중지했습니다. 이 다운로드를 설치하지 마세요. 수정된 버전은 공식 릴리스를 확인하세요.",
-        "c9ff9b9ec2": "공식 릴리스 확인",
-        "a05992a26b": "서명 확인을 실행할 수 없었습니다. 일반적으로 바이러스 백신 소프트웨어가 차단했기 때문입니다. 다운로드를 다시 시도하거나 공식 릴리스에서 설치 프로그램을 받으세요.",
-        "5194358929": "세부 정보 숨기기",
-        "8bc9e17d8f": "세부 정보 표시",
-        "8cf17b10af": "로컬 빌드 오류",
-        "a4650b0dc4": "로컬 빌드를 사용할 수 없음",
-        "b1e390250d": "로컬 빌드 전환을 완료할 수 없었습니다.",
-        "d29740d175": "선택한 빌드를 사용할 수 없었습니다.",
-        "37d45c9ec1": "다른 빌드 선택"
+        "522df222b9": "스피너"
       },
       "WorktreeJumpPalette": {
         "ac037cfac2": "이동",
@@ -2301,85 +1883,23 @@
         "api": {
           "key": {
             "dialog": {
-              "834a52c084": "확인 중...",
-              "f8f704a019": "취소",
-              "e603ee9156": "워크스페이스 API 설정",
-              "dc7ccb0f7c": "개인 API 키",
-              "e3100b36b9": "멤버 API 키가 차단된 경우 워크스페이스 관리자에게 워크스페이스 API 설정에서 이를 허용하도록 요청하세요.",
-              "d56d3629f4": "Orcinus가 해당 워크스페이스에서 계정으로 액세스할 수 있는 모든 팀을 표시해야 하는 경우 전체 액세스를 선호합니다. 제한된 키는 허용된 팀만 노출하며 비공개 팀에서는 키 소유자에게 액세스 권한이 필요합니다.",
-              "af52a6227f": "계정 > 보안 및 액세스에서 개인 API 키를 생성하세요.",
-              "edec49dfae": "lin_api_...",
-              "7d498f653c": "개인 API 키",
               "57a66522c8": "연결 중",
-              "c9889a09f8": "키를 생성하기 전에 Linear를 사용하여 원하는 워크스페이스를 선택하세요.",
               "e689a4d0a6": "오류"
             }
           }
         },
         "priority": {
-          "icon": {
-            "c43d3e065b": "우선순위:"
-          }
+          "icon": {}
         },
         "project": {
           "view": {
             "surfaces": {
-              "8bbecb2510": "없음",
-              "e1fa97d21d": "개요를 보려면 프로젝트를 선택하세요.",
-              "1748d3b9af": "라벨",
-              "65bda65159": "멤버",
-              "c5f79616c3": "팀",
-              "25a2196732": "목표",
-              "3fb6473111": "시작",
-              "111bef9aa8": "리드",
-              "3be47aed6f": "우선순위",
-              "f5ef24cf46": "건강도",
-              "9ddb58edbd": "상태",
-              "0a6a5a7dd6": "최신 업데이트",
-              "c8db98b73b": "리소스",
-              "bb1405eff8": "마일스톤",
-              "5d99315fb8": "계획",
-              "3ad562bdf4": "범위 내 이슈",
-              "563501f191": "진행률",
-              "bb5664d456": "프로젝트 설명이 없습니다.",
-              "7b147907dc": "Linear",
-              "a9785c7158": "새로고침",
-              "ee3d2caabd": "이슈",
-              "5f79bc76b0": "프로젝트로 돌아가기",
-              "aac9a4afc6": "Linear에서 열기",
-              "7616c986c6": "열린 이슈 {{value0}}개",
-              "93e1f6bfca": "로드 중",
-              "98730088a6": ". 전체 세트를 보려면 Linear를 검색하거나 엽니다.",
-              "06b887d622": "처음 표시",
-              "2c4b1c2c08": "숫자",
-              "f2cc1e0ff6": "Linear / 프로젝트",
-              "906b5e4cb8": "Linear / 프로젝트 / {{value0}}",
-              "85607ff793": "프로젝트",
-              "20b9d09b7d": "알 수 없음",
-              "f059181bd9": "비공개",
-              "27d91cb1a6": "공유됨",
-              "9f0f51fd9e": "Linear에서 뷰를 생성하거나 저장한 후 새로 고칩니다.",
-              "f4c79cff5f": "아래 워크스페이스 오류를 확인한 후 새로고침하세요.",
-              "ef90b21366": "보기를 찾을 수 없습니다.",
-              "c0a50f96a4": "보기를 로드할 수 없습니다.",
-              "df4bd63c1d": "할당되지 않음",
-              "30402d2c6e": "검색하거나 새로고침해 보세요.",
-              "a2f31c4cd6": "Linear 프로젝트를 찾을 수 없습니다.",
-              "c9b6e9f90d": "Linear 프로젝트를 로드할 수 없습니다."
+              "2c4b1c2c08": "숫자"
             }
           }
         },
         "scope": {
-          "selector": {
-            "91c8871dad": "팀 액세스 추가",
-            "7783361266": "모든 팀",
-            "e1ae6bebb0": "팀",
-            "a14ce4df2b": "모든 워크스페이스",
-            "05baa5ae90": "워크스페이스",
-            "89f6580dbf": "팀 검색...",
-            "b3488fad3c": "가져온 팀이 없습니다. 액세스는 키 범위, 비공개 팀 멤버십, 보관된 팀, 권한 또는 가져오기 실패에 따라 달라질 수 있습니다.",
-            "405b33c378": "가져온 팀이 검색어와 일치하지 않습니다."
-          }
+          "selector": {}
         }
       },
       "notification": {
@@ -2815,18 +2335,8 @@
             "c337c9d75c": "닫기"
           },
           "TerminalSshReconnectOverlay": {
-            "authFailed": "{{value0}} 인증에 실패했습니다. 이 터미널 세션을 계속하려면 다시 연결하세요.",
-            "reconnectFailed": "{{value0}}에 대한 SSH 연결에 실패했습니다. 이 터미널 세션을 계속하려면 다시 연결하세요.",
-            "connecting": "{{value0}}에 연결 중입니다. 호스트를 사용할 수 있게 되면 이 터미널이 재개됩니다.",
-            "connected": "SSH가 연결되었습니다.",
-            "disconnected": "이 터미널은 {{value0}} 연결을 기다리고 있습니다. 이 SSH 세션을 계속하려면 연결하세요.",
-            "connectFailed": "SSH 연결 실패",
-            "title": "SSH 연결 필요",
             "connectingButton": "연결 중...",
-            "connectButton": "연결",
-            "removedTitle": "SSH 호스트가 제거됨",
-            "removedBody": "이 워크트리의 SSH 호스트가 제거되어 더 이상 연결할 수 없습니다. 워크트리를 제거하여 정리하세요 — 원격 파일은 그대로 남아 있습니다.",
-            "removeWorkspaceButton": "워크트리 제거"
+            "connectButton": "연결"
           },
           "TerminalRemoteRuntimeReconnectBanner": {
             "retryingTitle": "원격 런타임에 다시 연결 중",
@@ -2868,16 +2378,10 @@
         },
         "bar": {
           "BrowserTab": {
-            "6e0bc8f3a8": "브라우저에서 열기",
-            "9dd880bd56": "오른쪽으로 탭 닫기",
-            "1611a1324b": "닫기",
-            "5d6e89891f": "탭 복제",
             "966feb9ad5": "오른쪽 분할",
             "7e8106899f": "왼쪽으로 분할",
             "2186a8407c": "아래로 분할",
-            "96354ed249": "위로 분할",
-            "911542656f": "탭 고정",
-            "c5aaee8c39": "탭 고정 해제"
+            "96354ed249": "위로 분할"
           },
           "EditorFileTab": {
             "3da7445c84": "파일 이름 바꾸기 {{value0}}"
@@ -2957,7 +2461,6 @@
           "TabBarCreateEntry": {
             "d62d63b807": "파일 생성",
             "25dc1cd653": "파일 열기",
-            "7cdf8ee0c8": "URL 열기",
             "b27864279e": "agent 실행",
             "omniboxPlaceholderWithHistory": "열린 탭, 방문 기록, 파일, URL, agent 검색…",
             "openPage": "페이지 열기",
@@ -2965,8 +2468,7 @@
             "2c38630a01": "워크스페이스가 더 이상 존재하지 않습니다",
             "4f0d9a71c2": "탭이 더 이상 존재하지 않습니다",
             "d7d496a451": "브라우저 페이지가 더 이상 존재하지 않습니다",
-            "chooseAction": "작업을 선택하세요.",
-            "searchProvider": "{{value0}}에서 검색"
+            "chooseAction": "작업을 선택하세요."
           },
           "TabBarQuickCommandsButton": {
             "a2c7a33831": "명령",
@@ -3005,7 +2507,6 @@
                 "classifier": {
                   "42e6262ae9": "사용할 수 있는 작업이 없습니다.",
                   "097a982ee0": "파일 로드 중...",
-                  "90eb94dc48": "http:// 또는 https:// URL을 입력하세요.",
                   "5553b283ce": "URL 또는 파일 경로를 입력하세요.",
                   "queryTooLarge": "검색 텍스트가 너무 큽니다.",
                   "absolutePathRemoteBlocked": "절대 경로에는 로컬 워크스페이스가 필요합니다."
@@ -3054,21 +2555,9 @@
       "status": {
         "bar": {
           "PortsStatusSegment": {
-            "4ebf90c12e": "외부 포트가 감지되지 않았습니다.",
-            "7dac3ecc9d": "외부 포트",
-            "95495019ed": "{{value0}}에서 포트 스캔을 사용할 수 없습니다: {{value1}}",
-            "a8e4bdb412": "· {{value0}} 외부",
             "9aa11005bf": "워크스페이스 ·",
-            "c22ea609fd": "포트",
             "a11ed266ce": "워크스페이스",
-            "ca41be2802": "포트 — {{value0}}개 워크스페이스 {{value1}}{{value2}}",
-            "b8bc3e420a": "포트, {{value0}} 워크스페이스 {{value1}}",
-            "3a87d54dfb": "워크스페이스 포트가 감지되지 않았습니다.",
-            "c174bbbfed": "워크스페이스 포트를 검색하는 중...",
-            "8caaa86e9a": "포트",
-            "45834a9ace": "포트",
-            "4ae65d871a": "외부",
-            "2b84c4d11f": "{{value0}} 워크스페이스 · {{value1}} 외부"
+            "4ae65d871a": "외부"
           },
           "ResourceUsageStatusSegment": {
             "946d9f94d0": "취소",
@@ -3228,16 +2717,7 @@
             "84c3b15dca": "Agent 사용량 한도",
             "d663430cf9": "사용량 추적 설정"
           },
-          "UpdateStatusSegment": {
-            "5cd13105a3": "업데이트에 실패했습니다. 확장하려면 클릭하세요.",
-            "2201df6987": "업데이트 실패 - 세부정보를 보려면 클릭하세요.",
-            "8533c12c3c": "업데이트 실패",
-            "962404f68e": "업데이트 설치 준비가 완료되었습니다. 확장하려면 클릭하세요.",
-            "248ee5d8ef": "Orcinus v{{value0}} 다운로드 중… {{value1}}%",
-            "57a29c3b0e": "업데이트 준비됨",
-            "fd1d3b3a1d": "업데이트 다운로드 중, {{value0}}퍼센트. 확장하려면 클릭하세요.",
-            "9d13213a56": "Orcinus v{{value0}} 설치 준비 완료"
-          },
+          "UpdateStatusSegment": {},
           "WorkspaceSpaceCompactPanel": {
             "a471aa9c24": "업데이트됨",
             "9be86c46a0": "확보 가능",
@@ -3334,17 +2814,7 @@
           "ports": {
             "status": {
               "popover": {
-                "rows": {
-                  "a49ea79246": "작업 트리로 이동",
-                  "f2b813345f": "워크스페이스를 사용할 수 없음",
-                  "0e72c8d9fb": "프로세스 중지",
-                  "536d48a5dc": "{{value0}} 복사",
-                  "085f4f0334": "브라우저에서 열기",
-                  "e4a709548c": "포트를 새로고침하지 못했습니다.",
-                  "acdb6df590": "{{value0}}에서 프로세스가 중지되었습니다.",
-                  "480d8f2347": "{{value0}} 복사됨",
-                  "b854ec9ff5": "브라우저를 열지 못했습니다."
-                }
+                "rows": {}
               }
             }
           },
@@ -3999,21 +3469,7 @@
           "e52454b7f6": "폴더로 열기"
         },
         "AddRepoRemoteStep": {
-          "5b205b5281": "스캔 중지",
-          "6680289908": "/home/user/project",
-          "ef410aa881": "원격 경로",
-          "0416bde073": "설정에 추가",
-          "df6fbcf880": "구성된 SSH 대상이 없습니다.",
-          "44637f43bd": "SSH 대상",
-          "80557be85a": "연결된 SSH 대상을 선택하고 Git 리포지토리 경로를 입력하세요.",
-          "91b93a90a4": "원격 프로젝트 열기",
-          "007651bdf9": "디렉터리로 이동한 후 선택을 클릭하여 선택합니다.",
-          "dd3ff65486": "원격 파일 시스템 찾아보기",
-          "36d427bb66": "원격 프로젝트 추가",
-          "35831a7312": "추가 중...",
-          "lockedDescription": "{{value0}}의 Git 리포지토리 경로를 입력하세요.",
-          "lockedDisconnected": "{{value0}} 연결이 끊어졌습니다.",
-          "93e0221434": "연결"
+          "0416bde073": "설정에 추가"
         },
         "AddRepoServerStartStep": {
           "ae990c86a0": "옵션 추가로 돌아가기",
@@ -4057,8 +3513,6 @@
           "5b2ea674b1": "Git URL을 입력하고 복제할 위치를 선택하세요.",
           "c05f88a31f": "URL에서 복제",
           "fe8e629fe3": "디렉터리로 이동한 후 선택을 클릭하여 선택합니다.",
-          "df8b0e6c22": "원격 프로젝트가 추가되었습니다.",
-          "3e64e8a70d": "연결 실패",
           "32a7256d85": "클론",
           "69f5b5380d": "복제 중...",
           "cloneOnHostDescription": "Git URL을 입력하고 {{value0}}에서 클론할 위치를 선택하세요.",
@@ -4343,10 +3797,7 @@
           "folderPathIdentity": "브랜치 / 폴더 경로",
           "cli": "Orcinus CLI"
         },
-        "SshTargetRow": {
-          "4677394048": "연결 중…",
-          "75ad429b5d": "연결"
-        },
+        "SshTargetRow": {},
         "WorkspaceStatusAppearancePopover": {
           "514be2f569": "{{value0}} 색상을 {{value1}}로 설정",
           "8be427206b": "아이콘",
@@ -4441,16 +3892,7 @@
         },
         "WorktreeCardPorts": {
           "34f733dda2": "작업 트리로 이동",
-          "3240f320d7": "라이브 포트",
-          "3e5f66564e": "워크스페이스를 사용할 수 없음",
-          "2f854442ff": "프로세스 중지",
-          "c8067a829a": "{{value0}} 복사",
-          "33bc7d7495": "브라우저에서 열기",
-          "9950fe2d20": "포트를 새로고침하지 못했습니다.",
-          "5d1a5d51bb": "{{value0}}에서 프로세스가 중지되었습니다.",
-          "c89f290e25": "{{value0}} 복사됨",
-          "d1113f4660": "브라우저를 열지 못했습니다.",
-          "fed49903c9": "{{value0}} 실시간 {{value1}}"
+          "3e5f66564e": "워크스페이스를 사용할 수 없음"
         },
         "WorktreeContextMenu": {
           "c39c37676a": "그룹을 만들고 이 프로젝트를 그룹으로 이동하세요.",
@@ -4833,41 +4275,9 @@
           }
         },
         "LinearAgentSkillSetupPrompt": {
-          "missingCliAndSkill": "Orcinus CLI와 Linear agent 스킬이 없습니다.",
-          "modalTitle": "Linear 티켓 접근 활성화",
-          "modalDescription": "terminal에서 Linear 스킬을 설치합니다.",
-          "modalPrompt": "agents가 첨부된 Linear 티켓을 읽고 편집할 수 있게 합니다.",
-          "dontShowAgain": "다시 표시하지 않음",
           "missingBoth": "Orcinus CLI와 Linear agent 스킬이 없습니다.",
-          "missingCli": "Orcinus CLI가 없습니다.",
-          "missingSkill": "Linear agent 스킬이 없습니다.",
-          "title": "Linear agent 스킬 설정",
-          "remoteCopy": "호스트 설정을 설치합니다. 원격 agent 환경에는 별도 설정이 필요할 수 있습니다.",
-          "hostCopy": "연결된 Linear 작업에서 호스트 agent 인계를 위해 설치합니다.",
-          "dismiss": "Linear agent 스킬 설정 닫기",
-          "setup": "설정",
-          "recheck": "다시 확인",
           "panelTitle": "Linear agent 스킬",
-          "panelDescription": "연결된 Linear 작업 인계를 위해 호스트 agent 스킬을 설치합니다.",
-          "terminalTitle": "Linear agent 스킬 설치",
-          "terminalAria": "Linear agent 스킬 설치 terminal",
-          "install": "CLI 및 스킬 설치",
-          "successTitle": "Linear 티켓 접근이 준비되었습니다",
-          "successDescription": "이제 agents가 이 워크스페이스에서 연결된 Linear 티켓을 읽고 업데이트할 수 있습니다.",
-          "successDescriptionWsl": "이제 WSL agents가 이 워크스페이스에서 연결된 Linear 티켓을 사용할 수 있습니다.",
-          "successDescriptionRemote": "이제 호스트 agents가 연결된 Linear 티켓을 사용할 수 있습니다. 원격 agent 환경에는 자체 설정이 여전히 필요할 수 있습니다.",
-          "successStatus": "Linear 티켓 접근 준비됨",
-          "done": "완료",
-          "wslCopy": "연결된 Linear 작업에서 WSL agent 인계를 위해 설치합니다.",
-          "wslLabel": "WSL 기본값",
-          "toastMissingCliAndSkill": "Orcinus CLI와 Linear 스킬이 없습니다",
-          "toastMissingCli": "Orcinus CLI가 없습니다",
-          "toastMissingSkill": "Linear 스킬이 없습니다",
-          "toastInstallCliAndSkillDescription": "Orcinus CLI와 Linear 스킬을 설치하여 agents가 Linear 작업을 읽고 편집할 수 있게 하세요.",
-          "toastInstallCliDescription": "Orcinus CLI를 설치하여 agents가 Linear 작업을 읽고 편집할 수 있게 하세요.",
-          "toastInstallSkillDescription": "Linear 스킬을 설치하여 agents가 Orcinus CLI를 통해 Linear 작업을 읽고 편집할 수 있게 하세요.",
-          "toastRemoteDescription": "{{value0}} 원격 agent 환경에는 자체 설정이 필요할 수 있습니다.",
-          "toastWslDescription": "{{value0}} 이 설정은 선택한 WSL agent 런타임에서 실행됩니다."
+          "panelDescription": "연결된 Linear 작업 인계를 위해 호스트 agent 스킬을 설치합니다."
         },
         "FolderWorkspaceComposerDialog": {
           "connectFailed": "프로젝트에 연결하지 못했습니다.",
@@ -5029,14 +4439,7 @@
           "loopbackBlocked": "SSH 터널 재정의를 활성화하거나 다른 호스트의 Tailscale 또는 LAN 주소를 사용해 새 링크를 만드세요."
         },
         "ForgetSshWorkspaceDialog": {
-          "reconnectFailed": "재연결 실패",
-          "forgetBody": "이 작업 공간을 Orcinus에서만 제거합니다. 파일, Git 워크트리, {{host}}의 브랜치는 그대로 유지됩니다.",
-          "title": "Delete “{{name}}”?",
-          "disconnectedBody": "이 워크트리의 SSH 호스트가 연결되어 있지 않습니다. 재연결하여 원격에서도 삭제하거나 Orcinus에서만 제거하세요.",
-          "ghostBody": "{{host}}은(는) 더 이상 저장된 SSH 호스트가 아니므로 이 워크스페이스는 라이브 호스트에 연결되어 있지 않습니다. Orcinus에서 제거만 할 수 있으며, 원격의 파일과 브랜치는 그대로 유지됩니다.",
-          "cancel": "취소",
-          "forget": "Orcinus에서 제거",
-          "reconnectAndDelete": "재연결 후 삭제"
+          "forget": "Orcinus에서 제거"
         },
         "MarkdownImageLightbox": {
           "image": "Image",
@@ -5422,108 +4825,22 @@
           "2f3cda96f5": "이 repo에 고정됨",
           "ee110e1830": "기본 기본 참조 없음"
         },
-        "BrowserDefaultZoomSetting": {
-          "2622126877": "새로 열린 브라우저 탭에 적용되는 확대/축소 수준입니다.",
-          "bbeec087d3": "새로 열린 브라우저 탭에 적용됩니다.",
-          "265597101f": "기본 줌"
-        },
-        "BrowserHomePageSetting": {
-          "d4ddcd0056": "저장",
-          "37a30c5bfd": "https://google.com",
-          "c6cbd1c105": "홈페이지가 저장되었습니다.",
-          "6a37540f4b": "새 브라우저 탭을 만들 때 열리는 URL입니다. 빈 탭을 열려면 비워 두세요.",
-          "70224e37b1": "기본 홈 페이지"
-        },
+        "BrowserDefaultZoomSetting": {},
+        "BrowserHomePageSetting": {},
         "BrowserPane": {
-          "81ff774667": "취소",
-          "7d4c0a2aa4": "프로필 이름",
-          "612f7f6861": "프로필을 생성하지 못했습니다.",
-          "8f22b7580d": "프로필 '{{value0}}'이(가) 생성되었습니다.",
-          "8481ee0331": "새 브라우저 프로필",
-          "6f2584b39e": "프로필 추가",
-          "e4aaf8051b": "도구 모음 메뉴.",
-          "cd47bc9622": "새 브라우저 탭의 기본 프로필을 선택합니다. 쿠키를 가져오고 탭별로 프로필을 전환하려면 다음을 이용하세요:",
-          "2d66a6efb5": "세션 및 쿠키",
-          "aa1074bfe9": "브라우저 프로필을 관리하고 Chrome, Edge, Comet 또는 기타 브라우저에서 쿠키를 가져옵니다.",
-          "113cd2dc9b": "세션 및 쿠키",
-          "d3eb69c0aa": "링크 라우팅",
-          "3e46903ad4": "주소 표시줄에 URL이 아닌 텍스트를 입력할 때 사용됩니다.",
-          "0d9c987f21": "기본 검색 엔진",
-          "7b225c78f5": "주소 표시줄에 URL이 아닌 텍스트를 입력할 때 사용되는 검색 엔진입니다.",
-          "64898ecdab": "생성",
-          "7b649a578a": "만드는 중…",
-          "4399c77caa": "기본",
-          "4af9a17947": "kagi",
-          "c0f85056d9": "이 Orcinus 서버의 브라우저 프로필입니다.",
-          "86b7c83fee": "이 컴퓨터",
-          "6480776a03": "선택한 호스트의 브라우저 프로필입니다.",
-          "5e19a692f7": "호스트"
+          "4af9a17947": "kagi"
         },
         "BrowserProfileRow": {
-          "8e636cae25": "프로필 '{{value0}}'이(가) 삭제되었습니다.",
-          "2d4bea7f35": "기본 쿠키가 삭제되었습니다.",
-          "ebb78dfd6f": "파일에서…",
           "7df818977e": "에서",
-          "cdec84552f": "쿠키 가져오기",
-          "796d846483": "가져온 쿠키가 없습니다.",
-          "c29648fe5b": "활성",
-          "d420c43729": "{{value1}}{{value2}}에서 {{value0}}개의 쿠키를 {{value3}}(으)로 가져왔습니다.",
-          "b4c167764d": "파일에서 {{value0}}개의 쿠키를 {{value1}}에 가져왔습니다.",
-          "a3f8c2d1e0b4": "{{value1}} ({{value2}})에서 {{value0}}개의 쿠키를 {{value3}}(으)로 가져왔습니다.",
-          "b4e9d3f2a1c5": "{{value1}}에서 {{value0}}개의 쿠키를 {{value2}}(으)로 가져왔습니다.",
-          "c5a273a809": "{{value0}}에서"
+          "d420c43729": "{{value1}}{{value2}}에서 {{value0}}개의 쿠키를 {{value3}}(으)로 가져왔습니다."
         },
-        "BrowserUseComputerUseNotice": {
-          "15b5e680ba": "컴퓨터 사용 열기",
-          "79209b37b9": "쿠키 가져오기가 적합하지 않은 경우 컴퓨터 사용은 로컬 앱을 제어할 수 있으며 해당되는 경우 기존 로그인 브라우저 세션을 사용할 수 있습니다. Computer Use 스킬을 설치하십시오. macOS에도 개인정보 보호 권한이 필요합니다.",
-          "333984cf90": "기존 브라우저 세션 사용"
-        },
-        "BrowserUseEnableSwitch": {
-          "aea3f45349": "Agent 브라우저 사용 활성화"
-        },
-        "BrowserUseExamples": {
-          "1199258ace": "복사",
-          "1188e56af4": "예시 프롬프트 복사",
-          "b84807f228": "\"",
-          "59722f31b4": "\"",
-          "c5325e91f6": "이 중 하나를 Claude Code, Codex 또는 해당 스킬이 설치된 프로젝트의 다른 agent에 붙여넣으세요.",
-          "2a180694f7": "시도해 보세요 - 예시 프롬프트",
-          "5ec620ccc4": "복사하지 못했습니다.",
-          "a602d43069": "{{value0}}을(를) 복사했습니다."
-        },
+        "BrowserUseComputerUseNotice": {},
+        "BrowserUseEnableSwitch": {},
+        "BrowserUseExamples": {},
         "BrowserUsePane": {
-          "be6df68384": "파일에서…",
-          "e44c5d681e": "에서",
-          "67d9a53f47": "별도의 로그인을 위한 프로필 관리",
-          "112f70adc4": "{{value0}}에서 마지막으로 가져옴",
-          "72d4815523": "agents가 인증된 페이지에 접근할 수 있도록 기존 로그인을 Orcinus로 가져오세요. 기본 프로필로 가져옵니다.",
-          "2eb906706c": "브라우저 쿠키 가져오기",
-          "af8c83ed61": "agents가 로그인을 재사용할 수 있도록 Chrome, Edge 또는 기타 브라우저에서 쿠키를 가져옵니다.",
-          "68ea76eb71": "agents가 Orcinus의 브라우저를 작동할 수 있도록 브라우저 사용 스킬을 설치하세요.",
-          "2d6ead9ab2": "브라우저 사용 스킬 설치",
-          "e9f3f3b488": "설치 위치",
-          "9fca1f7f5d": "agents가 셸에서 브라우저를 조정할 수 있도록 Orcinus CLI 명령을 등록합니다.",
-          "c6065d205d": "Orcinus CLI 활성화",
-          "c79eff0213": "agents가 브라우저를 구동할 수 있도록 Orcinus CLI를 등록하세요.",
-          "702488a5f7": "코딩 agents가 로그인을 통해 이 브라우저를 구동하게 하세요. 아래 세 단계를 완료하세요.",
-          "b8a1f2d84d": "Agent 브라우저 사용",
-          "96b91c6349": "코딩 agents가 로그인을 통해 이 브라우저를 구동하게 하세요.",
-          "2ea4617e3a": "{{value1}}{{value2}}에서 {{value0}} 쿠키를 가져왔습니다.",
-          "721aee31b4": "PATH에 Orcinus CLI를 등록했습니다.",
-          "180a9abf3a": "CLI 상태를 로드하지 못했습니다.",
-          "2ccfc9cff8": "가져오기",
-          "0462565413": "다시 가져오기",
-          "de9b2f32f3": "활성화",
-          "ad8cb0ee22": "경로 수정",
-          "0289434ed6": "활성화됨",
-          "8b3054dac7": "등록 중...",
-          "8f2675c2f3": "파일에서 {{value0}}개의 쿠키를 가져왔습니다.",
-          "5301857d88": "{{value0}}에서"
+          "e44c5d681e": "에서"
         },
-        "BrowserUseSkillStep": {
-          "0871b6998d": "agents가 Orcinus 브라우저에서 페이지를 탐색하고 확인할 수 있습니다.",
-          "459e24eebc": "Browser Use 스킬"
-        },
+        "BrowserUseSkillStep": {},
         "CliSection": {
           "8671e406f0": "취소",
           "a4aafe46e3": "대상 경로:",
@@ -5981,16 +5298,7 @@
           "1683acbac4": "Orcinus가 PR, MR, 체크, 리뷰 상태에 사용할 소스 호스트를 연결합니다.",
           "298c65ecac": "리뷰 제공자"
         },
-        "KagiSessionLinkForm": {
-          "92f0b4e472": "지우기",
-          "9f741627a7": "Kagi 세션 링크가 삭제되었습니다.",
-          "d5c8b94c5b": "저장",
-          "ff450194cd": "Kagi 비공개 세션 링크",
-          "e383683485": "https://kagi.com/search?token=...",
-          "81409d9362": "Kagi 인증을 위한 선택적 비공개 세션 링크입니다.",
-          "3e5b7c6c25": "Kagi 세션 링크가 저장되었습니다.",
-          "0911d5fa4c": "https://kagi.com/search?token=...에서 Kagi 비공개 세션 링크를 입력하세요."
-        },
+        "KagiSessionLinkForm": {},
         "KeybindingsFileActions": {
           "abc49853fb": "디스크에서 다시 로드",
           "a8a8d6b9d3": "파일 관리자에 표시",
@@ -6898,7 +6206,6 @@
         "TasksPane": {
           "f71d8a9dd3": "작업 제공자",
           "6b23a34f6d": "Jira",
-          "09ae2d7c51": "Linear",
           "7c5d7fdc20": "GitLab",
           "e14063e727": "GitHub",
           "connectProviderTitle": "{{provider}} 연결",
@@ -7530,102 +6837,10 @@
         },
         "browser": {
           "search": {
-            "7539f6336c": "프로필",
-            "1c1e097985": "Arc",
-            "533a253deb": "Edge",
-            "75a0d435b7": "크롬",
-            "854ef6ce83": "로그인",
-            "3910a41f32": "인증",
-            "2e7f951773": "가져오기",
-            "66dd641a47": "세션",
-            "29193a51d5": "쿠키",
-            "2d2d995c58": "브라우저",
-            "060ac1fcba": "Orcinus 내부의 기존 로그인을 사용하려면 Chrome, Edge 또는 기타 브라우저에서 쿠키를 가져오세요.",
-            "96afedcb5c": "세션 및 쿠키",
-            "a7a07d5415": "편집기",
-            "8dd4805991": "파일",
-            "68d1db8929": "markdown",
-            "90425d313c": "Shift",
-            "linkRoutingModifier": {
-              "routing": "라우팅",
-              "modifier": "수정자",
-              "invert": "반전",
-              "opposite": "반대"
-            },
-            "72c58f7792": "웹뷰",
-            "82ba1c80ea": "로컬호스트",
-            "bea27bac4b": "링크",
-            "44d14df30d": "미리보기",
-            "5cb082b3e3": "링크 라우팅",
-            "95944898e0": "백분율",
-            "483a0eb5e0": "새 탭",
-            "726f2a8556": "페이지 확대",
-            "5448f4097b": "기본값",
-            "54f4ea55f7": "배율",
-            "4a98ed195f": "확대",
-            "c3d89ed4d0": "새로 열린 브라우저 탭에 적용되는 확대/축소 수준입니다.",
-            "072b7f5c1f": "기본 줌",
-            "0bb34eacc9": "쿼리",
-            "8b8ed06e4b": "omnibox",
-            "3538b3aaeb": "token",
-            "0732ebe6fb": "비공개",
-            "e1c2a57f07": "kagi",
-            "ad40e75d13": "Bing",
-            "1f8153acfb": "DuckDuckGo",
-            "8a489aab8d": "Google",
-            "72b4b89970": "엔진",
-            "16bd69cd82": "검색",
-            "0628d5943b": "주소 표시줄에 URL이 아닌 텍스트를 입력할 때 사용되는 검색 엔진입니다.",
-            "5e755920c9": "기본 검색 엔진",
-            "4596a52cf7": "랜딩",
-            "5164c47e31": "공백",
-            "4fda4fb066": "URL",
-            "0dbb1eaf4e": "홈페이지",
-            "291f480a5e": "홈",
-            "a942905148": "새 브라우저 탭을 만들 때 열리는 URL입니다. 빈 탭을 열려면 비워 두세요.",
-            "c3903322d2": "기본 홈 페이지",
-            "19ea5607cf": "로컬호스트 작업 트리 레이블",
-            "4e0fdf0a3f": "브라우저 탭을 더 쉽게 구분할 수 있도록 작업 트리별 Orcinus 로컬 호스트 URL로 워크스페이스 포트를 엽니다."
+            "linkRoutingModifier": {}
           },
           "use": {
-            "search": {
-              "3f4c559deb": "Arc 프로필",
-              "d5afa54d21": "Edge 프로필",
-              "22fb801af8": "크롬 프로필",
-              "59968bb9b4": "인증된 브라우저",
-              "62e2a790c0": "기존 세션",
-              "63a66da648": "시스템 브라우저",
-              "20c1323d1e": "컴퓨터 사용",
-              "ab349a2dd0": "Arc",
-              "2e1b09897b": "Edge",
-              "088e7a9012": "크롬",
-              "96ce3d2de2": "인증",
-              "48557f639c": "로그인",
-              "d5ad1f7aad": "가져오기",
-              "02837ee497": "세션",
-              "fb8178824f": "쿠키",
-              "ba4eb53b72": "브라우저 사용",
-              "2fb24d17db": "agents가 로그인을 재사용할 수 있도록 Chrome, Edge 또는 기타 브라우저에서 쿠키를 가져옵니다.",
-              "614c756ab1": "브라우저 쿠키 가져오기",
-              "cee44fb442": "오토메이션",
-              "a57c2172dc": "agent-browser",
-              "6ea88e5206": "npx",
-              "f5b8fdddf5": "orca-cli",
-              "e5a784bc54": "설치",
-              "9d97446873": "agent",
-              "a2d489263e": "스킬",
-              "a7e82445fa": "agents가 Orcinus의 브라우저를 작동할 수 있도록 브라우저 사용 스킬을 설치하세요.",
-              "a1414dcefb": "브라우저 사용 스킬 설치",
-              "e56c7b55c9": "설정",
-              "034c5e8d7f": "활성화",
-              "7e0dcb257a": "셸",
-              "3ffafc9b95": "명령",
-              "30c74aaa1f": "경로",
-              "ff05cbc344": "orca",
-              "85fab5e12c": "CLI",
-              "890ddf943d": "agents가 브라우저를 구동할 수 있도록 Orcinus CLI를 등록하세요.",
-              "50f0860e18": "Orcinus CLI 활성화"
-            }
+            "search": {}
           }
         },
         "commit": {
@@ -8052,12 +7267,6 @@
             "50d20817f7": "bitbucket",
             "c97d58a0f3": "API 토큰 환경 변수를 통한 Bitbucket Cloud 인증.",
             "67a2a0e868": "Bitbucket 연동",
-            "371ee914d2": "MR",
-            "581844769a": "MR",
-            "b40cbe5de4": "glab",
-            "b939695c69": "gitlab",
-            "6e2ab619c6": "glab CLI를 통한 GitLab 인증.",
-            "b50b71ef9d": "GitLab 연동",
             "41ccade05c": "gh",
             "b79c21bd42": "GitHub",
             "7166b9090c": "gh CLI를 통한 GitHub 인증.",
@@ -8809,14 +8018,7 @@
                 "cards": {
                   "d5b3be8ecd": "Re-check",
                   "8cbc39f862": "자세히 알아보기",
-                  "707180d09c": "glab auth login",
-                  "4be0616873": "GitLab CLI가 설치되어 있지만 인증되지 않았습니다. terminal에서 다음 명령을 실행하세요.",
-                  "54a640af7a": "GitLab CLI 설치",
-                  "b56fd5676a": "MR, 이슈 및 파이프라인을 활성화하려면 GitLab CLI를 설치하세요.",
-                  "faddeb763d": "이 런타임에서는 아직 GitLab CLI 상태를 사용할 수 없습니다.",
                   "a47f71e357": "CLI.",
-                  "2a6b359e75": "glab",
-                  "1f2b347bd3": "다음을 통해 MR, 이슈, 할 일, 파이프라인을 병합합니다.",
                   "8d90249d22": "gh auth login",
                   "2e44dda68a": "GitHub CLI가 설치되어 있지만 인증되지 않았습니다. terminal에서 다음 명령을 실행하세요.",
                   "7755c28af5": "GitHub CLI 설치",
@@ -8833,31 +8035,7 @@
         "task": {
           "tracker": {
             "integration": {
-              "cards": {
-                "c90f2ef419": "다시 확인",
-                "dd3529015d": "{{value0}} 연결 해제",
-                "8b2408a8e5": "이 런타임에 Jira가 연결되어 있습니다. 연결된 사이트 목록이 오래된 것 같으면 다시 확인하세요.",
-                "8c20e76308": "연결된 각 Jira 사이트에는 활성 런타임이 저장한 토큰이 하나씩 있습니다.",
-                "c24e56c532": "테스트",
-                "3e7c10d286": "테스트 중...",
-                "a2c0015fb8": "확인됨",
-                "e2ff968276": "Jira 연결",
-                "60996beda6": "Jira 사이트 추가",
-                "7ca5ffffdb": "Jira Cloud 이슈를 탐색하고 생성하며, 이슈에서 작업을 시작합니다.",
-                "a1093a06c7": "설정 작업을 표시하기 전에 Jira 액세스를 확인하는 중입니다.",
-                "9fa04a032e": "{{value0}}개 사이트{{value1}} 연결됨",
-                "cef18762a2": "Linear 설정의 개인 API 키로 액세스를 추가합니다. 전체 액세스 키는 키 소유자가 접근할 수 있는 모든 팀을 볼 수 있습니다.",
-                "6224fe9d34": "연결된 각 Linear 워크스페이스에는 활성 런타임에 저장되는 키가 하나씩 있습니다. 전체 액세스 키는 키 소유자가 접근할 수 있는 모든 팀에 적용될 수 있으며, 제한된 키는 언제든 교체할 수 있습니다.",
-                "1a12e33fe5": "Linear 액세스 추가",
-                "622c224082": "워크스페이스 액세스 추가",
-                "eae4a9f16b": "이슈를 탐색하고 연결하려면 Linear 액세스를 추가하세요.",
-                "fe9231215b": "설정 작업을 표시하기 전에 Linear 액세스를 확인하는 중입니다.",
-                "e1f5e6424c": "{{value0}}개 워크스페이스{{value1}} 연결됨",
-                "disconnect_all": "연결 해제",
-                "account_scope_prefix": "계정 범위",
-                "2d60ec7921": "API 토큰으로 Jira Cloud 사이트를 연결하거나, 개인 액세스 토큰 또는 사용자 이름과 비밀번호로 자체 호스팅 Jira를 연결하세요. 자격 증명은 선택한 원격 런타임으로 전송되어 런타임이 지원하는 암호화로 저장됩니다.",
-                "977e360b71": "API 토큰으로 Jira Cloud 사이트를 연결하거나, 개인 액세스 토큰 또는 사용자 이름과 비밀번호로 자체 호스팅 Jira를 연결하세요. 자격 증명은 로컬에 저장되며 로컬 런타임 저장소가 지원하는 경우 암호화됩니다."
-              }
+              "cards": {}
             }
           }
         },
@@ -9036,10 +8214,7 @@
           "9e29aff18b": "{{value0}} 바로가기 {{value1}} 제거",
           "2a9588b1c2": "이 바인딩 제거"
         },
-        "BrowserLocalhostWorktreeLabelsSetting": {
-          "8ac8c3ad19": "로컬호스트 작업 트리 레이블",
-          "1db3c8b983": "브라우저 탭을 더 쉽게 구분할 수 있도록 작업 트리별 Orcinus 로컬 호스트 URL로 워크스페이스 포트를 엽니다."
-        },
+        "BrowserLocalhostWorktreeLabelsSetting": {},
         "AgentRuntimeSetting": {
           "label": "Agent 런타임",
           "wsl": "WSL",
@@ -9169,23 +8344,9 @@
           "agent": {
             "skill": {
               "install": {
-                "cta": {
-                  "copiedCommand": "명령이 복사되었습니다.",
-                  "copyFailed": "명령 복사 실패.",
-                  "skillLabel": "에이전트 스킬:",
-                  "checking": "확인 중...",
-                  "installed": "설치됨",
-                  "notInstalled": "설치되지 않음",
-                  "recheck": "다시 확인",
-                  "installedDescription": "에이전트 스킬이 설치되었습니다. 업데이트하려면 다음을 실행하세요:",
-                  "description": "에이전트가 Linear 작업을 읽고 편집할 수 있도록 합니다. 전체 가이드 설정(연결 + 스킬 + 표시)은 설정 → 작업 소스에 있습니다.",
-                  "copyCommand": "명령 복사"
-                }
+                "cta": {}
               },
-              "search": {
-                "title": "Linear",
-                "description": "Linear 스킬 상태, 사용 예시, 작업 소스 설정 링크입니다."
-              }
+              "search": {}
             }
           }
         },
@@ -9272,17 +8433,7 @@
           "done": "완료",
           "copyPrompt": "프롬프트 복사"
         },
-        "LinearAgentSkillPane": {
-          "title": "Linear",
-          "description": "Orcinus에서 Linear 이슈를 탐색하고 연결된 워크스페이스를 시작하며 /orca-linear로 에이전트가 이슈를 업데이트할 수 있습니다.",
-          "skillTitle": "Linear 스킬",
-          "howToUse": "프롬프트 예시",
-          "howToUseDescription": "카드를 클릭해 프롬프트를 복사하세요. 스킬을 설치한 후 Linear에 연결된 워크스페이스에서 사용하세요.",
-          "terminalTitle": "Linear 스킬 설정",
-          "terminalAriaLabel": "Linear 스킬 설치 터미널",
-          "manageConnectionHint": "연결된 Linear 워크스페이스와 API 키는 다음에서 확인할 수 있습니다.",
-          "manageConnectionLink": "연동"
-        },
+        "LinearAgentSkillPane": {},
         "MobileRelayBetaNotice": {
           "notice": "Orcinus Relay is in beta."
         },
@@ -9291,16 +8442,8 @@
           "description": "파일 편집기 및 diff 보기에서 사용되는 글꼴입니다. 비워두면 터미널 글꼴을 따릅니다.",
           "placeholder": "터미널 글꼴과 동일"
         },
-        "BrowserLinkRoutingSetting": {
-          "description": "터미널, Markdown, 편집기의 http(s) 링크를 Orcinus 내장 브라우저에서 엽니다. {{shortcut}}을(를) 누르면 항상 시스템 브라우저를 사용합니다.",
-          "descriptionBase": "터미널, Markdown, 편집기의 http(s) 링크를 Orcinus 내장 브라우저에서 엽니다."
-        },
-        "BrowserLinkRoutingModifierSetting": {
-          "titleSystem": "Hold Shift to open in your web browser",
-          "titleOrca": "Hold Shift to open in Orcinus",
-          "descriptionSystem": "Links open in Orcinus, so {{chord}}+click sends one to your system browser instead.",
-          "descriptionOrca": "Links open in your system browser. When enabled, {{chord}}+click opens one in Orcinus's built-in browser instead."
-        },
+        "BrowserLinkRoutingSetting": {},
+        "BrowserLinkRoutingModifierSetting": {},
         "PluginConsentDialog": {
           "workerTrust": "백그라운드 워커 — 자체 프로세스 실행",
           "instructionalTrust": "지시 내용 — 사용자 또는 에이전트 권한으로 나중에 실행",
@@ -9551,47 +8694,8 @@
             "development": "개발 플러그인"
           }
         },
-        "LinearAgentSkillGuide": {
-          "setupConnectTitle": "1. Linear 연결",
-          "setupConnectBody": "Orcinus가 이슈를 나열하고 연결된 워크스페이스를 열 수 있도록 하는 개인 API 키입니다.",
-          "manageKeys": "키 관리",
-          "addAccess": "액세스 추가",
-          "setupSkillTitle": "2. 에이전트 스킬 설치",
-          "setupSkillBody": "에이전트가 /orca-linear로 이슈 읽기, 업데이트, 분류, 풀 또는 머지 리퀘스트 첨부를 할 수 있게 합니다.",
-          "setupVisibleTitle": "3. 작업에 Linear 표시",
-          "setupVisibleBody": "작업 소스 선택기와 사이드바 바로 가기에 Linear를 표시합니다.",
-          "openTaskSources": "작업 소스",
-          "setupTitle": "설정 체크리스트",
-          "setupBody": "작업과 에이전트의 전체 흐름에는 세 단계가 모두 필요합니다. 최초 설정은 작업 소스에서도 진행할 수 있습니다.",
-          "setupReady": "설정 완료",
-          "setupProgress": "{{total}}개 중 {{done}}개 완료",
-          "notesTitle": "알아두면 좋은 점",
-          "notesIntro": "Linear를 연결하고 스킬을 설치한 후 참고할 내용입니다.",
-          "noteLinkedTitle": "Linear 이슈에서 시작",
-          "noteLinkedBody": "작업에서 만든 워크스페이스는 이슈가 컨텍스트로 연결되어 있어 이슈 작업이 가장 원활합니다.",
-          "noteSlashTitle": "/orca-linear 언급",
-          "noteSlashBody": "채팅에서 /orca-linear를 사용하거나 자연어로 요청하면 해당 턴에 에이전트가 스킬을 불러옵니다.",
-          "noteKeysTitle": "키는 런타임별로 저장",
-          "noteKeysBody": "API 키와 워크스페이스는 활성 런타임에 저장됩니다.",
-          "noteVisibilityTitle": "숨겨도 연결은 유지",
-          "noteVisibilityBody": "작업 소스에서 Linear를 숨기면 선택기에서만 제거됩니다. 키나 스킬은 삭제되지 않습니다.",
-          "setupChecking": "확인 중…"
-        },
-        "TaskSourceLinearSetup": {
-          "connectTitle": "Linear 연결",
-          "connectDescription": "Orcinus가 이슈를 탐색하고 이슈 컨텍스트로 워크스페이스를 열 수 있도록 개인 API 키를 추가하세요.",
-          "manageAccess": "키 관리",
-          "addAccess": "Linear 액세스 추가",
-          "connectedHint": "워크스페이스와 키는 활성 런타임에 저장됩니다. 언제든 액세스를 더 추가할 수 있습니다.",
-          "recheck": "연결 다시 확인",
-          "skillTitle": "Linear 에이전트 스킬 설치",
-          "skillDescription": "에이전트가 /orca-linear로 이슈 읽기, 업데이트 게시, 상태 변경, 풀 또는 머지 리퀘스트 첨부를 할 수 있게 합니다.",
-          "skillBlocked": "먼저 Linear를 연결한 다음 에이전트용 스킬을 설치하세요.",
-          "skillPanelTitle": "Linear 스킬",
-          "terminalTitle": "Linear 스킬 설정",
-          "terminalAriaLabel": "Linear 스킬 설치 터미널",
-          "showDescription": "작업 소스 선택기와 사이드바 바로 가기에 Linear를 표시합니다."
-        },
+        "LinearAgentSkillGuide": {},
+        "TaskSourceLinearSetup": {},
         "TaskSourceProviderCard": {
           "statusChecking": "확인 중…",
           "statusReady": "준비됨",
@@ -9881,72 +8985,10 @@
             "59b4dccf70": "파괴적인"
           },
           "PortsPanel": {
-            "3ea4a02a8f": "취소",
-            "4eb801ce93": "개발 서버",
-            "8dfed0a15c": "라벨(선택사항)",
-            "17bea6e391": "로컬호스트",
-            "a3721a50b0": "원격 호스트",
-            "d57545ff92": "원격과 동일",
-            "b950b1948b": "로컬 포트",
-            "9e5a4118b0": "원격 포트",
-            "c9d106547a": "포워드",
-            "c7e920aa7c": "{{value0}}(으)로 공개",
-            "e740075063": "제거",
-            "b3548e59f4": "편집",
-            "fe2730d050": "{{value0}} 복사",
-            "b22b128b2a": "브라우저에서 열기",
-            "75aeea592f": "브라우저에서 {{value0}} 열기",
-            "de349d4560": "{{value0}} 열기",
-            "907eb53ed2": "포트 전달",
-            "04efd3dad4": "로컬 시스템의 원격 서비스에 액세스하려면 포트를 전달하세요.",
-            "1f0d2a24f9": "전달된 포트 없음",
-            "36b1b2984a": "감지됨",
-            "ddbe58d74e": "전달됨",
-            "a103dae837": "추가",
-            "6bc058dbe1": "포트",
-            "d4c3cd679c": "다시 연결하는 중...",
-            "a2f1a47f42": "SSH 연결이 끊겼습니다.",
-            "409afcc145": "브라우저에 대해 선택된 워크스페이스가 없습니다.",
-            "153145e675": "증거",
-            "c7b4702b7b": "워크스페이스",
-            "57d930fa45": "PID",
-            "5dd86dcf2f": "프로세스",
-            "b1ff94fa27": "프로토콜",
-            "729be0b4e5": "종류",
-            "0f1d8cd324": "바인딩",
-            "1c1c18cefc": "주소",
-            "f9528da632": "프로세스 중지",
-            "a223459512": "세부정보 표시",
-            "bdac206faf": "세부정보 복사",
-            "792baeb7ed": "주소 복사",
-            "d41a8241ec": "포트",
-            "a2a9fc6899": "로컬 포트가 감지되지 않았습니다.",
-            "f59c783b7a": "{{value0}}에서 포트 스캔을 사용할 수 없습니다: {{value1}}",
-            "7822e3edc6": "포트 새로 고침",
-            "c1b115c375": "선택한 워크스페이스가 없습니다.",
-            "98e9a414f8": "브라우저를 열지 못했습니다.",
-            "a00f3a2840": "포트를 새로고침하지 못했습니다.",
-            "97b562d21d": ":{{value0}}에서 프로세스가 중지되었습니다.",
-            "9079776663": "저장",
             "c57eda6822": "편집",
-            "9f475dc994": "전달 중...",
-            "d7c83cfd24": "저장 중...",
-            "31e80cff2d": "원격 포트를 로컬 시스템으로 전달합니다.",
-            "10360598a4": "포트 전달 구성을 업데이트합니다.",
-            "80206251c8": "포트 전달 편집",
             "4bc9b00912": "워크스페이스",
-            "3e13cb63ee": "알려지지 않은",
-            "472054d94c": "포트 :{{value0}}",
             "1119f90ad7": "컨테이너",
-            "d32820d3e2": "외부",
-            "4db4b5e435": "기타 워크스페이스",
-            "38b16cfbef": "포트가 감지되지 않았습니다.",
-            "0d63d94db3": "스캐닝...",
-            "935dda7718": "활성 워크스페이스",
-            "740aca88ab": "워크스페이스 포트 스캔에 실패했습니다.",
-            "5be4f7f727": "포트 {{value0}} 메뉴",
-            "7550998473": "복사",
-            "1004af16ab": "{{value0}} 복사"
+            "7550998473": "복사"
           },
           "Search": {
             "1abfb25a66": "파일에서 검색하려면 입력하세요.",
@@ -10516,21 +9558,7 @@
           "gitlab": {
             "mr": {
               "merge": {
-                "state": {
-                  "04a3015a12": "병합 가능",
-                  "53c6d3b7e9": "GitLab에서는 이 MR이 병합될 수 있지만 파이프라인은 여전히 ​​실행 중이라고 말합니다.",
-                  "65c847ad1e": "검사 대기 중",
-                  "b41fbc180c": "GitLab에서는 이 MR이 병합될 수 있지만 일부 파이프라인 작업이 실패했다고 말합니다.",
-                  "49ac4fec10": "검사 실패",
-                  "22b7e50621": "GitLab이 병합 충돌을 보고합니다.",
-                  "96b05e374c": "충돌",
-                  "d63bb6f76e": "이 MR은 아직 초안입니다.",
-                  "b2715092c6": "초안",
-                  "2388413f28": "이 MR이 종료되었습니다.",
-                  "88d044c42f": "닫힘",
-                  "ee482a2bad": "이 MR은 이미 병합되었습니다.",
-                  "fae95ae20d": "병합됨"
-                }
+                "state": {}
               }
             }
           },
@@ -11317,18 +10345,7 @@
         "gitlab": {
           "rate": {
             "limit": {
-              "display": {
-                "ebc0e8ecf1": "GitLab API 예산 로드 중...",
-                "a2d3d1fdde": "GitLab API 예산을 사용할 수 없습니다.",
-                "a2f68645ac": "GitLab API 예산 새로 고침",
-                "2f9c16d6c3": "Orcinus는 GitLab CLI를 통해 REST를 사용합니다.",
-                "14e144f7a7": "GitLab API 예산",
-                "3e2c982cfa": "남음, 재설정까지",
-                "ea8ad0bae8": "/",
-                "0a891e8935": "REST API",
-                "953f7c6062": "이 GitLab 호스트는 속도 제한 헤더를 반환하지 않았습니다.",
-                "budget_scope_prefix": "예산 범위"
-              }
+              "display": {}
             }
           }
         }
@@ -12131,167 +11148,36 @@
       },
       "browser": {
         "pane": {
-          "BrowserFind": {
-            "c9d5f63fdc": "닫기",
-            "5c0c02ae76": "다음 일치 항목",
-            "ca7aebbd7f": "이전 일치 항목",
-            "636a69cd66": "페이지에서 찾기...",
-            "7baca7b1b8": "일치하는 항목 없음",
-            "fc63f336aa": "{{value1}} 중 {{value0}}"
-          },
-          "BrowserImportHintButton": {
-            "05e675fe96": "힌트 숨기기",
-            "77351d22f5": "브라우저 설정",
-            "e0e125e074": "파일에서…",
-            "0c6d254eca": "{{value0}}에서",
-            "244266c122": "가져오기…",
-            "e52a955e6f": "언제든지 설정 > 브라우저에서 찾을 수 있습니다.",
-            "4f5ffaa6a1": "브라우저 데이터 가져오기",
-            "b24fef25be": "가져오기",
-            "02e89014c5": "{{value1}}{{value2}}에서 {{value0}} 쿠키를 가져왔습니다.",
-            "d40d584769": "파일에서 {{value0}}개의 쿠키를 가져왔습니다."
-          },
-          "BrowserMobileDriverOverlay": {
-            "a6914ee43f": "제어권 가져오기",
-            "f4ecd61552": "이 탭은 휴대전화에서 제어되고 있습니다. 데스크톱에서 사용하려면 다시 가져가세요.",
-            "d9768ec642": "브라우저 입력이 일시중지되었습니다.",
-            "20539eca03": "휴대폰에서 이 브라우저를 제어 중입니다."
-          },
+          "BrowserFind": {},
+          "BrowserImportHintButton": {},
+          "BrowserMobileDriverOverlay": {},
           "BrowserPane": {
-            "1ded0d3168": "스크린샷 복사",
-            "f30d2d35a7": "스크린샷 완료",
-            "fa6ea61de3": "취소",
-            "c2ef0359b9": "내용 복사",
-            "f2d0c22d67": "주석 {{value0}} 삭제",
-            "11c5084aa2": "주석 지우기",
-            "734e4343ec": "브라우저 주석 지우기",
-            "95af781091": "agent에게 피드백 보내기",
-            "ac39b9366b": "보내기",
             "a3508d7e6e": "{{value0}} 주석{{value1}}이 준비되었습니다. 다른 요소를 선택하거나 모든 피드백을 복사하세요.",
-            "f796c774a4": "탐색을 시작하려면 위에 URL을 입력하세요.",
-            "366bf5d62c": "새 탭",
             "1c78adc73d": "외부에서 열기",
             "da68d35f7b": "기본 브라우저에서 실패한 페이지 열기",
             "93be92f8d1": "주소 복사",
             "3c085f638d": "실패한 페이지 URL 복사",
             "c6be71329e": "새로고침",
-            "781d6459ad": "다시 시도",
-            "2fdca7df09": "닫기",
             "8b6fab9ffa": "저장",
-            "0f41bf80c7": "기본 브라우저에서 열기",
-            "ec75d0c412": "브라우저 개발자 도구 열기",
-            "fc9be38f6f": "페이지 요소에 주석 달기",
-            "fdfc7fe0ef": "페이지 요소 가져오기",
-            "a8f37f70c3": "페이지 검사",
-            "1b179ab561": "페이지 URL 복사",
-            "f7ab83f7ed": "기본 브라우저에서 페이지 열기",
-            "0e080d820e": "새로고침",
-            "a1f3c2e4b5": "강제 새로고침",
-            "b7e4d9c1a2": "중지",
-            "250a9b3e42": "앞으로",
-            "40edfa75cb": "뒤로",
-            "efb0e8f7f3": "링크 주소 복사",
-            "8ce4f6b12e": "기본 브라우저에서 링크 열기",
-            "b5b87d6cbb": "Orcinus 브라우저에서 링크 열기",
-            "87eb75f7d2": "유효한 http(s) 또는 localhost URL을 입력하세요.",
-            "27d863542c": "브라우저 주석",
-            "e48569ac6d": "이 사이트에 접속할 수 없습니다.",
-            "bbe8f15e83": "이 분할창은 활성 런타임 서버에서 렌더링됩니다.",
-            "8b7e6d1f5a": "브라우저 주석은 로컬 브라우저 탭에서만 사용할 수 있습니다.",
-            "deb5293610": "원격 런타임에서는 브라우저 주석을 사용할 수 없습니다.",
-            "90d021f2ad": "추가",
-            "0cb3bd6221": "주석 의도",
-            "8f87e6c2e5": "의도",
-            "532bac48c5": "여기에서 agent가 무엇을 변경해야 하는지 설명하세요...",
-            "d2a7092e6e": "주석 코멘트",
-            "b472c5fe03": "브라우저 주석 추가",
-            "b5ba6085de": "질문",
-            "143204e423": "변경",
             "e7ca5a098c": "성공",
-            "d51ef37351": "복사",
-            "6f4ab3592b": "복사됨",
             "b2856516e2": "이 페이지를 로드할 수 없습니다.",
             "db325a7eeb": "{{value0}}에 연결할 수 없습니다.",
-            "499b31b84e": "모두 복사",
             "e72dfa268a": "주석 추가",
-            "168350ae6a": "요소를 클릭하거나 마우스로 가리킨 다음 C를 눌러 복사하거나 S를 눌러 스크린샷을 찍습니다.",
-            "e852e20cea": "복사됨 - S를 눌러 스크린샷을 찍거나 다른 요소를 선택하세요.",
             "a5dcd0fd1d": "확인 중",
-            "777b5bc4ec": "agent에게 보낼 피드백을 추가하려면 요소를 클릭하세요.",
-            "b733a91bd9": "선택한 요소에 대한 피드백을 추가합니다.",
-            "4328a0a062": "가져오기 실패: {{value0}}",
             "26615e116b": "오류",
             "8aec5bc044": "idle",
-            "759f32af29": "다운로드 중",
             "c8bc7f1f9e": "요청됨",
-            "4300f38145": "{{value0}}{{value1}}에서 다운로드 중",
             "31375046b7": "{{value0}}에서 다운로드",
-            "acbe79fd01": "페이지 요소 가져오기({{value0}})",
-            "572046436a": "원격 브라우저",
-            "b313a7275b": "원격 브라우저 열기",
-            "5f66313863": "주석",
-            "ea6af700da": "{{value0}}개 주석",
-            "c13693fe27": "{{value0}}개 주석",
-            "074f0ed10b": "{{value0}}개 주석이 준비되었습니다. 다른 요소를 선택하거나 모든 피드백을 복사하세요.",
-            "a2164a6e5a": "{{value0}}개 주석이 준비되었습니다. 다른 요소를 선택하거나 모든 피드백을 복사하세요.",
-            "9f6f2e8c19": "다운로드한 파일 경로를 사용할 수 없습니다.",
-            "0c79b7634d": "다운로드한 파일을 열 수 없습니다. 파일이 이동되었거나 삭제되었을 수 있습니다.",
-            "397d9dc923": "다운로드한 파일을 표시할 수 없습니다. 파일이 이동되었거나 삭제되었을 수 있습니다.",
-            "39c04fed61": "Downloading paused",
-            "5c3d530a68": "Downloaded",
-            "4bb7424d6b": "Canceled",
-            "6e776f9ef9": "Download failed",
-            "756bfc25c9": "열기",
-            "09a9489aa5": "표시",
-            "2a4c4b8e1f": "복사"
+            "5f66313863": "주석"
           },
           "BrowserToolbarMenu": {
-            "429ef481f9": "취소",
-            "64f448fb6e": "프로필 이름",
-            "67e9b9fcd6": "새 브라우저 프로필",
-            "58f2c81542": "전환",
-            "a38f217b46": "프로필을 전환하면 이 페이지가 다시 로드됩니다. 저장하지 않은 양식 데이터는 모두 손실됩니다.",
-            "fe683eb3b4": "프로필 전환",
-            "a771c2b6c8": "브라우저 설정…",
-            "ed8f54509d": "기본",
-            "e5d31de1a9": "뷰포트 크기",
-            "56f94f4ffa": "파일에서…",
-            "eb280bfb11": "{{value0}}에서",
-            "2293adf620": "쿠키 가져오기",
-            "cf7cdc67ef": "새 프로필…",
-            "7b838540c7": "브라우저 메뉴",
-            "6aa42813e4": "{{value1}}{{value2}}에서 {{value0}} 쿠키를 가져왔습니다.",
-            "a7a86702b3": "{{value0}} 프로필을 만들고 전환했습니다.",
-            "4d2f9f13a7": "프로필을 생성하지 못했습니다.",
-            "3ccd29d771": "{{value0}} 프로필로 전환됨",
-            "569bce8eb1": "생성",
-            "bf648471c5": "만드는 중…",
-            "53bbe3dab4": "파일에서 {{value0}}개의 쿠키를 가져왔습니다.",
-            "c5f0e4d3b2a1": "{{value1}} ({{value2}})에서 {{value0}}개의 쿠키를 가져왔습니다.",
-            "d6a1f5e4c3b2": "{{value1}}에서 {{value0}}개의 쿠키를 가져왔습니다."
+            "6aa42813e4": "{{value1}}{{value2}}에서 {{value0}} 쿠키를 가져왔습니다."
           },
-          "GrabConfirmationSheet": {
-            "314a0aaa5b": "AI에 연결",
-            "7095e98362": "스크린샷 복사",
-            "26fd87f4df": "복사",
-            "87d97bdd6d": "취소",
-            "effd75e330": "주변 컨텍스트",
-            "7d1480fbf1": "HTML",
-            "9098b118ab": "페이지",
-            "eb98a0971a": "\"",
-            "d053db279d": "역할=",
-            "a759d8f866": "선택된 요소",
-            "9c6ce0632a": "선택한 요소 스크린샷",
-            "50f7114f99": "첨부하기 전에 리뷰하세요. 캡처된 페이지 컨텍스트에는 눈에 보이는 사이트 콘텐츠가 포함될 수 있습니다.",
-            "f3575229df": "가져오기",
-            "405bb315da": "제목 없음"
-          },
+          "GrabConfirmationSheet": {},
           "browser": {
             "address": {
               "bar": {
-                "suggestions": {
-                  "87fcdd0da9": "{{value0}} 검색"
-                }
+                "suggestions": {}
               }
             }
           }
@@ -12744,38 +11630,7 @@
       },
       "jira": {
         "connect": {
-          "dialog": {
-            "63ce735809": "연결",
-            "4a2ab52781": "확인 중…",
-            "79e7aaed39": "취소",
-            "fdd26d81cc": "Atlassian 계정 설정",
-            "8090504a3e": "다음에서 토큰 생성:",
-            "7b3967c12f": "Atlassian API 토큰",
-            "3d81bf3ab3": "API 토큰",
-            "e91b9a4073": "you@example.com",
-            "2849ddb295": "Atlassian 이메일",
-            "70fcd360c4": "https://example.atlassian.net",
-            "e176f9d0c5": "Jira Cloud 사이트 URL",
-            "d785c42b8b": "Jira Cloud 사이트 URL, Atlassian 이메일, API 토큰을 사용해 이슈를 탐색합니다.",
-            "8388bdea2b": "Jira 사이트 연결",
-            "2e2b69e48e": "자체 호스팅 Jira 기본 URL과 개인 액세스 토큰으로 이슈를 탐색하세요.",
-            "b67e919bd5": "Jira 인스턴스 유형",
-            "17787d6e4b": "Atlassian Cloud",
-            "bc7a831773": "Self-hosted",
-            "3489e186d6": "Jira 사이트 URL",
-            "cbc27fa599": "https://jira.example.com",
-            "730d973bae": "개인 액세스 토큰",
-            "8b9c7b9e7b": "Jira 개인 액세스 토큰",
-            "ccfb086d3e": "Jira 프로필의 개인 액세스 토큰 메뉴에서 개인 액세스 토큰을 생성하세요.",
-            "1d947a07ab": "자체 호스팅 Jira 기본 URL, 사용자 이름, 비밀번호로 이슈를 탐색하세요.",
-            "f49708c369": "Jira 인증 방법",
-            "84a810dd0e": "Username & password",
-            "8d1223fa5c": "Username",
-            "be9eba0a1b": "username",
-            "70035652d7": "Password",
-            "c50abbf340": "Jira 계정 비밀번호",
-            "d8737db691": "Jira Server 또는 Data Center 계정의 사용자 이름과 비밀번호를 사용하세요."
-          }
+          "dialog": {}
         }
       },
       "rightSidebar": {
@@ -12847,35 +11702,15 @@
         "routing": {
           "preference": {
             "dialog": {
-              "badge": "Terminal 링크",
-              "preview": "미리보기",
-              "title": "terminal 링크를 Orcinus 브라우저에서 열까요?",
-              "description": "terminal 링크를 Orcinus 브라우저에서 열거나 시스템 브라우저를 계속 사용합니다.",
-              "orca": {
-                "button": "Orcinus에서 열기",
-                "note": "Orcinus는 가져온 쿠키를 사용해 로그인된 사이트를 열 수 있습니다."
-              },
-              "settings": {
-                "note": "나중에 설정 → 브라우저에서 변경할 수 있습니다."
-              },
-              "system": {
-                "button": "시스템 브라우저 사용"
-              },
-              "link": {
-                "label": "링크"
-              },
+              "orca": {},
+              "settings": {},
+              "system": {},
+              "link": {},
               "shortcut": {
-                "note": {
-                  "prefix": "링크가 Orcinus에서 열릴 때,",
-                  "suffix": "클릭하면 한 번만 시스템 브라우저에서 열립니다."
-                }
+                "note": {}
               },
               "keep": {
-                "title": "terminal 링크를 Orcinus 브라우저에서 계속 열까요?",
-                "description": "또는 시스템 브라우저를 기본값으로 사용합니다.",
-                "orca": {
-                  "button": "Orcinus에서 계속 열기"
-                }
+                "orca": {}
               }
             }
           }
@@ -12917,18 +11752,7 @@
       },
       "star": {
         "nag": {
-          "StarNagToastHost": {
-            "starredThanks": "별표를 눌러주셔서 감사합니다!",
-            "githubOpened": "GitHub 열림",
-            "opening": "여는 중…",
-            "starring": "별표 누르는 중…",
-            "openGithub": "GitHub 열기",
-            "starOnGithub": "GitHub에서 별표 누르기",
-            "onboardingCompleted": "온보딩 완료!",
-            "body": "Orcinus가 마음에 드신다면 GitHub 별표가 다른 개발자가 Orcinus를 발견하는 데 도움이 됩니다.",
-            "dismiss": "닫기",
-            "later": "Later"
-          }
+          "StarNagToastHost": {}
         }
       },
       "orca": {
@@ -12944,64 +11768,14 @@
         }
       },
       "linear-issue-attribute-filter-dropdowns": {
-        "removeFilter": "{{value0}} 필터 제거",
-        "teamRequired": "이 워크트리의 상태, 담당자, 레이블을 로드하려면 팀을 선택하세요.",
-        "filters": "필터",
-        "allWorkspacesTitle": "워크트리 선택",
-        "allWorkspacesBody": "상태, 담당자, 레이블 필터는 단일 Linear �크트리의 ID를 사용합니다. 필터링할 워크트리를 선택하세요.",
-        "optionsFromTeam": "{{team}}의 옵션",
-        "clearAll": "모든 필터 지우기"
+        "optionsFromTeam": "{{team}}의 옵션"
       },
-      "linear-issue-attribute-filter-sections": {
-        "status": "상태",
-        "priority": "우선순위",
-        "assignee": "담당자",
-        "unassigned": "미배정",
-        "labels": "레이블",
-        "countSelected": "{{count}}개 선택됨",
-        "selected": "선택됨",
-        "searchPriority": "우선순위 필터…",
-        "searchStatus": "상태 필터…",
-        "searchLabels": "레이블 필터…",
-        "searchAssignee": "담당자 필터…",
-        "back": "뒤로"
-      },
+      "linear-issue-attribute-filter-sections": {},
       "browser-pane": {
         "markup": {
-          "cancel": "취소",
-          "clear": "모두 지우기",
-          "copiedToast": "마크업을 복사했습니다 — 에이전트에 붙여넣으세요 ({{value0}})",
-          "copy": "마크업 복사",
-          "drawButton": "스크린샷에 그리기",
-          "drawHint": "페이지에 그린 다음 마크업을 복사해 에이전트에 붙여넣으세요.",
-          "drawHintBadge": "새 기능",
-          "drawHintDismiss": "확인",
-          "drawHintTry": "사용해 보기",
-          "errorAttach": "마크업 스크린샷을 첨부하지 못했습니다.",
-          "errorCapture": "그릴 페이지를 캡처하지 못했습니다.",
-          "errorUnavailable": "이 페이지에서는 스크린샷 마크업을 사용할 수 없습니다.",
-          "fontSize": "글자 크기",
-          "hint": "페이지에 그린 다음 마크업을 복사해 에이전트에 붙여넣으세요.",
-          "redo": "다시 실행",
-          "style": "색상 및 두께",
-          "textInput": "주석 텍스트",
-          "tool": {
-            "arrow": "화살표",
-            "ellipse": "타원",
-            "highlight": "형광펜",
-            "pen": "펜",
-            "rect": "사각형",
-            "text": "텍스트"
-          },
-          "undo": "실행 취소",
-          "widthOption": "{{value0}} px"
+          "tool": {}
         },
-        "grab": {
-          "errorNotReady": "이 페이지에서는 아직 요소를 선택할 수 없습니다.",
-          "errorNotAuthorized": "브라우저 접근이 거부되었습니다.",
-          "errorAlreadyActive": "요소 선택이 이미 활성화되어 있습니다.",
-          "errorInjectionFailed": "이 페이지에서 요소 선택을 시작할 수 없습니다."
-        }
+        "grab": {}
       },
       "pluginCatalog": {
         "PluginCatalogLayout": {
@@ -13042,16 +11816,7 @@
     },
     "i18n": {
       "hostedReview": {
-        "copy": {
-          "f0a4b8c2d1": "PR",
-          "e9f3a7b1c0": "PR",
-          "d8e2f6a0b9": "PR",
-          "c7d1e5f9a8": "GitHub",
-          "c4e8f1a2b9": "MR",
-          "b3d7e0f1a8": "MR",
-          "a2c6d9e0f7": "머지 리퀘스트",
-          "91b5c8d7e6": "GitLab"
-        }
+        "copy": {}
       }
     },
     "runtime": {
@@ -13069,19 +11834,10 @@
       "webRuntimeSession": {
         "remoteHostDisconnected": "The workspace is not connected to a remote Orcinus host."
       },
-      "gitlabJobTraceClient": {
-        "loadFailed": "GitLab 작업 로그를 불러오지 못했습니다.",
-        "emptyTrace": "이 GitLab 작업의 로그를 사용할 수 없습니다.",
-        "timedOut": "GitLab 작업 로그를 불러오는 중 시간이 초과되었습니다."
-      }
+      "gitlabJobTraceClient": {}
     },
     "ssh": {
-      "sshConnectVerb": {
-        "connect": "연결",
-        "connecting": "연결 중…",
-        "reconnect": "다시 연결",
-        "retry": "재시도"
-      }
+      "sshConnectVerb": {}
     },
     "main": {
       "window": {
@@ -13139,10 +11895,7 @@
         "SortableTabContextMenu": {
           "closeTabsToLeft": "왼쪽으로 탭 닫기"
         },
-        "BrowserTab": {
-          "closeOthers": "다른 탭 닫기",
-          "closeTabsToLeft": "왼쪽으로 탭 닫기"
-        },
+        "BrowserTab": {},
         "EditorFileTabContextMenu": {
           "closeOthers": "다른 탭 닫기",
           "closeTabsToLeft": "왼쪽으로 탭 닫기"
@@ -13216,7 +11969,6 @@
           "reviewAlphaCleanup": "알파 정리 검토"
         },
         "presentation": {
-          "gitlabMergeRequestNumber": "MR #{{value0}}",
           "githubPullRequestNumber": "PR #{{value0}}"
         }
       }
@@ -13262,27 +12014,7 @@
     }
   },
   "browser": {
-    "loadFailure": {
-      "connectionNotSecure": "연결이 안전하지 않습니다",
-      "cantReachHost": "{{value0}}에 연결할 수 없습니다",
-      "cantLoadPage": "이 페이지를 불러올 수 없습니다",
-      "certificateNameMismatch": "인증서가 {{value0}}과(와) 일치하지 않습니다.",
-      "certificateDateInvalid": "{{value0}}의 인증서가 현재 날짜와 시간에는 유효하지 않습니다.",
-      "certificateAuthorityInvalid": "Orcinus는 {{value0}}의 인증서를 발급한 인증 기관을 신뢰하지 않습니다.",
-      "certificateVerificationFailed": "Orcinus가 {{value0}}의 인증서를 확인하지 못했습니다.",
-      "trustedCertificateGuidance": "로컬 개발에서는 가능하면 신뢰할 수 있는 로컬 인증서를 사용하세요.",
-      "retry": "다시 시도",
-      "copyAddress": "주소 복사",
-      "addressCopied": "현재 페이지 주소를 복사했습니다.",
-      "openExternally": "외부에서 열기",
-      "tryHttps": "HTTPS로 시도",
-      "proceedUnsafe": "계속(안전하지 않음)",
-      "connecting": "연결 중…",
-      "certificateChallengeExpired": "이 인증서 승인이 만료되었습니다. 페이지를 다시 시도해 새로 요청하세요.",
-      "certificateChallengeChanged": "인증서 요청이 변경되었습니다. 페이지를 다시 시도하고 새 경고를 확인하세요.",
-      "certificateChallengeUnavailable": "이 인증서 요청은 더 이상 사용할 수 없습니다. 페이지를 다시 시도해 새로 요청하세요.",
-      "certificateProceedFailed": "Orcinus가 이 인증서 요청을 승인하지 못했습니다. 페이지를 다시 시도한 후 다시 요청하세요."
-    }
+    "loadFailure": {}
   },
   "runtimeRpc": {
     "startupFailure": {

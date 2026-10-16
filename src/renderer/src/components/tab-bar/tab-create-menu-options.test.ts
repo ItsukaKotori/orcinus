@@ -14,24 +14,19 @@ afterEach(() => {
 describe('tab create menu options', () => {
   const defaultOptions = buildTabCreateMenuOptions({
     terminalOnly: false,
-    hasNewBrowser: true,
     hasNewMarkdown: true,
     hasOpenMarkdown: true
   })
 
-  it('matches terminal and browser quick actions', () => {
+  it('matches terminal quick actions', () => {
     expect(
       findMatchingTabCreateMenuOptions('new terminal', defaultOptions).map((option) => option.kind)
     ).toEqual(['new-terminal'])
-    expect(
-      findMatchingTabCreateMenuOptions('browser', defaultOptions).map((option) => option.kind)
-    ).toEqual(['new-browser'])
   })
 
   it('keeps terminal and markdown results when client-impossible actions are omitted', () => {
     const options = buildTabCreateMenuOptions({
       terminalOnly: false,
-      hasNewBrowser: false,
       hasNewMarkdown: true,
       hasOpenMarkdown: true
     })
@@ -41,13 +36,11 @@ describe('tab create menu options', () => {
       'new-markdown',
       'open-markdown'
     ])
-    expect(findMatchingTabCreateMenuOptions('browser', options)).toEqual([])
   })
 
   it('preserves default Windows shell order for tied terminal matches', () => {
     const options = buildTabCreateMenuOptions({
       terminalOnly: false,
-      hasNewBrowser: false,
       hasNewMarkdown: false,
       hasOpenMarkdown: false,
       windowsShellEntries: [

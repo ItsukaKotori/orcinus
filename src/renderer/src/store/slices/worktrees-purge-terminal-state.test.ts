@@ -182,9 +182,6 @@ describe('purgeWorktreeTerminalState direct (design §4.4)', () => {
           { id: 'floating-terminal-tab', worktreeId: FLOATING_TERMINAL_WORKTREE_ID }
         ]
       },
-      browserTabsByWorktree: {
-        [FLOATING_TERMINAL_WORKTREE_ID]: [{ id: 'floating-browser', url: 'https://orca.test' }]
-      },
       openFiles: [
         floatingFile,
         {
@@ -236,9 +233,6 @@ describe('purgeWorktreeTerminalState direct (design §4.4)', () => {
         { id: 'floating-terminal-tab', worktreeId: FLOATING_TERMINAL_WORKTREE_ID }
       ]
     })
-    expect(store.getState().browserTabsByWorktree[FLOATING_TERMINAL_WORKTREE_ID]).toEqual([
-      { id: 'floating-browser', url: 'https://orca.test' }
-    ])
     expect(store.getState().openFiles).toEqual([floatingFile])
     expect(store.getState().activeFileIdByWorktree).toEqual({
       [FLOATING_TERMINAL_WORKTREE_ID]: 'floating-file'
@@ -254,9 +248,6 @@ describe('purgeWorktreeTerminalState direct (design §4.4)', () => {
   it('is a no-op when only the floating workspace sentinel is passed', () => {
     const store = createTestStore()
     const tabsByWorktree = {}
-    const browserTabsByWorktree = {
-      [FLOATING_TERMINAL_WORKTREE_ID]: [{ id: 'floating-browser', url: 'https://orca.test' }]
-    }
     const openFiles = [
       {
         id: 'floating-file',
@@ -294,7 +285,6 @@ describe('purgeWorktreeTerminalState direct (design §4.4)', () => {
 
     store.setState({
       tabsByWorktree,
-      browserTabsByWorktree,
       openFiles,
       activeFileIdByWorktree: { [FLOATING_TERMINAL_WORKTREE_ID]: 'floating-file' },
       unifiedTabsByWorktree,
@@ -305,7 +295,6 @@ describe('purgeWorktreeTerminalState direct (design §4.4)', () => {
     store.getState().purgeWorktreeTerminalState([FLOATING_TERMINAL_WORKTREE_ID])
 
     expect(store.getState().tabsByWorktree).toBe(tabsByWorktree)
-    expect(store.getState().browserTabsByWorktree).toBe(browserTabsByWorktree)
     expect(store.getState().openFiles).toBe(openFiles)
     expect(store.getState().unifiedTabsByWorktree).toBe(unifiedTabsByWorktree)
     expect(store.getState().groupsByWorktree).toBe(groupsByWorktree)

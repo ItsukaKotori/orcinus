@@ -48,13 +48,13 @@ const repoMap = new Map<string, Repo>([
   ]
 ])
 
-function gitLabReview(overrides: Partial<HostedReviewInfo> = {}): HostedReviewInfo {
+function bitbucketReview(overrides: Partial<HostedReviewInfo> = {}): HostedReviewInfo {
   return {
-    provider: 'gitlab',
+    provider: 'bitbucket',
     number: 17,
     title: 'Reuse checks tab review metadata',
     state: 'open',
-    url: 'https://gitlab.com/acme/orca/-/merge_requests/17',
+    url: 'https://bitbucket.org/acme/orca/pull-requests/17',
     status: 'success',
     updatedAt: '2026-07-12T00:00:00Z',
     mergeable: 'MERGEABLE',
@@ -242,42 +242,16 @@ describe('worktree-palette-search', () => {
     })
   })
 
-  it('matches the GitLab review title and number already selected by Checks', () => {
-    const worktree = makeWorktree()
-    const checksReviewByWorktree = new Map([[worktree, gitLabReview()]])
-
-    const titleResults = searchWorktrees([worktree], 'checks tab', repoMap, {
-      checksReviewByWorktree
-    })
-    const numberResults = searchWorktrees([worktree], '!17', repoMap, { checksReviewByWorktree })
-
-    expect(titleResults[0].supportingText).toEqual({
-      labelKind: 'mr',
-      text: '!17 · Reuse checks tab review metadata',
-      matchRanges: [
-        { start: 12, end: 18 },
-        { start: 19, end: 22 }
-      ],
-      accessibilityLabel: 'Merge request'
-    })
-    expect(numberResults[0].supportingText).toEqual({
-      labelKind: 'mr',
-      text: '!17 · Reuse checks tab review metadata',
-      matchRanges: [{ start: 0, end: 3 }],
-      accessibilityLabel: 'Merge request'
-    })
-  })
-
   it('matches a review number only exactly, not as an incidental substring', () => {
     const worktree = makeWorktree()
     const checksReviewByWorktree = new Map([
-      [worktree, gitLabReview({ number: 4123, title: 'Fix reconnect' })]
+      [worktree, bitbucketReview({ number: 4123, title: 'Fix reconnect' })]
     ])
 
-    expect(searchWorktrees([worktree], '!4123', repoMap, { checksReviewByWorktree })).toHaveLength(
+    expect(searchWorktrees([worktree], '4123', repoMap, { checksReviewByWorktree })).toHaveLength(
       1
     )
-    expect(searchWorktrees([worktree], '!123', repoMap, { checksReviewByWorktree })).toEqual([])
+    expect(searchWorktrees([worktree], '123', repoMap, { checksReviewByWorktree })).toEqual([])
   })
 
   it('does not search stale GitHub cache metadata when Checks selected another review', () => {
@@ -286,7 +260,7 @@ describe('worktree-palette-search', () => {
       linkedPR: 99
     })
     const checksReviewByWorktree = new Map([
-      [staleWorktree, gitLabReview({ title: 'Current merge request' })]
+      [staleWorktree, bitbucketReview({ title: 'Current pull request' })]
     ])
     const prCache = {
       '/repo/orca::feature/palette-refresh': { data: { number: 99, title: 'Stale GitHub title' } }
@@ -308,7 +282,7 @@ describe('worktree-palette-search', () => {
     const staleWorktree = makeWorktree({
       branch: 'refs/heads/feature/palette-refresh',
       linkedPR: 99,
-      linkedGitLabMR: 17
+      linkedBitbucketPR: 17
     })
     const checksReviewByWorktree = new Map<Worktree, HostedReviewInfo | null>([
       [staleWorktree, null]
@@ -328,41 +302,25 @@ describe('worktree-palette-search', () => {
   it('keeps review matches isolated between worktrees on different hosts', () => {
     const localWorktree = makeWorktree({ id: 'repo-1::/local/wt', hostId: 'local' })
     const sshWorktree = makeWorktree({ id: 'repo-1-ssh::/remote/wt', hostId: 'ssh:staging' })
-    const review = gitLabReview({ title: 'Remote-only merge request' })
+    const review = bitbucketReview({ title: 'Remote-only pull request' })
 
     const results = searchWorktrees([localWorktree, sshWorktree], 'remote-only', repoMap, {
       checksReviewByWorktree: new Map([[sshWorktree, review]])
     })
 
     expect(results).toHaveLength(1)
-    expect(results[0].supportingText?.text).toBe('!17 · Remote-only merge request')
+    expect(results[0].supportingText?.text).toBe('#17 · Remote-only pull request')
   })
 
-  it('scopes PR and MR number sigils to their providers', () => {
-    const gitHubWorktree = makeWorktree()
-    const gitHubReview = gitLabReview({
-      provider: 'github',
-      number: 42,
-      title: 'GitHub pull request',
-      url: 'https://github.com/acme/orca/pull/42'
-    })
-    const gitLabWorktree = makeWorktree()
+  it('matches PR numbers through the # sigil only', () => {
+    const worktree = makeWorktree()
+    const checksReviewByWorktree = new Map([[worktree, bitbucketReview()]])
 
     expect(
-      searchWorktrees([gitHubWorktree], '!42', repoMap, {
-        checksReviewByWorktree: new Map([[gitHubWorktree, gitHubReview]])
-      })
-    ).toEqual([])
-    expect(
-      searchWorktrees([gitLabWorktree], '#17', repoMap, {
-        checksReviewByWorktree: new Map([[gitLabWorktree, gitLabReview()]])
-      })
-    ).toEqual([])
-    expect(
-      searchWorktrees([makeWorktree({ linkedIssue: 42 })], '!42', repoMap, {
-        workspacePortsByWorktreeId: new Map([['wt-1', [{ port: 42 }]]])
-      })
-    ).toEqual([])
+      searchWorktrees([worktree], '#17', repoMap, { checksReviewByWorktree })
+    ).toHaveLength(1)
+    expect(searchWorktrees([worktree], '!17', repoMap, { checksReviewByWorktree })).toEqual([])
+    expect(searchWorktrees([makeWorktree({ linkedIssue: 42 })], '!42', repoMap)).toEqual([])
   })
 
   it('preserves input order when query matches a repo name', () => {
@@ -504,47 +462,5 @@ describe('worktree-palette-search', () => {
     expect(results.map((result) => result.worktreeId)).toEqual(['wt-pr'])
   })
 
-  it('matches a pasted Linear issue URL to the linked worktree', () => {
-    const results = searchWorktrees(
-      [
-        makeWorktree({
-          id: 'wt-linear',
-          linkedLinearIssue: 'STA-4052',
-          linkedLinearIssueOrganizationUrlKey: 'stably'
-        }),
-        makeWorktree({ id: 'wt-name', displayName: 'linear.app' })
-      ],
-      'https://linear.app/stably/issue/STA-4052/agent-terminals-disappearing-randomly',
-      repoMap
-    )
 
-    expect(results.map((result) => result.worktreeId)).toEqual(['wt-linear'])
-  })
-
-  it('promotes an exact sigilled issue number above an ordinary port number', () => {
-    const results = searchWorktrees(
-      [makeWorktree({ id: 'wt-port', linkedIssue: 3000 })],
-      '3000',
-      repoMap,
-      { workspacePortsByWorktreeId: new Map([['wt-port', [{ port: 3000, processName: 'vite' }]]]) }
-    )
-
-    expect(results).toHaveLength(1)
-    expect(results[0].matchedFields).toEqual(['issue'])
-    expect(results[0].supportingText).toEqual({
-      labelKind: 'issue',
-      text: '#3000',
-      matchRanges: [{ start: 1, end: 5 }],
-      accessibilityLabel: 'Linked issue'
-    })
-  })
-
-  it('still prefix-matches port numbers, unlike review numbers', () => {
-    const worktree = makeWorktree({ id: 'wt-port' })
-    const workspacePortsByWorktreeId = new Map([['wt-port', [{ port: 3000 }]]])
-
-    expect(
-      searchWorktrees([worktree], '300', repoMap, { workspacePortsByWorktreeId })
-    ).toHaveLength(1)
-  })
 })

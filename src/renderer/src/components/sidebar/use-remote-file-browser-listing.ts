@@ -17,7 +17,6 @@ export type RemoteFileBrowserListing = {
 }
 
 export function useRemoteFileBrowserListing(
-  targetId: string | undefined,
   runtimeEnvironmentId: string | undefined
 ): RemoteFileBrowserListing {
   // Per-picker listing cache keyed by resolved path, so typing issues at most one remote call per committed segment.
@@ -31,20 +30,18 @@ export function useRemoteFileBrowserListing(
       if (cached) {
         return cached
       }
-      const result = targetId
-        ? await window.api.ssh.browseDir({ targetId, dirPath })
-        : await browseRuntimeServerDirectory(
-            requireRuntimeEnvironmentId(runtimeEnvironmentId),
-            dirPath
-          )
+      const result = await browseRuntimeServerDirectory(
+        requireRuntimeEnvironmentId(runtimeEnvironmentId),
+        dirPath
+      )
       listingCacheRef.current.set(result.resolvedPath, result)
-      // Also key by the requested dirPath (e.g. `~`, relative) so an identical request doesn't re-hit the SSH backend.
+      // Also key by the requested dirPath (e.g. `~`, relative) so an identical request doesn't re-hit the backend.
       if (dirPath !== result.resolvedPath) {
         listingCacheRef.current.set(dirPath, result)
       }
       return result
     },
-    [runtimeEnvironmentId, targetId]
+    [runtimeEnvironmentId]
   )
 
   return { fetchListing, homePathRef }

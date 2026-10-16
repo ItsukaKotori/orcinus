@@ -80,19 +80,6 @@ export function activateTabNumberShortcut(index: number): boolean {
     return true
   }
 
-  if (target.contentType === 'browser') {
-    if (isWebRuntimeSessionActive(runtimeEnvironmentId)) {
-      void activateWebRuntimeSessionTab({
-        worktreeId,
-        tabId: target.id,
-        environmentId: runtimeEnvironmentId
-      })
-    }
-    store.setActiveBrowserTab(target.entityId)
-    store.setActiveTabType('browser')
-    return true
-  }
-
   if (target.contentType === 'plugin') {
     // Self-backed like agent sessions: activateTab above already moved the
     // group's active tab; only the visible type has to follow.

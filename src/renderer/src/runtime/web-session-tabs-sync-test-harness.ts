@@ -38,8 +38,6 @@ export function makeState(
   overrides: Partial<WebSessionTabsSyncState> = {}
 ): WebSessionTabsSyncState {
   return {
-    activeBrowserTabId: null,
-    activeBrowserTabIdByWorktree: {},
     activeFileId: null,
     activeFileIdByWorktree: {},
     activeGroupIdByWorktree: {},
@@ -50,14 +48,10 @@ export function makeState(
     activeWorktreeId: WT,
     agentStatusByPaneKey: {},
     agentStatusEpoch: 0,
-    browserCertificateFailuresByPageId: {},
-    browserPagesByWorkspace: {},
-    browserTabsByWorktree: {},
     groupsByWorktree: {},
     layoutByWorktree: {},
     openFiles: [],
     ptyIdsByTabId: {},
-    remoteBrowserPageHandlesByPageId: {},
     tabBarOrderByWorktree: {},
     tabsByWorktree: {},
     terminalLayoutsByTabId: {},

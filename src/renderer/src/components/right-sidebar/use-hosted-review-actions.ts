@@ -33,7 +33,6 @@ export function useHostedReviewActions({
   review,
   githubPR,
   repo,
-  isGitLab,
   shortLabel,
   reviewLabel,
   defaultMergeMethod,
@@ -43,7 +42,6 @@ export function useHostedReviewActions({
   review: HostedReviewActionInfo
   githubPR?: PRInfo | null
   repo: Repo
-  isGitLab: boolean
   shortLabel: string
   reviewLabel: string
   defaultMergeMethod: GitHubPRMergeMethod
@@ -68,7 +66,6 @@ export function useHostedReviewActions({
     reviewNumber: review.number,
     githubPR,
     repo,
-    isGitLab,
     shortLabel,
     reviewLabel,
     onRefreshReview,
@@ -77,7 +74,7 @@ export function useHostedReviewActions({
 
   const handleMerge = useCallback(
     async (method: GitHubPRMergeMethod = defaultMergeMethod) => {
-      if (!isGitLab && githubPR?.stack) {
+      if (githubPR?.stack) {
         const usesMergeQueue =
           review.mergeQueueRequired === true || githubPR.mergeQueueRequired === true
         const confirmed = await confirm(
@@ -95,19 +92,12 @@ export function useHostedReviewActions({
       setMerging(true)
       setActionError(null)
       try {
-        const result = isGitLab
-          ? await window.api.gl.mergeMR({
-              repoPath: repo.path,
-              repoId: repo.id,
-              iid: review.number,
-              method
-            })
-          : await mergeGitHubHostedReview({
-              repo,
-              prNumber: review.number,
-              method,
-              prRepo: githubPR?.prRepo ?? null
-            })
+        const result = await mergeGitHubHostedReview({
+          repo,
+          prNumber: review.number,
+          method,
+          prRepo: githubPR?.prRepo ?? null
+        })
         if (!result.ok) {
           setActionError(result.error)
         } else {
@@ -124,7 +114,6 @@ export function useHostedReviewActions({
       githubPR?.prRepo,
       githubPR?.mergeQueueRequired,
       githubPR?.stack,
-      isGitLab,
       defaultMergeMethod,
       onRefreshReview,
       repo,
@@ -134,7 +123,7 @@ export function useHostedReviewActions({
   )
 
   const handleAutoMerge = useCallback(async () => {
-    if (isGitLab || !autoMergeAction) {
+    if (!autoMergeAction) {
       return
     }
     const enabled = autoMergeAction.kind === 'enable'
@@ -160,7 +149,6 @@ export function useHostedReviewActions({
     }
   }, [
     githubPR?.prRepo,
-    isGitLab,
     autoMergeAction,
     defaultMergeMethod,
     onRefreshReview,
@@ -176,7 +164,7 @@ export function useHostedReviewActions({
       const isClosing = nextState === 'closed'
       const label = isClosing ? 'Close' : 'Reopen'
       const confirmed = await confirm({
-        title: `${label} ${shortLabel} ${isGitLab ? '!' : '#'}${review.number}?`,
+        title: `${label} ${shortLabel} #${review.number}?`,
         description: isClosing
           ? translate(
               'auto.components.right.sidebar.HostedReviewActions.a3d572a4de',
@@ -197,24 +185,12 @@ export function useHostedReviewActions({
       setStateUpdating(nextState)
       setActionError(null)
       try {
-        const result = isGitLab
-          ? isClosing
-            ? await window.api.gl.closeMR({
-                repoPath: repo.path,
-                repoId: repo.id,
-                iid: review.number
-              })
-            : await window.api.gl.reopenMR({
-                repoPath: repo.path,
-                repoId: repo.id,
-                iid: review.number
-              })
-          : await updateGitHubHostedReviewState({
-              repo,
-              prNumber: review.number,
-              prRepo: githubPR?.prRepo ?? null,
-              nextState
-            })
+        const result = await updateGitHubHostedReviewState({
+          repo,
+          prNumber: review.number,
+          prRepo: githubPR?.prRepo ?? null,
+          nextState
+        })
         if (!result.ok) {
           setActionError(result.error)
           toast.error(result.error)
@@ -246,7 +222,6 @@ export function useHostedReviewActions({
     [
       confirm,
       githubPR?.prRepo,
-      isGitLab,
       onRefreshReview,
       repo,
       review.number,

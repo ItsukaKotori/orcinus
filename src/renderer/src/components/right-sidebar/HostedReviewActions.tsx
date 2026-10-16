@@ -18,7 +18,6 @@ import type { Worktree } from '../../../../shared/worktree/types'
 import { resolveGitHubPRMergeMethods } from '../../../../shared/github/pull-request-merge-methods'
 import { runWorktreeDelete } from '../sidebar/delete-worktree-flow'
 import { getDeleteStateForWorktreeHost } from '../sidebar/worktree-delete-state-host-match'
-import { presentGitLabMRMergeState } from './gitlab-mr-merge-state'
 import {
   ClosedReviewActions,
   DraftReviewActions,
@@ -54,9 +53,8 @@ export default function HostedReviewActions({
   const isDeletingWorktree = useAppStore(
     (s) => getDeleteStateForWorktreeHost(worktree, s.deleteStateByWorktreeId)?.isDeleting ?? false
   )
-  const isGitLab = review.provider === 'gitlab'
-  const shortLabel = isGitLab ? 'MR' : 'PR'
-  const reviewLabel = isGitLab ? 'merge request' : 'pull request'
+  const shortLabel = 'PR'
+  const reviewLabel = 'pull request'
   const stackMergeScope = useMemo(
     () => (githubPR?.stack ? getGitHubPRStackMergeScope(githubPR.stack, review.number) : null),
     [githubPR?.stack, review.number]
@@ -80,9 +78,6 @@ export default function HostedReviewActions({
           )
       : stackMergeScope?.label
   const mergePresentation = useMemo(() => {
-    if (isGitLab) {
-      return { ...presentGitLabMRMergeState(review), autoMergeAction: null }
-    }
     const presentation = presentGitHubPRMergeState({
       ...githubPR,
       state: review.state,
@@ -117,10 +112,10 @@ export default function HostedReviewActions({
         (stackMergeScope.complete || presentation.directMergeAvailable || stackUsesMergeQueue),
       autoMergeAction: null
     }
-  }, [githubPR, isGitLab, review, stackMergeLabel, stackMergeScope, stackUsesMergeQueue])
+  }, [githubPR, review, stackMergeLabel, stackMergeScope, stackUsesMergeQueue])
   const mergeMethods = useMemo(
-    () => resolveGitHubPRMergeMethods(isGitLab ? null : (githubPR?.mergeMethodSettings ?? null)),
-    [githubPR?.mergeMethodSettings, isGitLab]
+    () => resolveGitHubPRMergeMethods(githubPR?.mergeMethodSettings ?? null),
+    [githubPR?.mergeMethodSettings]
   )
   const {
     merging,
@@ -136,7 +131,6 @@ export default function HostedReviewActions({
     review,
     githubPR,
     repo,
-    isGitLab,
     shortLabel,
     reviewLabel,
     defaultMergeMethod: mergeMethods.defaultMethod,
@@ -158,12 +152,11 @@ export default function HostedReviewActions({
     runWorktreeDelete(worktree.id, worktree.hostId ? { expectedHostId: worktree.hostId } : {})
   }, [worktree.hostId, worktree.id])
 
-  if (review.state === 'draft' && (review.provider === 'github' || review.provider === 'gitlab')) {
+  if (review.state === 'draft' && review.provider === 'github') {
     return (
       <DraftReviewActions
         shortLabel={shortLabel}
         reviewLabel={reviewLabel}
-        isGitLab={isGitLab}
         readying={readying}
         stateUpdating={stateUpdating}
         actionError={actionError}

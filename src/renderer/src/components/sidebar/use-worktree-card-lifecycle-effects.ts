@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 
 import { isMacAppDataPath } from '@/lib/passive-macos-app-data-access'
-import { installWindowVisibilityInterval, isWindowVisible } from '@/lib/window-visibility-interval'
+import { installWindowVisibilityInterval } from '@/lib/window-visibility-interval'
 import {
   HOSTED_REVIEW_CARD_REFRESH_INTERVAL_MS,
   isWebClient,
@@ -31,8 +31,6 @@ export function useWorktreeCardLifecycleEffects({
   showIssue,
   issueCacheKey,
   fetchIssue,
-  showLinearIssue,
-  fetchLinearIssue
 }: Pick<WorktreeCardProps, 'worktree' | 'repo'> &
   Pick<
     ReviewDetails,
@@ -48,12 +46,11 @@ export function useWorktreeCardLifecycleEffects({
   > &
   Pick<
     Foundation,
-    'fetchHostedReviewForBranch' | 'newCardStyle' | 'fetchIssue' | 'fetchLinearIssue'
+    'fetchHostedReviewForBranch' | 'newCardStyle' | 'fetchIssue'
   > & {
     shouldRefreshHostedReview: boolean
     hoverDetailsOpen: boolean
     showIssue: boolean
-    showLinearIssue: boolean
   }): void {
   // Why: card surfaces are presentational, so skip hosted-review fetches when hidden to save rate-limit budget.
   useEffect(() => {
@@ -203,38 +200,5 @@ export function useWorktreeCardLifecycleEffects({
     worktree.linkedIssue,
     fetchIssue,
     issueCacheKey
-  ])
-
-  useEffect(() => {
-    if (!worktree.linkedLinearIssue || !showLinearIssue) {
-      return
-    }
-    const linearIssueId = worktree.linkedLinearIssue
-    const refreshLinearIssueIfVisible = (): void => {
-      if (!isWindowVisible()) {
-        return
-      }
-      void fetchLinearIssue(linearIssueId, 'all')
-    }
-    refreshLinearIssueIfVisible()
-    window.addEventListener('focus', refreshLinearIssueIfVisible)
-    document.addEventListener('visibilitychange', refreshLinearIssueIfVisible)
-    return () => {
-      window.removeEventListener('focus', refreshLinearIssueIfVisible)
-      document.removeEventListener('visibilitychange', refreshLinearIssueIfVisible)
-    }
-  }, [worktree.linkedLinearIssue, fetchLinearIssue, showLinearIssue])
-
-  useEffect(() => {
-    if (!newCardStyle || !hoverDetailsOpen || showLinearIssue || !worktree.linkedLinearIssue) {
-      return
-    }
-    void fetchLinearIssue(worktree.linkedLinearIssue, 'all')
-  }, [
-    newCardStyle,
-    hoverDetailsOpen,
-    showLinearIssue,
-    worktree.linkedLinearIssue,
-    fetchLinearIssue
   ])
 }

@@ -5,18 +5,16 @@ import type {
   WebSessionTabsSnapshotApplyOptions,
   WebSessionTabsSyncState
 } from './state'
-import { suppressE2eWebRuntimeBrowserSnapshot } from '../web-runtime-browser-creation-e2e-fault'
 import { prepareWebSessionTabsSnapshotBase } from './apply-preparation-base'
-import { prepareWebSessionTabsSnapshotBrowser } from './apply-preparation-browser'
+import { prepareWebSessionTabsSnapshotSessions } from './apply-preparation-sessions'
 import { prepareWebSessionTabsSnapshotUnified } from './apply-preparation-unified'
 import { prepareWebSessionTabsSnapshotGroups } from './apply-preparation-groups'
 import { applyTerminalRecordUpdates } from './apply-terminal-records'
-import { applyBrowserRecordUpdates } from './apply-browser-records'
 import { applyWorktreeRecordUpdates } from './apply-worktree-records'
 import { applyActiveStateUpdates } from './apply-active-state'
 import { buildWebSessionTabsFinalPatch } from './apply-final-patch'
 
-/** Reconcile one host frame through the staged terminal/browser/layout pipeline. */
+/** Reconcile one host frame through the staged terminal/layout pipeline. */
 export function applyWebSessionTabsSnapshotWithContext(
   state: WebSessionTabsSyncState,
   rawSnapshot: RuntimeMobileSessionTabsResult,
@@ -25,10 +23,7 @@ export function applyWebSessionTabsSnapshotWithContext(
   batchContext?: WebSessionTabsBatchContext,
   options?: WebSessionTabsSnapshotApplyOptions
 ): WebSessionTabsSyncState | Partial<WebSessionTabsSyncState> {
-  if (
-    suppressE2eWebRuntimeBrowserSnapshot(rawSnapshot) ||
-    rawSnapshot.worktree === FLOATING_TERMINAL_WORKTREE_ID
-  ) {
+  if (rawSnapshot.worktree === FLOATING_TERMINAL_WORKTREE_ID) {
     return state
   }
   const worktreeId = rawSnapshot.worktree
@@ -41,12 +36,11 @@ export function applyWebSessionTabsSnapshotWithContext(
     batchContext,
     options
   )
-  const browser = prepareWebSessionTabsSnapshotBrowser(base)
-  const unified = prepareWebSessionTabsSnapshotUnified(browser)
+  const sessions = prepareWebSessionTabsSnapshotSessions(base)
+  const unified = prepareWebSessionTabsSnapshotUnified(sessions)
   const groups = prepareWebSessionTabsSnapshotGroups(unified)
   const terminalRecords = applyTerminalRecordUpdates(groups)
-  const browserRecords = applyBrowserRecordUpdates(terminalRecords)
-  const worktreeRecords = applyWorktreeRecordUpdates(browserRecords)
+  const worktreeRecords = applyWorktreeRecordUpdates(terminalRecords)
   const activeState = applyActiveStateUpdates(worktreeRecords)
   return buildWebSessionTabsFinalPatch(activeState)
 }

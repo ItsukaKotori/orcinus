@@ -648,24 +648,6 @@ describe('acknowledgePRCommentsAfterAiLaunch', () => {
     expect(takePendingPRCommentAiAck()).toBeNull()
   })
 
-  // Why: the ack resolves after delivery, by which point the panel may show another review —
-  // the host target must ride along in the payload, not be re-read from live state.
-  it('carries the snapshotted GitLab target through take', () => {
-    const payload: PendingPRCommentAiAck = {
-      reviewContextKey: 'repo::main::gitlab::7::abc',
-      provider: 'gitlab',
-      selectedGroups: [openThread('D1')],
-      gitlabTarget: { repoPath: '/repos/widgets', repoId: 'repo-1', iid: 7 }
-    }
-    clearPendingPRCommentAiAck()
-    setPendingPRCommentAiAck(payload)
-    expect(takePendingPRCommentAiAck()?.gitlabTarget).toEqual({
-      repoPath: '/repos/widgets',
-      repoId: 'repo-1',
-      iid: 7
-    })
-  })
-
   it('runs groups with bounded concurrency', async () => {
     const groups = Array.from({ length: 9 }, (_, index) => openThread(`T${index}`, 100 + index))
     let inFlight = 0

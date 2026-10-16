@@ -17,69 +17,7 @@ export {
   type ComputerWindowInfo,
   type ComputerWindowListWindow
 } from './computer-use-runtime-types'
-export type {
-  BrowserBackResult,
-  BrowserCaptureStartResult,
-  BrowserCaptureStopResult,
-  BrowserCheckResult,
-  BrowserClearResult,
-  BrowserClickResult,
-  BrowserConsoleEntry,
-  BrowserConsoleResult,
-  BrowserCookie,
-  BrowserCookieDeleteResult,
-  BrowserCookieGetResult,
-  BrowserCookieSetResult,
-  BrowserDetectedInfo,
-  BrowserDetectedProfileInfo,
-  BrowserDetectProfilesResult,
-  BrowserDragResult,
-  BrowserErrorCode,
-  BrowserEvalResult,
-  BrowserFillResult,
-  BrowserFocusResult,
-  BrowserGeolocationResult,
-  BrowserGotoResult,
-  BrowserHoverResult,
-  BrowserInterceptDisableResult,
-  BrowserInterceptedRequest,
-  BrowserInterceptEnableResult,
-  BrowserKeypressResult,
-  BrowserNetworkEntry,
-  BrowserNetworkLogResult,
-  BrowserPdfResult,
-  BrowserProfileClearDefaultCookiesResult,
-  BrowserProfileCreateResult,
-  BrowserProfileDeleteResult,
-  BrowserProfileImportFromBrowserResult,
-  BrowserProfileListResult,
-  BrowserReloadResult,
-  BrowserScreencastDialogClosedResult,
-  BrowserScreencastDialogResult,
-  BrowserScreencastEndResult,
-  BrowserScreencastErrorResult,
-  BrowserScreencastReadyResult,
-  BrowserScreencastResult,
-  BrowserScreenshotResult,
-  BrowserScrollResult,
-  BrowserSelectAllResult,
-  BrowserSelectResult,
-  BrowserSnapshotRef,
-  BrowserSnapshotResult,
-  BrowserTabCreateResult,
-  BrowserTabCurrentResult,
-  BrowserTabInfo,
-  BrowserTabListResult,
-  BrowserTabProfileCloneResult,
-  BrowserTabProfileShowResult,
-  BrowserTabSetProfileResult,
-  BrowserTabShowResult,
-  BrowserTabSwitchResult,
-  BrowserTypeResult,
-  BrowserUploadResult,
-  BrowserViewportResult,
-  BrowserWaitResult
-} from './runtime-browser-contracts'
+
 export type {
   RuntimeFileListEntry,
   RuntimeFileListResult,
@@ -91,8 +29,6 @@ export type {
   RuntimeTerminalPathResolution
 } from './runtime-file-contracts'
 export {
-  BROWSER_UNAVAILABLE_ERROR_CODE,
-  browserUnavailableMessage,
   HEADLESS_RUNTIME_WINDOW_ID,
   UNPUBLISHED_WORKTREE_PUBLICATION_EPOCH
 } from './runtime-session-contracts'
@@ -102,7 +38,6 @@ export {
   terminalUnavailableMessage
 } from './runtime-capability-degradation'
 export type {
-  RuntimeBrowserUnavailableReason,
   RuntimeDegradation,
   RuntimeTerminalUnavailableReason
 } from './runtime-capability-degradation'
@@ -110,11 +45,9 @@ export type {
   CliRuntimeState,
   CliStatusResult,
   DeviceScope,
-  RuntimeBrowserDriverState,
   RuntimeDesktopWindowStatus,
   RuntimeGraphStatus,
   RuntimeMobileSessionAgentTab,
-  RuntimeMobileSessionBrowserTab,
   RuntimeMobileSessionClientTab,
   RuntimeMobileSessionCreateTerminalResult,
   RuntimeMobileSessionFileTab,

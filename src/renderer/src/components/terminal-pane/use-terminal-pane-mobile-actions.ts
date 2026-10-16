@@ -12,7 +12,6 @@ import {
 import { getConnectionId } from '@/lib/connection-context'
 import { executeTerminalPastePlan, planTerminalPasteWithYield } from './terminal-paste-coordinator'
 import { resolveTerminalPasteRuntime } from './terminal-paste-runtime'
-import { getTerminalPasteSshRemotePlatform } from './terminal-paste-ssh-platform'
 import { pasteTerminalText } from './terminal-bracketed-paste'
 import { writeTerminalPastePtyInput } from './terminal-pty-paste-writer'
 import { formatTerminalPasteExecutionError } from './terminal-paste-errors'
@@ -164,7 +163,6 @@ export function useTerminalPaneMobileActions(controller: TerminalPaneContextCont
               platform: shortcutPlatform,
               ptyId,
               connectionId,
-              remotePlatform: getTerminalPasteSshRemotePlatform(connectionId),
               transport
             })
           },

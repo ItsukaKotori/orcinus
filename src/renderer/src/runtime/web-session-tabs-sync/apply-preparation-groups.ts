@@ -1,10 +1,6 @@
 import type { TabGroup } from '../../../../shared/tab-types'
 import type { prepareWebSessionTabsSnapshotUnified } from './apply-preparation-unified'
 import { toWebTerminalSurfaceTabId } from '../web-runtime-session'
-import {
-  isWebSessionBrowserPlacementGroupReserved,
-  peekWebSessionBrowserPlacementGroup
-} from '../web-session-browser-placement'
 import { peekWebSessionTerminalPlacementGroup } from '../web-session-terminal-placement'
 import { reconcileClientOwnedTabPlacement } from '../web-session-client-owned-tab-placement'
 import { buildMirroredHostGroups, retainClientPlacedMirroredTabs } from './layout-groups'
@@ -21,7 +17,6 @@ export function prepareWebSessionTabsSnapshotGroups(
     now,
     options,
     terminalSurfaceTabs,
-    mirroredBrowserTabs,
     mirroredEditorTabs,
     mirroredUnifiedIds,
     mirroredUnifiedTabs,
@@ -33,15 +28,9 @@ export function prepareWebSessionTabsSnapshotGroups(
     hostToLocalTabId,
     existingTabIndex,
     honorSnapshotActiveFocus,
-    intentUnifiedTabId,
-    reservedEmptyPreviewFallbackTabId
+    intentUnifiedTabId
   } = base
   const currentGroups = state.groupsByWorktree[worktreeId] ?? []
-  const clientGroupIdByLocalTabId = new Map(
-    mirroredBrowserTabs.flatMap((entry) =>
-      entry.clientGroupId ? [[entry.unifiedTab.id, entry.clientGroupId]] : []
-    )
-  )
   // Why: once this worktree has client groups, placement is client-owned — snapshots may only
   // append never-seen tabs, drop vanished ones, and honor explicit focus intent. Host order,
   // host actives, and host layout apply only on first adoption (no client groups yet).
@@ -67,21 +56,7 @@ export function prepareWebSessionTabsSnapshotGroups(
         group.tabOrder.map((tabId) => rekeyedTabIds.get(tabId) ?? tabId)
       )
     )
-    // Why: a pending record is this client's own create intent — authoritative even when the
-    // provisional tab was provisionally adopted elsewhere or the target group record lags its leaf.
-    // The entry's own clientGroupId comes first, so a group the user moved the row into after the
-    // create was recorded wins over the group the create asked for.
-    const placementMoves = mirroredBrowserTabs.flatMap((entry) => {
-      const recordedGroupId = peekWebSessionBrowserPlacementGroup({
-        environmentId,
-        worktreeId,
-        remotePageId: entry.remotePageId
-      })
-      if (!recordedGroupId) {
-        return []
-      }
-      return [{ tabId: entry.unifiedTab.id, groupId: entry.clientGroupId ?? recordedGroupId }]
-    })
+    const placementMoves: { tabId: string; groupId: string }[] = []
     for (const parentTabId of new Set(terminalSurfaceTabs.map((tab) => tab.parentTabId))) {
       const recordedGroupId = peekWebSessionTerminalPlacementGroup({
         environmentId,
@@ -97,10 +72,7 @@ export function prepareWebSessionTabsSnapshotGroups(
     }
     const adoptedTabs = mirroredUnifiedTabs
       .filter((tab) => !knownGroupTabIds.has(tab.id))
-      .map((tab) => ({
-        tabId: tab.id,
-        groupId: clientGroupIdByLocalTabId.get(tab.id) ?? tab.groupId
-      }))
+      .map((tab) => ({ tabId: tab.id, groupId: tab.groupId }))
     return reconcileClientOwnedTabPlacement({
       currentGroups,
       worktreeId,
@@ -109,11 +81,10 @@ export function prepareWebSessionTabsSnapshotGroups(
       placementMoves,
       rekeyedTabIds,
       intentTabId: honorSnapshotActiveFocus ? (intentUnifiedTabId ?? null) : null,
-      reservedEmptyGroupFallbackTabId: reservedEmptyPreviewFallbackTabId,
+      reservedEmptyGroupFallbackTabId: null,
       currentActiveGroupId: state.activeGroupIdByWorktree[worktreeId] ?? null,
       currentLayout: state.layoutByWorktree[worktreeId] ?? null,
-      isGroupReserved: (groupId) =>
-        isWebSessionBrowserPlacementGroupReserved({ worktreeId, groupId })
+      isGroupReserved: () => false
     })
   })()
   const nextGroups = (() => {
@@ -133,15 +104,13 @@ export function prepareWebSessionTabsSnapshotGroups(
         now,
         validUnifiedTabIds,
         environmentId,
-        worktreeId,
-        clientGroupIdByLocalTabId
+        worktreeId
       })
     }
     const strippedGroups = retainClientPlacedMirroredTabs({
       groups: currentGroups,
       mirroredUnifiedIds,
       validUnifiedTabIds,
-      clientGroupIdByLocalTabId,
       nextActiveUnifiedTabId
     })
     const target = strippedGroups.find((group) => group.id === targetGroupId) ?? {
@@ -153,9 +122,7 @@ export function prepareWebSessionTabsSnapshotGroups(
     }
     const targetOrder = [
       ...target.tabOrder.filter((tabId) => validUnifiedTabIds.has(tabId)),
-      ...mirroredUnifiedTabs
-        .filter((tab) => !clientGroupIdByLocalTabId.has(tab.id))
-        .map((tab) => tab.id)
+      ...mirroredUnifiedTabs.map((tab) => tab.id)
     ]
     const targetActiveTabId =
       nextActiveUnifiedTabId && targetOrder.includes(nextActiveUnifiedTabId)
@@ -176,13 +143,7 @@ export function prepareWebSessionTabsSnapshotGroups(
       ? strippedGroups.map((group) => (group.id === targetGroupId ? updatedTarget : group))
       : [...strippedGroups, updatedTarget]
     return merged.filter(
-      (group) =>
-        group.id === targetGroupId ||
-        group.tabOrder.length > 0 ||
-        isWebSessionBrowserPlacementGroupReserved({
-          worktreeId,
-          groupId: group.id
-        })
+      (group) => group.id === targetGroupId || group.tabOrder.length > 0
     )
   })()
 
@@ -206,7 +167,7 @@ export function prepareWebSessionTabsSnapshotGroups(
         next.push(tabId)
       }
     }
-    // Why: snapshots can arrive after the client staged local browser tabs, so preserve visible order and only append new host tabs.
+    // Why: snapshots can arrive after the client staged local tabs, so preserve visible order and only append new host tabs.
     for (const tabId of current) {
       push(tabId)
     }
@@ -220,7 +181,6 @@ export function prepareWebSessionTabsSnapshotGroups(
   return {
     ...base,
     currentGroups,
-    clientGroupIdByLocalTabId,
     clientOwnedPlacement,
     nextGroups,
     nextTabBarOrder

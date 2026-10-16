@@ -1,9 +1,4 @@
 import type { AppState } from '../../../types'
-import type {
-  BrowserPage,
-  BrowserWorkspace
-} from '../../../../../../shared/browser-workspace-types'
-import { remapBrowserPageDocLocation } from '../../../../../../shared/browser-page-doc-location'
 import { splitWorktreeIdForFilesystem } from '../../../../../../shared/worktree/id'
 import { worktreeWorkspaceKey } from '../../../../../../shared/workspace-scope'
 import { getWorktreeIdFromVisitKey } from '@/lib/worktree-visit-recency'
@@ -21,9 +16,6 @@ const WORKTREE_ID_KEYED_MAP_KEYS = [
   'baseStatusByWorktreeId',
   'remoteBranchConflictByWorktreeId',
   'fileSearchStateByWorktree',
-  'browserTabsByWorktree',
-  'recentlyClosedBrowserTabsByWorktree',
-  'activeBrowserTabIdByWorktree',
   'activeFileIdByWorktree',
   'activeTabTypeByWorktree',
   'activeTabIdByWorktree',
@@ -83,33 +75,8 @@ export function buildWorktreeRenameState(
     value.worktreeId === oldWorktreeId ? { ...value, worktreeId: newWorktreeId } : value
   const oldWorktreePath = splitWorktreeIdForFilesystem(oldWorktreeId)?.worktreePath
   const newWorktreePath = splitWorktreeIdForFilesystem(newWorktreeId)?.worktreePath
-  const withNewBrowserWorktreeId = <T extends BrowserPage | BrowserWorkspace>(value: T): T => {
-    const renamedValue = withNewWorktreeId(value)
-    return value.docLocation?.worktreeId === oldWorktreeId
-      ? {
-          ...renamedValue,
-          docLocation: remapBrowserPageDocLocation(
-            value.docLocation,
-            oldWorktreeId,
-            newWorktreeId,
-            oldWorktreePath,
-            newWorktreePath
-          )
-        }
-      : renamedValue
-  }
   const renameValueByKey: Partial<Record<(typeof WORKTREE_ID_KEYED_MAP_KEYS)[number], unknown>> = {
     tabsByWorktree: (tabs: { worktreeId: string }[]) => tabs.map(withNewWorktreeId),
-    browserTabsByWorktree: (workspaces: BrowserWorkspace[]) =>
-      workspaces.map(withNewBrowserWorktreeId),
-    recentlyClosedBrowserTabsByWorktree: (
-      snapshots: { workspace: BrowserWorkspace; pages: BrowserPage[] }[]
-    ) =>
-      snapshots.map((snapshot) => ({
-        ...snapshot,
-        workspace: withNewBrowserWorktreeId(snapshot.workspace),
-        pages: snapshot.pages.map(withNewBrowserWorktreeId)
-      })),
     fileSearchStateByWorktree: (searchState: AppState['fileSearchStateByWorktree'][string]) => ({
       ...searchState,
       resultOwner: searchState.resultOwner ? withNewWorktreeId(searchState.resultOwner) : null
@@ -155,34 +122,6 @@ export function buildWorktreeRenameState(
         f.worktreeId === oldWorktreeId ? { ...f, worktreeId: newWorktreeId } : f
       )
     : s.openFiles
-  const currentBrowserPagesByWorkspace = s.browserPagesByWorkspace ?? {}
-  const browserPagesByWorkspace = Object.values(currentBrowserPagesByWorkspace).some((pages) =>
-    pages.some(
-      (page) => page.worktreeId === oldWorktreeId || page.docLocation?.worktreeId === oldWorktreeId
-    )
-  )
-    ? Object.fromEntries(
-        Object.entries(currentBrowserPagesByWorkspace).map(([workspaceId, pages]) => [
-          workspaceId,
-          pages.map(withNewBrowserWorktreeId)
-        ])
-      )
-    : s.browserPagesByWorkspace
-  const currentRecentlyClosedBrowserPagesByWorkspace = s.recentlyClosedBrowserPagesByWorkspace ?? {}
-  const recentlyClosedBrowserPagesByWorkspace = Object.values(
-    currentRecentlyClosedBrowserPagesByWorkspace
-  ).some((pages) =>
-    pages.some(
-      (page) => page.worktreeId === oldWorktreeId || page.docLocation?.worktreeId === oldWorktreeId
-    )
-  )
-    ? Object.fromEntries(
-        Object.entries(currentRecentlyClosedBrowserPagesByWorkspace).map(([workspaceId, pages]) => [
-          workspaceId,
-          pages.map(withNewBrowserWorktreeId)
-        ])
-      )
-    : s.recentlyClosedBrowserPagesByWorkspace
   let everActivated = s.everActivatedWorktreeIds
   if (everActivated.has(oldWorktreeId)) {
     everActivated = new Set(everActivated)
@@ -207,10 +146,6 @@ export function buildWorktreeRenameState(
   return {
     ...(renamed as Partial<AppState>),
     ...(openFiles !== s.openFiles ? { openFiles } : {}),
-    ...(browserPagesByWorkspace !== s.browserPagesByWorkspace ? { browserPagesByWorkspace } : {}),
-    ...(recentlyClosedBrowserPagesByWorkspace !== s.recentlyClosedBrowserPagesByWorkspace
-      ? { recentlyClosedBrowserPagesByWorkspace }
-      : {}),
     ...(everActivated !== s.everActivatedWorktreeIds
       ? { everActivatedWorktreeIds: everActivated }
       : {}),

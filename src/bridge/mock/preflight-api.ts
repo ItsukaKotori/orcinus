@@ -1,6 +1,6 @@
 // Phase 0 mock; replaced by Tauri IPC per view.
 import type { PreloadApi } from '../../preload/api-types'
-import type { PreflightStatus, RefreshAgentsResult } from '../../preload/api/preflight-api'
+import type { PreflightStatus, RefreshAgentsResult } from '../../shared/preload-api/api/preflight-api'
 import { withMethodFallback } from '../unimplemented-fallback'
 import { cloneMockValue } from './clone-mock-value'
 

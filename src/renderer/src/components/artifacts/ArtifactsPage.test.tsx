@@ -168,12 +168,6 @@ describe('ArtifactsPage', () => {
     expect(screen.queryByRole('button', { name: 'Delete artifact' })).toBeNull()
     expect(screen.getByRole('button', { name: 'More artifact actions' })).toBeInTheDocument()
 
-    await waitFor(() => {
-      const preview = document.querySelector('webview[aria-label="Artifact preview"]')
-      expect(preview).toHaveAttribute('partition', 'persist:orca-default')
-      expect(preview).toHaveAttribute('src', 'https://share.onorca.dev/a/report-123?embed=1')
-    })
-
     fireEvent.click(copyButton)
     await waitFor(() =>
       expect(mocks.writeClipboardText).toHaveBeenCalledWith('https://share.onorca.dev/a/report-123')
@@ -184,15 +178,7 @@ describe('ArtifactsPage', () => {
     expect(mocks.openUrl).toHaveBeenCalledWith('https://share.onorca.dev/a/report-123')
   })
 
-  it('shows a fallback when the desktop preview session is unavailable', async () => {
-    mocks.resolvePartition.mockResolvedValue(null)
-    render(<ArtifactsPage />)
 
-    fireEvent.click(await screen.findByRole('button', { name: /Quarterly report/ }))
-    expect(await screen.findByText('Preview unavailable')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Copy link' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Open in browser' })).toBeEnabled()
-  })
 
   it('closes the drawer on Escape, then the page', async () => {
     render(<ArtifactsPage />)

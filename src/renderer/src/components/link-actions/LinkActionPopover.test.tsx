@@ -2,12 +2,9 @@
 import type { ReactNode } from 'react'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { BROWSER_TERMINAL_LINK_ACTIONS_SETTINGS_TARGET_ID } from '@/lib/settings-navigation-types'
 import type { LinkActionRequest } from './link-action-request'
 
 const mocks = vi.hoisted(() => ({
-  openSettingsPage: vi.fn(),
-  openSettingsTarget: vi.fn(),
   toastError: vi.fn(),
   toastSuccess: vi.fn(),
   writeClipboardText: vi.fn()
@@ -15,19 +12,6 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('sonner', () => ({
   toast: { error: mocks.toastError, success: mocks.toastSuccess }
-}))
-
-vi.mock('@/store', () => ({
-  useAppStore: (
-    selector: (state: {
-      openSettingsPage: () => void
-      openSettingsTarget: (target: unknown) => void
-    }) => unknown
-  ) =>
-    selector({
-      openSettingsPage: mocks.openSettingsPage,
-      openSettingsTarget: mocks.openSettingsTarget
-    })
 }))
 
 vi.mock('@/components/ui/tooltip', () => ({
@@ -237,29 +221,4 @@ describe('LinkActionPopover', () => {
     expect(screen.queryByRole('button', { name: 'Copy link' })).toBeNull()
   })
 
-  it('opens the terminal link setting from the compact settings button', () => {
-    vi.stubGlobal('navigator', { userAgent: 'Macintosh' })
-    const onClose = vi.fn()
-    const restoreFocus = vi.fn()
-    const request: LinkActionRequest = {
-      anchorX: 100,
-      anchorY: 200,
-      destination: 'https://example.com',
-      kind: 'url',
-      primary: { label: 'System Browser', run: vi.fn() },
-      restoreFocus
-    }
-
-    render(<LinkActionPopover request={request} onClose={onClose} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Terminal link settings' }))
-
-    expect(onClose).toHaveBeenCalledOnce()
-    expect(mocks.openSettingsTarget).toHaveBeenCalledWith({
-      pane: 'browser',
-      repoId: null,
-      sectionId: BROWSER_TERMINAL_LINK_ACTIONS_SETTINGS_TARGET_ID
-    })
-    expect(mocks.openSettingsPage).toHaveBeenCalledOnce()
-    expect(restoreFocus).not.toHaveBeenCalled()
-  })
 })

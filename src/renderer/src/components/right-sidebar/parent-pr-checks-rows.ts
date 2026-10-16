@@ -109,7 +109,6 @@ function buildParentPrChecksRow(
   const fallbackDisplay = getWorktreeCardPrDisplay(
     reviewSnapshot.review,
     args.worktree.linkedPR,
-    args.worktree.linkedGitLabMR ?? null,
     args.worktree.linkedBitbucketPR ?? null,
     args.worktree.linkedAzureDevOpsPR ?? null,
     args.worktree.linkedGiteaPR ?? null,
@@ -205,7 +204,7 @@ function getReviewLabel(
   if (provider === undefined || number === undefined) {
     return null
   }
-  return provider === 'gitlab' ? `!${number}` : `#${number}`
+  return `#${number}`
 }
 
 function getCheckDetails(

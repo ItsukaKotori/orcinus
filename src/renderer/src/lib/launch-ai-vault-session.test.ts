@@ -33,9 +33,8 @@ vi.mock('@/components/tab-bar/reconcile-order', () => ({
   reconcileTabOrder: (
     _current: string[] | undefined,
     terminalIds: string[],
-    editorIds: string[],
-    browserIds: string[]
-  ) => [...terminalIds, ...editorIds, ...browserIds]
+    editorIds: string[]
+  ) => [...terminalIds, ...editorIds]
 }))
 
 vi.mock('@/lib/worktree-runtime-owner', () => ({

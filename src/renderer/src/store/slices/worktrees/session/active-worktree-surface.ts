@@ -13,7 +13,6 @@ export function resolveActivatedWorktreeSurface(
     AppState['rightSidebarExplorerViewByWorktree']
   >[string]
   activeFileId: string | null
-  activeBrowserTabId: string | null
   activeTabType: WorkspaceVisibleTabType
   activeTabId: string | null
 } {

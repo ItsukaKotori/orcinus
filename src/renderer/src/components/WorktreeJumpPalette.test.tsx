@@ -163,8 +163,6 @@ async function renderPalette(overrides: Partial<AppState>): Promise<void> {
     activeWorktreeId: null,
     repos: [makeRepo()],
     tabsByWorktree: {},
-    browserTabsByWorktree: {},
-    browserPagesByWorkspace: {},
     unifiedTabsByWorktree: {},
     hideDefaultBranchWorkspace: false,
     hideAutomationGeneratedWorkspaces: false,
@@ -264,22 +262,22 @@ describe('WorktreeJumpPalette', () => {
     await renderPalette({
       worktreesByRepo: { 'repo-1': [defaultBranch, feature, folderMain] },
       showSleepingWorkspaces: false,
-      browserTabsByWorktree: {
+      tabsByWorktree: {
         feature: [
           {
-            id: 'browser-tab-1',
+            id: 'feature-tab',
             worktreeId: 'feature',
-            url: 'https://example.com',
-            title: 'example.com',
-            loading: false,
-            faviconUrl: null,
-            canGoBack: false,
-            canGoForward: false,
-            loadError: null,
+            ptyId: 'feature-pty',
+            title: 'Terminal',
+            defaultTitle: 'Terminal',
+            customTitle: null,
+            color: null,
+            sortOrder: 0,
             createdAt: 0
           }
         ]
-      }
+      },
+      ptyIdsByTabId: { 'feature-tab': ['pty-1'] }
     })
 
     expect(testContainer.textContent).toContain('Feature workspace')

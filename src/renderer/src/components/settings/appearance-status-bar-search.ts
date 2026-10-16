@@ -47,37 +47,6 @@ export const getStatusBarToggles = createLocalizedCatalog(
         'settings.appearance.statusBar.resourceUsageToggleDescription',
         'Show the Resource Manager. Click it for CPU, memory, sessions, daemon controls, and workspace disk scans.'
       )
-    },
-    {
-      id: 'ports',
-      title: translate('auto.components.settings.appearance.search.cf409b6c4d', 'Ports'),
-      description: translate(
-        'auto.components.settings.appearance.search.0ececfa190',
-        'Show live workspace ports in the status bar.'
-      ),
-      keywords: [
-        ...translateSearchKeyword(
-          'auto.components.settings.appearance.search.896eb53fd4',
-          'status bar'
-        ),
-        ...translateSearchKeyword('auto.components.settings.appearance.search.006e67b279', 'ports'),
-        ...translateSearchKeyword(
-          'auto.components.settings.appearance.search.46d21eef62',
-          'localhost'
-        ),
-        ...translateSearchKeyword(
-          'auto.components.settings.appearance.search.43cfba3b95',
-          'server'
-        ),
-        ...translateSearchKeyword(
-          'auto.components.settings.appearance.search.dc02c8759d',
-          'workspace'
-        )
-      ],
-      toggleDescription: translate(
-        'settings.appearance.statusBar.portsToggleDescription',
-        'Show live workspace ports. Click it for workspace-scoped ports and external listeners.'
-      )
     }
   ]
 )

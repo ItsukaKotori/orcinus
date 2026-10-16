@@ -3,9 +3,6 @@ import PullRequestPage from '@/components/PullRequestPage'
 import GitHubItemDialog from '@/components/GitHubItemDialog'
 import ProjectViewWrapper from '@/components/github-project/ProjectViewWrapper'
 import { TaskPageGitHubList } from './github/List'
-import { TaskPageGitLabTodoList } from './gitlab/TodoList'
-import { TaskPageGitLabItemList } from './gitlab/ItemList'
-import { TaskPageJiraContent } from './jira/Content'
 export function TaskPageContent({
   model
 }: {
@@ -15,7 +12,6 @@ export function TaskPageContent({
     repoSelection,
     taskSource,
     githubMode,
-    gitlabView,
     dialogInitialTab,
     dialogWorkItem,
     dialogRepoPath,
@@ -65,11 +61,5 @@ export function TaskPageContent({
     // Why: bottom of the joined GitHub list card — flush under the filter
     // chrome (no gap, no top border/radius) so toolbar + table read as one.
     <TaskPageGitHubList model={model} />
-  ) : taskSource === 'gitlab' && gitlabView === 'todos' ? (
-    <TaskPageGitLabTodoList model={model} />
-  ) : taskSource === 'gitlab' ? (
-    <TaskPageGitLabItemList model={model} />
-  ) : (
-    <TaskPageJiraContent model={model} />
-  )
+  ) : null
 }

@@ -7,7 +7,6 @@ import {
   isMarkdownPreviewOpenModifier,
   isMarkdownPreviewSystemBrowserModifier,
   resolveMarkdownPreviewHref,
-  resolveMarkdownPreviewHttpOpenOptions,
   resolveImageAbsolutePath
 } from './markdown-preview-links'
 
@@ -137,90 +136,6 @@ describe('isMarkdownPreviewSystemBrowserModifier', () => {
         false
       )
     ).toBe(false)
-  })
-})
-
-describe('resolveMarkdownPreviewHttpOpenOptions', () => {
-  // modifierHeld -> openHttpLink resolves the escape hatch against the
-  // openLinksInApp / openLinksInAppModifierInverts pair; worktreeId (no
-  // modifier) routes per the setting. See http-link-routing.test.ts.
-  it('marks the modifier held on Cmd+Shift-click on macOS', () => {
-    expect(
-      resolveMarkdownPreviewHttpOpenOptions(
-        { metaKey: true, ctrlKey: false, shiftKey: true },
-        true,
-        'wt-1',
-        { kind: 'local' }
-      )
-    ).toEqual({ worktreeId: 'wt-1', modifierHeld: true, sourceOwner: { kind: 'local' } })
-  })
-
-  it('marks the modifier held on Ctrl+Shift-click on Linux/Windows', () => {
-    expect(
-      resolveMarkdownPreviewHttpOpenOptions(
-        { metaKey: false, ctrlKey: true, shiftKey: true },
-        false,
-        'wt-1',
-        { kind: 'local' }
-      )
-    ).toEqual({ worktreeId: 'wt-1', modifierHeld: true, sourceOwner: { kind: 'local' } })
-  })
-
-  it('routes a plain Cmd-click through the worktree so it can open in Orca', () => {
-    expect(
-      resolveMarkdownPreviewHttpOpenOptions(
-        { metaKey: true, ctrlKey: false, shiftKey: false },
-        true,
-        'wt-1',
-        { kind: 'local' }
-      )
-    ).toEqual({ worktreeId: 'wt-1', sourceOwner: { kind: 'local' } })
-  })
-
-  it('routes a plain click (no modifier) through the worktree', () => {
-    expect(
-      resolveMarkdownPreviewHttpOpenOptions(
-        { metaKey: false, ctrlKey: false, shiftKey: false },
-        true,
-        'wt-1',
-        { kind: 'local' }
-      )
-    ).toEqual({ worktreeId: 'wt-1', sourceOwner: { kind: 'local' } })
-  })
-
-  it('does not force the system browser for Shift without the platform mod key', () => {
-    // Plain Shift-click (no Cmd/Ctrl) is not the escape hatch.
-    expect(
-      resolveMarkdownPreviewHttpOpenOptions(
-        { metaKey: false, ctrlKey: false, shiftKey: true },
-        true,
-        'wt-1',
-        { kind: 'local' }
-      )
-    ).toEqual({ worktreeId: 'wt-1', sourceOwner: { kind: 'local' } })
-  })
-
-  it('does not treat Mac Ctrl+Shift-click as the escape hatch', () => {
-    // On macOS the mod key is Cmd; Ctrl+Shift must not force the system browser.
-    expect(
-      resolveMarkdownPreviewHttpOpenOptions(
-        { metaKey: false, ctrlKey: true, shiftKey: true },
-        true,
-        'wt-1',
-        { kind: 'local' }
-      )
-    ).toEqual({ worktreeId: 'wt-1', sourceOwner: { kind: 'local' } })
-  })
-
-  it('passes through a null worktree (openHttpLink then falls back to system browser)', () => {
-    expect(
-      resolveMarkdownPreviewHttpOpenOptions(
-        { metaKey: false, ctrlKey: false, shiftKey: false },
-        true,
-        null,
-        { kind: 'local' }
-      )
-    ).toEqual({ worktreeId: null, sourceOwner: { kind: 'local' } })
   })
 })
 

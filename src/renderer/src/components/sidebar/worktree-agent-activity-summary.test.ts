@@ -491,7 +491,6 @@ describe('selectWorktreeAgentActivitySummary', () => {
 
     const status = resolveWorktreeStatus({
       tabs: [tab],
-      browserTabs: [],
       ptyIdsByTabId: { 'tab-1': ['pty-1'] },
       agentStatusPaneIdsByTabId: summary.agentStatusPaneIdsByTabId,
       stalePaneIdsByTabId: summary.stalePaneIdsByTabId,

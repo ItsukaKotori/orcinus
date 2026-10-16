@@ -144,12 +144,10 @@ function decisionInputs(
     retainedAgentsByPaneKey: {},
     openFiles: [],
     editorDrafts: {},
-    browserTabsByWorktree: {},
     gitStatusByWorktree: {},
     remoteStatusesByWorktree: {},
     hostedReviewCache: {},
     issueCache: {},
-    linearIssueCache: {},
     settings: null,
     activeWorktreeId: null,
     activeWorkspaceExecutionHostId: null,
@@ -537,12 +535,12 @@ describe('workspace space presentation helpers', () => {
         ])
       })
     )
-    const gitLab = getWorkspaceDecisionDetails(
+    const bitbucket = getWorkspaceDecisionDetails(
       row({ branch: 'refs/heads/feature/local' }),
       decisionInputs({
         hostedReviewCache: {
           'local::repo::feature/local': {
-            data: { ...cachedReview, provider: 'gitlab' }
+            data: { ...cachedReview, provider: 'bitbucket' }
           }
         },
         worktreeMap: new Map([
@@ -552,7 +550,7 @@ describe('workspace space presentation helpers', () => {
               branch: 'refs/heads/feature/local',
               linkedPR: null,
               suppressedGitHubPR: 12,
-              linkedGitLabMR: 12
+              linkedBitbucketPR: 12
             })
           ]
         ])
@@ -560,7 +558,7 @@ describe('workspace space presentation helpers', () => {
     )
 
     expect(explicit.reviewLabel).toBe('PR #12 Open, success')
-    expect(gitLab.reviewLabel).toBe('PR #12 Open, success')
+    expect(bitbucket.reviewLabel).toBe('PR #12 Open, success')
   })
 
   it('counts migration-unsupported agent entries by worktree id', () => {

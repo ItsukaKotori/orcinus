@@ -1,13 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import type { BrowserPage, BrowserWorkspace } from '../../../../shared/browser-workspace-types'
 import type { Tab, TabContentType } from '../../../../shared/tab-types'
 import type { Worktree } from '../../../../shared/worktree/types'
 import { buildPaletteTabDocument } from '@/lib/palette-match/tab-document'
 import { PALETTE_QUERY_MAX_TOKENS } from '@/lib/palette-match/palette-query'
-import {
-  buildSearchableBrowserPageDocument,
-  type SearchableBrowserPage
-} from '@/lib/browser-palette-search'
 import type { SearchableWorkspaceTab } from '@/lib/workspace-tab-palette-search'
 import {
   OPEN_TAB_SEARCH_QUERY_MAX_BYTES,
@@ -120,76 +115,15 @@ function makeWorkspaceTab({
   }
 }
 
-function makeBrowserPage({
-  id,
-  title,
-  url = 'https://example.com/one',
-  faviconUrl = null,
-  workspaceLabel = null,
-  isCurrentPage = false
-}: {
-  id: string
-  title: string
-  url?: string
-  faviconUrl?: string | null
-  workspaceLabel?: string | null
-  isCurrentPage?: boolean
-}): SearchableBrowserPage {
-  const page: BrowserPage = {
-    id,
-    workspaceId: `${id}-ws`,
-    worktreeId: worktree.id,
-    url,
-    title,
-    loading: false,
-    faviconUrl,
-    canGoBack: false,
-    canGoForward: false,
-    loadError: null,
-    createdAt: 0
-  }
-  const workspace: BrowserWorkspace = {
-    id: `${id}-ws`,
-    worktreeId: worktree.id,
-    activePageId: id,
-    pageIds: [id],
-    url,
-    title,
-    label: workspaceLabel ?? undefined,
-    loading: false,
-    faviconUrl: null,
-    canGoBack: false,
-    canGoForward: false,
-    loadError: null,
-    createdAt: 0
-  }
-  return {
-    page,
-    workspace,
-    worktree,
-    repoName: REPO_NAME,
-    worktreeSortIndex: 0,
-    isCurrentPage,
-    isCurrentWorktree: true,
-    document: buildSearchableBrowserPageDocument({
-      page,
-      workspace,
-      worktree,
-      repoName: REPO_NAME
-    })
-  }
-}
-
 function search(input: Partial<OpenTabSearchInput> & { query: string }): OpenTabSearchResult[] {
   return searchOpenTabs({
     workspaceTabs: [],
-    browserPages: [],
     ...input
   })
 }
 
 function readableId(result: OpenTabSearchResult): string {
-  return `open-tab:${result.source}:${result.source === 'browser' ? result.pageId : result.tabId}`
+  return `open-tab:${result.source}:${result.tabId}`
 }
 
 describe('searchOpenTabs ranking', () => {
@@ -244,36 +178,6 @@ describe('searchOpenTabs ranking', () => {
     ])
   })
 
-  it('ranks a title-prefix match above a title-substring match from another source', () => {
-    const results = search({
-      query: 'zebra',
-      workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'The zebra terminal' })],
-      browserPages: [makeBrowserPage({ id: 'page-1', title: 'Zebra release notes' })]
-    })
-
-    expect(results.map(readableId)).toEqual(['open-tab:browser:page-1', 'open-tab:workspace:tab-1'])
-  })
-
-  it('ranks a primary word match above a comparable secondary word match', () => {
-    const results = search({
-      query: 'zebra',
-      workspaceTabs: [
-        makeWorkspaceTab({
-          id: 'tab-secondary',
-          title: 'Notes',
-          contentType: 'editor',
-          secondaryText: 'src/zebra.ts'
-        })
-      ],
-      browserPages: [makeBrowserPage({ id: 'page-1', title: 'Trailing zebra' })]
-    })
-
-    expect(results.map(readableId)).toEqual([
-      'open-tab:browser:page-1',
-      'open-tab:workspace:tab-secondary'
-    ])
-  })
-
   // Both use secondary coverage, so match rank has to beat tab position: the
   // agent tab sits earlier in the group and would win a position-only tie-break.
   it('ranks a path match above an agent-snippet match on tabs in the same group', () => {
@@ -302,20 +206,18 @@ describe('searchOpenTabs ranking', () => {
     ])
   })
 
-  it('breaks semantic and activity ties on source order, then engine score', () => {
+  it('breaks semantic and activity ties on tab position', () => {
     const results = search({
       query: 'zebra',
       workspaceTabs: [
         makeWorkspaceTab({ id: 'tab-late', title: 'Zebra two', tabSortIndex: 5 }),
         makeWorkspaceTab({ id: 'tab-early', title: 'Zebra one', tabSortIndex: 0 })
-      ],
-      browserPages: [makeBrowserPage({ id: 'page-1', title: 'Zebra page' })]
+      ]
     })
 
     expect(results.map(readableId)).toEqual([
       'open-tab:workspace:tab-early',
-      'open-tab:workspace:tab-late',
-      'open-tab:browser:page-1'
+      'open-tab:workspace:tab-late'
     ])
   })
 
@@ -348,12 +250,10 @@ describe('searchOpenTabs ranking', () => {
       )
     }
     const uncappedSelection = searchOpenTabs({
-      browserPages: [],
       ...input
     })[3]
     input.workspaceTabs[4].tab.createdAt = Date.now()
     const retained = searchOpenTabs({
-      browserPages: [],
       ...input,
       retainedResultId: uncappedSelection.id
     })
@@ -362,42 +262,25 @@ describe('searchOpenTabs ranking', () => {
     expect(retained.some((result) => result.id === uncappedSelection.id)).toBe(true)
   })
 
-  it('ranks an exact browser destination above a workspace typo', () => {
-    const results = search({
-      query: 'zebra',
-      workspaceTabs: [makeWorkspaceTab({ id: 'tab-typo', title: 'zebrb' })],
-      browserPages: [makeBrowserPage({ id: 'page-exact', title: 'Notes', url: 'zebra' })]
-    })
-
-    expect(results.map(readableId)).toEqual([
-      'open-tab:browser:page-exact',
-      'open-tab:workspace:tab-typo'
-    ])
-  })
 })
 
 describe('searchOpenTabs filtering', () => {
   // The focused tab is only unreachable from its own column; hiding it here would
   // make it unreachable from every other column's "+" too.
-  it('still returns the focused tab and page', () => {
+  it('still returns the focused tab', () => {
     const results = search({
       query: 'zebra',
-      workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Zebra tab', isCurrentTab: true })],
-      browserPages: [makeBrowserPage({ id: 'page-1', title: 'Zebra page', isCurrentPage: true })]
+      workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Zebra tab', isCurrentTab: true })]
     })
 
-    expect(results.map(readableId)).toEqual([
-      'open-tab:workspace:tab-1',
-      'open-tab:browser:page-1'
-    ])
+    expect(results.map(readableId)).toEqual(['open-tab:workspace:tab-1'])
   })
 
   it('returns nothing for a query that only matches the worktree name', () => {
     expect(
       search({
         query: 'aurora',
-        workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Notes' })],
-        browserPages: [makeBrowserPage({ id: 'page-1', title: 'Release notes' })]
+        workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Notes' })]
       })
     ).toEqual([])
   })
@@ -406,22 +289,9 @@ describe('searchOpenTabs filtering', () => {
     expect(
       search({
         query: 'rocket',
-        workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Notes' })],
-        browserPages: [makeBrowserPage({ id: 'page-1', title: 'Release notes' })]
+        workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Notes' })]
       })
     ).toEqual([])
-  })
-
-  it('keeps a browser workspace-label match in the secondary tier', () => {
-    const results = search({
-      query: 'zebra',
-      workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Zebra terminal' })],
-      browserPages: [
-        makeBrowserPage({ id: 'page-1', title: 'Release notes', workspaceLabel: 'Zebra staging' })
-      ]
-    })
-
-    expect(results.map(readableId)).toEqual(['open-tab:workspace:tab-1', 'open-tab:browser:page-1'])
   })
 
   it('keeps branch matches while excluding worktree and repository fields', () => {
@@ -567,12 +437,10 @@ describe('searchOpenTabs result fields', () => {
     })
   })
 
-  it('carries the activation identifiers each source needs', () => {
-    const faviconUrl = 'https://example.com/favicon.ico'
+  it('carries the activation identifiers workspace results need', () => {
     const results = search({
       query: 'zebra',
-      workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Zebra tab' })],
-      browserPages: [makeBrowserPage({ id: 'page-1', title: 'Zebra page', faviconUrl })]
+      workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Zebra tab' })]
     })
 
     expect(results).toMatchObject([
@@ -584,14 +452,6 @@ describe('searchOpenTabs result fields', () => {
         groupId: 'group-1',
         worktreeId: 'wt-1',
         occupantAgent: null
-      },
-      {
-        source: 'browser',
-        contentType: 'browser',
-        pageId: 'page-1',
-        workspaceId: 'page-1-ws',
-        worktreeId: 'wt-1',
-        faviconUrl
       }
     ])
   })
@@ -611,8 +471,7 @@ describe('searchOpenTabs query guards', () => {
     expect(
       search({
         query,
-        workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Zebra tab' })],
-        browserPages: [makeBrowserPage({ id: 'page-1', title: 'Zebra page' })]
+        workspaceTabs: [makeWorkspaceTab({ id: 'tab-1', title: 'Zebra tab' })]
       })
     ).toEqual([])
   })

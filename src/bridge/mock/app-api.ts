@@ -1,5 +1,5 @@
 // Phase 0 mock; replaced by Tauri IPC per view.
-import type { AppApi } from '../../preload/api/app-api'
+import type { AppApi } from '../../shared/preload-api/api/app-api'
 
 const MOCK_HOME = 'C:\\Users\\ade'
 

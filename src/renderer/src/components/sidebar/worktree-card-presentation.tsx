@@ -9,7 +9,6 @@ import {
   WorktreeCardDetailsHover,
   WorktreeCardMetaBadges
 } from './WorktreeCardMeta'
-import { WorktreeCardPortsDetails, WorktreeCardPortsTrigger } from './WorktreeCardPorts'
 import type { WorktreeCardController } from './use-worktree-card-controller'
 
 export function buildWorktreeCardPresentation(card: WorktreeCardController) {
@@ -34,31 +33,23 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
     cardProps,
     cacheStartedAt,
     hasDetails,
-    hasPorts,
     showStatus,
     showInlineAgentList,
     showLineageChildChip,
     remoteBranchConflict,
     visibleCardTitle,
-    workspacePorts,
     metaIssue,
-    metaLinearIssue,
-    metaJiraIssue,
     metaReview,
     metaComment,
     metaAutomationProvenance,
     metaCliProvenance,
     hoverIssue,
-    hoverLinearIssue,
-    hoverJiraIssue,
     hoverReview,
     hoverComment,
-    linearIssue,
     handleEditIssue,
     handleEditComment,
     handleOpenGitHubIssueInOrca,
     handleOpenIssueInBrowser,
-    handleOpenLinearIssueInOrca,
     handleOpenReviewInOrca,
     handleOpenReviewInBrowser,
     handleOpenAutomation,
@@ -92,8 +83,8 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
   // Why: the slot owns the unread/status lane; legacy keeps the bell toggle, the new card keeps the glyph passive.
   const showCombinedStatusSlot = showStatus
   const showTitleRowPrimary = compactCards && worktree.isMainWorktree && !isFolder
-  const showMetaRowDetails = !newCardStyle && !compactCards && (hasDetails || hasPorts)
-  const showTitleRowIndicators = (newCardStyle || compactCards) && (hasDetails || hasPorts)
+  const showMetaRowDetails = !newCardStyle && !compactCards && hasDetails
+  const showTitleRowIndicators = (newCardStyle || compactCards) && hasDetails
   // Why: grouped views can hide the repo badge; don't reserve a blank metadata lane unless there's real content.
   const hasDetailedMetaRowContent = Boolean(
     (showRepoBadgeInMetaRow && repo) ||
@@ -131,26 +122,21 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
     newCardStyle &&
     (hasWorktreeCardDetails({
       issue: hoverIssue,
-      linearIssue: hoverLinearIssue,
-      jiraIssue: hoverJiraIssue,
       review: hoverReview,
       comment: hoverComment,
       automationProvenance: metaAutomationProvenance,
       cliProvenance: metaCliProvenance
     }) ||
-      workspacePorts.length > 0 ||
       hasHoverIdentity)
   // Why: the parent row owns metadata hover; don't stack the title's truncation tooltip on the details popover.
   const titleWrapper = newCardStyle
     ? hasHoverDetails
       ? (title: React.ReactElement): React.ReactElement => title
       : undefined
-    : compactCards && (showBranchIdentityHover || hasDetails || hasPorts)
+    : compactCards && (showBranchIdentityHover || hasDetails)
       ? (title: React.ReactElement): React.ReactElement => (
           <WorktreeCardDetailsHover
             issue={metaIssue}
-            linearIssue={metaLinearIssue}
-            jiraIssue={metaJiraIssue}
             review={metaReview}
             comment={metaComment}
             automationProvenance={metaAutomationProvenance}
@@ -158,7 +144,6 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
             branchName={showBranchIdentityHover ? branch : undefined}
             workspaceTitle={worktree.displayName}
             identityOrder="branch-first"
-            detailsAfter={hasPorts ? <WorktreeCardPortsDetails ports={workspacePorts} /> : null}
             openDelay={100}
             // Why: compact mode also renders the plug/badge hover root; sharing one open-state made hovering the
             // plug force-open the wider title card and race it closed (#9304), so let this title hover own its state.
@@ -174,7 +159,6 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
                 ? handleOpenIssueInBrowser
                 : undefined
             }
-            onOpenLinearIssueInOrca={linearIssue?.url ? handleOpenLinearIssueInOrca : undefined}
             onOpenReviewInOrca={
               metaReview?.url && metaReview.provider === 'github'
                 ? handleOpenReviewInOrca
@@ -202,15 +186,11 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
       ? getNewCardStyleParentContentMarginLeft(contentIndent)
       : 0
   const cardStyle = cardPaddingLeft ? { paddingLeft: cardPaddingLeft } : undefined
-  const detailsAndPortsContent =
-    hasDetails || hasPorts ? (
+  const detailsAndPortsContent = hasDetails ? (
       <div className="flex shrink-0 items-center gap-1">
-        {hasPorts && <WorktreeCardPortsTrigger ports={workspacePorts} />}
         {hasDetails && (
           <WorktreeCardMetaBadges
             issue={metaIssue}
-            linearIssue={metaLinearIssue}
-            jiraIssue={metaJiraIssue}
             review={newCardStyle ? null : metaReview}
             comment={metaComment}
             automationProvenance={metaAutomationProvenance}
@@ -224,13 +204,10 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
     detailsAndPortsContent && !newCardStyle ? (
       <WorktreeCardDetailsHover
         issue={metaIssue}
-        linearIssue={metaLinearIssue}
-        jiraIssue={metaJiraIssue}
         review={metaReview}
         comment={metaComment}
         automationProvenance={metaAutomationProvenance}
         cliProvenance={metaCliProvenance}
-        detailsAfter={hasPorts ? <WorktreeCardPortsDetails ports={workspacePorts} /> : null}
         hoverControl={detailsHoverControl}
         onEditIssue={affiliateListMode ? undefined : handleEditIssue}
         onEditComment={affiliateListMode ? undefined : handleEditComment}
@@ -240,7 +217,6 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
         onOpenIssueInBrowser={
           metaIssue && 'url' in metaIssue && metaIssue.url ? handleOpenIssueInBrowser : undefined
         }
-        onOpenLinearIssueInOrca={linearIssue?.url ? handleOpenLinearIssueInOrca : undefined}
         onOpenReviewInOrca={
           metaReview?.url && metaReview.provider === 'github' ? handleOpenReviewInOrca : undefined
         }

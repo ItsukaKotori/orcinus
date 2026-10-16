@@ -1,4 +1,4 @@
-import type { TaskPageJiraCreationMetadataModel } from './use-task-page-jira-creation-metadata'
+import type { TaskPageGitHubMutationStateModel } from './use-task-page-github-mutation-state'
 import { useCallback, useMemo, useEffect } from 'react'
 import type { GitHubWorkItem } from '../../../shared/github/work-item-types'
 import { taskPageGitHubItemKey } from '@/components/task-page-github-work-item-mutation-registry'
@@ -11,7 +11,7 @@ import {
   getTaskPageRepoSourceContext
 } from './task-page-source-context'
 import { sameOptionalGitHubOwnerRepo } from './task-page-github-review-model'
-export function useTaskPageGitHubListProjection(model: TaskPageJiraCreationMetadataModel) {
+export function useTaskPageGitHubListProjection(model: TaskPageGitHubMutationStateModel) {
   const {
     repoMap,
     fetchPRChecks,

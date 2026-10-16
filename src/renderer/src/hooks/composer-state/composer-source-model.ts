@@ -1,17 +1,12 @@
-import type { GitLabWorkItem } from '../../../../shared/gitlab-types'
 import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import type { WorktreeMeta } from '../../../../shared/worktree/meta-types'
 import type { GitPushTarget } from '../../../../shared/worktree/types'
-import type { JiraIssue } from '../../../../shared/jira-types'
-import type { TaskSourceContext } from '../../../../shared/task-source-context'
-import type { LinearIssue } from '../../../../shared/linear/issue-types'
 import type { SparsePreset } from '../../../../shared/worktree/create-types'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { PendingSmartGitHubSubmitResolution } from './source-selection-decisions'
 import type { SmartWorkspaceNameSelection } from '@/components/new-workspace/SmartWorkspaceNameField'
 export type ComposerSourceModel = {
   addComposerAttachments: (paths: string[]) => void
-  applyLinkedGitLabWorkItem: (item: GitLabWorkItem) => void
   applyLinkedWorkItem: (
     item: GitHubWorkItem,
     options?: { preserveBranchNameOverride?: boolean | undefined }
@@ -22,12 +17,6 @@ export type ComposerSourceModel = {
   folderCreateDisabled: boolean
   handleAddAttachment: () => Promise<void>
   handleBaseBranchChange: (next: string | undefined) => void
-  handleBaseBranchMrSelect: (
-    nextBaseBranch: string,
-    item: GitLabWorkItem,
-    nextPushTarget?: GitPushTarget | undefined,
-    nextCompareBaseRef?: string | undefined
-  ) => void
   handleBaseBranchPrSelect: (
     nextBaseBranch: string,
     item: GitHubWorkItem,
@@ -41,7 +30,6 @@ export type ComposerSourceModel = {
   handleLinkPopoverChange: (open: boolean) => void
   handleNameValueChange: (nextName: string) => void
   handleOpenAgentSettings: () => void
-  handleOpenJiraSettings: () => void
   handleProjectChange: (projectId: string) => void
   handleProjectHostSetupChange: (setupId: string) => void
   handleRemoveLinkedWorkItem: () => void
@@ -53,9 +41,6 @@ export type ComposerSourceModel = {
   handleSelectLinkedItem: (item: GitHubWorkItem) => void
   handleSmartBranchSelect: (refName: string, localBranchName: string) => void
   handleSmartGitHubItemSelect: (item: GitHubWorkItem) => void
-  handleSmartGitLabItemSelect: (item: GitLabWorkItem) => void
-  handleSmartJiraIssueSelect: (issue: JiraIssue, sourceContext: TaskSourceContext) => void
-  handleSmartLinearIssueSelect: (issue: LinearIssue) => void
   handleSparseSelectPreset: (preset: SparsePreset | null) => void
   insertComposerFolderPaths: (folderPaths: string[]) => void
   onConnectSelectedProjectGroup: () => Promise<void>

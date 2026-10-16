@@ -65,7 +65,6 @@ export function FileExplorerFilesTreePane({
     scrollRef,
     runtimeDownloadContext,
     supportsFolderDownload,
-    canOpenWorkspaceFileBrowserForPath,
     statusByRelativePath,
     folderStatusByRelativePath,
     deletion,
@@ -187,7 +186,6 @@ export function FileExplorerFilesTreePane({
           dirCache={tree.dirCache}
           runtimeDownloadContext={runtimeDownloadContext}
           supportsFolderDownload={supportsFolderDownload}
-          canOpenInOrcaBrowser={canOpenWorkspaceFileBrowserForPath}
           onClick={handleRowClick}
           onDoubleClick={handleDoubleClick}
           onViewFile={handleClick}

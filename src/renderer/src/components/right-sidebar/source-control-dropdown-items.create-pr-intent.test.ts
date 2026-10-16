@@ -53,7 +53,7 @@ describe('resolveDropdownItems Create PR intent', () => {
     },
     {
       name: 'force push',
-      provider: 'gitlab' as const,
+      provider: 'azure-devops' as const,
       upstreamStatus: {
         hasUpstream: true as const,
         upstreamName: 'origin/feature',
@@ -62,7 +62,7 @@ describe('resolveDropdownItems Create PR intent', () => {
         behindCommitsArePatchEquivalent: true
       },
       blockedReason: 'needs_sync' as const,
-      expectedTitle: 'Force push with lease before creating a merge request'
+      expectedTitle: 'Force push with lease before creating a pull request'
     }
   ])(
     'keeps $name-before-review recovery available when review lookup is unavailable',
@@ -88,31 +88,6 @@ describe('resolveDropdownItems Create PR intent', () => {
       expect(pushCreate?.hint).toBeUndefined()
     }
   )
-
-  it('uses GitLab MR copy for create and push-before-create rows', () => {
-    const items = resolveDropdownItems(
-      inputs({
-        upstreamStatus: { hasUpstream: true, ahead: 2, behind: 0 },
-        hostedReviewCreation: {
-          provider: 'gitlab',
-          review: null,
-          canCreate: false,
-          blockedReason: 'needs_push',
-          nextAction: 'push',
-          reviewLookupOutcome: 'not_found'
-        }
-      })
-    )
-    const byKind = Object.fromEntries(
-      items.filter((e) => e.kind !== 'separator').map((e) => [e.kind, e])
-    )
-    expect(byKind.create_pr.label).toBe('Create MR')
-    expect(byKind.create_pr.hint).toBe('Push first')
-    expect(byKind.create_pr.disabled).toBe(false)
-    expect(byKind.push_create_pr.label).toBe('Push before MR')
-    expect(byKind.push_create_pr.title).toBe('Push local commits before creating a merge request')
-    expect(byKind.push_create_pr.disabled).toBe(false)
-  })
 
   it.each(['azure-devops', 'gitea'] as const)(
     'enables push-before-PR recovery for %s review creation',
@@ -165,23 +140,4 @@ describe('resolveDropdownItems Create PR intent', () => {
     expect(byKind.create_pr.hint).toBe(hint)
   })
 
-  it('uses GitLab auth copy when MR creation needs authentication', () => {
-    const items = resolveDropdownItems(
-      inputs({
-        upstreamStatus: { hasUpstream: true, ahead: 0, behind: 0 },
-        hostedReviewCreation: {
-          provider: 'gitlab',
-          review: null,
-          canCreate: false,
-          blockedReason: 'auth_required',
-          nextAction: 'authenticate',
-          reviewLookupOutcome: 'not_found'
-        }
-      })
-    )
-    const byKind = Object.fromEntries(
-      items.filter((e) => e.kind !== 'separator').map((e) => [e.kind, e])
-    )
-    expect(byKind.create_pr.hint).toBe('Run glab auth login in this environment')
-  })
 })

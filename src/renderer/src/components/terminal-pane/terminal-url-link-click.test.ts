@@ -1,6 +1,5 @@
 import type { IBufferLine, Terminal } from '@xterm/xterm'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { registerHttpLinkStoreAccessor } from '@/lib/http-link-routing'
 import { handleTerminalWebLinkClick } from './terminal-web-link-click'
 import { installHttpLinkClickFallback } from './terminal-url-link-hit-testing'
 
@@ -160,11 +159,6 @@ describe('hard-wrapped terminal HTTP clicks', () => {
   beforeEach(() => {
     vi.stubGlobal('navigator', { userAgent: 'Macintosh' })
     vi.stubGlobal('window', { api: { shell: { openUrl: openUrlMock } } })
-    registerHttpLinkStoreAccessor(() => ({
-      settings: { openLinksInApp: false },
-      setActiveWorktree: vi.fn(),
-      createBrowserTab: vi.fn()
-    }))
     openUrlMock.mockReset()
   })
 
@@ -174,7 +168,7 @@ describe('hard-wrapped terminal HTTP clicks', () => {
 
   it('opens the full logical URL once when WebLinksAddon reports only the first row', () => {
     const { terminal, registrations, clearSelection } = makeTerminal()
-    const disposable = installHttpLinkClickFallback(terminal, { worktreeId: 'wt-1' })
+    const disposable = installHttpLinkClickFallback(terminal, {})
     const event = mouseEventForRow(0)
 
     expect(
@@ -203,7 +197,7 @@ describe('hard-wrapped terminal HTTP clicks', () => {
 
   it('opens the same full URL from a continuation-row fallback click', () => {
     const { terminal, registrations } = makeTerminal()
-    const disposable = installHttpLinkClickFallback(terminal, { worktreeId: 'wt-1' })
+    const disposable = installHttpLinkClickFallback(terminal, {})
     const event = mouseEventForRow(3)
     const fallback = registrations.find(
       ([name, _listener, options]) => name === 'mouseup' && options === undefined
@@ -337,7 +331,7 @@ describe('hard-wrapped terminal HTTP clicks', () => {
       lineSuffix: '│ ',
       softWrapped: false
     })
-    const disposable = installHttpLinkClickFallback(terminal, { worktreeId: 'wt-1' })
+    const disposable = installHttpLinkClickFallback(terminal, {})
 
     expect(
       handleTerminalWebLinkClick('http://example.com/', mouseEventForRow(0), {
@@ -388,7 +382,7 @@ describe('hard-wrapped terminal HTTP clicks', () => {
       urlRows: ['Repo: https://github.com/stablyai/orca/', 'Description: 123'],
       softWrapped: false
     })
-    const disposable = installHttpLinkClickFallback(terminal, { worktreeId: 'wt-1' })
+    const disposable = installHttpLinkClickFallback(terminal, {})
 
     const fallback = registrations.find(
       ([name, _listener, options]) => name === 'mouseup' && options === undefined
@@ -408,7 +402,7 @@ describe('hard-wrapped terminal HTTP clicks', () => {
       urlRows: [url.slice(0, cols), url.slice(cols)],
       softWrapped: false
     })
-    const disposable = installHttpLinkClickFallback(terminal, { worktreeId: 'wt-1' })
+    const disposable = installHttpLinkClickFallback(terminal, {})
 
     const fallback = registrations.find(
       ([name, _listener, options]) => name === 'mouseup' && options === undefined
@@ -422,7 +416,7 @@ describe('hard-wrapped terminal HTTP clicks', () => {
 
   it('does not suppress a modifier-click when the buffer position is not an HTTP link', () => {
     const { terminal, registrations } = makeTerminal({ urlRows: ['not-a-link'] })
-    const disposable = installHttpLinkClickFallback(terminal, { worktreeId: 'wt-1' })
+    const disposable = installHttpLinkClickFallback(terminal, {})
     const mouseDown = registrations.find(([name]) => name === 'mousedown')?.[1]
 
     mouseDown!(mouseEventForRow(0))
@@ -439,7 +433,7 @@ describe('hard-wrapped terminal HTTP clicks', () => {
     terminalWithLinkifier._core = {
       linkifier: { _currentLink: { link: 'https://example.com/osc' } }
     }
-    const disposable = installHttpLinkClickFallback(terminal, { worktreeId: 'wt-1' })
+    const disposable = installHttpLinkClickFallback(terminal, {})
     const mouseDown = registrations.find(([name]) => name === 'mousedown')?.[1]
 
     mouseDown!(mouseEventForRow(0))
@@ -451,7 +445,7 @@ describe('hard-wrapped terminal HTTP clicks', () => {
 
   it('leaves Alt-modified link gestures to the child TUI', () => {
     const { terminal, registrations } = makeTerminal()
-    const disposable = installHttpLinkClickFallback(terminal, { worktreeId: 'wt-1' })
+    const disposable = installHttpLinkClickFallback(terminal, {})
     const mouseDown = registrations.find(([name]) => name === 'mousedown')?.[1]
     const event = mouseEventForRow(0, { altKey: true })
 
@@ -471,7 +465,7 @@ describe('hard-wrapped terminal HTTP clicks', () => {
 
   it('temporarily suppresses PTY mouse reporting at an HTTP link position', async () => {
     const { terminal, registrations } = makeTerminal()
-    const disposable = installHttpLinkClickFallback(terminal, { worktreeId: 'wt-1' })
+    const disposable = installHttpLinkClickFallback(terminal, {})
     const mouseDown = registrations.find(([name]) => name === 'mousedown')?.[1]
     const mouseUp = registrations.find(
       ([name, _listener, options]) => name === 'mouseup' && options !== undefined
@@ -490,7 +484,6 @@ describe('hard-wrapped terminal HTTP clicks', () => {
     const request = vi.fn()
     const { terminal, registrations } = makeTerminal()
     const disposable = installHttpLinkClickFallback(terminal, {
-      worktreeId: 'wt-1',
       getLinkActionContext: () => ({
         paneId: 1,
         pointerGesture: { canRequestAction: () => true, dispose: vi.fn() },
@@ -517,7 +510,6 @@ describe('hard-wrapped terminal HTTP clicks', () => {
   it('does not suppress a plain HTTP link when action popovers are disabled', () => {
     const { terminal, registrations } = makeTerminal()
     const disposable = installHttpLinkClickFallback(terminal, {
-      worktreeId: 'wt-1',
       getLinkActionContext: () => null
     })
     const mouseDown = registrations.find(([name]) => name === 'mousedown')?.[1]

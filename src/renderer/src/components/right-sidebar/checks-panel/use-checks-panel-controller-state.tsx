@@ -21,7 +21,6 @@ import type {
 import type { PRCheckDetail } from '../../../../../shared/github/check-types'
 import type { PRComment } from '../../../../../shared/github/comment-types'
 import type { PRRefreshErrorType } from '../../../../../shared/github/pull-request-refresh-types'
-import type { GitLabProjectRef } from '../../../../../shared/gitlab-types'
 import type { PRCommentsListSelectionClearRequest } from '../pr-comments-list-selection'
 import {
   buildChecksPanelGitStatusContextKey,
@@ -159,7 +158,6 @@ export function useChecksPanelControllerState() {
   const prevChecksRef = useRef<string>('')
   // Why: a fork MR's pipeline lives in the source project, so job traces must be
   // fetched against the MR's own project rather than this repo's default remote.
-  const gitLabProjectRefRef = useRef<GitLabProjectRef | null>(null)
   const conflictSummaryRefreshKeyRef = useRef<string | null>(null)
   const panelVisibleSinceRef = useRef<number | null>(null)
   const foregroundedUnrenderedReviewKeyRef = useRef<string | null>(null)
@@ -247,7 +245,7 @@ export function useChecksPanelControllerState() {
     worktreePath: activeWorktreePath,
     branch,
     linkedGitHubPR: activeWorktree?.linkedPR ?? null,
-    linkedGitLabMR: activeWorktree?.linkedGitLabMR ?? null,
+    linkedGitLabMR: null,
     linkedBitbucketPR: activeWorktree?.linkedBitbucketPR ?? null,
     linkedAzureDevOpsPR: activeWorktree?.linkedAzureDevOpsPR ?? null,
     linkedGiteaPR: activeWorktree?.linkedGiteaPR ?? null,
@@ -360,7 +358,6 @@ export function useChecksPanelControllerState() {
     mountedRef,
     confirm,
     prevChecksRef,
-    gitLabProjectRefRef,
     conflictSummaryRefreshKeyRef,
     panelVisibleSinceRef,
     foregroundedUnrenderedReviewKeyRef,

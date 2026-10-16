@@ -176,18 +176,6 @@ export const KEYBINDING_DEFINITION_CORE_1: readonly KeybindingDefinition[] = [
     defaultBindings: platformBindings([])
   },
   {
-    id: 'sidebar.ports.toggle',
-    title: 'Show Ports',
-    group: 'Global',
-    scope: 'global',
-    searchKeywords: ['shortcut', 'sidebar', 'ports'],
-    defaultBindings: {
-      darwin: ['Mod+Shift+I'],
-      linux: [],
-      win32: []
-    }
-  },
-  {
     id: 'sidebar.sleepingWorkspaces.toggle',
     title: 'Toggle Sleeping Workspaces',
     group: 'Global',

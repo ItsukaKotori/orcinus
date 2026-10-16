@@ -8,31 +8,8 @@
     }
   },
   "browser": {
-    "loadFailure": {
-      "connectionNotSecure": "La connexion n'est pas sécurisée",
-      "cantReachHost": "Impossible d'accéder à {{value0}}",
-      "cantLoadPage": "Impossible de charger cette page",
-      "certificateNameMismatch": "Le certificat ne correspond pas à {{value0}}.",
-      "certificateDateInvalid": "Le certificat de {{value0}} n'est pas valide à la date et à l'heure actuelles.",
-      "certificateAuthorityInvalid": "Orcinus ne fait pas confiance à l'autorité qui a émis le certificat de {{value0}}.",
-      "certificateVerificationFailed": "Orcinus n'a pas pu vérifier le certificat de {{value0}}.",
-      "trustedCertificateGuidance": "Pour le développement local, utilisez si possible un certificat local de confiance.",
-      "retry": "Réessayer",
-      "copyAddress": "Copier l'adresse",
-      "addressCopied": "Adresse de la page actuelle copiée.",
-      "openExternally": "Ouvrir en externe",
-      "tryHttps": "Essayer HTTPS",
-      "proceedUnsafe": "Continuer quand même (non sécurisé)",
-      "connecting": "Connexion…",
-      "certificateChallengeExpired": "Cette approbation de certificat a expiré. Rechargez la page pour en demander une nouvelle.",
-      "certificateChallengeChanged": "La demande de certificat a changé. Rechargez la page et examinez le nouvel avertissement.",
-      "certificateChallengeUnavailable": "Cette demande de certificat n'est plus disponible. Rechargez la page pour en demander une nouvelle.",
-      "certificateProceedFailed": "Orcinus n'a pas pu approuver cette demande de certificat. Rechargez la page et réessayez."
-    },
-    "guestRecovery": {
-      "title": "Page du navigateur arrêtée",
-      "failed": "La page du navigateur s'est arrêtée de manière inattendue. Réessayez pour la restaurer."
-    }
+    "loadFailure": {},
+    "guestRecovery": {}
   },
   "githubChecks": {
     "retrying": "Nouvelle tentative…"
@@ -227,10 +204,6 @@
         "preload": {
           "api": {
             "31bfe8ae1a": "Indisponible dans le client web.",
-            "67ec964791": "L'import de cookies est indisponible dans le client web.",
-            "275a776357": "L'extraction au survol est indisponible dans le client web.",
-            "8dfcb7a351": "Les captures de sélection sont indisponibles dans le client web.",
-            "31bea294d5": "Le mode capture est indisponible dans le client web.",
             "b8a1618172": "La génération du détail de pull request est indisponible dans le client web.",
             "e57c82d276": "La découverte des modèles de messages de commit est indisponible dans le client web.",
             "9fc90740b6": "La génération des messages de commit est indisponible dans le client web.",
@@ -252,11 +225,7 @@
     },
     "store": {
       "slices": {
-        "browser": {
-          "d175274b6d": "Nouvel onglet de navigateur",
-          "08fc23631d": "Navigateur",
-          "remoteCookieImportUnavailable": "L'import manuel d'un fichier de cookies est indisponible tant qu'un runtime distant est actif."
-        },
+        "browser": {},
         "editor": {
           "dcb521ed29": "Ce fichier est en état de conflit, mais aucun fichier de l'arbre de travail n'est disponible à l'édition.",
           "conflictPlaceholderGuidance": "Résolvez le conflit dans Git ou restaurez l'un des deux côtés avant de le rouvrir.",
@@ -370,12 +339,8 @@
           "66e3bd7ce6": "Envoyé à {{value0}}",
           "53883b7bc3": "Impossible d'envoyer à {{value0}}"
         },
-        "jira": {
-          "856083302c": "La connexion Jira a été remplacée par une requête plus récente."
-        },
-        "linear": {
-          "37d36984d0": "La connexion Linear a été remplacée par une requête plus récente."
-        },
+        "jira": {},
+        "linear": {},
         "orca": {
           "profiles": {
             "612f7f6861": "Échec de la création du profil",
@@ -658,10 +623,7 @@
         },
         "browser": {
           "tab": {
-            "open": {
-              "urlFailed": "Impossible d'ouvrir l'URL.",
-              "searchFailed": "Impossible d'effectuer la recherche avec {{value0}}."
-            }
+            "open": {}
           }
         }
       },
@@ -731,29 +693,11 @@
       },
       "linear": {
         "usage": {
-          "examples": {
-            "readTicket": "Lire le ticket lié",
-            "postUpdate": "Publier un point d'avancement",
-            "moveState": "Faire avancer le ticket",
-            "attachPr": "Joindre le lien de review",
-            "triageFollowups": "Trier et créer des tickets de suivi",
-            "readTicketSummary": "Récupérer tout le contexte de l'issue Linear liée avant de commencer le travail.",
-            "readTicketPrompt": "Utilisez {{value0}} pour lire l'issue Linear liée à ce worktree, puis résumez l'objectif et les critères d'acceptation avant de commencer.",
-            "postUpdateSummary": "Commenter la progression ou un résumé d'achèvement vers l'issue Linear.",
-            "postUpdatePrompt": "Utilisez {{value0}} pour publier une mise à jour d'achèvement sur l'issue Linear associée, avec ce qui a changé et comment cela a été vérifié.",
-            "moveStateSummary": "Faites avancer l'état du workflow Linear au fur et à mesure de la progression des travaux.",
-            "moveStatePrompt": "Utilisez {{value0}} pour passer l'issue Linear associée à In Review maintenant que la modification est prête.",
-            "attachPrSummary": "Liez la pull request ou merge request à l'issue Linear au moment de l'ouvrir.",
-            "attachPrPrompt": "Utilisez {{value0}} pour rattacher cette pull request ou merge request à l'issue Linear associée.",
-            "triageFollowupsSummary": "Définissez l'assigné, la priorité ou l'estimation, et créez des tickets de suivi rattachés.",
-            "triageFollowupsPrompt": "Utilisez {{value0}} pour trier l'issue Linear associée — définir la priorité et l'estimation — et créer un ticket de suivi rattaché pour le nettoyage différé."
-          }
+          "examples": {}
         },
         "issue": {
           "workspace": {
-            "open": {
-              "4f2c1d8a3b": "Impossible d'ouvrir l'espace de travail associé à cette issue."
-            }
+            "open": {}
           }
         }
       },
@@ -769,17 +713,7 @@
         "cookie": {
           "import": {
             "toast": {
-              "restartFallbackUnavailableNone": "Aucun des {{value0}} cookies n'a pu être chargé, et la solution de repli par redémarrage était indisponible. Les cookies précédents de ce profil ont été remplacés. Réessayez l'importation.",
-              "restartFallbackUnavailablePartial": "{{value0}} cookies sur {{value1}} ont été importés. Le reste n'a pas pu être chargé, et la solution de repli par redémarrage était indisponible. Réessayez l'importation.",
-              "googleCookiesSkipped": "Les cookies Google n'ont pas été importés. Ouvrez un navigateur dans Orcinus sur {{value0}} avec ce profil, puis connectez-vous à Google.",
-              "undecryptableAppBound": "Orcinus ne peut pas déchiffrer {{value0}} cookies de ce navigateur car ils utilisent un chiffrement lié à l'application. Vous pouvez importer des cookies depuis un fichier avec « Depuis un fichier… ».",
-              "undecryptableAppBoundMixed": "Orcinus ne peut pas déchiffrer {{value0}} cookies de ce navigateur car ils utilisent un chiffrement lié à l'application ; {{value1}} autres n'ont pas pu être déchiffrés pour une autre raison. Vous pouvez importer des cookies depuis un fichier avec « Depuis un fichier… ».",
-              "undecryptableKeyring": "{{value0}} cookies n'ont pas pu être déchiffrés car le trousseau système était indisponible. Déverrouillez votre trousseau de connexion (ou installez un fournisseur Secret Service tel que gnome-keyring), puis importez à nouveau.",
-              "undecryptableKeyringMixed": "{{value0}} cookies n'ont pas pu être déchiffrés car le trousseau système était indisponible ; {{value1}} autres n'ont pas pu être déchiffrés pour une autre raison. Déverrouillez votre trousseau de connexion (ou installez un fournisseur Secret Service tel que gnome-keyring), puis importez à nouveau.",
-              "undecryptableUnknown": "{{value0}} cookies n'ont pas pu être déchiffrés et ont été ignorés. Fermez complètement le navigateur source, puis réessayez l'importation.",
-              "unrecognizedWarning": "L'importation des cookies s'est terminée avec un avertissement que cette version d'Orcinus ne reconnaît pas. Mettez Orcinus à jour pour voir les détails, puis vérifiez ce profil avant de vous fier à ses cookies.",
-              "undecryptableUnrecognizedReason": "{{value0}} cookies n'ont pas pu être déchiffrés et ont été ignorés pour une raison que cette version d'Orcinus ne reconnaît pas. Mettez Orcinus à jour pour voir les détails, puis réessayez l'importation.",
-              "partitionSkipped": "{{value0}} cookies n'ont pas été importés car leur partition de site n'a pas pu être lue. Connectez-vous à nouveau à ces sites dans Orcinus."
+              "googleCookiesSkipped": "Les cookies Google n'ont pas été importés. Ouvrez un navigateur dans Orcinus sur {{value0}} avec ce profil, puis connectez-vous à Google."
             }
           }
         }
@@ -807,8 +741,7 @@
         "chooseOrAddProjectBeforeWorkspace": "Choisissez ou ajoutez un projet avant de créer un espace de travail.",
         "folderWorkspaceCreateFailedTitle": "Échec de la création de l'espace de travail de dossier",
         "folderWorkspaceCreateFailedMessage": "L'espace de travail de dossier n'a pas pu être créé. Vérifiez les détails de l'erreur ci-dessus, puis réessayez.",
-        "setupAgentStartupPolicySaveFailed": "Échec de l'enregistrement du comportement de démarrage de la configuration.",
-        "5f3d2c8a1b": "Échec de la résolution de la base de la MR."
+        "setupAgentStartupPolicySaveFailed": "Échec de l'enregistrement du comportement de démarrage de la configuration."
       },
       "useGlobalFileDrop": {
         "38c9f034ff": "Échec de l'envoi des fichiers déposés.",
@@ -821,11 +754,6 @@
         "ownerChanged": "Impossible de vérifier quel hôte possède cet espace de travail. Réessayez après sa reconnexion."
       },
       "useIpcEvents": {
-        "0e3cf53060": "Onglet de navigateur {{value0}} introuvable",
-        "2f6637fe6c": "L'onglet de navigateur {{value0}} est épinglé",
-        "a8d2bf8e9e": "Aucun onglet de navigateur actif à fermer",
-        "291c8ed902": "Les onglets de navigateur sont indisponibles tant qu'un runtime distant est actif",
-        "f45fa2b03c": "Les profils de navigateur sont indisponibles tant qu'un runtime distant est actif",
         "f000b2ff76": "Aucun worktree actif",
         "56d3ec4203": "Échec de la création du fichier markdown sans titre.",
         "f6300deb8b": "Nouvel onglet de navigateur",
@@ -937,10 +865,7 @@
       }
     },
     "components": {
-      "BrowserCookieImportDisclosure": {
-        "title": "Connexions Google non importées",
-        "description": "Connectez-vous à Google directement dans Orcinus."
-      },
+      "BrowserCookieImportDisclosure": {},
       "CodexRestartChip": {
         "a4c8e1b2f7": "Codex est toujours connecté en tant que {{value0}}",
         "c72a5fb234": "Redémarrer",
@@ -1158,104 +1083,17 @@
         "00f55cc17b": "L'accès au dépôt est indisponible pour cette pull request."
       },
       "GitLabItemDialog": {
-        "65e784c1f1": "Rouvrir",
-        "a199eb364b": "Fermer",
-        "16b3412570": "Merge",
-        "131865e231": "Créer un espace de travail",
-        "f2e64d1c20": "Ouvrir dans GitLab",
-        "84012fa8fb": "Commentaire",
-        "c08e1d5a57": "Commenter {{value0}}{{value1}}…",
-        "f11e3e7675": "Aucune exécution de pipeline pour cette MR.",
-        "808b1ca1ba": "Aucun fichier modifié.",
-        "007423f585": "Contenu du diff indisponible.",
-        "a7eb4f4916": "de",
-        "21f8dde18a": "Commentaire en ligne",
-        "7a7204417f": "Ligne",
-        "ceb08a733d": "Fichier",
-        "85a8170279": "Aucun commentaire pour le moment.",
-        "14423484db": "Aucune description.",
-        "da4174b00f": "Édition",
-        "93f79a3fc1": "Enregistrer",
-        "f72fad3b16": "Annuler",
-        "717b706849": "Chargement des étiquettes",
-        "3c0b6ccca7": "bug, backend",
-        "dde24ade55": "Étiquettes",
-        "908d8d2a73": "Description",
-        "89f3f19368": "Titre",
-        "7a2117129a": "Ajouter",
-        "05939e977d": "Ajouter un reviewer",
-        "474b50d988": "Aucun reviewer.",
-        "1b19cdc510": "Retirer le reviewer {{value0}}",
-        "cb55b0390f": "Gérer",
-        "4f9313984d": "Reviewers",
-        "02cbe2de44": "Pipeline",
-        "be3d291837": "Fichiers",
-        "c996e2962c": "Conversation",
-        "b3c156dd51": "Actualiser",
-        "9bfb4a24d7": "par",
-        "30c97083c2": "Détail de l'élément de travail GitLab",
-        "e089f62594": "MR !{{value0}} fusionnée",
-        "865ea2703e": "MR !{{value0}} rouverte",
-        "9b11cd233f": "MR !{{value0}} fermée",
-        "60c13320c4": "Commentaire en ligne ajouté",
-        "ffdd9a78e1": "Les refs de diff de la MR sont indisponibles pour les commentaires en ligne.",
-        "00d0d25825": "Le fichier, la ligne et le commentaire sont requis.",
-        "ceaf7c30c7": "L'id de reviewer est indisponible pour cet utilisateur GitLab.",
-        "f7cb495a12": "{{value0}} relancé(s)",
-        "98718490e4": "Le titre de la MR est requis.",
-        "d600c2619a": "Chargement du log",
-        "028bde664e": "Masquer",
-        "2f9b27f838": "Log du job",
-        "032ae1312b": "Ouvrir le job dans GitLab",
-        "fa3e042203": "Réessayer",
-        "f23ea85341": "résolu",
         "4186685c78": "rouvrir",
         "cae2712a23": "clôturer",
         "881e522e04": "merge",
-        "6de8ce0cc6": "{{value0}} requis",
-        "22511537d2": "Approuvé",
-        "00f3bab87b": " sur {{value0}} requis",
-        "11384f99aa": "nombre",
-        "40c56b95e2": "Il reste {{value0}} approbation{{value1}}",
-        "3a051b8ade": "Élément de travail",
-        "32f8bef818": "Aucune sortie de log.",
-        "4168eb2c51": "Résoudre",
-        "commentTooLarge": "Le commentaire est trop volumineux pour être envoyé sans risque."
+        "11384f99aa": "nombre"
       },
       "JiraIssueWorkspace": {
-        "b0b92666c9": "Commentaire",
-        "a585fd204e": "Ajouter un commentaire Jira...",
-        "2441be6f9f": "Démarrer l'espace de travail",
-        "9178090e26": "Aucun commentaire pour le moment.",
-        "5cd09beaf9": "Réessayer",
-        "9a980b06b9": "Commentaires",
-        "c4889a47e4": "Aucune description fournie.",
-        "0f3c07a901": "backend, bug",
-        "aee97b6913": "Étiquettes",
-        "444865b4a8": "Titre",
-        "0b6b5646ed": "Non assigné",
-        "51bed73f88": "Aucune priorité",
-        "7a96985ca0": "Fermer",
-        "76513c7898": "Fermer l'aperçu du ticket Jira",
-        "857bd2f88f": "Prévisualisez, modifiez et démarrez le travail depuis le ticket sélectionné.",
-        "0cc62bd690": "Copier le prompt",
-        "80efa101c5": "Copier le nom de branche suggéré",
-        "38839801e8": "Copier la clé",
-        "779bb91ee0": "Copier l'URL",
-        "69da9a208c": "Ouvrir dans Jira",
-        "fa132c8aed": "Échec de l'ajout du commentaire.",
-        "ea21952aa3": "Échec de la mise à jour du ticket Jira.",
-        "6c41a9bcea": "Échec de la copie : {{value0}}",
-        "2ff69a3545": "{{value0}} copié",
-        "666cfdd835": "Inconnu",
         "9ebee71962": "labels",
         "def3d0e824": "titre",
         "b8e2079d96": "assigné",
-        "54649eaeab": "+ Assigné",
         "2a829a2f00": "priorité",
-        "693be070d0": "transition",
-        "ef21405c6d": "Ticket Jira",
-        "commentTooLarge": "Le commentaire est trop volumineux pour être envoyé sans risque."
+        "693be070d0": "transition"
       },
       "Landing": {
         "76a95f7f47": "Créer",
@@ -1279,118 +1117,17 @@
         "157bb5ecbb": "Ouvrir GitHub",
         "preflightDismiss": "Ignorer"
       },
-      "LinearIssueMarkdownDescriptionEditor": {
-        "d9c47069ef": "Markdown",
-        "a7301a11f3": "enregistrer",
-        "632096eb1c": "Lien",
-        "340160f4e8": "Supprimer le lien",
-        "9eaf02ac01": "Citation",
-        "e2a0267c8c": "Liste de tâches",
-        "d6b2f3d35b": "Liste numérotée",
-        "c82917e06e": "Liste à puces",
-        "ad1869bd54": "Code en ligne",
-        "28fd951b83": "Barré",
-        "5666b4493d": "Italique",
-        "caa88f50d0": "Gras",
-        "dddaa7a0a6": "Titre 2",
-        "e3f741d258": "Titre 1",
-        "68a41d5665": "Texte courant",
-        "7c52151156": "Mise en forme de la description du ticket",
-        "5c16ec8f14": "URL du lien",
-        "4f2fddc2b7": "Aucune description fournie."
-      },
+      "LinearIssueMarkdownDescriptionEditor": {},
       "LinearIssueTextEditor": {
-        "947ba2d6f4": "pour enregistrer",
-        "04d73b72dc": "Titre du ticket",
-        "e8ff595db3": "Échec de la mise à jour de {{value0}}",
-        "1e08a1ec80": "Le titre est obligatoire",
         "00fa439dc7": "titre",
         "75294b07d1": "description"
       },
       "LinearIssueWorkspace": {
-        "ad5dec37b7": "Prévisualisez, modifiez et démarrez le travail depuis le ticket sélectionné.",
-        "c23e79e5c0": "Actions",
-        "b0eac92d85": "Réessayer",
-        "fabbd3f974": "a mis à jour le ticket ·",
-        "543970c87a": "Activité",
-        "df4c86ed12": "Fermer",
-        "7a4997d8bb": "Fermer l'aperçu du ticket Linear",
-        "e1e0a9bca9": "Démarrer l'espace de travail",
-        "30a7f56c0a": "Démarrer un espace de travail à partir de l'issue",
-        "30c1242f3a": "Copier l'identifiant",
         "9e3c49beb8": "Copier l'identifiant du ticket",
-        "9a9a884236": "Copier l'URL",
-        "97c19a84f1": "Copier l'URL Linear",
-        "f63ef94ea8": "Tickets",
-        "f6c6381593": "Copier le prompt",
-        "5d670ec8dc": "Copier le nom de branche suggéré",
-        "937ba6ad9a": "Chargement des projets",
-        "db3f269d98": "Rechercher des projets",
-        "b51276c8d6": "Projet",
-        "8b5b593053": "Échec de la mise à jour du projet",
-        "f9d4ef9807": "Projet mis à jour",
-        "38b80780c2": "Échec du chargement des projets",
-        "42589845bc": "Créer",
-        "c182e02de5": "Titre du sous-ticket",
-        "8c55d6696a": "Ajouter des sous-tickets",
-        "b25e453c9d": "Échec de la création du sous-ticket",
-        "aeed19d003": "{{value0}} créé",
-        "9a1317cdd3": "Échec du chargement du sous-ticket",
-        "9bcbaa2737": "Échec de la copie : {{value0}}",
-        "7835483c43": "{{value0}} copié",
-        "61f424f8ca": "Ticket Linear",
-        "ca8778c124": "Inconnu",
-        "8a33c85e9c": "Quelqu'un",
         "f5a6b38a14": "sheet",
-        "65239a714b": "Linear",
-        "af6e02c44a": "page",
-        "76ffd3c937": "Recherchez un projet à ajouter.",
-        "c11b4e3cc2": "Aucun projet trouvé.",
-        "519c3587f3": "Ajouter au projet",
-        "openAttachedWorkspace": "Ouvrir l'espace de travail associé à l'issue",
-        "openWorkspace": "Ouvrir l'espace de travail",
-        "openOnLinear": "Ouvrir dans Linear",
-        "moreWorkspaceActions": "Plus d'actions de espace de travail pour l'issue",
-        "startNewWorkspace": "Démarrer un nouveau espace de travail",
-        "workspaceSection": "Espace de travail",
-        "noWorkspaceYet": "Aucun pour l'instant"
+        "af6e02c44a": "page"
       },
-      "LinearItemDrawer": {
-        "04008e6c46": "Démarrer un espace de travail à partir de l'issue",
-        "a4fcc57522": "Aucun commentaire pour le moment.",
-        "fde849b2b6": "Commentaires",
-        "9dc54172db": "Fermer · Esc",
-        "0190b760c1": "Ouvrir dans Linear",
-        "04a442f796": "Prévisualisez et modifiez le ticket Linear sélectionné.",
-        "d369841269": "Envoyer le commentaire",
-        "2fcff829a8": "Ajouter un commentaire…",
-        "2820f0f0f0": "Laisser un commentaire...",
-        "6ab35eafd5": "Échec de l'ajout du commentaire",
-        "367f828482": "Aucun label trouvé",
-        "cddd9b04a7": "Chargement des étiquettes",
-        "23886c7eec": "Ajouter un label",
-        "7f7b89b631": "Labels : {{value0}}",
-        "b2376d0179": "Chargement des membres",
-        "866316f22c": "Non assigné",
-        "b5675b0694": "Enregistrer",
-        "ceeb8c6153": "Effacer",
-        "fbb90300e2": "Estimation personnalisée",
-        "780ea6ed89": "Aucun état trouvé",
-        "59b6cd3706": "Chargement des états",
-        "64bfffc4dd": "Étiquettes",
-        "dd304de85a": "Propriétés",
-        "0be31fef8e": "L'estimation doit être un entier non négatif",
-        "48e17e8cbd": "Inconnu",
-        "858d0630da": "Fermer l'aperçu",
-        "39883467f4": "Ticket Linear",
-        "fda549766e": "{{value0}} pour commenter",
-        "d71cd3003e": "+ Assigné",
-        "commentTooLarge": "Le commentaire est trop volumineux pour être envoyé sans risque.",
-        "openAttachedWorkspace": "Ouvrir l'espace de travail associé à l'issue",
-        "openWorkspace": "Ouvrir l'espace de travail",
-        "moreWorkspaceActions": "Plus d'actions de espace de travail pour l'issue",
-        "startNewWorkspace": "Démarrer un nouveau espace de travail"
-      },
+      "LinearItemDrawer": {},
       "NewWorkspaceComposerCard": {
         "reuseExistingBranch": "Réutiliser la branche",
         "reuseExistingBranchHint": "Faites un checkout de la branche existante au lieu d'en créer une nouvelle à partir de celle-ci.",
@@ -1460,7 +1197,6 @@
         "perWorkspaceEnvHint": "Provisionner un environnement à la demande depuis une recette",
         "branchName": "Nom de branche",
         "branchNamePlaceholder": "feature/my-branch",
-        "connectTimedOut": "La connexion a expiré. Elle se poursuit peut-être en arrière-plan.",
         "connectingHost": "Connexion…",
         "connectHost": "Se connecter",
         "setLocation": "Définir l'emplacement du projet",
@@ -1686,16 +1422,8 @@
         "92b0f9d921": "soit authentifiée et réessayez.",
         "cd8c34aac1": "gh",
         "cf82170065": "Impossible de mettre une étoile au dépôt. Vérifiez que",
-        "30c36231c1": "Orcinus est open source. Si ça vous a aidé aujourd'hui, une étoile GitHub aide d'autres développeurs à le découvrir.",
-        "b5e685e4d9": "Ignorer",
-        "5f6df21046": "Vous appréciez Orcinus ?",
-        "2d67b6c849": "Mettre une étoile sur GitHub",
-        "af3c9bbb37": "Ajout de l'étoile…",
         "68a41bc3aa": "Impossible de mettre une étoile avec",
         "996bf76e46": "Ouvrez GitHub pour terminer dans votre navigateur.",
-        "d32015fec7": "Ouverture...",
-        "157bb5ecbb": "Ouvrir GitHub",
-        "8c967b4d15": "Plus tard",
         "73dfd4eb8d": "Ne plus demander"
       },
       "TaskPage": {
@@ -1711,104 +1439,23 @@
         "60f806ce99": "Connecter le site Jira",
         "8ff6fdc368": "Création…",
         "fc0d8a1fa4": "pour valider.",
-        "919a20dd5b": "Saisissez {{value0}}",
-        "56cdb413a2": "Valeurs séparées par des virgules",
-        "1f0fce91e3": "Sélectionner {{value0}}",
-        "cbcdcbe244": "Chargement des champs Jira obligatoires…",
         "34d97ca682": "Que se passe-t-il ?",
-        "f161bf9ede": "Description (facultatif)",
         "578f730c16": "Résumé court",
         "16cba35bee": "Titre",
-        "ae592fee62": "Type de ticket",
-        "7d63e2626e": "Chargement...",
-        "93c57f15e5": "Aucun projet trouvé.",
-        "cfb56a7868": "Rechercher des projets...",
         "00022ec0ba": "Projet",
-        "0c11ca0b6d": "Nouveau ticket Jira",
         "d0ca4aa1d0": "Étiquettes",
-        "1742eafc14": "Aucun projet",
-        "69591944e7": "Basse",
-        "7fd59c18d8": "Moyenne",
-        "345b169f1f": "Haute",
-        "f373ab1a4f": "Urgente",
-        "713179dfdc": "Aucune priorité",
-        "c8d5bec5f7": "Priorité",
         "42a9160321": "Non assigné",
-        "d2a876ca53": "Assigné",
         "154b0fa623": "Statut",
-        "9bc8aea407": "Ajouter une description...",
-        "d9151fd4e9": "Titre du ticket",
-        "4f3cb99f41": "Changer d'équipe",
-        "c11105dac5": "Nouveau ticket",
-        "1b59a07674": "Création...",
-        "cf72580c04": "Rédigez une description, une note de projet ou rassemblez des idées...",
-        "2ea1c701b6": "Date cible",
-        "7da41c9225": "Cible",
-        "09623359b9": "Date de début",
         "7d08e8be0f": "Début",
-        "af9e877f30": "Aucun label",
-        "d6cda23ef1": "Membres",
-        "cfaadb6b22": "Aucun responsable",
-        "34da8ac06c": "Responsable",
-        "579f98afcd": "Ajoutez un résumé court...",
-        "ecbcc83140": "Nom du projet",
-        "b6795e65fd": "Fermer",
-        "a98cbe7664": "Équipe",
-        "02f67c0d09": "Nouveau projet",
-        "bdebffcbfe": "Créez un projet Linear pour l'équipe sélectionnée.",
-        "1361275ec3": "Nouveau projet Linear",
         "7f3f7b4c18": "Description (facultatif, markdown)",
         "9f2b4c03a6": "Création dans",
         "d3d0998b7d": "Nouveau ticket GitHub",
-        "d1e243795c": "tickets",
-        "be8cf68d9f": "voir les tickets",
-        "67662ade50": "tickets du projet",
-        "6244a02f46": "Ouvrir dans Linear",
         "606a85c774": "Ouvert",
-        "5e8061b088": "Démarrer un espace de travail depuis {{value0}} {{value1}}",
-        "592a55611b": "Essayez de sélectionner plus d'équipes ou d'actualiser ; les filtres d'équipe s'appliquent aux tickets déjà récupérés.",
-        "618107fab3": "Aucun ticket récupéré ne correspond aux équipes sélectionnées",
-        "903c7af49f": "Aucun ticket Linear trouvé",
-        "5ed38a49e5": "Consultez l'erreur d'espace de travail ci-dessous, puis actualisez.",
-        "cc8795e07c": "Impossible de charger les tickets Linear",
         "f362667d55": "Mis à jour",
         "b1eaa18ace": "Issue",
-        "37e7ee311e": "Clé",
-        "b7bae28b6a": "affichés",
-        "a26a48252e": "Propriétés affichées",
-        "5d2d835467": "Tri",
-        "5659da12fc": "Regroupement",
         "9c57663908": "Affichage",
-        "af377b13b1": "Vue {{value0}}",
-        "d47248df4d": "Mode d'affichage Linear",
-        "f397d513e3": "Retour",
-        "b39fe6511d": "projets",
-        "8675cd6188": "Linear",
-        "733b8f2421": "Linear / Vues",
-        "bc06ed0fb0": "Retour aux vues",
-        "3cb855080f": "vues",
-        "b4e10f096e": "Propriétaire",
-        "a04fe7ba73": "Visibilité",
-        "0aa8525950": "Modèle",
         "dfc0c79bd8": "Tickets",
-        "8a07f21e76": "Santé",
-        "851017590d": "Ajouter l'accès Linear",
-        "228b25028f": "Parcourez vos tickets Linear assignés et démarrez le travail directement depuis ici.",
-        "6d56559467": "Connectez votre compte Linear",
-        "eee68073b2": "Ouvrir dans Jira",
-        "9497f2787c": "Démarrer l'espace de travail",
-        "eba87f2edb": "Aucun ticket Jira trouvé",
-        "63b2abd3aa": "Tickets Jira",
-        "e7115334aa": "Masquer Jira",
-        "83bce6be5c": "Connecter Jira",
-        "b518ae6307": "Parcourez, modifiez, créez des tickets Jira et démarrez le travail directement depuis ici.",
-        "a150c59da7": "Connectez votre site Jira",
-        "bcdc1330b2": "Ouvrir dans GitLab",
-        "00b7ffb952": "Type / État",
         "eb10c32872": "ID",
-        "e9b6955dcd": "Ticket #{{value0}}",
-        "a0544fb653": "MR !{{value0}}",
-        "8396825a14": "Action",
         "c1d1600362": "Ouvrir dans le navigateur",
         "b6329379ca": "Démarrer un nouveau espace de travail",
         "054bf695cc": "Brouillon",
@@ -1823,17 +1470,8 @@
         "f6fa3c97d0": "Reviewers",
         "8aba10579d": "Assignés",
         "5eccb3c841": "Titre / Contexte",
-        "d4c2830063": "Actualiser les éléments de travail GitLab",
-        "c679af7ad9": "Actualiser mes todos",
         "dfd72673e7": "Échec de l'enregistrement de la sélection de projets.",
         "b797bdd7c3": "Effacer la recherche",
-        "99c2755218": "JQL Jira, ex. project = ABC AND statusCategory != Done",
-        "2ff9fd71fd": "Actualiser les tickets Jira",
-        "0b65d3fb2c": "Rechercher des projets Linear...",
-        "eec0c5c079": "Rechercher des tickets Linear...",
-        "8964184a8b": "Actualiser Linear",
-        "3feb524d42": "Nouveau ticket Linear",
-        "0cbf7e5cf3": "Mode tâches Linear",
         "ff53631e6f": "Actualiser le travail GitHub",
         "6ffa6be99f": "Actualisation du travail GitHub",
         "b15ceb409d": "Rechercher des tickets GitHub...",
@@ -1846,18 +1484,10 @@
         "1a06219d5c": "Fermer les tâches",
         "3f594861a5": "Échec de l'enregistrement de la sélection d'équipe.",
         "d0d570b306": "Échec du changement d'espace de travail Linear.",
-        "cb98f0350c": "{{value0}} créé",
-        "1e1b2ad8f2": "Sélectionnez une équipe depuis l'espace de travail du projet avant de créer ce ticket.",
-        "3ca9b424a3": "Échec de la création du projet.",
         "3f9604efc7": "Ticket #{{value0}} ouvert",
         "585dba2989": "Impossible d'ouvrir l'espace de travail associé à cette issue.",
         "534a9c6017": "Impossible d'ouvrir l'espace de travail attaché à cette pull request.",
         "fe380f306c": "Échec de l'enregistrement de la vue de tâches par défaut.",
-        "af2a8371de": "Échec du chargement des types de tickets Jira.",
-        "6775c05483": "Échec de la mise à jour de l'état Linear",
-        "745ae567d4": "« {{value0}} » n'est pas disponible pour {{value1}}",
-        "669e419d65": "Contexte d'espace de travail manquant pour la vue Linear.",
-        "cba2a2b7fb": "Contexte d'espace de travail manquant pour le projet Linear.",
         "f4374519ae": "Votre source de tickets préférée (upstream) n'est plus configurée pour {{value0}}. Utilisation d'origin.",
         "e9139db03f": "Échec du masquage de {{value0}}.",
         "b73717af92": "Suivant",
@@ -1900,9 +1530,6 @@
         "5ebff3a0aa": "Aucun",
         "d09bf34db7": "Fermé",
         "1c893195ac": "Échec de la mise à jour de l'état",
-        "afc68824ff": "Aucun état trouvé",
-        "cc13109b5d": "Chargement des états",
-        "d45a910c4a": "Changer l'état Linear depuis {{value0}}",
         "d8a517ad89": "Identifiant",
         "50387522d7": "Aucun regroupement",
         "d747aed72f": "Tableau",
@@ -1927,28 +1554,15 @@
         "6459faa8b3": "error",
         "e15ba2d2eb": "Créer un ticket",
         "3b11c8e8fc": "tableau",
-        "e178c0a953": "Choisissez un projet Jira avant de créer le ticket.",
-        "0f7b0d964a": "Crée un nouveau ticket dans {{value0}}.",
-        "eff9800d4b": "{{value0}} label{{value1}}",
-        "d7f16d0e32": "Sélectionner l'équipe",
-        "5301ca0f20": "Créer le projet",
-        "7719d8daa9": "{{value0}} membre{{value1}}",
-        "5af6f0ae5b": "Sélectionner l'équipe",
         "cfb730b73e": "issue",
         "3659f9792a": "tableau",
         "d079be2dc8": "Aucun ticket assigné. Essayez de rechercher autre chose.",
-        "2bdefbcac3": "Essayez une autre requête de recherche.",
-        "25ff84769a": "Aucun ticket ne correspond à ce contexte Linear.",
         "cbce2bc9cd": "aucun",
         "51411113df": "liste",
-        "60f68a2ef4": "Issues Linear",
         "b2007ba885": "projet",
         "6edf402e11": "vue d'ensemble",
         "9ae151b26b": "linear",
-        "94d900518d": "Aucune issue ne correspond au préréglage sélectionné.",
-        "f51e254d35": "Essayez une requête JQL différente.",
         "4645a7814f": "jira",
-        "e224d76876": "MR",
         "bbec4717ee": "mr",
         "d6d08c1650": "Sélectionnez un projet pour voir les work items GitLab.",
         "f294c500ef": "Aucun work GitLab ne correspond à ce filtre.",
@@ -1957,8 +1571,6 @@
         "a9f256ecea": "Aucune issue GitLab ne correspond à ce filtre.",
         "2007e14d95": "gitlab",
         "456b8512da": "MergeRequest",
-        "03da966159": "Sélectionnez un projet afin que nous puissions nous authentifier auprès de GitLab.",
-        "d591aac6ae": "Aucun todo en attente. Vous êtes à jour !",
         "33a4bd7f5c": "todos",
         "66ae7330f6": "Plus d'actions",
         "93d5f21fc1": "pr",
@@ -1978,16 +1590,11 @@
         "bc46d8204e": "Sélectionnez un seul projet à ouvrir dans GitHub",
         "d1132848f8": "Sélectionnez un seul projet GitHub à ouvrir dans GitHub",
         "2af3ab5c58": "Sélectionnez une seule équipe à ouvrir dans Linear",
-        "aec5feeb69": "Échec de la création de l'issue Jira.",
         "7437e340b4": "Échec de la création de l'issue.",
         "9e03c17847": "Ouvrez les détails de la PR pour voir les reviewers actuels.",
         "3b7f34282f": "closed",
-        "246bd64aed": "Ouvrir {{value0}} dans Linear",
-        "ff90d0abc7": "Démarrer un espace de travail à partir de {{value0}}",
         "fe28c9821f": "vue",
         "8d1e17a3ef": "Ouvrir {{value0}} dans GitHub",
-        "4ac8ff2275": "Ouvrir {{value0}} dans Jira",
-        "40eaf2c27c": "Détails",
         "closeAsCompleted": "Fermer comme terminée",
         "closeAsCompletedDescription": "Terminée, fermée, corrigée, résolue",
         "closeAsNotPlanned": "Fermer comme non planifiée",
@@ -2006,28 +1613,13 @@
         "useIssueNumber": "Utiliser l'issue #{{value0}}",
         "noMatchingIssuesLoaded": "Aucune issue correspondante n'a été chargée.",
         "editReviewersWithCurrent": "Modifier les reviewers : {{value0}}",
-        "linearEmptyAttributeFilter": "Aucune issue ne correspond aux filtres sélectionnés. Effacez un filtre ou essayez d'autres critères.",
-        "linearEmptyUnfilteredScope": "Aucune issue dans le périmètre de cet espace de travail. Essayez de rechercher ou d'ajuster les équipes.",
-        "linearFetchMore": "Charger plus",
-        "jiraSortAscending": "croissant",
-        "jiraSortDescending": "décroissant",
-        "jiraSortBy": "Trier par",
-        "jiraToggleSortDirection": "Trier : {{value0}}",
         "75a38d7df8": "Les données GitHub sont temporairement indisponibles. Son API est peut-être en panne, limitée en débit ou injoignable. Réessayez dans quelques instants.",
         "noGithubSourceDetected": "Aucune source GitHub détectée pour",
         "noGithubSourceDetectedHint": "il n'a peut-être aucun remote GitHub, ou la source n'a pas pu être résolue.",
         "jiraLinkSourceUnavailable": "Impossible de lier cette issue Jira. Reconnectez Jira ou sélectionnez le site correspondant, puis réessayez.",
         "loadPageUnreachable": "La page {{value0}} dépasse ce que la recherche GitHub peut renvoyer.",
         "loadPageFailed": "La page {{value0}} n'a pas pu être chargée depuis GitHub.",
-        "loadPageNoMoreResults": "Aucun autre résultat sur la page {{value0}}.",
-        "linearHasWorktreeLoadFailed": "Impossible de charger les issues Linear liées à un espace de travail Orcinus.",
-        "linearHasWorktreePartialLoadFailed": "Certaines issues Linear liées à un espace de travail Orcinus n'ont pas pu être chargées. Actualisez pour réessayer.",
-        "linearHasWorktreeSearchPlaceholder": "Filtrer les issues liées à un espace de travail Orcinus...",
-        "linearModeHasWorktree": "Avec espace de travail",
-        "linearModeHasWorktreeTooltip": "Tickets Linear liés à un espace de travail Orcinus",
-        "linearEmptyHasWorktree": "Aucun ticket Linear n'est encore lié à un espace de travail Orcinus. Démarrez le travail depuis une issue Linear pour le voir ici.",
-        "linearOpenAttachedWorkspace": "Ouvrir l'espace de travail attaché à {{value0}}",
-        "linearWorktreesColumn": "Espaces de travail"
+        "loadPageNoMoreResults": "Aucun autre résultat sur la page {{value0}}."
       },
       "Terminal": {
         "73768427cf": "Fermer",
@@ -2056,52 +1648,9 @@
         "e07012f26e": "Rechercher..."
       },
       "UpdateCard": {
-        "68b235d264": "Redémarrer pour mettre à jour",
-        "6714206e5a": "Orcinus v{{value0}} est téléchargée. Redémarrez quand vous êtes prêt.",
-        "93794ea932": "Orcinus v{{value0}} est en cours de téléchargement.",
-        "8acbdd3961": "Réduire dans la barre d'état",
-        "17412483da": "Prêt à installer",
-        "47126bcf57": "Télécharger manuellement",
-        "3553a8672f": "Dernière erreur",
-        "90559b14e3": "Active un commutateur réseau Electron à l'échelle du processus après redémarrage. Utilisez-le pour les VPN d'entreprise ou les proxys qui rejettent les téléchargements de mises à jour en HTTP/2.",
-        "6e45bfa2e0": "Téléchargement...",
-        "558842597d": "Téléchargement de la mise à jour",
-        "f58b5c57a6": "Nouveau :",
-        "ec8fe71cfc": "Mettre à jour",
-        "44324ef542": "Notes de version",
-        "fdd4a364fa": "Les sessions ne seront pas interrompues.",
-        "05ad78a6d1": "Orcinus v{{value0}} est prête.",
-        "318d3b4bc7": "Ignorer la mise à jour",
-        "9abc59f814": "Mise à jour disponible",
-        "aad383aecc": "Lire toutes les notes de version",
-        "ccd8b0a793": "en plus depuis votre dernière mise à jour",
-        "b1d867f4fb": "Vos sessions de terminal ne seront pas interrompues pendant la mise à jour.",
-        "09a55c39b5": "Installation...",
-        "ea2a41adbe": "Vous utilisez déjà la dernière version.",
-        "ba5ffc949c": "Recherche de mises à jour...",
-        "2c2d3e03ca": "Réessayer",
-        "4cf109845a": "Erreur de mise à jour",
-        "6b0085010d": "Revérifier",
-        "48565a32bc": "Réessayer le téléchargement",
-        "933c6fdf5b": "Activer et redémarrer",
-        "1339b82cee": "Téléchargement HTTP/2 bloqué",
-        "7274ef6e59": "Ignorer l'astuce",
-        "a726967bd3": "Ignorer",
         "d5253b54af": "error",
         "7ffc08506e": "check",
-        "522df222b9": "spinner",
-        "e944c2de43": "Vérification de la mise à jour bloquée",
-        "5b309b19f3": "La mise à jour n'a pas été installée",
-        "092f09fc14": "L'éditeur de l'installateur ne correspond pas à Orcinus ; la mise à jour a donc été stoppée. N'installez pas ce téléchargement ; consultez les versions officielles pour obtenir une version corrigée.",
-        "c9ff9b9ec2": "Consulter les versions officielles",
-        "a05992a26b": "La vérification de signature n'a pas pu s'exécuter — généralement parce qu'un logiciel antivirus l'a bloquée. Relancez le téléchargement ou récupérez l'installateur depuis nos versions officielles.",
-        "5194358929": "Masquer les détails",
-        "8bc9e17d8f": "Afficher les détails",
-        "8cf17b10af": "Erreur de build local",
-        "a4650b0dc4": "Impossible d'utiliser le build local",
-        "b1e390250d": "Impossible de finaliser le basculement vers le build local.",
-        "d29740d175": "Le build sélectionné n'a pas pu être utilisé.",
-        "37d45c9ec1": "Choisir un autre build"
+        "522df222b9": "spinner"
       },
       "WorktreeJumpPalette": {
         "ac037cfac2": "Déplacer",
@@ -2465,85 +2014,23 @@
         "api": {
           "key": {
             "dialog": {
-              "834a52c084": "Vérification...",
-              "f8f704a019": "Annuler",
-              "e603ee9156": "Paramètres d'API de l'espace de travail",
-              "dc7ccb0f7c": "Clés d'API personnelles",
-              "e3100b36b9": "Si les clés d'API des membres sont bloquées, demandez à un administrateur de l'espace de travail de les autoriser depuis les paramètres d'API de l'espace de travail.",
-              "d56d3629f4": "Privilégiez l'accès complet lorsqu'Orcinus doit afficher toutes les équipes accessibles au compte dans cet espace de travail. Les clés restreintes n'exposent que les équipes autorisées, et les équipes privées exigent que le propriétaire de la clé y ait accès.",
-              "af52a6227f": "Créez une clé d'API personnelle depuis Account > Security & Access.",
-              "edec49dfae": "lin_api_...",
-              "7d498f653c": "Clé d'API personnelle",
               "57a66522c8": "connexion en cours",
-              "c9889a09f8": "Utilisez Linear pour choisir l'espace de travail souhaité avant de créer la clé.",
               "e689a4d0a6": "error"
             }
           }
         },
         "priority": {
-          "icon": {
-            "c43d3e065b": "Priorité :"
-          }
+          "icon": {}
         },
         "project": {
           "view": {
             "surfaces": {
-              "8bbecb2510": "Aucun",
-              "e1fa97d21d": "Sélectionnez un projet pour afficher sa vue d'ensemble.",
-              "1748d3b9af": "Étiquettes",
-              "65bda65159": "Membres",
-              "c5f79616c3": "Équipes",
-              "25a2196732": "Cible",
-              "3fb6473111": "Début",
-              "111bef9aa8": "Responsable",
-              "3be47aed6f": "Priorité",
-              "f5ef24cf46": "Santé",
-              "9ddb58edbd": "Statut",
-              "0a6a5a7dd6": "Dernière mise à jour",
-              "c8db98b73b": "Ressources",
-              "bb1405eff8": "Jalons",
-              "5d99315fb8": "Planification",
-              "3ad562bdf4": "issues du périmètre",
-              "563501f191": "Progression",
-              "bb5664d456": "Aucune description de projet.",
-              "7b147907dc": "Linear",
-              "a9785c7158": "Actualiser",
-              "ee3d2caabd": "Tickets",
-              "5f79bc76b0": "Retour aux projets",
-              "aac9a4afc6": "Ouvrir dans Linear",
-              "7616c986c6": "Ouvrir {{value0}} issues",
-              "93e1f6bfca": "Chargement",
-              "98730088a6": ". Recherchez ou ouvrez Linear pour voir l'ensemble complet.",
-              "06b887d622": "Affichage des premières",
-              "2c4b1c2c08": "nombre",
-              "f2cc1e0ff6": "Linear / Projets",
-              "906b5e4cb8": "Linear / Projets / {{value0}}",
-              "85607ff793": "Projet",
-              "20b9d09b7d": "Inconnu",
-              "f059181bd9": "Privé",
-              "27d91cb1a6": "Partagé",
-              "9f0f51fd9e": "Créez ou enregistrez des vues dans Linear, puis actualisez.",
-              "f4c79cff5f": "Consultez l'erreur d'espace de travail ci-dessous, puis actualisez.",
-              "ef90b21366": "Aucune vue trouvée",
-              "c0a50f96a4": "Impossible de charger les vues",
-              "df4bd63c1d": "Non assigné",
-              "30402d2c6e": "Essayez la recherche ou actualisez.",
-              "a2f31c4cd6": "Aucun projet Linear trouvé",
-              "c9b6e9f90d": "Impossible de charger les projets Linear"
+              "2c4b1c2c08": "nombre"
             }
           }
         },
         "scope": {
-          "selector": {
-            "91c8871dad": "Ajouter un accès d'équipe",
-            "7783361266": "Toutes les équipes",
-            "e1ae6bebb0": "Équipes",
-            "a14ce4df2b": "Tous les espaces de travail",
-            "05baa5ae90": "Espace de travail",
-            "89f6580dbf": "Rechercher des équipes...",
-            "b3488fad3c": "Aucune équipe n'a été récupérée. L'accès peut dépendre du périmètre de la clé, de l'appartenance à des équipes privées, d'équipes archivées, des permissions ou d'un échec de récupération.",
-            "405b33c378": "Aucune équipe récupérée ne correspond à votre recherche."
-          }
+          "selector": {}
         }
       },
       "notification": {
@@ -2894,7 +2381,6 @@
             "7dbbfcbecc": "Titre du volet"
           },
           "TerminalLinkActionPopover": {
-            "openLink": "Ouvrir le lien",
             "openFile": "Ouvrir le fichier",
             "switchWorkspace": "Changer de espace de travail",
             "openInFinder": "Afficher dans le Finder",
@@ -2903,8 +2389,6 @@
             "switchTerminal": "Changer de terminal",
             "openTaskTerminal": "Ouvrir le terminal de tâches",
             "systemBrowser": "Navigateur système",
-            "orcaBrowser": "Navigateur Orcinus",
-            "terminalLinkSettings": "Paramètres des liens du terminal",
             "copyLink": "Copier le lien",
             "copied": "Copied",
             "copiedLink": "Lien copié",
@@ -3017,18 +2501,8 @@
             "c337c9d75c": "Fermer"
           },
           "TerminalSshReconnectOverlay": {
-            "authFailed": "Échec de l'authentification pour {{value0}}. Reconnectez-vous pour poursuivre cette session de terminal.",
-            "reconnectFailed": "La connexion SSH à {{value0}} a échoué. Reconnectez-vous pour poursuivre cette session de terminal.",
-            "connecting": "Connexion à {{value0}} en cours. Ce terminal reprendra dès que l'hôte sera disponible.",
-            "connected": "SSH est connecté.",
-            "disconnected": "Ce terminal attend {{value0}}. Connectez-vous pour poursuivre cette session SSH.",
-            "connectFailed": "Échec de la connexion SSH",
-            "title": "Connexion SSH requise",
             "connectingButton": "Connexion...",
-            "connectButton": "Se connecter",
-            "removedTitle": "Hôte SSH supprimé",
-            "removedBody": "L'hôte SSH de cet espace de travail a été supprimé ; il ne peut plus se connecter. Supprimez l'espace de travail pour l'effacer — les fichiers distants restent intacts.",
-            "removeWorkspaceButton": "Supprimer l'espace de travail"
+            "connectButton": "Se connecter"
           },
           "TerminalRemoteRuntimeReconnectBanner": {
             "retryingTitle": "Reconnexion au runtime distant",
@@ -3074,16 +2548,10 @@
         },
         "bar": {
           "BrowserTab": {
-            "6e0bc8f3a8": "Ouvrir dans le navigateur",
-            "9dd880bd56": "Fermer les onglets à droite",
-            "1611a1324b": "Fermer",
-            "5d6e89891f": "Dupliquer l'onglet",
             "966feb9ad5": "Scinder vers la droite",
             "7e8106899f": "Scinder vers la gauche",
             "2186a8407c": "Scinder vers le bas",
-            "96354ed249": "Scinder vers le haut",
-            "911542656f": "Épingler l'onglet",
-            "c5aaee8c39": "Détacher l'onglet"
+            "96354ed249": "Scinder vers le haut"
           },
           "EditorFileTab": {
             "3da7445c84": "Renommer le fichier {{value0}}"
@@ -3163,14 +2631,12 @@
           "TabBarCreateEntry": {
             "d62d63b807": "Créer un fichier",
             "25dc1cd653": "Ouvrir le fichier",
-            "7cdf8ee0c8": "Ouvrir une URL",
             "b27864279e": "Lancer un agent",
             "8f0a1c4d92": "Basculer vers l'onglet",
             "2c38630a01": "L'espace de travail n'existe plus",
             "4f0d9a71c2": "L'onglet n'existe plus",
             "d7d496a451": "La page du navigateur n'existe plus",
-            "chooseAction": "Choisissez une action.",
-            "searchProvider": "Rechercher {{value0}}"
+            "chooseAction": "Choisissez une action."
           },
           "TabBarQuickCommandsButton": {
             "a2c7a33831": "Commande",
@@ -3209,7 +2675,6 @@
                 "classifier": {
                   "42e6262ae9": "Aucune action disponible.",
                   "097a982ee0": "Chargement des fichiers...",
-                  "90eb94dc48": "Saisissez une URL http:// ou https://.",
                   "5553b283ce": "Saisissez une URL ou un chemin de fichier.",
                   "queryTooLarge": "Le texte recherché est trop long.",
                   "absolutePathRemoteBlocked": "Les chemins absolus nécessitent un espace de travail local."
@@ -3266,21 +2731,9 @@
       "status": {
         "bar": {
           "PortsStatusSegment": {
-            "4ebf90c12e": "Aucun port externe détecté",
-            "7dac3ecc9d": "Ports externes",
-            "95495019ed": "Scan des ports indisponible sur {{value0}} : {{value1}}",
-            "a8e4bdb412": " · {{value0}} externe(s)",
             "9aa11005bf": "workspace ·",
-            "c22ea609fd": "Ports",
             "a11ed266ce": "espace de travail",
-            "ca41be2802": "Ports — espace de travail {{value0}} {{value1}}{{value2}}",
-            "b8bc3e420a": "Ports, espace de travail {{value0}} {{value1}}",
-            "3a87d54dfb": "Aucun port de espace de travail détecté",
-            "c174bbbfed": "Recherche des ports de espace de travail...",
-            "8caaa86e9a": "ports",
-            "45834a9ace": "port",
-            "4ae65d871a": "externes",
-            "2b84c4d11f": "{{value0}} espace de travail · {{value1}} externes"
+            "4ae65d871a": "externes"
           },
           "ResourceUsageStatusSegment": {
             "946d9f94d0": "Annuler",
@@ -3449,16 +2902,7 @@
             "stoppingTooltip": "Arrêt de la mise à jour des skills…",
             "stoppingAria": "Arrêt de la mise à jour des skills. Cliquez pour ouvrir les détails."
           },
-          "UpdateStatusSegment": {
-            "5cd13105a3": "Échec de la mise à jour. Cliquez pour déplier.",
-            "2201df6987": "Échec de la mise à jour — cliquez pour voir les détails",
-            "8533c12c3c": "Échec de la mise à jour",
-            "962404f68e": "Mise à jour prête à installer. Cliquez pour déplier.",
-            "248ee5d8ef": "Téléchargement d'Orcinus v{{value0}}… {{value1}} %",
-            "57a29c3b0e": "Mise à jour prête",
-            "fd1d3b3a1d": "Téléchargement de la mise à jour, {{value0}} pour cent. Cliquez pour déplier.",
-            "9d13213a56": "Orcinus v{{value0}} prête à installer"
-          },
+          "UpdateStatusSegment": {},
           "WorkspaceSpaceCompactPanel": {
             "a471aa9c24": "Mis à jour",
             "9be86c46a0": "Libérable",
@@ -3555,17 +2999,7 @@
           "ports": {
             "status": {
               "popover": {
-                "rows": {
-                  "a49ea79246": "Aller au worktree",
-                  "f2b813345f": "Espace de travail indisponible",
-                  "0e72c8d9fb": "Arrêter le processus",
-                  "536d48a5dc": "Copier {{value0}}",
-                  "085f4f0334": "Ouvrir dans le navigateur",
-                  "e4a709548c": "Échec de l'actualisation des ports",
-                  "acdb6df590": "Processus arrêté sur {{value0}}",
-                  "480d8f2347": "{{value0}} copié",
-                  "b854ec9ff5": "Échec de l'ouverture du navigateur"
-                }
+                "rows": {}
               }
             }
           },
@@ -4630,21 +4064,7 @@
           "e52454b7f6": "Ouvrir comme dossier"
         },
         "AddRepoRemoteStep": {
-          "5b205b5281": "Interrompre l'analyse",
-          "6680289908": "/home/user/project",
-          "ef410aa881": "Chemin sur l'hôte",
-          "0416bde073": "Ajouter dans les paramètres",
-          "df6fbcf880": "Aucune cible SSH configurée.",
-          "44637f43bd": "Cible SSH",
-          "80557be85a": "Choisissez une cible SSH connectée et saisissez le chemin vers un dépôt Git.",
-          "91b93a90a4": "Ouvrir un projet sur l'hôte SSH",
-          "007651bdf9": "Naviguez jusqu'à un répertoire et cliquez sur Sélectionner pour le choisir.",
-          "dd3ff65486": "Parcourir le système de fichiers distant",
-          "36d427bb66": "Ajouter un projet sur l'hôte SSH",
-          "35831a7312": "Ajout...",
-          "lockedDescription": "Saisissez le chemin vers un dépôt Git sur {{value0}}.",
-          "lockedDisconnected": "{{value0}} est déconnecté.",
-          "93e0221434": "Se connecter"
+          "0416bde073": "Ajouter dans les paramètres"
         },
         "AddRepoServerStartStep": {
           "ae990c86a0": "Retour aux options d'ajout",
@@ -4688,8 +4108,6 @@
           "5b2ea674b1": "Saisissez l'URL Git et choisissez où le cloner.",
           "c05f88a31f": "Cloner depuis une URL",
           "fe8e629fe3": "Naviguez jusqu'à un répertoire et cliquez sur Sélectionner pour le choisir.",
-          "df8b0e6c22": "Projet ajouté sur l'hôte SSH",
-          "3e64e8a70d": "Échec de la connexion",
           "32a7256d85": "Cloner",
           "69f5b5380d": "Clonage...",
           "cloneOnHostDescription": "Saisissez l'URL Git et choisissez où le cloner sur {{value0}}.",
@@ -4985,10 +4403,7 @@
           "folderPathIdentity": "Branche / chemin de dossier",
           "cli": "Orcinus CLI"
         },
-        "SshTargetRow": {
-          "4677394048": "Connexion…",
-          "75ad429b5d": "Se connecter"
-        },
+        "SshTargetRow": {},
         "WorkspaceStatusAppearancePopover": {
           "514be2f569": "Définir la couleur de {{value0}} sur {{value1}}",
           "8be427206b": "Icône",
@@ -5083,16 +4498,7 @@
         },
         "WorktreeCardPorts": {
           "34f733dda2": "Aller au worktree",
-          "3240f320d7": "Ports actifs",
-          "3e5f66564e": "Espace de travail indisponible",
-          "2f854442ff": "Arrêter le processus",
-          "c8067a829a": "Copier {{value0}}",
-          "33bc7d7495": "Ouvrir dans le navigateur",
-          "9950fe2d20": "Échec de l'actualisation des ports",
-          "5d1a5d51bb": "Processus arrêté sur {{value0}}",
-          "c89f290e25": "{{value0}} copié",
-          "d1113f4660": "Échec de l'ouverture du navigateur",
-          "fed49903c9": "{{value0}} {{value1}} actif(s)"
+          "3e5f66564e": "Espace de travail indisponible"
         },
         "WorktreeContextMenu": {
           "c39c37676a": "Créez un groupe et déplacez-y ce projet.",
@@ -5481,41 +4887,9 @@
           "6e7f8a9b0c": "Retirer l'hôte…"
         },
         "LinearAgentSkillSetupPrompt": {
-          "missingCliAndSkill": "La CLI Orcinus et le skill d'agent Linear sont manquants.",
-          "modalTitle": "Activer l'accès aux tickets Linear",
-          "modalDescription": "Installez le skill Linear depuis un terminal.",
-          "modalPrompt": "Permet aux agents de lire et de modifier le ticket Linear attaché.",
-          "dontShowAgain": "Ne plus afficher",
           "missingBoth": "La CLI Orcinus et le skill d'agent Linear sont manquants.",
-          "missingCli": "La CLI Orcinus est manquante.",
-          "missingSkill": "Le skill d'agent Linear est manquant.",
-          "title": "Configurer le skill d'agent Linear",
-          "remoteCopy": "Ceci installe la configuration côté hôte ; les environnements d'agents distants peuvent nécessiter une configuration séparée.",
-          "hostCopy": "Installez-le pour les passations d'agents hôtes depuis le travail Linear lié.",
-          "dismiss": "Ignorer la configuration du skill d'agent Linear",
-          "setup": "Configurer",
-          "recheck": "Revérifier",
           "panelTitle": "Skill d'agent Linear",
-          "panelDescription": "Installez le skill d'agent hôte pour les passations de tâches Linear liées.",
-          "terminalTitle": "Installer le skill d'agent Linear",
-          "terminalAria": "Terminal d'installation du skill d'agent Linear",
-          "install": "Installer la CLI et le skill",
-          "successTitle": "L'accès aux tickets Linear est prêt",
-          "successDescription": "Les agents peuvent désormais lire et mettre à jour les tickets Linear liés depuis cet espace de travail.",
-          "successDescriptionWsl": "Les agents WSL peuvent désormais utiliser les tickets Linear liés depuis cet espace de travail.",
-          "successDescriptionRemote": "Les agents de l'hôte peuvent désormais utiliser les tickets Linear liés. Les environnements d'agents distants peuvent encore nécessiter leur propre configuration.",
-          "successStatus": "Accès aux tickets Linear prêt",
-          "done": "Terminé",
-          "wslCopy": "Installez-le pour les passations d'agents WSL depuis le travail Linear lié.",
-          "wslLabel": "WSL par défaut",
-          "toastMissingCliAndSkill": "La CLI Orcinus et le skill Linear sont manquants",
-          "toastMissingCli": "La CLI Orcinus est manquante",
-          "toastMissingSkill": "Le skill Linear est manquant",
-          "toastInstallCliAndSkillDescription": "Installez la CLI Orcinus et le skill Linear pour permettre à vos agents de lire et de modifier les tâches Linear.",
-          "toastInstallCliDescription": "Installez la CLI Orcinus pour permettre à vos agents de lire et de modifier les tâches Linear.",
-          "toastInstallSkillDescription": "Installez le skill Linear pour permettre à vos agents de lire et de modifier les tâches Linear via la CLI Orcinus.",
-          "toastRemoteDescription": "{{value0}} Les environnements d'agents distants peuvent nécessiter leur propre configuration.",
-          "toastWslDescription": "{{value0}} Cette configuration s'exécute dans le runtime d'agent WSL sélectionné."
+          "panelDescription": "Installez le skill d'agent hôte pour les passations de tâches Linear liées."
         },
         "FolderWorkspaceComposerDialog": {
           "connectFailed": "Échec de la connexion au projet.",
@@ -5644,14 +5018,7 @@
           "sshConfigPickerResolving": "Lecture…"
         },
         "ForgetSshWorkspaceDialog": {
-          "reconnectFailed": "Échec de la reconnexion",
-          "forgetBody": "Retire uniquement cet espace de travail d'Orcinus. Les fichiers, le worktree Git et les branches sur {{host}} restent intacts.",
-          "title": "Supprimer « {{name}} » ?",
-          "disconnectedBody": "L'hôte SSH de cet espace de travail n'est pas connecté. Reconnectez-le pour le supprimer aussi à distance, ou retirez-le seulement d'Orcinus.",
-          "ghostBody": "{{host}} n'est plus un hôte SSH enregistré ; cet espace de travail n'est donc plus connecté à un hôte actif. Il ne peut être que retiré d'Orcinus — les fichiers et branches distants restent intacts.",
-          "cancel": "Annuler",
-          "forget": "Retirer d'Orcinus",
-          "reconnectAndDelete": "Reconnecter et supprimer"
+          "forget": "Retirer d'Orcinus"
         },
         "MarkdownImageLightbox": {
           "image": "Image",
@@ -5682,19 +5049,7 @@
           "3f61c0a8d2": "Linear {{value}}",
           "9c4b7e1f60": "GitHub #{{value}}"
         },
-        "WorktreeCardSshHostControl": {
-          "connectFailed": "Échec de la connexion SSH",
-          "removedTooltip": "Hôte SSH retiré — reconnexion impossible",
-          "removedName": "L'hôte SSH {{value0}} a été retiré",
-          "connectedTooltip": "Projet sur hôte SSH",
-          "connectedName": "Projet sur l'hôte SSH {{value0}}",
-          "connectingName": "Connexion à l'hôte SSH {{value0}}",
-          "authFailedName": "Reconnexion à l'hôte SSH {{value0}} — échec d'authentification",
-          "retryName": "Relancer la connexion SSH vers {{value0}}",
-          "connectName": "Se connecter à l'hôte SSH {{value0}}",
-          "authFailedTooltip": "{{value0}} · échec d'authentification",
-          "failedTooltip": "{{value0}} · échec de connexion"
-        },
+        "WorktreeCardSshHostControl": {},
         "preserved": {
           "branch": {
             "batch": {
@@ -6158,109 +5513,22 @@
           "2f3cda96f5": "Épinglé pour ce dépôt",
           "ee110e1830": "Aucun ref de base par défaut"
         },
-        "BrowserDefaultZoomSetting": {
-          "2622126877": "Niveau de zoom appliqué aux nouveaux onglets du navigateur.",
-          "bbeec087d3": "Appliqué aux nouveaux onglets du navigateur.",
-          "265597101f": "Zoom par défaut"
-        },
-        "BrowserHomePageSetting": {
-          "d4ddcd0056": "Enregistrer",
-          "37a30c5bfd": "https://google.com",
-          "c6cbd1c105": "Page d'accueil enregistrée.",
-          "6a37540f4b": "URL ouverte à la création d'un nouvel onglet du navigateur. Laissez vide pour un onglet vierge.",
-          "70224e37b1": "Page d'accueil par défaut"
-        },
+        "BrowserDefaultZoomSetting": {},
+        "BrowserHomePageSetting": {},
         "BrowserPane": {
-          "81ff774667": "Annuler",
-          "7d4c0a2aa4": "Nom du profil",
-          "612f7f6861": "Échec de la création du profil.",
-          "8f22b7580d": "Profil « {{value0}} » créé.",
-          "8481ee0331": "Nouveau profil de navigateur",
-          "c0f85056d9": "Profils de navigateur sur ce serveur Orcinus.",
-          "86b7c83fee": "Cet ordinateur",
-          "6480776a03": "Profils de navigateur pour l'hôte sélectionné.",
-          "5e19a692f7": "Hôte",
-          "6f2584b39e": "Ajouter un profil",
-          "e4aaf8051b": "menu de la barre d'outils.",
-          "cd47bc9622": "Sélectionnez un profil par défaut pour les nouveaux onglets du navigateur. Importez des cookies et changez de profil par onglet via le ",
-          "2d66a6efb5": "Session & cookies",
-          "aa1074bfe9": "Gérez les profils de navigateur et importez les cookies depuis Chrome, Edge, Comet ou d'autres navigateurs.",
-          "113cd2dc9b": "Session & cookies",
-          "d3eb69c0aa": "Routage des liens",
-          "3e46903ad4": "Utilisé quand on saisit du texte autre qu'une URL dans la barre d'adresse.",
-          "0d9c987f21": "Moteur de recherche par défaut",
-          "7b225c78f5": "Moteur de recherche utilisé quand on saisit du texte autre qu'une URL dans la barre d'adresse.",
-          "64898ecdab": "Créer",
-          "7b649a578a": "Création…",
-          "4399c77caa": "Par défaut",
           "4af9a17947": "kagi"
         },
         "BrowserProfileRow": {
-          "8e636cae25": "Profil « {{value0}} » supprimé.",
-          "2d4bea7f35": "Cookies par défaut effacés.",
-          "ebb78dfd6f": "Depuis un fichier…",
           "7df818977e": "Depuis",
-          "cdec84552f": "Importer des cookies",
-          "796d846483": "Aucun cookie importé",
-          "c29648fe5b": "Actif",
-          "d420c43729": "{{value0}} cookies importés depuis {{value1}}{{value2}} vers {{value3}}.",
-          "b4c167764d": "{{value0}} cookies importés depuis un fichier vers {{value1}}.",
-          "a3f8c2d1e0b4": "{{value0}} cookies importés depuis {{value1}} ({{value2}}) vers {{value3}}.",
-          "b4e9d3f2a1c5": "{{value0}} cookies importés depuis {{value1}} vers {{value2}}.",
-          "c5a273a809": "Depuis {{value0}}",
-          "b5c0479e21": "User agent non modifié"
+          "d420c43729": "{{value0}} cookies importés depuis {{value1}}{{value2}} vers {{value3}}."
         },
-        "BrowserUseComputerUseNotice": {
-          "15b5e680ba": "Ouvrir Computer Use",
-          "79209b37b9": "Si l'import de cookies ne convient pas, Computer Use peut contrôler des apps locales et, le cas échéant, réutiliser des sessions de navigateur déjà connectées. Installez la skill Computer Use ; macOS exige aussi des autorisations de confidentialité.",
-          "333984cf90": "Utiliser une session de navigateur existante"
-        },
-        "BrowserUseEnableSwitch": {
-          "aea3f45349": "Activer Agent Browser Use"
-        },
-        "BrowserUseExamples": {
-          "1199258ace": "Copier",
-          "1188e56af4": "Copier l'exemple de prompt",
-          "b84807f228": "\"",
-          "59722f31b4": "\"",
-          "c5325e91f6": "Collez l'un de ces exemples dans Claude Code, Codex ou un autre agent, dans un projet où la skill est installée.",
-          "2a180694f7": "Essayez — exemples de prompts",
-          "5ec620ccc4": "Échec de la copie.",
-          "a602d43069": "{{value0}} copié."
-        },
+        "BrowserUseComputerUseNotice": {},
+        "BrowserUseEnableSwitch": {},
+        "BrowserUseExamples": {},
         "BrowserUsePane": {
-          "be6df68384": "Depuis un fichier…",
-          "e44c5d681e": "Depuis",
-          "67d9a53f47": "Gérer les profils pour des connexions distinctes",
-          "112f70adc4": "Dernier import depuis {{value0}}",
-          "72d4815523": "Importez vos connexions existantes dans Orcinus pour que les agents accèdent aux pages authentifiées. Importe dans le profil par défaut.",
-          "2eb906706c": "Importer les cookies du navigateur",
-          "af8c83ed61": "Importez les cookies depuis Chrome, Edge ou d'autres navigateurs pour que les agents réutilisent vos connexions.",
-          "68ea76eb71": "Installez la skill Browser Use pour que les agents pilotent le navigateur d'Orcinus.",
-          "2d6ead9ab2": "Installer la skill Browser Use",
-          "e9f3f3b488": "Installé dans",
-          "9fca1f7f5d": "Enregistre la commande CLI d'Orcinus pour que les agents orchestrent le navigateur depuis leur shell.",
-          "c6065d205d": "Activer Orcinus CLI",
-          "c79eff0213": "Enregistrer Orcinus CLI pour que les agents pilotent le navigateur.",
-          "702488a5f7": "Permettez aux agents de code de piloter ce navigateur avec vos connexions. Terminez les trois étapes ci-dessous.",
-          "b8a1f2d84d": "Agent Browser Use",
-          "96b91c6349": "Permettez aux agents de code de piloter ce navigateur avec vos connexions.",
-          "2ea4617e3a": "{{value0}} cookies importés depuis {{value1}}{{value2}}.",
-          "721aee31b4": "Orcinus CLI enregistré dans PATH.",
-          "180a9abf3a": "Échec du chargement de l'état de la CLI.",
-          "2ccfc9cff8": "Importer",
-          "0462565413": "Réimporter",
-          "de9b2f32f3": "Activer",
-          "ad8cb0ee22": "Corriger PATH",
-          "0289434ed6": "Activé",
-          "8b3054dac7": "Enregistrement...",
-          "8f2675c2f3": "{{value0}} cookies importés depuis un fichier.",
-          "5301857d88": "Depuis {{value0}}"
+          "e44c5d681e": "Depuis"
         },
-        "BrowserUseSkillStep": {
-          "0871b6998d": "Permet aux agents de naviguer et de vérifier des pages dans le navigateur d'Orcinus.",
-          "459e24eebc": "Skill Browser Use"
-        },
+        "BrowserUseSkillStep": {},
         "CliSection": {
           "8671e406f0": "Annuler",
           "a4aafe46e3": "Chemin cible :",
@@ -6788,16 +6056,7 @@
           "1683acbac4": "Connectez les hébergeurs de code qu'Orcinus peut utiliser pour les pull requests, merge requests, checks et statuts de revue.",
           "298c65ecac": "Fournisseurs de revue"
         },
-        "KagiSessionLinkForm": {
-          "92f0b4e472": "Effacer",
-          "9f741627a7": "Lien de session Kagi effacé.",
-          "d5c8b94c5b": "Enregistrer",
-          "ff450194cd": "Lien de session privée Kagi",
-          "e383683485": "https://kagi.com/search?token=...",
-          "81409d9362": "Lien de session privée facultatif pour l'authentification Kagi.",
-          "3e5b7c6c25": "Lien de session Kagi enregistré.",
-          "0911d5fa4c": "Saisissez un lien de session privée Kagi de la forme https://kagi.com/search?token=..."
-        },
+        "KagiSessionLinkForm": {},
         "KeybindingsFileActions": {
           "abc49853fb": "Recharger depuis le disque",
           "a8a8d6b9d3": "Révéler dans le gestionnaire de fichiers",
@@ -7729,7 +6988,6 @@
         "TasksPane": {
           "f71d8a9dd3": "Fournisseurs de tâches",
           "6b23a34f6d": "Jira",
-          "09ae2d7c51": "Linear",
           "7c5d7fdc20": "GitLab",
           "e14063e727": "GitHub",
           "connectProviderTitle": "Connecter {{provider}}",
@@ -8365,110 +7623,11 @@
         },
         "browser": {
           "search": {
-            "7539f6336c": "profil",
-            "1c1e097985": "arc",
-            "533a253deb": "edge",
-            "75a0d435b7": "chrome",
-            "854ef6ce83": "connexion",
-            "3910a41f32": "auth",
-            "2e7f951773": "importer",
-            "66dd641a47": "session",
-            "29193a51d5": "cookies",
-            "2d2d995c58": "navigateur",
-            "060ac1fcba": "Importer les cookies de Chrome, Edge ou d'autres navigateurs pour utiliser vos sessions existantes dans Orcinus.",
-            "96afedcb5c": "Session & cookies",
-            "a7a07d5415": "éditeur",
-            "8dd4805991": "fichier",
-            "68d1db8929": "markdown",
-            "90425d313c": "shift",
-            "linkRoutingModifier": {
-              "routing": "routage",
-              "modifier": "modificateur",
-              "invert": "inverser",
-              "opposite": "opposé"
-            },
-            "terminalLinkActions": {
-              "terminal": "terminal",
-              "click": "clic",
-              "actions": "actions",
-              "popover": "popover",
-              "menu": "menu",
-              "disable": "désactiver"
-            },
-            "72c58f7792": "webview",
-            "82ba1c80ea": "localhost",
-            "bea27bac4b": "liens",
-            "44d14df30d": "aperçu",
-            "5cb082b3e3": "Routage des liens",
-            "95944898e0": "pourcentage",
-            "483a0eb5e0": "nouvel onglet",
-            "726f2a8556": "zoom de page",
-            "5448f4097b": "default",
-            "54f4ea55f7": "échelle",
-            "4a98ed195f": "zoom",
-            "c3d89ed4d0": "Niveau de zoom appliqué aux nouveaux onglets du navigateur.",
-            "072b7f5c1f": "Zoom par défaut",
-            "0bb34eacc9": "requête",
-            "8b8ed06e4b": "omnibox",
-            "3538b3aaeb": "token",
-            "0732ebe6fb": "privé",
-            "e1c2a57f07": "kagi",
-            "ad40e75d13": "bing",
-            "1f8153acfb": "duckduckgo",
-            "8a489aab8d": "google",
-            "72b4b89970": "moteur",
-            "16bd69cd82": "recherche",
-            "0628d5943b": "Moteur de recherche utilisé quand on saisit du texte autre qu'une URL dans la barre d'adresse.",
-            "5e755920c9": "Moteur de recherche par défaut",
-            "4596a52cf7": "landing",
-            "5164c47e31": "vierge",
-            "4fda4fb066": "url",
-            "0dbb1eaf4e": "page d'accueil",
-            "291f480a5e": "accueil",
-            "a942905148": "URL ouverte à la création d'un nouvel onglet du navigateur. Laissez vide pour un onglet vierge.",
-            "c3903322d2": "Page d'accueil par défaut",
-            "19ea5607cf": "Libellés localhost des worktrees",
-            "4e0fdf0a3f": "Ouvrir les ports des espaces de travail sous forme d'URL localhost Orcinus propres à chaque worktree, pour mieux distinguer les onglets du navigateur."
+            "linkRoutingModifier": {},
+            "terminalLinkActions": {}
           },
           "use": {
-            "search": {
-              "3f4c559deb": "profil Arc",
-              "d5afa54d21": "profil Edge",
-              "22fb801af8": "profil Chrome",
-              "59968bb9b4": "navigateur authentifié",
-              "62e2a790c0": "session existante",
-              "63a66da648": "navigateur système",
-              "20c1323d1e": "computer use",
-              "ab349a2dd0": "arc",
-              "2e1b09897b": "edge",
-              "088e7a9012": "chrome",
-              "96ce3d2de2": "auth",
-              "48557f639c": "connexion",
-              "d5ad1f7aad": "importer",
-              "02837ee497": "session",
-              "fb8178824f": "cookies",
-              "ba4eb53b72": "browser use",
-              "2fb24d17db": "Importez les cookies depuis Chrome, Edge ou d'autres navigateurs pour que les agents réutilisent vos connexions.",
-              "614c756ab1": "Importer les cookies du navigateur",
-              "cee44fb442": "automatisation",
-              "a57c2172dc": "agent-browser",
-              "6ea88e5206": "npx",
-              "f5b8fdddf5": "orca-cli",
-              "e5a784bc54": "installer",
-              "9d97446873": "agent",
-              "a2d489263e": "skill",
-              "a7e82445fa": "Installez la skill Browser Use pour que les agents pilotent le navigateur d'Orcinus.",
-              "a1414dcefb": "Installer la skill Browser Use",
-              "e56c7b55c9": "configuration",
-              "034c5e8d7f": "activer",
-              "7e0dcb257a": "shell",
-              "3ffafc9b95": "command",
-              "30c74aaa1f": "chemin",
-              "ff05cbc344": "orca",
-              "85fab5e12c": "cli",
-              "890ddf943d": "Enregistrer Orcinus CLI pour que les agents pilotent le navigateur.",
-              "50f0860e18": "Activer Orcinus CLI"
-            }
+            "search": {}
           }
         },
         "commit": {
@@ -8895,12 +8054,6 @@
             "50d20817f7": "bitbucket",
             "c97d58a0f3": "Authentification Bitbucket Cloud via des variables d'environnement de jeton API.",
             "67a2a0e868": "Intégration Bitbucket",
-            "371ee914d2": "merge request",
-            "581844769a": "mr",
-            "b40cbe5de4": "glab",
-            "b939695c69": "gitlab",
-            "6e2ab619c6": "Authentification GitLab via la CLI glab.",
-            "b50b71ef9d": "Intégration GitLab",
             "41ccade05c": "gh",
             "b79c21bd42": "github",
             "7166b9090c": "Authentification GitHub via la CLI gh.",
@@ -8935,9 +8088,7 @@
               "d5c5b47bb9": "mise à jour",
               "fb854902d9": "connexion en cours",
               "9a9f8d4910": "Connectez Jira Cloud pour parcourir, créer et lier des issues.",
-              "74f3063026": "{{value0}} site{{value1}} connecté",
-              "statusConnected": "Connecté",
-              "statusNotConnected": "Non connecté"
+              "74f3063026": "{{value0}} site{{value1}} connecté"
             }
           }
         },
@@ -9607,14 +8758,7 @@
                 "cards": {
                   "d5b3be8ecd": "Revérifier",
                   "8cbc39f862": "En savoir plus",
-                  "707180d09c": "glab auth login",
-                  "4be0616873": "La CLI GitLab est installée mais non authentifiée. Exécutez cette commande dans un terminal :",
-                  "54a640af7a": "Installer la CLI GitLab",
-                  "b56fd5676a": "Installez la CLI GitLab pour activer les merge requests, les issues et les pipelines.",
-                  "faddeb763d": "Le statut de GitLab CLI n'est pas encore disponible dans ce runtime.",
                   "a47f71e357": "CLI.",
-                  "2a6b359e75": "glab",
-                  "1f2b347bd3": "Merge requests, issues, todos et pipelines via la",
                   "8d90249d22": "gh auth login",
                   "2e44dda68a": "La CLI GitHub est installée mais non authentifiée. Exécutez cette commande dans un terminal :",
                   "7755c28af5": "Installer la CLI GitHub",
@@ -9635,33 +8779,7 @@
         "task": {
           "tracker": {
             "integration": {
-              "cards": {
-                "c90f2ef419": "Revérifier",
-                "dd3529015d": "Déconnecter {{value0}}",
-                "8b2408a8e5": "Jira est connecté pour ce runtime. Relancez la vérification si la liste des sites connectés semble obsolète.",
-                "8c20e76308": "Chaque site Jira connecté dispose d'un jeton stocké par le runtime actif.",
-                "c24e56c532": "Tester",
-                "3e7c10d286": "Test en cours...",
-                "a2c0015fb8": "Vérifié",
-                "e2ff968276": "Connecter Jira",
-                "60996beda6": "Ajouter un site Jira",
-                "7ca5ffffdb": "Parcourez, créez et démarrez du travail depuis les tickets Jira Cloud.",
-                "a1093a06c7": "Vérification de l'accès Jira avant d'afficher les actions de configuration.",
-                "9fa04a032e": "{{value0}} site{{value1}} connecté",
-                "cef18762a2": "Ajoutez l'accès avec une clé d'API personnelle depuis vos paramètres Linear. Les clés à accès complet peuvent voir toutes les équipes accessibles au propriétaire de la clé.",
-                "6224fe9d34": "Chaque espace de travail Linear connecté possède une clé stockée par le runtime actif. Les clés à accès complet peuvent couvrir toutes les équipes auxquelles le propriétaire de la clé a accès ; les clés restreintes peuvent être remplacées à tout moment.",
-                "1a12e33fe5": "Ajouter l'accès Linear",
-                "622c224082": "Ajouter un accès à l'espace de travail",
-                "eae4a9f16b": "Ajoutez un accès Linear pour parcourir et lier des issues.",
-                "fe9231215b": "Vérification de l'accès Linear avant d'afficher les actions de configuration.",
-                "e1f5e6424c": "Connecté{{value1}} : {{value0}} espace de travail",
-                "disconnect_all": "Déconnecter",
-                "account_scope_prefix": "Portée des comptes",
-                "2d60ec7921": "Connectez un site Jira Cloud avec un jeton d'API, ou un Jira auto-hébergé avec un jeton d'accès personnel ou un nom d'utilisateur et mot de passe. Les identifiants sont envoyés au runtime distant sélectionné et y sont stockés avec le chiffrement pris en charge par le runtime.",
-                "977e360b71": "Connectez un site Jira Cloud avec un jeton d'API, ou un Jira auto-hébergé avec un jeton d'accès personnel ou un nom d'utilisateur et mot de passe. Les identifiants sont stockés localement et chiffrés lorsque le stockage du runtime local le prend en charge.",
-                "statusConnected": "Connecté",
-                "statusNotConnected": "Non connecté"
-              }
+              "cards": {}
             }
           }
         },
@@ -9840,10 +8958,7 @@
           "9e29aff18b": "Supprimer le raccourci {{value1}} de {{value0}}",
           "2a9588b1c2": "Supprimer cette association"
         },
-        "BrowserLocalhostWorktreeLabelsSetting": {
-          "8ac8c3ad19": "Libellés localhost des worktrees",
-          "1db3c8b983": "Ouvrir les ports des espaces de travail sous forme d'URL localhost Orcinus propres à chaque worktree, pour mieux distinguer les onglets du navigateur."
-        },
+        "BrowserLocalhostWorktreeLabelsSetting": {},
         "AgentRuntimeSetting": {
           "label": "Runtime des agents",
           "wsl": "WSL",
@@ -9977,23 +9092,9 @@
           "agent": {
             "skill": {
               "install": {
-                "cta": {
-                  "copiedCommand": "Commande copiée.",
-                  "copyFailed": "Échec de la copie de la commande.",
-                  "skillLabel": "Skill d'agent :",
-                  "checking": "Vérification...",
-                  "installed": "Installés",
-                  "notInstalled": "Non installé",
-                  "recheck": "Revérifier",
-                  "installedDescription": "Skill d'agent installée. Pour la mettre à jour, exécutez :",
-                  "description": "Permet aux agents de lire et modifier les tâches Linear. La configuration guidée complète (connexion + skill + visibilité) se trouve dans Paramètres → Task Sources.",
-                  "copyCommand": "Copier la commande"
-                }
+                "cta": {}
               },
-              "search": {
-                "title": "Linear",
-                "description": "Statut de la skill Linear, exemples d'utilisation et liens vers la configuration de Task Sources."
-              }
+              "search": {}
             }
           }
         },
@@ -10081,17 +9182,7 @@
           "done": "Terminé",
           "copyPrompt": "Copier le prompt"
         },
-        "LinearAgentSkillPane": {
-          "title": "Linear",
-          "description": "Fonctionnement de Linear dans Orcinus : parcourez les tickets, démarrez des espaces de travail liés et laissez les agents mettre à jour les tickets avec /orca-linear.",
-          "skillTitle": "Skill Linear",
-          "howToUse": "Prompts d'exemple",
-          "howToUseDescription": "Cliquez sur une carte pour copier un prompt. Utilisez-les dans un worktree lié à Linear après l'installation de la skill.",
-          "terminalTitle": "Configuration de la skill Linear",
-          "terminalAriaLabel": "Terminal d'installation de la skill Linear",
-          "manageConnectionHint": "Consultez les espaces de travail Linear connectés et les clés d'API dans",
-          "manageConnectionLink": "Intégrations"
-        },
+        "LinearAgentSkillPane": {},
         "MobileRelayBetaNotice": {
           "notice": "Orcinus Relay est en bêta."
         },
@@ -10100,20 +9191,9 @@
           "description": "Police utilisée par les éditeurs de fichiers et les vues de diff. Laissez vide pour suivre la police du terminal.",
           "placeholder": "Identique à la police du terminal"
         },
-        "BrowserLinkRoutingSetting": {
-          "description": "Ouvre les liens http(s) dans le navigateur intégré d'Orcinus — depuis le terminal, le markdown et l'éditeur. {{shortcut}} utilise toujours votre navigateur système.",
-          "descriptionBase": "Ouvre les liens http(s) dans le navigateur intégré d'Orcinus — depuis le terminal, le markdown et l'éditeur."
-        },
-        "BrowserLinkRoutingModifierSetting": {
-          "titleSystem": "Maintenez Shift pour ouvrir dans votre navigateur web",
-          "titleOrca": "Maintenez Shift pour ouvrir dans Orcinus",
-          "descriptionSystem": "Les liens s'ouvrent dans Orcinus ; {{chord}}+clic les envoie plutôt à votre navigateur système.",
-          "descriptionOrca": "Les liens s'ouvrent dans votre navigateur système. Une fois activé, {{chord}}+clic en ouvre un dans le navigateur intégré d'Orcinus."
-        },
-        "BrowserTerminalLinkActionsSetting": {
-          "title": "Afficher les actions de lien du terminal",
-          "description": "Affiche les actions disponibles quand vous cliquez sur un lien du terminal. Désactivez pour exiger un {{modifier}}+clic."
-        },
+        "BrowserLinkRoutingSetting": {},
+        "BrowserLinkRoutingModifierSetting": {},
+        "BrowserTerminalLinkActionsSetting": {},
         "PluginConsentDialog": {
           "workerTrust": "Worker en arrière-plan — exécute son propre processus",
           "instructionalTrust": "Contenu instructif — s'exécute plus tard sous l'autorité de l'utilisateur ou d'un agent",
@@ -10364,47 +9444,8 @@
             "development": "plugins de développement"
           }
         },
-        "LinearAgentSkillGuide": {
-          "setupConnectTitle": "1. Connecter Linear",
-          "setupConnectBody": "Clé API personnelle pour qu'Orcinus liste les issues et ouvre les espaces de travail liés.",
-          "manageKeys": "Gérer les clés",
-          "addAccess": "Ajouter l'accès",
-          "setupSkillTitle": "2. Installer la skill de l'agent",
-          "setupSkillBody": "Donne aux agents de codage /orca-linear pour la lecture, les mises à jour, le tri et la jointure de pull requests ou merge requests.",
-          "setupVisibleTitle": "3. Afficher Linear dans Tasks",
-          "setupVisibleBody": "Conserve Linear dans le sélecteur de sources Tasks et les raccourcis de la barre latérale.",
-          "openTaskSources": "Sources de tâches",
-          "setupTitle": "Checklist de configuration",
-          "setupBody": "Les trois sont requis pour la boucle complète Tasks + agent. Le parcours de première configuration figure aussi sous Task Sources.",
-          "setupReady": "Tout est prêt",
-          "setupProgress": "{{done}} sur {{total}} prêts",
-          "notesTitle": "Bon à savoir",
-          "notesIntro": "Quelques rappels une fois Linear connecté et la skill installée.",
-          "noteLinkedTitle": "Partir d'une issue Linear",
-          "noteLinkedBody": "Les actions sur les tickets fonctionnent mieux dans un worktree créé depuis Tasks, pour que l'issue reste liée comme contexte.",
-          "noteSlashTitle": "Mentionner /orca-linear",
-          "noteSlashBody": "Dans le chat, utilisez /orca-linear (ou demandez en langage naturel) pour que l'agent charge la skill à ce tour.",
-          "noteKeysTitle": "Les clés suivent le runtime",
-          "noteKeysBody": "Les clés API et les espaces de travail sont stockés pour le runtime actif.",
-          "noteVisibilityTitle": "Masquer ≠ déconnecter",
-          "noteVisibilityBody": "Masquer Linear dans Task Sources le retire seulement du sélecteur. Cela ne supprime ni votre clé ni votre skill.",
-          "setupChecking": "Vérification…"
-        },
-        "TaskSourceLinearSetup": {
-          "connectTitle": "Connecter Linear",
-          "connectDescription": "Ajoutez une clé API personnelle pour qu'Orcinus puisse parcourir les issues et ouvrir des espaces de travail avec le contexte du ticket.",
-          "manageAccess": "Gérer les clés",
-          "addAccess": "Ajouter l'accès Linear",
-          "connectedHint": "Les espaces de travail et les clés sont stockés pour le runtime actif. Vous pouvez ajouter d'autres accès à tout moment.",
-          "recheck": "Revérifier la connexion",
-          "skillTitle": "Installer le skill d'agent Linear",
-          "skillDescription": "Donne aux agents /orca-linear pour lire les tickets, publier des mises à jour, changer les états et joindre des pull requests ou merge requests.",
-          "skillBlocked": "Connectez d'abord Linear, puis installez la skill pour les agents.",
-          "skillPanelTitle": "Skill Linear",
-          "terminalTitle": "Configuration de la skill Linear",
-          "terminalAriaLabel": "Terminal d'installation de la skill Linear",
-          "showDescription": "Incluez Linear dans le sélecteur de sources de la page Tasks et les raccourcis de la barre latérale."
-        },
+        "LinearAgentSkillGuide": {},
+        "TaskSourceLinearSetup": {},
         "TaskSourceProviderCard": {
           "statusChecking": "Vérification…",
           "statusReady": "Prêt",
@@ -10869,72 +9910,10 @@
             "e555a41d32": "Merge de la pile..."
           },
           "PortsPanel": {
-            "3ea4a02a8f": "Annuler",
-            "4eb801ce93": "dev-server",
-            "8dfed0a15c": "Libellé (facultatif)",
-            "17bea6e391": "localhost",
-            "a3721a50b0": "Hôte distant",
-            "d57545ff92": "Identique au distant",
-            "b950b1948b": "Port local",
-            "9e5a4118b0": "Port distant",
-            "c9d106547a": "Transférer",
-            "c7e920aa7c": "annoncé comme {{value0}}",
-            "e740075063": "Supprimer",
-            "b3548e59f4": "Édition",
-            "fe2730d050": "Copier {{value0}}",
-            "b22b128b2a": "Ouvrir dans le navigateur",
-            "75aeea592f": "Ouvrir {{value0}} dans le navigateur",
-            "de349d4560": "ouvre {{value0}}",
-            "907eb53ed2": "Transférer un port",
-            "04efd3dad4": "Transférez un port pour accéder aux services distants depuis votre machine locale.",
-            "1f0d2a24f9": "Aucun port transféré",
-            "36b1b2984a": "Détecté",
-            "ddbe58d74e": "Transféré",
-            "a103dae837": "Ajouter",
-            "6bc058dbe1": "Ports",
-            "d4c3cd679c": "Reconnexion...",
-            "a2f1a47f42": "Connexion SSH perdue",
-            "409afcc145": "Aucun espace de travail sélectionné pour le navigateur.",
-            "153145e675": "Preuve",
-            "c7b4702b7b": "Espace de travail",
-            "57d930fa45": "PID",
-            "5dd86dcf2f": "Processus",
-            "b1ff94fa27": "Protocole",
-            "729be0b4e5": "Type",
-            "0f1d8cd324": "Bind",
-            "1c1c18cefc": "Adresse",
-            "f9528da632": "Arrêter le processus",
-            "a223459512": "Afficher les détails",
-            "bdac206faf": "Copier les détails",
-            "792baeb7ed": "Copier l'adresse",
-            "d41a8241ec": "Port",
-            "a2a9fc6899": "Aucun port local détecté",
-            "f59c783b7a": "Scan des ports indisponible sur {{value0}} : {{value1}}",
-            "7822e3edc6": "Actualiser les ports",
-            "c1b115c375": "Aucun espace de travail sélectionné",
-            "98e9a414f8": "Échec de l'ouverture du navigateur",
-            "a00f3a2840": "Échec de l'actualisation des ports",
-            "97b562d21d": "Processus arrêté sur :{{value0}}",
-            "9079776663": "Enregistrer",
             "c57eda6822": "modifier",
-            "9f475dc994": "Transfert en cours...",
-            "d7c83cfd24": "Enregistrement...",
-            "31e80cff2d": "Transférez un port distant vers votre machine locale.",
-            "10360598a4": "Mettez à jour la configuration de transfert de port.",
-            "80206251c8": "Modifier le transfert de port",
             "4bc9b00912": "espace de travail",
-            "3e13cb63ee": "Inconnu",
-            "472054d94c": "Port :{{value0}}",
             "1119f90ad7": "conteneur",
-            "d32820d3e2": "Externe",
-            "4db4b5e435": "Autres espaces de travail",
-            "38b16cfbef": "Aucun port détecté",
-            "0d63d94db3": "Analyse...",
-            "935dda7718": "Espace de travail actif",
-            "740aca88ab": "Échec du scan des ports de l'espace de travail.",
-            "5be4f7f727": "Menu du port {{value0}}",
-            "7550998473": "Copier",
-            "1004af16ab": "Copier {{value0}}"
+            "7550998473": "Copier"
           },
           "Search": {
             "1abfb25a66": "Saisissez pour rechercher dans les fichiers",
@@ -11501,38 +10480,7 @@
           "gitlab": {
             "mr": {
               "merge": {
-                "state": {
-                  "04a3015a12": "Peut être fusionné",
-                  "53c6d3b7e9": "GitLab indique que cette MR peut être fusionnée, mais le pipeline est toujours en cours",
-                  "65c847ad1e": "Vérifications en attente",
-                  "b41fbc180c": "GitLab indique que cette MR peut être fusionnée, mais certains jobs du pipeline ont échoué",
-                  "49ac4fec10": "Vérifications échouées",
-                  "22b7e50621": "GitLab signale des conflits de fusion",
-                  "96b05e374c": "Conflits",
-                  "d63bb6f76e": "Cette demande de fusion est encore au stade de brouillon",
-                  "b2715092c6": "Brouillon",
-                  "2388413f28": "Cette demande de fusion est fermée",
-                  "88d044c42f": "Fermé",
-                  "ee482a2bad": "Cette demande de fusion est déjà fusionnée",
-                  "fae95ae20d": "Fusionnés",
-                  "5105b0e584": "Approbation requise",
-                  "46dc85711b": "GitLab exige une approbation avant que cette MR puisse être fusionnée",
-                  "893a999c8c": "Modifications demandées",
-                  "c65408a99d": "Un relecteur a demandé des modifications sur cette demande de fusion",
-                  "01ab632a21": "Fils non résolus",
-                  "4191fdfcec": "GitLab exige que les discussions non résolues soient résolues avant la fusion",
-                  "bf628700f6": "Les vérifications doivent passer",
-                  "37d8637c70": "GitLab exige que le pipeline réussisse avant que cette MR puisse être fusionnée",
-                  "049ea91a82": "Le pipeline est toujours en cours",
-                  "382c70faeb": "En retard",
-                  "2c61100b3a": "Mettez à jour la branche avant de merger",
-                  "195917574e": "Vérification",
-                  "ff6db2db63": "GitLab calcule encore le statut de cette demande de fusion",
-                  "4ecc0d90ee": "Bloquée",
-                  "a0f3de7023": "GitLab signale que cette demande de fusion est bloquée",
-                  "804ecf93e8": "GitLab n'a pas communiqué de statut de fusion final",
-                  "a5c049afe4": "GitLab indique que cette MR peut être fusionnée"
-                }
+                "state": {}
               }
             }
           },
@@ -12467,18 +11415,7 @@
         "gitlab": {
           "rate": {
             "limit": {
-              "display": {
-                "ebc0e8ecf1": "Chargement du quota de l'API GitLab...",
-                "a2d3d1fdde": "Le quota de l'API GitLab est indisponible.",
-                "a2f68645ac": "Actualiser le quota de l'API GitLab",
-                "2f9c16d6c3": "Orcinus utilise REST via le CLI GitLab.",
-                "14e144f7a7": "Budget API GitLab",
-                "3e2c982cfa": "restants, réinitialisation dans",
-                "ea8ad0bae8": "sur",
-                "0a891e8935": "API REST",
-                "953f7c6062": "Cet hôte GitLab n'a pas renvoyé d'en-têtes de limite de débit.",
-                "budget_scope_prefix": "Périmètre du quota"
-              }
+              "display": {}
             }
           }
         }
@@ -13278,169 +12215,36 @@
       },
       "browser": {
         "pane": {
-          "BrowserFind": {
-            "c9d5f63fdc": "Fermer",
-            "5c0c02ae76": "Correspondance suivante",
-            "ca7aebbd7f": "Correspondance précédente",
-            "636a69cd66": "Rechercher dans la page...",
-            "7baca7b1b8": "Aucun résultat",
-            "fc63f336aa": "{{value0}} sur {{value1}}"
-          },
-          "BrowserImportHintButton": {
-            "05e675fe96": "Masquer l'astuce",
-            "77351d22f5": "Paramètres du navigateur",
-            "e0e125e074": "Depuis un fichier…",
-            "0c6d254eca": "Depuis {{value0}}",
-            "244266c122": "Importer…",
-            "e52a955e6f": "Vous retrouverez toujours cette option dans Paramètres > Navigateur.",
-            "4f5ffaa6a1": "Importer les données du navigateur",
-            "b24fef25be": "Importer",
-            "02e89014c5": "{{value0}} cookies importés depuis {{value1}}{{value2}}.",
-            "d40d584769": "{{value0}} cookies importés depuis un fichier."
-          },
-          "BrowserMobileDriverOverlay": {
-            "a6914ee43f": "Reprendre",
-            "f4ecd61552": "Cet onglet est contrôlé depuis votre téléphone. Reprenez-le pour l'utiliser sur ordinateur.",
-            "d9768ec642": "Saisie du navigateur en pause",
-            "20539eca03": "Le mobile contrôle ce navigateur",
-            "7c31b0da94": "Impossible de reprendre cet onglet. Vérifiez la session sur le téléphone, puis réessayez."
-          },
+          "BrowserFind": {},
+          "BrowserImportHintButton": {},
+          "BrowserMobileDriverOverlay": {},
           "BrowserPane": {
-            "1ded0d3168": "Copier la capture d'écran",
-            "f30d2d35a7": "Capture effectuée",
-            "fa6ea61de3": "Annuler",
-            "c2ef0359b9": "Copier le contenu",
-            "f2d0c22d67": "Supprimer l'annotation {{value0}}",
-            "11c5084aa2": "Effacer les annotations",
-            "734e4343ec": "Effacer les annotations du navigateur",
-            "95af781091": "Envoyer un retour à un agent",
-            "ac39b9366b": "Envoyer",
             "a3508d7e6e": "{{value0}} annotation{{value1}} prête. Sélectionnez un autre élément ou copiez tous les retours.",
-            "f796c774a4": "Saisissez une URL ci-dessus pour commencer à naviguer.",
-            "366bf5d62c": "Nouvel onglet",
             "1c78adc73d": "Ouvrir en externe",
             "da68d35f7b": "Ouvrir la page en erreur dans le navigateur par défaut",
             "93be92f8d1": "Copier l'adresse",
             "3c085f638d": "Copier l'URL de la page en erreur",
             "c6be71329e": "Actualiser",
-            "781d6459ad": "Réessayer",
-            "2fdca7df09": "Ignorer",
             "8b6fab9ffa": "Enregistrer",
-            "0f41bf80c7": "Ouvrir dans le navigateur par défaut",
-            "ec75d0c412": "Ouvrir les devtools du navigateur",
-            "fc9be38f6f": "Annoter un élément de la page",
-            "fdfc7fe0ef": "Capturer un élément de la page",
-            "a8f37f70c3": "Inspecter la page",
-            "1b179ab561": "Copier l'URL de la page",
-            "f7ab83f7ed": "Ouvrir la page dans le navigateur par défaut",
-            "0e080d820e": "Recharger",
-            "a1f3c2e4b5": "Rechargement forcé",
-            "b7e4d9c1a2": "Arrêter",
-            "250a9b3e42": "Transférer",
-            "40edfa75cb": "Retour",
-            "efb0e8f7f3": "Copier l'adresse du lien",
-            "8ce4f6b12e": "Ouvrir le lien dans le navigateur par défaut",
-            "b5b87d6cbb": "Ouvrir le lien dans le navigateur Orcinus",
-            "87eb75f7d2": "Saisissez une URL http(s) ou localhost valide.",
-            "27d863542c": "Annotations du navigateur",
-            "e48569ac6d": "Impossible d'accéder à ce site.",
-            "bbe8f15e83": "Ce volet est rendu depuis le serveur runtime actif.",
-            "8b7e6d1f5a": "Les annotations du navigateur ne sont disponibles que dans les onglets locaux.",
-            "deb5293610": "Annotations du navigateur indisponibles dans un runtime distant",
-            "90d021f2ad": "Ajouter",
-            "0cb3bd6221": "Intention d'annotation",
-            "8f87e6c2e5": "Intention",
-            "532bac48c5": "Décrivez ce que l'agent doit modifier ici...",
-            "d2a7092e6e": "Commentaire d'annotation",
-            "b472c5fe03": "Ajouter une annotation au navigateur",
-            "b5ba6085de": "Question",
-            "143204e423": "Modifier",
-            "b71dc3d930": "Reconnecter",
             "e7ca5a098c": "succès",
-            "d51ef37351": "Copier",
-            "6f4ab3592b": "Copied",
             "b2856516e2": "Impossible de charger cette page",
             "db325a7eeb": "Impossible d'accéder à {{value0}}",
-            "499b31b84e": "Tout copier",
             "e72dfa268a": "annoter",
-            "168350ae6a": "Cliquez ou survolez un élément, puis appuyez sur C pour copier ou S pour capturer.",
-            "e852e20cea": "Copié — appuyez sur S pour capturer, ou sélectionnez un autre élément",
             "a5dcd0fd1d": "confirmation",
-            "777b5bc4ec": "Cliquez sur un élément pour ajouter un retour pour l'agent.",
-            "b733a91bd9": "Ajouter un retour pour l'élément sélectionné.",
-            "4328a0a062": "Échec de la capture : {{value0}}",
             "26615e116b": "error",
             "8aec5bc044": "idle",
-            "759f32af29": "Téléchargement",
             "c8bc7f1f9e": "demandé",
-            "4300f38145": "Téléchargement depuis {{value0}}{{value1}}",
             "31375046b7": "Télécharger depuis {{value0}}",
-            "acbe79fd01": "Capturer un élément de la page ({{value0}})",
-            "572046436a": "Navigateur distant",
-            "b313a7275b": "Ouverture du navigateur distant",
-            "5f66313863": "annotation",
-            "ea6af700da": "{{value0}} annotation",
-            "c13693fe27": "{{value0}} annotations",
-            "074f0ed10b": "{{value0}} annotation prête. Sélectionnez un autre élément ou copiez tous les retours.",
-            "a2164a6e5a": "{{value0}} annotations prêtes. Sélectionnez un autre élément ou copiez tous les retours.",
-            "9f6f2e8c19": "Le chemin du fichier téléchargé est indisponible.",
-            "0c79b7634d": "Impossible d'ouvrir le fichier téléchargé. Il a peut-être été déplacé ou supprimé.",
-            "397d9dc923": "Impossible d'afficher le fichier téléchargé. Il a peut-être été déplacé ou supprimé.",
-            "39c04fed61": "Téléchargement en pause",
-            "5c3d530a68": "Téléchargé",
-            "4bb7424d6b": "Annulé",
-            "6e776f9ef9": "Échec du téléchargement",
-            "756bfc25c9": "Ouvert",
-            "09a9489aa5": "Afficher",
-            "2a4c4b8e1f": "Copier"
+            "5f66313863": "annotation"
           },
           "BrowserToolbarMenu": {
-            "429ef481f9": "Annuler",
-            "64f448fb6e": "Nom du profil",
-            "67e9b9fcd6": "Nouveau profil de navigateur",
-            "58f2c81542": "Basculer",
-            "a38f217b46": "Changer de profil rechargera cette page. Toutes les données de formulaire non enregistrées seront perdues.",
-            "fe683eb3b4": "Changer de profil",
-            "a771c2b6c8": "Paramètres du navigateur…",
-            "ed8f54509d": "Par défaut",
-            "e5d31de1a9": "Taille de la zone d'affichage",
-            "56f94f4ffa": "Depuis un fichier…",
-            "eb280bfb11": "Depuis {{value0}}",
-            "2293adf620": "Importer des cookies",
-            "cf7cdc67ef": "Nouveau profil…",
-            "7b838540c7": "Menu du navigateur",
-            "6aa42813e4": "{{value0}} cookies importés depuis {{value1}}{{value2}}.",
-            "a7a86702b3": "Profil {{value0}} créé et activé",
-            "4d2f9f13a7": "Échec de la création du profil.",
-            "3ccd29d771": "Profil {{value0}} activé",
-            "569bce8eb1": "Créer",
-            "bf648471c5": "Création…",
-            "53bbe3dab4": "{{value0}} cookies importés depuis un fichier.",
-            "c5f0e4d3b2a1": "{{value0}} cookies importés depuis {{value1}} ({{value2}}).",
-            "d6a1f5e4c3b2": "{{value0}} cookies importés depuis {{value1}}."
+            "6aa42813e4": "{{value0}} cookies importés depuis {{value1}}{{value2}}."
           },
-          "GrabConfirmationSheet": {
-            "314a0aaa5b": "Joindre à l'IA",
-            "7095e98362": "Copier la capture d'écran",
-            "26fd87f4df": "Copier",
-            "87d97bdd6d": "Annuler",
-            "effd75e330": "Contexte proche",
-            "7d1480fbf1": "HTML",
-            "9098b118ab": "Page",
-            "eb98a0971a": "\"",
-            "d053db279d": "role=",
-            "a759d8f866": "Élément sélectionné",
-            "9c6ce0632a": "Capture d'écran de l'élément sélectionné",
-            "50f7114f99": "Vérifiez avant de joindre. Le contexte de page capturé peut inclure du contenu visible du site.",
-            "f3575229df": "Capturer",
-            "405bb315da": "Sans titre"
-          },
+          "GrabConfirmationSheet": {},
           "browser": {
             "address": {
               "bar": {
-                "suggestions": {
-                  "87fcdd0da9": "Recherche {{value0}}"
-                }
+                "suggestions": {}
               }
             }
           },
@@ -13449,11 +12253,7 @@
               "browser": {
                 "page": {
                   "grab": {
-                    "annotations": {
-                      "0c7b9b2b7a": "Copied",
-                      "c937229f19": "Capture effectuée",
-                      "1f5cb19034": "Annotation ajoutée"
-                    }
+                    "annotations": {}
                   }
                 }
               }
@@ -13464,10 +12264,7 @@
               "browser": {
                 "page": {
                   "navigation": {
-                    "downloads": {
-                      "8683b84b9e": "La page du navigateur n'est pas prête pour le dépôt de fichiers.",
-                      "22272f2784": "Déposez les fichiers sur la page du navigateur, pas sur la barre d'outils."
-                    }
+                    "downloads": {}
                   }
                 }
               }
@@ -13477,21 +12274,12 @@
         "profile": {
           "user": {
             "agent": {
-              "option": {
-                "04af3dc12b": "Utiliser le user agent non modifié",
-                "5bf47a3c91": "Peut améliorer la connexion à Google, mais réduire la compatibilité avec les sites protégés contre les bots."
-              }
+              "option": {}
             }
           }
         },
         "webauthn": {
-          "account": {
-            "fallback": "Clé d'accès",
-            "title": "Choisir une clé d'accès",
-            "description": "Choisissez le compte à utiliser avec cette clé de sécurité.",
-            "site": "Site",
-            "cancel": "Annuler"
-          }
+          "account": {}
         }
       },
       "automations": {
@@ -13921,38 +12709,7 @@
       },
       "jira": {
         "connect": {
-          "dialog": {
-            "63ce735809": "Se connecter",
-            "4a2ab52781": "Vérification…",
-            "79e7aaed39": "Annuler",
-            "fdd26d81cc": "Paramètres du compte Atlassian",
-            "8090504a3e": "Créez un token dans",
-            "7b3967c12f": "Token API Atlassian",
-            "3d81bf3ab3": "Token API",
-            "e91b9a4073": "you@example.com",
-            "2849ddb295": "E-mail Atlassian",
-            "70fcd360c4": "https://example.atlassian.net",
-            "e176f9d0c5": "URL du site Jira Cloud",
-            "d785c42b8b": "Utilisez l'URL d'un site Jira Cloud, un e-mail Atlassian et un token API pour parcourir les tickets.",
-            "8388bdea2b": "Connecter le site Jira",
-            "2e2b69e48e": "Utilisez une URL de base Jira auto-hébergée et un jeton d'accès personnel pour parcourir les tickets.",
-            "b67e919bd5": "Type d'instance Jira",
-            "17787d6e4b": "Atlassian Cloud",
-            "bc7a831773": "Auto-hébergé",
-            "3489e186d6": "URL du site Jira",
-            "cbc27fa599": "https://jira.example.com",
-            "730d973bae": "Jeton d'accès personnel",
-            "8b9c7b9e7b": "Jeton d'accès personnel Jira",
-            "ccfb086d3e": "Créez un jeton d'accès personnel dans votre profil Jira, rubrique Personal Access Tokens.",
-            "1d947a07ab": "Utilisez une URL de base Jira auto-hébergée, un nom d'utilisateur et un mot de passe pour parcourir les tickets.",
-            "f49708c369": "Méthode d'authentification Jira",
-            "84a810dd0e": "Nom d'utilisateur et mot de passe",
-            "8d1223fa5c": "Nom d'utilisateur",
-            "be9eba0a1b": "nom d'utilisateur",
-            "70035652d7": "Mot de passe",
-            "c50abbf340": "Mot de passe du compte Jira",
-            "d8737db691": "Utilisez le nom d'utilisateur et le mot de passe de votre compte Jira Server ou Data Center."
-          }
+          "dialog": {}
         }
       },
       "rightSidebar": {
@@ -14024,36 +12781,16 @@
         "routing": {
           "preference": {
             "dialog": {
-              "badge": "Lien de terminal",
-              "preview": "Aperçu",
               "keep": {
-                "title": "Ouvrir les liens de terminal dans le navigateur d'Orcinus ?",
-                "description": "Ou utilisez votre navigateur système par défaut.",
-                "orca": {
-                  "button": "Garder Orcinus"
-                }
+                "orca": {}
               },
-              "title": "Ouvrir les liens du terminal dans le navigateur d'Orcinus ?",
-              "description": "Utilisez le navigateur d'Orcinus pour les liens du terminal, ou gardez votre navigateur système.",
-              "link": {
-                "label": "Lien"
-              },
-              "orca": {
-                "note": "Orcinus peut utiliser les cookies importés pour les sites où vous êtes connecté.",
-                "button": "Ouvrir dans Orcinus"
-              },
-              "settings": {
-                "note": "Modifiable plus tard dans Paramètres → Navigateur."
-              },
+              "link": {},
+              "orca": {},
+              "settings": {},
               "shortcut": {
-                "note": {
-                  "prefix": "Quand les liens s'ouvrent dans Orcinus,",
-                  "suffix": "un clic ouvre le navigateur système une seule fois."
-                }
+                "note": {}
               },
-              "system": {
-                "button": "Utiliser le navigateur système"
-              }
+              "system": {}
             }
           }
         }
@@ -14094,18 +12831,7 @@
       },
       "star": {
         "nag": {
-          "StarNagToastHost": {
-            "starredThanks": "Étoile ajoutée — merci !",
-            "githubOpened": "GitHub ouvert",
-            "opening": "Ouverture…",
-            "starring": "Ajout de l'étoile…",
-            "openGithub": "Ouvrir GitHub",
-            "starOnGithub": "Mettre une étoile sur GitHub",
-            "onboardingCompleted": "Prise en main terminée !",
-            "body": "Si Orcinus vous plaît jusqu'ici, une étoile GitHub aide d'autres développeurs à le découvrir.",
-            "dismiss": "Ignorer",
-            "later": "Plus tard"
-          }
+          "StarNagToastHost": {}
         }
       },
       "orca": {
@@ -14121,64 +12847,14 @@
         }
       },
       "linear-issue-attribute-filter-dropdowns": {
-        "removeFilter": "Retirer le filtre {{value0}}",
-        "teamRequired": "Sélectionnez une équipe pour charger les statuts, responsables et étiquettes de cet espace de travail.",
-        "filters": "Filtres",
-        "allWorkspacesTitle": "Sélectionnez un espace de travail",
-        "allWorkspacesBody": "Les filtres de statut, responsable et étiquette utilisent des identifiants issus d'un seul espace de travail Linear. Choisissez-en un pour filtrer selon ces attributs.",
-        "optionsFromTeam": "Options de {{team}}",
-        "clearAll": "Effacer tous les filtres"
+        "optionsFromTeam": "Options de {{team}}"
       },
-      "linear-issue-attribute-filter-sections": {
-        "status": "Statut",
-        "priority": "Priorité",
-        "assignee": "Assigné",
-        "unassigned": "Non assigné",
-        "labels": "Étiquettes",
-        "countSelected": "{{count}} sélectionnés",
-        "selected": "sélectionnés",
-        "searchPriority": "Filtrer par priorité…",
-        "searchStatus": "Filtrer par statut…",
-        "searchLabels": "Filtrer par étiquette…",
-        "searchAssignee": "Filtrer par responsable…",
-        "back": "Retour"
-      },
+      "linear-issue-attribute-filter-sections": {},
       "browser-pane": {
         "markup": {
-          "cancel": "Annuler",
-          "clear": "Tout effacer",
-          "copiedToast": "Markup copié — collez-le dans votre agent ({{value0}})",
-          "copy": "Copier le markup",
-          "drawButton": "Dessiner sur la capture d'écran",
-          "drawHint": "Dessinez sur la page, puis copiez le markup pour le coller dans votre agent.",
-          "drawHintBadge": "Nouveau",
-          "drawHintDismiss": "Compris",
-          "drawHintTry": "Essayer",
-          "errorAttach": "Impossible de joindre la capture d'écran annotée.",
-          "errorCapture": "Impossible de capturer la page à annoter.",
-          "errorUnavailable": "Le markup de capture d'écran n'est pas disponible sur cette page.",
-          "fontSize": "Taille de police",
-          "hint": "Dessinez sur la page, puis copiez le markup pour le coller dans votre agent.",
-          "redo": "Rétablir",
-          "style": "Couleur et épaisseur",
-          "textInput": "Texte d'annotation",
-          "tool": {
-            "arrow": "Flèche",
-            "ellipse": "Ellipse",
-            "highlight": "Surligneur",
-            "pen": "Stylo",
-            "rect": "Rectangle",
-            "text": "Texte"
-          },
-          "undo": "Annuler",
-          "widthOption": "{{value0}} px"
+          "tool": {}
         },
-        "grab": {
-          "errorNotReady": "Cette page n'est pas encore prête pour la sélection d'éléments.",
-          "errorNotAuthorized": "L'accès au navigateur a été refusé.",
-          "errorAlreadyActive": "La sélection d'éléments est déjà active.",
-          "errorInjectionFailed": "Impossible de démarrer la sélection d'éléments sur cette page."
-        }
+        "grab": {}
       },
       "pluginCatalog": {
         "PluginCatalogLayout": {
@@ -14200,17 +12876,7 @@
         "description": "La ref de suivi distante « {{value0}} » était indisponible ; Orcinus a donc utilisé la locale « {{value1}} ». Cet espace de travail pourrait ne pas inclure les derniers changements distants.",
         "dismiss": "Compris"
       },
-      "LinuxPackageInstallRecoveryCard": {
-        "e3de29c86a": "Afficher le paquet",
-        "55c86654b7": "Copier la commande d'installation",
-        "53e1559f99": "Échec de l'installation automatique",
-        "a7ac6ec78b": "Orcinus a téléchargé la mise à jour mais n'a pas pu installer le paquet système automatiquement.",
-        "82c6dbea00": "Copiez la commande et exécutez-la dans un terminal système sur l'ordinateur où Orcinus est installé. Une fois terminée, quittez puis rouvrez Orcinus pour utiliser la nouvelle version.",
-        "53c4b8e148": "Aucun agent d'authentification exploitable n'a répondu à la demande d'installation privilégiée.",
-        "c732bcbf8f": "Vérification du paquet...",
-        "aa57fa4f80": "Commande copiée. Exécutez-la dans un terminal système pour installer {{value0}}, puis quittez et rouvrez Orcinus.",
-        "b7e7c5bc95": "Orcinus vérifie le fichier téléchargé par rapport aux métadonnées de version au moment où il construit cette commande. Le paquet système lui-même n'est pas vérifié par signature, et Orcinus ne peut pas garantir le fichier au-delà de ce point."
-      },
+      "LinuxPackageInstallRecoveryCard": {},
       "pr-check-counts": {
         "passingChip": "{{value0}} réussis",
         "failingChip": "{{value0}} en échec",
@@ -14218,12 +12884,7 @@
         "needsActionChip": "{{value0}} action requise",
         "unresolvedChip": "{{value0}} non résolus"
       },
-      "BrowserPane": {
-        "streamConnectionLost": "Connexion au serveur distant perdue.",
-        "streamConnectionUnreachable": "Impossible de joindre le serveur distant.",
-        "streamRestartFailed": "Échec du redémarrage du flux du navigateur distant.",
-        "streamCapabilityUnsupported": "Le runtime sélectionné ne prend pas en charge le streaming du navigateur distant."
-      },
+      "BrowserPane": {},
       "artifacts": {
         "ArtifactsPage": {
           "signInAgain": "Reconnectez-vous à Orcinus pour charger les artifacts.",
@@ -14259,9 +12920,6 @@
         "copyFailed": "Impossible de copier le lien de l'artifact",
         "copyLink": "Copier le lien",
         "openInBrowser": "Ouvrir dans le navigateur",
-        "preview": "Aperçu de l'artifact",
-        "previewUnavailable": "Aperçu indisponible",
-        "previewUnavailableDescription": "Ouvrez cet artifact dans votre navigateur pour le consulter.",
         "actions": "Actions de l'artifact",
         "ArtifactActions": {
           "more": "Plus d'actions sur l'artifact"
@@ -14343,16 +13001,7 @@
     },
     "i18n": {
       "hostedReview": {
-        "copy": {
-          "f0a4b8c2d1": "PR",
-          "e9f3a7b1c0": "pull request",
-          "d8e2f6a0b9": "Pull Request",
-          "c7d1e5f9a8": "GitHub",
-          "c4e8f1a2b9": "MR",
-          "b3d7e0f1a8": "merge request",
-          "a2c6d9e0f7": "Merge Request",
-          "91b5c8d7e6": "GitLab"
-        }
+        "copy": {}
       }
     },
     "runtime": {
@@ -14370,22 +13019,13 @@
       "webRuntimeSession": {
         "remoteHostDisconnected": "L'espace de travail n'est pas connecté à un hôte Orcinus distant."
       },
-      "gitlabJobTraceClient": {
-        "loadFailed": "Échec du chargement du journal du job GitLab.",
-        "emptyTrace": "Aucun journal disponible pour ce job GitLab.",
-        "timedOut": "Délai dépassé lors du chargement du journal du job GitLab."
-      },
+      "gitlabJobTraceClient": {},
       "githubCheckDetailsTimeout": {
         "timedOut": "Délai dépassé lors du chargement des détails des vérifications."
       }
     },
     "ssh": {
-      "sshConnectVerb": {
-        "reconnect": "Reconnecter",
-        "retry": "Réessayer",
-        "connect": "Se connecter",
-        "connecting": "Connexion…"
-      }
+      "sshConnectVerb": {}
     },
     "main": {
       "window": {
@@ -14408,10 +13048,7 @@
         "SortableTabContextMenu": {
           "closeTabsToLeft": "Fermer les onglets à gauche"
         },
-        "BrowserTab": {
-          "closeOthers": "Fermer les autres",
-          "closeTabsToLeft": "Fermer les onglets à gauche"
-        },
+        "BrowserTab": {},
         "EditorFileTabContextMenu": {
           "closeOthers": "Fermer les autres",
           "closeTabsToLeft": "Fermer les onglets à gauche"
@@ -14424,7 +13061,6 @@
           "reviewAlphaCleanup": "Nettoyage alpha de la revue"
         },
         "presentation": {
-          "gitlabMergeRequestNumber": "MR #{{value0}}",
           "githubPullRequestNumber": "PR #{{value0}}"
         },
         "browse": {

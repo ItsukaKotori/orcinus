@@ -9,14 +9,14 @@ import {
 import { createWebAgentStatusApi } from './preload-api/web-agent-status-api'
 import { createWebAiVaultApi } from './preload-api/web-ai-vault-api'
 import { createWebAppApi } from './preload-api/web-app-api'
-import { createBrowserApi } from './preload-api/web-browser-api'
 import { createCliApi } from './preload-api/web-cli-api'
 import { withFallback } from './preload-api/web-fallback-api'
 import { createFileApi } from './preload-api/web-filesystem-api'
 import { createGitApi } from './preload-api/web-git-api'
 import { createWebGithubCacheApi } from './preload-api/web-github-cache-api'
 import { createGitHubApi } from './preload-api/web-github-api'
-import { createGitLabApi } from './preload-api/web-gitlab-api'
+import { createWebStarNagApi } from './preload-api/web-star-nag-api'
+import { createUpdaterApi } from './preload-api/web-updater-api'
 import {
   createComputerUsePermissionsApi,
   createDeveloperPermissionsApi,
@@ -40,11 +40,8 @@ import { createRuntimeEnvironmentsApi } from './preload-api/web-runtime-environm
 import { webRuntimeState } from './preload-api/web-runtime-session'
 import { createWebSettingsApi } from './preload-api/web-settings-api'
 import { createShellApi } from './preload-api/web-shell-api'
-import { createWebStarNagApi } from './preload-api/web-star-nag-api'
 import { createPtyApi, createSshApi } from './preload-api/web-terminal-api'
 import { createWebUiApi } from './preload-api/web-ui-api'
-import { createUpdaterApi } from './preload-api/web-updater-api'
-import { createWebWorkspacePortsApi } from './preload-api/web-workspace-ports-api'
 import { createWebWorkspaceSessionApi } from './preload-api/web-workspace-session-api'
 import { createWorktreesApi } from './preload-api/web-worktrees-api'
 import { readStoredWebRuntimeEnvironment } from './web-runtime-environment'
@@ -59,16 +56,16 @@ export function installWebPreloadApi(): void {
 function createWebPreloadApi(): Partial<PreloadApi> {
   return {
     ...createWebAppApi(),
-    ...createWebStarNagApi(),
     ...createWebPlatformApi(),
-    ...createWebWorkspacePortsApi(),
     ...createWebOrcaProfilesApi(),
     ...createWebE2EApi(),
     ...createWebSettingsApi(),
     keybindings: createWebKeybindingsApi(),
     ui: createWebUiApi(),
+    updater: createUpdaterApi(),
     ...createWebWorkspaceSessionApi(),
     ...createWebOnboardingApi(),
+    ...createWebStarNagApi(),
     ...createWebGithubCacheApi(),
     runtime: createWebRuntimeApi(),
     runtimeEnvironments: createRuntimeEnvironmentsApi(),
@@ -76,11 +73,8 @@ function createWebPreloadApi(): Partial<PreloadApi> {
     worktrees: createWorktreesApi(),
     fs: createFileApi(),
     git: createGitApi(),
-    browser: createBrowserApi(),
     gh: createGitHubApi(),
-    gl: createGitLabApi(),
     hostedReview: createRuntimeNamespaceApi('hostedReview'),
-    linear: createRuntimeNamespaceApi('linear'),
     hooks: createHooksApi(),
     stats: {
       getSummary: async () =>
@@ -110,7 +104,6 @@ function createWebPreloadApi(): Partial<PreloadApi> {
     },
     developerPermissions: createDeveloperPermissionsApi(),
     computerUsePermissions: createComputerUsePermissionsApi(),
-    updater: createUpdaterApi(),
     shell: createShellApi(),
     skills: createSkillsApi(),
     pty: createPtyApi(),

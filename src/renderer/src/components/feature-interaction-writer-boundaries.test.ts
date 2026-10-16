@@ -77,7 +77,7 @@ describe('feature interaction writer boundaries', () => {
       sourceBetween(
         componentSource('use-task-page-workspace-actions.ts'),
         'const handleOpenOrUseGitHubWorkItem',
-        'const openComposerForGitLabItem'
+        'const nextModel'
       )
     ).toContain(githubWriter)
   })
@@ -114,11 +114,6 @@ describe('feature interaction writer boundaries', () => {
     )
 
     const inPageNavigationSections = [
-      sourceBetween(
-        componentSource('use-task-page-detail-routing.ts'),
-        'const openLinearDetailPage',
-        'const openRelatedLinearIssue'
-      ),
       sourceBetween(
         componentSource('task-page/SourceBar.tsx'),
         'taskSourceManuallyChangedRef.current = true',
@@ -157,153 +152,17 @@ describe('feature interaction writer boundaries', () => {
     ).toContain('return')
   })
 
-  it('records GitLab provider-depth for detail opens, workspace use, and dialog mutations', () => {
-    const detailsSource = componentSource('gitlab-item-dialog/use-gitlab-details-editing.ts')
-    const primarySource = componentSource('gitlab-item-dialog/use-gitlab-primary-actions.ts')
-    const reviewSource = componentSource('gitlab-item-dialog/use-gitlab-review-actions.ts')
-    const gitlabWriter = "recordFeatureInteraction('gitlab-tasks')"
 
-    expect(
-      sourceBetween(
-        componentSource('task-page/gitlab/ItemList.tsx'),
-        '{displayedGitLabItems.map((item) => (',
-        'handleUseGitLabItem(item)'
-      ).match(/recordFeatureInteraction\('gitlab-tasks'\)/g)
-    ).toHaveLength(2)
-    expect(
-      sourceBetween(
-        componentSource('use-task-page-workspace-actions.ts'),
-        'const handleUseGitLabItem',
-        'const nextModel'
-      )
-    ).toContain(gitlabWriter)
 
-    const mutationSections = [
-      sourceBetween(detailsSource, 'const handleSaveDetails', 'return {'),
-      sourceBetween(reviewSource, 'const handleSetReviewers', 'const handleSubmitInlineComment'),
-      sourceBetween(
-        reviewSource,
-        'const handleSubmitInlineComment',
-        'const handleResolveDiscussion'
-      ),
-      sourceBetween(primarySource, 'const handleClose', 'const handleReopen'),
-      sourceBetween(primarySource, 'const handleReopen', 'const handleMerge'),
-      sourceBetween(primarySource, 'const handleMerge', 'const handleSubmitComment'),
-      sourceBetween(primarySource, 'const handleSubmitComment', 'return {'),
-      sourceBetween(reviewSource, 'const handleResolveDiscussion', 'return {')
-    ]
-    for (const section of mutationSections) {
-      expect(section).toContain(gitlabWriter)
-      expect(section).toContain('showGitLabMutationError')
-    }
-  })
 
-  it('keeps nested GitLab row actions from also opening task details by keyboard', () => {
-    const rowSection = sourceBetween(
-      componentSource('task-page/gitlab/ItemList.tsx'),
-      'onKeyDown={(e) => {',
-      'className="grid w-full cursor-pointer'
-    )
-    expect(rowSection).toContain('e.target !== e.currentTarget')
-    expect(rowSection.indexOf('e.target !== e.currentTarget')).toBeLessThan(
-      rowSection.indexOf("e.key === 'Enter'")
-    )
-  })
 
-  it('keys GitLab rows by repository and item identity across hosts', () => {
-    expect(componentSource('task-page/gitlab/ItemList.tsx')).toContain(
-      'key={`${item.repoId}:${item.id}`}'
-    )
-  })
 
-  it('records Linear provider-depth for inline edits, board drops, creation, and workspace use', () => {
-    const drawerSource = [
-      componentSource('linear-item-drawer-edit-controller.tsx'),
-      componentSource('linear-item-drawer-comment-footer.tsx')
-    ].join('\n')
-    const linearWriter = "recordFeatureInteraction('linear-tasks')"
 
-    const taskPageSections = [
-      sourceBetween(
-        componentSource('task-page-linear-issue-model.tsx'),
-        'export function LinearStateCell',
-        'return ('
-      ),
-      sourceBetween(
-        componentSource('use-task-page-linear-board.ts'),
-        'const handleLinearBoardDrop',
-        'const toggleLinearDisplayProperty'
-      ),
-      sourceBetween(
-        componentSource('use-task-page-linear-issue-creation.ts'),
-        'const handleCreateNewLinearIssue',
-        'const nextModel'
-      ),
-      sourceBetween(
-        componentSource('use-task-page-composer-actions.ts'),
-        'const handleUseLinearItem',
-        'const handleLinearWorkspaceChange'
-      )
-    ]
-    for (const section of taskPageSections) {
-      expect(section).toContain(linearWriter)
-    }
 
-    const drawerMutationSections = [
-      sourceBetween(drawerSource, 'const handleStateChange', 'const handlePriorityChange'),
-      sourceBetween(drawerSource, 'const handlePriorityChange', 'const handleEstimateChange'),
-      sourceBetween(drawerSource, 'const handleEstimateChange', 'const handleEstimateSubmit'),
-      sourceBetween(drawerSource, 'const handleAssigneeChange', 'const handleLabelToggle'),
-      sourceBetween(drawerSource, 'const handleLabelToggle', 'return {'),
-      sourceBetween(drawerSource, 'const handleSubmit = useCallback(async () => {', 'return (')
-    ]
-    for (const section of drawerMutationSections) {
-      expect(section).toContain(linearWriter)
-    }
-  })
 
-  it('records Jira provider-depth for workspace use', () => {
-    const jiraWriter = "recordFeatureInteraction('jira-tasks')"
 
-    // End boundary is the declaration after the handler: the Jira connect flow
-    // now lives in the shared JiraConnectDialog, so handleJiraConnect (the prior
-    // marker) no longer exists in TaskPage.
-    expect(
-      sourceBetween(
-        componentSource('use-task-page-composer-actions.ts'),
-        'const handleUseJiraItem',
-        'const nextModel'
-      )
-    ).toContain(jiraWriter)
-  })
 
-  it('records browser annotation agent handoff only from the prompt-delivered callback', () => {
-    const source = componentSource('browser-pane/annotate/use-browser-page-annotation-send.ts')
-    expect(
-      source.match(/recordFeatureInteraction\('browser-annotations-sent-to-agent'\)/g)
-    ).toHaveLength(1)
-    expect(
-      sourceBetween(
-        source,
-        'const handleBrowserAnnotationsSentToAgent',
-        'const handleClearBrowserAnnotations'
-      )
-    ).toContain("recordFeatureInteraction('browser-annotations-sent-to-agent')")
-    expect(
-      sourceBetween(
-        source,
-        'const handleCopyBrowserAnnotations',
-        'const handleBrowserAnnotationsSentToAgent'
-      )
-    ).not.toContain("recordFeatureInteraction('browser-annotations-sent-to-agent')")
-    expect(
-      sourceBetween(
-        source,
-        'const handleClearBrowserAnnotations',
-        'const handleDeleteBrowserAnnotation'
-      )
-    ).not.toContain("recordFeatureInteraction('browser-annotations-sent-to-agent')")
-  })
+
 
   it('records floating workspace hide only from explicit disable or hide actions', () => {
     const allowedSources = [

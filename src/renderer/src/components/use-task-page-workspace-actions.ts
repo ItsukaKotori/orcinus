@@ -1,18 +1,13 @@
 import type { TaskPageSearchActionsModel } from './use-task-page-search-actions'
 import { useCallback } from 'react'
 import type { GitHubWorkItem } from '../../../shared/github/work-item-types'
-import type { GitLabWorkItem } from '../../../shared/gitlab-types'
 import type { LinkedWorkItemSummary } from '@/lib/new-workspace'
 import { useAppStore } from '@/store'
 import { findGithubWorkItemWorkspaceAttachment } from '@/lib/github-work-item-workspace-attachment'
 import { activateAndRevealWorktree } from '@/lib/worktree-activation'
 import { toast } from 'sonner'
 import { translate } from '@/i18n/i18n'
-import {
-  getGitHubWorkItemWorkspaceSeed,
-  getGitLabWorkItemWorkspaceSeed,
-  getTaskPageRepoSourceContext
-} from './task-page-source-context'
+import { getGitHubWorkItemWorkspaceSeed, getTaskPageRepoSourceContext } from './task-page-source-context'
 export function useTaskPageWorkspaceActions(model: TaskPageSearchActionsModel) {
   const { repoMap, openModal } = model
   const openComposerForItem = useCallback(
@@ -79,53 +74,14 @@ export function useTaskPageWorkspaceActions(model: TaskPageSearchActionsModel) {
     },
     [handleUseWorkItem]
   )
-  const openComposerForGitLabItem = useCallback(
-    (item: GitLabWorkItem): void => {
-      const linkedWorkItem: LinkedWorkItemSummary = {
-        provider: 'gitlab',
-        type: item.type,
-        number: item.number,
-        title: item.title,
-        url: item.url,
-        ...(item.repoId
-          ? {
-              repoId: item.repoId
-            }
-          : {})
-      }
-      openModal('new-workspace-composer', {
-        linkedWorkItem,
-        taskSourceContext: getTaskPageRepoSourceContext(
-          repoMap.get(item.repoId),
-          'gitlab',
-          item.projectRef
-        ),
-        prefilledName: getGitLabWorkItemWorkspaceSeed(item),
-        initialRepoId: item.repoId,
-        telemetrySource: 'sidebar'
-      })
-    },
-    [openModal, repoMap]
-  )
-  const handleUseGitLabItem = useCallback(
-    (item: GitLabWorkItem): void => {
-      useAppStore.getState().recordFeatureInteraction('gitlab-tasks')
-      openComposerForGitLabItem(item)
-    },
-    [openComposerForGitLabItem]
-  )
   const nextModel = model as typeof model & {
     openComposerForItem: typeof openComposerForItem
     handleUseWorkItem: typeof handleUseWorkItem
     handleOpenOrUseGitHubWorkItem: typeof handleOpenOrUseGitHubWorkItem
-    openComposerForGitLabItem: typeof openComposerForGitLabItem
-    handleUseGitLabItem: typeof handleUseGitLabItem
   }
   nextModel.openComposerForItem = openComposerForItem
   nextModel.handleUseWorkItem = handleUseWorkItem
   nextModel.handleOpenOrUseGitHubWorkItem = handleOpenOrUseGitHubWorkItem
-  nextModel.openComposerForGitLabItem = openComposerForGitLabItem
-  nextModel.handleUseGitLabItem = handleUseGitLabItem
   return nextModel
 }
 export type TaskPageWorkspaceActionsModel = ReturnType<typeof useTaskPageWorkspaceActions>

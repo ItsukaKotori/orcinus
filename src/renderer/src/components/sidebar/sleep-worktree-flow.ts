@@ -139,12 +139,8 @@ export async function runSleepWorktrees(worktreeIds: readonly string[]): Promise
   if (worktreeIds.length === 0) {
     return
   }
-  const {
-    activeWorktreeId,
-    setActiveWorktree,
-    shutdownWorktreeBrowsers,
-    shutdownWorktreeTerminals
-  } = useAppStore.getState()
+  const { activeWorktreeId, setActiveWorktree, shutdownWorktreeTerminals } =
+    useAppStore.getState()
   const sleptActiveWorktreeId =
     activeWorktreeId && worktreeIds.includes(activeWorktreeId) ? activeWorktreeId : null
   if (sleptActiveWorktreeId) {
@@ -165,19 +161,6 @@ export async function runSleepWorktrees(worktreeIds: readonly string[]): Promise
       // until an explicit wake (#10205); mark per workspace so an earlier
       // slow teardown never leaves a later, still-awake one marked.
       markWorktreeSleepIntent(worktreeId)
-      try {
-        // Why: sleep mirrors removeWorktree's shutdown sequence — browsers first
-        // so destroyPersistentWebview unregisters the Chromium guests before any
-        // other teardown runs, terminals second so the PTY kill uses the same
-        // ordering on both paths. Without the browser thunk here, sleep leaks
-        // browserPagesByWorkspace entries and live webviews for the slept worktree.
-        await withWorktreeSleepTeardown(worktreeId, () => shutdownWorktreeBrowsers(worktreeId))
-      } catch (err) {
-        console.error('[sleep-worktree] browser shutdown failed', { worktreeId, error: err })
-        failedWorktreeIds.add(worktreeId)
-        errors.push(describeSleepFailure(err))
-        continue
-      }
       try {
         // Why: sleep is reversible — the tab record stays in tabsByWorktree, the
         // layout stays in terminalLayoutsByTabId, only the live PTY processes are

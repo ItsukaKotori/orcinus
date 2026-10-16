@@ -4,13 +4,11 @@ import type { PRInfo } from '../../../../shared/github/pull-request-types'
 import type { Repo } from '../../../../shared/repo-types'
 import { translate } from '@/i18n/i18n'
 import { markGitHubHostedReviewReadyForReview } from './hosted-review-github-actions'
-import { markGitLabHostedReviewReadyForReview } from './hosted-review-gitlab-actions'
 
 export function useReadyHostedReviewAction({
   reviewNumber,
   githubPR,
   repo,
-  isGitLab,
   shortLabel,
   reviewLabel,
   onRefreshReview,
@@ -19,7 +17,6 @@ export function useReadyHostedReviewAction({
   reviewNumber: number
   githubPR?: PRInfo | null
   repo: Repo
-  isGitLab: boolean
   shortLabel: string
   reviewLabel: string
   onRefreshReview: () => Promise<void>
@@ -36,13 +33,11 @@ export function useReadyHostedReviewAction({
     setReadying(true)
     setActionError(null)
     try {
-      const result = isGitLab
-        ? await markGitLabHostedReviewReadyForReview({ repo, mrNumber: reviewNumber })
-        : await markGitHubHostedReviewReadyForReview({
-            repo,
-            prNumber: reviewNumber,
-            prRepo: githubPR?.prRepo ?? null
-          })
+      const result = await markGitHubHostedReviewReadyForReview({
+        repo,
+        prNumber: reviewNumber,
+        prRepo: githubPR?.prRepo ?? null
+      })
       if (!result.ok) {
         setActionError(result.error)
         toast.error(result.error)
@@ -66,7 +61,6 @@ export function useReadyHostedReviewAction({
     }
   }, [
     githubPR?.prRepo,
-    isGitLab,
     onRefreshReview,
     readying,
     repo,

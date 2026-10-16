@@ -19,7 +19,6 @@ export function useWorktreeMetaWorkspace(args: {
 }): {
   worktree: Worktree | undefined
   linkedIssue: number | null
-  linkedLinearIssue: string | null
   /** The persisted value and its provider, from one source so they cannot drift. */
   currentIssue: string
   currentProvider: IssueLinkProvider
@@ -61,17 +60,8 @@ export function useWorktreeMetaWorkspace(args: {
     [folderWorkspace, indexedWorktree]
   )
   const linkedIssue = worktree?.linkedIssue ?? null
-  const linkedLinearIssue = worktree?.linkedLinearIssue ?? null
-  // Why: `typeof` rather than a null check — an unhydrated projection can leave
-  // linkedIssue undefined, which `!== null` would read as a GitHub link.
-  const currentProvider: IssueLinkProvider =
-    typeof linkedIssue === 'number' ? 'github' : linkedLinearIssue ? 'linear' : 'github'
-  const currentIssue =
-    currentProvider === 'linear'
-      ? (linkedLinearIssue ?? '')
-      : typeof linkedIssue === 'number'
-        ? String(linkedIssue)
-        : ''
+  const currentProvider: IssueLinkProvider = 'github'
+  const currentIssue = typeof linkedIssue === 'number' ? String(linkedIssue) : ''
   // Why: displacement is decided against live state, not the frozen snapshot —
   // the dialog's warning reads the same values, so a link added by the CLI while
   // the dialog was open cannot outlive a save that promised to displace it.
@@ -79,24 +69,15 @@ export function useWorktreeMetaWorkspace(args: {
     () => ({
       linkedPR: worktree?.linkedPR ?? null,
       linkedIssue,
-      linkedLinearIssue,
-      linkedLinearIssueOrganizationUrlKey: worktree?.linkedLinearIssueOrganizationUrlKey ?? null,
       linkedWorkItemProvider: worktree?.linkedWorkItem?.provider ?? null,
       linkedWorkItemType: worktree?.linkedWorkItem?.type ?? null
     }),
-    [
-      linkedIssue,
-      linkedLinearIssue,
-      worktree?.linkedPR,
-      worktree?.linkedLinearIssueOrganizationUrlKey,
-      worktree?.linkedWorkItem
-    ]
+    [linkedIssue, worktree?.linkedPR, worktree?.linkedWorkItem]
   )
 
   return {
     worktree,
     linkedIssue,
-    linkedLinearIssue,
     currentIssue,
     currentProvider,
     // Why: folder workspaces persist links only through their creation-time

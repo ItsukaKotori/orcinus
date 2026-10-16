@@ -5,22 +5,29 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { RemoteFileBrowser } from './RemoteFileBrowser'
 
-type BrowseDirArgs = {
-  dirPath: string
-  targetId: string
-}
+const browserMock = vi.hoisted(() => ({
+  pathFlavor: 'posix' as 'posix' | 'win32',
+  entries: [
+    { name: 'src', isDirectory: true },
+    { name: 'README.md', isDirectory: false }
+  ] as Array<{ name: string; isDirectory: boolean }>,
+  calls: [] as Array<{ environmentId: string; dirPath: string }>
+}))
 
-let browsePathFlavor: 'posix' | 'win32' = 'posix'
-let browseEntries = [
-  { name: 'src', isDirectory: true },
-  { name: 'README.md', isDirectory: false }
-]
-
-const browseDir = vi.fn(async ({ dirPath }: BrowseDirArgs) => ({
-  entries: browseEntries,
-  resolvedPath:
-    dirPath === '~' ? (browsePathFlavor === 'win32' ? 'C:/Users/alice' : '/home/alice') : dirPath,
-  pathFlavor: browsePathFlavor
+vi.mock('@/runtime/runtime-server-directory-browser', () => ({
+  browseRuntimeServerDirectory: async (environmentId: string, dirPath: string) => {
+    browserMock.calls.push({ environmentId, dirPath })
+    return {
+      entries: browserMock.entries,
+      resolvedPath:
+        dirPath === '~'
+          ? browserMock.pathFlavor === 'win32'
+            ? 'C:/Users/alice'
+            : '/home/alice'
+          : dirPath,
+      pathFlavor: browserMock.pathFlavor
+    }
+  }
 }))
 
 async function flushPromises(count = 4): Promise<void> {
@@ -39,7 +46,7 @@ async function renderRemoteFileBrowser(): Promise<{
   const root = createRoot(container)
 
   await act(async () => {
-    root.render(<RemoteFileBrowser targetId="target-1" onSelect={vi.fn()} onCancel={vi.fn()} />)
+    root.render(<RemoteFileBrowser runtimeEnvironmentId="env-1" onSelect={vi.fn()} onCancel={vi.fn()} />)
     await flushPromises()
   })
 
@@ -70,20 +77,12 @@ describe('RemoteFileBrowser paste-sized input', () => {
   beforeEach(() => {
     ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
     vi.useFakeTimers()
-    browsePathFlavor = 'posix'
-    browseEntries = [
+    browserMock.pathFlavor = 'posix'
+    browserMock.entries = [
       { name: 'src', isDirectory: true },
       { name: 'README.md', isDirectory: false }
     ]
-    browseDir.mockClear()
-    Object.defineProperty(window, 'api', {
-      configurable: true,
-      value: {
-        ssh: {
-          browseDir
-        }
-      }
-    })
+    browserMock.calls.length = 0
   })
 
   afterEach(() => {
@@ -94,14 +93,17 @@ describe('RemoteFileBrowser paste-sized input', () => {
 
   it('still debounces and resolves ordinary path-mode input', async () => {
     const { input, root } = await renderRemoteFileBrowser()
-    browseDir.mockClear()
+    browserMock.calls.length = 0
 
     await changeInput(input, 'src/')
-    expect(browseDir).not.toHaveBeenCalled()
+    expect(browserMock.calls).toHaveLength(0)
 
     await advancePathResolveDebounce()
 
-    expect(browseDir).toHaveBeenCalledWith({ targetId: 'target-1', dirPath: '/home/alice/src' })
+    expect(browserMock.calls).toContainEqual({
+      environmentId: 'env-1',
+      dirPath: '/home/alice/src'
+    })
 
     await act(async () => {
       root.unmount()
@@ -109,14 +111,14 @@ describe('RemoteFileBrowser paste-sized input', () => {
   })
 
   it('navigates a typed Windows drive root and renders its breadcrumb', async () => {
-    browsePathFlavor = 'win32'
+    browserMock.pathFlavor = 'win32'
     const { container, input, root } = await renderRemoteFileBrowser()
-    browseDir.mockClear()
+    browserMock.calls.length = 0
 
     await changeInput(input, 'M:\\')
     await advancePathResolveDebounce()
 
-    expect(browseDir).toHaveBeenCalledWith({ targetId: 'target-1', dirPath: 'M:\\' })
+    expect(browserMock.calls).toContainEqual({ environmentId: 'env-1', dirPath: 'M:\\' })
     await act(async () => {
       input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
       await flushPromises()
@@ -131,14 +133,14 @@ describe('RemoteFileBrowser paste-sized input', () => {
   })
 
   it('keeps a drive-shaped POSIX directory as an ordinary filtered row', async () => {
-    browseEntries = [{ name: 'M:\\', isDirectory: true }]
+    browserMock.entries = [{ name: 'M:\\', isDirectory: true }]
     const { container, input, root } = await renderRemoteFileBrowser()
-    browseDir.mockClear()
+    browserMock.calls.length = 0
 
     await changeInput(input, 'M:\\')
     await advancePathResolveDebounce()
 
-    expect(browseDir).not.toHaveBeenCalled()
+    expect(browserMock.calls).toHaveLength(0)
     expect(container.textContent).toContain('M:\\')
 
     await act(async () => {
@@ -149,12 +151,12 @@ describe('RemoteFileBrowser paste-sized input', () => {
   it('does not parse or remotely resolve oversized slash-containing paste text', async () => {
     const { container, input, root } = await renderRemoteFileBrowser()
     const pastedSecretPathList = 'C:/Users/alice/project/secret-token-value.txt\n'.repeat(2_000)
-    browseDir.mockClear()
+    browserMock.calls.length = 0
 
     await changeInput(input, pastedSecretPathList)
     await advancePathResolveDebounce()
 
-    expect(browseDir).not.toHaveBeenCalled()
+    expect(browserMock.calls).toHaveLength(0)
     expect(container.textContent).toContain('No matches for this long input')
     expect(container.textContent).not.toContain('secret-token-value')
 

@@ -1,6 +1,5 @@
 import { useCallback, useEffect } from 'react'
 import { checksPanelAsyncResultKey } from '../checks-panel-async-result-key'
-import { loadGitLabJobLogDetails } from '@/runtime/gitlab-job-trace-client'
 import type { PRCheckDetail } from '../../../../../shared/github/check-types'
 import type { PRInfo } from '../../../../../shared/github/pull-request-types'
 
@@ -8,19 +7,14 @@ import type { ChecksPanelContextState } from './use-checks-panel-context-state'
 import type { ChecksPanelControllerState } from './use-checks-panel-controller-state'
 import type { ChecksPanelComposerState } from './use-checks-panel-composer-state'
 
-type ChecksPanelReviewDataInput = Pick<
-  ChecksPanelContextState,
-  'activeGitLabReview' | 'pr' | 'prCacheKey' | 'prNumber'
-> &
+type ChecksPanelReviewDataInput = Pick<ChecksPanelContextState, 'pr' | 'prCacheKey' | 'prNumber'> &
   Pick<
     ChecksPanelControllerState,
     | 'branch'
     | 'fetchPRCheckDetails'
     | 'fetchPRComments'
-    | 'gitLabProjectRefRef'
     | 'isPanelVisible'
     | 'repo'
-    | 'settings'
     | 'setComments'
     | 'setCommentsLoading'
   > &
@@ -28,18 +22,15 @@ type ChecksPanelReviewDataInput = Pick<
 
 export function useChecksPanelReviewData(model: ChecksPanelReviewDataInput) {
   const {
-    activeGitLabReview,
     branch,
     fetchPRCheckDetails,
     fetchPRComments,
-    gitLabProjectRefRef,
     isCurrentAsyncResult,
     isPanelVisible,
     pr,
     prCacheKey,
     prNumber,
     repo,
-    settings,
     setComments,
     setCommentsLoading
   } = model
@@ -116,17 +107,6 @@ export function useChecksPanelReviewData(model: ChecksPanelReviewDataInput) {
       if (!repo) {
         return Promise.resolve(null)
       }
-      if (check.gitlabJobId) {
-        // Why: `settings` (not ownerSettings) is what fetched the job list, so the
-        // job id and its trace always resolve against the same host.
-        return loadGitLabJobLogDetails({
-          repoPath: repo.path,
-          repoId: repo.id,
-          settings,
-          check,
-          projectRef: gitLabProjectRefRef.current
-        })
-      }
       return fetchPRCheckDetails(
         repo.path,
         {
@@ -139,16 +119,10 @@ export function useChecksPanelReviewData(model: ChecksPanelReviewDataInput) {
         { repoId: repo.id }
       )
     },
-    [fetchPRCheckDetails, pr?.prRepo, repo, settings, gitLabProjectRefRef]
+    [fetchPRCheckDetails, pr?.prRepo, repo]
   )
 
-  // Why: read at call time — the ref is filled by an async MR fetch, so a value prop would be stale.
-  const getGitLabProjectRef = useCallback(() => gitLabProjectRefRef.current, [gitLabProjectRefRef])
-
   useEffect(() => {
-    if (activeGitLabReview) {
-      return
-    }
     if (!repo || !prNumber || !isPanelVisible) {
       setComments([])
       return
@@ -180,7 +154,6 @@ export function useChecksPanelReviewData(model: ChecksPanelReviewDataInput) {
       cancelled = true
     }
   }, [
-    activeGitLabReview,
     repo,
     prNumber,
     pr?.headSha,
@@ -195,7 +168,7 @@ export function useChecksPanelReviewData(model: ChecksPanelReviewDataInput) {
   ])
 
   useEffect(() => {
-    if (activeGitLabReview || !repo || !prNumber || !isPanelVisible) {
+    if (!repo || !prNumber || !isPanelVisible) {
       return undefined
     }
     return window.api.gh.onWorkItemMutated((payload) => {
@@ -206,8 +179,8 @@ export function useChecksPanelReviewData(model: ChecksPanelReviewDataInput) {
       }
       void fetchComments({ force: true })
     })
-  }, [activeGitLabReview, fetchComments, isPanelVisible, prNumber, repo])
-  return { fetchComments, handleLoadCheckDetails, getGitLabProjectRef }
+  }, [fetchComments, isPanelVisible, prNumber, repo])
+  return { fetchComments, handleLoadCheckDetails }
 }
 
 export type ChecksPanelReviewDataState = ReturnType<typeof useChecksPanelReviewData>

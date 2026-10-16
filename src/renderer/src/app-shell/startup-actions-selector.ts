@@ -17,8 +17,6 @@ export type StartupActions = Pick<
   | 'hydrateWorkspaceSession'
   | 'hydrateTabsSession'
   | 'hydrateEditorSession'
-  | 'hydrateBrowserSession'
-  | 'fetchBrowserSessionProfiles'
   | 'reconnectPersistedTerminals'
   | 'setTerminalStartupRestorationReady'
   | 'setDeferredSshReconnectTargets'
@@ -54,8 +52,6 @@ export function selectStartupActions(state: StartupActions): StartupActions {
     cachedStartupActions.hydrateWorkspaceSession === state.hydrateWorkspaceSession &&
     cachedStartupActions.hydrateTabsSession === state.hydrateTabsSession &&
     cachedStartupActions.hydrateEditorSession === state.hydrateEditorSession &&
-    cachedStartupActions.hydrateBrowserSession === state.hydrateBrowserSession &&
-    cachedStartupActions.fetchBrowserSessionProfiles === state.fetchBrowserSessionProfiles &&
     cachedStartupActions.reconnectPersistedTerminals === state.reconnectPersistedTerminals &&
     cachedStartupActions.setTerminalStartupRestorationReady ===
       state.setTerminalStartupRestorationReady &&
@@ -89,8 +85,6 @@ export function selectStartupActions(state: StartupActions): StartupActions {
     hydrateWorkspaceSession: state.hydrateWorkspaceSession,
     hydrateTabsSession: state.hydrateTabsSession,
     hydrateEditorSession: state.hydrateEditorSession,
-    hydrateBrowserSession: state.hydrateBrowserSession,
-    fetchBrowserSessionProfiles: state.fetchBrowserSessionProfiles,
     reconnectPersistedTerminals: state.reconnectPersistedTerminals,
     setTerminalStartupRestorationReady: state.setTerminalStartupRestorationReady,
     setDeferredSshReconnectTargets: state.setDeferredSshReconnectTargets,

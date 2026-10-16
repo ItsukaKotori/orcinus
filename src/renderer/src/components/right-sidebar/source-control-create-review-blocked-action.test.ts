@@ -47,13 +47,13 @@ describe('source-control-create-review-blocked-action', () => {
     expect(
       resolveBlockedCreateReviewNoticeMessage(
         eligibility({
-          provider: 'gitlab',
+          provider: 'bitbucket',
           blockedReason: 'auth_required',
           nextAction: 'authenticate'
         })
       )
     ).toBe(
-      'Create MR failed: GitLab is not authenticated. Next step: Run glab auth login in this environment.'
+      'Create PR failed: Bitbucket is not authenticated. Next step: Connect Bitbucket in Settings > Integrations in this environment.'
     )
   })
 
@@ -79,32 +79,32 @@ describe('source-control-create-review-blocked-action', () => {
     expect(
       resolveBlockedCreateReviewNoticeMessage(
         eligibility({
-          provider: 'gitlab',
+          provider: 'bitbucket',
           blockedReason: 'auth_required',
           nextAction: 'authenticate',
           reviewLookupOutcome: 'unavailable'
         })
       )
     ).toBe(
-      'Create MR failed: GitLab is not authenticated. Next step: Run glab auth login in this environment.'
+      'Create PR failed: Bitbucket is not authenticated. Next step: Connect Bitbucket in Settings > Integrations in this environment.'
     )
   })
 
   it('reports unavailable review lookup authority when no local blocker is known', () => {
-    expect(resolveUnavailableCreateReviewLookupNoticeMessage('gitlab')).toBe(
-      'Create MR failed: Orca could not confirm whether this branch already has a merge request. Retry once the GitLab lookup succeeds.'
+    expect(resolveUnavailableCreateReviewLookupNoticeMessage('bitbucket')).toBe(
+      'Create PR failed: Orca could not confirm whether this branch already has a pull request. Retry once the Bitbucket lookup succeeds.'
     )
     expect(
       resolveBlockedCreateReviewNoticeMessage(
         eligibility({
-          provider: 'gitlab',
+          provider: 'bitbucket',
           blockedReason: null,
           nextAction: null,
           reviewLookupOutcome: 'unavailable'
         })
       )
     ).toBe(
-      'Create MR failed: Orca could not confirm whether this branch already has a merge request. Retry once the GitLab lookup succeeds.'
+      'Create PR failed: Orca could not confirm whether this branch already has a pull request. Retry once the Bitbucket lookup succeeds.'
     )
   })
 

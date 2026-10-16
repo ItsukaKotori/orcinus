@@ -155,12 +155,6 @@ export const CMD_J_FIXTURE_WORKTREES: Worktree[] = [
   })
 ]
 
-export const CMD_J_FIXTURE_PORTS: ReadonlyMap<string, { port: number; processName?: string }[]> =
-  new Map([
-    ['wt-main-orca', [{ port: 3000, processName: 'node' }]],
-    ['wt-docs', [{ port: 4123, processName: 'vite' }]]
-  ])
-
 export type CmdJFixtureCase = {
   query: string
   /** Worktree ids that must match, best first. An empty list means no match. */
@@ -177,7 +171,6 @@ export const CMD_J_FIXTURE_CASES: readonly CmdJFixtureCase[] = [
   { query: 'nightly review run-184', expected: ['wt-scan-daily'] },
   { query: 'sta-4052 reconnect', expected: ['wt-reconnect'] },
   { query: 'reconnect infra', expected: ['wt-reconnect'] },
-  { query: 'main 3000', expected: ['wt-main-orca'] },
   { query: 'acme/orca main', expected: ['wt-main-orca'] },
   { query: 'orca/main', expected: ['wt-main-orca'] },
   { query: 'docs terminal', expected: ['wt-docs'] },

@@ -170,7 +170,6 @@ function makeDisconnectedHostOption(targetId: string, label: string): ProjectHos
 }
 
 const disconnectedDevboxNeedsSetupHostOption = makeDisconnectedHostOption('devbox', 'Devbox')
-const disconnectedBastionNeedsSetupHostOption = makeDisconnectedHostOption('bastion', 'Bastion')
 
 const pnpmInstallSetupConfig = {
   source: 'yaml' as const,
@@ -221,9 +220,7 @@ function renderCard(
         name=""
         onNameValueChange={() => {}}
         onSmartGitHubItemSelect={() => {}}
-        onSmartGitLabItemSelect={() => {}}
         onSmartBranchSelect={() => {}}
-        onSmartLinearIssueSelect={() => {}}
         smartNameSelection={null}
         onClearSmartNameSelection={() => {}}
         canReuseSelectedBranch={false}
@@ -641,65 +638,9 @@ describe('NewWorkspaceComposerCard folder task source mode', () => {
     expect(hostChanges).toEqual([])
   })
 
-  it('connects disconnected setup-needed SSH hosts without selecting them', async () => {
-    const hostChanges: string[] = []
-    current = renderCard({
-      projectHostSetupOptions: [localReadyHostOption, disconnectedDevboxNeedsSetupHostOption],
-      selectedProjectHostSetupId: 'setup-local',
-      onProjectHostSetupChange: (setupId) => hostChanges.push(setupId)
-    })
 
-    openRunTargetPicker(current.container)
-    const devboxItem = findRunTargetItem('Devbox')
-    expect(devboxItem).toBeTruthy()
-    const connectButton = [...(devboxItem?.querySelectorAll('button') ?? [])].find((button) =>
-      button.textContent?.includes('Connect')
-    )
-    expect(connectButton).toBeTruthy()
 
-    await act(async () => {
-      connectButton?.click()
-    })
 
-    expect(apiMocks.sshConnect).toHaveBeenCalledWith({ targetId: 'devbox' })
-    expect(hostChanges).toEqual([])
-    // The picker stays open so the connecting state is visible; the row is not auto-selected.
-    expect(findRunTargetItem('Devbox')).toBeTruthy()
-  })
-
-  it('keeps other hosts connectable while one connect is still in flight', async () => {
-    // First host's connect never resolves — a stalled connect must not disable the others.
-    apiMocks.sshConnect.mockImplementation(({ targetId }: { targetId: string }) =>
-      targetId === 'devbox' ? new Promise(() => {}) : Promise.resolve(undefined)
-    )
-    current = renderCard({
-      projectHostSetupOptions: [
-        localReadyHostOption,
-        disconnectedDevboxNeedsSetupHostOption,
-        disconnectedBastionNeedsSetupHostOption
-      ],
-      selectedProjectHostSetupId: 'setup-local'
-    })
-
-    openRunTargetPicker(current.container)
-    await act(async () => {
-      findConnectButton('Devbox')?.click()
-    })
-
-    // The picker stays open through the connect, so the state is inspectable in place.
-    // Devbox is mid-connect: disabled, showing the connecting indicator; Bastion stays clickable.
-    const devboxButton = findConnectButton('Devbox')
-    expect(devboxButton?.disabled).toBe(true)
-    expect(devboxButton?.textContent).toContain('Connecting')
-    const bastionButton = findConnectButton('Bastion')
-    expect(bastionButton?.disabled).toBe(false)
-    expect(bastionButton?.textContent).toContain('Connect')
-
-    await act(async () => {
-      bastionButton?.click()
-    })
-    expect(apiMocks.sshConnect).toHaveBeenCalledWith({ targetId: 'bastion' })
-  })
 
   it('stops the connecting indicator when the connect fails', async () => {
     // A failed connect must clear the spinner and restore the Connect button so the user

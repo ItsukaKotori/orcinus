@@ -1,5 +1,5 @@
 // Phase 0 mock; replaced by Tauri IPC per view.
-import type { SettingsApi } from '../../preload/api/settings-api'
+import type { SettingsApi } from '../../shared/preload-api/api/settings-api'
 import { getDefaultSettings } from '../../shared/constants'
 import type { GlobalSettings } from '../../shared/global-settings-types'
 import { cloneMockValue } from './clone-mock-value'

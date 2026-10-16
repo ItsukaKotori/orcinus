@@ -120,8 +120,6 @@ export type PersistedUIState = {
   activityClearedAtByPaneKey?: Record<string, number>
   /** Per-paneKey turn stamps the user explicitly marked unread; persisted so a manual unread survives restart the way acks and cutoffs do. Renderer-owned via ui:set. */
   manuallyUnreadTurnsByPaneKey?: Record<string, number>
-  /** User-dismissed browser import toolbar hint; import stays available from Settings > Browser and the overflow menu. */
-  browserImportHintHidden?: boolean
   /** Why: Windows-only. Set once on first hide to tray so the "Orca is still running" notice shows only once. */
   trayMinimizeNoticeShown?: boolean
   /** Set by the OSC 52 default-on migration when it overrode a persisted `false`; the renderer shows one notice and clears it. */
@@ -130,13 +128,6 @@ export type PersistedUIState = {
   projectOrderManualDefaultNoticeDismissed?: boolean
   /** User-hidden empty-state usage CTA; permanently hides the "Connect AI accounts" prompt even if providers are later disconnected. */
   usageEmptyStateDismissed?: boolean
-  /** URL for new browser tabs; null = blank tab. */
-  browserDefaultUrl?: string | null
-  browserDefaultSearchEngine?: 'google' | 'duckduckgo' | 'bing' | 'kagi' | null
-  /** Electron browser zoom level applied when a new local browser tab is created. */
-  browserDefaultZoomLevel?: number
-  /** Optional Kagi private-session link used only when Kagi is the search engine. */
-  browserKagiSessionLink?: string | null
   /** Saved window bounds so the app restores last position/size instead of maximizing each launch. */
   windowBounds?: { x: number; y: number; width: number; height: number } | null
   /** Whether the window was maximized when it was last closed. */

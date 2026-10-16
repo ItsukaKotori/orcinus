@@ -189,9 +189,9 @@ describe('query search', () => {
         hostId: 'ssh:builder',
         workspaceStatus: 'in-review'
       },
-      review: { provider: 'gitlab', label: 'MR #7' }
+      review: { provider: 'bitbucket', label: 'PR #7' }
     })
-    for (const term of ['fix/login', 'ssh:builder', 'in-review', 'gitlab', 'live-agent']) {
+    for (const term of ['fix/login', 'ssh:builder', 'in-review', 'bitbucket', 'live-agent']) {
       expect(matchesWorkspaceCleanupFilters(facets, { ...ANY, query: term }, FACET_NOW)).toBe(true)
     }
     expect(matchesWorkspaceCleanupFilters(facets, { ...ANY, query: 'nope' }, FACET_NOW)).toBe(false)
@@ -378,13 +378,13 @@ describe('agent, git, review, ticket, context, and location filters', () => {
 
   it('keeps review filtering provider-general and treats draft as a state', () => {
     const draftMr = makeFacets({
-      review: { provider: 'gitlab', state: 'draft', label: 'MR #7' }
+      review: { provider: 'bitbucket', state: 'draft', label: 'PR #7' }
     })
     const state = filters((s) => {
       s.safety.dismissed = 'any'
       s.review.presence = 'some'
       s.review.states = ['draft']
-      s.review.providers = ['gitlab', 'bitbucket']
+      s.review.providers = ['bitbucket', 'gitea']
     })
     expect(matchesWorkspaceCleanupFilters(draftMr, state, FACET_NOW)).toBe(true)
     state.review.providers = ['github']

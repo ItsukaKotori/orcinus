@@ -1,9 +1,8 @@
 import React from 'react'
-import { ChevronDown, ChevronRight, Globe, Trash2, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, Trash2, X } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { translate } from '@/i18n/i18n'
-import type { BrowserWorkspace } from '../../../../shared/browser-workspace-types'
 import { ORPHAN_WORKTREE_ID } from '../../../../shared/constants'
 import type { Worktree } from '../../../../shared/worktree/types'
 import { UNATTRIBUTED_REPO_ID } from './mergeSnapshotAndSessions'
@@ -89,18 +88,6 @@ export function SessionRow({
   )
 }
 
-function BrowserRow({ browser }: { browser: BrowserWorkspace }): React.JSX.Element {
-  const label = browser.title?.trim() || browser.label?.trim() || browser.url
-  return (
-    <div className="flex items-center gap-2 pl-10 pr-3 py-1.5">
-      <Globe className="size-3 shrink-0 text-muted-foreground" aria-hidden />
-      <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">{label}</span>
-      <MetricPair cpu={null} memory={null} size="small" />
-      <span className={ROW_TRAILING_GUTTER_CLS} aria-hidden />
-    </div>
-  )
-}
-
 // ─── Worktree row ───────────────────────────────────────────────────
 
 export function WorktreeRow({
@@ -124,7 +111,7 @@ export function WorktreeRow({
   onKillSession: (session: UnifiedSessionRow) => void
   navigateToTab: (tabId: string, paneKey: string | null) => void
 }): React.JSX.Element {
-  const hasResources = worktree.sessions.length > 0 || worktree.browsers.length > 0
+  const hasResources = worktree.sessions.length > 0
   // Why: synthetic buckets (orphan/unattributed) have no sidebar target to reveal; real and SSH-resolved worktrees stay navigable.
   const isSynthetic =
     worktree.worktreeId === ORPHAN_WORKTREE_ID || worktree.repoId === UNATTRIBUTED_REPO_ID
@@ -259,8 +246,6 @@ export function WorktreeRow({
             onKill={onKillSession}
           />
         ))}
-      {!isCollapsed &&
-        worktree.browsers.map((browser) => <BrowserRow key={browser.id} browser={browser} />)}
     </div>
   )
 }

@@ -3,11 +3,6 @@ import { useCallback, useEffect, useRef } from 'react'
 import { useAppStore } from '../store'
 import { focusTerminalTabSurface } from '../lib/focus-terminal-tab-surface'
 import {
-  ORCA_BROWSER_FOCUS_REQUEST_EVENT,
-  queueBrowserFocusRequest,
-  type BrowserFocusRequestDetail
-} from '../components/browser-pane/host-guest/browser-focus'
-import {
   resolveModalReturnFocusAction,
   type ModalReturnFocusSurface
 } from './modal-return-focus-action'
@@ -22,7 +17,7 @@ function isRestorableFocusedElement(element: HTMLElement | null): element is HTM
  * Why: Radix dialogs (QuickOpen, Cmd+J) prevent the default close-time focus
  * restoration to avoid landing on a stale trigger, but must then return focus
  * themselves — otherwise dismissing the dialog with Esc leaves the active
- * terminal/editor/browser panel unfocused. Capture happens on open because
+ * terminal/editor panel unfocused. Capture happens on open because
  * Radix moves document focus into the dialog before the close fires.
  */
 export function useModalReturnFocus(visible: boolean): {
@@ -98,23 +93,12 @@ export function useModalReturnFocus(visible: boolean): {
     focusFirstMatchingSurface(['.xterm-helper-textarea', '.monaco-editor textarea'])
   }, [focusFirstMatchingSurface])
 
-  const requestBrowserFocus = useCallback((detail: BrowserFocusRequestDetail): void => {
-    queueBrowserFocusRequest(detail)
-    window.dispatchEvent(new CustomEvent(ORCA_BROWSER_FOCUS_REQUEST_EVENT, { detail }))
-  }, [])
-
   const captureReturnFocus = useCallback((): void => {
     const state = useAppStore.getState()
     const worktreeId = state.activeWorktreeId
     const tabType = state.activeTabType
     const activeElement =
       document.activeElement instanceof HTMLElement ? document.activeElement : null
-    const browserPageId =
-      worktreeId && tabType === 'browser'
-        ? ((state.browserTabsByWorktree[worktreeId] ?? []).find(
-            (workspace) => workspace.id === state.activeBrowserTabId
-          )?.activePageId ?? null)
-        : null
     const terminalTabId =
       worktreeId && tabType === 'terminal'
         ? (state.activeTabIdByWorktree[worktreeId] ?? state.activeTabId)
@@ -122,18 +106,10 @@ export function useModalReturnFocus(visible: boolean): {
     const terminalLeafId = terminalTabId
       ? (state.terminalLayoutsByTabId[terminalTabId]?.activeLeafId ?? null)
       : null
-    // Why: this can be called from Radix onOpenAutoFocus, before focus moves
-    // into the dialog, preserving address-bar/editor identity.
-    const browserTarget =
-      tabType === 'browser' && activeElement?.closest('[data-orca-browser-address-bar="true"]')
-        ? 'address-bar'
-        : 'webview'
     capturedElementRef.current = isRestorableFocusedElement(activeElement) ? activeElement : null
     capturedRef.current = {
       tabType,
       worktreeId,
-      browserPageId,
-      browserTarget,
       terminalTabId,
       terminalLeafId
     }
@@ -152,10 +128,7 @@ export function useModalReturnFocus(visible: boolean): {
     if (!visible && wasVisibleRef.current) {
       const action = resolveModalReturnFocusAction(skipRef.current ? null : capturedRef.current)
       capturedRef.current = null
-      if (action.kind === 'browser') {
-        cancelFrames()
-        requestBrowserFocus({ pageId: action.pageId, target: action.target })
-      } else if (action.kind === 'terminal') {
+      if (action.kind === 'terminal') {
         cancelFrames()
         focusTerminalTabSurface(action.tabId, action.leafId)
       } else if (action.kind === 'editor') {
@@ -167,14 +140,7 @@ export function useModalReturnFocus(visible: boolean): {
     }
 
     wasVisibleRef.current = visible
-  }, [
-    visible,
-    cancelFrames,
-    captureReturnFocus,
-    focusEditorSurface,
-    focusFallbackSurface,
-    requestBrowserFocus
-  ])
+  }, [visible, cancelFrames, captureReturnFocus, focusEditorSurface, focusFallbackSurface])
 
   // Why: callers invoke this when the close itself moves focus (e.g. opening a
   // file focuses the editor) so we don't yank focus back to the prior surface.

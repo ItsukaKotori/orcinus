@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useAppStore } from '@/store'
 import { useActiveWorktree } from '@/store/selectors'
-import type { GitLabProjectRef } from '../../../../../shared/gitlab-types'
 import type { PRCheckDetail, PRCheckRunDetails } from '../../../../../shared/github/check-types'
 import type { GitHubRepositoryIdentity } from '../../../../../shared/github/pull-request-types'
 import { sortChecksBySeverity } from '../../../../../shared/pr-check-severity-order'
@@ -23,7 +22,6 @@ export type ChecksListProps = {
   onLoadCheckDetails?: (check: PRCheckDetail) => Promise<PRCheckRunDetails | null>
   worktreeId?: string
   detailsStickySurface?: CheckDetailsStickySurface
-  getGitLabProjectRef?: () => GitLabProjectRef | null
   githubRepository?: GitHubRepositoryIdentity | null
 }
 
@@ -32,7 +30,6 @@ export function useChecksListState({
   checkDetailsContextKey,
   onLoadCheckDetails,
   worktreeId: worktreeIdOverride,
-  getGitLabProjectRef,
   githubRepository
 }: ChecksListProps) {
   const activeWorktree = useActiveWorktree()
@@ -175,7 +172,6 @@ export function useChecksListState({
           loading: true,
           error: retryError,
           githubRepository: githubRepository ?? null,
-          gitlabProjectRef: getGitLabProjectRef?.() ?? null
         })
       }
       const request = Promise.resolve().then(() => onLoadCheckDetails(row.check))
@@ -193,7 +189,6 @@ export function useChecksListState({
                     'No inline details are available for this check.'
                   ),
               githubRepository: githubRepository ?? null,
-              gitlabProjectRef: getGitLabProjectRef?.() ?? null
             })
           }
           if (detailsContextRef.current !== requestContextKey) {
@@ -238,7 +233,6 @@ export function useChecksListState({
               loading: false,
               error,
               githubRepository: githubRepository ?? null,
-              gitlabProjectRef: getGitLabProjectRef?.() ?? null
             })
           }
           if (detailsContextRef.current !== requestContextKey) {
@@ -264,8 +258,7 @@ export function useChecksListState({
     [
       checkDetailsContextKey,
       detailsByCheckKey,
-      getGitLabProjectRef,
-      githubRepository,
+        githubRepository,
       onLoadCheckDetails,
       patchOpenCheckRunDetails,
       resolvedWorktreeId
@@ -298,13 +291,11 @@ export function useChecksListState({
         loading: detailsState.loading ?? false,
         error: detailsState.error ?? null,
         githubRepository: githubRepository ?? null,
-        gitlabProjectRef: getGitLabProjectRef?.() ?? null
       })
     }
   }, [
     checkDetailsContextKey,
     detailsByCheckKey,
-    getGitLabProjectRef,
     githubRepository,
     patchOpenCheckRunDetails,
     resolvedWorktreeId,

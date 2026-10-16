@@ -25,7 +25,6 @@ export function useTerminalWorkspaceStoreBindings(controller: TerminalWorkspaceF
   )
   const openFiles = useAppStore((state) => state.openFiles)
   const activeFileId = useAppStore((state) => state.activeFileId)
-  const activeBrowserTabId = useAppStore((state) => state.activeBrowserTabId)
   const activeTabType = useAppStore((state) => state.activeTabType)
   const keybindings = useAppStore((state) => state.keybindings)
   const terminalShortcutPolicy = useAppStore(
@@ -36,19 +35,12 @@ export function useTerminalWorkspaceStoreBindings(controller: TerminalWorkspaceF
   const closeFile = useAppStore((state) => state.closeFile)
   const makePreviewFilePermanent = useAppStore((state) => state.makePreviewFilePermanent)
   const pinFile = useAppStore((state) => state.pinFile)
-  const browserTabsByWorktree = useAppStore((state) => state.browserTabsByWorktree)
-  const createBrowserTab = useAppStore((state) => state.createBrowserTab)
-  const openNewBrowserTabInActiveWorkspace = useAppStore(
-    (state) => state.openNewBrowserTabInActiveWorkspace
-  )
   const openNewMarkdownInActiveWorkspace = useAppStore(
     (state) => state.openNewMarkdownInActiveWorkspace
   )
   const openNewTerminalTabInActiveWorkspace = useAppStore(
     (state) => state.openNewTerminalTabInActiveWorkspace
   )
-  const closeBrowserTab = useAppStore((state) => state.closeBrowserTab)
-  const setActiveBrowserTab = useAppStore((state) => state.setActiveBrowserTab)
   const groupsByWorktree = useAppStore((state) => state.groupsByWorktree)
   const layoutByWorktree = useAppStore((state) => state.layoutByWorktree)
   const activeGroupIdByWorktree = useAppStore((state) => state.activeGroupIdByWorktree)
@@ -79,7 +71,6 @@ export function useTerminalWorkspaceStoreBindings(controller: TerminalWorkspaceF
     startupWorktreeRefreshCompleted,
     openFiles,
     activeFileId,
-    activeBrowserTabId,
     activeTabType,
     keybindings,
     terminalShortcutPolicy,
@@ -88,13 +79,8 @@ export function useTerminalWorkspaceStoreBindings(controller: TerminalWorkspaceF
     closeFile,
     makePreviewFilePermanent,
     pinFile,
-    browserTabsByWorktree,
-    createBrowserTab,
-    openNewBrowserTabInActiveWorkspace,
     openNewMarkdownInActiveWorkspace,
     openNewTerminalTabInActiveWorkspace,
-    closeBrowserTab,
-    setActiveBrowserTab,
     groupsByWorktree,
     layoutByWorktree,
     activeGroupIdByWorktree,

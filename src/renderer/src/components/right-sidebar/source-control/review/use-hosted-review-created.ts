@@ -83,14 +83,6 @@ export function useSourceControlHostedReviewCreated({
           linkedGiteaPR,
           ...createdLink.lookup
         }
-        if (result.provider === 'gitlab') {
-          await fetchHostedReviewForBranch(repoPath, branch, {
-            force: true,
-            repoId,
-            ...linkedReviewNumbers
-          })
-          return
-        }
         if (result.provider !== 'github') {
           await fetchHostedReviewForBranch(repoPath, branch, {
             force: true,

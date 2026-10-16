@@ -1,26 +1,16 @@
 export type FeatureInteractionId =
   | 'cmd-j'
   | 'cmd-j-workspace-open'
-  | 'cmd-j-browser-page-open'
   | 'cmd-j-settings-open'
   | 'cmd-j-quick-action'
   | 'cmd-j-create-workspace'
-  | 'browser'
-  | 'browser-tab-created'
   | 'tasks'
   | 'github-tasks'
-  | 'gitlab-tasks'
-  | 'linear-tasks'
-  | 'jira-tasks'
   | 'automations'
   | 'automation-created'
   | 'automation-run'
-  | 'browser-annotations'
-  | 'browser-annotations-sent-to-agent'
-  | 'browser-grab'
   | 'markdown-file-created'
   | 'workspace-creation'
-  | 'agent-browser-setup'
   | 'agent-orchestration-setup'
   | 'ai-commit-generation'
   | 'ai-pr-generation'
@@ -28,11 +18,10 @@ export type FeatureInteractionId =
   | 'computer-use-setup'
   | 'computer-use'
   | 'codex-account-switching'
-  | 'cookie-import'
   | 'floating-workspace'
   | 'floating-workspace-hidden'
   | 'notifications'
-  | 'ports'
+
   | 'quick-commands'
   | 'resource-manager'
   | 'review-notes'
@@ -55,29 +44,16 @@ export type FeatureInteractionDefinition = {
 export const FEATURE_INTERACTIONS = [
   { id: 'cmd-j', interaction: 'Cmd+J palette opened' },
   { id: 'cmd-j-workspace-open', interaction: 'workspace opened from Cmd+J' },
-  { id: 'cmd-j-browser-page-open', interaction: 'browser page opened from Cmd+J' },
   { id: 'cmd-j-settings-open', interaction: 'settings opened from Cmd+J' },
   { id: 'cmd-j-quick-action', interaction: 'quick action run from Cmd+J' },
   { id: 'cmd-j-create-workspace', interaction: 'workspace creation started from Cmd+J' },
-  { id: 'browser', interaction: 'in-app browser opened' },
-  { id: 'browser-tab-created', interaction: 'browser tab explicitly created' },
   { id: 'tasks', interaction: 'Tasks page opened' },
   { id: 'github-tasks', interaction: 'GitHub task item workflow used' },
-  { id: 'gitlab-tasks', interaction: 'GitLab task item workflow used' },
-  { id: 'linear-tasks', interaction: 'Linear task item workflow used' },
-  { id: 'jira-tasks', interaction: 'Jira task item workflow used' },
   { id: 'automations', interaction: 'Automations page opened' },
   { id: 'automation-created', interaction: 'automation created' },
   { id: 'automation-run', interaction: 'automation run queued' },
-  { id: 'browser-annotations', interaction: 'browser annotation added, copied, or cleared' },
-  {
-    id: 'browser-annotations-sent-to-agent',
-    interaction: 'browser annotations sent to an agent'
-  },
-  { id: 'browser-grab', interaction: 'browser element grab or screenshot used' },
   { id: 'markdown-file-created', interaction: 'untitled markdown file explicitly created' },
   { id: 'workspace-creation', interaction: 'workspace creation flow opened' },
-  { id: 'agent-browser-setup', interaction: 'Agent Browser Use setup enabled or opened' },
   {
     id: 'agent-orchestration-setup',
     interaction: 'Agent Orchestration setup enabled or opened'
@@ -100,14 +76,12 @@ export const FEATURE_INTERACTIONS = [
     id: 'codex-account-switching',
     interaction: 'Codex managed account added, selected, reauthenticated, or removed'
   },
-  { id: 'cookie-import', interaction: 'browser cookies imported or cleared' },
   { id: 'floating-workspace', interaction: 'Floating Workspace opened or configured' },
   {
     id: 'floating-workspace-hidden',
     interaction: 'Floating Workspace explicitly hidden or disabled'
   },
   { id: 'notifications', interaction: 'desktop notifications enabled or tested' },
-  { id: 'ports', interaction: 'Ports popover opened, configured, or port action used' },
   { id: 'quick-commands', interaction: 'terminal quick command created or edited' },
   { id: 'resource-manager', interaction: 'Resource Manager opened or configured' },
   { id: 'review-notes', interaction: 'review note added or sent to an agent' },

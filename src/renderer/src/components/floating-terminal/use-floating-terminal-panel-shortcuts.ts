@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { isTerminalPaneCloseChord } from '@/components/terminal-pane/terminal-shortcut-policy'
-import { ensureClientCreationActionAllowed } from '@/lib/client-creation-action-error'
 import {
   matchFloatingWorkspacePanelOwnedAction,
   matchFloatingWorkspacePanelShortcut
@@ -9,7 +8,6 @@ import { isFloatingWorkspaceTerminalInputTarget } from '@/lib/floating-workspace
 import { getShortcutPlatform } from '@/lib/shortcut-platform'
 import { requestTerminalTabRename } from '@/components/tab-bar/terminal-tab-rename-request'
 import { useAppStore } from '@/store'
-import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../../shared/constants'
 import type { KeybindingContext, KeybindingMatchOptions } from '../../../../shared/keybindings'
 import type {
   FloatingPanelShortcutInput,
@@ -46,7 +44,6 @@ export function useFloatingTerminalPanelShortcuts({
   closeFloatingItemConfirmed,
   activateFloatingItem,
   createFloatingTerminalTab,
-  createFloatingBrowserTab,
   createFloatingMarkdownTab,
   openFloatingMarkdownTab,
   toggleMaximized,
@@ -125,13 +122,6 @@ export function useFloatingTerminalPanelShortcuts({
         consume()
         if (resolution.action === 'tab.newTerminal') {
           createFloatingTerminalTab()
-        } else if (resolution.action === 'tab.newBrowser') {
-          if (
-            !ensureClientCreationActionAllowed(FLOATING_TERMINAL_WORKTREE_ID, 'managed-browser')
-          ) {
-            return 'handled'
-          }
-          createFloatingBrowserTab()
         } else if (resolution.action === 'tab.newMarkdown') {
           createFloatingMarkdownTab()
         } else {
@@ -186,7 +176,6 @@ export function useFloatingTerminalPanelShortcuts({
       activateFloatingItem,
       closeActiveFloatingTerminalPane,
       closeFloatingItemConfirmed,
-      createFloatingBrowserTab,
       createFloatingMarkdownTab,
       createFloatingTerminalTab,
       onOpenChange,

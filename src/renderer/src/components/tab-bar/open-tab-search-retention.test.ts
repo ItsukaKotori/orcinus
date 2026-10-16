@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { BrowserPage, BrowserWorkspace } from '../../../../shared/browser-workspace-types'
 import type { Tab, TabContentType } from '../../../../shared/tab-types'
 import type { Worktree } from '../../../../shared/worktree/types'
-import {
-  buildSearchableBrowserPageDocument,
-  type SearchableBrowserPage
-} from '@/lib/browser-palette-search'
 import { buildPaletteTabDocument } from '@/lib/palette-match/tab-document'
 import type { SearchableWorkspaceTab } from '@/lib/workspace-tab-palette-search'
 import { TERMINAL_TYPE_SEARCH_ALIASES } from '@/lib/workspace-tab-palette-search'
@@ -102,63 +97,9 @@ function makeWorkspaceTab({
   }
 }
 
-function makeBrowserPage({
-  id,
-  title,
-  workspaceLabel
-}: {
-  id: string
-  title: string
-  workspaceLabel?: string
-}): SearchableBrowserPage {
-  const url = 'https://example.com/one'
-  const page: BrowserPage = {
-    id,
-    workspaceId: `${id}-ws`,
-    worktreeId: worktree.id,
-    url,
-    title,
-    loading: false,
-    faviconUrl: null,
-    canGoBack: false,
-    canGoForward: false,
-    loadError: null,
-    createdAt: 0
-  }
-  const workspace: BrowserWorkspace = {
-    id: `${id}-ws`,
-    worktreeId: worktree.id,
-    activePageId: id,
-    pageIds: [id],
-    url,
-    title,
-    label: workspaceLabel,
-    loading: false,
-    faviconUrl: null,
-    canGoBack: false,
-    canGoForward: false,
-    loadError: null,
-    createdAt: 0
-  }
-  return {
-    page,
-    workspace,
-    worktree,
-    repoName: 'octo/rocket',
-    worktreeSortIndex: 0,
-    document: buildSearchableBrowserPageDocument({
-      page,
-      workspace,
-      worktree,
-      repoName: 'octo/rocket'
-    }),
-    isCurrentPage: false,
-    isCurrentWorktree: true
-  }
-}
 
 function makeEntries(overrides: Partial<OpenTabSearchEntries> = {}): OpenTabSearchEntries {
-  return { workspaceTabs: [], browserPages: [], ...overrides }
+  return { workspaceTabs: [], ...overrides }
 }
 
 // Mirrors the hook: the deferred query builds the rows, the live query re-checks them.
@@ -227,17 +168,6 @@ describe('retainOpenTabResultsForQuery', () => {
     expect(retain({ entries: aliased, deferredQuery: 'term', query: 'termin' }).titles).toEqual([
       'zsh'
     ])
-  })
-
-  it('keeps a browser row the newer query matches through its workspace label', () => {
-    const labelled = makeEntries({
-      browserPages: [
-        makeBrowserPage({ id: 'page-1', title: 'Untitled', workspaceLabel: 'Release checklist' })
-      ]
-    })
-    expect(retain({ entries: labelled, deferredQuery: 'rele', query: 'release c' }).titles).toEqual(
-      ['Untitled']
-    )
   })
 
   it('keeps an editor row the newer query matches through its absolute path', () => {

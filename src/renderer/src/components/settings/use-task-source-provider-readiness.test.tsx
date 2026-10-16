@@ -8,15 +8,7 @@ import type { TaskProviderReadiness } from './task-source-setup-state'
 import { useTaskSourceProviderReadiness } from './use-task-source-provider-readiness'
 
 const mocks = vi.hoisted(() => ({
-  state: {} as Record<string, unknown>,
-  skill: {
-    installed: false,
-    loading: false,
-    settled: true,
-    error: null,
-    skills: [],
-    refresh: vi.fn()
-  }
+  state: {} as Record<string, unknown>
 }))
 
 vi.mock('@/store', () => ({
@@ -26,23 +18,6 @@ vi.mock('@/store', () => ({
 vi.mock('@/lib/local-preflight-context', () => ({
   getLocalPreflightContext: () => null,
   localPreflightContextKey: () => 'local'
-}))
-
-vi.mock('@/lib/provider-runtime-context', () => ({
-  getProviderRuntimeContextKey: () => 'local'
-}))
-
-vi.mock('@/hooks/useActiveProjectSkillRuntime', () => ({
-  useActiveProjectSkillRuntime: () => ({ installDisabledReason: null })
-}))
-
-vi.mock('@/hooks/useLinearProviderConnected', () => ({
-  useLinearProviderConnected: () => Boolean(mocks.state.linearConnected)
-}))
-
-vi.mock('@/hooks/useInstalledAgentSkills', () => ({
-  GLOBAL_AGENT_SKILL_SOURCE_KINDS: ['home'],
-  useInstalledAgentSkillNames: () => mocks.skill
 }))
 
 const ALL_PROVIDERS: readonly TaskProvider[] = ['github', 'gitlab', 'linear', 'jira']
@@ -79,21 +54,7 @@ beforeEach(() => {
     preflightStatusChecked: true,
     preflightStatusContextKey: 'local',
     preflightStatusError: null,
-    preflightStatusLoading: false,
-    jiraStatus: { connected: true },
-    jiraStatusChecked: true,
-    jiraStatusContextKey: 'local',
-    linearStatusChecked: true,
-    linearStatusContextKey: 'local',
-    linearConnected: true
-  }
-  mocks.skill = {
-    installed: true,
-    loading: false,
-    settled: true,
-    error: null,
-    skills: [],
-    refresh: vi.fn()
+    preflightStatusLoading: false
   }
 })
 
@@ -110,18 +71,10 @@ afterEach(async () => {
 })
 
 describe('useTaskSourceProviderReadiness', () => {
-  it('reports every provider connected once checks land cleanly', async () => {
+  it('reports GitHub connected once checks land cleanly', async () => {
     await renderProbe()
 
     expect(latest?.github).toMatchObject({ connected: true, checking: false })
-    expect(latest?.gitlab).toMatchObject({ connected: true, checking: false })
-    expect(latest?.jira).toMatchObject({ connected: true, checking: false })
-    expect(latest?.linear).toMatchObject({
-      connected: true,
-      checking: false,
-      skillInstalled: true,
-      skillChecking: false
-    })
   })
 
   it('does not read code-host connection facts out of a failed preflight snapshot', async () => {
@@ -132,41 +85,28 @@ describe('useTaskSourceProviderReadiness', () => {
     await renderProbe()
 
     expect(latest?.github.connected).toBe(false)
-    expect(latest?.gitlab.connected).toBe(false)
     expect(latest?.github.unavailable).toBe(true)
-    expect(latest?.gitlab.unavailable).toBe(true)
   })
 
-  it('keeps the known skill result while a focus-triggered rescan is in flight', async () => {
-    mocks.skill = { ...mocks.skill, loading: true, settled: true }
-
+  it('keeps retired providers inert', async () => {
     await renderProbe()
 
-    expect(latest?.linear).toMatchObject({ skillInstalled: true, skillChecking: false })
+    expect(latest?.gitlab).toMatchObject({ connected: false, checking: false, visible: false })
+    expect(latest?.linear).toMatchObject({ connected: false, checking: false, visible: false })
+    expect(latest?.jira).toMatchObject({ connected: false, checking: false, visible: false })
   })
 
-  it('reports the skill as checking until the first scan settles', async () => {
-    mocks.skill = { ...mocks.skill, installed: false, loading: true, settled: false }
+  it('marks GitHub hidden when it is not in the visible list', async () => {
+    await renderProbe([])
 
-    await renderProbe()
-
-    expect(latest?.linear).toMatchObject({ skillInstalled: false, skillChecking: true })
-  })
-
-  it('marks providers hidden when they are not in the visible list', async () => {
-    await renderProbe(['github', 'linear'])
-
-    expect(latest?.github.visible).toBe(true)
-    expect(latest?.linear.visible).toBe(true)
-    expect(latest?.gitlab.visible).toBe(false)
-    expect(latest?.jira.visible).toBe(false)
+    expect(latest?.github.visible).toBe(false)
   })
 
   it('recomputes visibility when the provider list changes', async () => {
-    await renderProbe(['github', 'linear'])
-    expect(latest?.jira.visible).toBe(false)
+    await renderProbe([])
+    expect(latest?.github.visible).toBe(false)
 
-    await renderProbe(['github', 'linear', 'jira'])
-    expect(latest?.jira.visible).toBe(true)
+    await renderProbe(['github'])
+    expect(latest?.github.visible).toBe(true)
   })
 })

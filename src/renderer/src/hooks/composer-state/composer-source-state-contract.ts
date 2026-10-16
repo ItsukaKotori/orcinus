@@ -2,7 +2,6 @@ import type { ComposerModel } from './composer-model'
 export type ComposerSourceState = {
   sourceIdentityActions: Pick<
     ComposerModel,
-    | 'applyLinkedGitLabWorkItem'
     | 'handleSelectLinkedItem'
     | 'handleLinkPopoverChange'
     | 'handleRemoveLinkedWorkItem'
@@ -28,26 +27,20 @@ export type ComposerSourceState = {
     | 'handleSparseSelectPreset'
     | 'handleBaseBranchChange'
     | 'handleBaseBranchPrSelect'
-    | 'handleBaseBranchMrSelect'
     | 'selectAddedProjectRepo'
   >
   githubProviderSelection: Pick<ComposerModel, 'handleSmartGitHubItemSelect'>
-  gitlabProviderSelection: Pick<ComposerModel, 'handleSmartGitLabItemSelect'>
   workItemSourceActions: Pick<
     ComposerModel,
     'handleSmartBranchSelect' | 'handleReuseSelectedBranchChange'
   >
   issueSourceActions: Pick<
     ComposerModel,
-    | 'handleSmartLinearIssueSelect'
-    | 'handleSmartJiraIssueSelect'
-    | 'handleClearSmartNameSelection'
-    | 'smartNameSelection'
+    'handleClearSmartNameSelection' | 'smartNameSelection'
   >
   composerNavigationActions: Pick<
     ComposerModel,
     | 'handleOpenAgentSettings'
-    | 'handleOpenJiraSettings'
     | 'applyWorktreeMeta'
     | 'folderCreateDisabled'
   >

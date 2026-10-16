@@ -7,7 +7,6 @@ import {
   buildWorktreeCommentEvidence,
   buildWorktreeIssueEvidence,
   buildWorktreeLinkedTaskEvidence,
-  buildWorktreePortEvidence,
   buildWorktreeReviewEvidence,
   type WorktreePaletteReviewSource
 } from './worktree-palette-evidence'
@@ -37,10 +36,6 @@ export type WorktreePaletteDocumentSources = {
   repoMapByHostIdentity?: ReadonlyMap<string, Repo>
   prCache?: Record<string, PRCacheEntry> | null
   issueCache?: Record<string, IssueCacheEntry> | null
-  workspacePortsByWorktreeId?: ReadonlyMap<
-    string,
-    readonly { port: number; processName?: string }[]
-  >
   checksReviewByWorktree?: ReadonlyMap<Worktree, HostedReviewInfo | null>
   hostLabelByWorktreeId?: ReadonlyMap<string, string>
 }
@@ -77,9 +72,6 @@ function resolveReviewSource(
   if (worktree.linkedPR != null) {
     return { provider: 'github', number: worktree.linkedPR }
   }
-  if (worktree.linkedGitLabMR != null) {
-    return { provider: 'gitlab', number: worktree.linkedGitLabMR }
-  }
   return null
 }
 
@@ -108,7 +100,6 @@ function buildEvidence(
   sources: WorktreePaletteDocumentSources
 ): PaletteComposedEvidence[] {
   const comment = buildWorktreeCommentEvidence(worktree.comment ?? '')
-  const ports = sources.workspacePortsByWorktreeId?.get(worktree.id) ?? []
   const units = [
     comment,
     buildWorktreeAutomationEvidence(worktree),
@@ -117,8 +108,7 @@ function buildEvidence(
     buildWorktreeIssueEvidence({
       number: worktree.linkedIssue,
       title: resolveIssueTitle(worktree, repo, sources)
-    }),
-    ...ports.map((port) => buildWorktreePortEvidence(port))
+    })
   ]
   return units.filter((unit): unit is PaletteComposedEvidence => unit !== null)
 }

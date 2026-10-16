@@ -3,7 +3,6 @@ import type { SmartNameMode } from './smart-workspace-source-results'
 
 export function getSmartWorkspaceNameFieldCopy({
   repoBackedSourcesDisabled,
-  linearAvailable,
   branchesEnabled,
   crossRepoSwitchTarget,
   disabled,
@@ -11,7 +10,6 @@ export function getSmartWorkspaceNameFieldCopy({
   mode
 }: {
   repoBackedSourcesDisabled: boolean
-  linearAvailable: boolean
   branchesEnabled: boolean
   crossRepoSwitchTarget: 'project' | 'task-source'
   disabled: boolean
@@ -19,34 +17,19 @@ export function getSmartWorkspaceNameFieldCopy({
   mode: SmartNameMode
 }) {
   const smartPlaceholder = repoBackedSourcesDisabled
-    ? linearAvailable
+    ? translate(
+        'auto.components.new.workspace.SmartWorkspaceNameField.placeholderWorkspaceName',
+        'Type a workspace name'
+      )
+    : branchesEnabled
       ? translate(
-          'auto.components.new.workspace.SmartWorkspaceNameField.placeholderNameOrLinearUrl',
-          'Type a name, Linear URL, or Jira URL'
+          'auto.components.new.workspace.SmartWorkspaceNameField.placeholderSmartWithBranchGitHub',
+          'Type a name, #1234, branch, or GitHub URL'
         )
       : translate(
-          'auto.components.new.workspace.SmartWorkspaceNameField.placeholderWorkspaceName',
-          'Type a workspace name'
+          'auto.components.new.workspace.SmartWorkspaceNameField.placeholderSmartGitHub',
+          'Type a name, #1234, or GitHub URL'
         )
-    : linearAvailable
-      ? branchesEnabled
-        ? translate(
-            'auto.components.new.workspace.SmartWorkspaceNameField.placeholderSmartWithBranchGitLabLinear',
-            'Type a name, #1234, branch, GitHub/GitLab, Linear, or Jira URL'
-          )
-        : translate(
-            'auto.components.new.workspace.SmartWorkspaceNameField.placeholderSmartGitLabLinear',
-            'Type a name, #1234, GitHub/GitLab, Linear, or Jira URL'
-          )
-      : branchesEnabled
-        ? translate(
-            'auto.components.new.workspace.SmartWorkspaceNameField.placeholderSmartWithBranchGitLab',
-            'Type a name, #1234, branch, GitHub, GitLab, or Jira URL'
-          )
-        : translate(
-            'auto.components.new.workspace.SmartWorkspaceNameField.placeholderSmartGitLab',
-            'Type a name, #1234, GitHub, GitLab, or Jira URL'
-          )
   const crossRepoSwitchIsTaskSource = crossRepoSwitchTarget === 'task-source'
   const crossRepoSwitchTitle = crossRepoSwitchIsTaskSource
     ? translate(
@@ -85,30 +68,15 @@ export function getSmartWorkspaceNameFieldCopy({
             'auto.components.new.workspace.SmartWorkspaceNameField.searchGitHub',
             'Search GitHub PRs and issues'
           )
-        : mode === 'gitlab'
+        : mode === 'branches'
           ? translate(
-              'auto.components.new.workspace.SmartWorkspaceNameField.searchGitLab',
-              'Search GitLab MRs and issues'
+              'auto.components.new.workspace.SmartWorkspaceNameField.searchBranches',
+              'Search branches'
             )
-          : mode === 'branches'
-            ? translate(
-                'auto.components.new.workspace.SmartWorkspaceNameField.searchBranches',
-                'Search branches'
-              )
-            : mode === 'linear'
-              ? translate(
-                  'auto.components.new.workspace.SmartWorkspaceNameField.searchLinear',
-                  'Search Linear issues'
-                )
-              : mode === 'jira'
-                ? translate(
-                    'auto.components.new.workspace.SmartWorkspaceNameField.searchJira',
-                    'Search Jira issues or paste an issue URL'
-                  )
-                : translate(
-                    'auto.components.new.workspace.SmartWorkspaceNameField.workspaceName',
-                    'Workspace name'
-                  )
+          : translate(
+              'auto.components.new.workspace.SmartWorkspaceNameField.workspaceName',
+              'Workspace name'
+            )
 
   return {
     crossRepoSwitchTitle,

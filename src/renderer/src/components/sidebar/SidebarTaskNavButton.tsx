@@ -1,7 +1,5 @@
 import React from 'react'
-import { EyeOff, Github, Gitlab, List } from 'lucide-react'
-import { JiraIcon } from '@/components/icons/JiraIcon'
-import { LinearIcon } from '@/components/icons/LinearIcon'
+import { EyeOff, Github, List } from 'lucide-react'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -63,16 +61,12 @@ export function SidebarTaskNavButton(): React.JSX.Element | null {
   const showTasksButton = useAppStore((s) => s.settings?.showTasksButton !== false)
   const rawVisibleTaskProviders = useAppStore((s) => s.settings?.visibleTaskProviders)
   const defaultTaskSource = useAppStore((s) => s.settings?.defaultTaskSource ?? 'github')
-  const preflightStatus = useAppStore((s) => s.preflightStatus)
   const preflightStatusChecked = useAppStore((s) => s.preflightStatusChecked)
   const preflightStatusContextKey = useAppStore((s) => s.preflightStatusContextKey)
   const refreshPreflightStatus = useAppStore((s) => s.refreshPreflightStatus)
   const expectedPreflightContextKey = useAppStore((s) =>
     localPreflightContextKey(getLocalPreflightContext(s))
   )
-  const linearStatus = useAppStore((s) => s.linearStatus)
-  const linearStatusChecked = useAppStore((s) => s.linearStatusChecked)
-  const checkLinearConnection = useAppStore((s) => s.checkLinearConnection)
   const prefetchWorkItems = useAppStore((s) => s.prefetchWorkItems)
   const activeRepoId = useAppStore((s) => s.activeRepoId)
   const defaultTaskViewPreset = useAppStore((s) => s.settings?.defaultTaskViewPreset ?? 'all')
@@ -86,18 +80,12 @@ export function SidebarTaskNavButton(): React.JSX.Element | null {
       restoreAvailableDefaultTaskProvider(
         preferredVisibleTaskProviders,
         {
-          gitlabInstalled: preflightStatusCurrent && preflightStatus?.glab?.installed === true,
-          linearConnected: linearStatus.connected === true
+          gitlabInstalled: false,
+          linearConnected: false
         },
         defaultTaskSource
       ),
-    [
-      defaultTaskSource,
-      linearStatus.connected,
-      preferredVisibleTaskProviders,
-      preflightStatusCurrent,
-      preflightStatus?.glab?.installed
-    ]
+    [defaultTaskSource, preferredVisibleTaskProviders]
   )
   const resolvedDefaultTaskSource = React.useMemo(
     () => resolveVisibleTaskProvider(defaultTaskSource, visibleTaskProviders),
@@ -108,16 +96,7 @@ export function SidebarTaskNavButton(): React.JSX.Element | null {
     if (!preflightStatusChecked || !preflightStatusCurrent) {
       void refreshPreflightStatus()
     }
-    if (!linearStatusChecked) {
-      void checkLinearConnection()
-    }
-  }, [
-    checkLinearConnection,
-    linearStatusChecked,
-    preflightStatusChecked,
-    preflightStatusCurrent,
-    refreshPreflightStatus
-  ])
+  }, [preflightStatusChecked, preflightStatusCurrent, refreshPreflightStatus])
 
   const handlePrefetch = React.useCallback(() => {
     if (resolvedDefaultTaskSource !== 'github') {
@@ -192,39 +171,6 @@ export function SidebarTaskNavButton(): React.JSX.Element | null {
                 onOpen={() => openTaskPage({ taskSource: 'github' })}
               >
                 <Github className="size-3.5" aria-hidden />
-              </TaskProviderShortcut>
-            ) : null}
-            {visibleTaskProviders.includes('gitlab') ? (
-              <TaskProviderShortcut
-                label={translate(
-                  'auto.components.sidebar.SidebarNav.196c1b5362',
-                  'Open GitLab tasks'
-                )}
-                onOpen={() => openTaskPage({ taskSource: 'gitlab' })}
-              >
-                <Gitlab className="size-3.5" aria-hidden />
-              </TaskProviderShortcut>
-            ) : null}
-            {visibleTaskProviders.includes('linear') ? (
-              <TaskProviderShortcut
-                label={translate(
-                  'auto.components.sidebar.SidebarNav.c39ab10000',
-                  'Open Linear tasks'
-                )}
-                onOpen={() => openTaskPage({ taskSource: 'linear' })}
-              >
-                <LinearIcon className="size-3.5" />
-              </TaskProviderShortcut>
-            ) : null}
-            {visibleTaskProviders.includes('jira') ? (
-              <TaskProviderShortcut
-                label={translate(
-                  'auto.components.sidebar.SidebarNav.e7ad3c540d',
-                  'Open Jira tasks'
-                )}
-                onOpen={() => openTaskPage({ taskSource: 'jira' })}
-              >
-                <JiraIcon className="size-3.5" />
               </TaskProviderShortcut>
             ) : null}
           </span>

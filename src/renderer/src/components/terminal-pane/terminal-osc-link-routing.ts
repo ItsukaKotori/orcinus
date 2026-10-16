@@ -6,11 +6,7 @@ import {
   isTerminalLinkActionActivation,
   isTerminalLinkDirectActivation
 } from './terminal-link-activation'
-import {
-  handleTerminalHttpLink,
-  type TerminalHttpLinkActionDestinations,
-  type TerminalLinkRoutingPreferenceRequester
-} from './terminal-url-link-hit-testing'
+import { handleTerminalHttpLink } from './terminal-url-link-hit-testing'
 import type { HttpLinkSourceOwner } from '@/lib/http-link-routing'
 import type { TerminalLinkActionContext } from './terminal-link-action-request'
 import { handleTerminalFileLink } from './terminal-file-link-actions'
@@ -52,9 +48,7 @@ export function handleOscLink(
       >
     > & {
       sourceOwner?: HttpLinkSourceOwner
-      requestOpenLinksInAppPreference?: TerminalLinkRoutingPreferenceRequester
       linkActionContext?: TerminalLinkActionContext | null
-      actionDestinations?: TerminalHttpLinkActionDestinations
     }
 ): boolean {
   if (!isDesktopOscLinkActivation(event)) {
@@ -110,15 +104,12 @@ export function handleOscLink(
   if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
     return finish(
       handleTerminalHttpLink(parsed.toString(), event as MouseEvent, {
-        worktreeId: deps.worktreeId,
         sourceOwner:
           deps.sourceOwner ??
           (deps.runtimeEnvironmentId
             ? { kind: 'runtime', runtimeEnvironmentId: deps.runtimeEnvironmentId }
             : { kind: 'local' }),
-        requestOpenLinksInAppPreference: deps.requestOpenLinksInAppPreference,
         linkActionContext: deps.linkActionContext,
-        actionDestinations: deps.actionDestinations,
         actionDestination: rawText
       })
     )

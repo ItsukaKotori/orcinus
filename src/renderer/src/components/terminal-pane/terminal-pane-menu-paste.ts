@@ -12,7 +12,6 @@ import {
 } from './terminal-paste-coordinator'
 import { formatTerminalPasteExecutionError } from './terminal-paste-errors'
 import { resolveTerminalPasteRuntime } from './terminal-paste-runtime'
-import { getTerminalPasteSshRemotePlatform } from './terminal-paste-ssh-platform'
 import { isTerminalPanePasteTargetCurrent } from './terminal-paste-target-state'
 import { writeTerminalPastePtyInput } from './terminal-pty-paste-writer'
 import { scheduleImagePasteWebglAtlasRecovery } from './terminal-webgl-atlas-recovery'
@@ -76,7 +75,6 @@ export const executeTerminalPaneMenuPasteText = async (
         platform: shortcutPlatform,
         ptyId,
         connectionId,
-        remotePlatform: getTerminalPasteSshRemotePlatform(connectionId),
         transport,
         isWindowsConpty: context.forceBracketedMultilineTextPaste
       })

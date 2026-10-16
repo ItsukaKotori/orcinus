@@ -23,7 +23,6 @@ const pendingFocusByOwnerAndWorktree = new Map<string, WebSessionFocusIntent>()
 
 type WebSessionVisibleTabState = Pick<
   AppState,
-  | 'activeBrowserTabIdByWorktree'
   | 'activeFileIdByWorktree'
   | 'activeGroupIdByWorktree'
   | 'activeTabIdByWorktree'
@@ -88,11 +87,7 @@ export function resolveWebSessionVisibleTabId(
     return tabs.find((tab) => tab.contentType === 'agent-session')?.id ?? null
   }
   const entityId =
-    currentType === 'browser'
-      ? state.activeBrowserTabIdByWorktree?.[worktreeId]
-      : currentType === 'editor'
-        ? state.activeFileIdByWorktree?.[worktreeId]
-        : null
+    currentType === 'editor' ? state.activeFileIdByWorktree?.[worktreeId] : null
   return (
     tabs.find(
       (tab) => toVisibleTabType(tab.contentType) === currentType && tab.entityId === entityId

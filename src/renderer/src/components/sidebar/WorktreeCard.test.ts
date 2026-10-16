@@ -35,26 +35,16 @@ function makeTerminalTab(title: string): TerminalTab {
 }
 
 describe('getWorktreeStatus', () => {
-  it('treats browser-only worktrees as active', () => {
-    expect(getWorktreeStatus([], [{ id: 'browser-1' }], {})).toBe('active')
-  })
-
-  it('keeps terminal agent states higher priority than browser presence', () => {
+  it('keeps terminal agent states higher priority than plain activity', () => {
     // Why: liveness gate now requires ptyIdsByTabId, not tab.ptyId. Pass a
     // populated live-pty map so this assertion exercises the live-tab branch.
     // Titles are real classifiable shapes: getWorktreeStatus reads the shared
     // classifier through pane-agent-evidence, which this file does not mock.
     const livePtyIds = { 'tab-1': ['pty-1'] }
     expect(
-      getWorktreeStatus(
-        [makeTerminalTab('Claude - action required')],
-        [{ id: 'browser-1' }],
-        livePtyIds
-      )
+      getWorktreeStatus([makeTerminalTab('Claude - action required')], livePtyIds)
     ).toBe('permission')
-    expect(
-      getWorktreeStatus([makeTerminalTab('mimo working')], [{ id: 'browser-1' }], livePtyIds)
-    ).toBe('working')
+    expect(getWorktreeStatus([makeTerminalTab('mimo working')], livePtyIds)).toBe('working')
   })
 })
 

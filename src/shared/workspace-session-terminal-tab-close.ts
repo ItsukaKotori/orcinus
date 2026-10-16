@@ -91,7 +91,6 @@ function deriveActiveSurface(
   activeGroupId: string | undefined
 ): {
   terminalTabId: string | null
-  browserTabId: string | null
   fileId: string | null
   type: WorkspaceVisibleTabType
 } {
@@ -101,16 +100,11 @@ function deriveActiveSurface(
       null)
     : null
   const terminalTabs = session.tabsByWorktree[worktreeId] ?? []
-  const browsers = session.browserTabsByWorktree?.[worktreeId] ?? []
   const files = session.openFilesByWorktree?.[worktreeId] ?? []
   const priorTerminal = session.activeTabIdByWorktree?.[worktreeId]
   const terminalFallback = terminalTabs.some((tab) => tab.id === priorTerminal)
     ? (priorTerminal ?? null)
     : (terminalTabs[0]?.id ?? null)
-  const priorBrowser = session.activeBrowserTabIdByWorktree?.[worktreeId]
-  const browserFallback = browsers.some((tab) => tab.id === priorBrowser)
-    ? (priorBrowser ?? null)
-    : (browsers[0]?.id ?? null)
   const priorFile = session.activeFileIdByWorktree?.[worktreeId]
   const fileFallback = files.some((file) => file.filePath === priorFile)
     ? (priorFile ?? null)
@@ -119,23 +113,13 @@ function deriveActiveSurface(
   if (activeUnified?.contentType === 'terminal') {
     return {
       terminalTabId: activeUnified.entityId,
-      browserTabId: browserFallback,
       fileId: fileFallback,
       type: 'terminal'
-    }
-  }
-  if (activeUnified?.contentType === 'browser') {
-    return {
-      terminalTabId: terminalFallback,
-      browserTabId: activeUnified.entityId,
-      fileId: fileFallback,
-      type: 'browser'
     }
   }
   if (activeUnified) {
     return {
       terminalTabId: terminalFallback,
-      browserTabId: browserFallback,
       fileId: activeUnified.entityId,
       type: 'editor'
     }
@@ -143,20 +127,11 @@ function deriveActiveSurface(
   if (fileFallback) {
     return {
       terminalTabId: terminalFallback,
-      browserTabId: browserFallback,
       fileId: fileFallback,
       type: 'editor'
     }
   }
-  if (browserFallback) {
-    return {
-      terminalTabId: terminalFallback,
-      browserTabId: browserFallback,
-      fileId: null,
-      type: 'browser'
-    }
-  }
-  return { terminalTabId: terminalFallback, browserTabId: null, fileId: null, type: 'terminal' }
+  return { terminalTabId: terminalFallback, fileId: null, type: 'terminal' }
 }
 
 export function closeTerminalTabInWorkspaceSession(
@@ -254,10 +229,6 @@ export function closeTerminalTabInWorkspaceSession(
     ...session.activeTabIdByWorktree,
     [worktreeId]: surface.terminalTabId
   }
-  next.activeBrowserTabIdByWorktree = {
-    ...session.activeBrowserTabIdByWorktree,
-    [worktreeId]: surface.browserTabId
-  }
   next.activeFileIdByWorktree = {
     ...session.activeFileIdByWorktree,
     [worktreeId]: surface.fileId
@@ -271,7 +242,6 @@ export function closeTerminalTabInWorkspaceSession(
     const hasSurface =
       nextTabs.length > 0 ||
       (next.tabsByWorktree[worktreeId]?.length ?? 0) > 0 ||
-      (next.browserTabsByWorktree?.[worktreeId]?.length ?? 0) > 0 ||
       (next.openFilesByWorktree?.[worktreeId]?.length ?? 0) > 0
     if (!hasSurface) {
       next.activeWorktreeId = null

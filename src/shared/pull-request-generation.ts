@@ -47,7 +47,6 @@ function limitSection(value: string, maxChars: number): string {
 
 const PROVIDER_LABELS: Record<HostedReviewProvider, string> = {
   github: 'GitHub',
-  gitlab: 'GitLab',
   bitbucket: 'Bitbucket',
   'azure-devops': 'Azure DevOps',
   gitea: 'Gitea',
@@ -55,9 +54,6 @@ const PROVIDER_LABELS: Record<HostedReviewProvider, string> = {
 }
 
 function issueReferences(issue: PullRequestLinkedIssue): { complete: string; partial: string } {
-  if (issue.provider === 'gitlab') {
-    return { complete: `Closes #${issue.number}`, partial: `Related to #${issue.number}` }
-  }
   if (issue.provider === 'azure-devops') {
     return { complete: `Fixes AB#${issue.number}`, partial: `AB#${issue.number}` }
   }

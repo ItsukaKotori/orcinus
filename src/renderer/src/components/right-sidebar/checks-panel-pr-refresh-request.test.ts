@@ -16,7 +16,6 @@ describe('resolveChecksPanelReviewEvidenceProvider', () => {
 
   it.each([
     ['linkedGitHubPR', 'github'],
-    ['linkedGitLabMR', 'gitlab'],
     ['linkedBitbucketPR', 'bitbucket'],
     ['linkedAzureDevOpsPR', 'azure-devops'],
     ['linkedGiteaPR', 'gitea']
@@ -35,7 +34,7 @@ describe('resolveChecksPanelReviewEvidenceProvider', () => {
       resolveChecksPanelReviewEvidenceProvider({
         ...noLinkedReviews,
         eligibilityProvider: 'bitbucket',
-        cachedProvider: 'gitlab'
+        cachedProvider: 'azure-devops'
       })
     ).toBe('bitbucket')
   })
@@ -63,7 +62,7 @@ describe('getChecksPanelForegroundReviewEvidenceKey', () => {
     expect(
       getChecksPanelForegroundReviewEvidenceKey({
         ...input,
-        reviewEvidenceProvider: 'gitlab'
+        reviewEvidenceProvider: 'bitbucket'
       })
     ).toBeNull()
   })

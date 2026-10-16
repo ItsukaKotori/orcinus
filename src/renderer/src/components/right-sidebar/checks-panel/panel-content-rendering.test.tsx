@@ -80,7 +80,6 @@ describe('checks panel concrete content', () => {
       isFolder: false,
       isGitHubReviewContext: true,
       isPublishingBranch: false,
-      linkedGitLabMR: null,
       linkedPR: null,
       linkedReviewNumber: null,
       panelContextKey: 'worktree-1::without-pr',
@@ -100,7 +99,6 @@ describe('checks panel concrete content', () => {
     const model = {
       activeConnectionId: null,
       activeConflictReview: null,
-      activeGitLabReview: null,
       activeReview: {
         provider: 'github',
         number: 42,
@@ -129,7 +127,6 @@ describe('checks panel concrete content', () => {
       consumeClaimedCommentResolutionAfterDeliveryRef: { current: vi.fn() },
       detachedHeadDisplay: null,
       editingTitle: false,
-      getGitLabProjectRef: vi.fn(() => null),
       handleAddPRComment: vi.fn(),
       handleCancelEdit: vi.fn(),
       handleDeleteComment: vi.fn(),
@@ -154,7 +151,6 @@ describe('checks panel concrete content', () => {
       isFixingChecksWithAI: false,
       isRefreshing: false,
       isResolvingConflictsWithAI: false,
-      linkedGitLabMR: null,
       pendingCommentResolutionRef: { current: null },
       pr: null,
       prRefreshState: undefined,

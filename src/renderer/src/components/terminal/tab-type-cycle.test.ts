@@ -8,10 +8,8 @@ import {
 const mixedTabs: TypeCyclableTab[] = [
   { type: 'terminal', id: 'term-1' },
   { type: 'editor', id: 'file-1', tabId: 'tab-file-1' },
-  { type: 'browser', id: 'browser-1' },
   { type: 'terminal', id: 'term-2' },
-  { type: 'editor', id: 'file-2', tabId: 'tab-file-2' },
-  { type: 'browser', id: 'browser-2' }
+  { type: 'editor', id: 'file-2', tabId: 'tab-file-2' }
 ]
 
 describe('getNextTabWithinActiveType', () => {
@@ -22,7 +20,6 @@ describe('getNextTabWithinActiveType', () => {
         activeTabType: 'terminal',
         activeTabId: 'term-1',
         activeFileId: 'file-1',
-        activeBrowserTabId: 'browser-1',
         direction: 1
       })
     ).toEqual({ type: 'terminal', id: 'term-2' })
@@ -35,23 +32,9 @@ describe('getNextTabWithinActiveType', () => {
         activeTabType: 'editor',
         activeTabId: 'term-1',
         activeFileId: 'file-1',
-        activeBrowserTabId: 'browser-1',
         direction: 1
       })
     ).toEqual({ type: 'editor', id: 'file-2', tabId: 'tab-file-2' })
-  })
-
-  it('cycles only browser tabs when a browser is active', () => {
-    expect(
-      getNextTabWithinActiveType({
-        tabs: mixedTabs,
-        activeTabType: 'browser',
-        activeTabId: 'term-1',
-        activeFileId: 'file-1',
-        activeBrowserTabId: 'browser-1',
-        direction: 1
-      })
-    ).toEqual({ type: 'browser', id: 'browser-2' })
   })
 
   it('returns null when the active type has a single tab', () => {
@@ -59,13 +42,11 @@ describe('getNextTabWithinActiveType', () => {
       getNextTabWithinActiveType({
         tabs: [
           { type: 'terminal', id: 'term-1' },
-          { type: 'editor', id: 'file-1' },
-          { type: 'browser', id: 'browser-1' }
+          { type: 'editor', id: 'file-1' }
         ],
-        activeTabType: 'browser',
+        activeTabType: 'editor',
         activeTabId: 'term-1',
         activeFileId: 'file-1',
-        activeBrowserTabId: 'browser-1',
         direction: 1
       })
     ).toBeNull()
@@ -84,7 +65,6 @@ describe('getNextTabWithinActiveType', () => {
         activeTabType: 'terminal',
         activeTabId: null,
         activeFileId: 'file-1',
-        activeBrowserTabId: 'browser-1',
         direction: -1
       })
     ).toEqual({ type: 'terminal', id: 'term-3' })
@@ -95,7 +75,6 @@ describe('getNextTabWithinActiveType', () => {
         activeTabType: 'terminal',
         activeTabId: null,
         activeFileId: 'file-1',
-        activeBrowserTabId: 'browser-1',
         direction: 1
       })
     ).toEqual({ type: 'terminal', id: 'term-1' })
@@ -113,7 +92,6 @@ describe('getNextTabWithinActiveType', () => {
         activeTabType: 'editor',
         activeTabId: 'term-1',
         activeFileId: 'file-a',
-        activeBrowserTabId: 'browser-1',
         activeGroupTabId: 'tab-b',
         direction: 1
       })
@@ -129,7 +107,6 @@ describe('getNextTabAcrossAllTypes', () => {
         activeTabType: 'terminal',
         activeTabId: 'term-1',
         activeFileId: 'file-1',
-        activeBrowserTabId: 'browser-1',
         direction: 1
       })
     ).toEqual({ type: 'editor', id: 'file-1', tabId: 'tab-file-1' })
@@ -139,10 +116,9 @@ describe('getNextTabAcrossAllTypes', () => {
     expect(
       getNextTabAcrossAllTypes({
         tabs: mixedTabs,
-        activeTabType: 'browser',
+        activeTabType: 'editor',
         activeTabId: 'term-1',
-        activeFileId: 'file-1',
-        activeBrowserTabId: 'browser-2',
+        activeFileId: 'file-2',
         direction: 1
       })
     ).toEqual({ type: 'terminal', id: 'term-1' })
@@ -155,7 +131,6 @@ describe('getNextTabAcrossAllTypes', () => {
         activeTabType: 'editor',
         activeTabId: 'term-1',
         activeFileId: 'file-1',
-        activeBrowserTabId: 'browser-1',
         direction: -1
       })
     ).toEqual({ type: 'terminal', id: 'term-1' })
@@ -168,7 +143,6 @@ describe('getNextTabAcrossAllTypes', () => {
         activeTabType: 'terminal',
         activeTabId: 'term-1',
         activeFileId: null,
-        activeBrowserTabId: null,
         direction: 1
       })
     ).toBeNull()
@@ -181,16 +155,15 @@ describe('getNextTabAcrossAllTypes', () => {
           { type: 'editor', id: 'file-a', tabId: 'tab-a' },
           { type: 'terminal', id: 'term-1' },
           { type: 'editor', id: 'file-a', tabId: 'tab-b' },
-          { type: 'browser', id: 'browser-1', tabId: 'tab-browser-1' }
+          { type: 'terminal', id: 'term-2', tabId: 'tab-term-2' }
         ],
         activeTabType: 'editor',
         activeTabId: 'term-1',
         activeFileId: 'file-a',
-        activeBrowserTabId: null,
         activeGroupTabId: 'tab-b',
         direction: 1
       })
-    ).toEqual({ type: 'browser', id: 'browser-1', tabId: 'tab-browser-1' })
+    ).toEqual({ type: 'terminal', id: 'term-2', tabId: 'tab-term-2' })
   })
 
   it('uses direction-aware fallback when the active tab id is missing', () => {
@@ -200,7 +173,6 @@ describe('getNextTabAcrossAllTypes', () => {
         activeTabType: 'terminal',
         activeTabId: 'nonexistent',
         activeFileId: null,
-        activeBrowserTabId: null,
         direction: 1
       })
     ).toEqual(mixedTabs[0])
@@ -211,7 +183,6 @@ describe('getNextTabAcrossAllTypes', () => {
         activeTabType: 'terminal',
         activeTabId: 'nonexistent',
         activeFileId: null,
-        activeBrowserTabId: null,
         direction: -1
       })
     ).toEqual(mixedTabs.at(-1))

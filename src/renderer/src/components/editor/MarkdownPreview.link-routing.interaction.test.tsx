@@ -3,17 +3,13 @@
 // Faithful end-to-end check of the markdown-preview http link routing: renders
 // the real MarkdownPreview, lets react-markdown produce a real <a>, and fires
 // real modifier clicks so the component's own handleClick + modifier detection
-// run. openHttpLink stays real (wired through its registerHttpLinkStoreAccessor
-// seam); only its store data and window.api are controlled. This is the
-// regression guard for "Cmd+Shift-click opens the system browser, plain/Cmd
-// click opens the Orca browser".
+// run. openHttpLink stays real; only its store data and window.api are
+// controlled. Every http link opens in the system browser now.
 
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const createBrowserTabMock = vi.fn()
-const setActiveWorktreeMock = vi.fn()
 const openUrlMock = vi.fn()
 const openFileUriMock = vi.fn()
 const pathExistsMock = vi.fn(async () => true)
@@ -82,7 +78,6 @@ vi.mock('./NotesSendMenu', () => ({ NotesSendMenu: () => null }))
 vi.mock('./MarkdownTableOfContentsPanel', () => ({ MarkdownTableOfContentsPanel: () => null }))
 
 import MarkdownPreview from './MarkdownPreview'
-import { registerHttpLinkStoreAccessor } from '../../lib/http-link-routing'
 
 describe('MarkdownPreview http link routing (Cmd vs Cmd+Shift click)', () => {
   let container: HTMLDivElement
@@ -101,14 +96,6 @@ describe('MarkdownPreview http link routing (Cmd vs Cmd+Shift click)', () => {
       },
       ui: { writeClipboardText: vi.fn(async () => true) }
     }
-    // openHttpLink reads the store through this injected accessor, not @/store.
-    registerHttpLinkStoreAccessor(() => ({
-      settings: { openLinksInApp: true, activeRuntimeEnvironmentId: null },
-      setActiveWorktree: setActiveWorktreeMock,
-      createBrowserTab: createBrowserTabMock
-    }))
-    createBrowserTabMock.mockClear()
-    setActiveWorktreeMock.mockClear()
     openUrlMock.mockClear()
     openFileUriMock.mockClear()
     pathExistsMock.mockClear()
@@ -163,20 +150,16 @@ describe('MarkdownPreview http link routing (Cmd vs Cmd+Shift click)', () => {
     })
   }
 
-  it('plain Cmd-click opens the link in the Orca browser', () => {
+  it('plain Cmd-click opens the link in the system browser', () => {
     const anchor = render()
     click(anchor, { metaKey: true })
-    expect(createBrowserTabMock).toHaveBeenCalledWith('wt-1', 'https://example.com/', {
-      activate: true
-    })
-    expect(openUrlMock).not.toHaveBeenCalled()
+    expect(openUrlMock).toHaveBeenCalledWith('https://example.com/')
   })
 
   it('Cmd+Shift-click opens the link in the system default browser', () => {
     const anchor = render()
     click(anchor, { metaKey: true, shiftKey: true })
     expect(openUrlMock).toHaveBeenCalledWith('https://example.com/')
-    expect(createBrowserTabMock).not.toHaveBeenCalled()
   })
 
   it('keeps system-browser HTTP and file links inert while ownership is unknown', () => {
@@ -184,7 +167,6 @@ describe('MarkdownPreview http link routing (Cmd vs Cmd+Shift click)', () => {
     const httpAnchor = render()
     click(httpAnchor, { metaKey: true, shiftKey: true })
     expect(openUrlMock).not.toHaveBeenCalled()
-    expect(createBrowserTabMock).not.toHaveBeenCalled()
 
     act(() => {
       root.unmount()
@@ -228,9 +210,6 @@ describe('MarkdownPreview http link routing (Cmd vs Cmd+Shift click)', () => {
     expect(anchor.textContent).toBe('[12]')
     expect(container.textContent).not.toContain('<sup>')
     click(anchor, { metaKey: true })
-    expect(createBrowserTabMock).toHaveBeenCalledWith('wt-1', 'https://example.com/', {
-      activate: true
-    })
-    expect(openUrlMock).not.toHaveBeenCalled()
+    expect(openUrlMock).toHaveBeenCalledWith('https://example.com/')
   })
 })

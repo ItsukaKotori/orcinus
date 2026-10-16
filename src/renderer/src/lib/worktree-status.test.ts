@@ -33,7 +33,6 @@ describe('getWorktreeStatus', () => {
         { id: 'tab-1', title: 'claude [working]' },
         { id: 'tab-2', title: 'claude [permission]' }
       ],
-      [{ id: 'browser-1' }],
       livePtyMap('tab-1', 'tab-2')
     )
 
@@ -41,26 +40,20 @@ describe('getWorktreeStatus', () => {
     expect(getWorktreeStatusLabel(status)).toBe('Needs permission')
   })
 
-  it('treats browser-only worktrees as active', () => {
-    const status = getWorktreeStatus([], [{ id: 'browser-1' }], {})
-
-    expect(status).toBe('active')
-  })
-
   it('preserves a working agent status without a renderer PTY', () => {
-    const status = getWorktreeStatus([], [], {}, {}, { liveAgentStatus: 'working' })
+    const status = getWorktreeStatus([], {}, {}, { liveAgentStatus: 'working' })
 
     expect(status).toBe('working')
   })
 
   it('preserves a permission agent status without a renderer PTY', () => {
-    const status = getWorktreeStatus([], [], {}, {}, { liveAgentStatus: 'permission' })
+    const status = getWorktreeStatus([], {}, {}, { liveAgentStatus: 'permission' })
 
     expect(status).toBe('permission')
   })
 
-  it('returns inactive when neither tabs nor browser state are live', () => {
-    expect(getWorktreeStatus([], [], {})).toBe('inactive')
+  it('returns inactive when no tabs are live', () => {
+    expect(getWorktreeStatus([], {})).toBe('inactive')
   })
 
   it('reports working when any pane in a split-pane tab is working even if tab.title is idle', () => {
@@ -70,7 +63,6 @@ describe('getWorktreeStatus', () => {
     // another pane is still working, the sidebar spinner must stay spinning.
     const status = getWorktreeStatus(
       [{ id: 'tab-1', title: 'claude [done]' }],
-      [],
       livePtyMap('tab-1'),
       { 'tab-1': { 0: 'codex [working]', 1: 'claude [done]' } }
     )
@@ -81,7 +73,6 @@ describe('getWorktreeStatus', () => {
   it('prefers pane-level permission status over tab.title', () => {
     const status = getWorktreeStatus(
       [{ id: 'tab-1', title: 'claude [done]' }],
-      [],
       livePtyMap('tab-1'),
       { 'tab-1': { 0: 'claude [permission]', 1: 'claude [done]' } }
     )
@@ -93,7 +84,7 @@ describe('getWorktreeStatus', () => {
   // as a wake-hint sessionId. Reading tab.ptyId for liveness was the bug —
   // pin the new behavior so it can't regress.
   it('returns inactive for a slept tab (ptyIdsByTabId empty even if heuristic title matches working)', () => {
-    const status = getWorktreeStatus([{ id: 'tab-1', title: 'claude [working]' }], [], {
+    const status = getWorktreeStatus([{ id: 'tab-1', title: 'claude [working]' }], {
       'tab-1': []
     })
 
@@ -101,7 +92,7 @@ describe('getWorktreeStatus', () => {
   })
 
   it('returns active when ptyIdsByTabId has entries (live precondition)', () => {
-    const status = getWorktreeStatus([{ id: 'tab-1', title: 'bash' }], [], livePtyMap('tab-1'))
+    const status = getWorktreeStatus([{ id: 'tab-1', title: 'bash' }], livePtyMap('tab-1'))
 
     expect(status).toBe('active')
   })
@@ -114,7 +105,6 @@ describe('getWorktreeStatus', () => {
   it('does not spin on a bare braille-spinner tab title that yields no agent row', () => {
     const status = getWorktreeStatus(
       [{ id: 'tab-1', title: '⠐ Review branch for regressions' }],
-      [],
       livePtyMap('tab-1')
     )
 
@@ -122,7 +112,7 @@ describe('getWorktreeStatus', () => {
   })
 
   it('does not spin on a bare braille-spinner pane title that yields no agent row', () => {
-    const status = getWorktreeStatus([{ id: 'tab-1', title: 'bash' }], [], livePtyMap('tab-1'), {
+    const status = getWorktreeStatus([{ id: 'tab-1', title: 'bash' }], livePtyMap('tab-1'), {
       'tab-1': { 0: '⠐ Review branch for regressions', 1: 'bash' }
     })
 
@@ -132,7 +122,6 @@ describe('getWorktreeStatus', () => {
   it('still spins on an agent-attributable braille-spinner title', () => {
     const status = getWorktreeStatus(
       [{ id: 'tab-1', title: '⠹ codex fix flaky test' }],
-      [],
       livePtyMap('tab-1')
     )
 
@@ -144,7 +133,6 @@ describe('resolveWorktreeStatus', () => {
   it('returns inactive when no tab has a live pty and no explicit agent row exists', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'tab-1', title: 'claude [done]' }],
-      browserTabs: [],
       // Slept: live-pty array empty; tab.ptyId would be the wake-hint sessionId.
       ptyIdsByTabId: { 'tab-1': [] },
       hasPermission: false,
@@ -159,7 +147,6 @@ describe('resolveWorktreeStatus', () => {
   it('promotes to done when a retained done row is visible, even without a live pty', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'tab-1', title: 'bash' }],
-      browserTabs: [],
       ptyIdsByTabId: { 'tab-1': [] },
       hasPermission: false,
       hasLiveWorking: false,
@@ -173,7 +160,6 @@ describe('resolveWorktreeStatus', () => {
   it('treats pending paired web host terminal mirrors as inactive without a live pty', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'web-terminal-host-tab-1', title: 'Terminal 1' }],
-      browserTabs: [],
       ptyIdsByTabId: {},
       hasPermission: false,
       hasLiveWorking: false,
@@ -187,7 +173,6 @@ describe('resolveWorktreeStatus', () => {
   it('treats ready paired web host terminal mirrors as active once they have a live pty', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'web-terminal-host-tab-1', title: 'Terminal 1' }],
-      browserTabs: [],
       ptyIdsByTabId: { 'web-terminal-host-tab-1': ['pty-1'] },
       hasPermission: false,
       hasLiveWorking: false,
@@ -198,24 +183,11 @@ describe('resolveWorktreeStatus', () => {
     expect(status).toBe('active')
   })
 
-  it('keeps browser-only paired workspaces active without terminal liveness', () => {
-    const status = resolveWorktreeStatus({
-      tabs: [{ id: 'web-terminal-host-tab-1', title: 'Terminal 1' }],
-      browserTabs: [{ id: 'browser-1' }],
-      ptyIdsByTabId: {},
-      hasPermission: false,
-      hasLiveWorking: false,
-      hasLiveDone: false,
-      hasRetainedDone: false
-    })
 
-    expect(status).toBe('active')
-  })
 
   it('promotes to permission when an explicit agent row needs input, even without a live pty', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'tab-1', title: 'claude [permission]' }],
-      browserTabs: [],
       ptyIdsByTabId: { 'tab-1': [] },
       hasPermission: true,
       hasLiveWorking: false,
@@ -229,7 +201,6 @@ describe('resolveWorktreeStatus', () => {
   it('promotes to permission when live and hasPermission', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'tab-1', title: 'bash' }],
-      browserTabs: [],
       ptyIdsByTabId: livePtyMap('tab-1'),
       hasPermission: true,
       hasLiveWorking: false,
@@ -243,7 +214,6 @@ describe('resolveWorktreeStatus', () => {
   it('promotes to working from a fresh explicit agent row before pane titles restore', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'tab-1', title: 'bash' }],
-      browserTabs: [],
       ptyIdsByTabId: livePtyMap('tab-1'),
       hasPermission: false,
       hasLiveWorking: true,
@@ -257,7 +227,6 @@ describe('resolveWorktreeStatus', () => {
   it('reports passive monitoring below active work and permission', () => {
     const base = {
       tabs: [{ id: 'tab-1', title: 'bash' }],
-      browserTabs: [],
       ptyIdsByTabId: livePtyMap('tab-1'),
       hasLiveDone: false,
       hasRetainedDone: false
@@ -292,7 +261,6 @@ describe('resolveWorktreeStatus', () => {
   it('lets heuristic working beat hasLiveDone (newer in-progress signal wins)', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'tab-1', title: 'claude [working]' }],
-      browserTabs: [],
       ptyIdsByTabId: livePtyMap('tab-1'),
       hasPermission: false,
       hasLiveWorking: false,
@@ -306,7 +274,6 @@ describe('resolveWorktreeStatus', () => {
   it('lets a hook-covered done pane suppress its stale working title', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'tab-1', title: 'claude [working]' }],
-      browserTabs: [],
       ptyIdsByTabId: livePtyMap('tab-1'),
       runtimePaneTitlesByTabId: {
         'tab-1': {
@@ -332,7 +299,6 @@ describe('resolveWorktreeStatus', () => {
   it('lets a single hook-covered done pane suppress an unmapped single working title', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'tab-1', title: 'claude [working]' }],
-      browserTabs: [],
       ptyIdsByTabId: livePtyMap('tab-1'),
       runtimePaneTitlesByTabId: {
         'tab-1': {
@@ -354,7 +320,6 @@ describe('resolveWorktreeStatus', () => {
   it('keeps sibling pane working when hook done covers only another pane', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'tab-1', title: 'claude [working]' }],
-      browserTabs: [],
       ptyIdsByTabId: livePtyMap('tab-1'),
       runtimePaneTitlesByTabId: {
         'tab-1': {
@@ -385,7 +350,6 @@ describe('resolveWorktreeStatus', () => {
   it('honors heuristic permission over hasLiveDone (priority: permission > done)', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'tab-1', title: 'claude [permission]' }],
-      browserTabs: [],
       ptyIdsByTabId: livePtyMap('tab-1'),
       hasPermission: false,
       hasLiveWorking: false,
@@ -399,7 +363,6 @@ describe('resolveWorktreeStatus', () => {
   it('promotes to done when live and hasRetainedDone (no working heuristic)', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'tab-1', title: 'bash' }],
-      browserTabs: [],
       ptyIdsByTabId: livePtyMap('tab-1'),
       hasPermission: false,
       hasLiveWorking: false,
@@ -415,7 +378,6 @@ describe('resolveWorktreeStatus', () => {
     // heuristic — the attribution gate must not regress them.
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'tab-1', title: '⠐ Review branch for regressions' }],
-      browserTabs: [],
       ptyIdsByTabId: livePtyMap('tab-1'),
       hasPermission: false,
       hasLiveWorking: true,
@@ -429,7 +391,6 @@ describe('resolveWorktreeStatus', () => {
   it('resolves a stale unattributable spinner title with no hook entry to active, not working', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'tab-1', title: '⠐ Review branch for regressions' }],
-      browserTabs: [],
       ptyIdsByTabId: livePtyMap('tab-1'),
       hasPermission: false,
       hasLiveWorking: false,
@@ -443,7 +404,6 @@ describe('resolveWorktreeStatus', () => {
   it('falls through to active heuristic when nothing else applies', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'tab-1', title: 'bash' }],
-      browserTabs: [],
       ptyIdsByTabId: livePtyMap('tab-1'),
       hasPermission: false,
       hasLiveWorking: false,

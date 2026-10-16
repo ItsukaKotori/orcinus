@@ -1,9 +1,8 @@
-import { FileText, FolderPlus, Globe, Play, SquareTerminal, Trash2 } from 'lucide-react'
+import { FileText, FolderPlus, Play, SquareTerminal, Trash2 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { CmdJQuickActionAvailability, CmdJQuickActionContext } from './quick-action-context'
 import {
   getCurrentWorkspaceActionAvailability,
-  getBrowserWorkspaceActionAvailability,
   getWorkspaceScopedActionAvailability
 } from './quick-action-context'
 import { translate } from '@/i18n/i18n'
@@ -39,12 +38,6 @@ function currentWorkspaceActionAvailability(
   return getCurrentWorkspaceActionAvailability(ctx)
 }
 
-function browserWorkspaceActionAvailability(
-  ctx: CmdJQuickActionContext
-): CmdJQuickActionAvailability {
-  return getBrowserWorkspaceActionAvailability(ctx)
-}
-
 async function runWorkspaceAction(
   ctx: CmdJQuickActionContext,
   run: (groupId: string) => Promise<void>
@@ -64,30 +57,6 @@ async function runWorkspaceAction(
 // Context-heavy setup flows such as Ghostty import and browser cookie import
 // stay inside their Settings panes where explanatory UI and failure states fit.
 export const getCmdJQuickActions = createLocalizedCatalog((): CmdJQuickAction[] => [
-  {
-    id: 'new-browser-tab',
-    kind: 'action',
-    title: translate('auto.components.cmd.j.quick.actions.892bfa9339', 'New Browser Tab'),
-    description: translate(
-      'auto.components.cmd.j.quick.actions.784812ca24',
-      'Open a browser tab in the active workspace.'
-    ),
-    icon: Globe,
-    verbKeywords: [
-      translate('auto.components.cmd.j.quick.actions.verbs.newBrowser', 'new browser'),
-      translate('auto.components.cmd.j.quick.actions.verbs.newBrowserTab', 'new browser tab'),
-      translate('auto.components.cmd.j.quick.actions.verbs.openBrowser', 'open browser'),
-      translate('auto.components.cmd.j.quick.actions.verbs.browserTab', 'browser tab')
-    ],
-    isAvailable: browserWorkspaceActionAvailability,
-    run: async (ctx) => {
-      const availability = browserWorkspaceActionAvailability(ctx)
-      if (!availability.available) {
-        return { status: 'unavailable', reason: availability.reason }
-      }
-      return runWorkspaceAction(ctx, ctx.openNewBrowserTab)
-    }
-  },
   {
     id: 'new-markdown-file',
     kind: 'action',

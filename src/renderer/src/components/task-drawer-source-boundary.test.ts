@@ -45,64 +45,9 @@ describe('task drawer source boundaries', () => {
     )
   })
 
-  it('threads GitLab task source context through the shared drawer selector', () => {
-    const controllerSource = componentSource('GitLabItemDialog.tsx')
-    const source = [
-      controllerSource,
-      componentSource('gitlab-item-dialog/use-gitlab-item-dialog-effects.ts'),
-      componentSource('gitlab-item-dialog/use-gitlab-details-editing.ts'),
-      componentSource('gitlab-item-dialog/use-gitlab-primary-actions.ts'),
-      componentSource('gitlab-item-dialog/use-gitlab-review-actions.ts')
-    ].join('\n')
-    const selector = sourceBetween(
-      controllerSource,
-      'const repoSelector = useMemo',
-      'const updateCommentDraft'
-    )
 
-    expect(selector).toContain('...(repoId ? { repoId } : {})')
-    expect(selector).toContain('...(sourceContext ? { sourceContext } : {})')
-    expect(selector).toContain('}, [repoId, repoPath, sourceContext])')
-    expect(source).toContain('workItemDetails({ ...repoSelector')
-    expect(source).toContain('updateMR({ ...repoSelector')
-    expect(source).toContain('addMRComment({')
-    expect(source).toContain('addIssueComment({')
-    expect(source).toContain('...repoSelector')
-  })
 
-  it('uses Linear task source context for drawer reads, mutations, and optimistic patches', () => {
-    const drawerSource = componentSource('LinearItemDrawer.tsx')
-    const editSection = componentSource('linear-item-drawer-edit-controller.tsx')
-    const drawer = sourceBetween(
-      drawerSource,
-      'export default function LinearItemDrawer',
-      'return renderLinearItemDrawerSheet'
-    )
 
-    expect(editSection).toContain('const providerSettings = sourceContext ?? settings')
-    expect(editSection).toContain('linearUpdateIssue(providerSettings')
-    expect(editSection).toContain(
-      'patchLinearIssue(issue.id, { state: stateValue }, { sourceContext })'
-    )
-    expect(editSection).toContain(
-      'patchLinearIssue(issue.id, { assignee: newAssignee }, { sourceContext })'
-    )
-    expect(drawer).toContain('const providerSettings = sourceContext ?? settings')
-    expect(drawer).toContain('linearGetIssue(providerSettings')
-    expect(drawer).toContain('linearIssueComments(providerSettings')
-  })
 
-  it('uses Jira task source context for drawer reads, mutations, and optimistic patches', () => {
-    const source = componentSource('JiraIssueWorkspace.tsx')
-    const drawer = sourceBetween(source, 'export default function JiraIssueWorkspace', 'return (')
 
-    expect(drawer).toContain('const providerSettings = sourceContext ?? settings')
-    expect(drawer).toContain('jiraIssueComments(providerSettings')
-    expect(drawer).toContain('jiraGetIssue(providerSettings')
-    expect(drawer).toContain('jiraListTransitions(providerSettings')
-    expect(drawer).toContain('jiraUpdateIssue(providerSettings')
-    expect(drawer).toContain('jiraAddIssueComment(')
-    expect(drawer).toContain('patchJiraIssue(displayed.key, optimistic, { sourceContext })')
-    expect(drawer).toContain('patchJiraIssue(previous.key, previous, { sourceContext })')
-  })
 })

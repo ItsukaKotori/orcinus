@@ -1,21 +1,11 @@
 import type { PaneManager } from '@/lib/pane-manager/pane-manager'
 import { useAppStore } from '@/store'
 import { getConnectionId } from '@/lib/connection-context'
-import { httpLinkActionDestinationsFor } from '@/lib/http-link-destinations'
-import {
-  canOpenWorkspaceBrowserTabOnRuntime,
-  canOpenWorkspaceBrowserTabOnSsh
-} from '@/lib/workspace-browser-tab-open'
 import { resolvePaneWslDistro } from './terminal-pane-wsl-distro'
 import { resolveTerminalHttpLinkSourceOwner } from './terminal-http-link-source-owner'
-import {
-  getTerminalFileOpenHint,
-  getTerminalUrlOpenHint,
-  terminalUrlOpenHintOptionsFor
-} from './terminal-link-open-hints'
+import { getTerminalFileOpenHint, getTerminalUrlOpenHint } from './terminal-link-open-hints'
 import type { LinkHandlerDeps } from './terminal-link-handlers'
 import type { TerminalLinkActionContext } from './terminal-link-action-request'
-import type { TerminalHttpLinkActionDestinations } from './terminal-url-link-hit-testing'
 import type { PtyConnectionDeps } from './pty-connection-types'
 import type { UseTerminalPaneLifecycleDeps } from './terminal-pane-lifecycle-types'
 import type { TerminalPaneLifecycleRefs } from './use-terminal-pane-lifecycle-refs'
@@ -53,8 +43,6 @@ export type TerminalPaneMountPreparation = {
   getHttpLinkSourceOwnerForPane: (
     paneId: number
   ) => ReturnType<typeof resolveTerminalHttpLinkSourceOwner>
-  canOpenOwnedBrowserForPane: (paneId: number) => boolean
-  getHttpLinkActionDestinations: (paneId: number) => TerminalHttpLinkActionDestinations
   getLinkActionContext: (paneId: number) => TerminalLinkActionContext | null
   linkDeps: LinkHandlerDeps
   queueResizeAll: (focusActive: boolean) => void
@@ -105,30 +93,6 @@ export function prepareTerminalPaneMount(
     paneId: number
   ): ReturnType<typeof resolveTerminalHttpLinkSourceOwner> =>
     resolveTerminalHttpLinkSourceOwner(paneTransports.get(paneId))
-  const canOpenOwnedBrowserForPane = (paneId: number): boolean => {
-    const sourceOwner = getHttpLinkSourceOwnerForPane(paneId)
-    if (sourceOwner.kind === 'runtime') {
-      return canOpenWorkspaceBrowserTabOnRuntime(
-        useAppStore.getState(),
-        deps.worktreeId,
-        sourceOwner.runtimeEnvironmentId
-      )
-    }
-    return (
-      sourceOwner.kind === 'ssh' &&
-      canOpenWorkspaceBrowserTabOnSsh(
-        useAppStore.getState(),
-        deps.worktreeId,
-        sourceOwner.connectionId
-      )
-    )
-  }
-  const getHttpLinkActionDestinations = (paneId: number): TerminalHttpLinkActionDestinations =>
-    httpLinkActionDestinationsFor(
-      deps.settingsRef.current,
-      getHttpLinkSourceOwnerForPane(paneId),
-      canOpenOwnedBrowserForPane(paneId)
-    )
   const getLinkActionContext = (paneId: number): TerminalLinkActionContext | null => {
     if (deps.settingsRef.current?.terminalLinkActionPopoverEnabled === false) {
       return null
@@ -235,13 +199,8 @@ export function prepareTerminalPaneMount(
     getPtyIdForPane: (paneId) => paneTransports.get(paneId)?.getPtyId() ?? null
   })
   const fileOpenLinkHint = getTerminalFileOpenHint()
-  const getUrlOpenLinkHint = (paneId: number): string =>
+  const getUrlOpenLinkHint = (_paneId: number): string =>
     getTerminalUrlOpenHint({
-      ...terminalUrlOpenHintOptionsFor(
-        deps.settingsRef.current,
-        getHttpLinkSourceOwnerForPane(paneId),
-        canOpenOwnedBrowserForPane(paneId)
-      ),
       showActions: deps.settingsRef.current?.terminalLinkActionPopoverEnabled !== false
     })
   return {
@@ -262,8 +221,6 @@ export function prepareTerminalPaneMount(
     getPaneLinkCwd,
     getUrlOpenLinkHint,
     getHttpLinkSourceOwnerForPane,
-    canOpenOwnedBrowserForPane,
-    getHttpLinkActionDestinations,
     getLinkActionContext,
     linkDeps,
     queueResizeAll,

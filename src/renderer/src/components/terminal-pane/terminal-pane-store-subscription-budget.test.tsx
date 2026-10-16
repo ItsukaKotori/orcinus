@@ -13,7 +13,6 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, describe, expect, it } from 'vitest'
 import { useAppStore } from '@/store'
 import { readStoreListenerCount } from '@/store/store-listener-census'
-import { LinkRoutingPreferenceDialogProvider } from '@/components/link-routing-preference-dialog'
 import { useTerminalPaneController } from './use-terminal-pane-controller'
 import {
   TERMINAL_PANE_STORE_ACTION_KEYS,
@@ -90,19 +89,17 @@ describe('TerminalPane store subscription budget', () => {
   it('stays inside the pinned per-pane listener budget', () => {
     const baseline = listenerCount()
     mount(
-      <LinkRoutingPreferenceDialogProvider>
+      <>
         <PaneProbe tabId="tab-1" />
-      </LinkRoutingPreferenceDialogProvider>
+      </>
     )
     const withOnePane = listenerCount()
 
-    // The provider itself subscribes, so the marginal cost of a pane is measured
-    // by adding a second one to the already-mounted tree.
     rerender(
-      <LinkRoutingPreferenceDialogProvider>
+      <>
         <PaneProbe tabId="tab-1" />
         <PaneProbe tabId="tab-2" />
-      </LinkRoutingPreferenceDialogProvider>
+      </>
     )
     const perPane = listenerCount() - withOnePane
 
@@ -121,16 +118,15 @@ describe('TerminalPane store subscription budget', () => {
     const baseline = listenerCount()
     const tabIds = Array.from({ length: 20 }, (_, index) => `tab-${index}`)
     mount(
-      <LinkRoutingPreferenceDialogProvider>
+      <>
         {tabIds.map((tabId) => (
           <PaneProbe key={tabId} tabId={tabId} />
         ))}
-      </LinkRoutingPreferenceDialogProvider>
+      </>
     )
 
     const paneListeners = listenerCount() - baseline
-    // The provider's own subscriptions ride along; they do not scale with panes.
-    expect(paneListeners).toBeLessThanOrEqual(TERMINAL_PANE_LISTENER_BUDGET * 20 + 8)
+    expect(paneListeners).toBeLessThanOrEqual(TERMINAL_PANE_LISTENER_BUDGET * 20 + 1)
     expect(paneListeners).toBeLessThan(PRE_FOLD_LISTENERS_PER_PANE * 20)
 
     unmount()

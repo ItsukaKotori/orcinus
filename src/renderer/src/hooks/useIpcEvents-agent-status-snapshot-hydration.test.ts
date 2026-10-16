@@ -19,8 +19,7 @@ import {
   type StoreLike,
   type StoreSubscribeListener,
   type MobileFitListener,
-  type MobileDriverListener,
-  type MobileBrowserDriverListener
+  type MobileDriverListener
 } from './ipc-events-agent-status-store-test-fixtures'
 import {
   buildWindowApi,
@@ -39,12 +38,9 @@ describe('useIpcEvents agent status snapshot integration', () => {
     const hydrateOverrides = vi.fn()
     const setDriverForPty = vi.fn()
     const hydrateDrivers = vi.fn()
-    const setDriverForBrowserPage = vi.fn()
-    const hydrateBrowserDrivers = vi.fn()
     const listeners: { fit?: MobileFitListener } = {}
     let resolveFitOverrides: (value: []) => void = () => {}
     let resolveDrivers: (value: []) => void = () => {}
-    let resolveBrowserDrivers: (value: []) => void = () => {}
 
     vi.doMock('@/lib/pane-manager/mobile-fit-overrides', () => ({
       setFitOverride,
@@ -53,10 +49,6 @@ describe('useIpcEvents agent status snapshot integration', () => {
     vi.doMock('@/lib/pane-manager/mobile-driver-state', () => ({
       setDriverForPty,
       hydrateDrivers
-    }))
-    vi.doMock('@/lib/pane-manager/browser-mobile-driver-state', () => ({
-      setDriverForBrowserPage,
-      hydrateBrowserDrivers
     }))
     stubReactSyncEffect()
     stubAuxiliaryModules()
@@ -78,10 +70,6 @@ describe('useIpcEvents agent status snapshot integration', () => {
           getTerminalDrivers: () =>
             new Promise<[]>((resolve) => {
               resolveDrivers = resolve
-            }),
-          getBrowserDrivers: () =>
-            new Promise<[]>((resolve) => {
-              resolveBrowserDrivers = resolve
             }),
           onTerminalFitOverrideChanged: (listener: MobileFitListener) => {
             listeners.fit = listener
@@ -110,13 +98,11 @@ describe('useIpcEvents agent status snapshot integration', () => {
 
     resolveFitOverrides([])
     resolveDrivers([])
-    resolveBrowserDrivers([])
     await Promise.resolve()
     await Promise.resolve()
 
     expect(hydrateOverrides).toHaveBeenCalledWith([])
     expect(hydrateDrivers).toHaveBeenCalledWith([])
-    expect(hydrateBrowserDrivers).toHaveBeenCalledWith([])
     expect(setFitOverride).toHaveBeenCalledTimes(300)
     expect(setFitOverride).toHaveBeenNthCalledWith(1, 'pty-50', 'mobile-fit', 80, 24)
     expect(setFitOverride).toHaveBeenLastCalledWith('pty-349', 'mobile-fit', 80, 24)
@@ -127,20 +113,15 @@ describe('useIpcEvents agent status snapshot integration', () => {
     const hydrateOverrides = vi.fn()
     const setDriverForPty = vi.fn()
     const hydrateDrivers = vi.fn()
-    const setDriverForBrowserPage = vi.fn()
-    const hydrateBrowserDrivers = vi.fn()
     const unsubscribeFit = vi.fn()
     const unsubscribeDriver = vi.fn()
-    const unsubscribeBrowserDriver = vi.fn()
     const refs: {
       cleanup?: () => void
       fit?: MobileFitListener
       driver?: MobileDriverListener
-      browserDriver?: MobileBrowserDriverListener
     } = {}
     let resolveFitOverrides: (value: []) => void = () => {}
     let resolveDrivers: (value: []) => void = () => {}
-    let resolveBrowserDrivers: (value: []) => void = () => {}
 
     vi.doMock('@/lib/pane-manager/mobile-fit-overrides', () => ({
       setFitOverride,
@@ -149,10 +130,6 @@ describe('useIpcEvents agent status snapshot integration', () => {
     vi.doMock('@/lib/pane-manager/mobile-driver-state', () => ({
       setDriverForPty,
       hydrateDrivers
-    }))
-    vi.doMock('@/lib/pane-manager/browser-mobile-driver-state', () => ({
-      setDriverForBrowserPage,
-      hydrateBrowserDrivers
     }))
     vi.doMock('react', async () => {
       const actual = await vi.importActual<typeof ReactModule>('react')
@@ -186,10 +163,6 @@ describe('useIpcEvents agent status snapshot integration', () => {
             new Promise<[]>((resolve) => {
               resolveDrivers = resolve
             }),
-          getBrowserDrivers: () =>
-            new Promise<[]>((resolve) => {
-              resolveBrowserDrivers = resolve
-            }),
           onTerminalFitOverrideChanged: (listener: MobileFitListener) => {
             refs.fit = listener
             return unsubscribeFit
@@ -197,10 +170,6 @@ describe('useIpcEvents agent status snapshot integration', () => {
           onTerminalDriverChanged: (listener: MobileDriverListener) => {
             refs.driver = listener
             return unsubscribeDriver
-          },
-          onBrowserDriverChanged: (listener: MobileBrowserDriverListener) => {
-            refs.browserDriver = listener
-            return unsubscribeBrowserDriver
           },
           onClientHostedBrowserRowsChanged: () => () => {},
           getClientHostedBrowserRows: async () => []
@@ -211,7 +180,7 @@ describe('useIpcEvents agent status snapshot integration', () => {
     const { useIpcEvents } = await import('./useIpcEvents')
     useIpcEvents()
 
-    if (!refs.fit || !refs.driver || !refs.browserDriver || !refs.cleanup) {
+    if (!refs.fit || !refs.driver || !refs.cleanup) {
       throw new Error('Expected mobile listeners and cleanup to be registered')
     }
 
@@ -225,27 +194,19 @@ describe('useIpcEvents agent status snapshot integration', () => {
       ptyId: 'pty-1',
       driver: { kind: 'mobile', clientId: 'phone' }
     })
-    refs.browserDriver({
-      browserPageId: 'page-1',
-      driver: { kind: 'mobile', clientId: 'phone' }
-    })
 
     refs.cleanup()
     resolveFitOverrides([])
     resolveDrivers([])
-    resolveBrowserDrivers([])
     await Promise.resolve()
     await Promise.resolve()
 
     expect(unsubscribeFit).toHaveBeenCalledTimes(1)
     expect(unsubscribeDriver).toHaveBeenCalledTimes(1)
-    expect(unsubscribeBrowserDriver).toHaveBeenCalledTimes(1)
     expect(hydrateOverrides).not.toHaveBeenCalled()
     expect(hydrateDrivers).not.toHaveBeenCalled()
-    expect(hydrateBrowserDrivers).not.toHaveBeenCalled()
     expect(setFitOverride).not.toHaveBeenCalled()
     expect(setDriverForPty).not.toHaveBeenCalled()
-    expect(setDriverForBrowserPage).not.toHaveBeenCalled()
   })
 
   it('ignores early push events but applies the main-process snapshot after readiness', async () => {

@@ -54,8 +54,6 @@ export type UISliceContextual = {
   clearOrcaHookTrustForRepo: (repoId: string) => void
   setupScriptPromptDismissedRepoIds: readonly string[]
   dismissSetupScriptPrompt: (repoHostIdentity: string) => void
-  browserImportHintHidden: boolean
-  setBrowserImportHintHidden: (hidden: boolean) => void
   projectOrderManualDefaultNoticeDismissed: boolean
   dismissProjectOrderManualDefaultNotice: () => void
   usageEmptyStateDismissed: boolean

@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../../shared/constants'
 import type { KeybindingOverrides } from '../../../../shared/keybindings'
-import type { BrowserTab } from '../../../../shared/browser-workspace-types'
 import type { Tab } from '../../../../shared/tab-types'
 import { getMaximizedFloatingTerminalBounds } from './floating-terminal-panel-bounds'
 import {
+  makeFile,
   makeTab,
   setFloatingTabs,
   storeBox,
@@ -475,25 +475,14 @@ describe('FloatingTerminalPanel close behavior', () => {
     const state = storeBox.state as FloatingPanelStoreState
     const groupId = 'floating-group'
     const terminalTab = makeTab({ id: 'terminal-tab' })
-    const browserTab: BrowserTab = {
-      id: 'browser-tab',
-      worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
-      url: '',
-      title: 'Browser',
-      loading: false,
-      faviconUrl: null,
-      canGoBack: false,
-      canGoForward: false,
-      loadError: null,
-      createdAt: 2
-    }
-    const browserUnifiedTab: Tab = {
-      id: 'browser-unified-tab',
-      entityId: browserTab.id,
+    const editorFile = makeFile({ id: 'editor-file' })
+    const editorUnifiedTab: Tab = {
+      id: 'editor-unified-tab',
+      entityId: editorFile.id,
       groupId,
       worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
-      contentType: 'browser',
-      label: 'Browser',
+      contentType: 'editor',
+      label: 'Notes',
       customLabel: null,
       color: null,
       sortOrder: 2,
@@ -512,9 +501,9 @@ describe('FloatingTerminalPanel close behavior', () => {
       createdAt: terminalTab.createdAt
     }
     state.tabsByWorktree = { [FLOATING_TERMINAL_WORKTREE_ID]: [terminalTab] }
-    state.browserTabsByWorktree = { [FLOATING_TERMINAL_WORKTREE_ID]: [browserTab] }
+    state.openFiles = [editorFile]
     state.unifiedTabsByWorktree = {
-      [FLOATING_TERMINAL_WORKTREE_ID]: [terminalUnifiedTab, browserUnifiedTab]
+      [FLOATING_TERMINAL_WORKTREE_ID]: [terminalUnifiedTab, editorUnifiedTab]
     }
     state.groupsByWorktree = {
       [FLOATING_TERMINAL_WORKTREE_ID]: [
@@ -522,15 +511,15 @@ describe('FloatingTerminalPanel close behavior', () => {
           id: groupId,
           worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
           activeTabId: terminalUnifiedTab.id,
-          tabOrder: [terminalUnifiedTab.id, browserUnifiedTab.id],
-          recentTabIds: [terminalUnifiedTab.id, browserUnifiedTab.id]
+          tabOrder: [terminalUnifiedTab.id, editorUnifiedTab.id],
+          recentTabIds: [terminalUnifiedTab.id, editorUnifiedTab.id]
         }
       ]
     }
     state.activeGroupIdByWorktree = { [FLOATING_TERMINAL_WORKTREE_ID]: groupId }
     state.activeTabIdByWorktree = { [FLOATING_TERMINAL_WORKTREE_ID]: terminalTab.id }
     state.tabBarOrderByWorktree = {
-      [FLOATING_TERMINAL_WORKTREE_ID]: [terminalUnifiedTab.id, browserUnifiedTab.id]
+      [FLOATING_TERMINAL_WORKTREE_ID]: [terminalUnifiedTab.id, editorUnifiedTab.id]
     }
     const element = await renderPanel(true)
     const { keydownListener, panelElement } = bindFocusedFloatingPanelKeydown(element)
@@ -547,7 +536,7 @@ describe('FloatingTerminalPanel close behavior', () => {
     )
 
     expect(preventDefault).toHaveBeenCalledWith()
-    expect(mocks.activateTab).toHaveBeenCalledWith('browser-unified-tab')
+    expect(mocks.activateTab).toHaveBeenCalledWith('editor-unified-tab')
   })
 
   // F4: an out-of-range index chord in app context must still be CONSUMED (never leak a raw key to

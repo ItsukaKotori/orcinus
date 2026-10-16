@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import CommentMarkdown from '@/components/sidebar/CommentMarkdown'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/store'
-import type { GitLabProjectRef } from '../../../../../shared/gitlab-types'
 import type { PRCheckDetail } from '../../../../../shared/github/check-types'
 import type { GitHubRepositoryIdentity } from '../../../../../shared/github/pull-request-types'
 import { CheckJobLogTail } from '../check-job-log-tail'
@@ -46,7 +45,6 @@ export function CheckRunDetails({
   checkDetailsContextKey,
   worktreeId,
   detailsStickySurface = 'sidebar',
-  getGitLabProjectRef,
   githubRepository,
   onRetry
 }: {
@@ -55,8 +53,6 @@ export function CheckRunDetails({
   checkDetailsContextKey: string
   worktreeId: string | null
   detailsStickySurface?: CheckDetailsStickySurface
-  /** Why: a getter, not a value — the source ref is filled by an async fetch and would read stale during render. */
-  getGitLabProjectRef?: () => GitLabProjectRef | null
   githubRepository?: GitHubRepositoryIdentity | null
   onRetry: () => void
 }): React.JSX.Element {
@@ -100,7 +96,6 @@ export function CheckRunDetails({
       loading: state?.loading ?? false,
       error: state?.error ?? null,
       githubRepository: githubRepository ?? null,
-      gitlabProjectRef: getGitLabProjectRef?.() ?? null
     })
   }
 

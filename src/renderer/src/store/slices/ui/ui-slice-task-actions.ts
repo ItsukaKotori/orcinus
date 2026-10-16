@@ -9,8 +9,6 @@ import { PER_REPO_FETCH_LIMIT } from '../../../../../shared/work-items'
 import { isGitRepoKind } from '../../../../../shared/repo-kind'
 import { presetToQuery } from './ui-slice-hydration-sanitizers'
 
-const LINEAR_TASK_PREFETCH_LIMIT = 36
-
 export function createUiTaskActions(set: UISliceSet, get: UISliceGet): Partial<UISlice> {
   return {
     activeView: 'terminal',
@@ -32,15 +30,6 @@ export function createUiTaskActions(set: UISliceSet, get: UISliceGet): Partial<U
       if (data.openGitHubWorkItem) {
         get().recordFeatureInteraction?.('github-tasks')
       }
-      if (data.openGitLabWorkItem) {
-        get().recordFeatureInteraction?.('gitlab-tasks')
-      }
-      if (data.openLinearIssue) {
-        get().recordFeatureInteraction?.('linear-tasks')
-      }
-      if (data.openJiraIssue) {
-        get().recordFeatureInteraction?.('jira-tasks')
-      }
       // Why: record a Tasks visit in shared back/forward history; all task-source variants collapse to one deduped 'tasks' entry.
       const detailEntry = data.openGitHubWorkItem
         ? ({
@@ -50,28 +39,7 @@ export function createUiTaskActions(set: UISliceSet, get: UISliceGet): Partial<U
             sourceContext: data.openGitHubSourceContext,
             initialTab: data.openGitHubInitialTab
           } as const)
-        : data.openGitLabWorkItem
-          ? ({
-              kind: 'task-detail',
-              source: 'gitlab',
-              workItem: data.openGitLabWorkItem,
-              sourceContext: data.openGitLabSourceContext
-            } as const)
-          : data.openLinearIssue
-            ? ({
-                kind: 'task-detail',
-                source: 'linear',
-                issue: data.openLinearIssue,
-                sourceContext: data.openLinearSourceContext
-              } as const)
-            : data.openJiraIssue
-              ? ({
-                  kind: 'task-detail',
-                  source: 'jira',
-                  issue: data.openJiraIssue,
-                  sourceContext: data.openJiraSourceContext
-                } as const)
-              : null
+        : null
       const currentEntry = get().worktreeNavHistory[get().worktreeNavHistoryIndex]
       const currentIsTaskStack =
         currentEntry === 'tasks' ||
@@ -96,8 +64,8 @@ export function createUiTaskActions(set: UISliceSet, get: UISliceGet): Partial<U
       const visibleTaskProviders = restoreAvailableDefaultTaskProvider(
         preferredVisibleTaskProviders,
         {
-          gitlabInstalled: state.preflightStatus?.glab?.installed === true,
-          linearConnected: state.linearStatus?.connected === true
+          gitlabInstalled: false,
+          linearConnected: false
         },
         state.settings?.defaultTaskSource
       )
@@ -139,28 +107,6 @@ export function createUiTaskActions(set: UISliceSet, get: UISliceGet): Partial<U
                 ? data.openGitHubSourceContext
                 : null
           })
-        }
-      }
-      if (resolvedSource === 'linear' && typeof state.prefetchLinearIssues === 'function') {
-        const resume = state.taskResumeState
-        const query = (resume?.linearQuery ?? '').trim()
-        const sourceContext =
-          data.openLinearSourceContext?.provider === 'linear' ? data.openLinearSourceContext : null
-        if (query) {
-          state.prefetchLinearIssues(
-            { kind: 'search', query, limit: LINEAR_TASK_PREFETCH_LIMIT },
-            { sourceContext }
-          )
-        } else {
-          // Why: TaskPage no longer exposes Linear preset filters; keep prefetch aligned with the default unsearched issue list.
-          state.prefetchLinearIssues(
-            {
-              kind: 'list',
-              filter: 'all',
-              limit: LINEAR_TASK_PREFETCH_LIMIT
-            },
-            { sourceContext }
-          )
         }
       }
     },

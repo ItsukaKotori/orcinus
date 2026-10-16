@@ -1,27 +1,16 @@
 /**
- * Memory-leak regression: per-worktree and per-page maps that the worktree-removal
+ * Memory-leak regression: per-worktree maps that the worktree-removal
  * paths previously missed must be evicted on removal.
  *
- * Two families of entity-keyed Records grew monotonically over a session:
- *
- *  - Worktree-keyed: `remoteStatusesByWorktree`, `recentlyClosedEditorTabsByWorktree`
- *    and `defaultTerminalTabsAppliedByWorktreeId` were re-keyed on rename but absent
- *    from BOTH removal paths (the bulk `buildWorktreePurgeState` and the single
- *    `removeWorktree` reducer), while their siblings (gitStatusByWorktree,
- *    recentlyClosedBrowserTabsByWorktree, …) were purged.
- *  - Page/workspace-keyed browser maps: `browserAnnotationsByPageId`,
- *    `remoteBrowserPageHandlesByPageId`, `pendingAddressBarFocusByPageId`,
- *    `pendingAddressBarFocusByTabId` and `recentlyClosedBrowserPagesByWorkspace`
- *    were cleaned only on the single-worktree path (via shutdownWorktreeBrowsers →
- *    closeBrowserTab); the bulk reconcile path (CLI/SSH/other-window git worktree
- *    removal) skipped them, orphaning entries permanently.
- *
- * worktreeId, browser workspace id and browser page id are all unbounded, ephemeral
- * key spaces (fresh UUIDs / path-derived ids, never reused).
+ * `remoteStatusesByWorktree`, `recentlyClosedEditorTabsByWorktree`
+ * and `defaultTerminalTabsAppliedByWorktreeId` were re-keyed on rename but absent
+ * from BOTH removal paths (the bulk `buildWorktreePurgeState` and the single
+ * `removeWorktree` reducer), while their siblings (gitStatusByWorktree, …)
+ * were purged. worktreeId is an unbounded, ephemeral key space (fresh UUIDs /
+ * path-derived ids, never reused).
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type * as AgentStatusModule from '@/lib/agent-status'
-import type { BrowserPage, BrowserWorkspace } from '../../../../shared/browser-workspace-types'
 import {
   getAgentHibernationPaneOutputEpoch,
   recordAgentHibernationPaneOutput,
@@ -66,37 +55,6 @@ import {
 
 const WT1 = 'repo1::/path/wt1'
 const WT2 = 'repo1::/path/wt2'
-
-function makeWorkspace(id: string, worktreeId: string): BrowserWorkspace {
-  return {
-    id,
-    worktreeId,
-    url: 'about:blank',
-    title: '',
-    loading: false,
-    faviconUrl: null,
-    canGoBack: false,
-    canGoForward: false,
-    loadError: null,
-    createdAt: 0
-  }
-}
-
-function makePage(id: string, workspaceId: string, worktreeId: string): BrowserPage {
-  return {
-    id,
-    workspaceId,
-    worktreeId,
-    url: 'about:blank',
-    title: '',
-    loading: false,
-    faviconUrl: null,
-    canGoBack: false,
-    canGoForward: false,
-    loadError: null,
-    createdAt: 0
-  }
-}
 
 describe('worktree removal evicts the per-worktree + per-page maps it previously missed', () => {
   beforeEach(() => {
@@ -201,57 +159,4 @@ describe('worktree removal evicts the per-worktree + per-page maps it previously
     expect(getAgentHibernationPaneOutputEpoch(survivingPaneKey)).toBe(1)
   })
 
-  it('bulk purgeWorktreeTerminalState drops page/workspace-keyed browser maps for the removed worktree only', () => {
-    const store = createTestStore()
-    const WS1 = 'ws-1'
-    const WS2 = 'ws-2'
-    const P1 = 'page-1'
-    const P2 = 'page-2'
-    seedStore(store, {
-      worktreesByRepo: {
-        repo1: [
-          makeWorktree({ id: WT1, repoId: 'repo1', path: '/path/wt1' }),
-          makeWorktree({ id: WT2, repoId: 'repo1', path: '/path/wt2' })
-        ]
-      },
-      browserTabsByWorktree: {
-        [WT1]: [makeWorkspace(WS1, WT1)],
-        [WT2]: [makeWorkspace(WS2, WT2)]
-      },
-      browserPagesByWorkspace: {
-        [WS1]: [makePage(P1, WS1, WT1)],
-        [WS2]: [makePage(P2, WS2, WT2)]
-      },
-      browserAnnotationsByPageId: { [P1]: [], [P2]: [] },
-      remoteBrowserPageHandlesByPageId: {
-        [P1]: { environmentId: 'env-1', remotePageId: 'r-1' },
-        [P2]: { environmentId: 'env-2', remotePageId: 'r-2' }
-      },
-      pendingAddressBarFocusByPageId: { [P1]: true, [P2]: true },
-      // createBrowserTab writes BOTH the workspace id and the page id here.
-      pendingAddressBarFocusByTabId: { [WS1]: true, [P1]: true, [WS2]: true, [P2]: true },
-      recentlyClosedBrowserPagesByWorkspace: {
-        [WS1]: [makePage(P1, WS1, WT1)],
-        [WS2]: [makePage(P2, WS2, WT2)]
-      }
-    })
-
-    store.getState().purgeWorktreeTerminalState([WT1])
-
-    const s = store.getState()
-    // Removed worktree's workspace + page entries are gone.
-    expect(s.browserAnnotationsByPageId[P1]).toBeUndefined()
-    expect(s.remoteBrowserPageHandlesByPageId[P1]).toBeUndefined()
-    expect(s.pendingAddressBarFocusByPageId[P1]).toBeUndefined()
-    expect(s.pendingAddressBarFocusByTabId[WS1]).toBeUndefined()
-    expect(s.pendingAddressBarFocusByTabId[P1]).toBeUndefined()
-    expect(s.recentlyClosedBrowserPagesByWorkspace[WS1]).toBeUndefined()
-    // Surviving worktree's entries remain (guard over-eviction).
-    expect(s.browserAnnotationsByPageId[P2]).toBeDefined()
-    expect(s.remoteBrowserPageHandlesByPageId[P2]).toBeDefined()
-    expect(s.pendingAddressBarFocusByPageId[P2]).toBe(true)
-    expect(s.pendingAddressBarFocusByTabId[WS2]).toBe(true)
-    expect(s.pendingAddressBarFocusByTabId[P2]).toBe(true)
-    expect(s.recentlyClosedBrowserPagesByWorkspace[WS2]).toBeDefined()
-  })
 })

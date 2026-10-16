@@ -1,4 +1,4 @@
-// Merges the three Cmd+J open-tab engines into one ranked list for the new-tab
+// Merges the Cmd+J open-tab engines into one ranked list for the new-tab
 // omnibox. Pure: no store, no React.
 
 import { capPaletteSection } from '../cmd-j/palette-section-render-cap'
@@ -12,11 +12,6 @@ import {
   type PaletteSearchContext
 } from '@/lib/palette-match/palette-ranking'
 import { LOCAL_EXECUTION_HOST_ID, type ExecutionHostId } from '../../../../shared/execution-host'
-import {
-  searchBrowserPages,
-  type BrowserPaletteSearchResult,
-  type SearchableBrowserPage
-} from '@/lib/browser-palette-search'
 import { getUnifiedTabPaletteExecutionHostId } from '@/lib/unified-tab-host-ownership'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import {
@@ -31,7 +26,7 @@ export const OPEN_TAB_SEARCH_RESULT_LIMIT = 4
 // Why its own guard: searchWorkspaceTabs has no size limit of its own.
 export const OPEN_TAB_SEARCH_QUERY_MAX_BYTES = 2 * 1024
 
-export type OpenTabSearchSource = 'workspace' | 'browser'
+export type OpenTabSearchSource = 'workspace'
 
 type OpenTabSearchResultBase = {
   executionHostId: ExecutionHostId
@@ -54,18 +49,9 @@ export type OpenTabSearchResult =
       relativePath: string | null
       occupantAgent: TuiAgent | null
     })
-  | (OpenTabSearchResultBase & {
-      source: 'browser'
-      contentType: 'browser'
-      pageId: string
-      workspaceId: string
-      url: string
-      faviconUrl: string | null
-    })
 
 export type OpenTabSearchInput = {
   workspaceTabs: readonly SearchableWorkspaceTab[]
-  browserPages: readonly SearchableBrowserPage[]
   query: string
   context?: PaletteSearchContext
   retainedResultId?: string | null
@@ -80,8 +66,7 @@ type RankedResult = {
 }
 
 const SOURCE_RANK: Record<OpenTabSearchSource, number> = {
-  workspace: 0,
-  browser: 1
+  workspace: 0
 }
 
 function isOpenTabSearchQueryTooLarge(
@@ -91,7 +76,7 @@ function isOpenTabSearchQueryTooLarge(
   return isClipboardTextByteLengthOverLimit(query, maxBytes)
 }
 
-type EngineResult = WorkspaceTabPaletteSearchResult | BrowserPaletteSearchResult
+type EngineResult = WorkspaceTabPaletteSearchResult
 
 function getMatchedText(result: EngineResult): string | null {
   return result.secondaryRanges.length > 0 ? result.secondaryText : null
@@ -146,7 +131,6 @@ function rank<TEngine extends EngineResult>(
 
 export function searchOpenTabCandidates({
   workspaceTabs,
-  browserPages,
   query,
   context: suppliedContext
 }: OpenTabSearchInput): OpenTabSearchResult[] {
@@ -193,19 +177,6 @@ export function searchOpenTabCandidates({
         occupantAgent: result.occupantAgent
       })
     ),
-    ...rank(
-      'browser',
-      searchBrowserPages([...browserPages], trimmed, { context, fieldMode: 'omnibox' }),
-      (result) => ({
-        ...baseResult(result, result.executionHostId ?? LOCAL_EXECUTION_HOST_ID),
-        source: 'browser',
-        contentType: 'browser',
-        pageId: result.pageId,
-        workspaceId: result.workspaceId,
-        url: result.url,
-        faviconUrl: result.faviconUrl
-      })
-    )
   ]
     .sort((a, b) => {
       return comparePaletteEntityRanks(

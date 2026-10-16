@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useShallow } from 'zustand/react/shallow'
 import {
   findKeybindingConflictsForDefinitions,
   formatKeybindingList,
@@ -37,7 +36,6 @@ import { useMountedRef } from '@/hooks/useMountedRef'
 import { translate } from '@/i18n/i18n'
 import { useEditablePluginCommands } from '@/store/plugin-panels'
 import { buildShortcutDefinitionCatalog } from './shortcut-definition-catalog'
-import { getClientCreationActionPolicy } from '@/lib/client-creation-action-policy'
 import { buildShortcutRowVisibility } from './shortcut-row-visibility'
 import { useMacCapturedDigitChords } from './use-mac-captured-digit-chords'
 
@@ -64,12 +62,6 @@ export function ShortcutsPane(): React.JSX.Element {
   const resetKeybindingOverride = useAppStore((state) => state.resetKeybindingOverride)
   const disableKeybindingAction = useAppStore((state) => state.disableKeybindingAction)
   const pluginCommands = useEditablePluginCommands()
-  const [managedBrowserCreationEnabled] = useAppStore(
-    useShallow((state) => {
-      const policy = getClientCreationActionPolicy(state, state.activeWorktreeId)
-      return [policy['managed-browser'].state === 'enabled'] as const
-    })
-  )
   const mountedRef = useMountedRef()
   const [errors, setErrors] = useState<Partial<Record<KeybindingActionId, string>>>({})
   const [recordingActionId, setRecordingActionId] = useState<KeybindingActionId | null>(null)
@@ -129,7 +121,6 @@ export function ShortcutsPane(): React.JSX.Element {
         conflictByAction,
         terminalShortcutPolicy,
         platform,
-        managedBrowserCreationEnabled,
         settingsSearchQuery: searchQuery,
         shortcutQuery,
         shortcutFilter
@@ -138,7 +129,6 @@ export function ShortcutsPane(): React.JSX.Element {
       conflictByAction,
       groups,
       keybindings,
-      managedBrowserCreationEnabled,
       searchQuery,
       shortcutFilter,
       shortcutQuery,

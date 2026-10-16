@@ -1,14 +1,11 @@
 import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../../shared/constants'
 import type { KeybindingOverrides, TerminalShortcutPolicy } from '../../../../shared/keybindings'
-import type { BrowserTab } from '../../../../shared/browser-workspace-types'
 import type { Tab, TabGroup } from '../../../../shared/tab-types'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
 import type { OpenFile } from '@/store/slices/editor'
 
 export type FloatingPanelStoreState = {
   tabsByWorktree: Record<string, TerminalTab[]>
-  browserTabsByWorktree: Record<string, BrowserTab[]>
-  browserPagesByWorkspace: Record<string, unknown[]>
   groupsByWorktree: Record<string, TabGroup[]>
   unifiedTabsByWorktree: Record<string, Tab[]>
   openFiles: OpenFile[]
@@ -21,20 +18,7 @@ export type FloatingPanelStoreState = {
     shellOverride?: string,
     options?: { activate?: boolean; pendingActivationSpawn?: boolean; initialPtyId?: string }
   ) => TerminalTab
-  createBrowserTab: (
-    worktreeId: string,
-    url: string,
-    options?: {
-      activate?: boolean
-      focusAddressBar?: boolean
-      sessionProfileId?: string | null
-      sessionPartition?: string | null
-      title?: string
-      targetGroupId?: string
-    }
-  ) => BrowserTab
   closeTab: (tabId: string) => void
-  closeBrowserTab: (tabId: string) => void
   closeFile: (fileId: string) => void
   closeUnifiedTab: (tabId: string) => Tab | null
   markFileDirty: (fileId: string, dirty: boolean) => void
@@ -46,7 +30,6 @@ export type FloatingPanelStoreState = {
   makePreviewFilePermanent: (fileId: string, tabId?: string) => void
   pinFile: (fileId: string, tabId?: string) => void
   openFile: (file: unknown, options?: unknown) => void
-  browserDefaultUrl: string
   keybindings?: KeybindingOverrides
   tabBarOrderByWorktree: Record<string, string[]>
   settings: {

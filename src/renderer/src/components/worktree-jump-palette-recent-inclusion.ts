@@ -9,7 +9,7 @@ import type { OpenTabPaletteItem, OpenTabRecentRow } from './worktree-jump-palet
 import type { Worktree } from '../../../shared/worktree/types'
 
 function isCurrentOpenTabItem(item: OpenTabPaletteItem): boolean {
-  return item.type === 'browser-page' ? item.result.isCurrentPage : item.result.isCurrentTab
+  return item.result.isCurrentTab
 }
 
 export function shouldIncludeOpenTabInRecentSection({

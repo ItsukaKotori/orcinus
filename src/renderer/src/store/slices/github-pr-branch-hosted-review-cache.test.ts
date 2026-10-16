@@ -370,15 +370,15 @@ describe('createGitHubSlice.fetchPRForBranch', () => {
     const store = createTestStore()
     const repoPath = '/repo'
     const repoId = 'repo-1'
-    const branch = 'feature/gitlab-review'
+    const branch = 'feature/bitbucket-review'
     const cacheKey = `${repoId}::${branch}`
     const hostedReviewCacheKey = getHostedReviewCacheKey(repoPath, branch, null, repoId)
-    const gitlabReview: HostedReviewInfo = {
-      provider: 'gitlab',
+    const bitbucketReview: HostedReviewInfo = {
+      provider: 'bitbucket',
       number: 5,
-      title: 'GitLab MR',
+      title: 'Shared PR status',
       state: 'open',
-      url: 'https://gitlab.com/acme/orca/-/merge_requests/5',
+      url: 'https://bitbucket.org/acme/orca/pull-requests/5',
       status: 'pending',
       updatedAt: '2026-03-28T00:00:00Z',
       mergeable: 'UNKNOWN'
@@ -387,9 +387,9 @@ describe('createGitHubSlice.fetchPRForBranch', () => {
     store.setState({
       hostedReviewCache: {
         [hostedReviewCacheKey]: {
-          data: gitlabReview,
+          data: bitbucketReview,
           fetchedAt: 1,
-          linkedReviewHintKey: 'gitlab:5'
+          linkedReviewHintKey: 'bitbucket:5'
         }
       }
     } as unknown as Partial<AppState>)
@@ -407,9 +407,9 @@ describe('createGitHubSlice.fetchPRForBranch', () => {
 
     expect(store.getState().prCache[cacheKey]).toBeUndefined()
     expect(store.getState().hostedReviewCache[hostedReviewCacheKey]).toEqual({
-      data: gitlabReview,
+      data: bitbucketReview,
       fetchedAt: 1,
-      linkedReviewHintKey: 'gitlab:5'
+      linkedReviewHintKey: 'bitbucket:5'
     })
   })
 
@@ -556,15 +556,15 @@ describe('createGitHubSlice.fetchPRForBranch', () => {
     const store = createTestStore()
     const repoPath = '/repo'
     const repoId = 'repo-1'
-    const branch = 'feature/github-null-then-gitlab'
+    const branch = 'feature/github-null-then-bitbucket'
     const cacheKey = `${repoId}::${branch}`
     const hostedReviewCacheKey = getHostedReviewCacheKey(repoPath, branch, null, repoId)
-    const gitlabReview: HostedReviewInfo = {
-      provider: 'gitlab',
+    const bitbucketReview: HostedReviewInfo = {
+      provider: 'bitbucket',
       number: 5,
-      title: 'GitLab MR',
+      title: 'Shared PR status',
       state: 'open',
-      url: 'https://gitlab.com/acme/orca/-/merge_requests/5',
+      url: 'https://bitbucket.org/acme/orca/pull-requests/5',
       status: 'success',
       updatedAt: '2026-03-28T00:00:00Z',
       mergeable: 'MERGEABLE'
@@ -586,11 +586,11 @@ describe('createGitHubSlice.fetchPRForBranch', () => {
       reason: 'visible',
       outcome: { kind: 'no-pr', fetchedAt: 2 }
     })
-    mockApi.hostedReview.forBranch.mockResolvedValueOnce(gitlabReview)
+    mockApi.hostedReview.forBranch.mockResolvedValueOnce(bitbucketReview)
 
     await expect(
       store.getState().fetchHostedReviewForBranch(repoPath, branch, { repoId })
-    ).resolves.toEqual(gitlabReview)
+    ).resolves.toEqual(bitbucketReview)
     expect(mockApi.hostedReview.forBranch).toHaveBeenCalledTimes(1)
     expect(mockApi.hostedReview.forBranch).toHaveBeenCalledWith({
       branch,
@@ -604,7 +604,7 @@ describe('createGitHubSlice.fetchPRForBranch', () => {
       repoPath
     })
     expect(store.getState().hostedReviewCache[hostedReviewCacheKey]).toEqual({
-      data: gitlabReview,
+      data: bitbucketReview,
       fetchedAt: expect.any(Number),
       linkedReviewHintKey: ''
     })
@@ -614,15 +614,15 @@ describe('createGitHubSlice.fetchPRForBranch', () => {
     const store = createTestStore()
     const repoPath = '/repo'
     const repoId = 'repo-1'
-    const branch = 'feature/github-hit-then-gitlab'
+    const branch = 'feature/github-hit-then-bitbucket'
     const cacheKey = `${repoId}::${branch}`
     const hostedReviewCacheKey = getHostedReviewCacheKey(repoPath, branch, null, repoId)
-    const gitlabReview: HostedReviewInfo = {
-      provider: 'gitlab',
+    const bitbucketReview: HostedReviewInfo = {
+      provider: 'bitbucket',
       number: 5,
-      title: 'GitLab MR',
+      title: 'Shared PR status',
       state: 'open',
-      url: 'https://gitlab.com/acme/orca/-/merge_requests/5',
+      url: 'https://bitbucket.org/acme/orca/pull-requests/5',
       status: 'success',
       updatedAt: '2026-03-28T00:00:00Z',
       mergeable: 'MERGEABLE'
@@ -638,14 +638,14 @@ describe('createGitHubSlice.fetchPRForBranch', () => {
         fetchedAt: 2
       }
     })
-    mockApi.hostedReview.forBranch.mockResolvedValueOnce(gitlabReview)
+    mockApi.hostedReview.forBranch.mockResolvedValueOnce(bitbucketReview)
 
     await expect(
       store.getState().fetchHostedReviewForBranch(repoPath, branch, { repoId })
-    ).resolves.toEqual(gitlabReview)
+    ).resolves.toEqual(bitbucketReview)
     expect(mockApi.hostedReview.forBranch).toHaveBeenCalledTimes(1)
     expect(store.getState().hostedReviewCache[hostedReviewCacheKey]).toEqual({
-      data: gitlabReview,
+      data: bitbucketReview,
       fetchedAt: expect.any(Number),
       linkedReviewHintKey: ''
     })
@@ -695,15 +695,15 @@ describe('createGitHubSlice.fetchPRForBranch', () => {
     const store = createTestStore()
     const repoPath = '/repo'
     const repoId = 'repo-1'
-    const branch = 'feature/gitlab'
+    const branch = 'feature/bitbucket'
     const cacheKey = `${repoId}::${branch}`
     const hostedReviewCacheKey = getHostedReviewCacheKey(repoPath, branch, null, repoId)
-    const gitlabReview = {
-      provider: 'gitlab' as const,
+    const bitbucketReview = {
+      provider: 'bitbucket' as const,
       number: 5,
-      title: 'GitLab MR',
+      title: 'Shared PR status',
       state: 'open' as const,
-      url: 'https://gitlab.com/acme/orca/-/merge_requests/5',
+      url: 'https://bitbucket.org/acme/orca/pull-requests/5',
       status: 'success' as const,
       updatedAt: '2026-03-28T00:00:00Z',
       mergeable: 'MERGEABLE' as const
@@ -712,9 +712,9 @@ describe('createGitHubSlice.fetchPRForBranch', () => {
     store.setState({
       hostedReviewCache: {
         [hostedReviewCacheKey]: {
-          data: gitlabReview,
+          data: bitbucketReview,
           fetchedAt: 1,
-          linkedReviewHintKey: 'gitlab:5'
+          linkedReviewHintKey: 'bitbucket:5'
         }
       }
     } as unknown as Partial<AppState>)
@@ -728,9 +728,9 @@ describe('createGitHubSlice.fetchPRForBranch', () => {
 
     expect(store.getState().prCache[cacheKey]).toBeUndefined()
     expect(store.getState().hostedReviewCache[hostedReviewCacheKey]).toEqual({
-      data: gitlabReview,
+      data: bitbucketReview,
       fetchedAt: 1,
-      linkedReviewHintKey: 'gitlab:5'
+      linkedReviewHintKey: 'bitbucket:5'
     })
   })
 })

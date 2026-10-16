@@ -35,8 +35,6 @@ function recordStatusBarToggleInteraction(
 ): void {
   if (id === 'resource-usage') {
     recordFeatureInteraction('resource-manager')
-  } else if (id === 'ports') {
-    recordFeatureInteraction('ports')
   }
 }
 

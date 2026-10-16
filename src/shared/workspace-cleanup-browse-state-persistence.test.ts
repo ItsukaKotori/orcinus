@@ -28,7 +28,7 @@ describe('workspace cleanup browse state persistence', () => {
     state.filters.review = {
       presence: 'some',
       states: ['merged'],
-      providers: ['gitlab']
+      providers: ['bitbucket']
     }
     state.sort = { field: 'size', direction: 'desc' }
 

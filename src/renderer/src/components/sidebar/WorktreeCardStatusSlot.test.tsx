@@ -33,7 +33,7 @@ describe('WorktreeCardStatusSlot', () => {
     status: 'failure'
   }
   const gitlabReview: WorktreeCardPrDisplay = {
-    provider: 'gitlab',
+    provider: 'bitbucket',
     number: 456,
     title: 'Review me',
     state: 'open',
@@ -233,7 +233,7 @@ describe('WorktreeCardStatusSlot', () => {
       />
     )
 
-    expect(markup).toContain('MR checks: Pending')
+    expect(markup).toContain('PR checks: Pending')
     expect(markup).toContain('viewBox="0 0 16 16"')
     expect(markup).toContain('size-[13px] translate-x-px')
     expect(markup).toContain('text-amber-500/85')

@@ -9,7 +9,6 @@ import { useAppStore } from '@/store'
 import { parseCmdJTaskSourceUrl } from '@/lib/worktree-palette-task-url-match'
 import { getWorktreePaletteCreateActionState } from '@/lib/worktree-palette-create-action'
 import type { CmdJActiveGroupSnapshot } from '@/components/cmd-j/quick-action-context'
-import type { WorkspaceVisibleTabType } from '../../../shared/tab-types'
 import type { PaletteItem } from './worktree-jump-palette-model'
 
 export function useWorktreeJumpPaletteLocalState({
@@ -51,9 +50,6 @@ export function useWorktreeJumpPaletteLocalState({
   )
   const [dialogElement, setDialogElement] = useState<HTMLElement | null>(null)
   const previousWorktreeIdRef = useRef<string | null>(null)
-  const previousActiveTabTypeRef = useRef<WorkspaceVisibleTabType>('terminal')
-  const previousBrowserPageIdRef = useRef<string | null>(null)
-  const previousBrowserFocusTargetRef = useRef<'webview' | 'address-bar'>('webview')
   const previousFocusElementRef = useRef<HTMLElement | null>(null)
   const activeGroupSnapshotRef = useRef<CmdJActiveGroupSnapshot | null>(null)
   const wasVisibleRef = useRef(false)
@@ -97,9 +93,6 @@ export function useWorktreeJumpPaletteLocalState({
     dialogElement,
     setDialogElement,
     previousWorktreeIdRef,
-    previousActiveTabTypeRef,
-    previousBrowserPageIdRef,
-    previousBrowserFocusTargetRef,
     previousFocusElementRef,
     activeGroupSnapshotRef,
     wasVisibleRef,

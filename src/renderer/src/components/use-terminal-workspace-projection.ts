@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { setForegroundTerminalTabIds } from '@/lib/foreground-terminal-tabs'
-import { useClientHostedBrowserRows } from '@/lib/pane-manager/client-hosted-browser-row-state'
 import { useTerminalProviderSnapshotCapability } from './terminal/use-terminal-provider-snapshot-capability'
 import { getEffectiveLayoutForWorktree as getEffectiveLayout } from './terminal/split-group-mount'
 import type { TerminalWorkspaceStoreController } from './use-terminal-workspace-store-bindings'
@@ -14,7 +13,6 @@ export function useTerminalWorkspaceProjection(controller: TerminalWorkspaceStor
     activeView,
     activeWorktreeId,
     activityTerminalPortals,
-    browserTabsByWorktree,
     ensureWorktreeRootGroup,
     groupsByWorktree,
     hydrationSucceeded,
@@ -60,12 +58,6 @@ export function useTerminalWorkspaceProjection(controller: TerminalWorkspaceStor
   }, [activeWorktreeId, ensureWorktreeRootGroup])
 
   const worktreeFiles = useWorktreeFiles(openFiles, renderedActiveWorktreeId)
-  const worktreeBrowserTabs = renderedActiveWorktreeId
-    ? (browserTabsByWorktree[renderedActiveWorktreeId] ?? [])
-    : []
-  // Why: this strip only renders before the worktree has a layout, which is exactly when a paired
-  // client can have opened a page the host never has. Without a row here it stays uncloseable.
-  const worktreeClientHostedBrowserRows = useClientHostedBrowserRows(renderedActiveWorktreeId ?? '')
   const getEffectiveLayoutForWorktree = useCallback(
     (worktreeId: string) =>
       getEffectiveLayout(worktreeId, layoutByWorktree, groupsByWorktree, activeGroupIdByWorktree),
@@ -74,19 +66,13 @@ export function useTerminalWorkspaceProjection(controller: TerminalWorkspaceStor
   const effectiveActiveLayout = renderedActiveWorktreeId
     ? getEffectiveLayoutForWorktree(renderedActiveWorktreeId)
     : undefined
-  const activeWorktreeBrowserTabIdsKey = renderedActiveWorktreeId
-    ? (browserTabsByWorktree[renderedActiveWorktreeId] ?? []).map((tab) => tab.id).join(',')
-    : ''
   return {
     foregroundTerminalTabIds,
     tabs,
     titlebarTabsTarget,
     worktreeFiles,
-    worktreeBrowserTabs,
-    worktreeClientHostedBrowserRows,
     getEffectiveLayoutForWorktree,
     effectiveActiveLayout,
-    activeWorktreeBrowserTabIdsKey,
     terminalProviderSnapshotCapabilityRevision
   }
 }

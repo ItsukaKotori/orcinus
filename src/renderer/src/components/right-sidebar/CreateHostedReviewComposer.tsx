@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   ChevronDown,
-  GitMerge,
   GitPullRequestArrow,
   RefreshCw,
   Sparkles,
@@ -121,7 +120,7 @@ export function CreateHostedReviewComposer({
   // Providers without draft reviews must not carry a stale draft flag into submit.
   const supportsDraft = hostedReviewProviderSupportsDraft(provider)
   const effectiveDraft = supportsDraft && draft
-  const ReviewIcon = provider === 'gitlab' ? GitMerge : GitPullRequestArrow
+  const ReviewIcon = GitPullRequestArrow
   const stackedModeAvailable = provider === 'github' && stackedCreationSupported
   const normalizedBase = stripBaseRef(base)
   const stackSelectionKey = stackParentReview

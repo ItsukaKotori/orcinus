@@ -7,7 +7,6 @@ import {
   shouldShowChecksPanelPublishBranchAction
 } from '../checks-panel-empty-state'
 import { openChecksPanelHostedReviewUrl } from '../checks-panel-hosted-review-click-routing'
-import { isMacPlatform } from '../../terminal-pane/terminal-link-open-hints'
 import { translate } from '@/i18n/i18n'
 import { isGitHubPRSuppressed } from '../../../../../shared/worktree/github-pr-suppression'
 import type { ChecksPanelEmptyContentModel } from './empty-content-props'
@@ -63,7 +62,6 @@ export function ChecksPanelEmptyContent({
     isPublishingBranch,
     isRemoteOperationActive,
     isSyncingBranch,
-    linkedGitLabMR,
     linkedPR,
     linkedReviewNumber,
     panelContextKey,
@@ -165,10 +163,8 @@ export function ChecksPanelEmptyContent({
           : conflictOperation === 'cherry-pick'
             ? 'Cherry-pick'
             : null
-    const emptyReviewIsGitLab =
-      linkedGitLabMR !== null || hostedReviewCreation?.provider === 'gitlab'
-    const emptyReviewLabel = emptyReviewIsGitLab ? 'merge request' : 'pull request'
-    const emptyReviewShortLabel = emptyReviewIsGitLab ? 'MR' : 'PR'
+    const emptyReviewLabel = 'pull request'
+    const emptyReviewShortLabel = 'PR'
     const canPushCreate = hostedReviewCreation?.blockedReason === 'needs_push'
     const shouldPushBeforeCreateReview = createPrPushFirst || canPushCreate
     const canPublishBranch =
@@ -343,12 +339,9 @@ export function ChecksPanelEmptyContent({
                 size="xs"
                 variant="outline"
                 disabled={isRemoteOperationActive}
-                onClick={(event) =>
+                onClick={() =>
                   openChecksPanelHostedReviewUrl({
-                    url: reviewState.openReviewUrl as string,
-                    event,
-                    isMac: isMacPlatform(),
-                    worktreeId: activeWorktreeId
+                    url: reviewState.openReviewUrl as string
                   })
                 }
               >

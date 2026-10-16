@@ -1,5 +1,5 @@
 // Phase 0 mock; replaced by Tauri IPC per view.
-import type { StarNagApi } from '../../preload/api/onboarding-api'
+import type { StarNagApi } from '../../shared/preload-api/api/onboarding-api'
 
 export function createStarNagApi(): StarNagApi {
   // StarNagToastHost is always mounted and subscribes at boot; all user-triggered methods

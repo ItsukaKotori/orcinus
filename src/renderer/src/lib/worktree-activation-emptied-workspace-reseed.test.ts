@@ -155,62 +155,6 @@ describe('activating a workspace whose last terminal was closed', () => {
     expect(tabId).toBeNull()
     expect(useAppStore.getState().tabsByWorktree[worktree.id]).toEqual([])
   })
-
-  // Why: this passes ahead of the tombstone check — a renderable browser tab short-circuits
-  // `shouldAutoCreateInitialTerminal` — so it guards `renderableTabCount`, not the re-seed flag.
-  it('does not add a terminal to a workspace that still renders a browser tab', () => {
-    const worktree = makeWorktree()
-    seedEmptyActivatableWorktree(worktree)
-    seedClosedLastTerminal(worktree.id)
-    useAppStore.setState({
-      browserTabsByWorktree: {
-        [worktree.id]: [
-          {
-            id: 'browser-1',
-            worktreeId: worktree.id,
-            url: 'https://example.com',
-            title: 'example',
-            sortOrder: 0,
-            createdAt: 1
-          }
-        ]
-      },
-      unifiedTabsByWorktree: {
-        [worktree.id]: [
-          {
-            id: 'browser-1',
-            entityId: 'browser-1',
-            groupId: 'group-1',
-            worktreeId: worktree.id,
-            contentType: 'browser',
-            label: 'example',
-            customLabel: null,
-            color: null,
-            sortOrder: 0,
-            createdAt: 1
-          }
-        ]
-      },
-      groupsByWorktree: {
-        [worktree.id]: [
-          {
-            id: 'group-1',
-            worktreeId: worktree.id,
-            activeTabId: 'browser-1',
-            tabOrder: ['browser-1']
-          }
-        ]
-      },
-      activeGroupIdByWorktree: { [worktree.id]: 'group-1' }
-    } as unknown as Partial<ReturnType<typeof useAppStore.getState>>)
-    expect(
-      useAppStore.getState().reconcileWorktreeTabModel(worktree.id).renderableTabCount
-    ).toBeGreaterThan(0)
-
-    activateAndRevealWorktree(worktree.id, { notifyHostRuntime: false })
-
-    expect(useAppStore.getState().tabsByWorktree[worktree.id]).toEqual([])
-  })
 })
 
 const FOLDER_ID = 'folder-1'

@@ -55,7 +55,6 @@ export function useWorktreeJumpPaletteWorktrees({
   showSleepingWorkspaces,
   alwaysShowDefaultBranchWorkspace,
   ptyIdsByTabId,
-  browserTabsByWorktree,
   activeWorktreeId,
   activeWorkspaceExecutionHostId,
   runtimeEnvironments,
@@ -72,8 +71,7 @@ export function useWorktreeJumpPaletteWorktrees({
   prCache,
   hostedReviewCache,
   settings,
-  issueCache,
-  workspacePortScan
+  issueCache
 }: WorktreeJumpPaletteWorktreesInput) {
   const hasQuery = paletteSearchQuery.length > 0
   const isLoading = repos.length > 0 && Object.keys(worktreesByRepo).length === 0
@@ -124,13 +122,7 @@ export function useWorktreeJumpPaletteWorktrees({
         if (
           !showSleepingWorkspaces &&
           !isSleepingSweepExemptWorkspace(worktree, alwaysShowDefaultBranchWorkspace) &&
-          isInactiveWorkspace(
-            worktree.id,
-            tabsByWorktree,
-            ptyIdsByTabId,
-            browserTabsByWorktree,
-            worktreeIdsWithLiveAgent
-          )
+          isInactiveWorkspace(worktree.id, tabsByWorktree, ptyIdsByTabId, worktreeIdsWithLiveAgent)
         ) {
           return false
         }
@@ -139,7 +131,6 @@ export function useWorktreeJumpPaletteWorktrees({
     [
       allWorktrees,
       alwaysShowDefaultBranchWorkspace,
-      browserTabsByWorktree,
       filterPredicate,
       hideAutomationGeneratedWorkspaces,
       hideCliCreatedWorkspaces,
@@ -247,7 +238,6 @@ export function useWorktreeJumpPaletteWorktrees({
         hostFilterActive,
         prCache,
         issueCache,
-        workspacePortScan,
         checksReviewByWorktree
       }),
     [
@@ -258,8 +248,7 @@ export function useWorktreeJumpPaletteWorktrees({
       issueCache,
       prCache,
       repoByHostIdentity,
-      repoMap,
-      workspacePortScan
+      repoMap
     ]
   )
   const worktreeMatches = useMemo(

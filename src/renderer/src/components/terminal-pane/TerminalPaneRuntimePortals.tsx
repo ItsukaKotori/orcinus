@@ -1,6 +1,5 @@
 import { createPortal } from 'react-dom'
 import CodexRestartChip from '../CodexRestartChip'
-import { TerminalSshReconnectOverlay } from './TerminalSshReconnectOverlay'
 import { TerminalRemoteRuntimeReconnectBanner } from './TerminalRemoteRuntimeReconnectBanner'
 import { TerminalProcessExitOverlay } from './TerminalProcessExitOverlay'
 import { MobileDriverOverlay } from './MobileDriverOverlay'
@@ -77,43 +76,12 @@ export function TerminalPaneProcessExitPortals({
 }
 
 export function TerminalPaneSshReconnectPortals({
-  controller
+  controller: _controller
 }: {
   controller: TerminalPaneController
 }): React.JSX.Element | null {
-  const {
-    managedPanes,
-    showSshReconnectOverlay,
-    sshReconnectEnvironmentId,
-    sshReconnectError,
-    sshReconnectStatus,
-    sshReconnectTargetId,
-    sshReconnectTargetLabel,
-    sshReconnectTargetRemoved,
-    worktreeId
-  } = controller
-  if (!showSshReconnectOverlay || !sshReconnectTargetId || !sshReconnectStatus) {
-    return null
-  }
-  return (
-    <>
-      {managedPanes.map((pane) =>
-        createPortal(
-          <TerminalSshReconnectOverlay
-            targetId={sshReconnectTargetId}
-            targetLabel={sshReconnectTargetLabel}
-            status={sshReconnectStatus}
-            error={sshReconnectError}
-            targetRemoved={sshReconnectTargetRemoved}
-            worktreeId={worktreeId}
-            sshOwnerEnvironmentId={sshReconnectEnvironmentId}
-          />,
-          pane.container,
-          `ssh-reconnect-${pane.id}`
-        )
-      )}
-    </>
-  )
+  // Why: the SSH reconnect overlay retired with SSH support.
+  return null
 }
 
 export function TerminalPaneRecoveryPortals({

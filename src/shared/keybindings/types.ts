@@ -42,7 +42,6 @@ export type KeybindingActionId =
   | 'sidebar.search.toggle'
   | 'sidebar.sourceControl.toggle'
   | 'sidebar.checks.toggle'
-  | 'sidebar.ports.toggle'
   | 'sidebar.sleepingWorkspaces.toggle'
   | 'sidebar.focusWorktreeList'
   | 'floatingTerminal.toggle'
@@ -56,7 +55,6 @@ export type KeybindingActionId =
   | 'tab.newTerminal'
   | 'tab.newAgent'
   | AgentTabActionId
-  | 'tab.newBrowser'
   | 'tab.newMarkdown'
   | 'tab.openMarkdown'
   | 'tab.close'

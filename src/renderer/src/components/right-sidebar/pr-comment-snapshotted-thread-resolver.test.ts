@@ -58,30 +58,6 @@ describe('buildSnapshottedThreadResolver', () => {
     })
   })
 
-  it('resolves a GitLab discussion against the snapshotted MR iid', async () => {
-    const resolveGitLabDiscussion = vi.fn().mockResolvedValue({ ok: true })
-    const resolveReviewThread = vi.fn()
-    const resolve = buildSnapshottedThreadResolver(
-      deps({
-        provider: 'gitlab',
-        githubResolveTarget: undefined,
-        gitlabTarget: { repoPath: '/repos/widgets', repoId: 'repo-1', iid: 7 },
-        resolveGitLabDiscussion,
-        resolveReviewThread
-      })
-    )
-
-    expect(await resolve('D1')).toBe(true)
-    expect(resolveGitLabDiscussion).toHaveBeenCalledWith({
-      repoPath: '/repos/widgets',
-      repoId: 'repo-1',
-      iid: 7,
-      discussionId: 'D1',
-      resolved: true
-    })
-    expect(resolveReviewThread).not.toHaveBeenCalled()
-  })
-
   it('fails without calling a host when the provider cannot resolve threads', async () => {
     const resolveReviewThread = vi.fn()
     const resolveGitLabDiscussion = vi.fn()
@@ -104,31 +80,8 @@ describe('buildSnapshottedThreadResolver', () => {
 
   it('fails when the snapshotted target is missing', async () => {
     const resolveGithub = buildSnapshottedThreadResolver(deps({ githubResolveTarget: undefined }))
-    const resolveGitlab = buildSnapshottedThreadResolver(
-      deps({ provider: 'gitlab', githubResolveTarget: undefined, gitlabTarget: undefined })
-    )
 
     expect(await resolveGithub('T1')).toBe(false)
-    expect(await resolveGitlab('D1')).toBe(false)
-  })
-
-  it('surfaces the GitLab host error instead of swallowing it', async () => {
-    const onResolveFailed = vi.fn()
-    const onResolvedOptimistically = vi.fn()
-    const resolve = buildSnapshottedThreadResolver(
-      deps({
-        provider: 'gitlab',
-        githubResolveTarget: undefined,
-        gitlabTarget: { repoPath: '/repos/widgets', repoId: 'repo-1', iid: 7 },
-        resolveGitLabDiscussion: vi.fn().mockResolvedValue({ ok: false, error: 'timed out' }),
-        onResolveFailed,
-        onResolvedOptimistically
-      })
-    )
-
-    expect(await resolve('D1')).toBe(false)
-    expect(onResolveFailed).toHaveBeenCalledWith({ threadId: 'D1', error: 'timed out' })
-    expect(onResolvedOptimistically).not.toHaveBeenCalled()
   })
 
   // Why: one rejected host call must not abort the bulk ack pool.

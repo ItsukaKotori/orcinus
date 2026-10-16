@@ -1,5 +1,4 @@
 import { detectLanguage } from '@/lib/language-detect'
-import { canPreviewLanguage } from '@/lib/file-preview'
 import type { useAppStore } from '@/store'
 import type { MarkdownViewMode, OpenFile } from '@/store/slices/editor'
 import {
@@ -26,7 +25,6 @@ type EditorPanelRenderModelParams = {
   markdownViewMode: StoreState['markdownViewMode']
   markdownRichModeSizeOverridden: boolean
   isChangesMode: boolean
-  canOpenWorkspaceFileBrowser: boolean
 }
 
 export function getEditorPanelRenderModel({
@@ -37,8 +35,7 @@ export function getEditorPanelRenderModel({
   gitBranchEntries,
   markdownViewMode,
   markdownRichModeSizeOverridden,
-  isChangesMode,
-  canOpenWorkspaceFileBrowser
+  isChangesMode
 }: EditorPanelRenderModelParams) {
   const isSingleDiff =
     activeFile.mode === 'diff' &&
@@ -183,13 +180,9 @@ export function getEditorPanelRenderModel({
     isMermaid: viewerLanguage === 'mermaid',
     isCsv: viewerLanguage === 'csv' || viewerLanguage === 'tsv',
     isNotebook: viewerLanguage === 'notebook',
-    // Why: the preview renders the on-disk file, so diff surfaces only get it
-    // when the modified side still exists on disk (canOpen excludes deleted
-    // files and commit diffs whose content may not match the working tree).
-    canOpenPreviewToSide:
-      canOpenWorkspaceFileBrowser &&
-      canPreviewLanguage(viewerLanguage) &&
-      (activeFile.mode === 'edit' || (isSingleDiff && openFileState.canOpen)),
+    // Why always false: the in-app preview rendered through the embedded browser,
+    // which is gone; every file now opens as source.
+    canOpenPreviewToSide: false,
     mdViewMode,
     hasViewModeToggle,
     availableEditorToggleModes,

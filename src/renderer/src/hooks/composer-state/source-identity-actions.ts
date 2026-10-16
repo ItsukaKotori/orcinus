@@ -19,8 +19,6 @@ type SourceIdentityActionsInput = Pick<
   | 'setLinkDirectItem'
   | 'setLinkPopoverOpen'
   | 'setLinkQuery'
-  | 'setLinkedGitLabIssue'
-  | 'setLinkedGitLabMR'
   | 'setLinkedIssue'
   | 'setLinkedPR'
   | 'setLinkedTaskSourceContext'
@@ -33,11 +31,7 @@ type SourceIdentityActionsInput = Pick<
 >
 
 import { useCallback } from 'react'
-import type { GitLabWorkItem } from '../../../../shared/gitlab-types'
-import { getLinkedWorkItemSuggestedName, getLinkedWorkItemWorkspaceName } from '@/lib/new-workspace'
 import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
-import { shouldApplyWorkspaceSourceAutoName } from '../../../../shared/new-workspace/workspace-source'
-import { isLinearLinkedWorkItem } from '@/lib/linear-linked-work-item'
 import { resolveComposerManualBranchNameChange } from '../composer-branch-selection'
 
 export function useSourceIdentityActions(input: SourceIdentityActionsInput) {
@@ -59,8 +53,6 @@ export function useSourceIdentityActions(input: SourceIdentityActionsInput) {
     setLinkDirectItem,
     setLinkPopoverOpen,
     setLinkQuery,
-    setLinkedGitLabIssue,
-    setLinkedGitLabMR,
     setLinkedIssue,
     setLinkedPR,
     setLinkedTaskSourceContext,
@@ -71,72 +63,6 @@ export function useSourceIdentityActions(input: SourceIdentityActionsInput) {
     setReuseSelectedBranch,
     smartGitHubPrStartPointSelectionRef
   } = input
-
-  // Why: review routing prefers one provider identity — clear the opposite provider slots so stale hidden fields can't win later.
-  const applyLinkedGitLabWorkItem = useCallback(
-    (item: GitLabWorkItem): void => {
-      smartGitHubPrStartPointSelectionRef.current = null
-      if (item.type === 'issue') {
-        setLinkedGitLabIssue(item.number)
-        setLinkedGitLabMR(null)
-      } else {
-        setLinkedGitLabIssue(null)
-        setLinkedGitLabMR(item.number)
-      }
-      setLinkedIssue('')
-      setLinkedPR(null)
-      setLinkedTaskSourceContext(null)
-      setLinkedWorkItem({
-        type: item.type,
-        provider: 'gitlab',
-        number: item.number,
-        title: item.title,
-        url: item.url
-      })
-      // Why: GitLabWorkItem.branchName lines up structurally with GitHubWorkItem's; cast to reuse the naming heuristic without forking it.
-      const suggestedName = getLinkedWorkItemSuggestedName({
-        type: item.type === 'mr' ? 'pr' : 'issue',
-        number: item.number,
-        title: item.title,
-        branchName: item.branchName
-      } as unknown as GitHubWorkItem)
-      const titleName = getLinkedWorkItemWorkspaceName({
-        type: item.type,
-        provider: 'gitlab',
-        number: item.number,
-        title: item.title
-      })
-      const nextName = titleName?.seedName ?? suggestedName
-      if (
-        nextName &&
-        shouldApplyWorkspaceSourceAutoName({
-          currentName: name,
-          lastAutoName: lastAutoNameRef.current
-        })
-      ) {
-        setName(nextName)
-        lastAutoNameRef.current = nextName
-      }
-      setBranchNameOverride(undefined)
-      setBranchNameOverridePreservesNameEdits(false)
-      branchAutoNameRef.current = ''
-    },
-    [
-      name,
-      branchAutoNameRef,
-      lastAutoNameRef,
-      setBranchNameOverride,
-      setBranchNameOverridePreservesNameEdits,
-      setLinkedGitLabIssue,
-      setLinkedGitLabMR,
-      setLinkedIssue,
-      setLinkedPR,
-      setLinkedTaskSourceContext,
-      setLinkedWorkItem,
-      setName,
-      smartGitHubPrStartPointSelectionRef
-    ]
-  )
 
   const handleSelectLinkedItem = useCallback(
     (item: GitHubWorkItem): void => {
@@ -171,7 +97,6 @@ export function useSourceIdentityActions(input: SourceIdentityActionsInput) {
 
   const handleRemoveLinkedWorkItem = useCallback((): void => {
     smartGitHubPrStartPointSelectionRef.current = null
-    const removedLinearItem = isLinearLinkedWorkItem(linkedWorkItem)
     setLinkedWorkItem(null)
     setLinkedTaskSourceContext(null)
     setLinkedIssue('')
@@ -179,12 +104,6 @@ export function useSourceIdentityActions(input: SourceIdentityActionsInput) {
     setForkPushWarning(null)
     if (name === lastAutoNameRef.current) {
       lastAutoNameRef.current = ''
-    }
-    if (removedLinearItem) {
-      // Why: a Linear branch override belongs to its issue; unlinking must not leave it driving a later worktree create.
-      setBranchNameOverride(undefined)
-      setBranchNameOverridePreservesNameEdits(false)
-      branchAutoNameRef.current = ''
     }
   }, [
     linkedWorkItem,
@@ -261,7 +180,6 @@ export function useSourceIdentityActions(input: SourceIdentityActionsInput) {
   )
 
   return {
-    applyLinkedGitLabWorkItem,
     handleSelectLinkedItem,
     handleLinkPopoverChange,
     handleRemoveLinkedWorkItem,

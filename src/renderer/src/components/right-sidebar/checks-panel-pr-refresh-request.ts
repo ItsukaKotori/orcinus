@@ -39,9 +39,6 @@ export function resolveChecksPanelReviewEvidenceProvider(
   if (input.linkedGitHubPR !== null) {
     return 'github'
   }
-  if (input.linkedGitLabMR !== null) {
-    return 'gitlab'
-  }
   if (input.linkedBitbucketPR !== null) {
     return 'bitbucket'
   }

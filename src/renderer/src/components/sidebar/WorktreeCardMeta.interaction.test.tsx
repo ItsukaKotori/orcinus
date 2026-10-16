@@ -126,8 +126,7 @@ describe('WorktreeCardDetailsHover interactions', () => {
       root.render(
         <WorktreeCardDetailsHover
           issue={null}
-          linearIssue={null}
-          review={reviewFixture}
+            review={reviewFixture}
           comment={null}
           onEditIssue={vi.fn()}
           onEditComment={vi.fn()}
@@ -149,8 +148,7 @@ describe('WorktreeCardDetailsHover interactions', () => {
       root.render(
         <WorktreeCardDetailsHover
           issue={null}
-          linearIssue={null}
-          review={null}
+            review={null}
           comment={null}
           workspaceTitle="Editable hover title"
           onRenameWorkspaceTitle={onRenameWorkspaceTitle}
@@ -292,7 +290,7 @@ describe('WorktreeCardDetailsHover interactions', () => {
     ).toBe('false')
   })
 
-  it('opens the review URL in Orca browser and leaves existing actions independent', () => {
+  it('opens the review URL in the system browser and leaves existing actions independent', () => {
     const onOpenReviewInBrowser = vi.fn()
     const onUnlinkReview = renderHover(vi.fn(), onOpenReviewInBrowser)
 
@@ -302,7 +300,7 @@ describe('WorktreeCardDetailsHover interactions', () => {
     })
 
     const browserButton = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Open in Orca browser')
+      button.textContent?.includes('Open in browser')
     )
 
     act(() => {
@@ -324,7 +322,7 @@ describe('WorktreeCardDetailsHover interactions', () => {
       interactionMocks.onReviewMenuOpenChange?.(true)
     })
     const browserButton = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Open in Orca browser')
+      button.textContent?.includes('Open in browser')
     )
 
     act(() => {
@@ -372,8 +370,7 @@ describe('WorktreeCardDetailsHover interactions', () => {
             url: 'https://github.com/acme/orca/issues/5518',
             labels: []
           }}
-          linearIssue={null}
-          review={null}
+            review={null}
           comment={null}
           onOpenIssueInBrowser={onOpenIssueInBrowser}
         >
@@ -387,7 +384,7 @@ describe('WorktreeCardDetailsHover interactions', () => {
       interactionMocks.onReviewMenuOpenChange?.(true)
     })
     const browserButton = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Open in Orca browser')
+      button.textContent?.includes('Open in browser')
     )
 
     act(() => {

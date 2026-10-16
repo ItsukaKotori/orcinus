@@ -28,10 +28,7 @@ export function useTaskPageSearchActions(model: TaskPageGitHubQuietRefreshModel)
     setTaskRefreshNonce,
     dialogWorkItem,
     newIssueOpen,
-    newLinearProjectOpen,
-    newLinearIssueOpen,
-    activeGithubTaskKind,
-    newJiraIssueOpen
+    activeGithubTaskKind
   } = model
   const applyPRFilterChange = useCallback(
     (change: PRFilterChange): void => {
@@ -186,9 +183,6 @@ export function useTaskPageSearchActions(model: TaskPageGitHubQuietRefreshModel)
       githubMode !== 'items' ||
       dialogWorkItem ||
       newIssueOpen ||
-      newLinearProjectOpen ||
-      newLinearIssueOpen ||
-      newJiraIssueOpen ||
       activeModal !== 'none'
     ) {
       return
@@ -230,9 +224,6 @@ export function useTaskPageSearchActions(model: TaskPageGitHubQuietRefreshModel)
     dialogWorkItem,
     githubMode,
     newIssueOpen,
-    newLinearProjectOpen,
-    newLinearIssueOpen,
-    newJiraIssueOpen,
     taskSource,
     taskSearchInputRef
   ])

@@ -4,8 +4,6 @@ import type {
   WorkspaceSessionState
 } from '../../../shared/workspace-session-state-types'
 import { pruneLocalTerminalScrollbackBuffers } from '../../../shared/workspace-session-terminal-buffers'
-import { normalizeBrowserHistoryEntries } from '../../../shared/workspace-session-browser-history'
-import { normalizeWorkspaceDocHistoryEntries } from '../../../shared/workspace-doc-history'
 import type { AppState } from '../store'
 import type { OpenFile } from '../store/slices/editor'
 import { buildPersistedUnifiedTabSessionData } from './workspace-session-unified-tabs'
@@ -13,8 +11,6 @@ import { buildLastVisitedAtByWorktreeId } from './workspace-session-focus-recenc
 import { buildSleepingAgentSessionData } from './workspace-session-sleeping-agents'
 import { buildPersistedClosedTerminalTabTombstones } from './workspace-session-closed-tab-tombstones'
 import { buildActiveConnectionIdsAtShutdown } from './workspace-session-reconnect-targets'
-import { withoutStagedBrowserTabs } from './workspace-session-staged-browser-tabs'
-import { buildBrowserSessionData } from './workspace-session-browser-tabs'
 
 export { buildActiveConnectionIdsAtShutdown }
 
@@ -40,12 +36,6 @@ export type WorkspaceSessionSnapshot = Pick<
   | 'markdownFrontmatterVisible'
   | 'activeFileIdByWorktree'
   | 'activeTabTypeByWorktree'
-  | 'browserTabsByWorktree'
-  | 'browserPagesByWorkspace'
-  | 'activeBrowserTabIdByWorktree'
-  | 'browserUrlHistory'
-  | 'workspaceDocHistory'
-  | 'remoteBrowserPageHandlesByPageId'
   | 'unifiedTabsByWorktree'
   | 'groupsByWorktree'
   | 'layoutByWorktree'
@@ -60,7 +50,6 @@ export type WorkspaceSessionSnapshot = Pick<
 > & {
   activeWorkspaceExecutionHostId?: AppState['activeWorkspaceExecutionHostId']
   sleepingAgentSessionsByPaneKey?: AppState['sleepingAgentSessionsByPaneKey']
-  clientHostedBrowserCloseIntentsByEnvironment?: AppState['clientHostedBrowserCloseIntentsByEnvironment']
   /** Optional so the many partial snapshot fixtures keep type-checking; see buildTerminalSessionData. */
   pendingReconnectPtyIdByTabId?: AppState['pendingReconnectPtyIdByTabId']
   deferredSshSessionIdsByTabId?: AppState['deferredSshSessionIdsByTabId']
@@ -82,12 +71,6 @@ export const SESSION_RELEVANT_FIELDS = [
   'markdownFrontmatterVisible',
   'activeFileIdByWorktree',
   'activeTabTypeByWorktree',
-  'browserTabsByWorktree',
-  'browserPagesByWorkspace',
-  'activeBrowserTabIdByWorktree',
-  'browserUrlHistory',
-  'workspaceDocHistory',
-  'remoteBrowserPageHandlesByPageId',
   'unifiedTabsByWorktree',
   'groupsByWorktree',
   'layoutByWorktree',
@@ -100,7 +83,6 @@ export const SESSION_RELEVANT_FIELDS = [
   'defaultTerminalTabsAppliedByWorktreeId',
   'closedTerminalTabTombstonesByTabId',
   'sleepingAgentSessionsByPaneKey',
-  'clientHostedBrowserCloseIntentsByEnvironment',
   'pendingReconnectPtyIdByTabId',
   'deferredSshSessionIdsByTabId'
 ] as const satisfies readonly (keyof WorkspaceSessionSnapshot)[]
@@ -283,7 +265,7 @@ export function buildTerminalSessionData(
 export function buildWorkspaceSessionPayload(
   fullSnapshot: WorkspaceSessionSnapshot
 ): WorkspaceSessionState {
-  const snapshot = withoutStagedBrowserTabs(fullSnapshot)
+  const snapshot = fullSnapshot
   const terminalSessionData = buildTerminalSessionData(snapshot)
 
   const payload = {
@@ -304,15 +286,6 @@ export function buildWorkspaceSessionPayload(
       snapshot.activeFileIdByWorktree,
       snapshot.activeTabTypeByWorktree
     ),
-    ...buildBrowserSessionData(
-      snapshot.browserTabsByWorktree,
-      snapshot.browserPagesByWorkspace,
-      snapshot.activeBrowserTabIdByWorktree,
-      snapshot.remoteBrowserPageHandlesByPageId
-    ),
-    // Why: enforce the history storage cap here so stale renderer state can't make every write stringify an oversized legacy array.
-    browserUrlHistory: normalizeBrowserHistoryEntries(snapshot.browserUrlHistory),
-    workspaceDocHistory: normalizeWorkspaceDocHistoryEntries(snapshot.workspaceDocHistory ?? []),
     // Why: persist only layouts backed by real tabs so a reload can't restore a blank split pane from the split-before-tab midpoint.
     ...buildPersistedUnifiedTabSessionData(snapshot),
     activeConnectionIdsAtShutdown: buildActiveConnectionIdsAtShutdown(
@@ -330,11 +303,7 @@ export function buildWorkspaceSessionPayload(
     closedTerminalTabTombstonesByTabId: buildPersistedClosedTerminalTabTombstones(
       snapshot.closedTerminalTabTombstonesByTabId
     ),
-    ...buildSleepingAgentSessionData(snapshot),
-    // Why unconditional rather than omit-when-empty: a full write replaces the persisted object,
-    // so an emptied map has to be written as empty or the last replay never sticks.
-    clientHostedBrowserCloseIntentsByEnvironment:
-      snapshot.clientHostedBrowserCloseIntentsByEnvironment
+    ...buildSleepingAgentSessionData(snapshot)
   }
 
   return pruneLocalTerminalScrollbackBuffers(payload, snapshot.repos)

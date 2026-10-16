@@ -151,7 +151,7 @@ describe('tab.rename shortcut', () => {
   it('does not claim the chord for a tab type that has no inline rename', () => {
     mocks.store = {
       ...storeForActiveTab(CHAT_UNIFIED_ID),
-      activeTabType: 'browser'
+      activeTabType: 'editor'
     } as AppState
     expect(runRename()).toBe(false)
     expect(mocks.requestTerminalTabRename).not.toHaveBeenCalled()

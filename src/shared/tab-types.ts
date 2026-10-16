@@ -24,14 +24,12 @@ export type TabContentType =
   | 'conflict-review'
   | 'check-details'
   | 'agent-session'
-  | 'browser'
   | 'plugin'
 
 export type WorkspaceVisibleTabType =
   | 'terminal'
   | 'editor'
   | 'agent-session'
-  | 'browser'
   | 'plugin'
 export type CtrlTabOrderMode = 'mru' | 'sequential'
 
@@ -40,7 +38,6 @@ export type CtrlTabOrderMode = 'mru' | 'sequential'
 export function toVisibleTabType(contentType: TabContentType): WorkspaceVisibleTabType {
   if (
     contentType === 'agent-session' ||
-    contentType === 'browser' ||
     contentType === 'terminal' ||
     contentType === 'plugin'
   ) {
@@ -65,7 +62,7 @@ export type PluginTabBinding = {
 
 export type Tab = {
   id: string // UUID for terminals, filePath for editors (preserves current convention)
-  entityId: string // ID of the backing content (terminal tab ID, file path, browser workspace ID)
+  entityId: string // ID of the backing content (terminal tab ID, file path)
   groupId: string
   worktreeId: string
   /** Owning execution host when the same worktree id is visible from multiple hosts. */

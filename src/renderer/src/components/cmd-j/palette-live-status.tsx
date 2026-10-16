@@ -32,7 +32,7 @@ import {
   type AgentStatusEntry
 } from '../../../../shared/agent-status-types'
 import { parsePaneKey } from '../../../../shared/stable-pane-id'
-import type { BrowserWorkspace } from '../../../../shared/browser-workspace-types'
+import type { ReadableAgentAttentionUnread } from '@/attention/agent-attention-contract'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
 import type { Worktree } from '../../../../shared/worktree/types'
 import { useNow } from '@/hooks/use-now'
@@ -44,9 +44,8 @@ type PaletteLiveStatus = {
   stalePaneIdsByTabId: Record<string, ReadonlySet<string>>
   paneSources: TabPaneInputSources
   tabsByWorktree: Record<string, TerminalTab[]>
-  browserTabsByWorktree: Record<string, BrowserWorkspace[]>
-  unreadTerminalTabs: Record<string, true>
-  unreadAgentCompletionPanes: Record<string, true>
+  unreadTerminalTabs: Record<string, ReadableAgentAttentionUnread>
+  unreadAgentCompletionPanes: Record<string, ReadableAgentAttentionUnread>
   /** Bumped with the maps so consumers re-resolve `now`-sensitive freshness on the same tick. */
   statusEpoch: number
   now: number
@@ -69,7 +68,6 @@ export function PaletteLiveStatusProvider({
     ptyIdsByTabId,
     terminalLayoutsByTabId,
     tabsByWorktree,
-    browserTabsByWorktree,
     migrationUnsupportedByPtyId,
     unreadTerminalTabs,
     unreadAgentCompletionPanes
@@ -82,7 +80,6 @@ export function PaletteLiveStatusProvider({
             ptyIdsByTabId: s.ptyIdsByTabId,
             terminalLayoutsByTabId: s.terminalLayoutsByTabId,
             tabsByWorktree: s.tabsByWorktree,
-            browserTabsByWorktree: s.browserTabsByWorktree,
             migrationUnsupportedByPtyId: s.migrationUnsupportedByPtyId,
             unreadTerminalTabs: s.unreadTerminalTabs,
             unreadAgentCompletionPanes: s.unreadAgentCompletionPanes
@@ -115,7 +112,6 @@ export function PaletteLiveStatusProvider({
         terminalLayoutsByTabId
       },
       tabsByWorktree,
-      browserTabsByWorktree,
       unreadTerminalTabs,
       unreadAgentCompletionPanes,
       statusEpoch,
@@ -123,7 +119,6 @@ export function PaletteLiveStatusProvider({
     }
   }, [
     agentStatusByPaneKey,
-    browserTabsByWorktree,
     migrationUnsupportedByPtyId,
     ptyIdsByTabId,
     runtimePaneTitlesByTabId,
@@ -183,7 +178,6 @@ const EMPTY_LIVE_INPUTS = Object.freeze({
   ptyIdsByTabId: {},
   terminalLayoutsByTabId: {},
   tabsByWorktree: {},
-  browserTabsByWorktree: {},
   migrationUnsupportedByPtyId: {},
   unreadTerminalTabs: {},
   unreadAgentCompletionPanes: {}
@@ -208,7 +202,6 @@ export function PaletteWorktreeStatusDot({
   }
   const status = getWorktreeStatus(
     live.tabsByWorktree[worktree.id] ?? [],
-    live.browserTabsByWorktree[worktree.id] ?? [],
     live.paneSources.ptyIdsByTabId,
     live.paneSources.runtimePaneTitlesByTabId,
     {

@@ -1,7 +1,6 @@
 import {
   ChevronDown,
   CircleDot,
-  GitMerge,
   GitPullRequestArrow,
   GitPullRequestClosed,
   LoaderCircle,
@@ -31,7 +30,6 @@ export function HostedReviewActionError({
 export function DraftReviewActions({
   shortLabel,
   reviewLabel,
-  isGitLab,
   readying,
   stateUpdating,
   actionError,
@@ -40,7 +38,6 @@ export function DraftReviewActions({
 }: {
   shortLabel: string
   reviewLabel: string
-  isGitLab: boolean
   readying: boolean
   stateUpdating: 'open' | 'closed' | null
   actionError: string | null
@@ -48,7 +45,7 @@ export function DraftReviewActions({
   onCloseReview: () => void
 }): React.JSX.Element {
   const disabled = readying || stateUpdating !== null
-  const ReadyIcon = isGitLab ? GitMerge : GitPullRequestArrow
+  const ReadyIcon = GitPullRequestArrow
   return (
     <div className="space-y-1.5">
       <div className={RIGHT_SIDEBAR_SPLIT_ACTION_ROW_CLASS}>

@@ -11,7 +11,6 @@ import type { Repo } from '../../../../shared/repo-types'
 import { resolveRepoHeaderColor } from './project-header-color'
 import { formatSparseDirectoryPreview, shouldBeginWorktreeRename } from './worktree-card-model'
 import type { WorktreeCardPresentation } from './worktree-card-presentation'
-import { WorktreeCardSshHostControl } from './WorktreeCardSshHostControl'
 import { WorktreeTitleInlineRename } from './WorktreeTitleInlineRename'
 import type { WorktreeCardController } from './use-worktree-card-controller'
 
@@ -59,10 +58,6 @@ export function WorktreeCardHeader({
     compactCards,
     newCardStyle,
     parsedRepoHost,
-    sshTargetLabel,
-    sshStatus,
-    sshTargetRemoved,
-    sshOwnerEnvironmentId,
     stopQuickActionPointerPropagation,
     isRuntimeDisconnected,
     runtimeHostLabel,
@@ -101,18 +96,6 @@ export function WorktreeCardHeader({
               iconClassName="size-3"
             />
           </RepoIdentityChip>
-        )}
-
-        {repo?.connectionId && (
-          <WorktreeCardSshHostControl
-            targetId={repo.connectionId}
-            targetLabel={sshTargetLabel || repo.displayName}
-            status={sshStatus}
-            targetRemoved={sshTargetRemoved}
-            sshOwnerEnvironmentId={sshOwnerEnvironmentId}
-            iconOnly={compactCards || newCardStyle}
-            onPointerDown={stopQuickActionPointerPropagation}
-          />
         )}
 
         {!repo?.connectionId && parsedRepoHost?.kind === 'runtime' && (

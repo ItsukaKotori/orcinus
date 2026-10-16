@@ -19,12 +19,6 @@ describe('SESSION_RELEVANT_FIELDS', () => {
     markdownFrontmatterVisible: true,
     activeFileIdByWorktree: true,
     activeTabTypeByWorktree: true,
-    browserTabsByWorktree: true,
-    browserPagesByWorkspace: true,
-    activeBrowserTabIdByWorktree: true,
-    browserUrlHistory: true,
-    workspaceDocHistory: true,
-    remoteBrowserPageHandlesByPageId: true,
     unifiedTabsByWorktree: true,
     groupsByWorktree: true,
     layoutByWorktree: true,
@@ -37,7 +31,6 @@ describe('SESSION_RELEVANT_FIELDS', () => {
     defaultTerminalTabsAppliedByWorktreeId: true,
     closedTerminalTabTombstonesByTabId: true,
     sleepingAgentSessionsByPaneKey: true,
-    clientHostedBrowserCloseIntentsByEnvironment: true,
     pendingReconnectPtyIdByTabId: true,
     deferredSshSessionIdsByTabId: true
   }

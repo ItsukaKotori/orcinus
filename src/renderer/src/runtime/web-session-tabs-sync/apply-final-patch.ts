@@ -26,7 +26,6 @@ export function buildWebSessionTabsFinalPatch(
     removedTerminalResourceIds,
     mirroredTerminalIds,
     nextOpenFiles,
-    nextBrowserTabsByWorktree,
     nextUnifiedTabsByWorktree,
     nextGroupsByWorktree,
     nextActiveGroupIdByWorktree,
@@ -39,14 +38,9 @@ export function buildWebSessionTabsFinalPatch(
     nextPendingStartupByTabId,
     automaticAgentResumeClaimsByTabId,
     nextAutomaticAgentResumeClaimsByTabId,
-    nextBrowserPagesByWorkspace,
-    nextRemoteBrowserPageHandlesByPageId,
-    nextBrowserCertificateFailuresByPageId,
     nextActiveTabIdByWorktree,
-    nextActiveBrowserTabIdByWorktree,
     nextActiveFileIdByWorktree,
     nextActiveTabId,
-    nextActiveBrowserTabId,
     nextActiveFileId,
     nextActiveTabType,
     nextActiveTabTypeByWorktree
@@ -83,9 +77,6 @@ export function buildWebSessionTabsFinalPatch(
     ...remirroredClosedTabLiftPatch,
     ...(nextOpenFiles !== state.openFiles ? { openFiles: nextOpenFiles } : {}),
     ...(nextTabsByWorktree !== state.tabsByWorktree ? { tabsByWorktree: nextTabsByWorktree } : {}),
-    ...(nextBrowserTabsByWorktree !== state.browserTabsByWorktree
-      ? { browserTabsByWorktree: nextBrowserTabsByWorktree }
-      : {}),
     ...(nextUnifiedTabsByWorktree !== state.unifiedTabsByWorktree
       ? { unifiedTabsByWorktree: nextUnifiedTabsByWorktree }
       : {}),
@@ -114,28 +105,13 @@ export function buildWebSessionTabsFinalPatch(
     ...(nextAutomaticAgentResumeClaimsByTabId !== automaticAgentResumeClaimsByTabId
       ? { automaticAgentResumeClaimsByTabId: nextAutomaticAgentResumeClaimsByTabId }
       : {}),
-    ...(nextBrowserPagesByWorkspace !== state.browserPagesByWorkspace
-      ? { browserPagesByWorkspace: nextBrowserPagesByWorkspace }
-      : {}),
-    ...(nextRemoteBrowserPageHandlesByPageId !== state.remoteBrowserPageHandlesByPageId
-      ? { remoteBrowserPageHandlesByPageId: nextRemoteBrowserPageHandlesByPageId }
-      : {}),
-    ...(nextBrowserCertificateFailuresByPageId !== state.browserCertificateFailuresByPageId
-      ? { browserCertificateFailuresByPageId: nextBrowserCertificateFailuresByPageId }
-      : {}),
     ...(nextActiveTabIdByWorktree !== state.activeTabIdByWorktree
       ? { activeTabIdByWorktree: nextActiveTabIdByWorktree }
-      : {}),
-    ...(nextActiveBrowserTabIdByWorktree !== state.activeBrowserTabIdByWorktree
-      ? { activeBrowserTabIdByWorktree: nextActiveBrowserTabIdByWorktree }
       : {}),
     ...(nextActiveFileIdByWorktree !== state.activeFileIdByWorktree
       ? { activeFileIdByWorktree: nextActiveFileIdByWorktree }
       : {}),
     ...(nextActiveTabId !== state.activeTabId ? { activeTabId: nextActiveTabId } : {}),
-    ...(nextActiveBrowserTabId !== state.activeBrowserTabId
-      ? { activeBrowserTabId: nextActiveBrowserTabId }
-      : {}),
     ...(nextActiveFileId !== state.activeFileId ? { activeFileId: nextActiveFileId } : {}),
     ...(nextActiveTabType !== state.activeTabType ? { activeTabType: nextActiveTabType } : {}),
     ...(nextActiveTabTypeByWorktree !== state.activeTabTypeByWorktree

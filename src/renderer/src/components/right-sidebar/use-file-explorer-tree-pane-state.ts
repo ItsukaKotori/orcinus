@@ -2,7 +2,6 @@ import type { Dispatch, RefObject, SetStateAction } from 'react'
 import { useMemo, useRef } from 'react'
 import { useAppStore } from '@/store'
 import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
-import { useWorkspaceFileBrowserActionPredicate } from '@/lib/file-preview'
 import type { RuntimeFileOperationArgs } from '@/runtime/runtime-file-client'
 import type { OpenFile } from '@/store/slices/editor'
 import type { Repo } from '../../../../shared/repo-types'
@@ -44,7 +43,6 @@ type UseFileExplorerTreePaneStateResult = {
   scrollRef: RefObject<HTMLDivElement | null>
   runtimeDownloadContext: RuntimeFileOperationArgs | null
   supportsFolderDownload: boolean
-  canOpenWorkspaceFileBrowserForPath: ReturnType<typeof useWorkspaceFileBrowserActionPredicate>
   statusByRelativePath: ReturnType<typeof buildStatusMap>
   folderStatusByRelativePath: ReturnType<typeof buildFolderStatusMap>
   deletion: ReturnType<typeof useFileDeletion>
@@ -105,8 +103,6 @@ export function useFileExplorerTreePaneState({
   } = selection
 
   const scrollRef = useRef<HTMLDivElement>(null)
-  const canOpenWorkspaceFileBrowserForPath =
-    useWorkspaceFileBrowserActionPredicate(activeWorktreeId)
   const supportsFolderDownload = useAppStore((s) => {
     const connectionId = activeRepo?.connectionId
     return connectionId
@@ -265,7 +261,6 @@ export function useFileExplorerTreePaneState({
     scrollRef,
     runtimeDownloadContext,
     supportsFolderDownload,
-    canOpenWorkspaceFileBrowserForPath,
     statusByRelativePath,
     folderStatusByRelativePath,
     deletion,

@@ -54,10 +54,9 @@ function renderDraft(provider: HostedReviewActionInfo['provider']): string {
 }
 
 describe('HostedReviewActions draft state', () => {
-  it.each([
-    ['github', 'PR'],
-    ['gitlab', 'MR']
-  ] as const)('renders Ready as primary and Close as secondary for %s', (provider, shortLabel) => {
+  it.each([['github', 'PR']] as const)(
+    'renders Ready as primary and Close as secondary for %s',
+    (provider, shortLabel) => {
     const markup = renderDraft(provider)
 
     expect(markup).toContain('Mark ready for review')

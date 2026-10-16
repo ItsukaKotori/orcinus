@@ -75,8 +75,6 @@ function useSelectedSourceReset(
     setBranchNameOverridePreservesNameEdits: vi.fn(),
     setCompareBaseRef: vi.fn(),
     setForkPushWarning: vi.fn(),
-    setLinkedGitLabIssue: vi.fn(),
-    setLinkedGitLabMR: vi.fn(),
     setLinkedIssue: vi.fn(),
     setLinkedPR: vi.fn(),
     setLinkedTaskSourceContext: vi.fn(),

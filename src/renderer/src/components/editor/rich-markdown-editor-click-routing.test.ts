@@ -52,12 +52,9 @@ function clickExternalLinkWithShift(sourceOwner: HttpLinkSourceOwner, isMac = tr
 }
 
 describe('rich markdown editor Shift+modifier click on external links', () => {
-  // Why: intentionally NOT the preview's behavior — this path hands the link to the
-  // client OS, so it must keep forcing the system browser even when inverting is on.
-  it('forces the system browser rather than following the invert setting', () => {
+  it('opens external links through openHttpLink with the path source owner', () => {
     expect(clickExternalLinkWithShift({ kind: 'local' })).toBe(true)
     expect(openHttpLinkMock).toHaveBeenCalledWith('https://example.com/docs', {
-      forceSystemBrowser: true,
       sourceOwner: { kind: 'local' }
     })
   })
@@ -67,7 +64,6 @@ describe('rich markdown editor Shift+modifier click on external links', () => {
   it('uses the Ctrl chord off macOS', () => {
     expect(clickExternalLinkWithShift({ kind: 'local' }, false)).toBe(true)
     expect(openHttpLinkMock).toHaveBeenCalledWith('https://example.com/docs', {
-      forceSystemBrowser: true,
       sourceOwner: { kind: 'local' }
     })
   })
@@ -76,9 +72,6 @@ describe('rich markdown editor Shift+modifier click on external links', () => {
     const sourceOwner = { kind: 'ssh', connectionId: 'conn-1' } as HttpLinkSourceOwner
 
     expect(clickExternalLinkWithShift(sourceOwner)).toBe(true)
-    expect(openHttpLinkMock).toHaveBeenCalledWith(
-      'https://example.com/docs',
-      expect.objectContaining({ forceSystemBrowser: true, sourceOwner })
-    )
+    expect(openHttpLinkMock).toHaveBeenCalledWith('https://example.com/docs', { sourceOwner })
   })
 })

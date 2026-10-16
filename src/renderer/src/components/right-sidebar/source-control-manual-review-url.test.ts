@@ -9,11 +9,11 @@ describe('resolveSourceControlManualReviewProvider', () => {
   it('prefers hosted review and creation providers over linked review hints', () => {
     expect(
       resolveSourceControlManualReviewProvider({
-        hostedReviewProvider: 'gitlab',
+        hostedReviewProvider: 'bitbucket',
         hostedReviewCreationProvider: 'github',
         linkedGitLabMR: 12
       })
-    ).toBe('gitlab')
+    ).toBe('bitbucket')
     expect(
       resolveSourceControlManualReviewProvider({
         hostedReviewCreationProvider: 'bitbucket',
@@ -23,11 +23,6 @@ describe('resolveSourceControlManualReviewProvider', () => {
   })
 
   it('falls back through linked review metadata when no hosted provider is known', () => {
-    expect(
-      resolveSourceControlManualReviewProvider({
-        linkedGitLabMR: 12
-      })
-    ).toBe('gitlab')
     expect(
       resolveSourceControlManualReviewProvider({
         linkedBitbucketPR: 3
@@ -119,41 +114,6 @@ describe('buildSourceControlManualReviewUrl', () => {
       })
     ).toBe(
       'https://github.com/stablyai/orca/compare/main...slashdevcorpse/identifying-pwsh.exe-error?expand=1'
-    )
-  })
-
-  it('builds a GitLab merge request URL for a self-hosted GitLab remote', () => {
-    expect(
-      buildSourceControlManualReviewUrl({
-        baseRef: 'refs/remotes/origin/release/next',
-        branchName: 'feature/gitlab',
-        repoRemoteName: 'origin',
-        repoRemoteUrl: 'git@gitlab.company.test:group/sub/orca.git',
-        provider: 'gitlab',
-        upstreamName: 'origin/feature/gitlab'
-      })
-    ).toBe(
-      'https://gitlab.company.test/group/sub/orca/-/merge_requests/new?merge_request%5Bsource_branch%5D=feature%2Fgitlab&merge_request%5Btarget_branch%5D=release%2Fnext'
-    )
-  })
-
-  it('opens the GitLab New-MR page on the fork project when the branch was pushed to a fork', () => {
-    expect(
-      buildSourceControlManualReviewUrl({
-        baseRef: 'refs/remotes/upstream/main',
-        branchName: 'feature/fork-head',
-        repoRemoteName: 'upstream',
-        repoRemoteUrl: 'git@gitlab.company.test:group/sub/orca.git',
-        provider: 'gitlab',
-        pushTarget: {
-          remoteName: 'fork',
-          branchName: 'feature/fork-head',
-          remoteUrl: 'git@gitlab.company.test:contributor/orca.git'
-        }
-      })
-      // On the fork project — not group/sub/orca, where source_branch would 404.
-    ).toBe(
-      'https://gitlab.company.test/contributor/orca/-/merge_requests/new?merge_request%5Bsource_branch%5D=feature%2Ffork-head&merge_request%5Btarget_branch%5D=main'
     )
   })
 

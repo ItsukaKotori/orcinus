@@ -1,10 +1,7 @@
-// Builds one worktree's tabs and browser pages into the shapes the two Cmd+J
-// engines search.
+// Builds one worktree's tabs into the shape the Cmd+J engine searches.
 
 import type { Repo } from '../../../../shared/repo-types'
 import type { Worktree } from '../../../../shared/worktree/types'
-import { buildSearchableBrowserPages } from '@/lib/browser-palette-page-entries'
-import type { SearchableBrowserPage } from '@/lib/browser-palette-search'
 import {
   buildSearchableWorkspaceTabs,
   type SearchableWorkspaceTab
@@ -19,12 +16,10 @@ import { getPaletteOwnershipWorktreeIds } from '@/lib/unified-tab-host-ownership
 
 export type OpenTabSearchEntries = {
   workspaceTabs: readonly SearchableWorkspaceTab[]
-  browserPages: readonly SearchableBrowserPage[]
 }
 
 export type OpenTabSearchEntryState = Pick<
   AppState,
-  | 'activeBrowserTabId'
   | 'activeFileId'
   | 'activeFileIdByWorktree'
   | 'activeGroupIdByWorktree'
@@ -33,8 +28,6 @@ export type OpenTabSearchEntryState = Pick<
   | 'activeTabType'
   | 'activeTabTypeByWorktree'
   | 'activeWorktreeId'
-  | 'browserPagesByWorkspace'
-  | 'browserTabsByWorktree'
   | 'folderWorkspaces'
   | 'groupsByWorktree'
   | 'openFiles'
@@ -84,7 +77,6 @@ export function selectOpenTabSearchEntryState(
   // when neither the worktree nor a repo names a host.
   const executionHostId = getWorktreeExecutionHostId(worktree, repo ?? undefined, preferredHostId)
   return {
-    activeBrowserTabId: state.activeBrowserTabId,
     activeFileId: state.activeFileId,
     activeFileIdByWorktree: state.activeFileIdByWorktree,
     activeGroupIdByWorktree: state.activeGroupIdByWorktree,
@@ -93,8 +85,6 @@ export function selectOpenTabSearchEntryState(
     activeTabType: state.activeTabType,
     activeTabTypeByWorktree: state.activeTabTypeByWorktree,
     activeWorktreeId: state.activeWorktreeId,
-    browserPagesByWorkspace: state.browserPagesByWorkspace,
-    browserTabsByWorktree: state.browserTabsByWorktree,
     executionHostId,
     folderWorkspaces: state.folderWorkspaces,
     generatedTitlesEnabled: state.settings?.tabAutoGenerateTitle === true,
@@ -156,15 +146,6 @@ export function buildOpenTabSearchEntries(
       activeFileIdByWorktree: state.activeFileIdByWorktree,
       activeTabTypeByWorktree: state.activeTabTypeByWorktree,
       generatedTitlesEnabled: state.generatedTitlesEnabled
-    }),
-    browserPages: buildSearchableBrowserPages({
-      ...scope,
-      browserTabsByWorktree: state.browserTabsByWorktree,
-      browserPagesByWorkspace: state.browserPagesByWorkspace,
-      unifiedTabsByWorktree: state.unifiedTabsByWorktree,
-      activeBrowserTabId: state.activeBrowserTabId,
-      activeWorktreeId: state.activeWorktreeId,
-      activeTabType: state.activeTabType
     })
   }
 }

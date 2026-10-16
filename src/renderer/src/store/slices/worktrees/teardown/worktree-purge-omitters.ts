@@ -10,8 +10,7 @@ export function createWorktreePurgeOmitters(
   worktreeIdSet: Set<string>,
   doomed: WorktreePurgeDoomedIds
 ) {
-  const { doomedTabIds, doomedPtyIds, doomedBrowserWorkspaceIds, doomedPageIds, removedFileIds } =
-    doomed
+  const { doomedTabIds, doomedPtyIds, removedFileIds } = doomed
   const omitByWorktree = <T>(obj: Record<string, T>): Record<string, T> =>
     omitRecordKeys(obj, worktreeIdSet)
   const omitWorkspaceLineageByWorktree = (
@@ -63,10 +62,6 @@ export function createWorktreePurgeOmitters(
       })
     )
   }
-  const omitByBrowserWorkspaceId = <T>(obj: Record<string, T>): Record<string, T> =>
-    omitRecordKeys(obj, doomedBrowserWorkspaceIds)
-  const omitByPageId = <T>(obj: Record<string, T>): Record<string, T> =>
-    omitRecordKeys(obj, doomedPageIds)
   const omitByFileId = <T>(obj: Record<string, T>): Record<string, T> =>
     omitRecordKeys(obj, removedFileIds)
 
@@ -78,8 +73,6 @@ export function createWorktreePurgeOmitters(
     omitRetiredDirectSshLedgerByTabId,
     omitByPtyId,
     omitByPaneKeyTabPrefix,
-    omitByBrowserWorkspaceId,
-    omitByPageId,
     omitByFileId
   }
 }

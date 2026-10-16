@@ -29,7 +29,6 @@ export function assembleComposerModel(
     ...source.projectTargetActions,
     ...source.branchStartPointActions,
     ...source.githubProviderSelection,
-    ...source.gitlabProviderSelection,
     ...source.workItemSourceActions,
     ...source.issueSourceActions,
     ...source.composerNavigationActions,

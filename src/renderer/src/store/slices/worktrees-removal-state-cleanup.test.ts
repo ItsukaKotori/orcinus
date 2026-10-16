@@ -616,26 +616,6 @@ describe('removeWorktree state cleanup', () => {
     })
   })
 
-  it('clears recentlyClosedBrowserTabsByWorktree for the removed worktree', async () => {
-    // Why: undo snapshots for a deleted worktree can never be restored, so removeWorktree clears the key (design §1.1).
-    const store = createTestStore()
-    const wt = makeWorktree({ id: 'repo1::/path/wt1', repoId: 'repo1', path: '/path/wt1' })
-
-    store.setState({
-      worktreesByRepo: { repo1: [wt] },
-      recentlyClosedBrowserTabsByWorktree: {
-        'repo1::/path/wt1': [{ workspace: { id: 'workspace-1' }, pages: [] }],
-        'repo1::/path/wt2': [{ workspace: { id: 'workspace-2' }, pages: [] }]
-      }
-    } as unknown as Partial<AppState>)
-
-    await store.getState().removeWorktree({ id: 'repo1::/path/wt1', executionHostId: null })
-
-    expect(store.getState().recentlyClosedBrowserTabsByWorktree).toEqual({
-      'repo1::/path/wt2': [{ workspace: { id: 'workspace-2' }, pages: [] }]
-    })
-  })
-
   it('skips editorDrafts shallow copy when no files belong to the removed worktree', async () => {
     const store = createTestStore()
     const wt = makeWorktree({ id: 'repo1::/path/wt1', repoId: 'repo1', path: '/path/wt1' })

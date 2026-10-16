@@ -1,10 +1,8 @@
 import { useCallback } from 'react'
 import { toast } from 'sonner'
-import { activateBrowserPagePaletteResult } from '@/lib/browser-page-palette-activation'
 import { activateWorkspaceTabPaletteResult } from '@/lib/workspace-tab-palette-activation'
 import { activateAndRevealWorktree } from '@/lib/worktree-activation'
 import { queueWorkspaceActivationTerminalFocus } from '@/lib/workspace-activation-terminal-focus'
-import type { BrowserPaletteSearchResult } from '@/lib/browser-palette-search'
 import type { WorkspaceTabPaletteSearchResult } from '@/lib/workspace-tab-palette-search'
 import type { CmdJActionResult, CmdJSettingsResult } from '@/components/cmd-j/palette-results'
 import type { CmdJProjectSearchResult } from '@/components/cmd-j/palette-project-results'
@@ -34,7 +32,7 @@ function getSettingsTargetFromSectionId(sectionId: string): {
 type WorktreeJumpPaletteSelectionActionsInput = WorktreeJumpPaletteStoreState &
   WorktreeJumpPaletteLocalState &
   Pick<WorktreeJumpPaletteQuickActions, 'buildQuickActionContext'> &
-  Pick<WorktreeJumpPaletteSelectionLifecycle, 'focusFallbackSurface' | 'requestBrowserFocus'>
+  Pick<WorktreeJumpPaletteSelectionLifecycle, 'focusFallbackSurface'>
 
 export function useWorktreeJumpPaletteSelectionActions({
   closeModal,
@@ -42,14 +40,10 @@ export function useWorktreeJumpPaletteSelectionActions({
   skipRestoreFocusRef,
   setSelectedItemId,
   focusFallbackSurface,
-  requestBrowserFocus,
   openSettingsTarget,
   openSettingsPage,
   buildQuickActionContext,
   revealSidebarRow,
-  previousActiveTabTypeRef,
-  previousBrowserPageIdRef,
-  previousBrowserFocusTargetRef,
   previousWorktreeIdRef,
   previousFocusElementRef
 }: WorktreeJumpPaletteSelectionActionsInput) {
@@ -77,32 +71,6 @@ export function useWorktreeJumpPaletteSelectionActions({
     },
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- controller refs and setters preserve their original stable identities.
     [closeModal, focusFallbackSurface, recordFeatureInteraction]
-  )
-  const handleSelectBrowserPage = useCallback(
-    (result: BrowserPaletteSearchResult) => {
-      const activation = activateBrowserPagePaletteResult(result)
-      if (activation.status === 'failed') {
-        toast.error(
-          activation.reason === 'missing-page'
-            ? translate(
-                'auto.components.WorktreeJumpPalette.d7d496a451',
-                'Browser page no longer exists'
-              )
-            : translate(
-                'auto.components.WorktreeJumpPalette.2c38630a01',
-                'Workspace no longer exists'
-              )
-        )
-        return
-      }
-      recordFeatureInteraction('cmd-j-browser-page-open')
-      skipRestoreFocusRef.current = true
-      closeModal()
-      setSelectedItemId('')
-      requestBrowserFocus({ pageId: activation.pageId, target: activation.focusTarget })
-    },
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- controller refs and setters preserve their original stable identities.
-    [closeModal, recordFeatureInteraction, requestBrowserFocus]
   )
   const handleSelectWorkspaceTab = useCallback(
     (result: WorkspaceTabPaletteSearchResult) => {
@@ -185,25 +153,12 @@ export function useWorktreeJumpPaletteSelectionActions({
       recordFeatureInteraction('cmd-j')
       closeModal()
       setSelectedItemId('')
-      if (previousActiveTabTypeRef.current === 'browser' && previousBrowserPageIdRef.current) {
-        requestBrowserFocus({
-          pageId: previousBrowserPageIdRef.current,
-          target: previousBrowserFocusTargetRef.current
-        })
-        return
-      }
       if (previousWorktreeIdRef.current) {
         focusFallbackSurface(previousFocusElementRef.current)
       }
     },
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- controller refs and setters preserve their original stable identities.
-    [
-      closeModal,
-      focusFallbackSurface,
-      recordFeatureInteraction,
-      requestBrowserFocus,
-      revealSidebarRow
-    ]
+    [closeModal, focusFallbackSurface, recordFeatureInteraction, revealSidebarRow]
   )
   const handleSelectItem = useCallback(
     (item: PaletteItem) => {
@@ -211,8 +166,6 @@ export function useWorktreeJumpPaletteSelectionActions({
         handleSelectWorktree(item.worktree)
       } else if (item.type === 'project-target') {
         handleSelectProjectTarget(item.result)
-      } else if (item.type === 'browser-page') {
-        handleSelectBrowserPage(item.result)
       } else if (item.type === 'workspace-tab') {
         handleSelectWorkspaceTab(item.result)
       } else if (item.type === 'settings') {
@@ -222,7 +175,6 @@ export function useWorktreeJumpPaletteSelectionActions({
       }
     },
     [
-      handleSelectBrowserPage,
       handleSelectProjectTarget,
       handleSelectQuickAction,
       handleSelectSettings,

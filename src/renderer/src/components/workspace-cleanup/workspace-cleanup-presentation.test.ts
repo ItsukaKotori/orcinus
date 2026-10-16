@@ -81,29 +81,29 @@ describe('workspace cleanup presentation', () => {
         [cacheKey]: { data: makeReview({ number: 42 }), fetchedAt: NOW }
       }
     })
-    const gitLab = makeState({
+    const bitbucketState = makeState({
       worktreesByRepo: {
         'repo-1': [
           {
             ...makeState().worktreesByRepo['repo-1']![0]!,
             linkedPR: null,
             suppressedGitHubPR: 42,
-            linkedGitLabMR: 42
+            linkedBitbucketPR: 42
           }
         ]
       },
       hostedReviewCache: {
         [cacheKey]: {
-          data: makeReview({ provider: 'gitlab', number: 42 }),
+          data: makeReview({ provider: 'bitbucket', number: 42 }),
           fetchedAt: NOW
         }
       }
     })
 
     expect(getWorkspaceCleanupReviewInfo(makeCandidate(), explicit).hasReview).toBe(true)
-    expect(getWorkspaceCleanupReviewInfo(makeCandidate(), gitLab)).toMatchObject({
+    expect(getWorkspaceCleanupReviewInfo(makeCandidate(), bitbucketState)).toMatchObject({
       hasReview: true,
-      provider: 'gitlab'
+      provider: 'bitbucket'
     })
   })
 
@@ -279,9 +279,9 @@ describe('workspace cleanup presentation', () => {
     })
     const reviewInfo: WorkspaceCleanupReviewInfo = {
       hasReview: true,
-      label: 'MR #9',
+      label: 'PR #9',
       state: 'closed',
-      provider: 'gitlab',
+      provider: 'bitbucket',
       title: 'Searchable review'
     }
     const text = getWorkspaceCleanupSearchText(candidate, reviewInfo)
@@ -289,7 +289,7 @@ describe('workspace cleanup presentation', () => {
     expect(text).toContain('search repo')
     expect(text).toContain('feature/search')
     expect(text).toContain('/repo/search-target')
-    expect(text).toContain('mr #9')
+    expect(text).toContain('pr #9')
     expect(text).toContain('unknown')
     expect(text).toContain('has context')
   })

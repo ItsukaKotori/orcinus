@@ -84,11 +84,7 @@ export function applyRemoveWorktreeSuccessState(
         : s.activeWorkspaceExecutionHostId,
       activeTabId: s.activeTabId && tabIds.has(s.activeTabId) ? null : s.activeTabId,
       openFiles: nextOpenFiles,
-      browserTabsByWorktree: omitByWorktree(s.browserTabsByWorktree),
-      // Why: closeBrowserTab records a Cmd+Shift+T undo snapshot, but a deleted worktree's tabs can't be restored; purge it.
-      recentlyClosedBrowserTabsByWorktree: omitByWorktree(s.recentlyClosedBrowserTabsByWorktree),
       activeFileIdByWorktree: omitByWorktree(s.activeFileIdByWorktree),
-      activeBrowserTabIdByWorktree: omitByWorktree(s.activeBrowserTabIdByWorktree),
       activeTabTypeByWorktree: omitByWorktree(s.activeTabTypeByWorktree),
       rightSidebarExplorerViewByWorktree: omitByWorktree(s.rightSidebarExplorerViewByWorktree),
       activeTabIdByWorktree: omitByWorktree(s.activeTabIdByWorktree),
@@ -125,7 +121,6 @@ export function applyRemoveWorktreeSuccessState(
         s.gitBranchCompareRequestStatusHeadByWorktree
       ),
       activeFileId: activeFileCleared ? null : s.activeFileId,
-      activeBrowserTabId: removedActiveWorktree ? null : s.activeBrowserTabId,
       activeTabType: removedActiveWorktree || activeFileCleared ? 'terminal' : s.activeTabType,
       everActivatedWorktreeIds: s.everActivatedWorktreeIds.has(worktreeId)
         ? new Set([...s.everActivatedWorktreeIds].filter((id) => id !== worktreeId))

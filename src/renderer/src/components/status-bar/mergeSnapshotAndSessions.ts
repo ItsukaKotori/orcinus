@@ -229,8 +229,7 @@ export function mergeSnapshotAndSessions(
         history: wt.history,
         hasLocalSamples: true,
         isRemote,
-        sessions,
-        browsers: []
+        sessions
       })
     }
   }
@@ -290,8 +289,7 @@ export function mergeSnapshotAndSessions(
         history: [],
         hasLocalSamples: false,
         isRemote,
-        sessions: [],
-        browsers: []
+        sessions: []
       }
       appendWorktreeRow(repo, row)
     }
@@ -308,34 +306,6 @@ export function mergeSnapshotAndSessions(
       memory: null,
       hasLocalSamples: false
     })
-  }
-
-  // ── Step 3: add browser resources, including browser-only workspaces.
-  for (const [worktreeId, browsers] of Object.entries(ctx.browserTabsByWorktree ?? {})) {
-    const worktree = ctx.worktreeById?.get(worktreeId)
-    if (!worktree || browsers.length === 0) {
-      continue
-    }
-    const repoName = ctx.repoDisplayNameById.get(worktree.repoId) || worktree.repoId
-    const repo = ensureRepo(worktree.repoId, repoName)
-    let row = findWorktreeRow(repo, worktreeId)
-    if (!row) {
-      row = {
-        worktreeId,
-        worktreeName: worktree.displayName,
-        repoId: worktree.repoId,
-        repoName,
-        cpu: null,
-        memory: null,
-        history: [],
-        hasLocalSamples: false,
-        isRemote: resolveResourceWorkspaceHost(ctx, worktreeId, worktree.repoId).isRemote,
-        sessions: [],
-        browsers: []
-      }
-      appendWorktreeRow(repo, row)
-    }
-    row.browsers = browsers
   }
 
   // Only sampled rows contribute to project totals.

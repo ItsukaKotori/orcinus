@@ -26,20 +26,15 @@ export function useWorktreeCardController(props: ResolvedWorktreeCardProps) {
     deleteState: foundation.deleteState,
     branch: review.branch,
     issueEntry: review.issueEntry,
-    linearIssueEntry: review.linearIssueEntry,
-    linearIssueFallbackEntry: review.linearIssueFallbackEntry,
     prDisplay: review.prDisplay
   })
 
   const showStatus = foundation.cardProps.includes('status')
   const showIssue = foundation.cardProps.includes('issue')
-  const showLinearIssue = foundation.cardProps.includes('linear-issue')
-  const showJiraIssue = foundation.cardProps.includes('jira-issue')
   const showPR = foundation.cardProps.includes('pr')
   const showAutomation = foundation.cardProps.includes('automation')
   const showCli = foundation.cardProps.includes('cli')
   const showComment = foundation.cardProps.includes('comment')
-  const showPorts = foundation.cardProps.includes('ports')
   const shouldRefreshHostedReview = foundation.newCardStyle ? showStatus : showPR
   const detailsHoverControl = useWorktreeCardDetailsHoverControl()
   const hoverDetailsOpen = detailsHoverControl.hoverOpen
@@ -61,9 +56,7 @@ export function useWorktreeCardController(props: ResolvedWorktreeCardProps) {
     hoverDetailsOpen,
     showIssue,
     issueCacheKey: review.issueCacheKey,
-    fetchIssue: foundation.fetchIssue,
-    showLinearIssue,
-    fetchLinearIssue: foundation.fetchLinearIssue
+    fetchIssue: foundation.fetchIssue
   })
 
   const activation = useWorktreeCardActivationActions({
@@ -113,17 +106,11 @@ export function useWorktreeCardController(props: ResolvedWorktreeCardProps) {
     statusPrDisplay: props.statusPrDisplay,
     showStatus,
     showIssue,
-    showLinearIssue,
-    showJiraIssue,
     showPR,
     showAutomation,
     showCli,
     showComment,
-    showPorts,
     issueDisplay: linked.issueDisplay,
-    linearIssue: linked.linearIssue,
-    linearIssueDisplay: linked.linearIssueDisplay,
-    jiraIssueDisplay: linked.jiraIssueDisplay,
     prDisplay: review.prDisplay,
     linkedGitLabMR: review.linkedGitLabMR,
     linkedBitbucketPR: review.linkedBitbucketPR,
@@ -133,7 +120,6 @@ export function useWorktreeCardController(props: ResolvedWorktreeCardProps) {
     newCardStyle: foundation.newCardStyle,
     compactCards: foundation.compactCards,
     agentActivityDisplayMode: foundation.agentActivityDisplayMode,
-    workspacePorts: foundation.workspacePorts,
     openTaskPage: foundation.openTaskPage,
     updateWorktreeMeta: foundation.updateWorktreeMeta,
     settings: foundation.settings
@@ -147,13 +133,10 @@ export function useWorktreeCardController(props: ResolvedWorktreeCardProps) {
     detailsHoverControl,
     showStatus,
     showIssue,
-    showLinearIssue,
-    showJiraIssue,
     showPR,
     showAutomation,
     showCli,
     showComment,
-    showPorts,
     shouldRefreshHostedReview,
     ...activation,
     showDeleteQuickAction,

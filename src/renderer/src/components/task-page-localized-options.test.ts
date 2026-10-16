@@ -1,11 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { i18n } from '@/i18n/i18n'
-import {
-  getGitHubModeButtons,
-  getGitHubTaskKindPresets,
-  getLinearPriorityLabel
-} from './task-page-localized-options'
+import { getGitHubModeButtons, getGitHubTaskKindPresets } from './task-page-localized-options'
 
 describe('task-page-localized-options', () => {
   beforeEach(async () => {
@@ -44,15 +40,4 @@ describe('task-page-localized-options', () => {
     ])
   })
 
-  it('refreshes Linear priority labels when the UI language changes', async () => {
-    expect(getLinearPriorityLabel(0)).toBe('No priority')
-
-    await i18n.changeLanguage('ko')
-
-    expect(getLinearPriorityLabel(0)).toBe('우선순위 없음')
-
-    await i18n.changeLanguage('en')
-
-    expect(getLinearPriorityLabel(0)).toBe('No priority')
-  })
 })

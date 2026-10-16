@@ -208,7 +208,7 @@ describe('OnboardingFlow', () => {
       '<h3 class="text-[15px] font-semibold leading-tight text-foreground">Linear</h3>'
     )
     expect(html).toContain(
-      'Linear, GitLab, Bitbucket, Azure DevOps, Gitea, and Jira live in Settings'
+      'GitLab, Bitbucket, Azure DevOps, and Gitea live in Settings &gt; Integrations.'
     )
   })
 

@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { useAppStore } from '@/store'
-import {
-  getRuntimeGitCommitCompare,
-  getRuntimeGitRemoteCommitUrl,
-  type RuntimeGitContext
-} from '@/runtime/runtime-git-client'
+import { getRuntimeGitCommitCompare, type RuntimeGitContext } from '@/runtime/runtime-git-client'
 import { getConnectionId } from '@/lib/connection-context'
 import { detectLanguage } from '@/lib/language-detect'
 import { launchAgentInNewTab } from '@/lib/launch-agent-in-new-tab'
@@ -21,7 +17,6 @@ import {
   type SourceControlRowOpenEvent
 } from '../listing/split-open'
 import type { GitHistoryCommitAction } from './git-history-commit-context-menu'
-import { openWorkspaceBrowserTab } from '@/lib/workspace-browser-tab-open'
 
 const EMPTY_BRANCH_CHANGE_ENTRIES: GitBranchChangeEntry[] = []
 
@@ -189,47 +184,6 @@ export function useGitHistoryCommitActions({
 
   const handleCommitAction = useCallback(
     (action: GitHistoryCommitAction, item: GitHistoryItem): void => {
-      if (action === 'open-remote') {
-        if (!activeWorktreeId || !worktreePath) {
-          return
-        }
-        // Resolve the provider commit URL in the main process, which reads the
-        // real origin remote (the renderer has no reliable origin identity).
-        void getRuntimeGitRemoteCommitUrl(
-          {
-            settings: activeRepoSettings,
-            worktreeId: activeWorktreeId,
-            worktreePath,
-            connectionId: getConnectionId(activeWorktreeId) ?? undefined
-          },
-          { sha: item.id }
-        )
-          .then((url) => {
-            if (!url) {
-              toast.error(
-                translate(
-                  'auto.components.right.sidebar.SourceControl.04a5d7239b',
-                  'This repository has no supported web remote'
-                )
-              )
-              return
-            }
-            return openWorkspaceBrowserTab({
-              workspaceId: activeWorktreeId,
-              url,
-              intent: { kind: 'url' }
-            })
-          })
-          .catch(() => {
-            toast.error(
-              translate(
-                'auto.components.right.sidebar.SourceControl.15b6e834ac',
-                'Failed to open commit in browser'
-              )
-            )
-          })
-        return
-      }
       if (action === 'copy-hash') {
         void copyCommitText(
           item.id,

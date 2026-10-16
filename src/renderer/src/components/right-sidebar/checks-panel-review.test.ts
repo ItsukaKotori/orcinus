@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { gitHubPRToChecksPanelReview, selectChecksPanelReview } from './checks-panel-review'
 import type { PRInfo } from '../../../../shared/github/pull-request-types'
-import type { HostedReviewInfo } from '../../../../shared/hosted-review'
 
 function makePR(overrides: Partial<PRInfo> = {}): PRInfo {
   return {
@@ -16,19 +15,7 @@ function makePR(overrides: Partial<PRInfo> = {}): PRInfo {
   }
 }
 
-function makeGitLabReview(overrides: Partial<HostedReviewInfo> = {}): HostedReviewInfo {
-  return {
-    provider: 'gitlab',
-    number: 9,
-    title: 'GitLab MR',
-    state: 'open',
-    url: 'https://gitlab.com/acme/widgets/-/merge_requests/9',
-    status: 'pending',
-    updatedAt: '2026-06-02T00:00:00Z',
-    mergeable: 'UNKNOWN',
-    ...overrides
-  }
-}
+
 
 describe('gitHubPRToChecksPanelReview', () => {
   // Why: the right-sidebar merge presenter reads these fields off the converted
@@ -62,23 +49,6 @@ describe('gitHubPRToChecksPanelReview', () => {
 })
 
 describe('selectChecksPanelReview', () => {
-  it('uses GitLab hosted review metadata ahead of GitHub PR cache', () => {
-    const review = makeGitLabReview({ number: 34 })
-
-    expect(
-      selectChecksPanelReview({
-        hostedReview: review,
-        pr: makePR({ number: 12 }),
-        linkedPR: null,
-        suppressedGitHubPR: null,
-        linkedGitLabMR: 34,
-        linkedBitbucketPR: null,
-        linkedAzureDevOpsPR: null,
-        linkedGiteaPR: null
-      })
-    ).toBe(review)
-  })
-
   it('uses GitHub PR cache when no non-GitHub review is linked', () => {
     const selected = selectChecksPanelReview({
       hostedReview: null,
@@ -95,7 +65,6 @@ describe('selectChecksPanelReview', () => {
   })
 
   it.each([
-    { provider: 'GitLab', linkedGitLabMR: 7 },
     { provider: 'Bitbucket', linkedBitbucketPR: 8 },
     { provider: 'Azure DevOps', linkedAzureDevOpsPR: 9 },
     { provider: 'Gitea', linkedGiteaPR: 10 }
@@ -106,7 +75,7 @@ describe('selectChecksPanelReview', () => {
         pr: makePR({ number: 12, state: 'merged' }),
         linkedPR: null,
         suppressedGitHubPR: null,
-        linkedGitLabMR: links.linkedGitLabMR ?? null,
+        linkedGitLabMR: null,
         linkedBitbucketPR: links.linkedBitbucketPR ?? null,
         linkedAzureDevOpsPR: links.linkedAzureDevOpsPR ?? null,
         linkedGiteaPR: links.linkedGiteaPR ?? null

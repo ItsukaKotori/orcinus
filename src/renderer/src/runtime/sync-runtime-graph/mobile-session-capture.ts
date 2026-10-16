@@ -159,7 +159,6 @@ export function canReuseMobileSessionSnapshot(
     previous.worktreeId === next.worktreeId &&
     previous.worktreeInstanceId === next.worktreeInstanceId &&
     previous.terminalTabs === next.terminalTabs &&
-    previous.browserWorkspaces === next.browserWorkspaces &&
     previous.unifiedTabs === next.unifiedTabs &&
     previous.groups === next.groups &&
     previous.tabBarOrder === next.tabBarOrder &&
@@ -170,18 +169,12 @@ export function canReuseMobileSessionSnapshot(
     previous.activeEditorFileId === next.activeEditorFileId &&
     previous.activeEditorTabType === next.activeEditorTabType &&
     previous.activeTerminalTabId === next.activeTerminalTabId &&
-    previous.activeBrowserWorkspaceId === next.activeBrowserWorkspaceId &&
     previous.generatedTitlesEnabled === next.generatedTitlesEnabled &&
     previous.terminalTheme === next.terminalTheme &&
     narrowedEntriesEqual(previous.terminalLayoutByTabId, next.terminalLayoutByTabId) &&
     narrowedEntriesEqual(previous.paneTitlesByTabId, next.paneTitlesByTabId) &&
     narrowedEntriesEqual(previous.agentStatusByPaneKey, next.agentStatusByPaneKey) &&
     narrowedEntriesEqual(previous.editorDraftVersionByFileId, next.editorDraftVersionByFileId) &&
-    narrowedEntriesEqual(previous.pagesByBrowserWorkspaceId, next.pagesByBrowserWorkspaceId) &&
-    narrowedEntriesEqual(
-      previous.certificateFailureByBrowserPageId,
-      next.certificateFailureByBrowserPageId
-    ) &&
     mountedSurfaceCapturesEqual(
       previous.mountedSurfaceCaptureByTabId,
       next.mountedSurfaceCaptureByTabId

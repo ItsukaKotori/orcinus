@@ -63,42 +63,6 @@ describe('AddRepoHostSelector', () => {
     expect(html).not.toContain('Add remote server')
   })
 
-  it('shows disconnected SSH hosts with a connect action in Add Project', () => {
-    const html = renderToStaticMarkup(
-      <AddRepoHostSelector
-        hosts={[
-          {
-            id: 'local',
-            label: 'Local Mac',
-            detail: 'This computer',
-            kind: 'local',
-            health: 'local',
-            presence: 'local'
-          },
-          {
-            id: 'ssh:ssh-1',
-            label: 'Builder',
-            detail: 'SSH',
-            kind: 'ssh',
-            health: 'disconnected',
-            presence: 'configured'
-          }
-        ]}
-        selectedHostId="ssh:ssh-1"
-        open={false}
-        onOpenChange={vi.fn()}
-        onSelectHost={vi.fn()}
-      />
-    )
-
-    expect(html).toContain('Builder')
-    expect(html).toContain('Disconnected')
-    expect(html).toContain('Connect')
-    expect(html).toContain('aria-disabled="true"')
-    expect(html).not.toContain('cursor-not-allowed')
-    expect(html).not.toContain('opacity-55')
-  })
-
   it('shows exact update guidance for incompatible runtime hosts', () => {
     const html = renderToStaticMarkup(
       <AddRepoHostSelector

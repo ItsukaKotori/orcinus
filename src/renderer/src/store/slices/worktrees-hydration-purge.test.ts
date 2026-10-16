@@ -693,12 +693,6 @@ describe('fetchAllWorktrees hydration-time purge (design §4.4)', () => {
           { id: 'floating-terminal-tab', worktreeId: FLOATING_TERMINAL_WORKTREE_ID }
         ]
       },
-      browserTabsByWorktree: {
-        [FLOATING_TERMINAL_WORKTREE_ID]: [{ id: 'floating-browser', url: 'https://orca.test' }]
-      },
-      activeBrowserTabIdByWorktree: {
-        [FLOATING_TERMINAL_WORKTREE_ID]: 'floating-browser'
-      },
       openFiles: [
         floatingFile,
         {
@@ -752,9 +746,6 @@ describe('fetchAllWorktrees hydration-time purge (design §4.4)', () => {
         { id: 'floating-terminal-tab', worktreeId: FLOATING_TERMINAL_WORKTREE_ID }
       ]
     })
-    expect(store.getState().browserTabsByWorktree[FLOATING_TERMINAL_WORKTREE_ID]).toEqual([
-      { id: 'floating-browser', url: 'https://orca.test' }
-    ])
     expect(store.getState().openFiles).toEqual([floatingFile])
     expect(store.getState().activeFileIdByWorktree[FLOATING_TERMINAL_WORKTREE_ID]).toBe(
       'floating-file'

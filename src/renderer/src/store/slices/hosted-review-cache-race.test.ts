@@ -48,11 +48,11 @@ function makeStore(settings: AppState['settings'] = null) {
 }
 
 const review: HostedReviewInfo = {
-  provider: 'gitlab',
+  provider: 'bitbucket',
   number: 5,
-  title: 'Shared MR status',
+  title: 'Shared PR status',
   state: 'open',
-  url: 'https://gitlab.com/g/p/-/merge_requests/5',
+  url: 'https://bitbucket.org/g/p/pull-requests/5',
   status: 'success',
   updatedAt: '2026-05-10T00:00:00.000Z',
   mergeable: 'MERGEABLE'

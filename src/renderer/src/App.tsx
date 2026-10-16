@@ -2,9 +2,6 @@ import { useCallback, useEffect } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ConfirmationDialogProvider } from './components/confirmation-dialog'
-import { BrowserWebAuthnAccountDialog } from './components/browser-webauthn-account-dialog'
-import { DocPreviewExternalLinkConfirmation } from './components/browser-pane/workspace-doc/doc-preview-external-link-confirmation'
-import { LinkRoutingPreferenceDialogProvider } from './components/link-routing-preference-dialog'
 import PinnedTabCloseDialog from './components/terminal-pane/PinnedTabCloseDialog'
 import RunningTerminalCloseDialog from './components/terminal-pane/RunningTerminalCloseDialog'
 import WorktreeBaseFallbackDialog from './components/WorktreeBaseFallbackDialog'
@@ -90,16 +87,9 @@ function App(): React.JSX.Element {
     >
       <TooltipProvider delayDuration={400}>
         <ConfirmationDialogProvider>
-          <DocPreviewExternalLinkConfirmation />
-          <LinkRoutingPreferenceDialogProvider>
-            <AppBackgroundServices />
-            <AppWorkspaceShell layout={layout} floatingWorkspace={floatingWorkspace} />
-            <AppRootSurfaces
-              floatingWorkspace={floatingWorkspace}
-              onboardingGate={onboardingGate}
-            />
-            <BrowserWebAuthnAccountDialog />
-          </LinkRoutingPreferenceDialogProvider>
+          <AppBackgroundServices />
+          <AppWorkspaceShell layout={layout} floatingWorkspace={floatingWorkspace} />
+          <AppRootSurfaces floatingWorkspace={floatingWorkspace} onboardingGate={onboardingGate} />
         </ConfirmationDialogProvider>
       </TooltipProvider>
       <Toaster closeButton toastOptions={{ className: 'font-sans text-sm' }} />

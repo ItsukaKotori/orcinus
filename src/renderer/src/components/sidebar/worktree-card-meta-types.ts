@@ -16,24 +16,8 @@ export type WorktreeCardIssueDisplay =
       labels?: string[]
     }
 
-export type WorktreeCardLinearIssueDisplay = {
-  identifier: string
-  title: string
-  url?: string
-  stateName?: string
-  labels?: string[]
-}
-
-export type WorktreeCardJiraIssueDisplay = {
-  identifier: string
-  title: string
-  url: string
-}
-
 export type WorktreeCardMetaBadgesProps = {
   issue: WorktreeCardIssueDisplay | null
-  linearIssue: WorktreeCardLinearIssueDisplay | null
-  jiraIssue?: WorktreeCardJiraIssueDisplay | null
   review: WorktreeCardPrDisplay | null
   comment: string | null
   automationProvenance?: AutomationWorkspaceProvenance | null
@@ -58,7 +42,6 @@ export type WorktreeCardDetailsHoverProps = WorktreeCardMetaBadgesProps & {
   onEditComment?: (event: React.MouseEvent) => void
   onOpenGitHubIssueInOrca?: (event: React.MouseEvent) => void
   onOpenIssueInBrowser?: (url: string) => void
-  onOpenLinearIssueInOrca?: (event: React.MouseEvent) => void
   onOpenReviewInOrca?: (event: React.MouseEvent) => void
   onOpenReviewInBrowser?: (url: string) => void
   onUnlinkReview?: () => void

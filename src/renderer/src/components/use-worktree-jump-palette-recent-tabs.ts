@@ -51,7 +51,6 @@ export function useWorktreeJumpPaletteRecentTabs({
   terminalLayoutsByTabId,
   openTabItems,
   workspaceTabEntries,
-  browserPageEntries,
   resolveWorktree,
   unreadTerminalTabs,
   unreadAgentCompletionPanes,
@@ -70,14 +69,8 @@ export function useWorktreeJumpPaletteRecentTabs({
         entry.tab.lastFocusedAt
       )
     }
-    for (const entry of browserPageEntries) {
-      times.set(
-        encodePaletteIdentity(['page', getPaletteWorktreeIdentity(entry.worktree), entry.page.id]),
-        entry.lastFocusedAt
-      )
-    }
     return times
-  }, [workspaceTabEntries, browserPageEntries])
+  }, [workspaceTabEntries])
   const occurrenceIds = useMemo(() => {
     const counts = new Map<string, number>()
     return openTabItems.map((item) => {
@@ -135,14 +128,14 @@ export function useWorktreeJumpPaletteRecentTabs({
           worktreeHostId: getPaletteWorktreeExecutionHostId(worktree),
           lastFocusedAt: tabFocusTimes.get(
             encodePaletteIdentity([
-              item.type === 'browser-page' ? 'page' : 'tab',
+              'tab',
               getPaletteWorktreeIdentity(worktree),
-              item.type === 'browser-page' ? item.result.pageId : item.result.tabId
+              item.result.tabId
             ])
           ),
-          unifiedTabId: item.type === 'browser-page' ? null : item.result.tabId,
+          unifiedTabId: item.result.tabId,
           terminalTab:
-            item.type === 'workspace-tab' && item.result.contentType === 'terminal'
+            item.result.contentType === 'terminal'
               ? (terminalTabsByWorktree.get(worktree.id)?.get(item.result.entityId) ?? null)
               : null,
           worktreeLastActivityAt: worktree.lastActivityAt
@@ -181,12 +174,7 @@ export function useWorktreeJumpPaletteRecentTabs({
   const capturedFilterRef = useRef(filter)
   const recentOrderAttentionIncomplete = useMemo(() => {
     for (const { item, worktree, row } of openTabRecentRows) {
-      if (
-        item.type !== 'workspace-tab' ||
-        item.result.contentType !== 'terminal' ||
-        row.terminalTab ||
-        worktree.isArchived
-      ) {
+      if (item.result.contentType !== 'terminal' || row.terminalTab || worktree.isArchived) {
         continue
       }
       return true

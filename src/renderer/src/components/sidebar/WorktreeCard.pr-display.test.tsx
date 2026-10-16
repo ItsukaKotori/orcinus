@@ -8,7 +8,6 @@ import type { Repo } from '../../../../shared/repo-types'
 import type { WorktreeCardProperty } from '../../../../shared/ui-chrome-types'
 import type { Worktree } from '../../../../shared/worktree/types'
 import { COMPACT_WORKTREE_CARD_PROPERTIES } from '../../../../shared/worktree/card-properties'
-import type { WorkspacePortScanResult } from '../../../../shared/workspace-ports'
 
 const fetchHostedReviewForBranch = vi.fn()
 const fetchIssue = vi.fn()
@@ -20,7 +19,6 @@ let worktreeCardProperties: WorktreeCardProperty[] = ['status']
 let hostedReviewCache: Record<string, unknown> = {}
 let issueCache: Record<string, unknown> = {}
 let prCache: Record<string, unknown> = {}
-let workspacePortScan: WorkspacePortScanResult | null = null
 let settings: Partial<GlobalSettings> | null = null
 
 vi.mock('@/store', () => ({
@@ -42,7 +40,6 @@ vi.mock('@/store', () => ({
       sshConnectionStates: new Map(),
       sshTargetLabels: new Map(),
       updateWorktreeMeta,
-      workspacePortScan,
       worktreeCardProperties
     })
 }))
@@ -158,7 +155,6 @@ describe('WorktreeCard linked PR display', () => {
     hostedReviewCache = {}
     issueCache = {}
     prCache = {}
-    workspacePortScan = null
     settings = null
   })
 
@@ -390,14 +386,13 @@ describe('WorktreeCard linked PR display', () => {
 
   it('shows task and notes metadata while keeping PR out of the right metadata list', async () => {
     settings = { experimentalNewWorktreeCardStyle: true }
-    worktreeCardProperties = ['status', 'issue', 'linear-issue', 'comment']
+    worktreeCardProperties = ['status', 'issue', 'comment']
     const { default: WorktreeCard } = await import('./WorktreeCard')
 
     const markup = renderWorktreeCardMarkup(
       <WorktreeCard
         worktree={makeWorktree({
           linkedIssue: 123,
-          linkedLinearIssue: 'ENG-123',
           linkedPR: 456,
           comment: 'Reviewer handoff note'
         })}
@@ -407,7 +402,6 @@ describe('WorktreeCard linked PR display', () => {
     )
 
     expect(markup).toContain('Linked issue #123')
-    expect(markup).toContain('Linked Linear ENG-123')
     expect(markup).toContain('PR: Open')
     expect(markup).not.toContain('Linked PR #456')
     expect(markup).toContain('Workspace notes')
@@ -418,14 +412,13 @@ describe('WorktreeCard linked PR display', () => {
 
   it('shows selected task and notes metadata on compact cards when new card style is on', async () => {
     settings = { compactWorktreeCards: true, experimentalNewWorktreeCardStyle: true }
-    worktreeCardProperties = ['status', 'issue', 'linear-issue', 'comment']
+    worktreeCardProperties = ['status', 'issue', 'comment']
     const { default: WorktreeCard } = await import('./WorktreeCard')
 
     const markup = renderWorktreeCardMarkup(
       <WorktreeCard
         worktree={makeWorktree({
           linkedIssue: 123,
-          linkedLinearIssue: 'ENG-123',
           linkedPR: 456,
           comment: 'Reviewer handoff note'
         })}
@@ -435,7 +428,6 @@ describe('WorktreeCard linked PR display', () => {
     )
 
     expect(markup).toContain('Linked issue #123')
-    expect(markup).toContain('Linked Linear ENG-123')
     expect(markup).not.toContain('Linked PR #456')
     expect(markup).toContain('Workspace notes')
     expect(markup).not.toContain('data-worktree-card-meta-row=""')
@@ -450,7 +442,6 @@ describe('WorktreeCard linked PR display', () => {
       <WorktreeCard
         worktree={makeWorktree({
           linkedIssue: 123,
-          linkedLinearIssue: 'ENG-123',
           linkedPR: 456,
           comment: 'Reviewer handoff note'
         })}
@@ -588,43 +579,6 @@ describe('WorktreeCard linked PR display', () => {
     expect(countAutomationCreatedLabels(markup)).toBe(0)
     expect(markup).not.toContain('>Automation</span>')
     expect(markup).not.toContain('Nightly triage automation')
-  })
-
-  it('hides live port metadata when the Ports card property is disabled', async () => {
-    const worktree = makeWorktree()
-    workspacePortScan = {
-      platform: 'darwin',
-      scannedAt: 1,
-      ports: [
-        {
-          id: '127.0.0.1:58941:1234',
-          bindHost: '127.0.0.1',
-          connectHost: '127.0.0.1',
-          port: 58941,
-          pid: 1234,
-          processName: 'node',
-          protocol: 'http',
-          kind: 'workspace',
-          owner: {
-            worktreeId: worktree.id,
-            repoId: worktree.repoId,
-            displayName: worktree.displayName,
-            path: worktree.path,
-            confidence: 'cwd'
-          }
-        }
-      ]
-    }
-    worktreeCardProperties = []
-    const { default: WorktreeCard } = await import('./WorktreeCard')
-
-    const markup = renderWorktreeCardMarkup(
-      <WorktreeCard worktree={worktree} repo={makeRepo()} isActive={false} />
-    )
-
-    expect(markup).not.toContain('live port')
-    expect(markup).not.toContain('Live Ports')
-    expect(markup).not.toContain('58941')
   })
 
   it('renders linked PR status in the left status slot instead of the right metadata list', async () => {
@@ -808,13 +762,13 @@ describe('WorktreeCard linked PR display', () => {
 
     const markup = renderWorktreeCardMarkup(
       <WorktreeCard
-        worktree={makeWorktree({ linkedGitLabMR: 77 })}
+        worktree={makeWorktree({ linkedBitbucketPR: 77 })}
         repo={makeRepo()}
         isActive={false}
       />
     )
 
-    expect(markup).toContain('Linked MR #77')
+    expect(markup).toContain('Linked PR #77')
     expect(markup).not.toContain('Linked PR #6340')
   })
 

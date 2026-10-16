@@ -1,5 +1,4 @@
 import { vi, type Mock } from 'vitest'
-import type { BrowserTab } from '../../../../shared/browser-workspace-types'
 
 /** Shape shared by the Claude/Codex/OpenCode usage-scanner namespaces. */
 type UsageScannerMocks = {
@@ -22,7 +21,6 @@ export type StoreSessionMockApi = {
   claudeUsage: UsageScannerMocks
   codexUsage: UsageScannerMocks
   openCodeUsage: UsageScannerMocks
-  runtimeEnvironments: { prepareBrowserClientHostPlacement: Mock }
 }
 
 /** window.api double shared by the store session suites; installs itself on globalThis. */
@@ -103,28 +101,10 @@ export function createStoreSessionMockApi(): StoreSessionMockApi {
       getDaily: vi.fn().mockResolvedValue([]),
       getBreakdown: vi.fn().mockResolvedValue([]),
       getRecentSessions: vi.fn().mockResolvedValue([])
-    },
-    runtimeEnvironments: {
-      prepareBrowserClientHostPlacement: vi.fn().mockResolvedValue({ kind: 'server' })
     }
   }
 
   // @ts-expect-error -- mock
   globalThis.window = { api: mockApi }
   return mockApi
-}
-
-export function makeBrowserTab(
-  overrides: Partial<BrowserTab> & { id: string; worktreeId: string; url: string }
-): BrowserTab {
-  return {
-    title: overrides.url,
-    loading: false,
-    faviconUrl: null,
-    canGoBack: false,
-    canGoForward: false,
-    loadError: null,
-    createdAt: Date.now(),
-    ...overrides
-  }
 }

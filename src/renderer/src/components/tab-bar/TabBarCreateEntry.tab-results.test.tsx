@@ -52,7 +52,6 @@ const tabSearchMock = vi.hoisted(() => {
     entries(): OpenTabSearchEntries {
       const rows = Object.values(tabSearchMock.resultsByQuery).flat()
       return {
-        browserPages: [],
         workspaceTabs: rows
           .filter(
             (row): row is Extract<OpenTabSearchResult, { source: 'workspace' }> =>
@@ -107,21 +106,13 @@ vi.mock('./use-open-tab-search', () => ({
 // under test are the shipped ones; only the palette activations are stubbed.
 const activationMocks = vi.hoisted(() => ({
   workspace: vi.fn(),
-  browser: vi.fn(),
-  focusTerminalTabSurface: vi.fn(),
-  requestBrowserFocus: vi.fn()
+  focusTerminalTabSurface: vi.fn()
 }))
 vi.mock('@/lib/workspace-tab-palette-activation', () => ({
   activateWorkspaceTabPaletteResult: activationMocks.workspace
 }))
-vi.mock('@/lib/browser-page-palette-activation', () => ({
-  activateBrowserPagePaletteResult: activationMocks.browser
-}))
 vi.mock('@/lib/focus-terminal-tab-surface', () => ({
   focusTerminalTabSurface: activationMocks.focusTerminalTabSurface
-}))
-vi.mock('@/components/browser-pane/host-guest/browser-focus', () => ({
-  requestBrowserFocus: activationMocks.requestBrowserFocus
 }))
 
 import TabBarCreateEntry from './TabBarCreateEntry'
@@ -230,11 +221,6 @@ beforeEach(() => {
   tabSearchMock.hold = null
   tabSearchMock.resultsByQuery = {}
   activationMocks.workspace.mockReturnValue({ status: 'activated' })
-  activationMocks.browser.mockReturnValue({
-    status: 'activated',
-    pageId: 'page-1',
-    focusTarget: 'webview'
-  })
   container = document.createElement('div')
   document.body.appendChild(container)
   root = createRoot(container)
@@ -282,7 +268,7 @@ describe('TabBarCreateEntry tab results', () => {
     entryOptionsMock.options = [existingFileOption('src/gem.ts')]
     tabSearchMock.resultsByQuery['gem'] = [terminalResult({ title: 'gem tab' })]
     const menuOptions: TabCreateMenuOption[] = [
-      { id: 'new-browser', kind: 'new-browser', keywords: ['gem'], label: 'New Browser Tab' }
+      { id: 'new-terminal', kind: 'new-terminal', keywords: ['gem'], label: 'New Terminal Tab' }
     ]
     const agentOptions: TabAgentLaunchOption[] = [
       { agent: 'gemini', aliases: ['gemini'], label: 'Gemini' }
@@ -293,7 +279,7 @@ describe('TabBarCreateEntry tab results', () => {
 
     const rows = rowTexts()
     expect(rows[0]).toContain('Switch to tab')
-    expect(rows[1]).toContain('New Browser Tab')
+    expect(rows[1]).toContain('New Terminal Tab')
     expect(rows[2]).toContain('Launch agent')
     expect(rows[3]).toContain('Open file')
   })

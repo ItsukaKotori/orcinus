@@ -148,52 +148,6 @@ describe('closeTerminalTabInWorkspaceSession', () => {
     expect(result.session.tabsByWorktree[WORKTREE_ID]?.map((tab) => tab.id)).toEqual(['terminal-2'])
   })
 
-  it('lands on the active browser survivor instead of an empty terminal group', () => {
-    const current = session({
-      browserTabsByWorktree: {
-        [WORKTREE_ID]: [
-          {
-            id: 'browser-1',
-            worktreeId: WORKTREE_ID,
-            url: 'https://example.com',
-            title: 'Docs',
-            loading: false,
-            faviconUrl: null,
-            canGoBack: false,
-            canGoForward: false,
-            loadError: null,
-            createdAt: 1
-          }
-        ]
-      },
-      activeBrowserTabIdByWorktree: { [WORKTREE_ID]: 'browser-1' },
-      unifiedTabs: {
-        [WORKTREE_ID]: [
-          unifiedTab('terminal-1', 'terminal-1', 'terminal'),
-          unifiedTab('browser-1', 'browser-1', 'browser')
-        ]
-      },
-      tabGroups: {
-        [WORKTREE_ID]: [
-          {
-            id: 'group-1',
-            worktreeId: WORKTREE_ID,
-            activeTabId: 'terminal-1',
-            tabOrder: ['terminal-1', 'browser-1'],
-            recentTabIds: ['browser-1', 'terminal-1']
-          }
-        ]
-      }
-    })
-
-    const result = closeTerminalTabInWorkspaceSession(current, WORKTREE_ID, 'terminal-1')
-
-    expect(result.session.tabGroups?.[WORKTREE_ID]?.[0]?.activeTabId).toBe('browser-1')
-    expect(result.session.activeTabTypeByWorktree?.[WORKTREE_ID]).toBe('browser')
-    expect(result.session.activeBrowserTabIdByWorktree?.[WORKTREE_ID]).toBe('browser-1')
-    expect(result.session.activeWorktreeId).toBe(WORKTREE_ID)
-  })
-
   it('rejects pinned tabs without mutating the session', () => {
     const current = session({
       tabsByWorktree: { [WORKTREE_ID]: [terminalTab('terminal-1', 'pty-left', true)] }

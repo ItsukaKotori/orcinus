@@ -63,12 +63,12 @@ describe('useSourceControlHostedReviewState', () => {
   })
 
   it('preserves non-GitHub reviews', () => {
-    const gitLabReview: HostedReviewInfo = {
-      provider: 'gitlab',
+    const bitbucketReview: HostedReviewInfo = {
+      provider: 'bitbucket',
       number: 42,
-      title: 'GitLab review',
+      title: 'Bitbucket review',
       state: 'open',
-      url: 'https://gitlab.com/acme/orca/-/merge_requests/42',
+      url: 'https://bitbucket.org/acme/orca/pull-requests/42',
       status: 'pending',
       updatedAt: '2026-08-27T00:00:00Z',
       mergeable: 'UNKNOWN'
@@ -77,9 +77,9 @@ describe('useSourceControlHostedReviewState', () => {
     expect(
       renderState({
         pr: null,
-        hostedReviewEntryData: gitLabReview,
+        hostedReviewEntryData: bitbucketReview,
         suppressedGitHubPR: 42
       }).hostedReview
-    ).toBe(gitLabReview)
+    ).toBe(bitbucketReview)
   })
 })

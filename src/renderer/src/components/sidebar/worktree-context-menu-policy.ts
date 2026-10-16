@@ -27,7 +27,6 @@ export const PARENT_PICKER_EXIT_ANIMATION_MS = 200
 // the reference is constant and Zustand's Object.is equality short-circuits.
 export const EMPTY_TABS_BY_WORKTREE: AppState['tabsByWorktree'] = {}
 export const EMPTY_PTY_IDS_BY_TAB_ID: AppState['ptyIdsByTabId'] = {}
-export const EMPTY_BROWSER_TABS_BY_WORKTREE: AppState['browserTabsByWorktree'] = {}
 export const EMPTY_DELETE_STATE_BY_WORKTREE_ID: AppState['deleteStateByWorktreeId'] = {}
 export const EMPTY_WORKTREE_LINEAGE_BY_ID: AppState['worktreeLineageById'] = {}
 export const EMPTY_WORKSPACE_LINEAGE_BY_CHILD_KEY: AppState['workspaceLineageByChildKey'] = {}

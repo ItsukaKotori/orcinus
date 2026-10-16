@@ -41,9 +41,6 @@ export function resolveProvisionalHostedReviewProvider(input: {
   ) {
     return input.hostedReviewCreationState.data.provider
   }
-  if (input.linkedGitLabMR != null) {
-    return 'gitlab'
-  }
   if (input.linkedAzureDevOpsPR != null) {
     return 'azure-devops'
   }

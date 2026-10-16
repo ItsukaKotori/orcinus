@@ -21,7 +21,7 @@ describe('Cmd+J activation focus routing (#9939)', () => {
     const handler = sourceBetween(
       paletteSource('use-worktree-jump-palette-selection-actions.ts'),
       'const handleSelectWorktree = useCallback',
-      'const handleSelectBrowserPage'
+      'const handleSelectWorkspaceTab'
     )
 
     expect(handler).toContain('queueWorkspaceActivationTerminalFocus(worktree.id, activation)')

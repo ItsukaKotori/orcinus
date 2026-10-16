@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { toast } from 'sonner'
 import { refreshHostedReviewCard } from '@/store/slices/hosted-review-card-refresh'
 import { checksPanelAsyncResultKey } from '../checks-panel-async-result-key'
@@ -8,13 +8,10 @@ import {
   getCheckDetailsPromptKey
 } from '../../pr-checks-fix-prompt'
 
-import { loadGitLabJobLogDetails } from '@/runtime/gitlab-job-trace-client'
 import { startFixChecksAgent } from '@/lib/fix-checks-agent-launch'
 import { openChecksPanelHostedReviewUrl } from '../checks-panel-hosted-review-click-routing'
-import { isMacPlatform } from '../../terminal-pane/terminal-link-open-hints'
 import { translate } from '@/i18n/i18n'
 import type { PRCheckDetail, PRCheckRunDetails } from '../../../../../shared/github/check-types'
-import type { GitHubPRStackMapNavigationModifiers } from '../GitHubPRStackMap'
 import type { ChecksPanelCheckAndReviewActionsInput } from './check-and-review-action-dependencies'
 import { useChecksPanelReviewLinkActions } from './use-checks-panel-review-link-actions'
 
@@ -34,19 +31,16 @@ export function useChecksPanelCheckAndReviewActions(model: ChecksPanelCheckAndRe
     fetchPRChecks,
     fetchPRComments,
     fetchPRForBranch,
-    gitLabProjectRefRef,
     isCurrentAsyncResult,
     isFixingChecksWithAI,
     linkedAzureDevOpsPR,
     linkedBitbucketPR,
     linkedGiteaPR,
-    linkedGitLabMR,
     panelContextKey,
     panelContextKeyRef,
     pr,
     prCacheKey,
     repo,
-    settings,
     setChecks,
     setChecksLoading,
     setComments,
@@ -81,35 +75,21 @@ export function useChecksPanelCheckAndReviewActions(model: ChecksPanelCheckAndRe
       const checkRunDetailsByCheckKey: Record<string, PRCheckRunDetails> = {}
       await Promise.all(
         broken.slice(0, 5).map(async (check, index) => {
-          const isGitLabJob = Boolean(check.gitlabJobId)
-          if (
-            !isGitLabJob &&
-            (activeReview.provider === 'gitlab' || !hasGitHubCheckHandle(check))
-          ) {
+          if (!hasGitHubCheckHandle(check)) {
             return
           }
           try {
-            // Why: GitLab job logs are now loadable, so the fix prompt gets the same
-            // failure context the sidebar shows instead of check names alone.
-            const details = isGitLabJob
-              ? await loadGitLabJobLogDetails({
-                  repoPath: repo.path,
-                  repoId: repo.id,
-                  settings,
-                  check,
-                  projectRef: gitLabProjectRefRef.current
-                })
-              : await fetchPRCheckDetails(
-                  repo.path,
-                  {
-                    checkRunId: check.checkRunId,
-                    workflowRunId: check.workflowRunId,
-                    checkName: check.name,
-                    url: check.url,
-                    prRepo: pr?.prRepo ?? null
-                  },
-                  { repoId: repo.id }
-                )
+            const details = await fetchPRCheckDetails(
+              repo.path,
+              {
+                checkRunId: check.checkRunId,
+                workflowRunId: check.workflowRunId,
+                checkName: check.name,
+                url: check.url,
+                prRepo: pr?.prRepo ?? null
+              },
+              { repoId: repo.id }
+            )
             if (details) {
               checkRunDetailsByCheckKey[getCheckDetailsPromptKey(check, index)] = details
             }
@@ -122,7 +102,7 @@ export function useChecksPanelCheckAndReviewActions(model: ChecksPanelCheckAndRe
         return
       }
       const basePrompt = buildFixBrokenChecksPrompt({
-        reviewKind: activeReview.provider === 'gitlab' ? 'MR' : 'PR',
+        reviewKind: 'PR',
         reviewNumber: activeReview.number,
         reviewTitle: activeReview.title,
         reviewUrl: activeReview.url,
@@ -156,11 +136,9 @@ export function useChecksPanelCheckAndReviewActions(model: ChecksPanelCheckAndRe
     isFixingChecksWithAI,
     pr?.prRepo,
     repo,
-    settings,
     sourceControlAiActionsVisible,
     stateRequestKey,
-    setIsFixingChecksWithAI,
-    gitLabProjectRefRef
+    setIsFixingChecksWithAI
   ])
 
   const refreshLinkedGitHubPullRequest = useCallback(
@@ -194,7 +172,6 @@ export function useChecksPanelCheckAndReviewActions(model: ChecksPanelCheckAndRe
           repoId: repo.id,
           branch,
           linkedGitHubPR: linkedPRNumber,
-          linkedGitLabMR,
           linkedBitbucketPR,
           linkedAzureDevOpsPR,
           linkedGiteaPR
@@ -304,7 +281,6 @@ export function useChecksPanelCheckAndReviewActions(model: ChecksPanelCheckAndRe
       linkedAzureDevOpsPR,
       linkedBitbucketPR,
       linkedGiteaPR,
-      linkedGitLabMR,
       panelContextKey,
       prCacheKey,
       repo,
@@ -318,32 +294,15 @@ export function useChecksPanelCheckAndReviewActions(model: ChecksPanelCheckAndRe
   )
 
   // Open hosted review in browser
-  const handleOpenPR = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
-      if (activeReview?.url) {
-        // Why: route through openHttpLink so PR/MR links honor the "open links in app" setting; Shift+Cmd/Ctrl is the escape hatch.
-        openChecksPanelHostedReviewUrl({
-          url: activeReview.url,
-          event: event.nativeEvent,
-          isMac: isMacPlatform(),
-          worktreeId: activeWorktreeId
-        })
-      }
-    },
-    [activeReview, activeWorktreeId]
-  )
+  const handleOpenPR = useCallback(() => {
+    if (activeReview?.url) {
+      openChecksPanelHostedReviewUrl({ url: activeReview.url })
+    }
+  }, [activeReview])
 
-  const handleOpenStackPR = useCallback(
-    (url: string, modifiers: GitHubPRStackMapNavigationModifiers) => {
-      openChecksPanelHostedReviewUrl({
-        url,
-        event: modifiers,
-        isMac: isMacPlatform(),
-        worktreeId: activeWorktreeId
-      })
-    },
-    [activeWorktreeId]
-  )
+  const handleOpenStackPR = useCallback((url: string) => {
+    openChecksPanelHostedReviewUrl({ url })
+  }, [])
 
   const { handleUnlinkReview, handleLinkAnotherReview, handleLinkSuppressedPullRequest } =
     useChecksPanelReviewLinkActions(model, refreshLinkedGitHubPullRequest)

@@ -10,7 +10,6 @@ import {
   type TerminalPasteTextOptions
 } from './terminal-paste-coordinator'
 import { resolveTerminalPasteRuntime } from './terminal-paste-runtime'
-import { getTerminalPasteSshRemotePlatform } from './terminal-paste-ssh-platform'
 import {
   isTerminalPanePasteFocusCurrent,
   isTerminalPanePasteTargetCurrent
@@ -81,7 +80,6 @@ export function createTerminalPanePasteExecution(
           platform: shortcutPlatform,
           ptyId,
           connectionId,
-          remotePlatform: getTerminalPasteSshRemotePlatform(connectionId),
           transport,
           isWindowsConpty: forceBracketedMultilineTextPaste
         })

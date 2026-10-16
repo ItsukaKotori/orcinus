@@ -159,10 +159,6 @@
         "preload": {
           "api": {
             "31bfe8ae1a": "在网络客户端中不可用。",
-            "67ec964791": "Web 客户端不支持 Cookie 导入。",
-            "275a776357": "悬停提取在 Web 客户端中不可用。",
-            "8dfcb7a351": "选择屏幕截图在 Web 客户端中不可用。",
-            "31bea294d5": "抓取模式在 Web 客户端中不可用。",
             "b8a1618172": "PR详细信息生成在 Web 客户端中不可用。",
             "e57c82d276": "Commit 消息模型发现在 Web 客户端中不可用。",
             "9fc90740b6": "Commit 消息生成在 Web 客户端中不可用。",
@@ -184,11 +180,7 @@
     },
     "store": {
       "slices": {
-        "browser": {
-          "d175274b6d": "新浏览器选项卡",
-          "08fc23631d": "浏览器",
-          "remoteCookieImportUnavailable": "远程运行时激活期间无法手动导入 Cookie 文件。"
-        },
+        "browser": {},
         "editor": {
           "dcb521ed29": "该文件处于冲突状态，但没有可编辑的工作树文件。",
           "conflictPlaceholderGuidance": "请在 Git 中解决冲突，或恢复其中一侧后再重新打开。",
@@ -288,12 +280,8 @@
           "66e3bd7ce6": "发送至 {{value0}}",
           "53883b7bc3": "无法发送至 {{value0}}"
         },
-        "jira": {
-          "856083302c": "Jira 连接已被新的请求取代。"
-        },
-        "linear": {
-          "37d36984d0": "Linear 连接已被新的请求取代。"
-        },
+        "jira": {},
+        "linear": {},
         "orca": {
           "profiles": {
             "612f7f6861": "创建配置文件失败",
@@ -554,10 +542,7 @@
         },
         "browser": {
           "tab": {
-            "open": {
-              "urlFailed": "无法打开网址。",
-              "searchFailed": "无法使用 {{value0}} 搜索。"
-            }
+            "open": {}
           }
         }
       },
@@ -624,29 +609,11 @@
       },
       "linear": {
         "usage": {
-          "examples": {
-            "readTicket": "阅读关联的议题",
-            "postUpdate": "发布进度更新",
-            "moveState": "推进议题",
-            "attachPr": "附加评审链接",
-            "triageFollowups": "分类处理并创建跟进项",
-            "readTicketSummary": "开始工作前，获取关联 Linear 议题的完整上下文。",
-            "readTicketPrompt": "使用 {{value0}} 读取此工作树关联的 Linear 议题，然后在开始前总结目标和验收标准。",
-            "postUpdateSummary": "将进度或完成情况总结评论回 Linear 议题。",
-            "postUpdatePrompt": "使用 {{value0}} 在关联的 Linear 议题上发布完成更新，说明变更内容及验证方式。",
-            "moveStateSummary": "随着工作进展推进 Linear 工作流状态。",
-            "moveStatePrompt": "变更已就绪后，使用 {{value0}} 将关联的 Linear 议题移至 In Review。",
-            "attachPrSummary": "创建拉取或合并请求时，将其关联到 Linear 议题。",
-            "attachPrPrompt": "使用 {{value0}} 将此拉取或合并请求附加到关联的 Linear 议题。",
-            "triageFollowupsSummary": "设置负责人、优先级或预估工时，并创建带父级关联的后续议题。",
-            "triageFollowupsPrompt": "使用 {{value0}} 对关联的 Linear 议题进行分类处理 — 设置优先级和预估工时 — 并为延后清理创建带父级关联的后续议题。"
-          }
+          "examples": {}
         },
         "issue": {
           "workspace": {
-            "open": {
-              "4f2c1d8a3b": "无法打开关联到此议题的工作区。"
-            }
+            "open": {}
           }
         }
       },
@@ -661,10 +628,7 @@
       "browser": {
         "cookie": {
           "import": {
-            "toast": {
-              "restartFallbackUnavailableNone": "{{value0}} 个 Cookie 均无法加载，且重启回退不可用。此配置文件的旧 Cookie 已被替换。请重试导入。",
-              "restartFallbackUnavailablePartial": "已导入 {{value1}} 个 Cookie 中的 {{value0}} 个。其余无法加载，且重启回退不可用。请重试导入。"
-            }
+            "toast": {}
           }
         }
       },
@@ -688,8 +652,7 @@
         "chooseOrAddProjectBeforeWorkspace": "创建工作区前，请选择或添加项目。",
         "folderWorkspaceCreateFailedTitle": "文件夹工作区创建失败",
         "folderWorkspaceCreateFailedMessage": "无法创建文件夹工作区。请查看上方错误详情，然后重试。",
-        "setupAgentStartupPolicySaveFailed": "保存设置启动行为失败",
-        "5f3d2c8a1b": "解析 MR 基础分支失败"
+        "setupAgentStartupPolicySaveFailed": "保存设置启动行为失败"
       },
       "useGlobalFileDrop": {
         "38c9f034ff": "无法上传删除的文件。",
@@ -702,11 +665,6 @@
         "ownerChanged": "无法确认哪个主机拥有此工作区。请在它重新连接后重试。"
       },
       "useIpcEvents": {
-        "0e3cf53060": "未找到浏览器选项卡 {{value0}}",
-        "2f6637fe6c": "浏览器选项卡 {{value0}} 已固定",
-        "a8d2bf8e9e": "没有可关闭的活动浏览器选项卡",
-        "291c8ed902": "当远程运行时处于活动状态时，浏览器选项卡不可用",
-        "f45fa2b03c": "当远程运行时处于活动状态时，浏览器配置文件不可用",
         "f000b2ff76": "没有活动的工作树",
         "56d3ec4203": "无法创建无标题 Markdown 文件。",
         "f6300deb8b": "新浏览器选项卡",
@@ -1004,104 +962,17 @@
         "checkActionRequiredHint": "此检查需要在 GitHub 上执行手动操作（例如批准工作流运行）后才能解除合并阻止。"
       },
       "GitLabItemDialog": {
-        "65e784c1f1": "重新打开",
-        "a199eb364b": "关闭",
-        "16b3412570": "合并",
-        "131865e231": "创建工作区",
-        "f2e64d1c20": "在 GitLab 中打开",
-        "84012fa8fb": "评论",
-        "c08e1d5a57": "评论 {{value0}}{{value1}}...",
-        "f11e3e7675": "此 MR 没有运行任何管道。",
-        "808b1ca1ba": "没有更改的文件。",
-        "007423f585": "差异内容不可用。",
-        "a7eb4f4916": "从",
-        "21f8dde18a": "内嵌评论",
-        "7a7204417f": "线",
-        "ceb08a733d": "文件",
-        "85a8170279": "还没有评论。",
-        "14423484db": "没有描述。",
-        "da4174b00f": "编辑",
-        "93f79a3fc1": "保存",
-        "f72fad3b16": "取消",
-        "717b706849": "加载标签",
-        "3c0b6ccca7": "错误、后端",
-        "dde24ade55": "标签",
-        "908d8d2a73": "描述",
-        "89f3f19368": "标题",
-        "7a2117129a": "添加",
-        "05939e977d": "添加评审人",
-        "474b50d988": "没有评审人",
-        "1b19cdc510": "移除评审人 {{value0}}",
-        "cb55b0390f": "管理",
-        "4f9313984d": "评审人",
-        "02cbe2de44": "管道",
-        "be3d291837": "文件",
-        "c996e2962c": "对话",
-        "b3c156dd51": "刷新",
-        "9bfb4a24d7": "由",
-        "30c97083c2": "GitLab 工作项详细信息",
-        "e089f62594": "合并 MR !{{value0}}",
-        "865ea2703e": "已重新打开 MR !{{value0}}",
-        "9b11cd233f": "已关闭 MR !{{value0}}",
-        "60c13320c4": "添加了内嵌评论",
-        "ffdd9a78e1": "MR diff refs 不可用于内嵌注释。",
-        "00d0d25825": "文件、行和注释是必需的。",
-        "ceaf7c30c7": "此 GitLab 用户无法获取评审人 ID。",
-        "f7cb495a12": "重试 {{value0}}",
-        "98718490e4": "MR 职称是必需的。",
-        "d600c2619a": "加载日志",
-        "028bde664e": "隐藏",
-        "2f9b27f838": "工作日志",
-        "032ae1312b": "在 GitLab 中打开作业",
-        "fa3e042203": "重试",
-        "f23ea85341": "已解决",
         "4186685c78": "重新打开",
         "cae2712a23": "关闭",
         "881e522e04": "合并",
-        "6de8ce0cc6": "需要 {{value0}}",
-        "22511537d2": "已批准",
-        "00f3bab87b": "需要 {{value0}}",
-        "11384f99aa": "数字",
-        "40c56b95e2": "{{value0}} 批准{{value1}} 剩余",
-        "3a051b8ade": "工作项目",
-        "32f8bef818": "无日志输出。",
-        "4168eb2c51": "解决",
-        "commentTooLarge": "评论过长，无法安全提交。"
+        "11384f99aa": "数字"
       },
       "JiraIssueWorkspace": {
-        "b0b92666c9": "评论",
-        "a585fd204e": "添加 Jira 评论...",
-        "2441be6f9f": "启动工作区",
-        "9178090e26": "还没有评论。",
-        "5cd09beaf9": "重试",
-        "9a980b06b9": "评论",
-        "c4889a47e4": "没有提供描述。",
-        "0f3c07a901": "后端、错误",
-        "aee97b6913": "标签",
-        "444865b4a8": "标题",
-        "0b6b5646ed": "未分配",
-        "51bed73f88": "无优先权",
-        "7a96985ca0": "关闭",
-        "76513c7898": "关闭 Jira 议题预览",
-        "857bd2f88f": "预览、编辑并从选定的议题开始工作。",
-        "0cc62bd690": "复制提示",
-        "80efa101c5": "复制建议的分支名称",
-        "38839801e8": "复制键",
-        "779bb91ee0": "复制网址",
-        "69da9a208c": "在 Jira 中打开",
-        "fa132c8aed": "添加评论失败。",
-        "ea21952aa3": "无法更新 Jira 议题。",
-        "6c41a9bcea": "复制 {{value0}} 失败",
-        "2ff69a3545": "{{value0}} 已复制",
-        "666cfdd835": "未知",
         "9ebee71962": "标签",
         "def3d0e824": "标题",
         "b8e2079d96": "负责人",
-        "54649eaeab": "+ 负责人",
         "2a829a2f00": "优先事项",
-        "693be070d0": "过渡",
-        "ef21405c6d": "Jira 议题",
-        "commentTooLarge": "评论过长，无法安全提交。"
+        "693be070d0": "过渡"
       },
       "Landing": {
         "76a95f7f47": "创建",
@@ -1125,118 +996,17 @@
         "157bb5ecbb": "打开 GitHub",
         "preflightDismiss": "关闭"
       },
-      "LinearIssueMarkdownDescriptionEditor": {
-        "d9c47069ef": "Markdown",
-        "a7301a11f3": "保存",
-        "632096eb1c": "关联",
-        "340160f4e8": "删除链接",
-        "9eaf02ac01": "引用",
-        "e2a0267c8c": "清单",
-        "d6b2f3d35b": "编号列表",
-        "c82917e06e": "项目符号列表",
-        "ad1869bd54": "内联代码",
-        "28fd951b83": "删除线",
-        "5666b4493d": "斜体",
-        "caa88f50d0": "粗体",
-        "dddaa7a0a6": "标题 2",
-        "e3f741d258": "标题 1",
-        "68a41d5665": "正文",
-        "7c52151156": "议题描述格式",
-        "5c16ec8f14": "链接网址",
-        "4f2fddc2b7": "没有提供描述。"
-      },
+      "LinearIssueMarkdownDescriptionEditor": {},
       "LinearIssueTextEditor": {
-        "947ba2d6f4": "保存",
-        "04d73b72dc": "议题标题",
-        "e8ff595db3": "更新 {{value0}} 失败",
-        "1e08a1ec80": "标题为必填项",
         "00fa439dc7": "标题",
         "75294b07d1": "描述"
       },
       "LinearIssueWorkspace": {
-        "ad5dec37b7": "预览、编辑并从选定的议题开始工作。",
-        "c23e79e5c0": "操作",
-        "b0eac92d85": "重试",
-        "fabbd3f974": "更新了议题·",
-        "543970c87a": "活动",
-        "df4c86ed12": "关闭",
-        "7a4997d8bb": "关闭 Linear 议题预览",
-        "e1e0a9bca9": "启动工作区",
-        "30a7f56c0a": "从议题开始工作区",
-        "30c1242f3a": "复制标识符",
         "9e3c49beb8": "复制议题标识符",
-        "9a9a884236": "复制网址",
-        "97c19a84f1": "复制 Linear URL",
-        "f63ef94ea8": "议题",
-        "f6c6381593": "复制提示",
-        "5d670ec8dc": "复制建议的分支名称",
-        "937ba6ad9a": "加载项目",
-        "db3f269d98": "搜索项目",
-        "b51276c8d6": "项目",
-        "8b5b593053": "项目更新失败",
-        "f9d4ef9807": "项目已更新",
-        "38b80780c2": "无法加载项目",
-        "42589845bc": "创建",
-        "c182e02de5": "子议题标题",
-        "8c55d6696a": "添加子议题",
-        "b25e453c9d": "创建子议题失败",
-        "aeed19d003": "创建 {{value0}}",
-        "9a1317cdd3": "无法加载子议题",
-        "9bcbaa2737": "复制 {{value0}} 失败",
-        "7835483c43": "{{value0}} 已复制",
-        "61f424f8ca": "Linear 议题",
-        "ca8778c124": "未知",
-        "8a33c85e9c": "有人",
         "f5a6b38a14": "面板",
-        "65239a714b": "Linear",
-        "af6e02c44a": "页面",
-        "76ffd3c937": "搜索要添加的项目。",
-        "c11b4e3cc2": "没有找到项目。",
-        "519c3587f3": "添加到项目",
-        "openAttachedWorkspace": "打开关联到议题的工作区",
-        "openWorkspace": "打开工作区",
-        "openOnLinear": "在 Linear 中打开",
-        "moreWorkspaceActions": "更多议题工作区操作",
-        "startNewWorkspace": "启动新工作区",
-        "workspaceSection": "工作区",
-        "noWorkspaceYet": "暂无"
+        "af6e02c44a": "页面"
       },
-      "LinearItemDrawer": {
-        "04008e6c46": "从议题开始工作区",
-        "a4fcc57522": "还没有评论。",
-        "fde849b2b6": "评论",
-        "9dc54172db": "关闭 · Esc",
-        "0190b760c1": "在 Linear 中打开",
-        "04a442f796": "预览并编辑选定的 Linear 议题。",
-        "d369841269": "发送评论",
-        "2fcff829a8": "添加评论...",
-        "2820f0f0f0": "发表评论...",
-        "6ab35eafd5": "添加评论失败",
-        "367f828482": "没有找到标签",
-        "cddd9b04a7": "加载标签",
-        "23886c7eec": "添加标签",
-        "7f7b89b631": "标签： {{value0}}",
-        "b2376d0179": "正在加载成员",
-        "866316f22c": "未分配",
-        "b5675b0694": "保存",
-        "ceeb8c6153": "清除",
-        "fbb90300e2": "定制估价",
-        "780ea6ed89": "未找到任何州",
-        "59b6cd3706": "加载状态",
-        "64bfffc4dd": "标签",
-        "dd304de85a": "特性",
-        "0be31fef8e": "估计值必须是非负整数",
-        "48e17e8cbd": "未知",
-        "858d0630da": "关闭预览",
-        "39883467f4": "Linear 议题",
-        "fda549766e": "{{value0}} 发表评论",
-        "d71cd3003e": "+ 负责人",
-        "commentTooLarge": "评论过长，无法安全提交。",
-        "openAttachedWorkspace": "打开关联到议题的工作区",
-        "openWorkspace": "打开工作区",
-        "moreWorkspaceActions": "更多议题工作区操作",
-        "startNewWorkspace": "启动新工作区"
-      },
+      "LinearItemDrawer": {},
       "NewWorkspaceComposerCard": {
         "cbb47ee0dc": "仅适用于本地 Git 项目。",
         "d861de981b": "稀疏检出",
@@ -1306,7 +1076,6 @@
         "perWorkspaceEnvHint": "通过环境模板按需创建环境",
         "branchName": "分支名称",
         "branchNamePlaceholder": "feature/my-branch",
-        "connectTimedOut": "连接超时，可能仍在后台连接中。",
         "connectingHost": "Connecting…",
         "connectHost": "Connect",
         "addHost": "Add host",
@@ -1526,16 +1295,8 @@
         "92b0f9d921": "已通过身份验证并重试。",
         "cd8c34aac1": "gh",
         "cf82170065": "无法为该仓库加注星标。确保",
-        "30c36231c1": "Orcinus 是开源项目。如果它今天帮到了你，GitHub 星标会帮助其他开发者找到它。",
-        "b5e685e4d9": "关闭",
-        "5f6df21046": "喜欢 Orcinus 吗？",
-        "2d67b6c849": "在 GitHub 上加星标",
-        "af3c9bbb37": "正在加星标...",
         "68a41bc3aa": "无法使用以下方式加星:",
         "996bf76e46": "在浏览器中打开 GitHub 以完成操作。",
-        "d32015fec7": "正在打开...",
-        "157bb5ecbb": "打开 GitHub",
-        "8c967b4d15": "稍后",
         "73dfd4eb8d": "不再询问"
       },
       "TaskPage": {
@@ -1551,104 +1312,23 @@
         "60f806ce99": "连接 Jira 站点",
         "8ff6fdc368": "创建中…",
         "fc0d8a1fa4": "提交。",
-        "919a20dd5b": "输入 {{value0}}",
-        "56cdb413a2": "逗号分隔值",
-        "1f0fce91e3": "选择{{value0}}",
-        "cbcdcbe244": "正在加载所需的 Jira 字段...",
         "34d97ca682": "这是怎么回事？",
-        "f161bf9ede": "说明（可选）",
         "578f730c16": "简短摘要",
         "16cba35bee": "标题",
-        "ae592fee62": "议题类型",
-        "7d63e2626e": "加载中...",
-        "93c57f15e5": "没有找到项目。",
-        "cfb56a7868": "搜索项目...",
         "00022ec0ba": "项目",
-        "0c11ca0b6d": "新建 Jira 议题",
         "d0ca4aa1d0": "标签",
-        "1742eafc14": "没有项目",
-        "69591944e7": "低的",
-        "7fd59c18d8": "中等的",
-        "345b169f1f": "高的",
-        "f373ab1a4f": "紧迫的",
-        "713179dfdc": "无优先权",
-        "c8d5bec5f7": "优先事项",
         "42a9160321": "未分配",
-        "d2a876ca53": "负责人",
         "154b0fa623": "状态",
-        "9bc8aea407": "添加描述...",
-        "d9151fd4e9": "议题标题",
-        "4f3cb99f41": "切换团队",
-        "c11105dac5": "新一期",
-        "1b59a07674": "创建中...",
-        "cf72580c04": "撰写描述、项目简介或收集想法...",
-        "2ea1c701b6": "目标日期",
-        "7da41c9225": "目标",
-        "09623359b9": "开始日期",
         "7d08e8be0f": "开始",
-        "af9e877f30": "无标签",
-        "d6cda23ef1": "成员",
-        "cfaadb6b22": "无负责人",
-        "34da8ac06c": "负责人",
-        "579f98afcd": "添加简短摘要...",
-        "ecbcc83140": "项目名称",
-        "b6795e65fd": "关闭",
-        "a98cbe7664": "团队",
-        "02f67c0d09": "新项目",
-        "bdebffcbfe": "为所选团队创建 Linear 项目。",
-        "1361275ec3": "新建 Linear 项目",
         "7f3f7b4c18": "描述（可选，markdown）",
         "9f2b4c03a6": "提交",
         "d3d0998b7d": "新的 GitHub 议题",
-        "d1e243795c": "议题",
-        "be8cf68d9f": "查看议题",
-        "67662ade50": "项目议题",
-        "6244a02f46": "在 Linear 中打开",
         "606a85c774": "开放",
-        "5e8061b088": "从 {{value0}} {{value1}} 开始工作区",
-        "592a55611b": "尝试选择更多的团队或者刷新；团队筛选条件适用于当前获取的议题集。",
-        "618107fab3": "没有获取到与所选团队匹配的议题",
-        "903c7af49f": "未找到 Linear 议题",
-        "5ed38a49e5": "查看下面的工作区错误，然后刷新。",
-        "cc8795e07c": "无法加载 Linear 议题",
         "f362667d55": "已更新",
         "b1eaa18ace": "议题",
-        "37e7ee311e": "标识",
-        "b7bae28b6a": "显示",
-        "a26a48252e": "显示属性",
-        "5d2d835467": "排序",
-        "5659da12fc": "分组",
         "9c57663908": "查看",
-        "af377b13b1": "{{value0}} 视图",
-        "d47248df4d": "Linear 视图模式",
-        "f397d513e3": "返回",
-        "b39fe6511d": "项目",
-        "8675cd6188": "Linear",
-        "733b8f2421": "Linear/视图",
-        "bc06ed0fb0": "返回视图",
-        "3cb855080f": "视图",
-        "b4e10f096e": "所有者",
-        "a04fe7ba73": "可见性",
-        "0aa8525950": "模型",
         "dfc0c79bd8": "议题",
-        "8a07f21e76": "健康",
-        "851017590d": "添加 Linear 访问",
-        "228b25028f": "直接从这里浏览并开始处理分配给您的 Linear 议题。",
-        "6d56559467": "连接您的 Linear 账户",
-        "eee68073b2": "在 Jira 中打开",
-        "9497f2787c": "启动工作区",
-        "eba87f2edb": "未发现 Jira 议题",
-        "63b2abd3aa": "Jira 议题",
-        "e7115334aa": "隐藏 Jira",
-        "83bce6be5c": "连接 Jira",
-        "b518ae6307": "直接从此处浏览、编辑、创建 Jira 议题并开始工作。",
-        "a150c59da7": "连接您的 Jira 站点",
-        "bcdc1330b2": "在 GitLab 中打开",
-        "00b7ffb952": "类型/状态",
         "eb10c32872": "ID",
-        "e9b6955dcd": "议题 #{{value0}}",
-        "a0544fb653": "MR !{{value0}}",
-        "8396825a14": "操作",
         "c1d1600362": "在浏览器中打开",
         "b6329379ca": "启动新工作区",
         "054bf695cc": "草稿",
@@ -1663,17 +1343,8 @@
         "f6fa3c97d0": "评审人",
         "8aba10579d": "负责人",
         "5eccb3c841": "标题/上下文",
-        "d4c2830063": "刷新 GitLab 工作项",
-        "c679af7ad9": "刷新我的待办事项",
         "dfd72673e7": "无法保存项目选择。",
         "b797bdd7c3": "清除搜索",
-        "99c2755218": "Jira JQL，例如 project = ABC AND statusCategory != Done",
-        "2ff9fd71fd": "刷新 Jira 议题",
-        "0b65d3fb2c": "搜索 Linear 项目...",
-        "eec0c5c079": "搜索 Linear 议题...",
-        "8964184a8b": "刷新 Linear",
-        "3feb524d42": "新建 Linear 议题",
-        "0cbf7e5cf3": "Linear 任务模式",
         "ff53631e6f": "刷新 GitHub 工作",
         "6ffa6be99f": "刷新 GitHub 工作",
         "b15ceb409d": "搜索 GitHub 议题...",
@@ -1686,18 +1357,10 @@
         "1a06219d5c": "关闭任务",
         "3f594861a5": "无法保存团队选择。",
         "d0d570b306": "无法切换 Linear 工作区。",
-        "cb98f0350c": "创建 {{value0}}",
-        "1e1b2ad8f2": "在提交此议题之前，请从项目工作区选择一个团队。",
-        "3ca9b424a3": "创建项目失败。",
         "3f9604efc7": "已打开议题 #{{value0}}",
         "585dba2989": "无法打开此议题所附的工作区。",
         "534a9c6017": "无法打开附加到此PR的工作区。",
         "fe380f306c": "无法保存默认任务视图。",
-        "af2a8371de": "无法加载 Jira 议题类型。",
-        "6775c05483": "无法更新 Linear 状态",
-        "745ae567d4": "“{{value0}}”不适用于 {{value1}}",
-        "669e419d65": "Linear 视图缺少工作区上下文。",
-        "cba2a2b7fb": "Linear 项目缺少工作区上下文。",
         "f4374519ae": "您的首选议题源（upstream）已不再为 {{value0}} 配置。将使用 origin。",
         "e9139db03f": "无法隐藏 {{value0}}。",
         "b73717af92": "下一页",
@@ -1740,9 +1403,6 @@
         "5ebff3a0aa": "没有任何",
         "d09bf34db7": "已关闭",
         "1c893195ac": "更新状态失败",
-        "afc68824ff": "未找到任何州",
-        "cc13109b5d": "加载状态",
-        "d45a910c4a": "将 Linear 状态从 {{value0}} 更改为",
         "d8a517ad89": "标识符",
         "50387522d7": "没有分组",
         "d747aed72f": "看板",
@@ -1767,28 +1427,15 @@
         "6459faa8b3": "错误",
         "e15ba2d2eb": "创建议题",
         "3b11c8e8fc": "数组",
-        "e178c0a953": "在创建议题之前选择一个 Jira 项目。",
-        "0f7b0d964a": "在 {{value0}} 中创建一个新议题。",
-        "eff9800d4b": "{{value0}} 标签{{value1}}",
-        "d7f16d0e32": "选择团队",
-        "5301ca0f20": "创建项目",
-        "7719d8daa9": "{{value0}} 成员{{value1}}",
-        "5af6f0ae5b": "选择团队",
         "cfb730b73e": "议题",
         "3659f9792a": "看板",
         "d079be2dc8": "没有分配的议题。请尝试搜索。",
-        "2bdefbcac3": "尝试不同的搜索查询。",
-        "25ff84769a": "没有议题与此 Linear 上下文匹配。",
         "cbce2bc9cd": "没有任何",
         "51411113df": "列表",
-        "60f68a2ef4": "Linear 议题",
         "b2007ba885": "项目",
         "6edf402e11": "概述",
         "9ae151b26b": "Linear",
-        "94d900518d": "没有与所选预设匹配的议题。",
-        "f51e254d35": "尝试不同的 JQL 查询。",
         "4645a7814f": "Jira",
-        "e224d76876": "MR",
         "bbec4717ee": "mr",
         "d6d08c1650": "选择一个项目以查看 GitLab 工作项。",
         "f294c500ef": "没有 GitLab 工作与此筛选条件匹配。",
@@ -1797,8 +1444,6 @@
         "a9f256ecea": "没有与此筛选条件匹配的 GitLab 议题。",
         "2007e14d95": "GitLab",
         "456b8512da": "合并请求",
-        "03da966159": "选择一个项目，以便我们可以向 GitLab 进行身份验证。",
-        "d591aac6ae": "没有待办事项，你全部处理完啦！",
         "33a4bd7f5c": "待办事项",
         "66ae7330f6": "更多操作",
         "93d5f21fc1": "PR",
@@ -1818,16 +1463,11 @@
         "bc46d8204e": "选择一个项目在 GitHub 中打开",
         "d1132848f8": "选择一个 GitHub 项目在 GitHub 中打开",
         "2af3ab5c58": "选择一个团队在 Linear 中打开",
-        "aec5feeb69": "无法创建 Jira 议题。",
         "7437e340b4": "无法创建议题。",
         "9e03c17847": "打开 PR 详情以查看当前评审人。",
         "3b7f34282f": "关闭",
-        "246bd64aed": "在 Linear 中打开 {{value0}}",
-        "ff90d0abc7": "从 {{value0}} 开始工作区",
         "fe28c9821f": "视图",
         "8d1e17a3ef": "在 GitHub 中打开 {{value0}}",
-        "4ac8ff2275": "在 Jira 中打开 {{value0}}",
-        "40eaf2c27c": "详情",
         "closeAsCompleted": "关闭为已完成",
         "closeAsCompletedDescription": "完成、已关闭、已修复、已解决",
         "closeAsNotPlanned": "关闭为不计划处理",
@@ -1846,21 +1486,6 @@
         "useIssueNumber": "使用议题 #{{value0}}",
         "noMatchingIssuesLoaded": "没有加载到匹配的议题。",
         "editReviewersWithCurrent": "编辑评审人：{{value0}}",
-        "linearEmptyAttributeFilter": "没有匹配所选筛选条件的问题。请清除筛选条件或尝试其他条件。",
-        "linearEmptyUnfilteredScope": "此工作区范围内没有问题。请尝试搜索或调整团队。",
-        "linearFetchMore": "加载更多",
-        "linearHasWorktreeLoadFailed": "无法加载关联到 Orcinus 工作区的 Linear 议题。",
-        "linearHasWorktreePartialLoadFailed": "部分关联到 Orcinus 工作区的 Linear 议题无法加载。请刷新后重试。",
-        "linearHasWorktreeSearchPlaceholder": "筛选关联到 Orcinus 工作区的议题...",
-        "linearModeHasWorktree": "有工作区",
-        "linearModeHasWorktreeTooltip": "已关联 Orcinus 工作区的 Linear 工单",
-        "linearEmptyHasWorktree": "还没有关联到 Orcinus 工作区的 Linear 工单。从 Linear 议题开始工作后会显示在这里。",
-        "linearOpenAttachedWorkspace": "打开关联到 {{value0}} 的工作区",
-        "linearWorktreesColumn": "工作区",
-        "jiraSortAscending": "升序",
-        "jiraSortDescending": "降序",
-        "jiraSortBy": "排序方式",
-        "jiraToggleSortDirection": "按{{value0}}排序",
         "75a38d7df8": "GitHub 数据暂时不可用，其 API 可能已宕机、被限流或无法访问。请稍后重试。",
         "noGithubSourceDetected": "未检测到 GitHub 来源：",
         "noGithubSourceDetectedHint": "它可能没有 GitHub 远程仓库，或来源无法解析。",
@@ -1896,52 +1521,9 @@
         "e07012f26e": "搜索..."
       },
       "UpdateCard": {
-        "68b235d264": "重启即可更新",
-        "6714206e5a": "Orcinus v{{value0}} 已下载。准备好后请重新启动。",
-        "93794ea932": "Orcinus v{{value0}} 正在下载。",
-        "8acbdd3961": "最小化到状态栏",
-        "17412483da": "准备安装",
-        "47126bcf57": "手动下载",
-        "3553a8672f": "最后一个错误",
-        "90559b14e3": "这将在重启后启用进程级 Electron 网络开关。适用于拒绝 HTTP/2 更新下载的企业 VPN 或代理。",
-        "6e45bfa2e0": "正在下载...",
-        "558842597d": "下载更新",
-        "f58b5c57a6": "新的：",
-        "ec8fe71cfc": "更新",
-        "44324ef542": "发行说明",
-        "fdd4a364fa": "会话不会被中断。",
-        "05ad78a6d1": "Orcinus v{{value0}} 已准备就绪。",
-        "318d3b4bc7": "关闭更新",
-        "9abc59f814": "可用更新",
-        "aad383aecc": "阅读完整的发行说明",
-        "ccd8b0a793": "自您上次更新以来还有更多内容",
-        "b1d867f4fb": "更新期间您的终端会话不会中断。",
-        "09a55c39b5": "正在安装...",
-        "ea2a41adbe": "您使用的是最新版本。",
-        "ba5ffc949c": "正在检查更新...",
-        "2c2d3e03ca": "重试",
-        "4cf109845a": "更新错误",
-        "6b0085010d": "重新检查",
-        "48565a32bc": "重试下载",
-        "933c6fdf5b": "启用并重新启动",
-        "1339b82cee": "HTTP/2 下载被阻止",
-        "7274ef6e59": "关闭提示",
-        "a726967bd3": "关闭",
         "d5253b54af": "错误",
         "7ffc08506e": "查看",
-        "522df222b9": "旋转器",
-        "e944c2de43": "更新验证被阻止",
-        "5b309b19f3": "更新未安装",
-        "092f09fc14": "安装程序的发布者与 Orcinus 不匹配，因此我们停止了更新。请勿安装此下载；请从官方版本获取正确的版本。",
-        "c9ff9b9ec2": "查看官方版本",
-        "a05992a26b": "签名检查无法运行——通常是因为防病毒软件阻止了它。请重试下载，或从我们的官方版本获取安装程序。",
-        "5194358929": "隐藏详情",
-        "8bc9e17d8f": "显示详情",
-        "8cf17b10af": "本地构建错误",
-        "a4650b0dc4": "无法使用本地构建",
-        "b1e390250d": "无法完成本地构建切换。",
-        "d29740d175": "无法使用所选的构建。",
-        "37d45c9ec1": "选择其他构建"
+        "522df222b9": "旋转器"
       },
       "WorktreeJumpPalette": {
         "ac037cfac2": "移动",
@@ -2299,85 +1881,23 @@
         "api": {
           "key": {
             "dialog": {
-              "834a52c084": "正在验证...",
-              "f8f704a019": "取消",
-              "e603ee9156": "工作区 API 设置",
-              "dc7ccb0f7c": "个人 API 密钥",
-              "e3100b36b9": "如果成员 API 密钥被阻止，请请求工作区管理员允许他们通过工作区 API 设置。",
-              "d56d3629f4": "当 Orcinus 应显示该账户可以在该工作区中访问的每个团队时，首选完全访问权限。受限密钥仅公开允许的团队，而私有团队需要密钥所有者才能访问。",
-              "af52a6227f": "从账户 > 安全和访问创建个人 API 密钥。",
-              "edec49dfae": "lin_api_...",
-              "7d498f653c": "个人API密钥",
               "57a66522c8": "连接",
-              "c9889a09f8": "在创建密钥之前，使用 Linear 选择所需的工作区。",
               "e689a4d0a6": "错误"
             }
           }
         },
         "priority": {
-          "icon": {
-            "c43d3e065b": "优先事项："
-          }
+          "icon": {}
         },
         "project": {
           "view": {
             "surfaces": {
-              "8bbecb2510": "没有任何",
-              "e1fa97d21d": "选择一个项目以查看其概述。",
-              "1748d3b9af": "标签",
-              "65bda65159": "成员",
-              "c5f79616c3": "团队",
-              "25a2196732": "目标",
-              "3fb6473111": "开始",
-              "111bef9aa8": "负责人",
-              "3be47aed6f": "优先事项",
-              "f5ef24cf46": "健康",
-              "9ddb58edbd": "状态",
-              "0a6a5a7dd6": "最新更新",
-              "c8db98b73b": "资源",
-              "bb1405eff8": "里程碑",
-              "5d99315fb8": "规划",
-              "3ad562bdf4": "范围议题",
-              "563501f191": "进度",
-              "bb5664d456": "无项目描述。",
-              "7b147907dc": "Linear",
-              "a9785c7158": "刷新",
-              "ee3d2caabd": "议题",
-              "5f79bc76b0": "返回项目",
-              "aac9a4afc6": "在 Linear 中打开",
-              "7616c986c6": "打开 {{value0}} 议题",
-              "93e1f6bfca": "加载中",
-              "98730088a6": "。在 Linear 中搜索或打开以查看完整列表。",
-              "06b887d622": "首先显示",
-              "2c4b1c2c08": "数字",
-              "f2cc1e0ff6": "Linear/项目",
-              "906b5e4cb8": "Linear/项目/{{value0}}",
-              "85607ff793": "项目",
-              "20b9d09b7d": "未知",
-              "f059181bd9": "私人的",
-              "27d91cb1a6": "共享",
-              "9f0f51fd9e": "在 Linear 中创建或保存视图，然后刷新。",
-              "f4c79cff5f": "查看下面的工作区错误，然后刷新。",
-              "ef90b21366": "未找到任何视图",
-              "c0a50f96a4": "无法加载视图",
-              "df4bd63c1d": "未分配",
-              "30402d2c6e": "尝试搜索或刷新。",
-              "a2f31c4cd6": "未找到 Linear 项目",
-              "c9b6e9f90d": "无法加载 Linear 项目"
+              "2c4b1c2c08": "数字"
             }
           }
         },
         "scope": {
-          "selector": {
-            "91c8871dad": "添加团队访问权限",
-            "7783361266": "所有团队",
-            "e1ae6bebb0": "团队",
-            "a14ce4df2b": "所有工作区",
-            "05baa5ae90": "工作区",
-            "89f6580dbf": "搜索团队...",
-            "b3488fad3c": "没有提取任何团队。访问权限可能取决于密钥范围、私有团队成员资格、存档团队、权限或获取失败。",
-            "405b33c378": "没有提取的团队与您的搜索相匹配。"
-          }
+          "selector": {}
         }
       },
       "notification": {
@@ -2825,18 +2345,8 @@
             "c337c9d75c": "关闭"
           },
           "TerminalSshReconnectOverlay": {
-            "authFailed": "{{value0}} 身份验证失败。请重新连接以继续此终端会话。",
-            "reconnectFailed": "与 {{value0}} 的 SSH 连接失败。请重新连接以继续此终端会话。",
-            "connecting": "正在连接到 {{value0}}。主机可用后，此终端将恢复。",
-            "connected": "SSH 已连接。",
-            "disconnected": "此终端正在等待 {{value0}}。请连接以继续此 SSH 会话。",
-            "connectFailed": "SSH 连接失败",
-            "title": "需要 SSH 连接",
             "connectingButton": "连接中...",
-            "connectButton": "连接",
-            "removedTitle": "SSH 主机已移除",
-            "removedBody": "此工作区的 SSH 主机已被移除，无法再连接。请移除工作区以清理 — 远程文件不会受影响。",
-            "removeWorkspaceButton": "移除工作区"
+            "connectButton": "连接"
           },
           "TerminalRemoteRuntimeReconnectBanner": {
             "retryingTitle": "正在重新连接到远程运行时",
@@ -2878,16 +2388,10 @@
         },
         "bar": {
           "BrowserTab": {
-            "6e0bc8f3a8": "在浏览器中打开",
-            "9dd880bd56": "关闭右侧的选项卡",
-            "1611a1324b": "关闭",
-            "5d6e89891f": "复制选项卡",
             "966feb9ad5": "向右拆分",
             "7e8106899f": "向左拆分",
             "2186a8407c": "向下拆分",
-            "96354ed249": "向上拆分",
-            "911542656f": "固定标签",
-            "c5aaee8c39": "取消固定标签"
+            "96354ed249": "向上拆分"
           },
           "EditorFileTab": {
             "3da7445c84": "重命名文件 {{value0}}"
@@ -2967,7 +2471,6 @@
           "TabBarCreateEntry": {
             "d62d63b807": "创建文件",
             "25dc1cd653": "打开文件",
-            "7cdf8ee0c8": "打开网址",
             "b27864279e": "启动智能体",
             "omniboxPlaceholderWithHistory": "搜索打开的标签页、历史记录、文件、URL 和智能体…",
             "openPage": "打开页面",
@@ -2975,8 +2478,7 @@
             "2c38630a01": "工作区已不存在",
             "4f0d9a71c2": "标签页已不存在",
             "d7d496a451": "浏览器页面已不存在",
-            "chooseAction": "请选择一项操作。",
-            "searchProvider": "使用 {{value0}} 搜索"
+            "chooseAction": "请选择一项操作。"
           },
           "TabBarQuickCommandsButton": {
             "a2c7a33831": "命令",
@@ -3015,7 +2517,6 @@
                 "classifier": {
                   "42e6262ae9": "没有可用的操作。",
                   "097a982ee0": "正在加载文件...",
-                  "90eb94dc48": "输入 http:// 或 https:// URL。",
                   "5553b283ce": "输入 URL 或文件路径。",
                   "queryTooLarge": "搜索文本过长。",
                   "absolutePathRemoteBlocked": "绝对路径需要本地工作区。"
@@ -3064,21 +2565,9 @@
       "status": {
         "bar": {
           "PortsStatusSegment": {
-            "4ebf90c12e": "未检测到外部端口",
-            "7dac3ecc9d": "外部端口",
-            "95495019ed": "{{value0}} 上无法进行端口扫描：{{value1}}",
-            "a8e4bdb412": "· {{value0}} 外部",
             "9aa11005bf": "工作区·",
-            "c22ea609fd": "端口",
             "a11ed266ce": "工作区",
-            "ca41be2802": "端口 — {{value0}} 个工作区 {{value1}}{{value2}}",
-            "b8bc3e420a": "端口，{{value0}} 工作区 {{value1}}",
-            "3a87d54dfb": "未检测到工作区端口",
-            "c174bbbfed": "正在扫描工作区端口...",
-            "8caaa86e9a": "端口",
-            "45834a9ace": "端口",
-            "4ae65d871a": "外部",
-            "2b84c4d11f": "{{value0}} 个工作区 · {{value1}} 个外部"
+            "4ae65d871a": "外部"
           },
           "ResourceUsageStatusSegment": {
             "946d9f94d0": "取消",
@@ -3238,16 +2727,7 @@
             "84c3b15dca": "智能体用量限制",
             "d663430cf9": "设置用量跟踪"
           },
-          "UpdateStatusSegment": {
-            "5cd13105a3": "更新失败。单击以展开。",
-            "2201df6987": "更新失败——点击查看详情",
-            "8533c12c3c": "更新失败",
-            "962404f68e": "更新准备安装。单击以展开。",
-            "248ee5d8ef": "Orcinus v{{value0}} 正在下载... {{value1}}%",
-            "57a29c3b0e": "更新准备就绪",
-            "fd1d3b3a1d": "更新下载，{{value0}}%。单击以展开。",
-            "9d13213a56": "Orcinus v{{value0}} 已准备好安装"
-          },
+          "UpdateStatusSegment": {},
           "WorkspaceSpaceCompactPanel": {
             "a471aa9c24": "已更新",
             "9be86c46a0": "可自由",
@@ -3344,17 +2824,7 @@
           "ports": {
             "status": {
               "popover": {
-                "rows": {
-                  "a49ea79246": "转到工作树",
-                  "f2b813345f": "工作区不可用",
-                  "0e72c8d9fb": "停止进程",
-                  "536d48a5dc": "复制 {{value0}}",
-                  "085f4f0334": "在浏览器中打开",
-                  "e4a709548c": "刷新端口失败",
-                  "acdb6df590": "已停止 {{value0}} 上的进程",
-                  "480d8f2347": "已复制 {{value0}}",
-                  "b854ec9ff5": "无法打开浏览器"
-                }
+                "rows": {}
               }
             }
           },
@@ -4042,21 +3512,7 @@
           "e52454b7f6": "作为文件夹打开"
         },
         "AddRepoRemoteStep": {
-          "5b205b5281": "停止扫描",
-          "6680289908": "/home/user/project",
-          "ef410aa881": "远程路径",
-          "0416bde073": "在设置中添加",
-          "df6fbcf880": "未配置 SSH 目标。",
-          "44637f43bd": "SSH 目标",
-          "80557be85a": "选择已连接的 SSH 目标并输入 Git 存储库的路径。",
-          "91b93a90a4": "打开远程项目",
-          "007651bdf9": "导航到目录并单击“选择”以选择它。",
-          "dd3ff65486": "浏览远程文件系统",
-          "36d427bb66": "添加远程项目",
-          "35831a7312": "添加...",
-          "lockedDescription": "输入 {{value0}} 上 Git 仓库的路径。",
-          "lockedDisconnected": "{{value0}} 已断开连接。",
-          "93e0221434": "连接"
+          "0416bde073": "在设置中添加"
         },
         "AddRepoServerStartStep": {
           "ae990c86a0": "返回添加选项",
@@ -4100,8 +3556,6 @@
           "5b2ea674b1": "输入 Git URL 并选择克隆位置。",
           "c05f88a31f": "从 URL 克隆",
           "fe8e629fe3": "导航到目录并单击“选择”以选择它。",
-          "df8b0e6c22": "添加了远程项目",
-          "3e64e8a70d": "连接失败",
           "32a7256d85": "克隆",
           "69f5b5380d": "克隆...",
           "cloneOnHostDescription": "输入 Git URL，并选择要在 {{value0}} 上克隆到的位置。",
@@ -4386,10 +3840,7 @@
           "folderPathIdentity": "分支 / 文件夹路径",
           "cli": "Orcinus CLI"
         },
-        "SshTargetRow": {
-          "4677394048": "正在连接…",
-          "75ad429b5d": "连接"
-        },
+        "SshTargetRow": {},
         "WorkspaceStatusAppearancePopover": {
           "514be2f569": "将 {{value0}} 颜色设置为 {{value1}}",
           "8be427206b": "图标",
@@ -4484,16 +3935,7 @@
         },
         "WorktreeCardPorts": {
           "34f733dda2": "转到工作树",
-          "3240f320d7": "实时端口",
-          "3e5f66564e": "工作区不可用",
-          "2f854442ff": "停止进程",
-          "c8067a829a": "复制 {{value0}}",
-          "33bc7d7495": "在浏览器中打开",
-          "9950fe2d20": "刷新端口失败",
-          "5d1a5d51bb": "已停止 {{value0}} 上的进程",
-          "c89f290e25": "已复制 {{value0}}",
-          "d1113f4660": "无法打开浏览器",
-          "fed49903c9": "{{value0}} 直播 {{value1}}"
+          "3e5f66564e": "工作区不可用"
         },
         "WorktreeContextMenu": {
           "c39c37676a": "创建一个组并将该项目移入其中。",
@@ -4876,41 +4318,9 @@
           }
         },
         "LinearAgentSkillSetupPrompt": {
-          "missingCliAndSkill": "缺少 Orcinus CLI 和 Linear 智能体技能。",
-          "modalTitle": "启用 Linear ticket 访问",
-          "modalDescription": "从终端安装 Linear 技能。",
-          "modalPrompt": "允许智能体读取和编辑已附加的 Linear ticket。",
-          "dontShowAgain": "不再显示",
           "missingBoth": "缺少 Orcinus CLI 和 Linear 智能体技能。",
-          "missingCli": "缺少 Orcinus CLI。",
-          "missingSkill": "缺少 Linear 智能体技能。",
-          "title": "设置 Linear 智能体技能",
-          "remoteCopy": "这会安装主机设置；远程智能体环境可能需要单独设置。",
-          "hostCopy": "为已链接 Linear 工作的主机智能体交接安装此项。",
-          "dismiss": "关闭 Linear 智能体技能设置",
-          "setup": "设置",
-          "recheck": "重新检查",
           "panelTitle": "Linear 智能体技能",
-          "panelDescription": "安装主机智能体技能，用于已链接 Linear 任务交接。",
-          "terminalTitle": "安装 Linear 智能体技能",
-          "terminalAria": "Linear 智能体技能安装终端",
-          "install": "安装 CLI 和技能",
-          "successTitle": "Linear 议题访问已就绪",
-          "successDescription": "智能体现在可以从此工作区读取和更新已链接的 Linear 议题。",
-          "successDescriptionWsl": "WSL 智能体现在可以从此工作区使用已链接的 Linear 议题。",
-          "successDescriptionRemote": "主机智能体现在可以使用已链接的 Linear 议题。远程智能体环境可能仍需要单独设置。",
-          "successStatus": "Linear 议题访问已就绪",
-          "done": "完成",
-          "wslCopy": "为已链接 Linear 工作的 WSL 智能体交接安装此项。",
-          "wslLabel": "WSL 默认值",
-          "toastMissingCliAndSkill": "缺少 Orcinus CLI 和 Linear 技能",
-          "toastMissingCli": "缺少 Orcinus CLI",
-          "toastMissingSkill": "缺少 Linear 技能",
-          "toastInstallCliAndSkillDescription": "安装 Orcinus CLI 和 Linear 技能，让智能体可以读取并编辑 Linear 任务。",
-          "toastInstallCliDescription": "安装 Orcinus CLI，让智能体可以读取并编辑 Linear 任务。",
-          "toastInstallSkillDescription": "安装 Linear 技能，让智能体可以通过 Orcinus CLI 读取并编辑 Linear 任务。",
-          "toastRemoteDescription": "{{value0}} 远程智能体环境可能仍需要自己的设置。",
-          "toastWslDescription": "{{value0}} 此设置会在所选 WSL 智能体运行时中执行。"
+          "panelDescription": "安装主机智能体技能，用于已链接 Linear 任务交接。"
         },
         "FolderWorkspaceComposerDialog": {
           "connectFailed": "无法连接到项目。",
@@ -5072,14 +4482,7 @@
           "loopbackBlocked": "启用 SSH 隧道选项，或使用另一台主机的 Tailscale 或 LAN 地址创建新链接。"
         },
         "ForgetSshWorkspaceDialog": {
-          "reconnectFailed": "重新连接失败",
-          "forgetBody": "仅从 Orcinus 中移除此工作区。文件、Git 工作树和 {{host}} 上的分支保持不变。",
-          "title": "从 Orcinus 中移除“{{name}}”？",
-          "disconnectedBody": "此工作区的 SSH 主机未连接。重新连接以同时在远程删除，或仅从 Orcinus 中移除。",
-          "ghostBody": "{{host}} 不再是已保存的 SSH 主机，因此此工作区不再连接到活跃主机。只能从 Orcinus 中移除 — 远程文件和分支保持不变。",
-          "cancel": "取消",
-          "forget": "从 Orcinus 中移除",
-          "reconnectAndDelete": "重新连接并删除"
+          "forget": "从 Orcinus 中移除"
         },
         "MarkdownImageLightbox": {
           "image": "Image",
@@ -5483,108 +4886,22 @@
           "2f3cda96f5": "固定此仓库",
           "ee110e1830": "没有默认的基本参考"
         },
-        "BrowserDefaultZoomSetting": {
-          "2622126877": "缩放级别应用于新打开的浏览器选项卡。",
-          "bbeec087d3": "应用于新打开的浏览器选项卡。",
-          "265597101f": "默认缩放"
-        },
-        "BrowserHomePageSetting": {
-          "d4ddcd0056": "保存",
-          "37a30c5bfd": "https://google.com",
-          "c6cbd1c105": "主页已保存。",
-          "6a37540f4b": "创建新浏览器选项卡时打开的 URL。留空以打开空白选项卡。",
-          "70224e37b1": "默认主页"
-        },
+        "BrowserDefaultZoomSetting": {},
+        "BrowserHomePageSetting": {},
         "BrowserPane": {
-          "81ff774667": "取消",
-          "7d4c0a2aa4": "个人资料名称",
-          "612f7f6861": "创建个人资料失败。",
-          "8f22b7580d": "已创建配置文件“{{value0}}”。",
-          "8481ee0331": "新的浏览器配置文件",
-          "6f2584b39e": "添加个人资料",
-          "e4aaf8051b": "工具栏菜单。",
-          "cd47bc9622": "为新浏览器选项卡选择默认配置文件。通过以下方式导入 cookie 并切换每个选项卡的配置文件",
-          "2d66a6efb5": "会话和 Cookie",
-          "aa1074bfe9": "管理浏览器配置文件并从 Chrome、Edge、Comet 或其他浏览器导入 cookie。",
-          "113cd2dc9b": "会话和 Cookie",
-          "d3eb69c0aa": "链路路由",
-          "3e46903ad4": "在地址栏中输入非 URL 文本时使用。",
-          "0d9c987f21": "默认搜索引擎",
-          "7b225c78f5": "在地址栏中输入非 URL 文本时使用的搜索引擎。",
-          "64898ecdab": "创建",
-          "7b649a578a": "创建中…",
-          "4399c77caa": "默认",
-          "4af9a17947": "kagi",
-          "c0f85056d9": "此 Orcinus 服务器上的浏览器配置。",
-          "86b7c83fee": "本机",
-          "6480776a03": "所选主机的浏览器配置。",
-          "5e19a692f7": "主机"
+          "4af9a17947": "kagi"
         },
         "BrowserProfileRow": {
-          "8e636cae25": "已删除配置文件“{{value0}}”。",
-          "2d4bea7f35": "默认 cookie 已清除。",
-          "ebb78dfd6f": "从文件...",
           "7df818977e": "从",
-          "cdec84552f": "导入 Cookie",
-          "796d846483": "没有导入cookie",
-          "c29648fe5b": "当前",
-          "d420c43729": "将 {{value0}} cookie 从 {{value1}}{{value2}} 导入到 {{value3}} 中。",
-          "b4c167764d": "已从文件将 {{value0}} 个 Cookie 导入到 {{value1}}。",
-          "a3f8c2d1e0b4": "已从 {{value1}} ({{value2}}) 导入 {{value0}} 个 Cookie 到 {{value3}}。",
-          "b4e9d3f2a1c5": "已从 {{value1}} 导入 {{value0}} 个 Cookie 到 {{value2}}。",
-          "c5a273a809": "从 {{value0}}"
+          "d420c43729": "将 {{value0}} cookie 从 {{value1}}{{value2}} 导入到 {{value3}} 中。"
         },
-        "BrowserUseComputerUseNotice": {
-          "15b5e680ba": "开放计算机使用",
-          "79209b37b9": "如果 cookie 导入不合适，“计算机使用”可以控制本地应用程序，并可以在适用的情况下使用现有的登录浏览器会话。安装计算机使用技能； macOS 还需要隐私权限。",
-          "333984cf90": "使用现有的浏览器会话"
-        },
-        "BrowserUseEnableSwitch": {
-          "aea3f45349": "启用智能体浏览器使用"
-        },
-        "BrowserUseExamples": {
-          "1199258ace": "复制",
-          "1188e56af4": "复制示例提示",
-          "b84807f228": "”",
-          "59722f31b4": "”",
-          "c5325e91f6": "将其中任何内容粘贴到 Claude Code、Codex 或安装该技能的项目中的其他智能体中。",
-          "2a180694f7": "尝试一下 - 示例提示",
-          "5ec620ccc4": "复制失败。",
-          "a602d43069": "复制{{value0}}。"
-        },
+        "BrowserUseComputerUseNotice": {},
+        "BrowserUseEnableSwitch": {},
+        "BrowserUseExamples": {},
         "BrowserUsePane": {
-          "be6df68384": "从文件...",
-          "e44c5d681e": "从",
-          "67d9a53f47": "管理单独登录的配置文件",
-          "112f70adc4": "上次导入自 {{value0}}",
-          "72d4815523": "将您现有的登录信息带入 Orcinus，以便智能体可以访问经过身份验证的页面。导入到默认配置文件中。",
-          "2eb906706c": "导入浏览器 Cookie",
-          "af8c83ed61": "从 Chrome、Edge 或其他浏览器导入 cookie，以便智能体可以重复使用您的登录信息。",
-          "68ea76eb71": "安装浏览器使用技能，以便智能体可以操作 Orcinus 的浏览器。",
-          "2d6ead9ab2": "安装浏览器使用技能",
-          "e9f3f3b488": "安装于",
-          "9fca1f7f5d": "注册 Orcinus CLI 命令，以便智能体可以从其 shell 编排浏览器。",
-          "c6065d205d": "启用 Orcinus CLI",
-          "c79eff0213": "注册 Orcinus CLI，以便智能体可以驱动浏览器。",
-          "702488a5f7": "让编码智能体通过您的登录来驱动此浏览器。完成以下三个步骤。",
-          "b8a1f2d84d": "智能体浏览器使用",
-          "96b91c6349": "让编码智能体通过您的登录来驱动此浏览器。",
-          "2ea4617e3a": "从 {{value1}}{{value2}} 导入 {{value0}} cookie。",
-          "721aee31b4": "在 PATH 中注册 Orcinus CLI。",
-          "180a9abf3a": "无法加载 CLI 状态。",
-          "2ccfc9cff8": "导入",
-          "0462565413": "重新导入",
-          "de9b2f32f3": "启用",
-          "ad8cb0ee22": "修复路径",
-          "0289434ed6": "启用",
-          "8b3054dac7": "注册...",
-          "8f2675c2f3": "已从文件导入 {{value0}} 个 Cookie。",
-          "5301857d88": "从 {{value0}}"
+          "e44c5d681e": "从"
         },
-        "BrowserUseSkillStep": {
-          "0871b6998d": "使智能体能够在 Orcinus 浏览器中导航和验证页面。",
-          "459e24eebc": "浏览器使用技能"
-        },
+        "BrowserUseSkillStep": {},
         "CliSection": {
           "8671e406f0": "取消",
           "a4aafe46e3": "目标路径：",
@@ -6042,16 +5359,7 @@
           "1683acbac4": "连接 Orcinus 可用于 pull request、merge request、检查和评审状态的源代码主机。",
           "298c65ecac": "评审提供商"
         },
-        "KagiSessionLinkForm": {
-          "92f0b4e472": "清除",
-          "9f741627a7": "Kagi 会话链接已清除。",
-          "d5c8b94c5b": "保存",
-          "ff450194cd": "Kagi 私密会话链接",
-          "e383683485": "https://kagi.com/search?token=...",
-          "81409d9362": "Kagi 身份验证的可选私人会话链接。",
-          "3e5b7c6c25": "Kagi 会话链接已保存。",
-          "0911d5fa4c": "输入来自 https://kagi.com/search?token=... 的 Kagi 私人会话链接"
-        },
+        "KagiSessionLinkForm": {},
         "KeybindingsFileActions": {
           "abc49853fb": "从磁盘重新加载",
           "a8a8d6b9d3": "在文件管理器中显示",
@@ -6959,7 +6267,6 @@
         "TasksPane": {
           "f71d8a9dd3": "任务提供者",
           "6b23a34f6d": "Jira",
-          "09ae2d7c51": "Linear",
           "7c5d7fdc20": "GitLab",
           "e14063e727": "GitHub",
           "connectProviderTitle": "连接 {{provider}}",
@@ -7595,102 +6902,10 @@
         },
         "browser": {
           "search": {
-            "7539f6336c": "轮廓",
-            "1c1e097985": "弧",
-            "533a253deb": "边缘",
-            "75a0d435b7": "铬合金",
-            "854ef6ce83": "登录",
-            "3910a41f32": "授权",
-            "2e7f951773": "导入",
-            "66dd641a47": "会话",
-            "29193a51d5": "曲奇饼",
-            "2d2d995c58": "浏览器",
-            "060ac1fcba": "从 Chrome、Edge 或其他浏览器导入 cookie，以使用 Orcinus 内的现有登录信息。",
-            "96afedcb5c": "会话和 Cookie",
-            "a7a07d5415": "编辑",
-            "8dd4805991": "文件",
-            "68d1db8929": "markdown",
-            "90425d313c": "转移",
-            "linkRoutingModifier": {
-              "routing": "路由",
-              "modifier": "修饰键",
-              "invert": "反转",
-              "opposite": "相反"
-            },
-            "72c58f7792": "网页视图",
-            "82ba1c80ea": "本地主机",
-            "bea27bac4b": "链接",
-            "44d14df30d": "预览",
-            "5cb082b3e3": "链路路由",
-            "95944898e0": "百分比",
-            "483a0eb5e0": "新标签",
-            "726f2a8556": "页面缩放",
-            "5448f4097b": "默认",
-            "54f4ea55f7": "比例",
-            "4a98ed195f": "缩放",
-            "c3d89ed4d0": "缩放级别应用于新打开的浏览器选项卡。",
-            "072b7f5c1f": "默认缩放",
-            "0bb34eacc9": "询问",
-            "8b8ed06e4b": "多功能框",
-            "3538b3aaeb": "Token",
-            "0732ebe6fb": "私人的",
-            "e1c2a57f07": "卡吉",
-            "ad40e75d13": "冰",
-            "1f8153acfb": "鸭鸭戈",
-            "8a489aab8d": "谷歌",
-            "72b4b89970": "引擎",
-            "16bd69cd82": "搜索",
-            "0628d5943b": "在地址栏中输入非 URL 文本时使用的搜索引擎。",
-            "5e755920c9": "默认搜索引擎",
-            "4596a52cf7": "降落",
-            "5164c47e31": "空白的",
-            "4fda4fb066": "网址",
-            "0dbb1eaf4e": "主页",
-            "291f480a5e": "家",
-            "a942905148": "创建新浏览器选项卡时打开的 URL。留空以打开空白选项卡。",
-            "c3903322d2": "默认主页",
-            "19ea5607cf": "本地主机工作区标签",
-            "4e0fdf0a3f": "将工作区端口打开为特定于工作区的 Orcinus localhost URL，便于区分浏览器标签页。"
+            "linkRoutingModifier": {}
           },
           "use": {
-            "search": {
-              "3f4c559deb": "圆弧轮廓",
-              "d5afa54d21": "边缘轮廓",
-              "22fb801af8": "镀铬型材",
-              "59968bb9b4": "经过身份验证的浏览器",
-              "62e2a790c0": "现有会话",
-              "63a66da648": "系统浏览器",
-              "20c1323d1e": "计算机控制",
-              "ab349a2dd0": "弧",
-              "2e1b09897b": "边缘",
-              "088e7a9012": "铬合金",
-              "96ce3d2de2": "授权",
-              "48557f639c": "登录",
-              "d5ad1f7aad": "导入",
-              "02837ee497": "会话",
-              "fb8178824f": "曲奇饼",
-              "ba4eb53b72": "浏览器使用",
-              "2fb24d17db": "从 Chrome、Edge 或其他浏览器导入 cookie，以便智能体可以重复使用您的登录信息。",
-              "614c756ab1": "导入浏览器 Cookie",
-              "cee44fb442": "自动化",
-              "a57c2172dc": "智能体浏览器",
-              "6ea88e5206": "恩克斯",
-              "f5b8fdddf5": "orca-cli",
-              "e5a784bc54": "安装",
-              "9d97446873": "智能体",
-              "a2d489263e": "技能",
-              "a7e82445fa": "安装浏览器使用技能，以便智能体可以操作 Orcinus 的浏览器。",
-              "a1414dcefb": "安装浏览器使用技能",
-              "e56c7b55c9": "设置",
-              "034c5e8d7f": "启用",
-              "7e0dcb257a": "Shell",
-              "3ffafc9b95": "命令",
-              "30c74aaa1f": "路径",
-              "ff05cbc344": "orca",
-              "85fab5e12c": "CLI",
-              "890ddf943d": "注册 Orcinus CLI，以便智能体可以驱动浏览器。",
-              "50f0860e18": "启用 Orcinus CLI"
-            }
+            "search": {}
           }
         },
         "commit": {
@@ -8117,12 +7332,6 @@
             "50d20817f7": "Bitbucket",
             "c97d58a0f3": "通过 API token环境变量进行 Bitbucket Cloud 身份验证。",
             "67a2a0e868": "Bitbucket 集成",
-            "371ee914d2": "合并请求",
-            "581844769a": "MR",
-            "b40cbe5de4": "glab",
-            "b939695c69": "GitLab",
-            "6e2ab619c6": "通过 glab CLI 进行 GitLab 身份验证。",
-            "b50b71ef9d": "GitLab 集成",
             "41ccade05c": "gh",
             "b79c21bd42": "GitHub",
             "7166b9090c": "通过 gh CLI 进行 GitHub 身份验证。",
@@ -8874,14 +8083,7 @@
                 "cards": {
                   "d5b3be8ecd": "重新检查",
                   "8cbc39f862": "了解更多",
-                  "707180d09c": "glab auth login",
-                  "4be0616873": "GitLab CLI 已安装但未通过身份验证。请在终端中运行此命令：",
-                  "54a640af7a": "安装 GitLab CLI",
-                  "b56fd5676a": "安装 GitLab CLI 以启用合并请求、议题和流水线。",
-                  "faddeb763d": "此运行时暂不支持 GitLab CLI 状态。",
                   "a47f71e357": "CLI。",
-                  "2a6b359e75": "glab",
-                  "1f2b347bd3": "通过",
                   "8d90249d22": "gh auth login",
                   "2e44dda68a": "GitHub CLI 已安装但未通过身份验证。请在终端中运行此命令：",
                   "7755c28af5": "安装 GitHub CLI",
@@ -8898,31 +8100,7 @@
         "task": {
           "tracker": {
             "integration": {
-              "cards": {
-                "c90f2ef419": "重新检查",
-                "dd3529015d": "断开 {{value0}}",
-                "8b2408a8e5": "此运行时已连接 Jira。如果已连接的站点列表看起来过期，请重新检查。",
-                "8c20e76308": "每个已连接的 Jira 站点都由活动运行时存储一个 token。",
-                "c24e56c532": "测试",
-                "3e7c10d286": "测试中...",
-                "a2c0015fb8": "已验证",
-                "e2ff968276": "连接 Jira",
-                "60996beda6": "添加 Jira 站点",
-                "7ca5ffffdb": "从 Jira Cloud 议题浏览、创建并开始工作。",
-                "a1093a06c7": "在显示设置操作前正在检查 Jira 访问权限。",
-                "9fa04a032e": "{{value0}} 个站点{{value1}} 已连接",
-                "cef18762a2": "用 Linear 设置里的个人 API 密钥添加访问权限。完全访问密钥可看到密钥所有者能访问的所有团队。",
-                "6224fe9d34": "每个已连接的 Linear 工作区都有一个由活动运行时存储的密钥。全权限密钥可覆盖密钥所有者可访问的所有团队；受限密钥可随时更换。",
-                "1a12e33fe5": "添加 Linear 访问",
-                "622c224082": "添加工作区访问权限",
-                "eae4a9f16b": "添加 Linear 访问以浏览和链接议题。",
-                "fe9231215b": "在显示设置操作前正在检查 Linear 访问权限。",
-                "e1f5e6424c": "{{value0}} 个工作区{{value1}} 已连接",
-                "disconnect_all": "断开连接",
-                "account_scope_prefix": "账户范围",
-                "2d60ec7921": "使用 API token 连接 Jira Cloud 站点，或使用个人访问令牌或用户名和密码连接自托管 Jira。凭据会发送到所选远程运行时并以运行时支持的加密方式存储。",
-                "977e360b71": "使用 API token 连接 Jira Cloud 站点，或使用个人访问令牌或用户名和密码连接自托管 Jira。凭据存储在本地，本地运行时存储支持时会进行加密。"
-              }
+              "cards": {}
             }
           }
         },
@@ -9101,10 +8279,7 @@
           "9e29aff18b": "移除 {{value0}} 快捷键 {{value1}}",
           "2a9588b1c2": "移除此绑定"
         },
-        "BrowserLocalhostWorktreeLabelsSetting": {
-          "8ac8c3ad19": "本地主机工作区标签",
-          "1db3c8b983": "将工作区端口打开为特定于工作区的 Orcinus localhost URL，便于区分浏览器标签页。"
-        },
+        "BrowserLocalhostWorktreeLabelsSetting": {},
         "AgentRuntimeSetting": {
           "label": "智能体运行时",
           "wsl": "WSL",
@@ -9234,23 +8409,9 @@
           "agent": {
             "skill": {
               "install": {
-                "cta": {
-                  "copiedCommand": "命令已复制。",
-                  "copyFailed": "复制命令失败。",
-                  "skillLabel": "智能体技能：",
-                  "checking": "检查中...",
-                  "installed": "已安装",
-                  "notInstalled": "未安装",
-                  "recheck": "重新检查",
-                  "installedDescription": "智能体技能已安装。要更新，请运行：",
-                  "description": "让智能体读取和编辑 Linear 任务。完整引导设置（连接 + 技能 + 可见性）位于设置 → 任务来源。",
-                  "copyCommand": "复制命令"
-                }
+                "cta": {}
               },
-              "search": {
-                "title": "Linear",
-                "description": "Linear 技能状态、使用示例和任务来源设置链接。"
-              }
+              "search": {}
             }
           }
         },
@@ -9337,17 +8498,7 @@
           "done": "完成",
           "copyPrompt": "复制提示"
         },
-        "LinearAgentSkillPane": {
-          "title": "Linear",
-          "description": "在 Orcinus 中浏览 Linear 议题、启动关联工作区，并让智能体通过 /orca-linear 更新议题。",
-          "skillTitle": "Linear 技能",
-          "howToUse": "提示词示例",
-          "howToUseDescription": "点击卡片即可复制提示词。安装技能后，请在关联 Linear 的工作区中使用。",
-          "terminalTitle": "Linear 技能设置",
-          "terminalAriaLabel": "Linear 技能安装终端",
-          "manageConnectionHint": "可在此查看已连接的 Linear 工作区和 API 密钥：",
-          "manageConnectionLink": "集成"
-        },
+        "LinearAgentSkillPane": {},
         "MobileRelayBetaNotice": {
           "notice": "Orcinus Relay 目前处于测试阶段。"
         },
@@ -9356,16 +8507,8 @@
           "description": "文件编辑器和差异视图使用的字体，留空则跟随终端字体。",
           "placeholder": "与终端字体相同"
         },
-        "BrowserLinkRoutingSetting": {
-          "description": "在 Orcinus 内置浏览器中打开来自终端、Markdown 和编辑器的 http(s) 链接。{{shortcut}} 始终使用系统浏览器。",
-          "descriptionBase": "在 Orcinus 内置浏览器中打开来自终端、Markdown 和编辑器的 http(s) 链接。"
-        },
-        "BrowserLinkRoutingModifierSetting": {
-          "titleSystem": "按住 Shift 在系统浏览器中打开",
-          "titleOrca": "按住 Shift 在 Orcinus 中打开",
-          "descriptionSystem": "链接在 Orcinus 中打开，因此 {{chord}}+点击会将其发送到系统浏览器。",
-          "descriptionOrca": "链接在系统浏览器中打开。启用后，{{chord}}+点击会改在 Orcinus 内置浏览器中打开。"
-        },
+        "BrowserLinkRoutingSetting": {},
+        "BrowserLinkRoutingModifierSetting": {},
         "PluginConsentDialog": {
           "workerTrust": "后台工作进程 — 运行自己的进程",
           "instructionalTrust": "指令内容 — 在用户或智能体权限下运行",
@@ -9616,47 +8759,8 @@
             "development": "开发插件"
           }
         },
-        "LinearAgentSkillGuide": {
-          "setupConnectTitle": "1. 连接 Linear",
-          "setupConnectBody": "用于让 Orcinus 列出议题并打开关联工作区的个人 API 密钥。",
-          "manageKeys": "管理密钥",
-          "addAccess": "添加访问权限",
-          "setupSkillTitle": "2. 安装智能体技能",
-          "setupSkillBody": "让智能体使用 /orca-linear 读取、更新、分类议题并附加拉取或合并请求。",
-          "setupVisibleTitle": "3. 在任务中显示 Linear",
-          "setupVisibleBody": "在任务来源选择器和侧边栏快捷方式中保留 Linear。",
-          "openTaskSources": "任务来源",
-          "setupTitle": "设置清单",
-          "setupBody": "完整的任务与智能体流程需要完成全部三个步骤。首次设置也可在任务来源中进行。",
-          "setupReady": "全部就绪",
-          "setupProgress": "已完成 {{done}}/{{total}}",
-          "notesTitle": "使用须知",
-          "notesIntro": "连接 Linear 并安装技能后的一些快速提示。",
-          "noteLinkedTitle": "从 Linear 议题开始",
-          "noteLinkedBody": "从任务创建的工作区会将议题保留为关联上下文，因此议题操作最顺畅。",
-          "noteSlashTitle": "提及 /orca-linear",
-          "noteSlashBody": "在聊天中使用 /orca-linear（或用自然语言提出请求），智能体会在该轮加载此技能。",
-          "noteKeysTitle": "密钥按运行环境保存",
-          "noteKeysBody": "API 密钥和工作区存储在当前运行环境中。",
-          "noteVisibilityTitle": "隐藏不等于断开连接",
-          "noteVisibilityBody": "在任务来源中隐藏 Linear 只会将其从选择器中移除，不会删除密钥或技能。",
-          "setupChecking": "检查中…"
-        },
-        "TaskSourceLinearSetup": {
-          "connectTitle": "连接 Linear",
-          "connectDescription": "添加个人 API 密钥，让 Orcinus 能够浏览议题并使用议题上下文打开工作区。",
-          "manageAccess": "管理密钥",
-          "addAccess": "添加 Linear 访问权限",
-          "connectedHint": "工作区和密钥存储在当前运行环境中。你可以随时添加更多访问权限。",
-          "recheck": "重新检查连接",
-          "skillTitle": "安装 Linear 智能体技能",
-          "skillDescription": "让智能体使用 /orca-linear 读取议题、发布更新、更改状态并附加拉取或合并请求。",
-          "skillBlocked": "请先连接 Linear，然后为智能体安装技能。",
-          "skillPanelTitle": "Linear 技能",
-          "terminalTitle": "Linear 技能设置",
-          "terminalAriaLabel": "Linear 技能安装终端",
-          "showDescription": "在任务来源选择器和侧边栏快捷方式中显示 Linear。"
-        },
+        "LinearAgentSkillGuide": {},
+        "TaskSourceLinearSetup": {},
         "TaskSourceProviderCard": {
           "statusChecking": "检查中…",
           "statusReady": "已就绪",
@@ -9908,72 +9012,10 @@
             "59b4dccf70": "destructive"
           },
           "PortsPanel": {
-            "3ea4a02a8f": "取消",
-            "4eb801ce93": "开发服务器",
-            "8dfed0a15c": "标签（可选）",
-            "17bea6e391": "本地主机",
-            "a3721a50b0": "远程主机",
-            "d57545ff92": "与远程相同",
-            "b950b1948b": "本地端口",
-            "9e5a4118b0": "远程端口",
-            "c9d106547a": "转发",
-            "c7e920aa7c": "公开为 {{value0}}",
-            "e740075063": "移除",
-            "b3548e59f4": "编辑",
-            "fe2730d050": "复制 {{value0}}",
-            "b22b128b2a": "在浏览器中打开",
-            "75aeea592f": "在浏览器中打开 {{value0}}",
-            "de349d4560": "打开 {{value0}}",
-            "907eb53ed2": "转发端口",
-            "04efd3dad4": "转发端口以访问本地计算机上的远程服务。",
-            "1f0d2a24f9": "无转发端口",
-            "36b1b2984a": "已检测",
-            "ddbe58d74e": "转发",
-            "a103dae837": "添加",
-            "6bc058dbe1": "端口",
-            "d4c3cd679c": "正在重新连接...",
-            "a2f1a47f42": "SSH 连接丢失",
-            "409afcc145": "没有为浏览器选择工作区。",
-            "153145e675": "证据",
-            "c7b4702b7b": "工作区",
-            "57d930fa45": "PID",
-            "5dd86dcf2f": "进程",
-            "b1ff94fa27": "协议",
-            "729be0b4e5": "种类",
-            "0f1d8cd324": "绑定",
-            "1c1c18cefc": "地址",
-            "f9528da632": "停止进程",
-            "a223459512": "显示详情",
-            "bdac206faf": "复制详情",
-            "792baeb7ed": "复制地址",
-            "d41a8241ec": "端口",
-            "a2a9fc6899": "未检测到本地端口",
-            "f59c783b7a": "{{value0}} 上无法进行端口扫描：{{value1}}",
-            "7822e3edc6": "刷新端口",
-            "c1b115c375": "未选择工作区",
-            "98e9a414f8": "无法打开浏览器",
-            "a00f3a2840": "刷新端口失败",
-            "97b562d21d": "已停止进程：{{value0}}",
-            "9079776663": "保存",
             "c57eda6822": "编辑",
-            "9f475dc994": "转发...",
-            "d7c83cfd24": "保存中...",
-            "31e80cff2d": "将远程端口转发到本地计算机。",
-            "10360598a4": "更新端口转发配置。",
-            "80206251c8": "编辑端口转发",
             "4bc9b00912": "工作区",
-            "3e13cb63ee": "未知",
-            "472054d94c": "端口：{{value0}}",
             "1119f90ad7": "容器",
-            "d32820d3e2": "外部的",
-            "4db4b5e435": "其他工作区",
-            "38b16cfbef": "未检测到端口",
-            "0d63d94db3": "扫描...",
-            "935dda7718": "活跃的工作区",
-            "740aca88ab": "工作区端口扫描失败。",
-            "5be4f7f727": "端口 {{value0}} 菜单",
-            "7550998473": "复制",
-            "1004af16ab": "复制 {{value0}}"
+            "7550998473": "复制"
           },
           "Search": {
             "1abfb25a66": "输入要在文件中搜索的内容",
@@ -10543,21 +9585,7 @@
           "gitlab": {
             "mr": {
               "merge": {
-                "state": {
-                  "04a3015a12": "可以合并",
-                  "53c6d3b7e9": "GitLab 表示该 MR 可以合并，但管道仍在运行",
-                  "65c847ad1e": "检查待处理",
-                  "b41fbc180c": "GitLab 表示这个 MR 可以合并，但一些管道作业失败了",
-                  "49ac4fec10": "检查失败",
-                  "22b7e50621": "GitLab 报告合并冲突",
-                  "96b05e374c": "冲突",
-                  "d63bb6f76e": "此合并请求仍是草稿",
-                  "b2715092c6": "草稿",
-                  "2388413f28": "此合并请求已关闭",
-                  "88d044c42f": "已关闭",
-                  "ee482a2bad": "该合并请求已被合并",
-                  "fae95ae20d": "合并"
-                }
+                "state": {}
               }
             }
           },
@@ -11344,18 +10372,7 @@
         "gitlab": {
           "rate": {
             "limit": {
-              "display": {
-                "ebc0e8ecf1": "正在加载 GitLab API 预算...",
-                "a2d3d1fdde": "GitLab API 预算不可用。",
-                "a2f68645ac": "刷新 GitLab API 预算",
-                "2f9c16d6c3": "Orcinus 通过 GitLab CLI 使用 REST。",
-                "14e144f7a7": "GitLab API预算",
-                "3e2c982cfa": "向左，重置于",
-                "ea8ad0bae8": "的",
-                "0a891e8935": "REST API",
-                "953f7c6062": "此 GitLab 主机未返回速率限制标头。",
-                "budget_scope_prefix": "预算范围"
-              }
+              "display": {}
             }
           }
         }
@@ -12158,167 +11175,36 @@
       },
       "browser": {
         "pane": {
-          "BrowserFind": {
-            "c9d5f63fdc": "关闭",
-            "5c0c02ae76": "下一个结果",
-            "ca7aebbd7f": "上一个结果",
-            "636a69cd66": "在页面中查找...",
-            "7baca7b1b8": "没有匹配项",
-            "fc63f336aa": "{{value1}} 的 {{value0}}"
-          },
-          "BrowserImportHintButton": {
-            "05e675fe96": "隐藏提示",
-            "77351d22f5": "浏览器设置",
-            "e0e125e074": "从文件...",
-            "0c6d254eca": "从 {{value0}}",
-            "244266c122": "导入…",
-            "e52a955e6f": "您始终可以在“设置”>“浏览器”中找到它。",
-            "4f5ffaa6a1": "导入浏览器数据",
-            "b24fef25be": "导入",
-            "02e89014c5": "从 {{value1}}{{value2}} 导入 {{value0}} cookie。",
-            "d40d584769": "已从文件导入 {{value0}} 个 Cookie。"
-          },
-          "BrowserMobileDriverOverlay": {
-            "a6914ee43f": "收回",
-            "f4ecd61552": "该选项卡由您的手机控制。收回来在桌面上使用它。",
-            "d9768ec642": "浏览器输入已暂停",
-            "20539eca03": "移动端正在控制此浏览器"
-          },
+          "BrowserFind": {},
+          "BrowserImportHintButton": {},
+          "BrowserMobileDriverOverlay": {},
           "BrowserPane": {
-            "1ded0d3168": "复制截图",
-            "f30d2d35a7": "截图",
-            "fa6ea61de3": "取消",
-            "c2ef0359b9": "复制内容",
-            "f2d0c22d67": "删除注释 {{value0}}",
-            "11c5084aa2": "清晰的注释",
-            "734e4343ec": "清除浏览器注释",
-            "95af781091": "向智能体发送反馈",
-            "ac39b9366b": "发送",
             "a3508d7e6e": "{{value0}} 注释{{value1}} 准备就绪。选择另一个元素或复制所有反馈。",
-            "f796c774a4": "在上面输入 URL 即可开始浏览。",
-            "366bf5d62c": "新标签",
             "1c78adc73d": "在外部打开",
             "da68d35f7b": "在默认浏览器中打开失败页面",
             "93be92f8d1": "复制地址",
             "3c085f638d": "复制失败页面 URL",
             "c6be71329e": "刷新",
-            "781d6459ad": "重试",
-            "2fdca7df09": "关闭",
             "8b6fab9ffa": "保存",
-            "0f41bf80c7": "在默认浏览器中打开",
-            "ec75d0c412": "打开浏览器开发工具",
-            "fc9be38f6f": "注释页面元素",
-            "fdfc7fe0ef": "抓取页面元素",
-            "a8f37f70c3": "检查页面",
-            "1b179ab561": "复制页面网址",
-            "f7ab83f7ed": "在默认浏览器中打开页面",
-            "0e080d820e": "重新加载",
-            "a1f3c2e4b5": "硬刷新",
-            "b7e4d9c1a2": "停止",
-            "250a9b3e42": "向前",
-            "40edfa75cb": "返回",
-            "efb0e8f7f3": "复制链接地址",
-            "8ce4f6b12e": "在默认浏览器中打开链接",
-            "b5b87d6cbb": "在 Orcinus 浏览器中打开链接",
-            "87eb75f7d2": "输入有效的 http(s) 或本地主机 URL。",
-            "27d863542c": "浏览器注释",
-            "e48569ac6d": "无法访问该网站。",
-            "bbe8f15e83": "该窗格是从活动运行时服务器呈现的。",
-            "8b7e6d1f5a": "浏览器注释仅在本地浏览器选项卡中可用。",
-            "deb5293610": "浏览器注释在远程运行时不可用",
-            "90d021f2ad": "添加",
-            "0cb3bd6221": "注释意图",
-            "8f87e6c2e5": "意图",
-            "532bac48c5": "描述智能体应该在这里改变什么......",
-            "d2a7092e6e": "注释评论",
-            "b472c5fe03": "添加浏览器注释",
-            "b5ba6085de": "疑问",
-            "143204e423": "改变",
             "e7ca5a098c": "成功",
-            "d51ef37351": "复制",
-            "6f4ab3592b": "已复制",
             "b2856516e2": "无法加载此页面",
             "db325a7eeb": "无法到达 {{value0}}",
-            "499b31b84e": "全部复制",
             "e72dfa268a": "注释",
-            "168350ae6a": "单击或悬停一个元素，然后按 C 进行复制或按 S 进行屏幕截图。",
-            "e852e20cea": "已复制 — 按 S 进行屏幕截图，或选择另一个元素",
             "a5dcd0fd1d": "确认",
-            "777b5bc4ec": "单击一个元素可为智能体添加反馈。",
-            "b733a91bd9": "为所选元素添加反馈。",
-            "4328a0a062": "抓取失败：{{value0}}",
             "26615e116b": "错误",
             "8aec5bc044": "空闲",
-            "759f32af29": "正在下载",
             "c8bc7f1f9e": "要求的",
-            "4300f38145": "从 {{value0}}{{value1}} 下载",
             "31375046b7": "从 {{value0}} 下载",
-            "acbe79fd01": "抓取页面元素 ({{value0}})",
-            "572046436a": "远程浏览器",
-            "b313a7275b": "打开远程浏览器",
-            "5f66313863": "注释",
-            "ea6af700da": "{{value0}} 条注释",
-            "c13693fe27": "{{value0}} 条注释",
-            "074f0ed10b": "{{value0}} 条注释已准备好。请选择另一个元素或复制所有反馈。",
-            "a2164a6e5a": "{{value0}} 条注释已准备好。请选择另一个元素或复制所有反馈。",
-            "9f6f2e8c19": "下载文件路径不可用。",
-            "0c79b7634d": "无法打开下载的文件。它可能已被移动或删除。",
-            "397d9dc923": "无法显示下载的文件。它可能已被移动或删除。",
-            "39c04fed61": "下载已暂停",
-            "5c3d530a68": "已下载",
-            "4bb7424d6b": "已取消",
-            "6e776f9ef9": "下载失败",
-            "756bfc25c9": "打开",
-            "09a9489aa5": "显示",
-            "2a4c4b8e1f": "复制"
+            "5f66313863": "注释"
           },
           "BrowserToolbarMenu": {
-            "429ef481f9": "取消",
-            "64f448fb6e": "个人资料名称",
-            "67e9b9fcd6": "新的浏览器配置文件",
-            "58f2c81542": "转变",
-            "a38f217b46": "切换配置文件将重新加载此页面。任何未保存的表单数据都将丢失。",
-            "fe683eb3b4": "开关配置文件",
-            "a771c2b6c8": "浏览器设置...",
-            "ed8f54509d": "默认",
-            "e5d31de1a9": "视口尺寸",
-            "56f94f4ffa": "从文件...",
-            "eb280bfb11": "从 {{value0}}",
-            "2293adf620": "导入 Cookie",
-            "cf7cdc67ef": "新档案...",
-            "7b838540c7": "浏览器菜单",
-            "6aa42813e4": "从 {{value1}}{{value2}} 导入 {{value0}} cookie。",
-            "a7a86702b3": "创建并切换到 {{value0}} 配置文件",
-            "4d2f9f13a7": "创建个人资料失败。",
-            "3ccd29d771": "切换到 {{value0}} 配置文件",
-            "569bce8eb1": "创建",
-            "bf648471c5": "创建中…",
-            "53bbe3dab4": "已从文件导入 {{value0}} 个 Cookie。",
-            "c5f0e4d3b2a1": "已从 {{value1}} ({{value2}}) 导入 {{value0}} 个 Cookie。",
-            "d6a1f5e4c3b2": "已从 {{value1}} 导入 {{value0}} 个 Cookie。"
+            "6aa42813e4": "从 {{value1}}{{value2}} 导入 {{value0}} cookie。"
           },
-          "GrabConfirmationSheet": {
-            "314a0aaa5b": "附加到 AI",
-            "7095e98362": "复制截图",
-            "26fd87f4df": "复制",
-            "87d97bdd6d": "取消",
-            "effd75e330": "附近的环境",
-            "7d1480fbf1": "超文本标记语言",
-            "9098b118ab": "页",
-            "eb98a0971a": "”",
-            "d053db279d": "角色=",
-            "a759d8f866": "选定的元素",
-            "9c6ce0632a": "所选元素屏幕截图",
-            "50f7114f99": "附加前请先检查。捕获的页面上下文可以包括可见的站点内容。",
-            "f3575229df": "抓住",
-            "405bb315da": "无题"
-          },
+          "GrabConfirmationSheet": {},
           "browser": {
             "address": {
               "bar": {
-                "suggestions": {
-                  "87fcdd0da9": "{{value0}} 搜索"
-                }
+                "suggestions": {}
               }
             }
           }
@@ -12771,38 +11657,7 @@
       },
       "jira": {
         "connect": {
-          "dialog": {
-            "63ce735809": "连接",
-            "4a2ab52781": "正在验证…",
-            "79e7aaed39": "取消",
-            "fdd26d81cc": "Atlassian 账户设置",
-            "8090504a3e": "在此创建 token：",
-            "7b3967c12f": "Atlassian API 令牌",
-            "3d81bf3ab3": "API 令牌",
-            "e91b9a4073": "you@example.com",
-            "2849ddb295": "Atlassian 邮箱",
-            "70fcd360c4": "https://example.atlassian.net",
-            "e176f9d0c5": "Jira Cloud 站点 URL",
-            "d785c42b8b": "使用 Jira Cloud 站点 URL、Atlassian 邮箱和 API token 来浏览议题。",
-            "8388bdea2b": "连接 Jira 站点",
-            "2e2b69e48e": "使用自托管 Jira 的基础 URL 和个人访问令牌来浏览议题。",
-            "b67e919bd5": "Jira 实例类型",
-            "17787d6e4b": "Atlassian Cloud",
-            "bc7a831773": "Self-hosted",
-            "3489e186d6": "Jira 站点 URL",
-            "cbc27fa599": "https://jira.example.com",
-            "730d973bae": "个人访问令牌",
-            "8b9c7b9e7b": "Jira 个人访问令牌",
-            "ccfb086d3e": "在 Jira 个人资料中的 Personal Access Tokens 下创建一个个人访问令牌。",
-            "1d947a07ab": "使用自托管 Jira 的基础 URL、用户名和密码来浏览议题。",
-            "f49708c369": "Jira 身份验证方式",
-            "84a810dd0e": "Username & password",
-            "8d1223fa5c": "Username",
-            "be9eba0a1b": "username",
-            "70035652d7": "Password",
-            "c50abbf340": "Jira 账户密码",
-            "d8737db691": "使用你的 Jira Server 或 Data Center 账户用户名和密码。"
-          }
+          "dialog": {}
         }
       },
       "rightSidebar": {
@@ -12874,35 +11729,15 @@
         "routing": {
           "preference": {
             "dialog": {
-              "badge": "终端链接",
-              "preview": "预览",
-              "title": "在 Orcinus 浏览器中打开终端链接？",
-              "description": "用 Orcinus 浏览器打开终端链接，或继续使用系统浏览器。",
-              "orca": {
-                "button": "在 Orcinus 中打开",
-                "note": "Orcinus 可以使用已导入的 Cookie 打开已登录的网站。"
-              },
-              "settings": {
-                "note": "之后可在设置 → 浏览器中更改。"
-              },
-              "system": {
-                "button": "使用系统浏览器"
-              },
-              "link": {
-                "label": "链接"
-              },
+              "orca": {},
+              "settings": {},
+              "system": {},
+              "link": {},
               "shortcut": {
-                "note": {
-                  "prefix": "当链接在 Orcinus 中打开时，",
-                  "suffix": "点击可临时改用系统浏览器。"
-                }
+                "note": {}
               },
               "keep": {
-                "title": "继续在 Orcinus 浏览器中打开终端链接？",
-                "description": "或默认使用系统浏览器。",
-                "orca": {
-                  "button": "继续使用 Orcinus"
-                }
+                "orca": {}
               }
             }
           }
@@ -12944,18 +11779,7 @@
       },
       "star": {
         "nag": {
-          "StarNagToastHost": {
-            "starredThanks": "已加星，谢谢！",
-            "githubOpened": "已打开 GitHub",
-            "opening": "正在打开…",
-            "starring": "正在加星…",
-            "openGithub": "打开 GitHub",
-            "starOnGithub": "在 GitHub 上加星",
-            "onboardingCompleted": "入门流程已完成！",
-            "body": "如果你目前喜欢 Orcinus，在 GitHub 上加星可以帮助其他开发者发现它。",
-            "dismiss": "关闭",
-            "later": "稍后"
-          }
+          "StarNagToastHost": {}
         }
       },
       "orca": {
@@ -12971,64 +11795,14 @@
         }
       },
       "linear-issue-attribute-filter-dropdowns": {
-        "removeFilter": "移除 {{value0}} 筛选器",
-        "teamRequired": "选择一个团队以加载此工作区的状态、负责人和标签。",
-        "filters": "筛选器",
-        "allWorkspacesTitle": "选择一个工作区",
-        "allWorkspacesBody": "状态、负责人和标签筛选器使用单个 Linear 工作区的 ID。请选择一个工作区以按这些属性进行筛选。",
-        "optionsFromTeam": "来自 {{team}} 的选项",
-        "clearAll": "清除所有筛选器"
+        "optionsFromTeam": "来自 {{team}} 的选项"
       },
-      "linear-issue-attribute-filter-sections": {
-        "status": "状态",
-        "priority": "优先级",
-        "assignee": "负责人",
-        "unassigned": "未分配",
-        "labels": "标签",
-        "countSelected": "已选择 {{count}} 个",
-        "selected": "已选择",
-        "searchPriority": "筛选优先级…",
-        "searchStatus": "筛选状态…",
-        "searchLabels": "筛选标签…",
-        "searchAssignee": "筛选负责人…",
-        "back": "返回"
-      },
+      "linear-issue-attribute-filter-sections": {},
       "browser-pane": {
         "markup": {
-          "cancel": "取消",
-          "clear": "全部清除",
-          "copiedToast": "已复制标注 — 粘贴到你的智能体（{{value0}}）",
-          "copy": "复制标注",
-          "drawButton": "在截图上绘制",
-          "drawHint": "在页面上绘制，然后复制标记并粘贴到你的智能体。",
-          "drawHintBadge": "新功能",
-          "drawHintDismiss": "知道了",
-          "drawHintTry": "试一试",
-          "errorAttach": "无法附加标注后的截图。",
-          "errorCapture": "无法捕获页面进行绘制。",
-          "errorUnavailable": "此页面无法使用截图标注。",
-          "fontSize": "字号",
-          "hint": "在页面上绘制，然后复制标注以粘贴到你的智能体。",
-          "redo": "重做",
-          "style": "颜色和粗细",
-          "textInput": "标注文字",
-          "tool": {
-            "arrow": "箭头",
-            "ellipse": "椭圆",
-            "highlight": "高亮",
-            "pen": "画笔",
-            "rect": "矩形",
-            "text": "文字"
-          },
-          "undo": "撤销",
-          "widthOption": "{{value0}} px"
+          "tool": {}
         },
-        "grab": {
-          "errorNotReady": "此页面尚未准备好进行元素选择。",
-          "errorNotAuthorized": "浏览器访问被拒绝。",
-          "errorAlreadyActive": "元素选择已处于活动状态。",
-          "errorInjectionFailed": "无法在此页面上启动元素选择。"
-        }
+        "grab": {}
       },
       "pluginCatalog": {
         "PluginCatalogLayout": {
@@ -13069,16 +11843,7 @@
     },
     "i18n": {
       "hostedReview": {
-        "copy": {
-          "f0a4b8c2d1": "PR",
-          "e9f3a7b1c0": "PR",
-          "d8e2f6a0b9": "PR",
-          "c7d1e5f9a8": "GitHub",
-          "c4e8f1a2b9": "MR",
-          "b3d7e0f1a8": "合并请求",
-          "a2c6d9e0f7": "合并请求",
-          "91b5c8d7e6": "GitLab"
-        }
+        "copy": {}
       }
     },
     "runtime": {
@@ -13096,19 +11861,10 @@
       "webRuntimeSession": {
         "remoteHostDisconnected": "工作区未连接到远程 Orcinus 主机。"
       },
-      "gitlabJobTraceClient": {
-        "loadFailed": "加载 GitLab 作业日志失败。",
-        "emptyTrace": "此 GitLab 作业没有可用的日志。",
-        "timedOut": "加载 GitLab 作业日志超时。"
-      }
+      "gitlabJobTraceClient": {}
     },
     "ssh": {
-      "sshConnectVerb": {
-        "connect": "连接",
-        "connecting": "正在连接…",
-        "reconnect": "重新连接",
-        "retry": "重试"
-      }
+      "sshConnectVerb": {}
     },
     "main": {
       "window": {
@@ -13131,10 +11887,7 @@
         "SortableTabContextMenu": {
           "closeTabsToLeft": "关闭左侧的选项卡"
         },
-        "BrowserTab": {
-          "closeOthers": "关闭其他",
-          "closeTabsToLeft": "关闭左侧的选项卡"
-        },
+        "BrowserTab": {},
         "EditorFileTabContextMenu": {
           "closeOthers": "关闭其他",
           "closeTabsToLeft": "关闭左侧的选项卡"
@@ -13208,7 +11961,6 @@
           "reviewAlphaCleanup": "评审 Alpha 清理"
         },
         "presentation": {
-          "gitlabMergeRequestNumber": "MR #{{value0}}",
           "githubPullRequestNumber": "PR #{{value0}}"
         }
       }
@@ -13254,27 +12006,7 @@
     }
   },
   "browser": {
-    "loadFailure": {
-      "connectionNotSecure": "连接不安全",
-      "cantReachHost": "无法访问 {{value0}}",
-      "cantLoadPage": "无法加载此页面",
-      "certificateNameMismatch": "证书与 {{value0}} 不匹配。",
-      "certificateDateInvalid": "{{value0}} 的证书在当前日期和时间无效。",
-      "certificateAuthorityInvalid": "Orcinus 不信任签发 {{value0}} 证书的机构。",
-      "certificateVerificationFailed": "Orcinus 无法验证 {{value0}} 的证书。",
-      "trustedCertificateGuidance": "进行本地开发时，请尽可能使用受信任的本地证书。",
-      "retry": "重试",
-      "copyAddress": "复制地址",
-      "addressCopied": "已复制当前页面地址。",
-      "openExternally": "在外部打开",
-      "tryHttps": "尝试 HTTPS",
-      "proceedUnsafe": "仍然继续（不安全）",
-      "connecting": "正在连接…",
-      "certificateChallengeExpired": "此证书审批已过期。请重试该页面以请求新的审批。",
-      "certificateChallengeChanged": "证书请求已更改。请重试该页面并查看新的警告。",
-      "certificateChallengeUnavailable": "此证书请求已不可用。请重试该页面以重新请求。",
-      "certificateProceedFailed": "Orcinus 无法批准此证书请求。请重试该页面后再试。"
-    }
+    "loadFailure": {}
   },
   "runtimeRpc": {
     "startupFailure": {

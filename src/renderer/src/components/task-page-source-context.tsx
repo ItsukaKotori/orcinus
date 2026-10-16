@@ -1,7 +1,4 @@
-import type { GitLabTaskFilter, GitLabIssueFilter } from '@/components/task-page-localized-options'
 import type { GitHubWorkItem } from '../../../shared/github/work-item-types'
-import type { GitLabProjectRef, GitLabWorkItem } from '../../../shared/gitlab-types'
-import type { JiraIssue } from '../../../shared/jira-types'
 import type { Repo } from '../../../shared/repo-types'
 import { getLinkedWorkItemWorkspaceName, getLinkedWorkItemSuggestedName } from '@/lib/new-workspace'
 import {
@@ -16,19 +13,7 @@ import type { TaskSourceHostAvailability } from './task-source-context-summary'
 import { TASK_SOURCE_CONTEXT_RUNTIME_CAPABILITY } from '../../../shared/protocol-version'
 import { cn } from '@/lib/utils'
 import { formatUiRelativeTimeFromDate } from '@/i18n/relative-time-format'
-export function isGitLabMRFilter(
-  value: GitLabTaskFilter | GitLabIssueFilter
-): value is GitLabTaskFilter {
-  return value === 'opened' || value === 'merged' || value === 'closed' || value === 'all'
-}
-export function isGitLabIssueFilter(
-  value: GitLabTaskFilter | GitLabIssueFilter
-): value is GitLabIssueFilter {
-  return value === 'opened' || value === 'assigned-to-me'
-}
 export const TASK_SEARCH_DEBOUNCE_MS = 300
-export const LINEAR_ITEM_LIMIT = 36
-export const JIRA_ITEM_LIMIT = 50
 export const PR_CHECKS_EAGER_PREFETCH_LIMIT = 20
 export const GITHUB_TASK_GRID_CLASS =
   'min-w-[790px] grid-cols-[72px_minmax(320px,1fr)_84px_100px_92px_122px]'
@@ -42,31 +27,9 @@ export const GITHUB_TASK_HEADER_SURFACE_CLASS =
 export function getGitHubWorkItemWorkspaceSeed(item: GitHubWorkItem): string {
   return getLinkedWorkItemWorkspaceName(item)?.seedName ?? getLinkedWorkItemSuggestedName(item)
 }
-export function getGitLabWorkItemWorkspaceSeed(item: GitLabWorkItem): string {
-  return (
-    getLinkedWorkItemWorkspaceName({
-      type: item.type,
-      provider: 'gitlab',
-      number: item.number,
-      title: item.title
-    })?.seedName ?? getLinkedWorkItemSuggestedName(item)
-  )
-}
-export function getJiraIssueWorkspaceSeed(issue: JiraIssue): string {
-  return (
-    getLinkedWorkItemWorkspaceName({
-      type: 'issue',
-      provider: 'jira',
-      number: 0,
-      title: `${issue.key} ${issue.title}`,
-      jiraIdentifier: issue.key
-    })?.seedName ?? getLinkedWorkItemSuggestedName(issue)
-  )
-}
 export function getTaskPageRepoSourceContext(
   repo: Repo | null | undefined,
-  provider: 'github' | 'gitlab',
-  gitlabProjectRef?: GitLabProjectRef | null
+  provider: 'github'
 ): TaskSourceContext | null {
   if (!repo) {
     return null
@@ -77,9 +40,7 @@ export function getTaskPageRepoSourceContext(
   const providerIdentity =
     provider === 'github' && project?.providerIdentity?.provider === 'github'
       ? project.providerIdentity
-      : provider === 'gitlab' && gitlabProjectRef
-        ? buildGitLabProviderIdentity(gitlabProjectRef)
-        : null
+      : null
   return normalizeTaskSourceContext({
     provider,
     projectId: setup?.projectId ?? project?.id ?? repo.id,
@@ -88,21 +49,6 @@ export function getTaskPageRepoSourceContext(
     repoId: repo.id,
     providerIdentity
   })
-}
-export function buildGitLabProviderIdentity(projectRef: GitLabProjectRef) {
-  const pathParts = projectRef.path
-    .split('/')
-    .map((part) => part.trim())
-    .filter(Boolean)
-  const projectName = pathParts.at(-1) ?? null
-  const namespace = pathParts.length > 1 ? pathParts.slice(0, -1).join('/') : null
-  return {
-    provider: 'gitlab' as const,
-    projectId: projectRef.path,
-    namespace,
-    project: projectName,
-    webUrl: `https://${projectRef.host}/${projectRef.path}`
-  }
 }
 export function getTaskSourceHostAvailabilityForHost(
   host: ExecutionHostRegistryEntry | null | undefined,

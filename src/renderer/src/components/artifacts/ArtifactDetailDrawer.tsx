@@ -4,7 +4,6 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/
 import { translate } from '@/i18n/i18n'
 import { artifactName } from './artifact-display-labels'
 import { ArtifactDetailHeader } from './ArtifactDetailHeader'
-import { ArtifactPreview } from './ArtifactPreview'
 
 export function ArtifactDetailDrawer({
   item,
@@ -22,8 +21,6 @@ export function ArtifactDetailDrawer({
       <SheetContent
         side="right"
         showCloseButton={false}
-        // Why: Electron webviews do not paint inside transformed ancestors, so this
-        // sheet must not use the default slide translate.
         // Why: leave the native macOS traffic-light area uncovered when the drawer is
         // intentionally wider than the standard sheet max-width. The var resolves to 0px on
         // Windows and Linux, whose controls sit on the right edge instead.
@@ -50,7 +47,6 @@ export function ArtifactDetailDrawer({
               onClose={onClose}
               onDelete={onDelete}
             />
-            <ArtifactPreview shareUrl={item.shareUrl} />
           </div>
         ) : null}
       </SheetContent>

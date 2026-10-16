@@ -74,7 +74,7 @@ export function useChecksPanelAiQueue(model: ChecksPanelAiQueueInput) {
         'Review and edit the full command input before starting an agent.'
       ),
       prompt: buildResolvePullRequestConflictsPrompt({
-        reviewKind: activeConflictReview.provider === 'gitlab' ? 'MR' : 'PR',
+        reviewKind: 'PR',
         baseRef: activeConflictReview.conflictSummary?.baseRef,
         entries: conflictFiles.map((path) => ({ path })),
         worktreePath: activeWorktreePath ?? null
@@ -154,19 +154,12 @@ export function useChecksPanelAiQueue(model: ChecksPanelAiQueueInput) {
         (activeReview.provider === 'github' && prNumber
           ? { repoPath: repo.path, repoId: repo.id, prNumber }
           : undefined)
-      // Why: the ack resolves against this MR after delivery, so pin the iid now — the panel
-      // may already be showing a different review by then.
-      const gitlabTarget =
-        activeReview.provider === 'gitlab'
-          ? { repoPath: repo.path, repoId: repo.id, iid: activeReview.number }
-          : undefined
       const commentResolution = {
         reviewContextKey: stateRequestKey,
         provider: activeReview.provider,
         selectedGroups,
         githubTarget,
-        githubResolveTarget,
-        gitlabTarget
+        githubResolveTarget
       }
       claimedCommentResolutionRef.current = null
       commentResolutionLaunchAcceptedRef.current = false
@@ -175,7 +168,7 @@ export function useChecksPanelAiQueue(model: ChecksPanelAiQueueInput) {
         title: translate(
           'auto.components.right.sidebar.ChecksPanel.d00ebdc402',
           'Resolve {{value0}} Comments With AI',
-          { value0: activeReview.provider === 'gitlab' ? 'MR' : 'PR' }
+          { value0: 'PR' }
         ),
         // Why: only GitHub with a resolved PR target posts fixing replies; other providers
         // must not be promised a reply the ack never sends. Resolvable threads are acked by
@@ -191,7 +184,7 @@ export function useChecksPanelAiQueue(model: ChecksPanelAiQueueInput) {
                 'Review and edit the full command input before starting an agent.'
               ),
         prompt: buildPRCommentsResolutionPrompt({
-          reviewKind: activeReview.provider === 'gitlab' ? 'MR' : 'PR',
+          reviewKind: 'PR',
           reviewNumber: activeReview.number,
           reviewTitle: activeReview.title,
           reviewUrl: activeReview.url,

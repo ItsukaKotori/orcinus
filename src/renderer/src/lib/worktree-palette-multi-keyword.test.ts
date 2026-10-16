@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   CMD_J_FIXTURE_CASES,
-  CMD_J_FIXTURE_PORTS,
   CMD_J_FIXTURE_REPO_MAP,
   CMD_J_FIXTURE_WORKTREES
 } from './cmd-j-evaluation-fixture'
@@ -17,10 +16,7 @@ function documentKey(worktreeId: string): string {
 }
 
 function search(query: string, extra: Record<string, unknown> = {}): PaletteSearchResult[] {
-  return searchWorktrees(CMD_J_FIXTURE_WORKTREES, query, CMD_J_FIXTURE_REPO_MAP, {
-    workspacePortsByWorktreeId: CMD_J_FIXTURE_PORTS,
-    ...extra
-  })
+  return searchWorktrees(CMD_J_FIXTURE_WORKTREES, query, CMD_J_FIXTURE_REPO_MAP, extra)
 }
 
 function ids(query: string): string[] {
@@ -116,10 +112,6 @@ describe('evidence and ranking', () => {
     const [exact] = search('#4123')
     expect(exact.supportingText?.labelKind).toBe('pr')
     expect(exact.qualityClass).toBe('exact-intent')
-    // A port prefix is the only reading of `412`, and it ranks below the exact hit.
-    const [partial] = search('412')
-    expect(partial.supportingText?.labelKind).toBe('port')
-    expect(partial.qualityClass).toBe('partial-evidence')
   })
 
   it('classifies a typo hit as fuzzy evidence', () => {
@@ -138,21 +130,6 @@ describe('document invalidation inputs', () => {
     })
     expect(withHost.map((result) => result.worktreeId)).toEqual(['wt-docs'])
     expect(withHost[0].hostRanges).toHaveLength(1)
-  })
-
-  it('rebuilds documents when a port appears without the worktree array changing', () => {
-    const before = buildWorktreePaletteDocuments(CMD_J_FIXTURE_WORKTREES, {
-      repoMap: CMD_J_FIXTURE_REPO_MAP
-    })
-    const after = buildWorktreePaletteDocuments(CMD_J_FIXTURE_WORKTREES, {
-      repoMap: CMD_J_FIXTURE_REPO_MAP,
-      workspacePortsByWorktreeId: CMD_J_FIXTURE_PORTS
-    })
-    // Documents are keyed by host identity so two same-id workspaces on different hosts
-    // keep separate entries.
-    const key = documentKey('wt-main-orca')
-    expect(before.get(key)?.evidenceUnits.has('port:3000')).toBe(false)
-    expect(after.get(key)?.evidenceUnits.has('port:3000')).toBe(true)
   })
 
   it('keeps recency and current-tab state out of normalized field data', () => {

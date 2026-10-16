@@ -1,7 +1,4 @@
-import { getLinearOrganizationUrlKeyFromIssueUrl } from '../linear/links'
 import type { FolderWorkspaceLinkedTask } from '../folder-workspace-types'
-import type { JiraIssue } from '../jira-types'
-import type { LinearIssue } from '../linear/issue-types'
 import {
   getLinkedWorkItemSuggestedName,
   getLinkedWorkItemWorkspaceName,
@@ -115,46 +112,6 @@ export function buildGitLabWorkspaceSource(item: {
   repoId?: string
 }): GitLabWorkspaceSource {
   return { provider: 'gitlab', ...item }
-}
-
-export function getUsableLinearBranchName(
-  branchName: string | null | undefined
-): string | undefined {
-  // Why: only a non-blank normalized value can safely enter the exact git-ref
-  // override path; missing values must keep Orca's generated-name fallback.
-  return branchName?.trim() || undefined
-}
-
-export function buildLinearWorkspaceSource(
-  issue: Pick<LinearIssue, 'identifier' | 'title' | 'url' | 'workspaceId' | 'branchName'>
-): LinearWorkspaceSource {
-  const organizationUrlKey = getLinearOrganizationUrlKeyFromIssueUrl(issue.url)
-  const branchName = getUsableLinearBranchName(issue.branchName)
-  return {
-    provider: 'linear',
-    type: 'issue',
-    // Why: Linear uses a string identifier; numeric issue metadata must stay empty.
-    number: 0,
-    title: issue.title,
-    url: issue.url,
-    linearIdentifier: issue.identifier,
-    ...(issue.workspaceId ? { linearWorkspaceId: issue.workspaceId } : {}),
-    ...(organizationUrlKey ? { linearOrganizationUrlKey: organizationUrlKey } : {}),
-    ...(branchName ? { linearBranchName: branchName } : {})
-  }
-}
-
-export function buildJiraWorkspaceSource(
-  issue: Pick<JiraIssue, 'key' | 'title' | 'url'>
-): JiraWorkspaceSource {
-  return {
-    provider: 'jira',
-    type: 'issue',
-    number: 0,
-    title: issue.title,
-    url: issue.url,
-    jiraIdentifier: issue.key
-  }
 }
 
 export function shouldApplyWorkspaceSourceAutoName(args: {

@@ -53,13 +53,11 @@ function HookProbe(props: {
   repo: Repo
   onRefreshReview: () => Promise<void>
   pullRequest?: PRInfo
-  isGitLab?: boolean
 }): null {
   latest = useHostedReviewActions({
     review,
     githubPR: props.pullRequest ?? githubPR,
     repo: props.repo,
-    isGitLab: props.isGitLab ?? false,
     shortLabel: 'PR',
     reviewLabel: 'pull request',
     defaultMergeMethod: 'squash',
@@ -72,14 +70,13 @@ function HookProbe(props: {
 async function renderHook(
   repo: Repo,
   onRefreshReview = vi.fn().mockResolvedValue(undefined),
-  pullRequest?: PRInfo,
-  isGitLab = false
+  pullRequest?: PRInfo
 ) {
   const container = document.createElement('div')
   document.body.appendChild(container)
   root = createRoot(container)
   await act(async () => {
-    root?.render(createElement(HookProbe, { repo, onRefreshReview, pullRequest, isGitLab }))
+    root?.render(createElement(HookProbe, { repo, onRefreshReview, pullRequest }))
   })
   return { onRefreshReview }
 }
@@ -97,12 +94,6 @@ describe('useHostedReviewActions', () => {
         setPRAutoMerge: vi.fn().mockResolvedValue({ ok: true }),
         updatePRState: vi.fn().mockResolvedValue({ ok: true }),
         markPRReadyForReview: vi.fn().mockResolvedValue({ ok: true })
-      },
-      gl: {
-        mergeMR: vi.fn().mockResolvedValue({ ok: true }),
-        closeMR: vi.fn().mockResolvedValue({ ok: true }),
-        reopenMR: vi.fn().mockResolvedValue({ ok: true }),
-        updateMR: vi.fn().mockResolvedValue({ ok: true })
       }
     }
   })
@@ -194,45 +185,6 @@ describe('useHostedReviewActions', () => {
       prRepo
     })
     expect(githubRefresh).toHaveBeenCalledTimes(1)
-  })
-
-  it('routes GitLab ready mutations through the existing update API', async () => {
-    const gitLabRefresh = vi.fn().mockResolvedValue(undefined)
-    await renderHook(makeRepo(), gitLabRefresh, undefined, true)
-    await act(async () => {
-      await latest?.handleMarkReadyForReview()
-    })
-
-    expect(window.api.gl.updateMR).toHaveBeenCalledWith({
-      repoPath: '/repo',
-      repoId: 'repo-1',
-      iid: 1015,
-      updates: { readyForReview: true }
-    })
-    expect(gitLabRefresh).toHaveBeenCalledTimes(1)
-  })
-
-  it('gates runtime-owned GitLab ready mutations on the host capability', async () => {
-    const gitLabRefresh = vi.fn().mockResolvedValue(undefined)
-    await renderHook(makeRepo({ executionHostId: 'runtime:env-1' }), gitLabRefresh, undefined, true)
-
-    await act(async () => {
-      await latest?.handleMarkReadyForReview()
-    })
-
-    expect(runtimeRpcMocks.assertRuntimeEnvironmentCapability).toHaveBeenCalledWith(
-      'env-1',
-      'gitlab.updateMR.readyForReview.v1',
-      expect.stringContaining('newer Orca server')
-    )
-    expect(runtimeRpcMocks.callRuntimeRpc).toHaveBeenCalledWith(
-      { kind: 'environment', environmentId: 'env-1' },
-      'gitlab.updateMR',
-      { repo: 'repo-1', iid: 1015, updates: { readyForReview: true } },
-      { timeoutMs: 30_000 }
-    )
-    expect(window.api.gl.updateMR).not.toHaveBeenCalled()
-    expect(gitLabRefresh).toHaveBeenCalledTimes(1)
   })
 
   it('confirms the downstack merge scope before merging a registered stack', async () => {

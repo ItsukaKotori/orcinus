@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { ActiveRightSidebarTab } from '@/store/slices/editor'
 import { getTopActivityBarLayout } from './activity-bar-overflow'
 
-const items = (['explorer', 'source-control', 'checks', 'ports'] as ActiveRightSidebarTab[]).map(
+const items = (['explorer', 'source-control', 'checks', 'vault'] as ActiveRightSidebarTab[]).map(
   (id) => ({ id })
 )
 
@@ -14,7 +14,7 @@ describe('getTopActivityBarLayout', () => {
       'explorer',
       'source-control',
       'checks',
-      'ports'
+      'vault'
     ])
     expect(layout.overflowItems).toEqual([])
   })
@@ -23,13 +23,13 @@ describe('getTopActivityBarLayout', () => {
     const layout = getTopActivityBarLayout(items, 124, 'explorer')
 
     expect(layout.visibleItems.map((item) => item.id)).toEqual(['explorer', 'source-control'])
-    expect(layout.overflowItems.map((item) => item.id)).toEqual(['checks', 'ports'])
+    expect(layout.overflowItems.map((item) => item.id)).toEqual(['checks', 'vault'])
   })
 
   it('keeps the active tab visible even when it would otherwise overflow', () => {
-    const layout = getTopActivityBarLayout(items, 124, 'ports')
+    const layout = getTopActivityBarLayout(items, 124, 'vault')
 
-    expect(layout.visibleItems.map((item) => item.id)).toEqual(['explorer', 'ports'])
+    expect(layout.visibleItems.map((item) => item.id)).toEqual(['explorer', 'vault'])
     expect(layout.overflowItems.map((item) => item.id)).toEqual(['source-control', 'checks'])
   })
 })

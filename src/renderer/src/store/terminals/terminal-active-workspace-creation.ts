@@ -47,12 +47,10 @@ export function createActiveWorkspaceTerminalActions(
       const latest = get()
       const currentTerminals = latest.tabsByWorktree[worktreeId] ?? []
       const currentEditors = latest.openFiles.filter((file) => file.worktreeId === worktreeId)
-      const currentBrowsers = latest.browserTabsByWorktree[worktreeId] ?? []
       const stored = latest.tabBarOrderByWorktree[worktreeId]
       const validIds = new Set([
         ...currentTerminals.map((tab) => tab.id),
-        ...currentEditors.map((file) => file.id),
-        ...currentBrowsers.map((tab) => tab.id)
+        ...currentEditors.map((file) => file.id)
       ])
       const base = (stored ?? []).filter((id) => validIds.has(id))
       const inBase = new Set(base)
@@ -61,7 +59,7 @@ export function createActiveWorkspaceTerminalActions(
           base.push(id)
         }
       }
-      // Why: Cmd+J shares the titlebar-button creation path, so append the new terminal after mixed editor/browser tabs, not first.
+      // Why: Cmd+J shares the titlebar-button creation path, so append the new terminal after existing editor tabs, not first.
       get().setTabBarOrder(worktreeId, [...base.filter((id) => id !== terminal.id), terminal.id])
       focusTerminalTabSurface(terminal.id)
     }

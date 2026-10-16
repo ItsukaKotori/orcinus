@@ -142,12 +142,11 @@ export function buildWorktreeReviewEvidence(
   if (!review || !Number.isFinite(review.number)) {
     return null
   }
-  const isMergeRequest = review.provider === 'gitlab'
-  const sigil = isMergeRequest ? '!' : '#'
+  const sigil = '#'
   return composePaletteEvidence({
     id: `review:${review.provider}:${review.number}`,
-    kind: isMergeRequest ? 'mr' : 'pr',
-    accessibilityLabel: isMergeRequest ? 'Merge request' : 'Pull request',
+    kind: 'pr',
+    accessibilityLabel: 'Pull request',
     parts: [
       {
         key: 'number',
@@ -183,21 +182,4 @@ export function buildWorktreeIssueEvidence(args: {
   })
 }
 
-export function buildWorktreePortEvidence(
-  port: Readonly<{ port: number; processName?: string }>
-): PaletteComposedEvidence | null {
-  return composePaletteEvidence({
-    id: `port:${port.port}`,
-    kind: 'port',
-    accessibilityLabel: 'Listening port',
-    parts: [
-      {
-        key: 'number',
-        text: String(port.port),
-        profile: 'identifier',
-        identifier: { kind: 'port' }
-      },
-      { key: 'process', text: port.processName ?? '', profile: 'structured-label' }
-    ]
-  })
-}
+

@@ -14,17 +14,17 @@ describe('resolveHostedReviewCreationProviderForTarget', () => {
   it('preserves a known self-hosted provider for the same target', () => {
     expect(
       resolveHostedReviewCreationProviderForTarget(
-        { ...target, provider: 'gitlab' },
+        { ...target, provider: 'bitbucket' },
         target,
         'github'
       )
-    ).toBe('gitlab')
+    ).toBe('bitbucket')
   })
 
   it('does not leak a provider hint across worktrees', () => {
     expect(
       resolveHostedReviewCreationProviderForTarget(
-        { ...target, provider: 'gitlab' },
+        { ...target, provider: 'bitbucket' },
         { ...target, worktreeId: 'worktree-2' },
         'github'
       )
@@ -62,14 +62,14 @@ describe('buildLocalBlockerHostedReviewCreationEligibility', () => {
 
   it('prefers dirty over no_upstream when both apply, matching main-process ordering', () => {
     expect(
-      buildLocalBlockerHostedReviewCreationEligibility('gitlab', {
+      buildLocalBlockerHostedReviewCreationEligibility('bitbucket', {
         ...featureBranch,
         hasUncommittedChanges: true,
         hasUpstream: false,
         ahead: 0,
         behind: 0
       })
-    ).toMatchObject({ provider: 'gitlab', blockedReason: 'dirty' })
+    ).toMatchObject({ provider: 'bitbucket', blockedReason: 'dirty' })
   })
 
   it('reports no_upstream for a clean unpublished branch', () => {

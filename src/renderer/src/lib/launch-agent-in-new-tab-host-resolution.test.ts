@@ -64,11 +64,7 @@ vi.mock('sonner', () => ({ toast: { message: vi.fn(), error: vi.fn() } }))
 
 vi.mock('@/components/tab-bar/reconcile-order', () => ({
   reconcileTabOrder: vi.fn(
-    (_stored, termIds: string[], editorIds: string[], browserIds: string[]) => [
-      ...termIds,
-      ...editorIds,
-      ...browserIds
-    ]
+    (_stored, termIds: string[], editorIds: string[]) => [...termIds, ...editorIds]
   )
 }))
 

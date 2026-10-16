@@ -178,16 +178,6 @@ function getLinkedReviewFallback(worktree: Worktree | null): {
   if (!worktree) {
     return null
   }
-  if (worktree.linkedGitLabMR != null) {
-    return {
-      label: translate(
-        'components.workspace.cleanup.presentation.gitlabMergeRequestNumber',
-        'MR #{{value0}}',
-        { value0: worktree.linkedGitLabMR }
-      ),
-      provider: 'gitlab'
-    }
-  }
   if (worktree.linkedPR != null) {
     return {
       label: translate(
@@ -201,8 +191,8 @@ function getLinkedReviewFallback(worktree: Worktree | null): {
   return null
 }
 
-function getReviewShortLabel(provider: HostedReviewProvider): string {
-  return provider === 'gitlab' ? 'MR' : 'PR'
+function getReviewShortLabel(_provider: HostedReviewProvider): string {
+  return 'PR'
 }
 
 function getBranchDisplayName(branch: string): string {

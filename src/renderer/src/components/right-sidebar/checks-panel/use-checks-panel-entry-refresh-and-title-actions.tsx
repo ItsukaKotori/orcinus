@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef } from 'react'
 import { ENTRY_REFRESH_GRACE_MS, shouldEntryRefresh } from '../checks-entry-refresh'
 import { refreshHostedReviewCard } from '@/store/slices/hosted-review-card-refresh'
-import { toast } from 'sonner'
 
 import type { ChecksPanelContextState } from './use-checks-panel-context-state'
 import type { ChecksPanelControllerState } from './use-checks-panel-controller-state'
@@ -11,17 +10,13 @@ import type { ChecksPanelReviewDataState } from './use-checks-panel-review-data'
 
 type ChecksPanelEntryRefreshAndTitleActionsInput = Pick<
   ChecksPanelContextState,
-  | 'activeGitLabReview'
   | 'activeReview'
   | 'clearTitleInputFocusTimer'
   | 'fallbackGitHubPRNumber'
-  | 'hostedReviewCacheKey'
   | 'isFolder'
-  | 'isGitLabReviewContext'
   | 'linkedAzureDevOpsPR'
   | 'linkedBitbucketPR'
   | 'linkedGiteaPR'
-  | 'linkedGitLabMR'
   | 'linkedPR'
   | 'pr'
   | 'prCacheKey'
@@ -29,7 +24,6 @@ type ChecksPanelEntryRefreshAndTitleActionsInput = Pick<
 > &
   Pick<
     ChecksPanelControllerState,
-    | 'activeWorktree'
     | 'activeWorktreeId'
     | 'branch'
     | 'enqueueGitHubPRRefresh'
@@ -48,16 +42,14 @@ type ChecksPanelEntryRefreshAndTitleActionsInput = Pick<
     | 'titleInputRef'
   > &
   Pick<ChecksPanelReviewState, 'checksFetchedAt' | 'commentsFetchedAt' | 'prFetchedAt'> &
-  Pick<ChecksPanelPollingState, 'fetchChecks' | 'fetchGitLabDetails'> &
+  Pick<ChecksPanelPollingState, 'fetchChecks'> &
   Pick<ChecksPanelReviewDataState, 'fetchComments'>
 
 export function useChecksPanelEntryRefreshAndTitleActions(
   model: ChecksPanelEntryRefreshAndTitleActionsInput
 ) {
   const {
-    activeGitLabReview,
     activeReview,
-    activeWorktree,
     activeWorktreeId,
     branch,
     checksFetchedAt,
@@ -67,17 +59,13 @@ export function useChecksPanelEntryRefreshAndTitleActions(
     fallbackGitHubPRNumber,
     fetchChecks,
     fetchComments,
-    fetchGitLabDetails,
     fetchHostedReviewForBranch,
     fetchPRForBranch,
-    hostedReviewCacheKey,
     isFolder,
-    isGitLabReviewContext,
     isPanelVisible,
     linkedAzureDevOpsPR,
     linkedBitbucketPR,
     linkedGiteaPR,
-    linkedGitLabMR,
     linkedPR,
     mountedRef,
     pollIntervalRef,
@@ -100,23 +88,6 @@ export function useChecksPanelEntryRefreshAndTitleActions(
         return
       }
       // Why: tab entry is automatic UI, not a user refresh; keep coordinator rate-limit guards and only force panes already proven stale.
-      if (isGitLabReviewContext) {
-        void fetchHostedReviewForBranch(repo.path, branch, {
-          force: true,
-          repoId: repo.id,
-          linkedGitHubPR: linkedPR,
-          fallbackGitHubPR: fallbackGitHubPRNumber,
-          currentHeadOid: activeWorktree?.head ?? null,
-          linkedGitLabMR,
-          linkedBitbucketPR,
-          linkedAzureDevOpsPR,
-          linkedGiteaPR
-        })
-        if (activeGitLabReview) {
-          void fetchGitLabDetails()
-        }
-        return
-      }
       enqueueGitHubPRRefresh(activeWorktreeId, 'active', 80)
       if (options.refreshChecks) {
         void fetchChecks({ force: true })
@@ -126,22 +97,11 @@ export function useChecksPanelEntryRefreshAndTitleActions(
       }
     },
     [
-      activeGitLabReview,
-      activeWorktree?.head,
       activeWorktreeId,
       branch,
       enqueueGitHubPRRefresh,
-      fallbackGitHubPRNumber,
       fetchChecks,
       fetchComments,
-      fetchGitLabDetails,
-      fetchHostedReviewForBranch,
-      isGitLabReviewContext,
-      linkedAzureDevOpsPR,
-      linkedBitbucketPR,
-      linkedGiteaPR,
-      linkedGitLabMR,
-      linkedPR,
       repo
     ]
   )
@@ -149,7 +109,7 @@ export function useChecksPanelEntryRefreshAndTitleActions(
   // Why: force a freshness check on each Checks-tab entry so externally-changed PRs appear without waiting for the cache TTL. See docs/refresh-on-checks-tab.md.
   const entryKey =
     isPanelVisible && repo && !isFolder && branch
-      ? `${activeWorktreeId ?? ''}::${activeGitLabReview ? hostedReviewCacheKey : prCacheKey}`
+      ? `${activeWorktreeId ?? ''}::${prCacheKey}`
       : ''
   const lastEntryKeyRef = useRef<string>('')
   useEffect(() => {
@@ -200,29 +160,6 @@ export function useChecksPanelEntryRefreshAndTitleActions(
     if (!repo || !branch) {
       return
     }
-    if (activeReview?.provider === 'gitlab') {
-      const refreshedReview = await refreshHostedReviewCard(fetchHostedReviewForBranch, {
-        repoPath: repo.path,
-        repoId: repo.id,
-        branch,
-        linkedGitHubPR: linkedPR,
-        fallbackGitHubPR: fallbackGitHubPRNumber,
-        linkedGitLabMR,
-        linkedBitbucketPR,
-        linkedAzureDevOpsPR,
-        linkedGiteaPR
-      })
-      const refreshedGitLabReview =
-        refreshedReview?.provider === 'gitlab' ? refreshedReview : activeGitLabReview
-      if (refreshedGitLabReview) {
-        await fetchGitLabDetails({
-          mrNumberOverride: refreshedGitLabReview.number,
-          headShaOverride: refreshedGitLabReview.headSha,
-          commitAsCurrent: true
-        })
-      }
-      return
-    }
     const refreshedPR = await fetchPRForBranch(repo.path, branch, {
       force: true,
       repoId: repo.id,
@@ -236,24 +173,19 @@ export function useChecksPanelEntryRefreshAndTitleActions(
       branch,
       linkedGitHubPR: linkedPR,
       fallbackGitHubPR: refreshedPR?.number ?? fallbackGitHubPRNumber,
-      linkedGitLabMR,
       linkedBitbucketPR,
       linkedAzureDevOpsPR,
       linkedGiteaPR
     })
   }, [
-    activeGitLabReview,
-    activeReview?.provider,
     activeWorktreeId,
     branch,
     fallbackGitHubPRNumber,
-    fetchGitLabDetails,
     fetchHostedReviewForBranch,
     fetchPRForBranch,
     linkedAzureDevOpsPR,
     linkedBitbucketPR,
     linkedGiteaPR,
-    linkedGitLabMR,
     linkedPR,
     repo
   ])
@@ -293,32 +225,18 @@ export function useChecksPanelEntryRefreshAndTitleActions(
     }
     setTitleSaving(true)
     try {
-      if (activeReview.provider === 'gitlab') {
-        const result = await window.api.gl.updateMR({
-          repoPath: repo.path,
-          repoId: repo.id,
-          iid: activeReview.number,
-          updates: { title: nextTitle }
-        })
-        if (!result.ok) {
-          toast.error(result.error)
-          return
-        }
+      if (!pr) {
+        return
+      }
+      const ok = await window.api.gh.updatePRTitle({
+        repoPath: repo.path,
+        repoId: repo.id,
+        prNumber: pr.number,
+        title: nextTitle,
+        prRepo: pr.prRepo ?? null
+      })
+      if (ok) {
         await refreshHostedReviewAfterMutation()
-      } else {
-        if (!pr) {
-          return
-        }
-        const ok = await window.api.gh.updatePRTitle({
-          repoPath: repo.path,
-          repoId: repo.id,
-          prNumber: pr.number,
-          title: nextTitle,
-          prRepo: pr.prRepo ?? null
-        })
-        if (ok) {
-          await refreshHostedReviewAfterMutation()
-        }
       }
     } finally {
       clearTitleInputFocusTimer()

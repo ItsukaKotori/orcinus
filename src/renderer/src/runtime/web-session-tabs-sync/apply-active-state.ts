@@ -32,14 +32,11 @@ export function applyActiveStateUpdates(context: ActiveStateContext) {
     currentVisibleUnifiedTabId,
     currentVisibleStructuredTabId,
     currentActiveTerminalStillExists,
-    currentActiveBrowserStillExists,
     currentActiveEditorStillExists,
     intentEditorFileId,
     nextActiveTerminalId,
-    nextActiveBrowserWorkspaceId,
     nextActiveEditorFileId,
-    intentTerminalId,
-    intentBrowserWorkspaceId
+    intentTerminalId
   } = context
 
   const nextActiveGroupId = clientOwnedPlacement
@@ -148,18 +145,6 @@ export function applyActiveStateUpdates(context: ActiveStateContext) {
           false
         )
       : state.activeTabIdByWorktree
-  const nextActiveBrowserTabIdByWorktree =
-    (state.activeBrowserTabIdByWorktree[worktreeId] ?? null) !== nextActiveBrowserWorkspaceId
-      ? withWorktreeEntry(
-          state,
-          'activeBrowserTabIdByWorktree',
-          worktreeId,
-          nextActiveBrowserWorkspaceId,
-          (current, next) => (current ?? null) === next,
-          context.batchContext,
-          false
-        )
-      : state.activeBrowserTabIdByWorktree
   const nextActiveFileIdByWorktree =
     (state.activeFileIdByWorktree[worktreeId] ?? null) !== nextActiveEditorFileId
       ? withWorktreeEntry(
@@ -177,24 +162,20 @@ export function applyActiveStateUpdates(context: ActiveStateContext) {
   const focusIntentVisibleTabType =
     navigationIntentTab?.type === 'agent-session' && intentMirroredAgent
       ? ('agent-session' as const)
-      : navigationIntentTab?.type === 'browser' && intentBrowserWorkspaceId
-        ? ('browser' as const)
-        : navigationIntentTab?.type === 'terminal' && intentTerminalId
-          ? ('terminal' as const)
-          : intentEditorFileId
-            ? ('editor' as const)
-            : null
+      : navigationIntentTab?.type === 'terminal' && intentTerminalId
+        ? ('terminal' as const)
+        : intentEditorFileId
+          ? ('editor' as const)
+          : null
   const snapshotVisibleTabType =
     snapshot.activeTabType === 'agent-session' && activeMirroredAgentTabId
       ? ('agent-session' as const)
-      : snapshot.activeTabType === 'browser' && nextActiveBrowserWorkspaceId
-        ? ('browser' as const)
-        : snapshot.activeTabType === 'terminal' && nextActiveTerminalId
-          ? ('terminal' as const)
-          : (snapshot.activeTabType === 'markdown' || snapshot.activeTabType === 'file') &&
-              nextActiveEditorFileId
-            ? ('editor' as const)
-            : null
+      : snapshot.activeTabType === 'terminal' && nextActiveTerminalId
+        ? ('terminal' as const)
+        : (snapshot.activeTabType === 'markdown' || snapshot.activeTabType === 'file') &&
+            nextActiveEditorFileId
+          ? ('editor' as const)
+          : null
   const currentVisibleTabType =
     state.activeTabTypeByWorktree[worktreeId] ?? (isActiveWorktree ? state.activeTabType : null)
   const currentVisibleTabTypeStillValid =
@@ -206,13 +187,11 @@ export function applyActiveStateUpdates(context: ActiveStateContext) {
             (tab) => tab.id === currentVisibleUnifiedTabId && tab.contentType === 'agent-session'
           )
         ? ('agent-session' as const)
-        : currentVisibleTabType === 'browser' && currentActiveBrowserStillExists
-          ? ('browser' as const)
-          : currentVisibleTabType === 'editor' && currentActiveEditorStillExists
-            ? ('editor' as const)
-            : currentVisibleTabType === 'terminal' && currentActiveTerminalStillExists
-              ? ('terminal' as const)
-              : null
+        : currentVisibleTabType === 'editor' && currentActiveEditorStillExists
+          ? ('editor' as const)
+          : currentVisibleTabType === 'terminal' && currentActiveTerminalStillExists
+            ? ('terminal' as const)
+            : null
   const activeUnifiedTab =
     nextActiveUnifiedTabId && nextUnifiedTabs
       ? (nextUnifiedTabs.find((tab) => tab.id === nextActiveUnifiedTabId) ?? null)
@@ -222,11 +201,9 @@ export function applyActiveStateUpdates(context: ActiveStateContext) {
       ? toVisibleTabType(activeUnifiedTab)
       : nextActiveTerminalId
         ? ('terminal' as const)
-        : nextActiveBrowserWorkspaceId
-          ? ('browser' as const)
-          : nextActiveEditorFileId
-            ? ('editor' as const)
-            : ('terminal' as const)
+        : nextActiveEditorFileId
+          ? ('editor' as const)
+          : ('terminal' as const)
   const nextVisibleTabType = honorSnapshotActiveFocus
     ? (focusIntentVisibleTabType ??
       currentVisibleTabTypeStillValid ??
@@ -248,9 +225,6 @@ export function applyActiveStateUpdates(context: ActiveStateContext) {
         ? nextActiveTerminalId
         : (currentActiveTerminalStillValid ?? nextActiveTerminalId)))
     : state.activeTabId
-  const nextActiveBrowserTabId = isActiveWorktree
-    ? nextActiveBrowserWorkspaceId
-    : state.activeBrowserTabId
   const nextActiveFileId = isActiveWorktree
     ? snapshot.activeTabType === 'markdown' || snapshot.activeTabType === 'file'
       ? nextActiveEditorFileId
@@ -276,11 +250,9 @@ export function applyActiveStateUpdates(context: ActiveStateContext) {
     nextLayoutByWorktree,
     nextTabBarOrderByWorktree,
     nextActiveTabIdByWorktree,
-    nextActiveBrowserTabIdByWorktree,
     nextActiveFileIdByWorktree,
     nextVisibleTabType,
     nextActiveTabId,
-    nextActiveBrowserTabId,
     nextActiveFileId,
     nextActiveTabType,
     nextActiveTabTypeByWorktree

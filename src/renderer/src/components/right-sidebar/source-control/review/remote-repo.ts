@@ -51,9 +51,6 @@ function providerForHost(host: string): ManualReviewProvider | null {
   if (normalized === 'github.com' || normalized === 'ssh.github.com') {
     return 'github'
   }
-  if (normalized === 'gitlab.com') {
-    return 'gitlab'
-  }
   if (normalized === 'bitbucket.org') {
     return 'bitbucket'
   }

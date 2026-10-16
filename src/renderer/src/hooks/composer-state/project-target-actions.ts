@@ -16,8 +16,6 @@ type ProjectTargetActionsInput = Pick<
   | 'setBranchNameOverride'
   | 'setBranchNameOverridePreservesNameEdits'
   | 'setForkPushWarning'
-  | 'setLinkedGitLabIssue'
-  | 'setLinkedGitLabMR'
   | 'setLinkedIssue'
   | 'setLinkedPR'
   | 'setLinkedTaskSourceContext'
@@ -62,8 +60,6 @@ export function useProjectTargetActions(input: ProjectTargetActionsInput) {
     setBranchNameOverride,
     setBranchNameOverridePreservesNameEdits,
     setForkPushWarning,
-    setLinkedGitLabIssue,
-    setLinkedGitLabMR,
     setLinkedIssue,
     setLinkedPR,
     setLinkedTaskSourceContext,
@@ -108,8 +104,6 @@ export function useProjectTargetActions(input: ProjectTargetActionsInput) {
         setRepoId(nextSourceRepo?.id ?? '')
         setLinkedIssue('')
         setLinkedPR(null)
-        setLinkedGitLabIssue(null)
-        setLinkedGitLabMR(null)
         if (linkedWorkItem && !shouldPreserveWorkspaceSourceOnRepoChange(linkedWorkItem)) {
           setLinkedWorkItem(null)
           setLinkedTaskSourceContext(null)
@@ -164,8 +158,6 @@ export function useProjectTargetActions(input: ProjectTargetActionsInput) {
       setBranchNameOverride,
       setBranchNameOverridePreservesNameEdits,
       setForkPushWarning,
-      setLinkedGitLabIssue,
-      setLinkedGitLabMR,
       setLinkedIssue,
       setLinkedPR,
       setLinkedTaskSourceContext,

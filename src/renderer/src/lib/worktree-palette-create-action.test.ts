@@ -191,17 +191,14 @@ describe('worktree-palette-create-action', () => {
         { id: '__hint_worktree_cap__', type: 'hint' },
         { id: '__header_actions_settings__', type: 'section-header' },
         { id: 'settings:ai-provider-accounts', type: 'settings' },
-        { id: 'quick-action:new-terminal', type: 'quick-action' },
-        { id: '__header_browser__', type: 'section-header' },
-        { id: 'browser-page:one', type: 'browser-page' }
+        { id: 'quick-action:new-terminal', type: 'quick-action' }
       ])
     ).toEqual([
       'worktree:one',
       CREATE_WORKTREE_ITEM_ID,
       '__hint_worktree_cap__',
       'settings:ai-provider-accounts',
-      'quick-action:new-terminal',
-      'browser-page:one'
+      'quick-action:new-terminal'
     ])
   })
 

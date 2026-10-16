@@ -17,7 +17,6 @@ type FloatingWorkspaceShortcutEvent = Partial<
 const FLOATING_WORKSPACE_SHORTCUT_SURFACE_SELECTOR = '[data-floating-terminal-shortcut-surface]'
 const FLOATING_WORKSPACE_PANEL_SHORTCUT_ACTIONS = [
   'tab.newTerminal',
-  'tab.newBrowser',
   'tab.newMarkdown',
   'tab.openMarkdown',
   'tab.close'
@@ -45,8 +44,8 @@ export function isFloatingWorkspacePanelShortcutTarget(
 }
 
 // Which tab-creation/close action the panel claims, without the target gate — the panel's own
-// window-capture dispatch owns chords from anywhere inside the panel (xterm, browser slot, editor),
-// not just its shortcut surface. Returning the identity lets one pass serve both the claim check and
+// window-capture dispatch owns chords from anywhere inside the panel (xterm, editor), not just
+// its shortcut surface. Returning the identity lets one pass serve both the claim check and
 // the dispatch branch.
 export function matchFloatingWorkspacePanelOwnedAction(
   event: FloatingWorkspaceShortcutEvent,

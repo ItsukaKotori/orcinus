@@ -10,9 +10,7 @@ import { createSettingsSlice } from './slices/settings'
 import { createKeybindingsSlice } from './slices/keybindings'
 import { createGitHubSlice } from './slices/github'
 import { createHostedReviewSlice } from './slices/hosted-review'
-import { createLinearSlice } from './slices/linear'
 import { createPreflightSlice } from './slices/preflight'
-import { createJiraSlice } from './slices/jira'
 import { createEditorSlice } from './slices/editor'
 import { createStatsSlice } from './slices/stats'
 import { createMemorySlice } from './slices/memory'
@@ -22,7 +20,6 @@ import {
   createCodexUsageSlice,
   createOpenCodeUsageSlice
 } from './slices/usage-provider-slices'
-import { createBrowserSlice } from './slices/browser'
 import { createRateLimitSlice } from './slices/rate-limits'
 import { createSshSlice } from './slices/ssh'
 import { createRuntimeEnvironmentSshSlice } from './slices/runtime-environment-ssh'
@@ -46,10 +43,6 @@ import { createTerminalQuickCommandHostsSlice } from './slices/terminal-quick-co
 import { createPluginCenterSlice } from './slices/plugin-center/plugin-center-slice'
 import { e2eConfig } from '@/lib/e2e-config'
 import type { createWebRuntimeSessionTerminal } from '@/runtime/web-runtime-session'
-import {
-  registerHttpLinkStoreAccessor,
-  registerWorkspaceHttpLinkBrowserOpener
-} from '@/lib/http-link-routing'
 import { installStoreListenerCensus } from './store-listener-census'
 import { withStoreIdentityChurnProbe } from './store-identity-churn-probe'
 
@@ -75,9 +68,7 @@ export const useAppStore = create<AppState>()(
       ...createKeybindingsSlice(...a),
       ...createGitHubSlice(...a),
       ...createHostedReviewSlice(...a),
-      ...createLinearSlice(...a),
       ...createPreflightSlice(...a),
-      ...createJiraSlice(...a),
       ...createEditorSlice(...a),
       ...createStatsSlice(...a),
       ...createMemorySlice(...a),
@@ -85,7 +76,6 @@ export const useAppStore = create<AppState>()(
       ...createClaudeUsageSlice(...a),
       ...createCodexUsageSlice(...a),
       ...createOpenCodeUsageSlice(...a),
-      ...createBrowserSlice(...a),
       ...createRateLimitSlice(...a),
       ...createSshSlice(...a),
       ...createRuntimeEnvironmentSshSlice(...a),
@@ -110,12 +100,6 @@ export const useAppStore = create<AppState>()(
     }
   })
 )
-
-registerHttpLinkStoreAccessor(() => useAppStore.getState())
-registerWorkspaceHttpLinkBrowserOpener(async (request) => {
-  const { openWorkspaceBrowserTab } = await import('@/lib/workspace-browser-tab-open')
-  await openWorkspaceBrowserTab(request)
-})
 
 export type { AppState } from './types'
 

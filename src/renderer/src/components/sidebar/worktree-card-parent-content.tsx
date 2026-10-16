@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils'
 import { WorktreeCardHeader } from './worktree-card-header'
 import { WorktreeCardMetaRow } from './worktree-card-meta-row'
 import { WorktreeCardDetailsHover } from './WorktreeCardMeta'
-import { WorktreeCardPortsDetails } from './WorktreeCardPorts'
 import type { WorktreeCardPresentation } from './worktree-card-presentation'
 import { WorktreeCardSecondaryRows } from './worktree-card-secondary-rows'
 import { WorktreeCardStatusSlot } from './WorktreeCardStatusSlot'
@@ -32,21 +31,16 @@ export function WorktreeCardParentContent({
     titleRenaming,
     isDeleting,
     hoverIssue,
-    hoverLinearIssue,
-    hoverJiraIssue,
     hoverReview,
     hoverComment,
     metaAutomationProvenance,
     metaCliProvenance,
-    workspacePorts,
     detailsHoverControl,
     handleRenameTitle,
     handleEditIssue,
     handleEditComment,
     handleOpenGitHubIssueInOrca,
     handleOpenIssueInBrowser,
-    linearIssue,
-    handleOpenLinearIssueInOrca,
     handleOpenReviewInOrca,
     handleOpenReviewInBrowser,
     handleOpenAutomation,
@@ -78,8 +72,6 @@ export function WorktreeCardParentContent({
     hasHoverDetails && !titleRenaming ? (
       <WorktreeCardDetailsHover
         issue={hoverIssue}
-        linearIssue={hoverLinearIssue}
-        jiraIssue={hoverJiraIssue}
         review={hoverReview}
         comment={hoverComment}
         automationProvenance={metaAutomationProvenance}
@@ -87,9 +79,6 @@ export function WorktreeCardParentContent({
         branchName={hoverBranchName}
         workspaceTitle={hoverWorkspaceTitle}
         workspaceTitleRenameDisabled={isDeleting || affiliateListMode}
-        detailsAfter={
-          workspacePorts.length > 0 ? <WorktreeCardPortsDetails ports={workspacePorts} /> : null
-        }
         openDelay={100}
         hoverControl={detailsHoverControl}
         onRenameWorkspaceTitle={affiliateListMode ? undefined : handleRenameTitle}
@@ -103,7 +92,6 @@ export function WorktreeCardParentContent({
         onOpenIssueInBrowser={
           hoverIssue && 'url' in hoverIssue && hoverIssue.url ? handleOpenIssueInBrowser : undefined
         }
-        onOpenLinearIssueInOrca={linearIssue?.url ? handleOpenLinearIssueInOrca : undefined}
         onOpenReviewInOrca={
           hoverReview?.url && hoverReview.provider === 'github' ? handleOpenReviewInOrca : undefined
         }

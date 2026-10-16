@@ -31,7 +31,6 @@ type CreateStepProps = {
   parentDefaultPending?: boolean
   manualParentEntry?: boolean
   runtimeEnvironmentId?: string | null
-  sshTargetId?: string | null
   onNameChange: (value: string) => void
   onParentChange: (value: string) => void
   onPickParent: () => void
@@ -49,18 +48,17 @@ export function CreateStep({
   parentDefaultPending = false,
   manualParentEntry = false,
   runtimeEnvironmentId,
-  sshTargetId,
   onNameChange,
   onParentChange,
   onPickParent,
   onCreate
 }: CreateStepProps): React.JSX.Element {
   const [browsingParent, setBrowsingParent] = useState(false)
-  // Why: SSH hosts need a typed remote path; hiding that field behind the
+  // Why: runtime hosts need a typed remote path; hiding that field behind the
   // collapsed defaults makes the create flow look impossible.
   const [advancedOpen, setAdvancedOpen] = useState(manualParentEntry)
 
-  // Why: SSH hosts report "unknown"; only a confirmed Git miss should block
+  // Why: runtime hosts report "unknown"; only a confirmed Git miss should block
   // Git-only creation.
   const canSubmit =
     createName.trim().length > 0 &&
@@ -77,7 +75,7 @@ export function CreateStep({
     'auto.components.sidebar.AddRepoCreateStep.6ed14c0281',
     'host folder not selected'
   )
-  const isRemoteHost = Boolean(runtimeEnvironmentId || sshTargetId)
+  const isRemoteHost = Boolean(runtimeEnvironmentId)
 
   const summaryParent = useMemo(
     () =>
@@ -111,11 +109,10 @@ export function CreateStep({
   const showRuntimeMissingParent =
     runtimeEnvironmentId && !createParent.trim() && runtimeParentStatus !== 'checking'
 
-  if (browsingParent && (runtimeEnvironmentId || sshTargetId)) {
+  if (browsingParent && runtimeEnvironmentId) {
     return (
       <CreateProjectParentBrowser
         runtimeEnvironmentId={runtimeEnvironmentId}
-        sshTargetId={sshTargetId}
         createParent={createParent}
         onParentChange={onParentChange}
         onClose={() => setBrowsingParent(false)}
@@ -239,7 +236,6 @@ export function CreateStep({
                 isCreating={isCreating}
                 manualParentEntry={manualParentEntry}
                 runtimeEnvironmentId={runtimeEnvironmentId}
-                sshTargetId={sshTargetId}
                 onParentChange={onParentChange}
                 onPickParent={onPickParent}
                 onBrowseServer={() => setBrowsingParent(true)}

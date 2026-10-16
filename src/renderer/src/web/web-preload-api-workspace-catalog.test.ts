@@ -8,26 +8,6 @@ import {
   writeStoredRuntimeEnvironment
 } from './web-preload-api-test-harness'
 
-describe('web browser-local port capability', () => {
-  beforeEach(() => {
-    vi.resetModules()
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
-  it('returns an explicit unavailable scan instead of an undefined fallback payload', async () => {
-    const { api } = await installApi('Linux')
-
-    await expect(api.workspacePorts.scan({})).resolves.toMatchObject({
-      platform: 'linux',
-      ports: [],
-      unavailableReason: 'Workspace port scanning is unavailable for browser-local workspaces.'
-    })
-  })
-})
-
 describe('web repos preload API', () => {
   beforeEach(() => {
     vi.resetModules()

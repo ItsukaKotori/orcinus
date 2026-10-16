@@ -246,7 +246,7 @@ describe('web UI preload API', () => {
               ui: {
                 featureInteractions: {
                   tasks: { firstInteractedAt: 100, interactionCount: 1 },
-                  ports: { firstInteractedAt: 300, interactionCount: 1 }
+                  notifications: { firstInteractedAt: 300, interactionCount: 1 }
                 }
               }
             },
@@ -284,7 +284,7 @@ describe('web UI preload API', () => {
       firstInteractedAt: 50,
       interactionCount: 3
     })
-    expect(stored.featureInteractions?.ports).toEqual({
+    expect(stored.featureInteractions?.notifications).toEqual({
       firstInteractedAt: 300,
       interactionCount: 1
     })
@@ -524,7 +524,7 @@ describe('web UI preload API', () => {
             result: {
               ui: {
                 featureInteractions: {
-                  browser: { firstInteractedAt: 2, interactionCount: 1 }
+                  notifications: { firstInteractedAt: 2, interactionCount: 1 }
                 }
               }
             },
@@ -556,11 +556,11 @@ describe('web UI preload API', () => {
 
     expect(ui.featureInteractions).toEqual({
       tasks: { firstInteractedAt: 1, interactionCount: 1 },
-      browser: { firstInteractedAt: 2, interactionCount: 1 }
+      notifications: { firstInteractedAt: 2, interactionCount: 1 }
     })
     expect(stored.featureInteractions).toEqual({
       tasks: { firstInteractedAt: 1, interactionCount: 1 },
-      browser: { firstInteractedAt: 2, interactionCount: 1 }
+      notifications: { firstInteractedAt: 2, interactionCount: 1 }
     })
   })
 
@@ -678,7 +678,7 @@ describe('web UI preload API', () => {
             result: {
               ui: {
                 featureInteractions: {
-                  browser: { firstInteractedAt: 2, interactionCount: 1 }
+                  notifications: { firstInteractedAt: 2, interactionCount: 1 }
                 }
               }
             },
@@ -710,11 +710,11 @@ describe('web UI preload API', () => {
 
     expect(ui.featureInteractions).toEqual({
       tasks: { firstInteractedAt: 1, interactionCount: 2 },
-      browser: { firstInteractedAt: 2, interactionCount: 1 }
+      notifications: { firstInteractedAt: 2, interactionCount: 1 }
     })
     expect(stored.featureInteractions).toEqual({
       tasks: { firstInteractedAt: 1, interactionCount: 2 },
-      browser: { firstInteractedAt: 2, interactionCount: 1 }
+      notifications: { firstInteractedAt: 2, interactionCount: 1 }
     })
   })
 

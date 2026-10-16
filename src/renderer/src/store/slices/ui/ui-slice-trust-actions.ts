@@ -56,15 +56,6 @@ export function createUiTrustActions(set: UISliceSet, _get: UISliceGet): Partial
         window.api.ui.set({ setupScriptPromptDismissedRepoIds: next }).catch(console.error)
         return { setupScriptPromptDismissedRepoIds: next }
       }),
-    browserImportHintHidden: false,
-    setBrowserImportHintHidden: (hidden) =>
-      set((s) => {
-        if (s.browserImportHintHidden === hidden) {
-          return s
-        }
-        window.api.ui.set({ browserImportHintHidden: hidden }).catch(console.error)
-        return { browserImportHintHidden: hidden }
-      }),
     projectOrderManualDefaultNoticeDismissed: true,
     dismissProjectOrderManualDefaultNotice: () =>
       set((s) => {

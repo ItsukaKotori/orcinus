@@ -14,15 +14,10 @@ type NewWorkspaceComposerNameSectionProps = Pick<
   | 'name'
   | 'onNameValueChange'
   | 'onSmartGitHubItemSelect'
-  | 'onSmartGitLabItemSelect'
   | 'onSmartBranchSelect'
-  | 'onSmartLinearIssueSelect'
-  | 'onSmartJiraIssueSelect'
-  | 'onOpenJiraSettings'
   | 'smartNameSelection'
   | 'onClearSmartNameSelection'
   | 'smartNameGitHubSourceContext'
-  | 'smartNameJiraSourceContext'
   | 'selectedRepoRequiresConnection'
   | 'selectedRepoIsGit'
   | 'branchesEnabled'
@@ -47,15 +42,10 @@ export function NewWorkspaceComposerNameSection({
   name,
   onNameValueChange,
   onSmartGitHubItemSelect,
-  onSmartGitLabItemSelect,
   onSmartBranchSelect,
-  onSmartLinearIssueSelect,
-  onSmartJiraIssueSelect,
-  onOpenJiraSettings,
   smartNameSelection,
   onClearSmartNameSelection,
   smartNameGitHubSourceContext,
-  smartNameJiraSourceContext,
   selectedRepoRequiresConnection,
   selectedRepoIsGit,
   branchesEnabled = true,
@@ -91,15 +81,10 @@ export function NewWorkspaceComposerNameSection({
         value={name}
         onValueChange={onNameValueChange}
         onGitHubItemSelect={onSmartGitHubItemSelect}
-        onGitLabItemSelect={onSmartGitLabItemSelect}
         onBranchSelect={onSmartBranchSelect}
-        onLinearIssueSelect={onSmartLinearIssueSelect}
-        onJiraIssueSelect={onSmartJiraIssueSelect}
-        onOpenJiraSettings={onOpenJiraSettings}
         selectedSource={smartNameSelection}
         onClearSelectedSource={onClearSmartNameSelection}
         githubSourceContext={smartNameGitHubSourceContext}
-        jiraSourceContext={smartNameJiraSourceContext}
         disabled={selectedRepoRequiresConnection}
         disabledPlaceholder={translate(
           'auto.components.NewWorkspaceComposerCard.connectProjectFirst',

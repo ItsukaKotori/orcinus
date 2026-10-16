@@ -1,5 +1,5 @@
 import type React from 'react'
-import { Copy, Globe, Hash, Sparkles } from 'lucide-react'
+import { Copy, Hash, Sparkles } from 'lucide-react'
 import {
   ContextMenuContent,
   ContextMenuItem,
@@ -7,10 +7,8 @@ import {
 } from '@/components/ui/context-menu'
 import { translate } from '@/i18n/i18n'
 import type { GitHistoryItem } from '../../../../../../shared/git-history'
-import { useAppStore } from '@/store'
-import { getClientCreationActionPolicy } from '@/lib/client-creation-action-policy'
 
-export type GitHistoryCommitAction = 'open-remote' | 'copy-hash' | 'copy-message' | 'explain'
+export type GitHistoryCommitAction = 'copy-hash' | 'copy-message' | 'explain'
 
 export function GitHistoryCommitContextMenu({
   item,
@@ -19,22 +17,8 @@ export function GitHistoryCommitContextMenu({
   item: GitHistoryItem
   onAction: (action: GitHistoryCommitAction, item: GitHistoryItem) => void
 }): React.JSX.Element {
-  const managedBrowserCreationEnabled = useAppStore(
-    (state) =>
-      getClientCreationActionPolicy(state, state.activeWorktreeId)['managed-browser'].state ===
-      'enabled'
-  )
   return (
     <ContextMenuContent className="w-56">
-      {managedBrowserCreationEnabled ? (
-        <ContextMenuItem onSelect={() => onAction('open-remote', item)}>
-          <Globe className="size-3.5" />
-          {translate(
-            'auto.components.right.sidebar.GitHistoryCommitContextMenu.7b1c4e9a02',
-            'Open commit in browser'
-          )}
-        </ContextMenuItem>
-      ) : null}
       <ContextMenuItem onSelect={() => onAction('copy-hash', item)}>
         <Hash className="size-3.5" />
         {translate(

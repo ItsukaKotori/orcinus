@@ -4,19 +4,15 @@ import { createHooksApi } from './mock/agent-hook-api'
 import { createAgentStatusApi } from './mock/agent-status-api'
 import { createAppApi } from './mock/app-api'
 import { createAutomationsApi } from './mock/automations-api'
-import { createBrowserApi } from './mock/browser-api'
 import { createCacheApi } from './mock/cache-api'
 import { createCliApi } from './mock/cli-api'
-import { createDocPreviewApi } from './mock/doc-preview-api'
 import { createEphemeralVmApi } from './mock/ephemeral-vm-api'
 import { createFolderWorkspacesApi } from './mock/folder-workspaces-api'
 import { createFsApi } from './mock/fs-api'
 import { createGhApi } from './mock/gh-api'
 import { createGitApi } from './mock/git-api'
 import { createHostedReviewApi } from './mock/hosted-review-api'
-import { createJiraApi } from './mock/jira-api'
 import { createKeybindingsApi } from './mock/keybindings-api'
-import { createLinearApi } from './mock/linear-api'
 import { createMacosTccPromptsApi } from './mock/macos-tcc-prompts-api'
 import { createMemoryApi } from './mock/memory-api'
 import { createNotificationsApi } from './mock/notifications-api'
@@ -33,13 +29,11 @@ import { createReposApi } from './mock/repos-api'
 import { createRuntimeApi } from './mock/runtime-events-api'
 import { createRuntimeEnvironmentsApi } from './mock/runtime-environments-api'
 import { createSettingsApi } from './mock/settings-api'
-import { createSkillsApi } from './mock/skills-api'
-import { createSshApi } from './mock/ssh-api'
 import { createStarNagApi } from './mock/star-nag-api'
+import { createSkillsApi } from './mock/skills-api'
 import { createUiApi } from './mock/ui-api'
 import { createUpdaterApi } from './mock/updater-api'
 import { createRemoteWorkspaceApi, createSessionApi } from './mock/workspace-session-api'
-import { createWorkspacePortsApi } from './mock/workspace-ports-api'
 import { createWorkspaceSpaceApi } from './mock/workspace-space-api'
 import { createWorktreesApi } from './mock/worktrees-api'
 import { createAgentStatusRealApi } from './real/agent-status'
@@ -114,10 +108,8 @@ function createMockDomains(): Partial<PreloadApi> {
     agentStatus: createAgentStatusApi(),
     app: createAppApi(),
     automations: createAutomationsApi(),
-    browser: createBrowserApi(),
     cache: createCacheApi(),
     cli: createCliApi(),
-    docPreview: createDocPreviewApi(),
     ephemeralVm: createEphemeralVmApi(),
     folderWorkspaces: createFolderWorkspacesApi(),
     fs: createFsApi(),
@@ -125,9 +117,7 @@ function createMockDomains(): Partial<PreloadApi> {
     git: createGitApi(),
     hooks: createHooksApi(),
     hostedReview: createHostedReviewApi(),
-    jira: createJiraApi(),
     keybindings: createKeybindingsApi(),
-    linear: createLinearApi(),
     macosTccPrompts: createMacosTccPromptsApi(),
     memory: createMemoryApi(),
     notifications: createNotificationsApi(),
@@ -146,12 +136,10 @@ function createMockDomains(): Partial<PreloadApi> {
     runtimeEnvironments: createRuntimeEnvironmentsApi(),
     session: createSessionApi(),
     settings: createSettingsApi(),
-    skills: createSkillsApi(),
-    ssh: createSshApi(),
     starNag: createStarNagApi(),
+    skills: createSkillsApi(),
     ui: createUiApi(),
     updater: createUpdaterApi(),
-    workspacePorts: createWorkspacePortsApi(),
     workspaceSpace: createWorkspaceSpaceApi(),
     worktrees: createWorktreesApi()
   }

@@ -5,8 +5,6 @@ const CONTENT_SOURCE = readTaskPageSource('task-page/Content.tsx')
 const SOURCE_BAR_SOURCE = readTaskPageSource('task-page/SourceBar.tsx')
 const SOURCE_CONTEXT_SOURCE = readTaskPageSource('task-page-source-context.tsx')
 const RUNTIME_HOSTS_SOURCE = readTaskPageSource('use-task-page-runtime-hosts.ts')
-const GITHUB_DETAIL_SOURCE = readTaskPageSource('use-task-page-github-detail.ts')
-const WORKSPACE_ACTIONS_SOURCE = readTaskPageSource('use-task-page-workspace-actions.ts')
 
 function sourceBetween(source: string, startPattern: string, endPattern: string): string {
   const start = source.indexOf(startPattern)
@@ -37,7 +35,7 @@ describe('TaskPage source switching host boundary', () => {
     const section = sourceBetween(
       SOURCE_BAR_SOURCE,
       '{visibleSourceOptions.map((source) => {',
-      "{taskSource === 'linear' && linearConnected ?"
+      'className="hidden min-w-0 max-w-[min(420px,40vw)]'
     )
 
     expect(section).toContain('openTaskPage(')
@@ -71,29 +69,5 @@ describe('TaskPage source switching host boundary', () => {
     expect(section).toContain("'preflight.check'")
     expect(section).toMatch(/\{\s*kind: 'environment',\s*environmentId: parsed\.environmentId\s*\}/)
     expect(RUNTIME_HOSTS_SOURCE).toContain('runtimePreflightStatusByHostId')
-  })
-
-  it('preserves exact GitLab project identity when opening or starting from an item', () => {
-    const sourceContextBuilder = sourceBetween(
-      SOURCE_CONTEXT_SOURCE,
-      'function getTaskPageRepoSourceContext',
-      'function getTaskSourceHostAvailabilityForHost'
-    )
-    expect(sourceContextBuilder).toContain('gitlabProjectRef?: GitLabProjectRef | null')
-    expect(sourceContextBuilder).toContain('buildGitLabProviderIdentity(gitlabProjectRef)')
-
-    const openGitLabDetail = sourceBetween(
-      GITHUB_DETAIL_SOURCE,
-      'const openGitLabDetailPage = useCallback(',
-      'const nextModel'
-    )
-    expect(openGitLabDetail).toContain('item.projectRef')
-
-    const startGitLabWorkspace = sourceBetween(
-      WORKSPACE_ACTIONS_SOURCE,
-      'const openComposerForGitLabItem = useCallback(',
-      'const handleUseGitLabItem = useCallback('
-    )
-    expect(startGitLabWorkspace).toContain('item.projectRef')
   })
 })

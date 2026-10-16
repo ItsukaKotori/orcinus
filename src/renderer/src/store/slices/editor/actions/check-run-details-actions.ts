@@ -6,12 +6,9 @@ import {
   createCheckRunDetailsRequestId,
   getCheckRunDetailsTabLabel,
   isSameGitHubRepository,
-  isSameGitLabProjectRef,
   type CheckRunDetailsTabPatch,
   type OpenCheckRunDetailsState
 } from '@/components/editor/check-run-details-tab'
-import { loadGitLabJobLogDetails } from '@/runtime/gitlab-job-trace-client'
-import { getSettingsForWorktreeRuntimeOwner } from '@/lib/worktree-runtime-owner'
 import { findWorktreeById, getRepoIdFromWorktreeId } from '../../worktree-helpers'
 import type { OpenFile } from '../types/open-file'
 import { openWorkspaceEditorItem } from '../tabs/workspace-editor-item'
@@ -34,8 +31,7 @@ export function createCheckRunDetailsActions(
         details: state.details,
         loading: state.loading,
         error: state.error,
-        githubRepository: state.githubRepository ?? null,
-        gitlabProjectRef: state.gitlabProjectRef ?? null
+        githubRepository: state.githubRepository ?? null
       }
       set((s) => {
         const existing = s.openFiles.find((f) => f.id === id)
@@ -105,10 +101,7 @@ export function createCheckRunDetailsActions(
         ) {
           return s
         }
-        // Why: the sidebar resolves the MR's project asynchronously, so an early patch
-        // must not blank a ref we already know.
         const githubRepository = state.githubRepository ?? current.githubRepository ?? null
-        const gitlabProjectRef = state.gitlabProjectRef ?? current.gitlabProjectRef ?? null
         const nextCheckRunDetails: OpenCheckRunDetailsState = {
           contextKey,
           check,
@@ -116,8 +109,7 @@ export function createCheckRunDetailsActions(
           details: state.details,
           loading: state.loading,
           error: state.error,
-          githubRepository,
-          gitlabProjectRef
+          githubRepository
         }
         if (
           current.contextKey === nextCheckRunDetails.contextKey &&
@@ -127,8 +119,7 @@ export function createCheckRunDetailsActions(
           current.loading === nextCheckRunDetails.loading &&
           current.error === nextCheckRunDetails.error &&
           current.details === nextCheckRunDetails.details &&
-          isSameGitHubRepository(current.githubRepository ?? null, githubRepository) &&
-          isSameGitLabProjectRef(current.gitlabProjectRef ?? null, gitlabProjectRef)
+          isSameGitHubRepository(current.githubRepository ?? null, githubRepository)
         ) {
           return s
         }
@@ -168,28 +159,17 @@ export function createCheckRunDetailsActions(
       }
       patch({ details: checkRunDetails.details, loading: true, error: null })
       try {
-        // Why: refreshing a GitLab job tab through the GitHub check-runs API returns
-        // null and would blank the tab the user just asked to reload.
-        const details = check.gitlabJobId
-          ? await loadGitLabJobLogDetails({
-              repoPath: repo.path,
-              repoId: repo.id,
-              settings: getSettingsForWorktreeRuntimeOwner(state, file.worktreeId),
-              check,
-              // Why: a fork MR's job lives in the source project, not the repo's own.
-              projectRef: checkRunDetails.gitlabProjectRef ?? null
-            })
-          : await get().fetchPRCheckDetails(
-              repo.path,
-              {
-                checkRunId: check.checkRunId,
-                workflowRunId: check.workflowRunId,
-                checkName: check.name,
-                url: check.url,
-                prRepo: checkRunDetails.githubRepository ?? null
-              },
-              { repoId: repo.id }
-            )
+        const details = await get().fetchPRCheckDetails(
+          repo.path,
+          {
+            checkRunId: check.checkRunId,
+            workflowRunId: check.workflowRunId,
+            checkName: check.name,
+            url: check.url,
+            prRepo: checkRunDetails.githubRepository ?? null
+          },
+          { repoId: repo.id }
+        )
         patch({
           details,
           loading: false,

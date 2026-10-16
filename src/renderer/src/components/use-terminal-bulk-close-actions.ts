@@ -2,8 +2,6 @@ import { useCallback } from 'react'
 import { useAppStore } from '../store'
 import { closeTerminalTab } from './terminal/terminal-tab-actions'
 import { isWebRuntimeSessionActive } from '@/runtime/web-runtime-session'
-import { closeBrowserWorkspaceTabOnHosts } from '@/runtime/browser-workspace-tab-close'
-import { destroyWorkspaceWebviews } from '../store/slices/browser-webview-cleanup'
 import {
   getActiveWorktreeRuntimeEnvironmentId,
   isPinnedEditorFileTab
@@ -11,8 +9,7 @@ import {
 import type { TerminalCloseController } from './use-terminal-close-actions'
 
 export function useTerminalBulkCloseActions(controller: TerminalCloseController) {
-  const { activeWorktreeId, closeBrowserTab, closeFile, closeTab, queueEditorCloseRequests } =
-    controller
+  const { activeWorktreeId, closeFile, closeTab, queueEditorCloseRequests } = controller
   const closeTabBarTabs = useCallback(
     (tabIds: string[]) => {
       if (!activeWorktreeId) {
@@ -26,25 +23,6 @@ export function useTerminalBulkCloseActions(controller: TerminalCloseController)
         )
         if (unifiedTab?.isPinned) {
           continue
-        }
-        let browserCloseOptions: { reason: 'cleanup' } | undefined
-        if (unifiedTab?.contentType === 'browser') {
-          const plan = closeBrowserWorkspaceTabOnHosts({
-            state,
-            worktreeId: activeWorktreeId,
-            workspaceId: unifiedTab.entityId,
-            visibleTabId: unifiedTab.id,
-            focusedEnvironmentId: getActiveWorktreeRuntimeEnvironmentId(activeWorktreeId)
-          })
-          if (!plan.closesLocally) {
-            if (plan.removesVisibleTab) {
-              state.closeUnifiedTab(unifiedTab.id)
-            }
-            continue
-          }
-          browserCloseOptions = plan.localCloseReason
-            ? { reason: plan.localCloseReason }
-            : undefined
         }
         if (
           unifiedTab?.contentType === 'terminal' &&
@@ -64,19 +42,13 @@ export function useTerminalBulkCloseActions(controller: TerminalCloseController)
             continue
           }
           closeFile(id)
-        } else if (
-          (state.browserTabsByWorktree[activeWorktreeId] ?? []).some((tab) => tab.id === id)
-        ) {
-          closeBrowserTab(id, browserCloseOptions)
-          // closeBrowserTab announces the MRU target before guest teardown can trigger bridge fallback.
-          destroyWorkspaceWebviews(state.browserPagesByWorkspace, id)
         }
       }
       if (dirtyFileIds.length > 0) {
         queueEditorCloseRequests(dirtyFileIds)
       }
     },
-    [activeWorktreeId, closeBrowserTab, closeFile, closeTab, queueEditorCloseRequests]
+    [activeWorktreeId, closeFile, closeTab, queueEditorCloseRequests]
   )
 
   const handleCloseOthers = useCallback(

@@ -27,13 +27,6 @@ describe('shouldRepairActiveTerminalTab', () => {
         tabs: [tab('cli-terminal')]
       })
     ).toBe(false)
-    expect(
-      shouldRepairActiveTerminalTab({
-        activeTabType: 'browser',
-        activeTabId: null,
-        tabs: [tab('cli-terminal')]
-      })
-    ).toBe(false)
   })
 
   it('repairs stale terminal active ids only while terminal content is active', () => {

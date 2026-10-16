@@ -13,10 +13,8 @@ import {
 } from '../pr-comments-ai-launch-ack'
 import type { ChecksPanelControllerState } from './use-checks-panel-controller-state'
 import type { ChecksPanelReviewDataState } from './use-checks-panel-review-data'
-import type { ChecksPanelPollingState } from './use-checks-panel-polling'
 import { buildSnapshottedThreadResolver } from '../pr-comment-snapshotted-thread-resolver'
 import { markPRCommentThreadResolved } from '../pr-comment-thread-resolution'
-import { resolveGitLabMRDiscussionForChecks } from './gitlab-review-client'
 import { clearPRCommentsListSelection } from '../pr-comments-list-selection'
 import { translate } from '@/i18n/i18n'
 import type { ChecksAgentComposerState } from './panel-state-types'
@@ -35,11 +33,9 @@ type ChecksPanelAiAcknowledgementInput = Pick<
   | 'setCommentResolutionAckBusyNow'
   | 'setComments'
   | 'setCommentsSelectionClearRequest'
-  | 'settings'
   | 'commentResolutionLaunchAcceptedRef'
 > &
-  Pick<ChecksPanelReviewDataState, 'fetchComments'> &
-  Pick<ChecksPanelPollingState, 'fetchGitLabDetails'>
+  Pick<ChecksPanelReviewDataState, 'fetchComments'>
 
 export function useChecksPanelAiAcknowledgement(model: ChecksPanelAiAcknowledgementInput) {
   const {
@@ -50,13 +46,11 @@ export function useChecksPanelAiAcknowledgement(model: ChecksPanelAiAcknowledgem
     commentsRef,
     commentsSelectionClearTokenRef,
     fetchComments,
-    fetchGitLabDetails,
     pendingCommentResolutionRef,
     resolveReviewThread,
     setCommentResolutionAckBusyNow,
     setComments,
     setCommentsSelectionClearRequest,
-    settings,
     commentResolutionLaunchAcceptedRef
   } = model
   const clearSentCommentSelection = useCallback(
@@ -72,14 +66,10 @@ export function useChecksPanelAiAcknowledgement(model: ChecksPanelAiAcknowledgem
   )
 
   const refreshCommentsAfterBulkResolve = useCallback(
-    async (provider: ChecksPanelReview['provider']): Promise<void> => {
-      if (provider === 'gitlab') {
-        await fetchGitLabDetails({ commitAsCurrent: true })
-        return
-      }
+    async (_provider: ChecksPanelReview['provider']): Promise<void> => {
       await fetchComments({ force: true })
     },
-    [fetchComments, fetchGitLabDetails]
+    [fetchComments]
   )
 
   const resolveSelectedThreadsAfterLaunch = useCallback(
@@ -109,8 +99,6 @@ export function useChecksPanelAiAcknowledgement(model: ChecksPanelAiAcknowledgem
         githubResolveTarget: resolution.githubResolveTarget,
         gitlabTarget: resolution.gitlabTarget,
         resolveReviewThread,
-        resolveGitLabDiscussion: (args) =>
-          resolveGitLabMRDiscussionForChecks({ ...args, settings }),
         isPanelStillOnLaunchReview,
         onResolvedOptimistically: (threadId) => {
           setComments((prev) => markPRCommentThreadResolved(prev, threadId, true))
@@ -257,8 +245,7 @@ export function useChecksPanelAiAcknowledgement(model: ChecksPanelAiAcknowledgem
       clearSentCommentSelection,
       refreshCommentsAfterBulkResolve,
       resolveReviewThread,
-      settings,
-      commentsRef,
+        commentsRef,
       setComments,
       asyncResultKeyRef
     ]

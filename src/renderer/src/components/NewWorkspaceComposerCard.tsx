@@ -9,8 +9,6 @@ import { resolveProjectCloneUrlPrefill } from '@/lib/project-clone-url-prefill'
 import { lazyWithRetry } from '@/lib/lazy-with-retry'
 import type * as SetProjectLocationDialogModule from '@/components/new-workspace/SetProjectLocationDialog'
 import { unwrapRuntimeRpcResult } from '@/runtime/runtime-rpc-client'
-import { withUiConnectTimeout } from '@/ssh/ssh-connect-ui-timeout'
-import { isSshConnectInFlight, trackSshConnect } from '@/ssh/ssh-connect-in-flight'
 import { translate } from '@/i18n/i18n'
 import {
   DEFAULT_DISABLED_TUI_AGENTS,
@@ -220,16 +218,10 @@ export default function NewWorkspaceComposerCard(
       if (!action) {
         return
       }
+      if (action.kind !== 'runtime') {
+        return
+      }
       try {
-        if (action.kind === 'ssh') {
-          if (isSshConnectInFlight(action.targetId)) {
-            return
-          }
-          await withUiConnectTimeout(
-            trackSshConnect(action.targetId, window.api.ssh.connect({ targetId: action.targetId }))
-          )
-          return
-        }
         const response = await window.api.runtimeEnvironments.getStatus({
           selector: action.environmentId,
           timeoutMs: 15_000
@@ -237,9 +229,7 @@ export default function NewWorkspaceComposerCard(
         unwrapRuntimeRpcResult<RuntimeStatus>(response)
         await useAppStore.getState().readRuntimeHostStatusSnapshots()
       } catch (error) {
-        if (action.kind === 'runtime') {
-          await useAppStore.getState().readRuntimeHostStatusSnapshots()
-        }
+        await useAppStore.getState().readRuntimeHostStatusSnapshots()
         toast.error(
           error instanceof Error
             ? error.message

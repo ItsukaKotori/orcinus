@@ -102,13 +102,12 @@ describe('resolveSourceControlSuppressedGitHubPRState', () => {
 
   it('does not apply GitHub recovery to folders, other providers, or invalid markers', () => {
     expect(resolve({ isFolder: true })).toBeNull()
-    expect(resolve({ provider: 'gitlab' })).toBeNull()
+    expect(resolve({ provider: 'bitbucket' })).toBeNull()
     expect(resolve({ worktree: { ...worktree, suppressedGitHubPR: null } })).toBeNull()
   })
 
   it.each([
     ['GitHub', { linkedPR: 42 }],
-    ['GitLab', { linkedGitLabMR: 9 }],
     ['Bitbucket', { linkedBitbucketPR: 9 }],
     ['Azure DevOps', { linkedAzureDevOpsPR: 9 }],
     ['Gitea', { linkedGiteaPR: 9 }]

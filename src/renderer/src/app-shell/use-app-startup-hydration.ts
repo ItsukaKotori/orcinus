@@ -205,7 +205,6 @@ export function useAppStartupHydration(onOnboardingLoaded: (state: OnboardingSta
             })
             actions.hydrateTabsSession(sessionRead.session, sessionHydrationOptions)
             actions.hydrateEditorSession(sessionRead.session, sessionHydrationOptions)
-            actions.hydrateBrowserSession(sessionRead.session, sessionHydrationOptions)
             reconcileHydratedWorkspaceTabModels(
               sessionRead.session,
               useAppStore.getState().reconcileWorktreeTabModels
@@ -223,14 +222,6 @@ export function useAppStartupHydration(onOnboardingLoaded: (state: OnboardingSta
             actions.pruneLastVisitedTimestamps()
             actions.seedActiveWorktreeLastVisitedIfMissing()
           })
-          // Why started here but not awaited: on a remote runtime this is an RPC with a 15s
-          // timeout, and nothing between here and terminal restoration reads the profile list —
-          // awaiting it put that timeout on the terminal-restoration gate. Starting it at the
-          // original point keeps the profiles landing no later than they did before; the action
-          // swallows its own failures, so the `.catch` only marks the timing wrapper handled.
-          void timeRendererStartupStep('fetch-browser-session-profiles', () =>
-            actions.fetchBrowserSessionProfiles()
-          ).catch(() => {})
           const onboardingState = await onboardingPromise
           if (!cancelled) {
             onOnboardingLoadedRef.current(onboardingState)

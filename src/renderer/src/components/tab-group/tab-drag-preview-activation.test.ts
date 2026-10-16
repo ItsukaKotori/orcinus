@@ -45,9 +45,9 @@ describe('restoreTabDragActivationSnapshot', () => {
             id: 'tab-2',
             groupId: 'group-1',
             worktreeId: WT,
-            contentType: 'browser',
-            entityId: 'browser-1',
-            label: 'Browser',
+            contentType: 'editor',
+            entityId: 'editor-1',
+            label: 'Editor',
             customLabel: null,
             color: null,
             sortOrder: 1,
@@ -69,8 +69,8 @@ describe('restoreTabDragActivationSnapshot', () => {
       activeGroupId: 'group-1'
     })
 
-    expect(useAppStore.getState().activeTabType).toBe('browser')
-    expect(useAppStore.getState().activeBrowserTabId).toBe('browser-1')
+    expect(useAppStore.getState().activeTabType).toBe('editor')
+    expect(useAppStore.getState().activeFileId).toBe('editor-1')
 
     restoreTabDragActivationSnapshot(WT, snapshot)
 

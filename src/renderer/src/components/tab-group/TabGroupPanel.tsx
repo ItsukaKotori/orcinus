@@ -21,14 +21,8 @@ import { resolveGroupTabFromVisibleId } from './tab-group-visible-id'
 import { getTabPaneBodyDroppableId, type HoveredTabInsertion } from './useTabDragSplit'
 import { tabGroupBodyAnchorName } from './tab-group-body-anchor'
 import { translate } from '@/i18n/i18n'
-import type { TabGroup } from '../../../../shared/tab-types'
-import type { ClientHostedBrowserRow } from '../../../../shared/client-hosted-browser-rows'
-import { useClientHostedBrowserRows } from '@/lib/pane-manager/client-hosted-browser-row-state'
-import { resolveClientHostedBrowserRowStripGroupId } from '../tab-bar/client-hosted-browser-row-strip-placement'
 
 const EditorPanel = lazy(() => import('../editor/EditorPanel'))
-const EMPTY_GROUPS: readonly TabGroup[] = []
-const EMPTY_CLIENT_HOSTED_ROWS: readonly ClientHostedBrowserRow[] = []
 
 export default function TabGroupPanel({
   groupId,
@@ -69,7 +63,6 @@ export default function TabGroupPanel({
   const {
     activeTab,
     agentSessionItems,
-    browserItems,
     commands,
     editorItems,
     pluginItems,
@@ -77,17 +70,6 @@ export default function TabGroupPanel({
     terminalTabs
   } = model
   const activeSurface = useMemo(() => resolveTabGroupActiveSurface(activeTab), [activeTab])
-  // Why: one strip owns the worktree's client-hosted rows, or every split repeats them.
-  const ownsClientHostedRows = useAppStore(
-    (state) =>
-      resolveClientHostedBrowserRowStripGroupId(
-        state.groupsByWorktree[worktreeId] ?? EMPTY_GROUPS
-      ) === groupId
-  )
-  const worktreeClientHostedRows = useClientHostedBrowserRows(worktreeId)
-  const clientHostedRows = ownsClientHostedRows
-    ? worktreeClientHostedRows
-    : EMPTY_CLIENT_HOSTED_ROWS
   const { setNodeRef: setBodyDropRef } = useDroppable({
     id: getTabPaneBodyDroppableId(groupId),
     data: {
@@ -143,35 +125,21 @@ export default function TabGroupPanel({
       }}
       onNewTerminalTab={commands.newTerminalTab}
       onNewTerminalWithShell={commands.newTerminalWithShell}
-      onNewBrowserTab={commands.newBrowserTab}
       onOpenEntry={commands.openEntry}
       onNewFileTab={commands.newFileTab}
       onSetCustomTitle={commands.setTabCustomTitle}
       onSetTabColor={commands.setTabColor}
       onTogglePaneExpand={commands.toggleTerminalPaneExpand}
       editorFiles={editorItems}
-      browserTabs={browserItems}
-      clientHostedBrowserRows={clientHostedRows}
       groupActiveTabId={activeTab?.id ?? null}
       agentSessionTabs={agentSessionItems}
       pluginTabs={pluginItems}
       activeFileId={activeSurface.activeFileId}
-      activeBrowserTabId={activeSurface.activeBrowserTabId}
       activeTabType={activeSurface.activeTabType}
       onActivateFile={commands.activateEditor}
       onCloseFile={commands.closeItem}
-      onActivateBrowserTab={commands.activateBrowser}
       onActivateAgentSession={commands.activateAgentSession}
       onActivatePlugin={commands.activatePlugin}
-      onCloseBrowserTab={(browserTabId) => {
-        const item = model.groupTabs.find(
-          (candidate) => candidate.entityId === browserTabId && candidate.contentType === 'browser'
-        )
-        if (item) {
-          commands.closeItem(item.id)
-        }
-      }}
-      onDuplicateBrowserTab={commands.duplicateBrowserTab}
       onCloseAllFiles={commands.closeAllEditorTabsInGroup}
       onMakePreviewFilePermanent={(_fileId, tabId) => {
         if (!tabId) {
@@ -340,7 +308,6 @@ export default function TabGroupPanel({
         {activeTab &&
           activeTab.contentType !== 'terminal' &&
           activeTab.contentType !== 'agent-session' &&
-          activeTab.contentType !== 'browser' &&
           activeTab.contentType !== 'plugin' && (
             <div className="absolute inset-0 flex min-h-0 min-w-0">
               {/* Why: split groups render editor content in a plain relative pane body, not the legacy Terminal.tsx flex column. */}

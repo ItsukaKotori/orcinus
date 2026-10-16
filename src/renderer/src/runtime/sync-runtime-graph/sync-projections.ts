@@ -2,27 +2,12 @@ import type { AppState } from '@/store/types'
 import { resolveTerminalTabTitle } from '../../../../shared/tab-title-resolution'
 import { stableHashString } from './editor-draft-hash'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
-import {
-  EMPTY_BROWSER_PAGES_BY_WORKSPACE,
-  EMPTY_BROWSER_TABS_BY_WORKTREE,
-  graphState
-} from './graph-state'
+import { graphState } from './graph-state'
 import type {
-  BrowserPagesProjectionCacheEntry,
-  BrowserWorkspacesProjectionCacheEntry,
   EditorDraftHashCache,
   EditorDraftHashCacheEntry,
   OpenFilesProjectionCacheEntry
 } from './types'
-
-export function getBrowserTabsByWorktree(state: AppState): AppState['browserTabsByWorktree'] {
-  // Some callers/tests build partial pre-browser states; treat missing slices as empty.
-  return state.browserTabsByWorktree ?? EMPTY_BROWSER_TABS_BY_WORKTREE
-}
-
-export function getBrowserPagesByWorkspace(state: AppState): AppState['browserPagesByWorkspace'] {
-  return state.browserPagesByWorkspace ?? EMPTY_BROWSER_PAGES_BY_WORKSPACE
-}
 
 export function resolveRuntimeTerminalTitle(
   tab: Pick<
@@ -122,98 +107,6 @@ export function buildRuntimeMobileOpenFilesProjection(openFiles: AppState['openF
   return projection
 }
 
-function buildBrowserWorkspacesProjection(
-  browserTabsByWorktree: AppState['browserTabsByWorktree']
-): string {
-  const cached = graphState.cachedBrowserWorkspacesProjection
-  if (cached?.source === browserTabsByWorktree) {
-    return cached.projection
-  }
-
-  const previousEntries = cached?.entries
-  const entries = new Map<string, BrowserWorkspacesProjectionCacheEntry>()
-  const parts: string[] = []
-  for (const [worktreeId, workspaces] of Object.entries(browserTabsByWorktree)) {
-    const previous = previousEntries?.get(worktreeId)
-    const entry =
-      previous?.workspaces === workspaces
-        ? previous
-        : {
-            workspaces,
-            keyJson: previous?.keyJson ?? JSON.stringify(worktreeId),
-            projection: JSON.stringify(
-              workspaces.map((workspace) => ({
-                id: workspace.id,
-                activePageId: workspace.activePageId,
-                title: workspace.title,
-                url: workspace.url,
-                loading: workspace.loading,
-                canGoBack: workspace.canGoBack,
-                canGoForward: workspace.canGoForward
-              }))
-            )
-          }
-    entries.set(worktreeId, entry)
-    parts.push(`${entry.keyJson}:${entry.projection}`)
-  }
-  const projection = `{${parts.join(',')}}`
-  graphState.cachedBrowserWorkspacesProjection = {
-    source: browserTabsByWorktree,
-    entries,
-    projection
-  }
-  return projection
-}
-
-function buildBrowserPagesProjection(
-  browserPagesByWorkspace: AppState['browserPagesByWorkspace']
-): string {
-  const cached = graphState.cachedBrowserPagesProjection
-  if (cached?.source === browserPagesByWorkspace) {
-    return cached.projection
-  }
-
-  const previousEntries = cached?.entries
-  const entries = new Map<string, BrowserPagesProjectionCacheEntry>()
-  const parts: string[] = []
-  for (const [workspaceId, pages] of Object.entries(browserPagesByWorkspace)) {
-    const previous = previousEntries?.get(workspaceId)
-    const entry =
-      previous?.pages === pages
-        ? previous
-        : {
-            pages,
-            keyJson: previous?.keyJson ?? JSON.stringify(workspaceId),
-            projection: JSON.stringify(
-              pages.map((page) => ({
-                id: page.id,
-                title: page.title,
-                url: page.url,
-                loading: page.loading,
-                canGoBack: page.canGoBack,
-                canGoForward: page.canGoForward
-              }))
-            )
-          }
-    entries.set(workspaceId, entry)
-    parts.push(`${entry.keyJson}:${entry.projection}`)
-  }
-  const projection = `{${parts.join(',')}}`
-  graphState.cachedBrowserPagesProjection = {
-    source: browserPagesByWorkspace,
-    entries,
-    projection
-  }
-  return projection
-}
-
-export function buildRuntimeMobileBrowserProjection(state: AppState): string {
-  // A title/url/loading tick replaces one worktree or workspace bucket; reuse the rest.
-  return `{"workspacesByWorktree":${buildBrowserWorkspacesProjection(
-    getBrowserTabsByWorktree(state)
-  )},"pagesByWorkspace":${buildBrowserPagesProjection(getBrowserPagesByWorkspace(state))}}`
-}
-
 /**
  * Why memoized per file id: `setEditorDraft` fires on every Monaco keystroke and re-spreads
  * `editorDrafts`, so an unmemoized rebuild re-hashed every open dirty file's full text on the
@@ -269,7 +162,5 @@ export function getEditorDraftVersionByFileId(
 export function resetRuntimeMobileSyncProjectionCachesForTests(): void {
   graphState.cachedTabsProjection = null
   graphState.cachedOpenFilesProjection = null
-  graphState.cachedBrowserWorkspacesProjection = null
-  graphState.cachedBrowserPagesProjection = null
   graphState.cachedEditorDraftHashes = null
 }

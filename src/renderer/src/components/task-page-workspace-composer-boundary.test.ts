@@ -8,7 +8,6 @@ import {
 
 const TASK_PAGE_SOURCE = readTaskPageSourceFamily()
 const WORKSPACE_ACTIONS_SOURCE = readTaskPageSource('use-task-page-workspace-actions.ts')
-const COMPOSER_ACTIONS_SOURCE = readTaskPageSource('use-task-page-composer-actions.ts')
 const PROJECT_VIEW_SOURCE = readFileSync(
   join(__dirname, 'github-project', 'ProjectViewWrapper.tsx'),
   'utf8'
@@ -79,32 +78,11 @@ describe('TaskPage workspace creation source boundaries', () => {
     expect(TASK_PAGE_SOURCE).not.toContain('@/lib/github-work-item-background-create')
   })
 
-  it('routes TaskPage Linear starts directly to the composer', () => {
-    const composerSection = sourceBetween(
-      COMPOSER_ACTIONS_SOURCE,
-      'const openComposerForLinearItem = useCallback(',
-      'const handleUseLinearItem = useCallback('
-    )
-    const handlerSection = sourceBetween(
-      COMPOSER_ACTIONS_SOURCE,
-      'const handleUseLinearItem = useCallback(',
-      'const handleOpenOrUseLinearItem = useCallback('
-    )
-
-    expect(composerSection).toContain('buildLinearIssueLinkedWorkItem(issue)')
-    expect(composerSection).toContain("openModal('new-workspace-composer', {")
-    expect(composerSection).toContain('taskSourceContext: linearTaskSourceContext')
-    expect(composerSection).toContain('prefilledName: getLinearIssueWorkspaceName(issue)')
-    expect(composerSection).toContain("telemetrySource: 'sidebar'")
-    expect(handlerSection).toContain("recordFeatureInteraction('linear-tasks')")
-    expect(handlerSection).toContain('openComposerForLinearItem(issue)')
-  })
-
   it('resumes an attachment from the primary action and composes when none exists', () => {
     const section = sourceBetween(
       WORKSPACE_ACTIONS_SOURCE,
       'const handleOpenOrUseGitHubWorkItem = useCallback(',
-      'const openComposerForGitLabItem = useCallback('
+      'const nextModel'
     )
 
     expect(section).toContain('findGithubWorkItemWorkspaceAttachment(')

@@ -107,13 +107,6 @@ const BASE_WORKTREE_CARD_PROPERTY_OPTIONS: WorktreeCardPropertyOption[] = [
     }
   },
   {
-    id: 'ports',
-    properties: ['ports'],
-    get label() {
-      return translate('auto.components.sidebar.SidebarWorkspaceOptionsMenu.2d74665a56', 'Ports')
-    }
-  },
-  {
     id: 'inline-agents',
     properties: ['inline-agents'],
     get label() {

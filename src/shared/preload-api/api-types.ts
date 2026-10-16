@@ -17,20 +17,15 @@ import type {
 import type { AiVaultApi } from './api/ai-vault-api'
 import type { AppApi, E2EApi, PlatformApi } from './api/app-api'
 import type { AutomationsApi } from './api/automation-api'
-import type { BrowserApi } from './api/browser-api'
 import type { CliApi } from './api/cli-install-api'
 import type { TerminalPreviewApi } from './api/terminal-preview-api'
-import type { DocPreviewApi } from './api/doc-preview-api'
 import type { EphemeralVmApi } from './api/ephemeral-vm-api'
 import type { ExportApi, FilesystemApi } from './api/filesystem-api'
 import type { GitInspectionApi } from './api/git-inspection-api'
 import type { GitOperationApi } from './api/git-operation-api'
 import type { GithubPullRequestApi } from './api/github-pull-request-api'
 import type { GithubWorkItemApi } from './api/github-work-item-api'
-import type { GitLabApi } from './api/gitlab-api'
 import type { BitbucketApi, HostedReviewApi } from './api/hosted-review-api'
-import type { JiraApi } from './api/jira-api'
-import type { LinearApi } from './api/linear-api'
 import type { MobileApi } from './api/mobile-api'
 import type { OnboardingApi, StarNagApi } from './api/onboarding-api'
 import type { OrcaProfileApi } from './api/orca-profile-api'
@@ -49,11 +44,10 @@ import type { KeybindingsApi, SettingsApi } from './api/settings-api'
 import type { ShellApi } from './api/shell-api'
 import type { SshApi } from './api/ssh-api'
 import type { UiCommandEventApi } from './api/ui-command-event-api'
+import type { UpdaterApi } from './api/updater-api'
 import type { MemorySnapshot } from '../process-stats-types'
 import type { UiWindowApi } from './api/ui-window-api'
-import type { UpdaterApi } from './api/updater-api'
 import type { WorkspaceCleanupApi, WorkspaceSpaceApi } from './api/workspace-cleanup-api'
-import type { LocalhostWorktreeLabelsApi, WorkspacePortsApi } from './api/workspace-port-api'
 import type { WorkspaceSessionApi } from './api/workspace-session-api'
 import type { FolderWorkspacesApi, SparsePresetsApi, WorktreeApi } from './api/worktree-api'
 
@@ -86,19 +80,14 @@ export type PreloadApi = {
   worktrees: WorktreeApi
   workspaceCleanup: WorkspaceCleanupApi
   workspaceSpace: WorkspaceSpaceApi
-  workspacePorts: WorkspacePortsApi
   pty: PtyApi
   export: ExportApi
   gh: Merged<GithubPullRequestApi & GithubWorkItemApi>
   hostedReview: HostedReviewApi
-  gl: GitLabApi
   bitbucket: BitbucketApi
-  linear: LinearApi
-  jira: JiraApi
   starNag: StarNagApi
   settings: SettingsApi
   agentAwake: AgentAwakeApi
-  localhostWorktreeLabels: LocalhostWorktreeLabelsApi
   keybindings: KeybindingsApi
   codexAccounts: CodexAccountsApi
   claudeAccounts: ClaudeAccountsApi
@@ -114,15 +103,12 @@ export type PreloadApi = {
   computerUsePermissions: ComputerUsePermissionsApi
   shell: ShellApi
   skills: SkillsApi
-  browser: BrowserApi
   hooks: HooksApi
   ephemeralVm: EphemeralVmApi
   cache: WorkspaceSessionApi['cache']
   session: WorkspaceSessionApi['session']
   remoteWorkspace: WorkspaceSessionApi['remoteWorkspace']
-  updater: UpdaterApi
   notebook: FilesystemApi['notebook']
-  docPreview: DocPreviewApi['docPreview']
   stats: StatsApi
   memory: MemoryApi
   claudeUsage: ClaudeUsageApi
@@ -132,6 +118,7 @@ export type PreloadApi = {
   fs: FilesystemApi['fs']
   git: Merged<GitInspectionApi & GitOperationApi>
   ui: Merged<UiCommandEventApi & UiWindowApi>
+  updater: UpdaterApi
   runtime: RuntimeApi['runtime']
   runtimeEnvironments: RuntimeApi['runtimeEnvironments']
   rateLimits: RateLimitsApi
@@ -151,7 +138,6 @@ export type { ClaudeUsageApi, CodexUsageApi, OpenCodeUsageApi } from './api/agen
 export type { AiVaultApi } from './api/ai-vault-api'
 export type { AutomationsApi, ExternalAutomationManagerResult } from './api/automation-api'
 export type { AppApi } from './api/app-api'
-export type { BrowserApi, DetectedBrowserInfo, DetectedBrowserProfileInfo } from './api/browser-api'
 export type { ExportApi } from './api/filesystem-api'
 export type {
   PluginHostInstallResult,

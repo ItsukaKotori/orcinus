@@ -7,8 +7,6 @@ import {
   showWorkspaceListChangedToast
 } from './stale-workspace-list-toast'
 import { getWorkspaceDeleteLineage } from './workspace-delete-lineage'
-import { resolveSshWorkspaceForget } from './ssh-workspace-forget-resolution'
-import { isPairedWebClientWindow } from '@/lib/desktop-window-chrome'
 import { parseWorkspaceKey } from '../../../../shared/workspace-scope'
 import { getRepoExecutionHostId } from '../../../../shared/execution-host'
 import {
@@ -67,31 +65,6 @@ export function runWorktreeDelete(worktreeId: string, options: WorktreeDeleteOpt
     state.clearWorktreeDeleteState(worktreeId, target.hostId)
   } else {
     state.clearWorktreeDeleteState(worktreeId)
-  }
-
-  // Why: a disconnected SSH host has no provider, so worktrees:remove throws; route to reconnect-and-delete or local-only forget.
-  // Skip on paired web/mobile clients: SSH state is desktop-only, so empty sshTargetLabels misclassifies SSH repos as ghosts; their worktree.rm RPC still handles the delete.
-  const matchingRepos = state.repos.filter((entry) => entry.id === target.repoId)
-  const repo = target.hostId
-    ? findRepoForHost(matchingRepos, target.repoId, { hostId: target.hostId })
-    : matchingRepos.length === 1
-      ? matchingRepos[0]
-      : null
-  const sshResolution = isPairedWebClientWindow()
-    ? { kind: 'not-ssh' as const }
-    : resolveSshWorkspaceForget({
-        repo,
-        sshConnectionStates: state.sshConnectionStates,
-        sshTargetLabels: state.sshTargetLabels
-      })
-  if (sshResolution.kind === 'ghost' || sshResolution.kind === 'disconnected') {
-    // Why no lineage-children warning: forget-local is metadata-only per-worktree, so it can't fail on a still-registered child.
-    state.openModal('forget-ssh-workspace', {
-      worktreeId,
-      displayName: target.displayName,
-      resolution: sshResolution
-    })
-    return
   }
 
   const deleteLineage = getWorkspaceDeleteLineage(

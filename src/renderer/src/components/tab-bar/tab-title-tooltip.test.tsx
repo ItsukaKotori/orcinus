@@ -1,13 +1,11 @@
 import { cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { BrowserTab as BrowserTabState } from '../../../../shared/browser-workspace-types'
 import type { GitFileStatus } from '../../../../shared/git-status-types'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import type { OpenFile } from '../../store/slices/editor'
 import type { TabDragItemData } from '../tab-group/useTabDragSplit'
-import BrowserTab from './BrowserTab'
 import EditorFileTab from './EditorFileTab'
 import SortableTab from './SortableTab'
 
@@ -112,9 +110,6 @@ vi.mock('@/store/selectors', () => ({
   useWorktreeById: () => ({ path: '/repo', repoId: 'repo-1' })
 }))
 
-vi.mock('../browser-pane/describe-page/live-browser-url-registry', () => ({
-  getLiveBrowserUrl: () => 'https://live.example/not-the-tab-label'
-}))
 
 vi.mock('@/lib/file-type-icons', () => ({
   getFileTypeIcon: () =>
@@ -217,21 +212,6 @@ function makeTerminalTab(overrides: Partial<TerminalTab> = {}): TerminalTab {
   }
 }
 
-function makeBrowserTab(overrides: Partial<BrowserTabState> = {}): BrowserTabState {
-  return {
-    id: 'browser-1',
-    worktreeId: 'wt-1',
-    url: 'https://example.com/docs/long-browser-tab-path',
-    title: 'Browser title',
-    loading: false,
-    faviconUrl: null,
-    canGoBack: false,
-    canGoForward: false,
-    loadError: null,
-    createdAt: 0,
-    ...overrides
-  }
-}
 
 function makeEditorFile(overrides: Partial<OpenFile & { tabId?: string }> = {}): OpenFile & {
   tabId?: string
@@ -320,36 +300,6 @@ describe('tab title tooltips', () => {
     expect(markup).toContain('>Claude Code</span>')
     expect(markup).not.toContain('data-shell-icon="generic"')
     expect(markup).not.toContain('>✳ Claude Code</span>')
-  })
-
-  it('uses the browser tab fallback label from the tab prop, not the live URL', () => {
-    const markup = renderToStaticMarkup(
-      <BrowserTab
-        tab={makeBrowserTab({ title: '' })}
-        isActive={false}
-        isPinned={false}
-        hasTabsToRight={false}
-        hasTabsToLeft={false}
-        tabCount={1}
-        onActivate={vi.fn()}
-        onClose={vi.fn()}
-        onCloseOthers={vi.fn()}
-        onCloseToRight={vi.fn()}
-        onCloseToLeft={vi.fn()}
-        onDuplicate={vi.fn()}
-        onTogglePin={vi.fn()}
-        dragData={makeDragData('browser', 'browser-1')}
-      />
-    )
-
-    expectTooltipContent(markup, 'example.com/docs/long-browser-tab-path')
-    expect(markup).not.toContain('live.example')
-    const root = openingTag(markup, 'data-sortable-id', 'browser-1')
-    expect(root).toContain('data-tooltip-trigger="true"')
-    expect(root).toContain('role="tab"')
-    expect(root).toContain('tabindex="0"')
-    expect(root).toContain('data-tab-id="browser-1"')
-    expectTabContainerWidth(markup, root)
   })
 
   it('uses the editor display label while leaving adjacent adornments outside the label', () => {

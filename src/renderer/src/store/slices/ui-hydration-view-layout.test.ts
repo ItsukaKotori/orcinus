@@ -509,7 +509,7 @@ describe('createUISlice hydratePersistedUI', () => {
       showDotfilesByWorktree: { 'repo-1::/repo': false },
       collapsedGroups: ['repo:one'],
       workspaceHostOrder: ['local'],
-      worktreeCardProperties: ['status', 'unread', 'ports'],
+      worktreeCardProperties: ['status', 'unread'],
       acknowledgedAgentsByPaneKey: { 'tab-1::pane-1': Date.now() }
     })
 

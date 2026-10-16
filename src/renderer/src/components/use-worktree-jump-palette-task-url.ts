@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useAppStore } from '@/store'
 import {
   getComposerEligibleRepos,
@@ -6,25 +6,15 @@ import {
 } from '@/lib/new-workspace-composer-repo'
 import { resolveWorkspaceCreationTarget } from '@/lib/project-host-workspace-target'
 import { lookupCmdJGitHubUrlWorkItem } from '@/lib/cmd-j-github-url-lookup'
-import { lookupLinearIssueUrl } from '@/lib/linear-issue-url-lookup'
 import {
   withResolvedCmdJGitHubPreview,
   type CmdJTaskSourceUrl,
   getCmdJTaskUrlCreatePreview
 } from '@/lib/worktree-palette-task-url-match'
 import type { GitHubWorkItem } from '../../../shared/github/work-item-types'
-import type { LinearIssue } from '../../../shared/linear/issue-types'
 import type { TaskSourceContext } from '../../../shared/task-source-context'
 import { buildTaskSourceContextFromRepo } from '../../../shared/task-source-context'
 import type { WorktreePaletteRequestGuard } from '@/lib/worktree-palette-create-action'
-
-export type CmdJLinearIssuePreview = {
-  query: string
-  issue: LinearIssue | null
-  loading: boolean
-  initialRepoId: string | null
-  sourceContext: TaskSourceContext | null
-}
 
 export type CmdJGitHubWorkItemPreview = {
   query: string
@@ -58,71 +48,18 @@ export function useWorktreeJumpPaletteTaskUrl({
   taskSourceUrl: CmdJTaskSourceUrl | null
   createLookupGuard: WorktreePaletteRequestGuard
 }) {
-  const linearIssueUrlIntent = taskSourceUrl?.provider === 'linear' ? taskSourceUrl.intent : null
   const githubUrlLink = taskSourceUrl?.provider === 'github' ? taskSourceUrl.link : null
   const parsedTaskUrlCreatePreview = useMemo(
     () => (taskSourceUrl ? getCmdJTaskUrlCreatePreview(taskSourceUrl) : null),
     [taskSourceUrl]
   )
-  const [linearIssuePreview, setLinearIssuePreview] = useState<CmdJLinearIssuePreview | null>(null)
   const [githubWorkItemPreview, setGithubWorkItemPreview] =
     useState<CmdJGitHubWorkItemPreview | null>(null)
-  const linearLookupRef = useRef<{
-    query: string
-    promise: Promise<CmdJLinearIssuePreview>
-  } | null>(null)
   const githubLookupRef = useRef<{
     query: string
     promise: Promise<CmdJGitHubWorkItemPreview>
   } | null>(null)
-  const linearGenerationRef = useRef(0)
   const githubGenerationRef = useRef(0)
-
-  useLayoutEffect(() => {
-    const generation = ++linearGenerationRef.current
-    linearLookupRef.current = null
-    if (!visible || !linearIssueUrlIntent) {
-      setLinearIssuePreview(null)
-      return
-    }
-    const state = useAppStore.getState()
-    const target = getComposerDefaultWorkspaceTarget(state)
-    const sourceContext = target
-      ? buildTaskSourceContextFromRepo({
-          provider: 'linear',
-          projectId: target.projectId,
-          repo: target.repo,
-          projectHostSetupId: target.projectHostSetupId
-        })
-      : null
-    const pending: CmdJLinearIssuePreview = {
-      query: createWorktreeName,
-      issue: null,
-      loading: true,
-      initialRepoId: target?.repoId ?? null,
-      sourceContext
-    }
-    setLinearIssuePreview(pending)
-    const promise = lookupLinearIssueUrl({
-      intent: linearIssueUrlIntent,
-      knownStatus: state.linearStatus,
-      sourceContext,
-      fetchLinearIssue: state.fetchLinearIssue
-    })
-      .catch(() => null)
-      .then((issue): CmdJLinearIssuePreview => ({ ...pending, issue, loading: false }))
-    linearLookupRef.current = { query: createWorktreeName, promise }
-    void promise.then((preview) => {
-      if (linearGenerationRef.current === generation) {
-        setLinearIssuePreview(preview)
-      }
-    })
-    return () => {
-      if (linearGenerationRef.current === generation) {
-        linearGenerationRef.current += 1
-      }
-    }
-  }, [createWorktreeName, linearIssueUrlIntent, visible])
 
   useLayoutEffect(() => {
     const generation = ++githubGenerationRef.current
@@ -169,8 +106,6 @@ export function useWorktreeJumpPaletteTaskUrl({
     }
   }, [createWorktreeName, githubUrlLink, visible])
 
-  const currentLinearIssuePreview =
-    linearIssuePreview?.query === createWorktreeName ? linearIssuePreview : null
   const currentGitHubWorkItemPreview =
     githubWorkItemPreview?.query === createWorktreeName ? githubWorkItemPreview : null
   const taskUrlCreatePreview = useMemo(() => {
@@ -183,31 +118,12 @@ export function useWorktreeJumpPaletteTaskUrl({
       currentGitHubWorkItemPreview?.loading === true
     )
   }, [currentGitHubWorkItemPreview, parsedTaskUrlCreatePreview])
-  const [linearLoadingFeedbackQuery, setLinearLoadingFeedbackQuery] = useState<string | null>(null)
-  useEffect(() => {
-    if (!currentLinearIssuePreview?.loading) {
-      setLinearLoadingFeedbackQuery(null)
-      return
-    }
-    setLinearLoadingFeedbackQuery(null)
-    const timer = window.setTimeout(
-      () => setLinearLoadingFeedbackQuery(currentLinearIssuePreview.query),
-      200
-    )
-    return () => window.clearTimeout(timer)
-  }, [currentLinearIssuePreview?.loading, currentLinearIssuePreview?.query])
 
   return {
-    linearIssueUrlIntent,
     githubUrlLink,
     taskUrlCreatePreview,
-    currentLinearIssuePreview,
     currentGitHubWorkItemPreview,
-    linearLookupRef,
     githubLookupRef,
-    showLinearLoadingFeedback:
-      currentLinearIssuePreview?.loading === true &&
-      linearLoadingFeedbackQuery === currentLinearIssuePreview.query,
     createLookupGuard
   }
 }

@@ -23,17 +23,13 @@ export function TerminalLegacyTerminalPanes({
     mountedWorktreeIdsRef,
     renderedActiveWorktreeId,
     tabsByWorktree,
-    worktreeBrowserTabs,
     worktreeFiles,
     workspaceSurfaces
   } = controller
   return (
     <div
       className={`relative flex-1 min-h-0 overflow-hidden ${
-        (activeTabType === 'editor' && worktreeFiles.length > 0) ||
-        (activeTabType === 'browser' && worktreeBrowserTabs.length > 0)
-          ? 'hidden'
-          : ''
+        activeTabType === 'editor' && worktreeFiles.length > 0 ? 'hidden' : ''
       }`}
     >
       {workspaceSurfaces

@@ -96,7 +96,7 @@ describe('useHostedReviewStackParent', () => {
   })
 
   it.each([
-    makeReview({ provider: 'gitlab' }),
+    makeReview({ provider: 'bitbucket' }),
     makeReview({ state: 'closed' }),
     makeReview({ state: 'merged' })
   ])('rejects a non-open GitHub review', async (review) => {

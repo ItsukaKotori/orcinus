@@ -30,34 +30,22 @@ function makeAgentEntry(
 describe('worktree activity state', () => {
   it('treats a slept wake-hint workspace as inactive', () => {
     expect(
-      isInactiveWorkspace('wt-1', { 'wt-1': [makeTab('tab-1')] }, { 'tab-1': [] }, {}, new Set())
+      isInactiveWorkspace('wt-1', { 'wt-1': [makeTab('tab-1')] }, { 'tab-1': [] }, new Set())
     ).toBe(true)
   })
 
   it('treats a never-opened workspace as inactive', () => {
-    expect(isInactiveWorkspace('wt-1', {}, {}, {}, new Set())).toBe(true)
+    expect(isInactiveWorkspace('wt-1', {}, {}, new Set())).toBe(true)
   })
 
   it('treats live terminal workspaces as active', () => {
     const tabsByWorktree = { 'wt-1': [makeTab('tab-1')] }
     const ptyIdsByTabId = { 'tab-1': ['pty-1'] }
 
-    expect(isInactiveWorkspace('wt-1', tabsByWorktree, ptyIdsByTabId, {}, new Set())).toBe(false)
-    expect(hasActiveWorkspaceActivity('wt-1', tabsByWorktree, ptyIdsByTabId, {}, new Set())).toBe(
+    expect(isInactiveWorkspace('wt-1', tabsByWorktree, ptyIdsByTabId, new Set())).toBe(false)
+    expect(hasActiveWorkspaceActivity('wt-1', tabsByWorktree, ptyIdsByTabId, new Set())).toBe(
       true
     )
-  })
-
-  it('treats browser workspaces as active', () => {
-    expect(
-      isInactiveWorkspace(
-        'wt-1',
-        { 'wt-1': [makeTab('tab-1')] },
-        { 'tab-1': [] },
-        { 'wt-1': [{ id: 'browser-1' }] },
-        new Set()
-      )
-    ).toBe(false)
   })
 
   it('treats pending paired web host terminal mirrors as inactive without a live pty', () => {
@@ -65,7 +53,6 @@ describe('worktree activity state', () => {
       hasActiveWorkspaceActivity(
         'wt-1',
         { 'wt-1': [makeTab('web-terminal-host-tab-1')] },
-        {},
         {},
         new Set()
       )
@@ -78,19 +65,6 @@ describe('worktree activity state', () => {
         'wt-1',
         { 'wt-1': [makeTab('web-terminal-host-tab-1')] },
         { 'web-terminal-host-tab-1': ['pty-1'] },
-        {},
-        new Set()
-      )
-    ).toBe(true)
-  })
-
-  it('keeps browser-only workspaces active when mirrored terminals are pending', () => {
-    expect(
-      hasActiveWorkspaceActivity(
-        'wt-1',
-        { 'wt-1': [makeTab('web-terminal-host-tab-1')] },
-        {},
-        { 'wt-1': [{ id: 'browser-1' }] },
         new Set()
       )
     ).toBe(true)
@@ -103,7 +77,6 @@ describe('worktree activity state', () => {
         'wt-1',
         { 'wt-1': [makeTab('tab-1')] },
         { 'tab-1': [] },
-        {},
         worktreeIdsWithLiveAgent
       )
     ).toBe(true)
@@ -112,7 +85,6 @@ describe('worktree activity state', () => {
         'wt-1',
         { 'wt-1': [makeTab('tab-1')] },
         { 'tab-1': [] },
-        {},
         worktreeIdsWithLiveAgent
       )
     ).toBe(false)
@@ -120,7 +92,7 @@ describe('worktree activity state', () => {
 
   it('still hides a slept workspace with no live agent entry', () => {
     expect(
-      isInactiveWorkspace('wt-1', { 'wt-1': [makeTab('tab-1')] }, { 'tab-1': [] }, {}, new Set())
+      isInactiveWorkspace('wt-1', { 'wt-1': [makeTab('tab-1')] }, { 'tab-1': [] }, new Set())
     ).toBe(true)
   })
 })

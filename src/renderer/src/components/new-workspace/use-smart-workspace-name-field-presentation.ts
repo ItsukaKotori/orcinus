@@ -1,13 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { CaseSensitive, LoaderCircle, Search } from 'lucide-react'
 import { parseGitHubIssueOrPRLink } from '@/lib/github-links'
-import { parseGitLabIssueOrMRLink } from '@/lib/gitlab-links'
-import {
-  isSmartWorkspaceLinearIssueIntentMatch,
-  parseBoundedSmartWorkspaceLinearIssueInput,
-  parseBoundedSmartWorkspaceLinearIssueUrlIntent,
-  prioritizeSmartWorkspaceLinearIssueResults
-} from '../../../../shared/new-workspace/smart-workspace-linear-intent'
 import {
   getActiveWorkspaceEmojiShortcode,
   searchWorkspaceEmojiShortcodes,
@@ -30,16 +23,8 @@ function isTypedTextSourceRow(row: RowEntry): boolean {
   return row.kind === 'use-name' || row.kind === 'create-branch'
 }
 
-export function useSmartWorkspaceNameFieldPresentation(
-  foundation: Foundation,
-  options?: {
-    linearUrlIntent?: ReturnType<typeof parseBoundedSmartWorkspaceLinearIssueUrlIntent>
-    linearUrlIntentOwnsInput?: boolean
-    linearQuery?: string
-  }
-) {
+export function useSmartWorkspaceNameFieldPresentation(foundation: Foundation) {
   const {
-    jiraSource,
     branches,
     mode,
     branchResultsSource,
@@ -47,11 +32,6 @@ export function useSmartWorkspaceNameFieldPresentation(
     value,
     githubItems,
     debouncedQuery,
-    gitlabSourceAvailable,
-    gitlabItems,
-    jiraIssues,
-    linearAvailable,
-    linearIssues,
     commandValue,
     setCommandValue,
     emojiCursor,
@@ -59,25 +39,8 @@ export function useSmartWorkspaceNameFieldPresentation(
     selectedSource,
     emojiCommandValue,
     githubLoading,
-    gitlabLoading,
-    branchesLoading,
-    linearLoading,
-    jiraLoading,
-    linearUrlLoadingFeedbackQuery,
-    settledLinearUrlQuery
+    branchesLoading
   } = foundation
-  const linearUrlIntent =
-    options?.linearUrlIntent ?? parseBoundedSmartWorkspaceLinearIssueUrlIntent(value)
-  const linearUrlIntentOwnsInput =
-    options?.linearUrlIntentOwnsInput ??
-    (linearUrlIntent !== null && (mode === 'smart' || mode === 'linear'))
-  const linearQuery = options?.linearQuery ?? (linearUrlIntentOwnsInput ? value : debouncedQuery)
-  const linearUrlLookupFailed =
-    linearUrlIntentOwnsInput &&
-    linearAvailable &&
-    settledLinearUrlQuery === linearQuery.trim() &&
-    !linearLoading &&
-    linearIssues.length === 0
   const githubUrlIntent = useMemo(
     () =>
       isSmartWorkspaceSourceQueryWithinLimit(value) && (mode === 'smart' || mode === 'github')
@@ -85,85 +48,38 @@ export function useSmartWorkspaceNameFieldPresentation(
         : null,
     [mode, value]
   )
-  const gitlabUrlIntent = useMemo(
+  const rows = useMemo<RowEntry[]>(
     () =>
-      isSmartWorkspaceSourceQueryWithinLimit(value) && (mode === 'smart' || mode === 'gitlab')
-        ? parseGitLabIssueOrMRLink(value)
-        : null,
-    [mode, value]
-  )
-  const rows = useMemo<RowEntry[]>(() => {
-    if (jiraSource.intent && jiraSource.accountChoices.length > 0) {
-      return jiraSource.accountChoices.map((site) => ({
-        kind: 'jira-account' as const,
-        value: `jira-account-${site.id}`,
-        site
-      }))
-    }
-    return buildSmartWorkspaceSourceRows({
-      branches: getVisibleBranchResults({
-        branches,
+      buildSmartWorkspaceSourceRows({
+        branches: getVisibleBranchResults({
+          branches,
+          mode,
+          resultRepoId: branchResultsSource?.repoId ?? null,
+          resultQuery: branchResultsSource?.query ?? null,
+          selectedRepoId: selectedRepo?.id ?? null,
+          value
+        }),
+        githubItems: getVisibleHeldProviderResults({
+          items: githubItems,
+          value,
+          debouncedQuery
+        }),
+        githubUrlIntent,
         mode,
-        resultRepoId: branchResultsSource?.repoId ?? null,
-        resultQuery: branchResultsSource?.query ?? null,
-        selectedRepoId: selectedRepo?.id ?? null,
+        resultLimit: RESULT_LIMIT,
         value
       }),
-      githubItems: getVisibleHeldProviderResults({
-        items: githubItems,
-        value,
-        debouncedQuery
-      }),
-      gitlabAvailable: gitlabSourceAvailable,
-      gitlabItems: getVisibleHeldProviderResults({
-        items: gitlabItems,
-        value,
-        debouncedQuery
-      }),
-      jiraIntent: jiraSource.intent,
-      jiraIssue: jiraSource.issue,
-      jiraIssues: getVisibleHeldProviderResults({
-        items: jiraIssues,
-        value,
-        debouncedQuery
-      }),
-      linearAvailable: linearAvailable && !linearUrlLookupFailed,
-      linearIssues: prioritizeSmartWorkspaceLinearIssueResults(
-        value,
-        getVisibleHeldProviderResults({
-          items: linearIssues,
-          value,
-          debouncedQuery: linearUrlIntentOwnsInput ? value : debouncedQuery
-        })
-      ),
-      linearUrlIntentOwnsResults: true,
+    [
+      branches,
+      branchResultsSource,
+      debouncedQuery,
+      githubItems,
       githubUrlIntent,
-      gitlabUrlIntent,
       mode,
-      resultLimit: RESULT_LIMIT,
+      selectedRepo?.id,
       value
-    })
-  }, [
-    branches,
-    branchResultsSource,
-    debouncedQuery,
-    githubItems,
-    githubUrlIntent,
-    gitlabSourceAvailable,
-    gitlabItems,
-    gitlabUrlIntent,
-    jiraSource.accountChoices,
-    jiraSource.intent,
-    jiraSource.issue,
-    jiraIssues,
-    linearAvailable,
-    linearIssues,
-    linearUrlIntentOwnsInput,
-    linearUrlLookupFailed,
-    mode,
-    selectedRepo?.id,
-    value
-  ])
+    ]
+  )
   const { typedTextActionRow, searchResultRows } = useMemo(() => {
     const typedTextRow = rows.find(isTypedTextSourceRow) ?? null
     return {
@@ -177,10 +93,9 @@ export function useSmartWorkspaceNameFieldPresentation(
   const debouncedQueryWithinSourceLimit = isSmartWorkspaceSourceQueryWithinLimit(debouncedQuery)
   const trimmedValue = valueWithinSourceLimit ? value.trim() : ''
   const trimmedDebouncedQuery = debouncedQueryWithinSourceLimit ? debouncedQuery.trim() : ''
-  const isQueryStale =
-    !linearUrlIntentOwnsInput && trimmedValue.length > 0 && trimmedDebouncedQuery !== trimmedValue
+  const isQueryStale = trimmedValue.length > 0 && trimmedDebouncedQuery !== trimmedValue
   // Why: unambiguous refs highlight their source row instead of the typed-text fallback.
-  const sourceIntent = useMemo<'github' | 'gitlab' | 'linear' | 'jira' | null>(() => {
+  const sourceIntent = useMemo<'github' | null>(() => {
     if (!isSmartWorkspaceSourceQueryWithinLimit(value)) {
       return null
     }
@@ -188,39 +103,15 @@ export function useSmartWorkspaceNameFieldPresentation(
     if (!trimmed) {
       return null
     }
-    if (jiraSource.intent) {
-      return 'jira'
-    }
     if (/^#\d+$/.test(trimmed) || parseGitHubIssueOrPRLink(trimmed) !== null) {
       return 'github'
     }
-    if (parseGitLabIssueOrMRLink(trimmed) !== null) {
-      return 'gitlab'
-    }
-    if (linearAvailable) {
-      const linearIntent = parseBoundedSmartWorkspaceLinearIssueInput(trimmed)
-      if (
-        linearIntent &&
-        rows.some(
-          (row) =>
-            row.kind === 'linear' && isSmartWorkspaceLinearIssueIntentMatch(linearIntent, row.issue)
-        )
-      ) {
-        return 'linear'
-      }
-    }
     return null
-  }, [jiraSource.intent, linearAvailable, rows, value])
-  const unresolvedLinearUrlIntent =
-    linearUrlIntentOwnsInput &&
-    linearAvailable &&
-    sourceIntent !== 'linear' &&
-    (linearLoading || settledLinearUrlQuery !== linearQuery.trim())
+  }, [value])
   const blockingTaskUrlResolution = isBlockingTaskUrlResolution({
-    sourceIntent: sourceIntent === 'github' || sourceIntent === 'gitlab' ? sourceIntent : null,
+    sourceIntent,
     isQueryStale,
-    githubLoading,
-    gitlabLoading
+    githubLoading
   })
   const resolvedCommandValue = resolveSmartWorkspaceCommandValue({
     currentValue: commandValue,
@@ -262,13 +153,7 @@ export function useSmartWorkspaceNameFieldPresentation(
     emojiSuggestions.find(
       (suggestion) => `emoji:${suggestion.shortcode}` === resolvedEmojiCommandValue
     ) ?? null
-  const showLinearUrlLoadingFeedback =
-    linearLoading && linearUrlIntentOwnsInput && linearUrlLoadingFeedbackQuery === linearQuery
-  const visibleLinearLoading =
-    linearLoading && (!linearUrlIntentOwnsInput || showLinearUrlLoadingFeedback)
-  const loading = jiraSource.intent
-    ? jiraSource.loading
-    : githubLoading || gitlabLoading || branchesLoading || visibleLinearLoading || jiraLoading
+  const loading = githubLoading || branchesLoading
   // Why: only spin on first load, not refreshes with retained rows.
   const showSearchSpinner = loading && searchResultRows.length === 0
   const ActiveInputIcon =
@@ -287,15 +172,8 @@ export function useSmartWorkspaceNameFieldPresentation(
     selectedEmojiSuggestion,
     loading,
     showSearchSpinner,
-    linearUrlIntent,
-    linearUrlIntentOwnsInput,
-    linearQuery,
-    unresolvedLinearUrlIntent,
+    sourceIntent,
     blockingTaskUrlResolution,
-    showLinearUrlLoadingFeedback,
-    reserveLinearLoadingResults: unresolvedLinearUrlIntent && searchResultRows.length === 0,
-    ActiveInputIcon,
-    selectJiraAccount: jiraSource.selectAccount,
-    jiraBoundSourceContext: jiraSource.boundSourceContext
+    ActiveInputIcon
   }
 }

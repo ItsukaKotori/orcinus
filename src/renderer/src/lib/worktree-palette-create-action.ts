@@ -63,7 +63,6 @@ const SELECTABLE_ENTRY_TYPES = [
   'create-worktree',
   'settings',
   'quick-action',
-  'browser-page',
   'workspace-tab',
   'project-target',
   'hint'

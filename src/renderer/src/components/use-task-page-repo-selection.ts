@@ -13,34 +13,13 @@ import {
   restoreAvailableDefaultTaskProvider,
   resolveVisibleTaskProvider
 } from '../../../shared/task-providers'
-import {
-  getSourceOptions,
-  getGitHubModeButtons,
-  getLinearModeOptions,
-  getJiraPresets,
-  getGitLabIssueFilters,
-  getGitLabMRFilters,
-  getLinearViewOptions,
-  getLinearGroupOptions,
-  getLinearOrderOptions,
-  getLinearDisplayProperties
-} from '@/components/task-page-localized-options'
+import { getSourceOptions, getGitHubModeButtons } from '@/components/task-page-localized-options'
 import type { TaskProvider } from '../../../shared/task-providers'
 import { toast } from 'sonner'
 import { translate } from '@/i18n/i18n'
 import { getTaskPageRepoSourceContext } from './task-page-source-context'
 export function useTaskPageRepoSelection(model: TaskPageStoreBindingsModel) {
-  const {
-    settings,
-    pageData,
-    repos,
-    updateSettings,
-    linearStatus,
-    preflightStatus,
-    jiraStatus,
-    preflightStatusCurrent,
-    linearConnected
-  } = model
+  const { settings, pageData, repos, updateSettings } = model
   const eligibleRepos = useMemo(() => getTaskEligibleRepos(repos), [repos])
 
   // Why: initial selection precedence — explicit preselection > persisted defaultRepoSelection > all eligible; preselection wins so "open tasks for this repo" lands single-repo.
@@ -99,12 +78,7 @@ export function useTaskPageRepoSelection(model: TaskPageStoreBindingsModel) {
   )
 
   // Why: see buildSelectedReposKey — array-identity deps re-fire on every
-  // repos:changed even when the selection is unchanged. The context part is
-  // resolved as GitHub, but every provider-independent field (projectId,
-  // hostId, projectHostSetupId, repoId) is identical across providers, so the
-  // GitLab effect can key off this too — it passes no gitlabProjectRef, so its
-  // context carries no providerIdentity of its own. Thread a projectRef into
-  // that call and this key needs a GitLab-scoped part.
+  // repos:changed even when the selection is unchanged.
   const selectedReposKey = useMemo(
     () => buildSelectedReposKey(selectedRepos, (r) => getTaskPageRepoSourceContext(r, 'github')),
     [selectedRepos]
@@ -112,23 +86,6 @@ export function useTaskPageRepoSelection(model: TaskPageStoreBindingsModel) {
 
   // Why: many affordances need *a* repo; use the first selected as default, while cross-repo dialogs still let the user override per-action.
   const primaryRepo = selectedRepos[0] ?? null
-  const linearWorkspaces = linearStatus.workspaces ?? []
-  const selectedLinearWorkspaceId =
-    linearStatus.selectedWorkspaceId ??
-    linearStatus.activeWorkspaceId ??
-    linearWorkspaces[0]?.id ??
-    null
-  const selectedLinearWorkspace =
-    selectedLinearWorkspaceId && selectedLinearWorkspaceId !== 'all'
-      ? (linearWorkspaces.find((workspace) => workspace.id === selectedLinearWorkspaceId) ?? null)
-      : null
-  const jiraSites = useMemo(() => jiraStatus.sites ?? [], [jiraStatus.sites])
-  const selectedJiraSiteId =
-    jiraStatus.selectedSiteId ?? jiraStatus.activeSiteId ?? jiraSites[0]?.id ?? null
-  const selectedJiraSite =
-    selectedJiraSiteId && selectedJiraSiteId !== 'all'
-      ? (jiraSites.find((site) => site.id === selectedJiraSiteId) ?? null)
-      : null
   const preferredVisibleTaskProviders = useMemo(
     () => normalizeVisibleTaskProviders(settings?.visibleTaskProviders),
     [settings?.visibleTaskProviders]
@@ -139,29 +96,15 @@ export function useTaskPageRepoSelection(model: TaskPageStoreBindingsModel) {
       restoreAvailableDefaultTaskProvider(
         preferredVisibleTaskProviders,
         {
-          gitlabInstalled: preflightStatusCurrent && preflightStatus?.glab?.installed === true,
-          linearConnected: linearConnected === true
+          gitlabInstalled: false,
+          linearConnected: false
         },
         defaultTaskSource
       ),
-    [
-      defaultTaskSource,
-      linearConnected,
-      preferredVisibleTaskProviders,
-      preflightStatusCurrent,
-      preflightStatus?.glab?.installed
-    ]
+    [defaultTaskSource, preferredVisibleTaskProviders]
   )
   const sourceOptions = getSourceOptions()
   const githubModeButtons = getGitHubModeButtons()
-  const linearModeOptions = getLinearModeOptions()
-  const jiraPresets = getJiraPresets()
-  const gitLabIssueFilters = getGitLabIssueFilters()
-  const gitLabMRFilters = getGitLabMRFilters()
-  const linearViewOptions = getLinearViewOptions()
-  const linearGroupOptions = getLinearGroupOptions()
-  const linearOrderOptions = getLinearOrderOptions()
-  const linearDisplayPropertyOptions = getLinearDisplayProperties()
   const visibleSourceOptions = useMemo(
     () => sourceOptions.filter((source) => visibleTaskProviders.includes(source.id)),
     [sourceOptions, visibleTaskProviders]
@@ -204,25 +147,11 @@ export function useTaskPageRepoSelection(model: TaskPageStoreBindingsModel) {
     selectedRepos: typeof selectedRepos
     selectedReposKey: typeof selectedReposKey
     primaryRepo: typeof primaryRepo
-    linearWorkspaces: typeof linearWorkspaces
-    selectedLinearWorkspaceId: typeof selectedLinearWorkspaceId
-    selectedLinearWorkspace: typeof selectedLinearWorkspace
-    jiraSites: typeof jiraSites
-    selectedJiraSiteId: typeof selectedJiraSiteId
-    selectedJiraSite: typeof selectedJiraSite
     preferredVisibleTaskProviders: typeof preferredVisibleTaskProviders
     defaultTaskSource: typeof defaultTaskSource
     visibleTaskProviders: typeof visibleTaskProviders
     sourceOptions: typeof sourceOptions
     githubModeButtons: typeof githubModeButtons
-    linearModeOptions: typeof linearModeOptions
-    jiraPresets: typeof jiraPresets
-    gitLabIssueFilters: typeof gitLabIssueFilters
-    gitLabMRFilters: typeof gitLabMRFilters
-    linearViewOptions: typeof linearViewOptions
-    linearGroupOptions: typeof linearGroupOptions
-    linearOrderOptions: typeof linearOrderOptions
-    linearDisplayPropertyOptions: typeof linearDisplayPropertyOptions
     visibleSourceOptions: typeof visibleSourceOptions
     hideTaskSource: typeof hideTaskSource
   }
@@ -236,25 +165,11 @@ export function useTaskPageRepoSelection(model: TaskPageStoreBindingsModel) {
   nextModel.selectedRepos = selectedRepos
   nextModel.selectedReposKey = selectedReposKey
   nextModel.primaryRepo = primaryRepo
-  nextModel.linearWorkspaces = linearWorkspaces
-  nextModel.selectedLinearWorkspaceId = selectedLinearWorkspaceId
-  nextModel.selectedLinearWorkspace = selectedLinearWorkspace
-  nextModel.jiraSites = jiraSites
-  nextModel.selectedJiraSiteId = selectedJiraSiteId
-  nextModel.selectedJiraSite = selectedJiraSite
   nextModel.preferredVisibleTaskProviders = preferredVisibleTaskProviders
   nextModel.defaultTaskSource = defaultTaskSource
   nextModel.visibleTaskProviders = visibleTaskProviders
   nextModel.sourceOptions = sourceOptions
   nextModel.githubModeButtons = githubModeButtons
-  nextModel.linearModeOptions = linearModeOptions
-  nextModel.jiraPresets = jiraPresets
-  nextModel.gitLabIssueFilters = gitLabIssueFilters
-  nextModel.gitLabMRFilters = gitLabMRFilters
-  nextModel.linearViewOptions = linearViewOptions
-  nextModel.linearGroupOptions = linearGroupOptions
-  nextModel.linearOrderOptions = linearOrderOptions
-  nextModel.linearDisplayPropertyOptions = linearDisplayPropertyOptions
   nextModel.visibleSourceOptions = visibleSourceOptions
   nextModel.hideTaskSource = hideTaskSource
   return nextModel

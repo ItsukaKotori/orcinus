@@ -1,4 +1,4 @@
-import type { TaskPageLinearCreationStateModel } from './use-task-page-linear-creation-state'
+import type { TaskPageResumeRestorationModel } from './use-task-page-resume-restoration'
 import { getGitHubTaskKind } from '@/components/task-page-github-task-kind'
 import { useMemo, useLayoutEffect, useEffect, useCallback, useRef } from 'react'
 import { parseTaskQuery } from '../../../shared/task-query'
@@ -13,7 +13,7 @@ import { useTaskPageGitHubWorkItemMutation } from '@/hooks/useTaskPageGitHubWork
 import { rebuildSoftHiddenKeysFromPendingAndSticky } from '@/components/task-page-github-work-item-mutations'
 import { buildGitHubRepoUrl } from '@/lib/github-links'
 import { getTaskPageRepoSourceContext } from './task-page-source-context'
-export function useTaskPageGitHubMutationState(model: TaskPageLinearCreationStateModel) {
+export function useTaskPageGitHubMutationState(model: TaskPageResumeRestorationModel) {
   const {
     selectedRepos,
     taskSource,

@@ -46,7 +46,6 @@ export type WorkspaceDecisionInputs = {
   retainedAgentsByPaneKey: Record<string, { worktreeId: string; entry: AgentStatusEntry }>
   openFiles: readonly { id: string; worktreeId: string; isDirty: boolean }[]
   editorDrafts: Record<string, string>
-  browserTabsByWorktree: Record<string, unknown[]>
   gitStatusByWorktree: Record<string, readonly unknown[]>
   gitStatusByWorktreeIdentity?: ReadonlyMap<string, readonly { path: string }[]>
   remoteStatusesByWorktree: Record<string, { hasUpstream: boolean; ahead: number; behind: number }>
@@ -63,10 +62,6 @@ export type WorkspaceDecisionInputs = {
     }
   >
   issueCache: Record<string, { data?: { number: number; title: string; state: string } | null }>
-  linearIssueCache: Record<
-    string,
-    { data?: { identifier: string; title: string; state?: { name: string } } | null }
-  >
   settings: Parameters<typeof getHostedReviewCacheKey>[2]
   activeWorktreeId: string | null
   activeWorkspaceExecutionHostId: ExecutionHostId | null
@@ -176,17 +171,7 @@ export function getWorkspaceDecisionDetails(
       : `#${linkedIssue}`
     : null
   const linkedLinearIssue = workspaceRecord?.linkedLinearIssue ?? null
-  const linearIssue = linkedLinearIssue
-    ? (inputs.linearIssueCache[`selected::${linkedLinearIssue}`]?.data ??
-      inputs.linearIssueCache[linkedLinearIssue]?.data)
-    : null
   const linearIssueLabel = linkedLinearIssue
-    ? linearIssue
-      ? `${linearIssue.identifier}${
-          linearIssue.state?.name ? ` ${linearIssue.state.name}` : ''
-        }: ${linearIssue.title}`
-      : linkedLinearIssue
-    : null
 
   return {
     isActive:
@@ -210,7 +195,7 @@ export function getWorkspaceDecisionDetails(
     ).length,
     openEditorFileCount: openFiles.length,
     dirtyEditorBufferCount,
-    browserTabCount: inputs.browserTabsByWorktree[worktree.worktreeId]?.length ?? 0,
+    browserTabCount: 0,
     changedFileCount: gitEntries ? gitEntries.length : null,
     branchStatus: getBranchStatus(inputs.remoteStatusesByWorktree[worktree.worktreeId]),
     reviewLabel,

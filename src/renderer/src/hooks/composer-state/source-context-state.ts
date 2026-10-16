@@ -2,21 +2,15 @@ import type { ComposerModel } from './composer-model'
 
 type ComposerSourceContextStateInput = Pick<
   ComposerModel,
-  | 'folderSourceRepos'
   | 'decisions'
   | 'initialLinkedWorkItem'
   | 'initialName'
   | 'initialPrompt'
   | 'initialTaskSourceContext'
-  | 'isProjectGroupTarget'
   | 'newWorkspaceDraft'
   | 'persistDraft'
   | 'onRepoIdOverrideChange'
   | 'projects'
-  | 'repoId'
-  | 'selectedProjectGroup'
-  | 'selectedProjectHostSetupId'
-  | 'selectedProjectId'
   | 'selectedRepo'
   | 'selectedRepoIsGit'
   | 'setInternalRepoId'
@@ -25,13 +19,10 @@ type ComposerSourceContextStateInput = Pick<
 
 import { useCallback, useMemo, useState } from 'react'
 import { getLinkedWorkItemProvider, type LinkedWorkItemSummary } from '@/lib/new-workspace'
-import { getLinearLinkedWorkItemBranchName } from '@/lib/linear-linked-work-item'
 import {
   type TaskSourceContext,
-  buildTaskSourceContextFromRepo,
-  normalizeTaskSourceContext
+  buildTaskSourceContextFromRepo
 } from '../../../../shared/task-source-context'
-import { resolveJiraSourceHostId } from '@/lib/jira-source-host'
 import {
   normalizeGitHubLinkedWorkItem,
   getGitHubLinkedWorkItemIdentity
@@ -39,21 +30,15 @@ import {
 
 export function useComposerSourceContextState(input: ComposerSourceContextStateInput) {
   const {
-    folderSourceRepos,
     decisions,
     initialLinkedWorkItem,
     initialName,
     initialPrompt,
     initialTaskSourceContext,
-    isProjectGroupTarget,
     newWorkspaceDraft,
     persistDraft,
     onRepoIdOverrideChange,
     projects,
-    repoId,
-    selectedProjectGroup,
-    selectedProjectHostSetupId,
-    selectedProjectId,
     selectedRepo,
     selectedRepoIsGit,
     setInternalRepoId,
@@ -103,19 +88,9 @@ export function useComposerSourceContextState(input: ComposerSourceContextStateI
     initialTaskSourceContext
   )
 
-  const initialLinkedWorkItemSeed =
-    normalizedInitialLinkedWorkItem &&
-    getLinkedWorkItemProvider(normalizedInitialLinkedWorkItem) === 'jira' &&
-    !initialLinkedTaskSourceContext
-      ? null
-      : normalizedInitialLinkedWorkItem
+  const initialLinkedWorkItemSeed = normalizedInitialLinkedWorkItem
 
-  const draftLinkedWorkItemSeed =
-    normalizedDraftLinkedWorkItem &&
-    getLinkedWorkItemProvider(normalizedDraftLinkedWorkItem) === 'jira' &&
-    !draftLinkedTaskSourceContext
-      ? null
-      : normalizedDraftLinkedWorkItem
+  const draftLinkedWorkItemSeed = normalizedDraftLinkedWorkItem
 
   const linkedWorkItemSeed = persistDraft
     ? (draftLinkedWorkItemSeed ?? initialLinkedWorkItemSeed)
@@ -126,8 +101,6 @@ export function useComposerSourceContextState(input: ComposerSourceContextStateI
   const [linkedWorkItem, setLinkedWorkItem] = useState<LinkedWorkItemSummary | null>(
     () => linkedWorkItemSeed
   )
-
-  const initialLinearBranchName = getLinearLinkedWorkItemBranchName(linkedWorkItemSeed)
 
   const [linkedTaskSourceContext, setLinkedTaskSourceContext] = useState<TaskSourceContext | null>(
     () => draftLinkedTaskSourceContext ?? initialLinkedTaskSourceContext
@@ -188,38 +161,6 @@ export function useComposerSourceContextState(input: ComposerSourceContextStateI
     })
   }, [projects, selectedRepo, selectedRepoIsGit, selectedWorkspaceTarget, taskSourceContext])
 
-  const smartNameJiraSourceContext = useMemo(() => {
-    if (!selectedProjectId) {
-      return null
-    }
-    const sourceRepo = isProjectGroupTarget
-      ? (folderSourceRepos.find((repo) => repo.id === repoId) ?? null)
-      : selectedRepo
-    return normalizeTaskSourceContext({
-      provider: 'jira',
-      projectId: selectedProjectGroup?.id ?? selectedProjectId,
-      hostId: resolveJiraSourceHostId({
-        workspaceHostId:
-          selectedWorkspaceTarget.status === 'ready' ? selectedWorkspaceTarget.target.hostId : null,
-        groupExecutionHostId: selectedProjectGroup?.executionHostId,
-        groupConnectionId: selectedProjectGroup?.connectionId
-      }),
-      projectHostSetupId: selectedProjectGroup ? null : selectedProjectHostSetupId,
-      repoId: sourceRepo?.id ?? null,
-      providerIdentity: null,
-      accountLabel: null
-    })
-  }, [
-    folderSourceRepos,
-    isProjectGroupTarget,
-    repoId,
-    selectedProjectGroup,
-    selectedProjectHostSetupId,
-    selectedProjectId,
-    selectedRepo,
-    selectedWorkspaceTarget
-  ])
-
   return {
     setRepoId,
     name,
@@ -240,12 +181,10 @@ export function useComposerSourceContextState(input: ComposerSourceContextStateI
     linkedWorkItemSeedIdentity,
     linkedWorkItem,
     setLinkedWorkItem,
-    initialLinearBranchName,
     linkedTaskSourceContext,
     setLinkedTaskSourceContext,
     derivedGitHubTaskSourceContext,
     taskSourceContext,
-    selectedRepoGitHubSourceContext,
-    smartNameJiraSourceContext
+    selectedRepoGitHubSourceContext
   }
 }

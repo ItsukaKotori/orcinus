@@ -16,7 +16,6 @@ import { I18nProvider } from './i18n/I18nProvider'
 import { translate } from './i18n/i18n'
 import { getOrCreateRendererRoot } from './lib/react-renderer-root'
 import { primeTerminalWebglAddon } from './lib/pane-manager/pane-webgl-renderer'
-import { installBrowserClientPageRenderer } from './components/browser-pane/browser-client-page-renderer-installation'
 import { installAdeBridge } from '../../bridge/install'
 import { registerHostShortcutFallback } from './lib/host-shortcut-fallback'
 
@@ -47,8 +46,6 @@ if (
 }
 
 applyDocumentTheme('system', { disableTransitions: false })
-const browserClientPageRenderer = installBrowserClientPageRenderer()
-import.meta.hot?.dispose(() => browserClientPageRenderer?.dispose())
 
 const rootElement = document.getElementById('root')
 if (!rootElement) {

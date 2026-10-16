@@ -7,7 +7,6 @@ import { gitHubPRToChecksPanelReview } from '@/components/right-sidebar/checks-p
 import { getWorktreeGitIdentityDisplay } from '@/lib/worktree-git-identity-display'
 import { useAppStore } from '@/store'
 import { getGitHubPRCacheKey } from '@/store/slices/github-cache-key'
-import { getHostedReviewCacheKey } from '@/store/slices/hosted-review-cache-identity'
 import { findWorktreeById } from '@/store/slices/worktree-helpers'
 import type { HostedReviewInfo } from '../../../../shared/hosted-review'
 import type { PRCheckDetail, PRCheckRunDetails } from '../../../../shared/github/check-types'
@@ -63,27 +62,7 @@ export function resolveHostedReviewForCheckRunDetailsFix(
     repo.executionHostId,
     true
   )
-  const hostedReviewCacheKey = getHostedReviewCacheKey(
-    repo.path,
-    branch,
-    settings,
-    repo.id,
-    repo.connectionId,
-    repo.executionHostId,
-    true
-  )
   const pr = prCacheKey ? (store.prCache[prCacheKey]?.data ?? null) : null
-  const hostedReview = hostedReviewCacheKey
-    ? (store.hostedReviewCache[hostedReviewCacheKey]?.data ?? null)
-    : null
-  const gitLabHostedReview = hostedReview?.provider === 'gitlab' ? hostedReview : null
-  const linkedGitLabMR = worktree.linkedGitLabMR ?? null
-  if (gitLabHostedReview) {
-    return gitLabHostedReview
-  }
-  if (linkedGitLabMR !== null) {
-    return null
-  }
   return pr && !isGitHubPRSuppressed(worktree, pr.number) ? gitHubPRToChecksPanelReview(pr) : null
 }
 
@@ -104,7 +83,7 @@ export function buildCheckRunDetailsFixBasePrompt(args: {
     ? { [getCheckDetailsPromptKey(resolvedCheck, 0)]: args.details }
     : undefined
   return buildFixBrokenChecksPrompt({
-    reviewKind: review.provider === 'gitlab' ? 'MR' : 'PR',
+    reviewKind: 'PR',
     reviewNumber: review.number,
     reviewTitle: review.title,
     reviewUrl: review.url,

@@ -5,12 +5,10 @@ import TerminalPane from '@/components/terminal-pane/TerminalPane'
 import { shouldDeferParkedPtyExitTabClose } from '@/components/terminal-pane/terminal-parked-tab-watchers'
 import { closeTerminalTab } from '@/components/terminal/terminal-tab-actions'
 import { isTerminalImeInputContextRefreshing } from '@/components/terminal-pane/terminal-ime-input-context-refresh'
-import { buildDuplicatedBrowserTabOptions } from '@/lib/duplicate-browser-tab-options'
 import { translate } from '@/i18n/i18n'
 import { useAppStore } from '@/store'
 import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../../shared/constants'
 import { isProvenProcessExit } from '../../../../shared/terminal-exit-cause'
-import { FloatingBrowserSlot } from './FloatingBrowserSlot'
 import { FloatingTerminalEmptyState } from './FloatingTerminalEmptyState'
 import { renderFloatingTerminalOrchestrationCard } from './FloatingTerminalOrchestrationCard'
 import { FloatingTerminalOrchestrationDialog } from './FloatingTerminalOrchestrationDialog'
@@ -45,37 +43,28 @@ export function renderFloatingTerminalPanelSurface({
   closeToRight,
   closeToLeft,
   createFloatingTerminalTab,
-  createFloatingBrowserTab,
   createFloatingMarkdownTab,
   openFloatingMarkdownTab,
   setTabCustomTitle,
   setTabColor,
   setTabPaneExpanded,
   editorItems,
-  browserItems,
   activeEditorUnifiedId,
-  activeBrowserId,
   activeTabType,
-  browserTabs,
-  createBrowserTab,
-  activeGroup,
   closeAllFiles,
   makePreviewFilePermanent,
   pinFile,
   tabBarOrder,
   toggleMaximized,
   hasVisibleFloatingTabs,
-  managedBrowserCreationEnabled,
   cwd,
   panelViewportSettled,
   tabs,
   parkedTerminalTabIds,
   terminalPaneRegistry,
-  activeBrowserTab,
   activeEditorFile,
   focusPanelForShortcuts,
   newTerminalShortcut,
-  newBrowserShortcut,
   newMarkdownShortcut,
   openMarkdownShortcut,
   closeShortcut,
@@ -155,7 +144,6 @@ export function renderFloatingTerminalPanelSurface({
               onCloseToLeft={closeToLeft}
               onNewTerminalTab={() => createFloatingTerminalTab()}
               onNewTerminalWithShell={createFloatingTerminalTab}
-              onNewBrowserTab={createFloatingBrowserTab}
               onNewFileTab={createFloatingMarkdownTab}
               onOpenFileTab={openFloatingMarkdownTab}
               newTabMenuOrder="markdown-first"
@@ -165,25 +153,10 @@ export function renderFloatingTerminalPanelSurface({
                 setTabPaneExpanded(tabId, expandedPaneByTabId[tabId] !== true)
               }
               editorFiles={editorItems}
-              browserTabs={browserItems}
               activeFileId={activeEditorUnifiedId}
-              activeBrowserTabId={activeBrowserId}
               activeTabType={activeTabType}
               onActivateFile={activateFloatingItem}
               onCloseFile={closeFloatingItemConfirmed}
-              onActivateBrowserTab={activateFloatingItem}
-              onCloseBrowserTab={closeFloatingItemConfirmed}
-              onDuplicateBrowserTab={(browserTabId) => {
-                const source = browserTabs.find((tab) => tab.id === browserTabId)
-                if (!source) {
-                  return
-                }
-                createBrowserTab(FLOATING_TERMINAL_WORKTREE_ID, source.url, {
-                  ...buildDuplicatedBrowserTabOptions(source),
-                  targetGroupId: activeGroup?.id,
-                  browserRuntimeEnvironmentId: null
-                })
-              }}
               onCloseAllFiles={closeAllFiles}
               onMakePreviewFilePermanent={makePreviewFilePermanent}
               onPinFile={pinFile}
@@ -246,18 +219,6 @@ export function renderFloatingTerminalPanelSurface({
                   )
                 })
             : null}
-          {browserTabs.map((tab) => {
-            const isActive = tab.id === activeBrowserTab?.id
-            return (
-              <div
-                key={tab.id}
-                className={isActive ? 'absolute inset-0 flex' : 'absolute inset-0 hidden'}
-                aria-hidden={!isActive}
-              >
-                <FloatingBrowserSlot browserTab={tab} isActive={open && isActive} />
-              </div>
-            )
-          })}
           {activeEditorFile ? (
             <div className="absolute inset-0 flex min-h-0 min-w-0">
               <Suspense
@@ -286,12 +247,9 @@ export function renderFloatingTerminalPanelSurface({
               onNewTerminal={() => createFloatingTerminalTab()}
               onNewMarkdown={createFloatingMarkdownTab}
               onOpenMarkdown={openFloatingMarkdownTab}
-              onNewBrowser={createFloatingBrowserTab}
-              showNewBrowser={managedBrowserCreationEnabled}
               onClose={() => onOpenChange(false)}
               onFocusPanel={focusPanelForShortcuts}
               newTerminalShortcut={newTerminalShortcut}
-              newBrowserShortcut={newBrowserShortcut}
               newMarkdownShortcut={newMarkdownShortcut}
               openMarkdownShortcut={openMarkdownShortcut}
               closeShortcut={closeShortcut}

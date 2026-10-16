@@ -299,12 +299,12 @@ describe('TabsSlice', () => {
               createdAt: 1
             },
             {
-              id: 'stale-browser',
-              entityId: 'missing-browser',
+              id: 'stale-terminal',
+              entityId: 'missing-terminal',
               groupId: staleGroupId,
               worktreeId: WT,
-              contentType: 'browser',
-              label: 'Missing browser',
+              contentType: 'terminal',
+              label: 'Missing terminal',
               customLabel: null,
               color: null,
               sortOrder: 1,
@@ -323,8 +323,8 @@ describe('TabsSlice', () => {
             {
               id: staleGroupId,
               worktreeId: WT,
-              activeTabId: 'stale-browser',
-              tabOrder: ['stale-browser']
+              activeTabId: 'stale-terminal',
+              tabOrder: ['stale-terminal']
             }
           ]
         },
@@ -352,7 +352,6 @@ describe('TabsSlice', () => {
           ]
         },
         ptyIdsByTabId: { 'terminal-1': ['pty-1'] },
-        browserTabsByWorktree: { [WT]: [] }
       })
 
       const result = store.getState().reconcileWorktreeTabModel(WT)

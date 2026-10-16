@@ -10,7 +10,6 @@ import type { ChecksPanelContextState } from './use-checks-panel-context-state'
 import type { ChecksPanelComposerState } from './use-checks-panel-composer-state'
 import type { ChecksPanelReviewState } from './use-checks-panel-review-state'
 import { checksPanelAsyncResultKey } from '../checks-panel-async-result-key'
-import { resolveGitLabMRDiscussionForChecks } from './gitlab-review-client'
 import { clearPendingPRCommentAiAck } from '../pr-comments-ai-launch-ack'
 import type { PRComment } from '../../../../../shared/github/comment-types'
 import { translate } from '@/i18n/i18n'
@@ -35,7 +34,7 @@ type ChecksPanelCommentResolutionInput = Pick<
 > &
   Pick<
     ChecksPanelContextState,
-    'activeGitLabReview' | 'activeReview' | 'pr' | 'prCacheKey' | 'prNumber'
+    'activeReview' | 'pr' | 'prCacheKey' | 'prNumber'
   > &
   Pick<ChecksPanelComposerState, 'isCurrentAsyncResult'> &
   Pick<ChecksPanelReviewState, 'sourceControlAiActionsVisible'>
@@ -43,7 +42,6 @@ type ChecksPanelCommentResolutionInput = Pick<
 export function useChecksPanelCommentResolution(model: ChecksPanelCommentResolutionInput) {
   const {
     activeConnectionId,
-    activeGitLabReview,
     activeReview,
     activeWorktreeId,
     branch,
@@ -74,29 +72,6 @@ export function useChecksPanelCommentResolution(model: ChecksPanelCommentResolut
       const notifyOnFailure = options.notifyOnFailure !== false
       const rollbackThread = (previousThreadComments: PRComment[]): void => {
         setComments((prev) => restorePRCommentThreadSnapshot(prev, previousThreadComments))
-      }
-      if (repo && activeGitLabReview) {
-        let previousThreadComments: PRComment[] = []
-        setComments((prev) => {
-          previousThreadComments = prev.filter((comment) => comment.threadId === threadId)
-          return markPRCommentThreadResolved(prev, threadId, resolve)
-        })
-        const result = await resolveGitLabMRDiscussionForChecks({
-          repoPath: repo.path,
-          repoId: repo.id,
-          settings,
-          iid: activeGitLabReview.number,
-          discussionId: threadId,
-          resolved: resolve
-        })
-        if (!result.ok) {
-          rollbackThread(previousThreadComments)
-          if (notifyOnFailure) {
-            toast.error(result.error)
-          }
-          return false
-        }
-        return true
       }
       if (!repo || !prNumber) {
         return false
@@ -133,19 +108,7 @@ export function useChecksPanelCommentResolution(model: ChecksPanelCommentResolut
       }
       return ok
     },
-    [
-      activeGitLabReview,
-      branch,
-      isCurrentAsyncResult,
-      pr?.headSha,
-      pr?.prRepo,
-      prCacheKey,
-      prNumber,
-      repo,
-      resolveReviewThread,
-      settings,
-      setComments
-    ]
+    [branch, isCurrentAsyncResult, pr?.headSha, pr?.prRepo, prCacheKey, prNumber, repo, resolveReviewThread, setComments]
   )
 
   const canTargetPRComments = Boolean(repo && prNumber && pr?.prRepo)
@@ -193,9 +156,7 @@ export function useChecksPanelCommentResolution(model: ChecksPanelCommentResolut
             ? 'Select a repository before launching an AI action.'
             : activeReview.provider === 'github' && !prNumber
               ? 'Open a GitHub PR before resolving comments.'
-              : activeReview.provider === 'gitlab' && !activeGitLabReview
-                ? 'Open a GitLab MR before resolving comments.'
-                : undefined
+              : undefined
   return {
     handleResolve,
     canTargetPRComments,

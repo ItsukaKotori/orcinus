@@ -14,9 +14,7 @@ import { createSettingsSlice } from './settings'
 import { createKeybindingsSlice } from './keybindings'
 import { createGitHubSlice } from './github'
 import { createHostedReviewSlice } from './hosted-review'
-import { createLinearSlice } from './linear'
 import { createPreflightSlice } from './preflight'
-import { createJiraSlice } from './jira'
 import { createEditorSlice } from './editor'
 import { createStatsSlice } from './stats'
 import { createMemorySlice } from './memory'
@@ -26,7 +24,6 @@ import {
   createCodexUsageSlice,
   createOpenCodeUsageSlice
 } from './usage-provider-slices'
-import { createBrowserSlice } from './browser'
 import { createRateLimitSlice } from './rate-limits'
 import { createSshSlice } from './ssh'
 import { createRuntimeEnvironmentSshSlice } from './runtime-environment-ssh'
@@ -70,9 +67,7 @@ export function createTestStore() {
     ...createKeybindingsSlice(...a),
     ...createGitHubSlice(...a),
     ...createHostedReviewSlice(...a),
-    ...createLinearSlice(...a),
     ...createPreflightSlice(...a),
-    ...createJiraSlice(...a),
     ...createEditorSlice(...a),
     ...createStatsSlice(...a),
     ...createMemorySlice(...a),
@@ -80,7 +75,6 @@ export function createTestStore() {
     ...createClaudeUsageSlice(...a),
     ...createCodexUsageSlice(...a),
     ...createOpenCodeUsageSlice(...a),
-    ...createBrowserSlice(...a),
     ...createRateLimitSlice(...a),
     ...createSshSlice(...a),
     ...createRuntimeEnvironmentSshSlice(...a),

@@ -23,7 +23,6 @@ export function isCachedMergedBranchPRCurrentForWorktree(
 
 type LinkedReviewNumbers = {
   linkedPR: number | null
-  linkedGitLabMR: number | null
   linkedBitbucketPR: number | null
   linkedAzureDevOpsPR: number | null
   linkedGiteaPR: number | null
@@ -54,8 +53,6 @@ function getLinkedReviewNumber(
   switch (provider) {
     case 'github':
       return links.linkedPR
-    case 'gitlab':
-      return links.linkedGitLabMR
     case 'bitbucket':
       return links.linkedBitbucketPR
     case 'azure-devops':
@@ -70,7 +67,7 @@ function makeLinkedReviewFallback(
   number: number,
   review: HostedReviewInfo | null | undefined
 ): WorktreeCardPrDisplay {
-  const label = provider === 'gitlab' ? 'MR' : 'PR'
+  const label = 'PR'
   return {
     provider,
     number,
@@ -83,7 +80,6 @@ function makeLinkedReviewFallback(
 export function getWorktreeCardPrDisplay(
   review: HostedReviewInfo | null | undefined,
   linkedPR: number | null,
-  linkedGitLabMR: number | null = null,
   linkedBitbucketPR: number | null = null,
   linkedAzureDevOpsPR: number | null = null,
   linkedGiteaPR: number | null = null,
@@ -91,14 +87,12 @@ export function getWorktreeCardPrDisplay(
 ): WorktreeCardPrDisplay | null {
   const links = {
     linkedPR,
-    linkedGitLabMR,
     linkedBitbucketPR,
     linkedAzureDevOpsPR,
     linkedGiteaPR
   }
   const hasLinkedReview =
     linkedPR !== null ||
-    linkedGitLabMR !== null ||
     linkedBitbucketPR !== null ||
     linkedAzureDevOpsPR !== null ||
     linkedGiteaPR !== null
@@ -117,19 +111,18 @@ export function getWorktreeCardPrDisplay(
     }
     const linkedReviewNumber = getLinkedReviewNumber(review.provider, links)
     if (linkedReviewNumber === null) {
-      if (review.provider !== 'github' && review.provider !== 'gitlab') {
+      if (review.provider !== 'github') {
         return review
       }
       // Why: GitHub refreshes retain a linked-style request hint; trust only the separately recorded branch-lookup provenance.
       if (
         !hasLinkedReview &&
-        review.provider === 'github' &&
         options.branchLookupGitHubPRNumber != null &&
         options.branchLookupGitHubPRNumber === review.number
       ) {
         return review
       }
-      // Why: GitHub/GitLab linked lookups can outlive the worktree metadata
+      // Why: GitHub linked lookups can outlive the worktree metadata
       // that requested them. A neutral branch lookup is safe to show unlinked.
       return options.reviewHintKey === '' ? review : null
     }
@@ -141,10 +134,6 @@ export function getWorktreeCardPrDisplay(
 
   if (linkedPR !== null) {
     return makeLinkedReviewFallback('github', linkedPR, review)
-  }
-
-  if (linkedGitLabMR !== null) {
-    return makeLinkedReviewFallback('gitlab', linkedGitLabMR, review)
   }
 
   if (linkedBitbucketPR !== null) {

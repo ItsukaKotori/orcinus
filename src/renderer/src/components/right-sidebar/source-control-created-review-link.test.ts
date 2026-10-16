@@ -5,7 +5,6 @@ import { resolveCreatedHostedReviewLink } from './source-control-created-review-
 describe('resolveCreatedHostedReviewLink', () => {
   it.each([
     ['github', { linkedPR: 42 }, { linkedGitHubPR: 42 }],
-    ['gitlab', { linkedGitLabMR: 42 }, { linkedGitLabMR: 42 }],
     ['bitbucket', { linkedBitbucketPR: 42 }, { linkedBitbucketPR: 42 }],
     ['azure-devops', { linkedAzureDevOpsPR: 42 }, { linkedAzureDevOpsPR: 42 }],
     ['gitea', { linkedGiteaPR: 42 }, { linkedGiteaPR: 42 }]

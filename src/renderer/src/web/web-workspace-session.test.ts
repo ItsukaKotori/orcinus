@@ -44,52 +44,7 @@ describe('sanitizeWebRuntimeWorkspaceSession', () => {
         ]
       },
       activeFileIdByWorktree: { 'repo-1::/worktree': '/worktree/README.md' },
-      browserTabsByWorktree: {
-        'repo-1::/worktree': [
-          {
-            id: 'stale-browser-workspace',
-            worktreeId: 'repo-1::/worktree',
-            activePageId: 'stale-page',
-            pageIds: ['stale-page'],
-            url: 'https://example.com/',
-            title: 'Example',
-            loading: false,
-            faviconUrl: null,
-            canGoBack: false,
-            canGoForward: false,
-            loadError: null,
-            createdAt: 1
-          }
-        ]
-      },
-      browserPagesByWorkspace: {
-        'stale-browser-workspace': [
-          {
-            id: 'stale-page',
-            workspaceId: 'stale-browser-workspace',
-            worktreeId: 'repo-1::/worktree',
-            url: 'https://example.com/',
-            title: 'Example',
-            loading: false,
-            faviconUrl: null,
-            canGoBack: false,
-            canGoForward: false,
-            loadError: null,
-            createdAt: 1
-          }
-        ]
-      },
-      activeBrowserTabIdByWorktree: { 'repo-1::/worktree': 'stale-browser-workspace' },
-      activeTabTypeByWorktree: { 'repo-1::/worktree': 'browser' },
-      browserUrlHistory: [
-        {
-          url: 'https://example.com/',
-          normalizedUrl: 'https://example.com/',
-          title: 'Example',
-          lastVisitedAt: 1,
-          visitCount: 1
-        }
-      ],
+      activeTabTypeByWorktree: { 'repo-1::/worktree': 'editor' },
       activeTabIdByWorktree: { 'repo-1::/worktree': 'stale-terminal-tab' },
       unifiedTabs: {
         'repo-1::/worktree': [
@@ -136,12 +91,8 @@ describe('sanitizeWebRuntimeWorkspaceSession', () => {
       tabsByWorktree: {},
       terminalLayoutsByTabId: {},
       openFilesByWorktree: {},
-      browserTabsByWorktree: {},
-      browserPagesByWorkspace: {},
-      activeBrowserTabIdByWorktree: {},
       activeFileIdByWorktree: {},
       activeTabTypeByWorktree: {},
-      browserUrlHistory: session.browserUrlHistory,
       lastVisitedAtByWorktreeId: session.lastVisitedAtByWorktreeId
     })
     expect(sanitized.remoteSessionIdsByTabId).toBeUndefined()

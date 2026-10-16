@@ -354,13 +354,6 @@ describe('createSettingsSlice runtime switching', () => {
           ptyIdsByLeafId: { 'pane:1': 'remote:legacy-terminal' }
         }
       },
-      browserTabsByWorktree: { 'repo-env-1::/env-1/repo': [{ id: 'browser-env-1' }] as never },
-      browserPagesByWorkspace: {
-        'browser-env-1': [{ id: 'page-env-1', worktreeId: 'repo-env-1::/env-1/repo' }] as never
-      },
-      remoteBrowserPageHandlesByPageId: {
-        'page-env-1': { environmentId: 'env-1', remotePageId: 'remote-page-1' }
-      },
       editorDrafts: { '/env-1/repo/stale.md': 'stale' },
       markdownViewMode: { '/env-1/repo/stale.md': 'rich' },
       editorViewMode: { '/env-1/repo/stale.md': 'changes' },
@@ -368,9 +361,7 @@ describe('createSettingsSlice runtime switching', () => {
       editorCursorLine: { '/env-1/repo/stale.md': 4 },
       showDotfilesByWorktree: { 'repo-env-1::/env-1/repo': false },
       gitIgnoredPathsByWorktree: { 'repo-env-1::/env-1/repo': ['dist/'] },
-      prCache: { '/env-1/repo::main': { data: null, fetchedAt: Date.now() } },
-      linearIssueCache: { 'LIN-1': { data: { id: 'LIN-1' } as never, fetchedAt: Date.now() } },
-      jiraIssueCache: { 'JIRA-1': { data: { key: 'JIRA-1' } as never, fetchedAt: Date.now() } }
+      prCache: { '/env-1/repo::main': { data: null, fetchedAt: Date.now() } }
     })
 
     await expect(store.getState().setActiveRuntimeEnvironmentPreference('env-2')).resolves.toBe(
@@ -433,17 +424,8 @@ describe('createSettingsSlice runtime switching', () => {
       'repo-env-1::/env-1/repo': ['dist/']
     })
     expect(store.getState().ptyIdsByTabId).toEqual({ tab1: ['remote:env-1@@terminal-a'] })
-    expect(store.getState().browserTabsByWorktree).toEqual({
-      'repo-env-1::/env-1/repo': [{ id: 'browser-env-1' }]
-    })
     expect(store.getState().prCache).toEqual({
       '/env-1/repo::main': expect.objectContaining({ data: null })
-    })
-    expect(store.getState().linearIssueCache).toEqual({
-      'LIN-1': expect.objectContaining({ data: { id: 'LIN-1' } })
-    })
-    expect(store.getState().jiraIssueCache).toEqual({
-      'JIRA-1': expect.objectContaining({ data: { key: 'JIRA-1' } })
     })
   })
 
@@ -488,13 +470,6 @@ describe('createSettingsSlice runtime switching', () => {
           ptyIdsByLeafId: { 'pane:1': 'remote:env-1@@terminal-a' }
         }
       },
-      browserTabsByWorktree: { 'repo-env-1::/env-1/repo': [{ id: 'browser-env-1' }] as never },
-      browserPagesByWorkspace: {
-        'browser-env-1': [{ id: 'page-env-1', worktreeId: 'repo-env-1::/env-1/repo' }] as never
-      },
-      remoteBrowserPageHandlesByPageId: {
-        'page-env-1': { environmentId: 'env-1', remotePageId: 'remote-page-1' }
-      }
     })
 
     await expect(store.getState().setActiveRuntimeEnvironmentPreference('env-2')).resolves.toBe(
@@ -510,9 +485,6 @@ describe('createSettingsSlice runtime switching', () => {
     )
     expect(store.getState().ptyIdsByTabId).toEqual({
       'web-terminal-host-tab-1': ['remote:env-1@@terminal-a']
-    })
-    expect(store.getState().remoteBrowserPageHandlesByPageId).toEqual({
-      'page-env-1': { environmentId: 'env-1', remotePageId: 'remote-page-1' }
     })
   })
 
@@ -556,12 +528,6 @@ describe('createSettingsSlice runtime switching', () => {
           ptyIdsByLeafId: { 'pane:1': 'remote:env-1@@terminal-a' }
         }
       },
-      browserPagesByWorkspace: {
-        'browser-env-1': [{ id: 'page-env-1', worktreeId: 'repo-env-1::/env-1/repo' }] as never
-      },
-      remoteBrowserPageHandlesByPageId: {
-        'page-env-1': { environmentId: 'env-1', remotePageId: 'remote-page-1' }
-      }
     })
 
     await expect(store.getState().setActiveRuntimeEnvironmentPreference('env-2')).resolves.toBe(
@@ -600,12 +566,6 @@ describe('createSettingsSlice runtime switching', () => {
         expandedLeafId: null,
         ptyIdsByLeafId: { 'pane:1': 'remote:env-1@@terminal-a' }
       }
-    })
-    expect(store.getState().browserPagesByWorkspace).toEqual({
-      'browser-env-1': [{ id: 'page-env-1', worktreeId: 'repo-env-1::/env-1/repo' }]
-    })
-    expect(store.getState().remoteBrowserPageHandlesByPageId).toEqual({
-      'page-env-1': { environmentId: 'env-1', remotePageId: 'remote-page-1' }
     })
   })
 

@@ -9,12 +9,6 @@ const EXPECTED_DIRECT_CALLBACK_METHODS = [
   'agentStatus.onMigrationUnsupportedClear',
   'agentStatus.onSet',
   'automations.onChanged',
-  'browser.onActivateView',
-  'browser.onCertificateFailureChanged',
-  'browser.onGuestLoadFailed',
-  'browser.onNavigationUpdate',
-  'browser.onOpenLinkInOrcaTab',
-  'browser.onPaneFocus',
   'gh.onPRRefreshEvent',
   'keybindings.onChanged',
   'orcaProfiles.onAuthStatusChanged',
@@ -22,9 +16,6 @@ const EXPECTED_DIRECT_CALLBACK_METHODS = [
   'rateLimits.onUpdate',
   'remoteWorkspace.onChanged',
   'repos.onChanged',
-  'runtime.onBrowserDriverChanged',
-  'runtime.onBrowserRemoteViewersChanged',
-  'runtime.onClientHostedBrowserRowsChanged',
   'runtime.onTerminalDriverChanged',
   'runtime.onTerminalFitOverrideChanged',
   'runtimeEnvironments.onStatusChanged',
@@ -36,18 +27,15 @@ const EXPECTED_DIRECT_CALLBACK_METHODS = [
   'ssh.onStateChanged',
   'ui.onActivateWorktree',
   'ui.onCloseActiveTab',
-  'ui.onCloseFloatingItem',
   'ui.onCloseSessionTab',
   'ui.onCloseTerminal',
   'ui.onCreateTerminal',
   'ui.onDeleteCurrentWorkspace',
   'ui.onFocusEditorTab',
   'ui.onFocusTerminal',
-  'ui.onFullscreenChanged',
   'ui.onJumpToTabIndex',
   'ui.onJumpToWorktreeIndex',
   'ui.onMoveSessionTab',
-  'ui.onNewBrowserTab',
   'ui.onNewMarkdownTab',
   'ui.onNewTerminalTab',
   'ui.onOpenDiffFromMobile',
@@ -58,9 +46,6 @@ const EXPECTED_DIRECT_CALLBACK_METHODS = [
   'ui.onOpenSettings',
   'ui.onOpenTasks',
   'ui.onRenameTerminal',
-  'ui.onRequestTabClose',
-  'ui.onRequestTabCreate',
-  'ui.onRequestTabSetProfile',
   'ui.onRequestTerminalCreate',
   'ui.onRequestTerminalTabMount',
   'ui.onResumeSleepingAgents',
@@ -145,21 +130,9 @@ const EXPECTED_CALLBACK_REGISTRATION_SEQUENCE = [
   'ui.onResumeSleepingAgents',
   'updater.onStatus',
   'updater.onClearDismissal',
-  'ui.onFullscreenChanged',
-  'browser.onGuestLoadFailed',
-  'browser.onCertificateFailureChanged',
-  'browser.onNavigationUpdate',
-  'browser.onActivateView',
-  'browser.onPaneFocus',
-  'browser.onOpenLinkInOrcaTab',
-  'ui.onNewBrowserTab',
   'ui.onNewMarkdownTab',
-  'ui.onRequestTabCreate',
-  'ui.onRequestTabSetProfile',
-  'ui.onRequestTabClose',
   'ui.onNewTerminalTab',
   'ui.onCloseActiveTab',
-  'ui.onCloseFloatingItem',
   'ui.onSelectFloatingIndex',
   'ui.onSwitchTab',
   'ui.onSwitchTabAcrossAllTypes',
@@ -181,10 +154,7 @@ const EXPECTED_CALLBACK_REGISTRATION_SEQUENCE = [
   'agentStatus.onMigrationUnsupportedClear',
   'agentStatus.onLegacyWorkerTerminalRecovery',
   'runtime.onTerminalFitOverrideChanged',
-  'runtime.onTerminalDriverChanged',
-  'runtime.onBrowserDriverChanged',
-  'runtime.onBrowserRemoteViewersChanged',
-  'runtime.onClientHostedBrowserRowsChanged'
+  'runtime.onTerminalDriverChanged'
 ] as const
 
 type ListenerRecord = {
@@ -406,26 +376,14 @@ describe('useIpcEvents App-lifetime lifecycle', () => {
       groupOrder([
         'runtime.onTerminalFitOverrideChanged',
         'runtime.onTerminalDriverChanged',
-        'runtime.onBrowserDriverChanged',
-        'runtime.onBrowserRemoteViewersChanged',
-        'runtime.onClientHostedBrowserRowsChanged',
-        'runtime.getClientHostedBrowserRows',
         'runtime.getTerminalFitOverrides',
-        'runtime.getTerminalDrivers',
-        'runtime.getBrowserDrivers',
-        'runtime.getBrowserRemoteViewerPages'
+        'runtime.getTerminalDrivers'
       ])
     ).toEqual([
       'runtime.onTerminalFitOverrideChanged',
       'runtime.onTerminalDriverChanged',
-      'runtime.onBrowserDriverChanged',
-      'runtime.onBrowserRemoteViewersChanged',
-      'runtime.onClientHostedBrowserRowsChanged',
-      'runtime.getClientHostedBrowserRows',
       'runtime.getTerminalFitOverrides',
-      'runtime.getTerminalDrivers',
-      'runtime.getBrowserDrivers',
-      'runtime.getBrowserRemoteViewerPages'
+      'runtime.getTerminalDrivers'
     ])
     expect(
       [...listeners.values()].every((records) => records.filter((item) => item.active).length === 1)
@@ -452,7 +410,7 @@ describe('useIpcEvents App-lifetime lifecycle', () => {
       cleanupOrder.indexOf('ipc.repos.onChanged')
     )
     expect(cleanupOrder.indexOf('directSsh.stop')).toBeGreaterThan(
-      cleanupOrder.lastIndexOf('ipc.runtime.onBrowserDriverChanged')
+      cleanupOrder.lastIndexOf('ipc.runtime.onTerminalDriverChanged')
     )
     expect(cleanupOrder.at(-1)).toBe('notifications.reset')
     expect([...listeners.values()].every((records) => records.every((item) => !item.active))).toBe(

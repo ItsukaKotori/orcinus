@@ -48,7 +48,6 @@ function seedTwoProjects(store: ReturnType<typeof createTestStore>): void {
     // Per-worktree maps that removeProject previously left behind.
     unifiedTabsByWorktree: { [W1]: [], [W2]: [] },
     groupsByWorktree: { [W1]: [], [W2]: [] },
-    browserTabsByWorktree: { [W1]: [], [W2]: [] },
     gitStatusHugeByWorktree: { [W1]: { limit: 1000 }, [W2]: { limit: 2000 } },
     everActivatedWorktreeIds: new Set([W1, W2]),
     localDetectedAgentIdsByContext: {
@@ -69,7 +68,6 @@ describe('removeProject purges per-worktree state (leak regression)', () => {
     // Removed project's worktree is purged from every map.
     expect(s.unifiedTabsByWorktree[W1]).toBeUndefined()
     expect(s.groupsByWorktree[W1]).toBeUndefined()
-    expect(s.browserTabsByWorktree[W1]).toBeUndefined()
     expect(s.gitStatusHugeByWorktree[W1]).toBeUndefined()
     expect(s.everActivatedWorktreeIds.has(W1)).toBe(false)
     expect(s.localDetectedAgentIdsByContext['repo-1:windows-host']).toBeUndefined()
@@ -85,7 +83,6 @@ describe('removeProject purges per-worktree state (leak regression)', () => {
     // Surviving project's worktree state is untouched (guard over-eviction).
     expect(s.unifiedTabsByWorktree[W2]).toBeDefined()
     expect(s.groupsByWorktree[W2]).toBeDefined()
-    expect(s.browserTabsByWorktree[W2]).toBeDefined()
     expect(s.gitStatusHugeByWorktree[W2]).toEqual({ limit: 2000 })
     expect(s.everActivatedWorktreeIds.has(W2)).toBe(true)
     expect(s.localDetectedAgentIdsByContext['repo-2:windows-host']).toEqual(['codex'])

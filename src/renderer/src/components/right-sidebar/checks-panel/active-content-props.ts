@@ -44,9 +44,7 @@ export type ChecksPanelActiveContentModel = Pick<
   Pick<
     ChecksPanelContextState,
     | 'activeConflictReview'
-    | 'activeGitLabReview'
     | 'activeReview'
-    | 'linkedGitLabMR'
     | 'pr'
     | 'prRefreshState'
     | 'setChecksPanelContentRef'
@@ -65,7 +63,7 @@ export type ChecksPanelActiveContentModel = Pick<
     | 'handleLaunchAborted'
     | 'handleLaunchAccepted'
   > &
-  Pick<ChecksPanelReviewDataState, 'getGitLabProjectRef' | 'handleLoadCheckDetails'> &
+  Pick<ChecksPanelReviewDataState, 'handleLoadCheckDetails'> &
   Pick<
     ChecksPanelCommentMutationState,
     | 'handleAddPRComment'

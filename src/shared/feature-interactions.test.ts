@@ -14,7 +14,7 @@ type MissingFeatureInteractionId = Exclude<FeatureInteractionId, DefinedFeatureI
 type ExtraFeatureInteractionId = Exclude<DefinedFeatureInteractionId, FeatureInteractionId>
 
 const REPO_ROOT = join(__dirname, '..', '..')
-const SOURCE_ROOTS = ['src/main', 'src/renderer/src', 'src/preload']
+const SOURCE_ROOTS = ['src/renderer/src', 'src/preload']
 const PRODUCTION_FILE_PATTERN = /\.(ts|tsx)$/
 const TEST_FILE_PATTERN = /(?:^|\.)(test|spec)\.(ts|tsx)$/
 const RUST_MAPPING_ROOTS = ['src-tauri/crates/ade-computer/src']
@@ -32,26 +32,16 @@ describe('feature interactions', () => {
     const expectedIds: FeatureInteractionId[] = [
       'cmd-j',
       'cmd-j-workspace-open',
-      'cmd-j-browser-page-open',
       'cmd-j-settings-open',
       'cmd-j-quick-action',
       'cmd-j-create-workspace',
-      'browser',
-      'browser-tab-created',
       'tasks',
       'github-tasks',
-      'gitlab-tasks',
-      'linear-tasks',
-      'jira-tasks',
       'automations',
       'automation-created',
       'automation-run',
-      'browser-annotations',
-      'browser-annotations-sent-to-agent',
-      'browser-grab',
       'markdown-file-created',
       'workspace-creation',
-      'agent-browser-setup',
       'agent-orchestration-setup',
       'ai-commit-generation',
       'ai-pr-generation',
@@ -59,11 +49,9 @@ describe('feature interactions', () => {
       'computer-use-setup',
       'computer-use',
       'codex-account-switching',
-      'cookie-import',
       'floating-workspace',
       'floating-workspace-hidden',
       'notifications',
-      'ports',
       'quick-commands',
       'resource-manager',
       'review-notes',
@@ -87,16 +75,16 @@ describe('feature interactions', () => {
     expect(
       normalizeFeatureInteractions({
         tasks: { firstInteractedAt: 100 },
-        browser: { firstInteractedAt: Number.NaN },
+        notifications: { firstInteractedAt: Number.NaN },
         automations: { firstInteractedAt: 200, interactionCount: 3 },
-        'browser-grab': { firstInteractedAt: 250, interactionCount: 0 },
+        'review-notes': { firstInteractedAt: 250, interactionCount: 0 },
         unknown: { firstInteractedAt: 200 },
         'usage-tracking': { firstInteractedAt: 300 }
       })
     ).toEqual({
       tasks: { firstInteractedAt: 100, interactionCount: 1 },
       automations: { firstInteractedAt: 200, interactionCount: 3 },
-      'browser-grab': { firstInteractedAt: 250, interactionCount: 1 },
+      'review-notes': { firstInteractedAt: 250, interactionCount: 1 },
       'usage-tracking': { firstInteractedAt: 300, interactionCount: 1 }
     })
   })
@@ -106,7 +94,10 @@ describe('feature interactions', () => {
       hasFeatureInteraction({ tasks: { firstInteractedAt: 100, interactionCount: 1 } }, 'tasks')
     ).toBe(true)
     expect(
-      hasFeatureInteraction({ tasks: { firstInteractedAt: 100, interactionCount: 1 } }, 'browser')
+      hasFeatureInteraction(
+        { tasks: { firstInteractedAt: 100, interactionCount: 1 } },
+        'notifications'
+      )
     ).toBe(false)
     expect(
       hasFeatureInteraction(

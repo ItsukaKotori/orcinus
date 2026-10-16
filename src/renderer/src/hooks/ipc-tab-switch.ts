@@ -54,7 +54,7 @@ function resolveCycleContext(): CycleContext | null {
 
 /**
  * Apply the next-tab selection to the store. Preserves the split-layout
- * disambiguation: `activateTab(tabId)` is required on the file/browser
+ * disambiguation: `activateTab(tabId)` is required on the file
  * branches so that when the same entity is open in multiple splits, the
  * correct tab instance is focused.
  */
@@ -67,12 +67,6 @@ export function activateCyclableTab(store: AppStoreState, next: TypeCyclableTab)
       store.activateTab?.(next.tabId)
     }
     store.setActiveTabType('terminal')
-  } else if (next.type === 'browser') {
-    store.setActiveBrowserTab(next.id)
-    if (next.tabId) {
-      store.activateTab?.(next.tabId)
-    }
-    store.setActiveTabType('browser')
   } else if (next.type === 'agent-session') {
     if (next.tabId) {
       store.activateTab?.(next.tabId)
@@ -115,7 +109,6 @@ export function handleSwitchTab(direction: number): boolean {
     activeTabType: store.activeTabType,
     activeTabId: store.activeTabId,
     activeFileId: store.activeFileId,
-    activeBrowserTabId: store.activeBrowserTabId,
     activeGroupTabId: groupTabIdInNav,
     direction
   })
@@ -146,7 +139,6 @@ export function handleSwitchTabAcrossAllTypes(direction: number): boolean {
     activeTabType: store.activeTabType,
     activeTabId: store.activeTabId,
     activeFileId: store.activeFileId,
-    activeBrowserTabId: store.activeBrowserTabId,
     activeGroupTabId: groupTabIdInNav,
     direction
   })
@@ -243,7 +235,7 @@ function shouldUseWorktreeTerminalFallback(
   }
 
   // An empty projection is only a hydration gap when the active group itself has no
-  // populated rows. If it has editor/browser rows and every runtime terminal is declared
+  // populated rows. If it has editor rows and every runtime terminal is declared
   // in another group, crossing that split would surprise the user.
   const hasPopulatedNonterminalRows = activeGroupNavTabs.some((tab) => tab.type !== 'terminal')
   const groupTerminalTabs = unifiedTerminalTabs.filter((tab) => tab.groupId === activeGroup.id)
@@ -352,14 +344,13 @@ export function handleSwitchTerminalTab(direction: number): boolean {
     store.activeTabType,
     store.activeTabId,
     store.activeFileId,
-    store.activeBrowserTabId,
     activeTab?.contentType === 'agent-session' ? activeTab.entityId : null
   )
-  // Why: when an editor/browser/structured tab is active, jump to the first terminal on
+  // Why: when an editor/structured tab is active, jump to the first terminal on
   // forward navigation instead of skipping to index 1.
   const idx = terminalTabs.findIndex((t) => t.id === currentId)
   // Why: only no-op when the sole terminal is already focused. With one terminal
-  // and an editor/browser active, the chord must still jump to that terminal -
+  // and an editor active, the chord must still jump to that terminal -
   // that is the whole point of the shortcut. The single-terminal-already-active
   // case is the only true no-op.
   if (terminalTabs.length === 1 && idx === 0) {

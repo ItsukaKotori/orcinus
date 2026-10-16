@@ -19,7 +19,6 @@ import {
   TerminalPaneMobileDriverPortals,
   TerminalPaneProcessExitPortals,
   TerminalPaneRecoveryPortals,
-  TerminalPaneSshReconnectPortals
 } from './TerminalPaneRuntimePortals'
 import type { TerminalPaneController } from './use-terminal-pane-controller'
 
@@ -186,7 +185,6 @@ export function TerminalPaneSurface({
           )
         : null}
       <TerminalPaneProcessExitPortals controller={controller} />
-      <TerminalPaneSshReconnectPortals controller={controller} />
       <DaemonActionDialog api={daemonActions} />
       {isActive && (
         <TerminalSessionStateSaveFailureDialog

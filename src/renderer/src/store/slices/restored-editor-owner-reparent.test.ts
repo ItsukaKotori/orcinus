@@ -300,7 +300,6 @@ describe('restored editor owner reparent', () => {
       activeRepoId: 'repo-b',
       activeWorkspaceExecutionHostId: 'local',
       activeTabId: 'target-terminal',
-      activeBrowserTabId: 'target-browser',
       activePendingCreationId: null,
       rightSidebarExplorerView: 'search',
       activeTabType: 'editor'

@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import type { HostedReviewInfo } from '../../../../shared/hosted-review'
 import type { PRInfo } from '../../../../shared/github/pull-request-types'
 import type { Repo } from '../../../../shared/repo-types'
 import type { Worktree } from '../../../../shared/worktree/types'
 import { getGitHubPRCacheKey } from '@/store/slices/github-cache-key'
-import { getHostedReviewCacheKey } from '@/store/slices/hosted-review-cache-identity'
 import { getRepoHostIdentity } from '@/store/slices/repo-host-identity'
 import { searchWorktrees } from '@/lib/worktree-palette-search'
 import { buildWorktreeChecksReviewIndex } from './worktree-checks-review-index'
@@ -52,19 +50,6 @@ function makePR(overrides: Partial<PRInfo> = {}): PRInfo {
   }
 }
 
-function makeGitLabReview(): HostedReviewInfo {
-  return {
-    provider: 'gitlab',
-    number: 17,
-    title: 'Search worktrees by merge request',
-    state: 'open',
-    url: 'https://gitlab.com/acme/orca/-/merge_requests/17',
-    status: 'pending',
-    updatedAt: '2026-07-12T00:00:00Z',
-    mergeable: 'UNKNOWN'
-  }
-}
-
 describe('buildWorktreeChecksReviewIndex', () => {
   it('reads the same host-scoped GitHub PR cache entry as Checks', () => {
     const key = getGitHubPRCacheKey(
@@ -92,41 +77,8 @@ describe('buildWorktreeChecksReviewIndex', () => {
     })
   })
 
-  it('uses the GitLab review selected by Checks instead of stale GitHub metadata', () => {
-    const gitLabWorktree = { ...worktree, linkedGitLabMR: 17 }
-    const prKey = getGitHubPRCacheKey(
-      repo.path,
-      repo.id,
-      'feature/search',
-      null,
-      repo.connectionId,
-      repo.executionHostId,
-      true
-    )
-    const reviewKey = getHostedReviewCacheKey(
-      repo.path,
-      'feature/search',
-      null,
-      repo.id,
-      repo.connectionId,
-      repo.executionHostId,
-      true
-    )
-    const gitLabReview = makeGitLabReview()
-
-    const reviews = buildWorktreeChecksReviewIndex({
-      worktrees: [gitLabWorktree],
-      repoByHostIdentity: new Map([[getRepoHostIdentity(repo), repo]]),
-      prCache: { [prKey]: { data: makePR(), fetchedAt: 1 } },
-      hostedReviewCache: { [reviewKey]: { data: gitLabReview, fetchedAt: 1 } },
-      settings: null
-    })
-
-    expect(reviews.get(gitLabWorktree)).toBe(gitLabReview)
-  })
-
   it('records when a non-GitHub link suppresses stale GitHub metadata before its review loads', () => {
-    const gitLabWorktree = { ...worktree, linkedGitLabMR: 17 }
+    const bitbucketWorktree = { ...worktree, linkedBitbucketPR: 17 }
     const prKey = getGitHubPRCacheKey(
       repo.path,
       repo.id,
@@ -138,15 +90,15 @@ describe('buildWorktreeChecksReviewIndex', () => {
     )
 
     const reviews = buildWorktreeChecksReviewIndex({
-      worktrees: [gitLabWorktree],
+      worktrees: [bitbucketWorktree],
       repoByHostIdentity: new Map([[getRepoHostIdentity(repo), repo]]),
       prCache: { [prKey]: { data: makePR(), fetchedAt: 1 } },
       hostedReviewCache: {},
       settings: null
     })
 
-    expect(reviews.has(gitLabWorktree)).toBe(true)
-    expect(reviews.get(gitLabWorktree)).toBeNull()
+    expect(reviews.has(bitbucketWorktree)).toBe(true)
+    expect(reviews.get(bitbucketWorktree)).toBeNull()
   })
 
   it('records matching GitHub suppression so Cmd+J cannot fall back to stale PR evidence', () => {

@@ -8,12 +8,10 @@ export function persistAgentLaunchTabOrder(worktreeId: string, tabId: string): v
   const editorIds = store.openFiles
     .filter((file) => file.worktreeId === worktreeId)
     .map((file) => file.id)
-  const browserIds = (store.browserTabsByWorktree?.[worktreeId] ?? []).map((tab) => tab.id)
   const order = reconcileTabOrder(
     store.tabBarOrderByWorktree[worktreeId],
     terminalIds,
-    editorIds,
-    browserIds
+    editorIds
   ).filter((id) => id !== tabId)
   order.push(tabId)
   store.setTabBarOrder(worktreeId, order)

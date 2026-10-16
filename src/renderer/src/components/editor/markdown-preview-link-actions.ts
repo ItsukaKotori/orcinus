@@ -9,11 +9,7 @@ import { statRuntimePath } from '@/runtime/runtime-file-client'
 import { useAppStore } from '@/store'
 import { relativePathInsideRoot } from '../../../../shared/cross-platform-path'
 import { resolveMarkdownLinkTarget } from './markdown-internal-links'
-import {
-  fileUrlToAbsolutePath,
-  resolveMarkdownPreviewHref,
-  resolveMarkdownPreviewHttpOpenOptions
-} from './markdown-preview-links'
+import { fileUrlToAbsolutePath, resolveMarkdownPreviewHref } from './markdown-preview-links'
 import {
   cancelMarkdownPreviewEditorRevealFrames,
   parseMarkdownPreviewLineTarget,
@@ -64,7 +60,6 @@ export async function handleMarkdownPreviewLinkClick({
   event.preventDefault()
 
   const {
-    isMac,
     sourceOwner,
     sourceRoutingWorktreeId,
     sourceConnectionId,
@@ -96,10 +91,7 @@ export async function handleMarkdownPreviewLinkClick({
   }
 
   if (target.protocol === 'http:' || target.protocol === 'https:') {
-    openHttpLink(
-      target.toString(),
-      resolveMarkdownPreviewHttpOpenOptions(event, isMac, sourceRoutingWorktreeId, sourceOwner)
-    )
+    openHttpLink(target.toString(), { sourceOwner })
     return
   }
 

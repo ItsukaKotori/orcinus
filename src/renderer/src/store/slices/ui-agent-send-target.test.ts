@@ -235,9 +235,9 @@ describe('createUISlice agent send target mode', () => {
     store.getState().openAgentSendPopoverTargetMode({
       id: 'send-1',
       worktreeId,
-      source: 'browser-annotations',
+      source: 'diff-notes',
       prompt: 'Review this',
-      label: 'Browser annotations',
+      label: 'Diff notes',
       launchSource: 'notes_send'
     })
 
@@ -312,9 +312,9 @@ describe('createUISlice agent send target mode', () => {
     store.getState().openAgentSendPopoverTargetMode({
       id: 'send-1',
       worktreeId,
-      source: 'browser-annotations',
+      source: 'diff-notes',
       prompt: 'Review this',
-      label: 'Browser annotations',
+      label: 'Diff notes',
       launchSource: 'notes_send'
     })
 

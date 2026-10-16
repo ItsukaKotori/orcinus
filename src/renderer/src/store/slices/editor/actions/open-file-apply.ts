@@ -254,11 +254,10 @@ export function applyOpenFileToState(
     const currentOrder = s.tabBarOrderByWorktree[worktreeId] ?? []
     const terminalIds = (s.tabsByWorktree?.[worktreeId] ?? []).map((t) => t.id)
     const editorFileIds = s.openFiles.filter((f) => f.worktreeId === worktreeId).map((f) => f.id)
-    const browserIds = (s.browserTabsByWorktree?.[worktreeId] ?? []).map((t) => t.id)
-    const allExisting = new Set([...terminalIds, ...editorFileIds, ...browserIds])
+    const allExisting = new Set([...terminalIds, ...editorFileIds])
     const base = currentOrder.filter((eid) => allExisting.has(eid))
     const inBase = new Set(base)
-    for (const eid of [...terminalIds, ...editorFileIds, ...browserIds]) {
+    for (const eid of [...terminalIds, ...editorFileIds]) {
       if (!inBase.has(eid)) {
         base.push(eid)
         inBase.add(eid)

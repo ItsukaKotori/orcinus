@@ -1,13 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getDefaultSettings } from '../../../../shared/constants'
 import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
-import type { LinearIssue } from '../../../../shared/linear/issue-types'
-import type { GitLabWorkItem } from '../../../../shared/gitlab-types'
 import type { Worktree } from '../../../../shared/worktree/types'
 import type { FeatureInteractionState } from '../../../../shared/feature-interactions'
 import type { TaskSourceContext } from '../../../../shared/task-source-context'
 import type { AppState } from '../types'
-import type { JiraIssue } from '../../../../shared/jira-types'
 import { createUIStore, makePersistedUI } from './ui-slice-test-harness'
 
 const mocks = vi.hoisted(() => ({
@@ -72,60 +69,6 @@ function makeGitHubWorkItem(overrides: Partial<GitHubWorkItem> = {}): GitHubWork
   }
 }
 
-function makeLinearIssue(overrides: Partial<LinearIssue> = {}): LinearIssue {
-  return {
-    id: 'lin-1',
-    identifier: 'ORC-1',
-    title: 'Fix task flow',
-    url: 'https://linear.app/orca/issue/ORC-1/fix-task-flow',
-    state: { name: 'Todo', type: 'unstarted', color: '#999' },
-    priority: 0,
-    estimate: null,
-    assignee: null,
-    labels: [],
-    labelIds: [],
-    team: { id: 'team-1', name: 'Orca', key: 'ORC' },
-    workspaceId: 'workspace-1',
-    updatedAt: '2026-05-30T00:00:00.000Z',
-    createdAt: '2026-05-30T00:00:00.000Z',
-    ...overrides
-  } as LinearIssue
-}
-
-function makeJiraIssue(overrides: Partial<JiraIssue> = {}): JiraIssue {
-  return {
-    id: 'ORC-1',
-    key: 'ORC-1',
-    title: 'Fix task source context',
-    url: 'https://example.atlassian.net/browse/ORC-1',
-    siteId: 'site-1',
-    siteName: 'Example Jira',
-    project: { id: '10000', key: 'ORC', name: 'Orca', siteId: 'site-1' },
-    issueType: { id: '10001', name: 'Bug' },
-    status: { id: '1', name: 'Todo', categoryKey: 'new', categoryName: 'To Do' },
-    labels: [],
-    createdAt: '2026-05-30T00:00:00.000Z',
-    updatedAt: '2026-05-30T00:00:00.000Z',
-    ...overrides
-  }
-}
-
-function makeGitLabWorkItem(overrides: Partial<GitLabWorkItem> = {}): GitLabWorkItem {
-  return {
-    id: 'mr-12',
-    type: 'mr',
-    number: 12,
-    title: 'Fix runner routing',
-    state: 'opened',
-    url: 'https://gitlab.com/acme/repo/-/merge_requests/12',
-    labels: [],
-    updatedAt: '2026-05-30T00:00:00.000Z',
-    author: 'gitlab-user',
-    repoId: 'repo-1',
-    ...overrides
-  }
-}
-
 describe('createUISlice settings navigation', () => {
   it('accepts a host-qualified settings target', () => {
     const store = createUIStore()
@@ -147,45 +90,6 @@ describe('createUISlice settings navigation', () => {
       openSettingsTarget({ pane: 'repo', repoId: 'repo-1', hostId: 'invalid' })
     ).toThrowError('openSettingsTarget received an invalid navigation target')
     expect(store.getState().settingsNavigationTarget).toBeNull()
-  })
-
-  it('prefetches the restored default task source when provider settings drifted', () => {
-    const store = createUIStore()
-    const prefetchWorkItems = vi.fn()
-    const prefetchLinearIssues = vi.fn()
-
-    store.setState({
-      repos: [
-        {
-          id: 'repo-1',
-          path: '/repo',
-          displayName: 'Repo',
-          badgeColor: 'blue',
-          addedAt: 1,
-          kind: 'git'
-        }
-      ],
-      settings: {
-        visibleTaskProviders: ['linear'],
-        defaultTaskSource: 'github',
-        defaultTaskViewPreset: 'all'
-      } as unknown as AppState['settings'],
-      linearStatus: { connected: true } as AppState['linearStatus'],
-      preflightStatus: { glab: { installed: false } } as AppState['preflightStatus'],
-      prefetchWorkItems,
-      prefetchLinearIssues
-    } as unknown as Partial<AppState>)
-
-    store.getState().openTaskPage()
-
-    expect(prefetchWorkItems).toHaveBeenCalledWith(
-      'repo-1',
-      '/repo',
-      expect.any(Number),
-      'is:issue is:open',
-      { sourceContext: null }
-    )
-    expect(prefetchLinearIssues).not.toHaveBeenCalled()
   })
 
   it('prefetches direct GitHub task opens with their source context', () => {
@@ -233,39 +137,6 @@ describe('createUISlice settings navigation', () => {
       '/repo',
       expect.any(Number),
       'is:issue is:open',
-      { sourceContext }
-    )
-  })
-
-  it('prefetches direct Linear task opens with their source context', () => {
-    const store = createUIStore()
-    const prefetchLinearIssues = vi.fn()
-    const linearIssue = makeLinearIssue()
-    const sourceContext: TaskSourceContext = {
-      kind: 'task-source',
-      provider: 'linear',
-      projectId: 'project-1',
-      hostId: 'runtime:remote-server',
-      providerIdentity: { provider: 'linear', workspaceId: 'workspace-1' }
-    }
-
-    store.setState({
-      settings: {
-        visibleTaskProviders: ['linear'],
-        defaultTaskSource: 'linear'
-      } as unknown as AppState['settings'],
-      linearStatus: { connected: true } as AppState['linearStatus'],
-      prefetchLinearIssues
-    } as unknown as Partial<AppState>)
-
-    store.getState().openTaskPage({
-      taskSource: 'linear',
-      openLinearIssue: linearIssue,
-      openLinearSourceContext: sourceContext
-    })
-
-    expect(prefetchLinearIssues).toHaveBeenCalledWith(
-      { kind: 'list', filter: 'all', limit: expect.any(Number) },
       { sourceContext }
     )
   })
@@ -357,17 +228,11 @@ describe('createUISlice page navigation history', () => {
     const recordFeatureInteraction = vi.fn()
     store.setState({ recordFeatureInteraction } as Partial<AppState>)
     const workItem = makeGitHubWorkItem()
-    const linearIssue = makeLinearIssue()
-    const jiraIssue = makeJiraIssue()
 
     store.getState().openTaskPage({ taskSource: 'github', openGitHubWorkItem: workItem })
-    store.getState().openTaskPage({ taskSource: 'linear', openLinearIssue: linearIssue })
-    store.getState().openTaskPage({ taskSource: 'jira', openJiraIssue: jiraIssue })
 
     expect(recordFeatureInteraction).toHaveBeenCalledWith('tasks')
     expect(recordFeatureInteraction).toHaveBeenCalledWith('github-tasks')
-    expect(recordFeatureInteraction).toHaveBeenCalledWith('linear-tasks')
-    expect(recordFeatureInteraction).toHaveBeenCalledWith('jira-tasks')
   })
 
   it('preserves GitHub task detail source context in navigation history', () => {
@@ -398,91 +263,11 @@ describe('createUISlice page navigation history', () => {
     })
   })
 
-  it('preserves Linear task detail source context in navigation history', () => {
-    const store = createUIStore()
-    const linearIssue = makeLinearIssue()
-    const sourceContext: TaskSourceContext = {
-      kind: 'task-source',
-      provider: 'linear',
-      projectId: 'project-1',
-      hostId: 'runtime:remote-server',
-      providerIdentity: { provider: 'linear', workspaceId: 'workspace-1' }
-    }
-
-    store.getState().openTaskPage({
-      taskSource: 'linear',
-      openLinearIssue: linearIssue,
-      openLinearSourceContext: sourceContext
-    })
-
-    expect(store.getState().worktreeNavHistory.at(-1)).toEqual({
-      kind: 'task-detail',
-      source: 'linear',
-      issue: linearIssue,
-      sourceContext
-    })
-  })
-
-  it('preserves GitLab task detail source context in navigation history', () => {
-    const store = createUIStore()
-    const workItem = makeGitLabWorkItem({ repoId: 'repo-remote' })
-    const sourceContext: TaskSourceContext = {
-      kind: 'task-source',
-      provider: 'gitlab',
-      projectId: 'project-1',
-      hostId: 'ssh:devbox',
-      projectHostSetupId: 'setup-1',
-      repoId: 'repo-remote',
-      providerIdentity: { provider: 'gitlab', projectId: '1234' }
-    }
-
-    store.getState().openTaskPage({
-      taskSource: 'gitlab',
-      openGitLabWorkItem: workItem,
-      openGitLabSourceContext: sourceContext
-    })
-
-    expect(store.getState().worktreeNavHistory.at(-1)).toEqual({
-      kind: 'task-detail',
-      source: 'gitlab',
-      workItem,
-      sourceContext
-    })
-  })
-
-  it('preserves Jira task detail source context in navigation history', () => {
-    const store = createUIStore()
-    const issue = makeJiraIssue()
-    const sourceContext: TaskSourceContext = {
-      kind: 'task-source',
-      provider: 'jira',
-      projectId: 'project-1',
-      hostId: 'runtime:remote-server',
-      providerIdentity: { provider: 'jira', siteId: 'site-1' },
-      accountLabel: 'Example Jira'
-    }
-
-    store.getState().openTaskPage({
-      taskSource: 'jira',
-      openJiraIssue: issue,
-      openJiraSourceContext: sourceContext
-    })
-
-    expect(store.getState().worktreeNavHistory.at(-1)).toEqual({
-      kind: 'task-detail',
-      source: 'jira',
-      issue,
-      sourceContext
-    })
-  })
-
   it('can suppress the Tasks surface interaction for in-page provider navigation', () => {
     const store = createUIStore()
     const recordFeatureInteraction = vi.fn()
     store.setState({ recordFeatureInteraction } as Partial<AppState>)
     const workItem = makeGitHubWorkItem()
-    const linearIssue = makeLinearIssue()
-    const jiraIssue = makeJiraIssue()
 
     store
       .getState()
@@ -490,23 +275,9 @@ describe('createUISlice page navigation history', () => {
         { taskSource: 'github', openGitHubWorkItem: workItem },
         { recordTasksInteraction: false }
       )
-    store
-      .getState()
-      .openTaskPage(
-        { taskSource: 'linear', openLinearIssue: linearIssue },
-        { recordTasksInteraction: false }
-      )
-    store
-      .getState()
-      .openTaskPage(
-        { taskSource: 'jira', openJiraIssue: jiraIssue },
-        { recordTasksInteraction: false }
-      )
 
     expect(recordFeatureInteraction).not.toHaveBeenCalledWith('tasks')
     expect(recordFeatureInteraction).toHaveBeenCalledWith('github-tasks')
-    expect(recordFeatureInteraction).toHaveBeenCalledWith('linear-tasks')
-    expect(recordFeatureInteraction).toHaveBeenCalledWith('jira-tasks')
   })
 
   it('skips the whole Tasks detail stack on close', () => {
@@ -516,7 +287,7 @@ describe('createUISlice page navigation history', () => {
 
     store.getState().recordWorktreeVisit('a')
     store.getState().openTaskPage({ taskSource: 'github', openGitHubWorkItem: workItem })
-    store.getState().openTaskPage({ taskSource: 'linear' })
+    store.getState().openTaskPage({ taskSource: 'github' })
     expect(store.getState().worktreeNavHistory).toEqual([
       'a',
       'tasks',

@@ -8,8 +8,6 @@ import { forgetDetachedHeadAutoDerivedDisplayName } from '../metadata/detached-h
 export type WorktreePurgeDoomedIds = {
   doomedTabIds: Set<string>
   doomedPtyIds: Set<string>
-  doomedBrowserWorkspaceIds: Set<string>
-  doomedPageIds: Set<string>
   removedFileIds: Set<string>
 }
 
@@ -37,8 +35,6 @@ export function collectWorktreePurgeDoomedIds(
       addDoomedPtyId(ptyId)
     }
   }
-  const doomedBrowserWorkspaceIds = new Set<string>()
-  const doomedPageIds = new Set<string>()
   const removedFileIds = new Set<string>()
   for (const id of worktreeIdSet) {
     for (const tab of s.tabsByWorktree[id] ?? []) {
@@ -47,9 +43,6 @@ export function collectWorktreePurgeDoomedIds(
       addDoomedTabPtyIds(tab.id, tab.ptyId)
       // Why: a removed worktree's panes are gone, so drop their hibernation output epochs from the module-level map (a future pane mints a fresh leafId at epoch 0).
       forgetAgentHibernationTabOutput(tab.id)
-    }
-    for (const workspace of s.browserTabsByWorktree[id] ?? []) {
-      doomedBrowserWorkspaceIds.add(workspace.id)
     }
     // Why: drop the auto-derived detached-HEAD display name so the module-level map doesn't retain removed worktrees for the session.
     forgetDetachedHeadAutoDerivedDisplayName(id)
@@ -60,12 +53,6 @@ export function collectWorktreePurgeDoomedIds(
   // Why: pane-authority aliases outlive the store maps they route to, so a purged
   // tab would leave a permanent entry pointing at a pane that no longer exists.
   forgetAgentPaneAuthorityAliasesByTabIds(doomedTabIds)
-  // Why: per-page browser maps are keyed by page id, so collect every page of a doomed workspace to evict here (the authoritative-scan reconcile skips closeBrowserTab's cleanup).
-  for (const workspaceId of doomedBrowserWorkspaceIds) {
-    for (const page of s.browserPagesByWorkspace[workspaceId] ?? []) {
-      doomedPageIds.add(page.id)
-    }
-  }
   for (const file of s.openFiles) {
     if (worktreeIdSet.has(file.worktreeId)) {
       removedFileIds.add(file.id)
@@ -77,8 +64,6 @@ export function collectWorktreePurgeDoomedIds(
   return {
     doomedTabIds,
     doomedPtyIds,
-    doomedBrowserWorkspaceIds,
-    doomedPageIds,
     removedFileIds
   }
 }

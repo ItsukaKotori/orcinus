@@ -142,14 +142,12 @@ export function createWebRuntimeSessionModule(): Pick<
   FloatingTerminalPanelMocks,
   | 'activateWebRuntimeSessionTab'
   | 'closeWebRuntimeSessionTab'
-  | 'createWebRuntimeSessionBrowserTab'
   | 'createWebRuntimeSessionTerminal'
   | 'isWebRuntimeSessionActive'
 > {
   return {
     activateWebRuntimeSessionTab: mocks.activateWebRuntimeSessionTab,
     closeWebRuntimeSessionTab: mocks.closeWebRuntimeSessionTab,
-    createWebRuntimeSessionBrowserTab: mocks.createWebRuntimeSessionBrowserTab,
     createWebRuntimeSessionTerminal: mocks.createWebRuntimeSessionTerminal,
     isWebRuntimeSessionActive: mocks.isWebRuntimeSessionActive
   }

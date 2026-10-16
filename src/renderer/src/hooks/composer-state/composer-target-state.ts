@@ -53,21 +53,15 @@ export function useComposerTargetState(
     worktreesByRepo: composerTargetStore.worktreesByRepo
   })
   const sourceContextState = useComposerSourceContextState({
-    folderSourceRepos: runtimeTargetSelection.folderSourceRepos,
     decisions: composerTargetStore.decisions,
     initialLinkedWorkItem: composerTargetStore.initialLinkedWorkItem,
     initialName: composerTargetStore.initialName,
     initialPrompt: composerTargetStore.initialPrompt,
     initialTaskSourceContext: composerTargetStore.initialTaskSourceContext,
-    isProjectGroupTarget: runtimeTargetSelection.isProjectGroupTarget,
     newWorkspaceDraft: composerTargetStore.newWorkspaceDraft,
     persistDraft: composerTargetStore.persistDraft,
     onRepoIdOverrideChange: composerTargetStore.onRepoIdOverrideChange,
     projects: composerTargetStore.projects,
-    repoId: initialTargetState.repoId,
-    selectedProjectGroup: initialTargetState.selectedProjectGroup,
-    selectedProjectHostSetupId: runtimeTargetSelection.selectedProjectHostSetupId,
-    selectedProjectId: runtimeTargetSelection.selectedProjectId,
     selectedRepo: runtimeTargetSelection.selectedRepo,
     selectedRepoIsGit: runtimeTargetSelection.selectedRepoIsGit,
     setInternalRepoId: initialTargetState.setInternalRepoId,
@@ -75,11 +69,8 @@ export function useComposerTargetState(
   })
   const workspaceIdentityState = useWorkspaceIdentityState({
     initialBaseBranch: composerTargetStore.initialBaseBranch,
-    initialLinearBranchName: sourceContextState.initialLinearBranchName,
     initialLinkedWorkItem: composerTargetStore.initialLinkedWorkItem,
-    linkedWorkItem: sourceContextState.linkedWorkItem,
     linkedWorkItemSeedIdentity: sourceContextState.linkedWorkItemSeedIdentity,
-    name: sourceContextState.name,
     newWorkspaceDraft: composerTargetStore.newWorkspaceDraft,
     persistDraft: composerTargetStore.persistDraft,
     selectedRepoConnectionId: runtimeTargetSelection.selectedRepoConnectionId,

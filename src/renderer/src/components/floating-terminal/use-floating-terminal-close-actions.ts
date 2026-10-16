@@ -7,7 +7,6 @@ import {
 } from '@/lib/floating-workspace-terminal-actions'
 import { armFloatingPanelReclaimIntent } from '@/lib/floating-workspace-focus-reclaim'
 import { useAppStore } from '@/store'
-import { destroyWorkspaceWebviews } from '@/store/slices/browser-webview-cleanup'
 import { guardPinnedTabClose, resolvePinnedTabLabel } from '@/store/pinned-tab-close-guard'
 import type { Tab } from '../../../../shared/tab-types'
 import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../../shared/constants'
@@ -18,7 +17,7 @@ import type { FloatingTerminalPanelStoreState } from './use-floating-terminal-pa
 
 type FloatingTerminalCloseActionsInput = Pick<
   FloatingTerminalPanelStoreState,
-  'closeTab' | 'closeBrowserTab' | 'closeFile' | 'closeUnifiedTab'
+  'closeTab' | 'closeFile' | 'closeUnifiedTab'
 > &
   Pick<FloatingTerminalPanelItems, 'activeGroup' | 'groupTabs'> &
   Pick<FloatingTerminalPanelLocalState, 'pendingReclaimArmByFileIdRef'> &
@@ -26,7 +25,6 @@ type FloatingTerminalCloseActionsInput = Pick<
 
 export function useFloatingTerminalCloseActions({
   closeTab,
-  closeBrowserTab,
   closeFile,
   closeUnifiedTab,
   activeGroup,
@@ -52,9 +50,6 @@ export function useFloatingTerminalCloseActions({
       for (const item of items) {
         if (item.contentType === 'terminal') {
           closeTab(item.entityId, { reason: 'cleanup' })
-        } else if (item.contentType === 'browser') {
-          destroyWorkspaceWebviews(state.browserPagesByWorkspace, item.entityId)
-          closeBrowserTab(item.entityId)
         } else {
           const file = state.openFiles.find((candidate) => candidate.id === item.entityId)
           if (file?.isDirty) {
@@ -68,7 +63,7 @@ export function useFloatingTerminalCloseActions({
         queueEditorCloseRequests(dirtyEditorFileIds)
       }
     },
-    [activeGroup, closeBrowserTab, closeFile, closeTab, closeUnifiedTab, queueEditorCloseRequests]
+    [activeGroup, closeFile, closeTab, closeUnifiedTab, queueEditorCloseRequests]
   )
 
   const closeFloatingItemConfirmed = useCallback(
@@ -98,30 +93,18 @@ export function useFloatingTerminalCloseActions({
         tabLabel: resolvePinnedTabLabel(state, FLOATING_TERMINAL_WORKTREE_ID, visibleId),
         onClose: () => {
           const latest = useAppStore.getState()
-          if (item.contentType === 'browser') {
-            destroyWorkspaceWebviews(latest.browserPagesByWorkspace, item.entityId)
-            closeBrowserTab(item.entityId)
-          } else {
-            const file = latest.openFiles.find((candidate) => candidate.id === item.entityId)
-            if (file?.isDirty) {
-              pendingReclaimArmByFileIdRef.current.set(item.entityId, armIfEmptying)
-              queueEditorCloseRequests([item.entityId])
-              return
-            }
-            closeFile(item.entityId)
+          const file = latest.openFiles.find((candidate) => candidate.id === item.entityId)
+          if (file?.isDirty) {
+            pendingReclaimArmByFileIdRef.current.set(item.entityId, armIfEmptying)
+            queueEditorCloseRequests([item.entityId])
+            return
           }
+          closeFile(item.entityId)
           armIfEmptying()
         }
       })
     },
-    [
-      closeBrowserTab,
-      closeFile,
-      closeUnifiedTab,
-      groupTabs,
-      pendingReclaimArmByFileIdRef,
-      queueEditorCloseRequests
-    ]
+    [closeFile, closeUnifiedTab, groupTabs, pendingReclaimArmByFileIdRef, queueEditorCloseRequests]
   )
 
   const closeOthers = useCallback(
@@ -197,10 +180,7 @@ export function useFloatingTerminalCloseActions({
       : (state.unifiedTabsByWorktree[FLOATING_TERMINAL_WORKTREE_ID] ?? [])
     closeFloatingItems(
       currentGroupTabs
-        .filter(
-          (tab) =>
-            tab.contentType !== 'terminal' && tab.contentType !== 'browser' && !tab.isPinned
-        )
+        .filter((tab) => tab.contentType !== 'terminal' && !tab.isPinned)
         .map((tab) => tab.id)
     )
   }, [activeGroup, closeFloatingItems])

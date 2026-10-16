@@ -42,7 +42,6 @@ const STATUS_LABELS: Record<WorktreeStatus, string> = {
 
 export function getWorktreeStatus(
   tabs: readonly Pick<TerminalTab, 'id' | 'title' | 'launchAgent'>[],
-  browserTabs: readonly { id: string }[],
   ptyIdsByTabId: Record<string, string[]>,
   runtimePaneTitlesByTabId: Record<string, Record<number, string>> = {},
   options: WorktreeStatusHeuristicOptions = {}
@@ -63,8 +62,7 @@ export function getWorktreeStatus(
   if (options.liveAgentStatus === 'monitoring') {
     return 'monitoring'
   }
-  if (liveTabs.length > 0 || browserTabs.length > 0) {
-    // Why: browser-only worktrees (no PTY) are still active from the user's point of view.
+  if (liveTabs.length > 0) {
     return 'active'
   }
   return 'inactive'
@@ -171,7 +169,6 @@ export function getWorktreeStatusLabel(status: WorktreeStatus): string {
  */
 export function resolveWorktreeStatus(args: {
   tabs: readonly Pick<TerminalTab, 'id' | 'title' | 'launchAgent'>[]
-  browserTabs: readonly { id: string }[]
   ptyIdsByTabId: Record<string, string[]>
   runtimePaneTitlesByTabId?: Record<string, Record<number, string>>
   agentStatusPaneIdsByTabId?: Record<string, ReadonlySet<string>>
@@ -187,7 +184,6 @@ export function resolveWorktreeStatus(args: {
 }): WorktreeStatus {
   const heuristic = getWorktreeStatus(
     args.tabs,
-    args.browserTabs,
     args.ptyIdsByTabId,
     args.runtimePaneTitlesByTabId ?? {},
     {

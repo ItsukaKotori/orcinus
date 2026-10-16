@@ -106,20 +106,7 @@ describe('closeTerminalTab kill-all routing', () => {
     expect(state.createTab).not.toHaveBeenCalled()
   })
 
-  it('routes the last active terminal to an existing browser when no editor exists', () => {
-    const state = baseState({
-      browserTabsByWorktree: { wt: [{ id: 'browser-1' }] }
-    })
-    getStateMock.mockReturnValue(state)
 
-    closeTerminalTab('terminal-1', { force: true })
-
-    expect(state.setActiveBrowserTab).toHaveBeenCalledWith('browser-1')
-    expect(state.setActiveTabType).toHaveBeenCalledWith('browser')
-    expect(state.closeBrowserTab).not.toHaveBeenCalled()
-    expect(state.setActiveWorktree).not.toHaveBeenCalled()
-    expect(state.createTab).not.toHaveBeenCalled()
-  })
 
   it('deactivates after the last active terminal when no other content exists', () => {
     const state = baseState()

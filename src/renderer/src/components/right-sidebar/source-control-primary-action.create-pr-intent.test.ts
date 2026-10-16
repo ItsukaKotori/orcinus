@@ -252,14 +252,14 @@ describe('resolvePrimaryAction Create PR intent', () => {
     })
   })
 
-  it('returns Create MR intent with provider copy for a GitLab dirty branch', () => {
+  it('returns Create PR intent with provider copy for a Bitbucket dirty branch', () => {
     const result = resolvePrimaryAction(
       inputs({
         stagedCount: 1,
         hasMessage: true,
         upstreamStatus: upstreamInSync,
         hostedReviewCreation: {
-          provider: 'gitlab',
+          provider: 'bitbucket',
           review: null,
           canCreate: false,
           blockedReason: 'dirty',
@@ -269,11 +269,11 @@ describe('resolvePrimaryAction Create PR intent', () => {
       })
     )
     expect(result.kind).toBe('create_pr_intent')
-    expect(result.label).toBe('Create MR')
-    expect(result.title).toBe('Prepare this branch and create a merge request')
+    expect(result.label).toBe('Create PR')
+    expect(result.title).toBe('Prepare this branch and create a pull request')
   })
 
-  it('routes a GitLab dirty branch header through Create MR intent', () => {
+  it('routes a Bitbucket dirty branch header through Create PR intent', () => {
     expect(
       resolveCreatePrHeaderAction(
         inputs({
@@ -281,7 +281,7 @@ describe('resolvePrimaryAction Create PR intent', () => {
           hasMessage: true,
           upstreamStatus: upstreamInSync,
           hostedReviewCreation: {
-            provider: 'gitlab',
+            provider: 'bitbucket',
             review: null,
             canCreate: false,
             blockedReason: 'dirty',
@@ -292,17 +292,17 @@ describe('resolvePrimaryAction Create PR intent', () => {
       )
     ).toEqual({
       kind: 'create_pr_intent',
-      label: 'Create MR',
-      title: 'Prepare this branch and create a merge request',
+      label: 'Create PR',
+      title: 'Prepare this branch and create a pull request',
       disabled: false
     })
   })
 
-  it('keeps in-flight Create MR intent copy provider-aware', () => {
+  it('keeps in-flight Create PR intent copy provider-aware', () => {
     const input = inputs({
       isPrIntentInFlight: true,
       hostedReviewCreation: {
-        provider: 'gitlab',
+        provider: 'bitbucket',
         review: null,
         canCreate: false,
         blockedReason: 'dirty',
@@ -313,13 +313,13 @@ describe('resolvePrimaryAction Create PR intent', () => {
 
     expect(resolvePrimaryAction(input)).toEqual({
       kind: 'create_pr_intent',
-      label: 'Create MR',
+      label: 'Create PR',
       title: 'Preparing branch for review…',
       disabled: true
     })
     expect(resolveCreatePrHeaderAction(input)).toEqual({
       kind: 'create_pr_intent',
-      label: 'Create MR',
+      label: 'Create PR',
       title: 'Preparing branch for review…',
       disabled: true
     })
@@ -509,12 +509,12 @@ describe('resolvePrimaryAction Create PR intent', () => {
     })
   })
 
-  it('keeps stale Create MR eligibility disabled with provider-aware loading copy', () => {
+  it('keeps stale Create PR eligibility disabled with provider-aware loading copy', () => {
     expect(
       resolveCreatePrHeaderAction(
         inputs({
           hostedReviewCreation: {
-            provider: 'gitlab',
+            provider: 'bitbucket',
             review: null,
             canCreate: true,
             blockedReason: null,
@@ -526,8 +526,8 @@ describe('resolvePrimaryAction Create PR intent', () => {
       )
     ).toEqual({
       kind: 'create_pr',
-      label: 'Create MR',
-      title: 'Checking whether this branch can create a merge request…',
+      label: 'Create PR',
+      title: 'Checking whether this branch can create a pull request…',
       disabled: true
     })
   })

@@ -7,14 +7,12 @@ export function reconcileTabOrder(
   storedOrder: string[] | undefined,
   terminalIds: string[],
   editorIds: string[],
-  browserIds: string[] = [],
   agentSessionIds: string[] = [],
   pluginIds: string[] = []
 ): string[] {
   const validIds = new Set([
     ...terminalIds,
     ...editorIds,
-    ...browserIds,
     ...agentSessionIds,
     ...pluginIds
   ])
@@ -22,7 +20,7 @@ export function reconcileTabOrder(
   // codepaths (drop/move/reorder/hydrate). A stale or racey write can leave
   // the same tab id twice in the list, which surfaces as React's "two
   // children with the same key" warning when TabBar maps items to
-  // SortableTab/EditorFileTab/BrowserTab. Dedupe at the render boundary so
+  // SortableTab/EditorFileTab. Dedupe at the render boundary so
   // the UI never produces duplicate keys regardless of store-side bugs.
   const result: string[] = []
   const inResult = new Set<string>()
@@ -32,7 +30,7 @@ export function reconcileTabOrder(
       inResult.add(id)
     }
   }
-  for (const id of [...terminalIds, ...editorIds, ...browserIds, ...agentSessionIds, ...pluginIds]) {
+  for (const id of [...terminalIds, ...editorIds, ...agentSessionIds, ...pluginIds]) {
     if (!inResult.has(id)) {
       result.push(id)
       inResult.add(id)

@@ -7,7 +7,6 @@ import { useTargetChangeActions } from './target-change-actions'
 import { useProjectTargetActions } from './project-target-actions'
 import { useBranchStartPointActions } from './branch-start-point-actions'
 import { useGitHubProviderSelection } from './github-provider-selection'
-import { useGitLabProviderSelection } from './gitlab-provider-selection'
 import { useWorkItemSourceActions } from './work-item-source-actions'
 import { useIssueSourceActions } from './issue-source-actions'
 import { useComposerNavigationActions } from './composer-navigation-actions'
@@ -36,8 +35,6 @@ export function useComposerSourceState(
     setLinkDirectItem: target.asyncComposerState.setLinkDirectItem,
     setLinkPopoverOpen: target.asyncComposerState.setLinkPopoverOpen,
     setLinkQuery: target.asyncComposerState.setLinkQuery,
-    setLinkedGitLabIssue: target.workspaceIdentityState.setLinkedGitLabIssue,
-    setLinkedGitLabMR: target.workspaceIdentityState.setLinkedGitLabMR,
     setLinkedIssue: target.workspaceIdentityState.setLinkedIssue,
     setLinkedPR: target.workspaceIdentityState.setLinkedPR,
     setLinkedTaskSourceContext: target.sourceContextState.setLinkedTaskSourceContext,
@@ -76,8 +73,6 @@ export function useComposerSourceState(
       target.workspaceIdentityState.setBranchNameOverridePreservesNameEdits,
     setCompareBaseRef: target.workspaceIdentityState.setCompareBaseRef,
     setForkPushWarning: target.workspaceIdentityState.setForkPushWarning,
-    setLinkedGitLabIssue: target.workspaceIdentityState.setLinkedGitLabIssue,
-    setLinkedGitLabMR: target.workspaceIdentityState.setLinkedGitLabMR,
     setLinkedIssue: target.workspaceIdentityState.setLinkedIssue,
     setLinkedPR: target.workspaceIdentityState.setLinkedPR,
     setLinkedTaskSourceContext: target.sourceContextState.setLinkedTaskSourceContext,
@@ -112,8 +107,6 @@ export function useComposerSourceState(
     setBranchNameOverridePreservesNameEdits:
       target.workspaceIdentityState.setBranchNameOverridePreservesNameEdits,
     setForkPushWarning: target.workspaceIdentityState.setForkPushWarning,
-    setLinkedGitLabIssue: target.workspaceIdentityState.setLinkedGitLabIssue,
-    setLinkedGitLabMR: target.workspaceIdentityState.setLinkedGitLabMR,
     setLinkedIssue: target.workspaceIdentityState.setLinkedIssue,
     setLinkedPR: target.workspaceIdentityState.setLinkedPR,
     setLinkedTaskSourceContext: target.sourceContextState.setLinkedTaskSourceContext,
@@ -132,7 +125,6 @@ export function useComposerSourceState(
     workspaceHostScope: target.composerTargetStore.workspaceHostScope
   })
   const branchStartPointActions = useBranchStartPointActions({
-    applyLinkedGitLabWorkItem: sourceIdentityActions.applyLinkedGitLabWorkItem,
     applyLinkedWorkItem: external.githubSourceApplication.applyLinkedWorkItem,
     branchAutoNameRef: target.asyncComposerState.branchAutoNameRef,
     handleRepoChange: targetChangeActions.handleRepoChange,
@@ -187,32 +179,6 @@ export function useComposerSourceState(
     smartGitHubPrStartPointSelectionRef:
       target.asyncComposerState.smartGitHubPrStartPointSelectionRef
   })
-  const gitlabProviderSelection = useGitLabProviderSelection({
-    applyLinkedGitLabWorkItem: sourceIdentityActions.applyLinkedGitLabWorkItem,
-    branchAutoNameRef: target.asyncComposerState.branchAutoNameRef,
-    eligibleRepos: target.composerTargetStore.eligibleRepos,
-    handleBaseBranchMrSelect: branchStartPointActions.handleBaseBranchMrSelect,
-    isProjectGroupTarget: target.runtimeTargetSelection.isProjectGroupTarget,
-    lastAutoNameRef: target.asyncComposerState.lastAutoNameRef,
-    name: target.sourceContextState.name,
-    selectedRepo: target.runtimeTargetSelection.selectedRepo,
-    setBaseBranch: target.workspaceIdentityState.setBaseBranch,
-    setBranchNameOverride: target.workspaceIdentityState.setBranchNameOverride,
-    setBranchNameOverridePreservesNameEdits:
-      target.workspaceIdentityState.setBranchNameOverridePreservesNameEdits,
-    setCompareBaseRef: target.workspaceIdentityState.setCompareBaseRef,
-    setForkPushWarning: target.workspaceIdentityState.setForkPushWarning,
-    setLinkedGitLabIssue: target.workspaceIdentityState.setLinkedGitLabIssue,
-    setLinkedGitLabMR: target.workspaceIdentityState.setLinkedGitLabMR,
-    setLinkedIssue: target.workspaceIdentityState.setLinkedIssue,
-    setLinkedPR: target.workspaceIdentityState.setLinkedPR,
-    setLinkedTaskSourceContext: target.sourceContextState.setLinkedTaskSourceContext,
-    setLinkedWorkItem: target.sourceContextState.setLinkedWorkItem,
-    setName: target.sourceContextState.setName,
-    setPushTarget: target.workspaceIdentityState.setPushTarget,
-    setStartFromResetHint: target.workspaceIdentityState.setStartFromResetHint,
-    settings: target.composerTargetStore.settings
-  })
   const workItemSourceActions = useWorkItemSourceActions({
     branchAutoNameRef: target.asyncComposerState.branchAutoNameRef,
     lastAutoNameRef: target.asyncComposerState.lastAutoNameRef,
@@ -249,8 +215,6 @@ export function useComposerSourceState(
       target.workspaceIdentityState.setBranchNameOverridePreservesNameEdits,
     setCompareBaseRef: target.workspaceIdentityState.setCompareBaseRef,
     setForkPushWarning: target.workspaceIdentityState.setForkPushWarning,
-    setLinkedGitLabIssue: target.workspaceIdentityState.setLinkedGitLabIssue,
-    setLinkedGitLabMR: target.workspaceIdentityState.setLinkedGitLabMR,
     setLinkedIssue: target.workspaceIdentityState.setLinkedIssue,
     setLinkedPR: target.workspaceIdentityState.setLinkedPR,
     setLinkedTaskSourceContext: target.sourceContextState.setLinkedTaskSourceContext,
@@ -272,9 +236,6 @@ export function useComposerSourceState(
     openSettingsPage: target.composerTargetStore.openSettingsPage,
     openSettingsTarget: target.composerTargetStore.openSettingsTarget,
     selectedProjectGroup: target.initialTargetState.selectedProjectGroup,
-    setActiveRuntimeEnvironmentPreference:
-      target.composerTargetStore.setActiveRuntimeEnvironmentPreference,
-    smartNameJiraSourceContext: target.sourceContextState.smartNameJiraSourceContext,
     sourceIntentBlocksCreate: target.workspaceIdentityState.sourceIntentBlocksCreate,
     updateWorktreeMeta: target.composerTargetStore.updateWorktreeMeta
   })
@@ -285,7 +246,6 @@ export function useComposerSourceState(
     projectTargetActions,
     branchStartPointActions,
     githubProviderSelection,
-    gitlabProviderSelection,
     workItemSourceActions,
     issueSourceActions,
     composerNavigationActions

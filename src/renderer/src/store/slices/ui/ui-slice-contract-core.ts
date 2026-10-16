@@ -1,9 +1,6 @@
 import type { StateCreator } from 'zustand'
 import type { AppState } from '../../types'
 import type { GitHubWorkItem } from '../../../../../shared/github/work-item-types'
-import type { GitLabWorkItem } from '../../../../../shared/gitlab-types'
-import type { JiraIssue } from '../../../../../shared/jira-types'
-import type { LinearIssue } from '../../../../../shared/linear/issue-types'
 import type { TaskProvider } from '../../../../../shared/task-providers'
 import type { TuiAgent } from '../../../../../shared/tui-agent'
 import type { LaunchSource } from '../../../../../shared/launch-context'
@@ -29,7 +26,7 @@ export type AgentSendPopoverTargetMode = {
   id: string
   instanceId: string
   worktreeId: string
-  source: 'diff-notes' | 'browser-annotations'
+  source: 'diff-notes'
   prompt: string
   label: string
   launchSource: LaunchSource
@@ -58,12 +55,6 @@ export type TaskPageData = {
   openGitHubWorkItem?: GitHubWorkItem
   openGitHubSourceContext?: TaskSourceContext | null
   openGitHubInitialTab?: 'conversation' | 'checks' | 'files'
-  openGitLabWorkItem?: GitLabWorkItem
-  openGitLabSourceContext?: TaskSourceContext | null
-  openLinearIssue?: LinearIssue
-  openLinearSourceContext?: TaskSourceContext | null
-  openJiraIssue?: JiraIssue
-  openJiraSourceContext?: TaskSourceContext | null
 }
 
 export type NewWorkspaceDraft = {

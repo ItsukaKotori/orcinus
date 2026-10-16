@@ -4,7 +4,6 @@ import { useHostedReviewStackParent } from '../useHostedReviewStackParent'
 import { shouldHydratePullRequestGenerationResult } from '@/store/slices/pull-request-generation'
 import {
   checksPanelAsyncResultKey,
-  checksPanelHostedReviewAsyncResultKey,
   shouldCommitChecksPanelAsyncResult
 } from '../checks-panel-async-result-key'
 import type { ChecksPanelContextState } from './use-checks-panel-context-state'
@@ -18,7 +17,7 @@ import {
 
 type ChecksPanelComposerStateInput = Pick<
   ChecksPanelContextState,
-  'activeGitLabReview' | 'hostedReviewCacheKey' | 'pr' | 'prCacheKey' | 'prNumber'
+  'pr' | 'prCacheKey' | 'prNumber'
 > &
   Pick<
     ChecksPanelReviewState,
@@ -58,7 +57,6 @@ type ChecksPanelComposerStateInput = Pick<
 
 export function useChecksPanelComposerState(model: ChecksPanelComposerStateInput) {
   const {
-    activeGitLabReview,
     activePullRequestGenerationKey,
     activePullRequestGenerationRecord,
     activePullRequestGenerationSeedRestoreKey,
@@ -72,7 +70,6 @@ export function useChecksPanelComposerState(model: ChecksPanelComposerStateInput
     handleCancelGeneratePullRequestFieldsForActive,
     handleGeneratePullRequestFieldsForActive,
     handlePullRequestGenerationSeedRestored,
-    hostedReviewCacheKey,
     hostedReviewCreateProvider,
     hostedReviewCreation,
     isCreatingPr,
@@ -212,15 +209,7 @@ export function useChecksPanelComposerState(model: ChecksPanelComposerStateInput
   )
   const stateRequestKey =
     repo && branch
-      ? activeGitLabReview
-        ? checksPanelHostedReviewAsyncResultKey(
-            hostedReviewCacheKey,
-            branch,
-            activeGitLabReview.provider,
-            activeGitLabReview.number,
-            activeGitLabReview.headSha
-          )
-        : checksPanelAsyncResultKey(prCacheKey, branch, prNumber, pr?.prRepo, pr?.headSha)
+      ? checksPanelAsyncResultKey(prCacheKey, branch, prNumber, pr?.prRepo, pr?.headSha)
       : ''
   asyncResultKeyRef.current = stateRequestKey
 

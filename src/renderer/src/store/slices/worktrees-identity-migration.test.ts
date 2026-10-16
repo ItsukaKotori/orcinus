@@ -74,38 +74,6 @@ describe('migrateWorktreeIdentity', () => {
         [OLD]: { resultOwner: { worktreeId: OLD, runtimeEnvironmentId: 'runtime-a' } }
       },
       activeTabIdByWorktree: { [OLD]: 'tab1' },
-      browserTabsByWorktree: {
-        [OLD]: [
-          {
-            id: 'browser1',
-            worktreeId: OLD,
-            docLocation: {
-              kind: 'workspace-doc',
-              worktreeId: OLD,
-              filePath: '/ws/cunner/docs/report.html'
-            }
-          }
-        ]
-      },
-      browserPagesByWorkspace: {
-        browser1: [
-          {
-            id: 'page1',
-            worktreeId: OLD,
-            docLocation: {
-              kind: 'workspace-doc',
-              worktreeId: OLD,
-              filePath: '/ws/cunner/docs/report.html'
-            }
-          }
-        ]
-      },
-      recentlyClosedBrowserTabsByWorktree: {
-        [OLD]: [
-          { workspace: { id: 'closed-browser', worktreeId: OLD }, pages: [{ worktreeId: OLD }] }
-        ]
-      },
-      recentlyClosedBrowserPagesByWorkspace: { browser1: [{ id: 'closed-page', worktreeId: OLD }] },
       unifiedTabsByWorktree: { [OLD]: [{ id: 'unified1', worktreeId: OLD }] },
       groupsByWorktree: { [OLD]: [{ id: 'group1', worktreeId: OLD }] },
       gitStatusByWorktree: { [OLD]: [{ path: 'a.ts' }] },
@@ -149,21 +117,6 @@ describe('migrateWorktreeIdentity', () => {
     expect(s.activeWorkspaceKey).toBe(worktreeWorkspaceKey(NEW))
     expect(s.renamingWorktreeId).toEqual({ worktreeId: NEW, rowKey: 'all:old' })
     expect(s.activeTabIdByWorktree[NEW]).toBe('tab1')
-    expect(s.browserTabsByWorktree[NEW]?.[0]?.worktreeId).toBe(NEW)
-    expect(s.browserPagesByWorkspace.browser1?.[0]?.worktreeId).toBe(NEW)
-    expect(s.browserTabsByWorktree[NEW]?.[0]?.docLocation).toEqual({
-      kind: 'workspace-doc',
-      worktreeId: NEW,
-      filePath: '/ws/worktree-creation-spinner/docs/report.html'
-    })
-    expect(s.browserPagesByWorkspace.browser1?.[0]?.docLocation).toEqual({
-      kind: 'workspace-doc',
-      worktreeId: NEW,
-      filePath: '/ws/worktree-creation-spinner/docs/report.html'
-    })
-    expect(s.recentlyClosedBrowserTabsByWorktree[NEW]?.[0]?.workspace.worktreeId).toBe(NEW)
-    expect(s.recentlyClosedBrowserTabsByWorktree[NEW]?.[0]?.pages[0]?.worktreeId).toBe(NEW)
-    expect(s.recentlyClosedBrowserPagesByWorkspace.browser1?.[0]?.worktreeId).toBe(NEW)
     expect(s.unifiedTabsByWorktree[NEW]?.[0]?.worktreeId).toBe(NEW)
     expect(s.groupsByWorktree[NEW]?.[0]?.worktreeId).toBe(NEW)
     expect(s.gitStatusByWorktree[NEW]).toEqual([{ path: 'a.ts' }])

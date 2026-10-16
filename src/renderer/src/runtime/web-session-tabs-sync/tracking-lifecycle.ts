@@ -25,11 +25,6 @@ import {
 import { clearWebSessionReorderIntentsForWorktree } from '../web-session-reorder-intent'
 import { clearWebSessionCloseIntentsForWorktree } from '../web-session-close-intent'
 import {
-  clearWebSessionBrowserPlacementsForWorktree,
-  clearWebSessionBrowserPlacementsForEnvironment,
-  resetWebSessionBrowserPlacementsForTests
-} from '../web-session-browser-placement'
-import {
   clearWebSessionTerminalPlacementsForWorktree,
   clearWebSessionTerminalPlacementsForEnvironment
 } from '../web-session-terminal-placement'
@@ -90,7 +85,6 @@ export function resetWebSessionTabsSnapshotFreshnessForTests(): void {
   hostSessionTabIdByLocalKey.clear()
   hostSessionTabMappingKeysByEnvironmentAndWorktree.clear()
   hostWorkingClientBoundaryByPaneKey.clear()
-  resetWebSessionBrowserPlacementsForTests()
 }
 
 export function _getWebSessionTabsTrackingCountsForTest(): {
@@ -138,7 +132,6 @@ export function clearWebSessionTabsTrackingForWorktree(
   clearWebSessionReorderIntentsForWorktree({ environmentId }, worktreeId)
   clearWebSessionCloseIntentsForWorktree({ environmentId }, worktreeId)
   clearHostSessionTabIdMappings(environmentId, worktreeId)
-  clearWebSessionBrowserPlacementsForWorktree(environmentId, worktreeId)
   clearWebSessionTerminalPlacementsForWorktree(environmentId, worktreeId)
 }
 
@@ -209,7 +202,6 @@ export function clearWebSessionTabsTrackingForEnvironment(environmentId: string)
     }
     hostSessionTabMappingKeysByEnvironmentAndWorktree.delete(trimmedEnvironmentId)
   }
-  clearWebSessionBrowserPlacementsForEnvironment(trimmedEnvironmentId)
   clearWebSessionTerminalPlacementsForEnvironment(trimmedEnvironmentId)
   clearHostSessionMirrorHydration(trimmedEnvironmentId)
   clearAllWebRuntimeWakeTerminalRespawn()

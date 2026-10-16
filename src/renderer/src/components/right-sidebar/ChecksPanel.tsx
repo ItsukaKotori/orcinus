@@ -1,5 +1,5 @@
 import React from 'react'
-import { Ellipsis, GitMerge, Link, RefreshCw } from 'lucide-react'
+import { Ellipsis, Link, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -8,12 +8,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import {
-  getTerminalUrlOrcaBrowserHint,
-  getTerminalUrlSystemBrowserHint
-} from '../terminal-pane/terminal-link-open-hints'
 import type { ChecksPanelReview } from './checks-panel-review'
-import type { ChecksPanelHostedReviewModifierDestination } from './checks-panel-hosted-review-click-routing'
 import { translate } from '@/i18n/i18n'
 import { PullRequestIcon, prStateColor } from './checks-panel/check-presentation'
 import { useChecksPanelControllerState } from './checks-panel/use-checks-panel-controller-state'
@@ -43,7 +38,6 @@ type ChecksPanelReviewHeaderProps = {
   review: ChecksPanelReview
   isRefreshing: boolean
   canUnlinkReview: boolean
-  modifierHintDestination: ChecksPanelHostedReviewModifierDestination
   onRefresh: () => void
   onOpenReview: (event: React.MouseEvent<HTMLButtonElement>) => void
   onUnlinkReview: () => void
@@ -54,31 +48,24 @@ export function ChecksPanelReviewHeader({
   review,
   isRefreshing,
   canUnlinkReview,
-  modifierHintDestination,
   onRefresh,
   onOpenReview,
   onUnlinkReview,
   onLinkAnotherReview
 }: ChecksPanelReviewHeaderProps): React.JSX.Element {
-  const reviewNumberLabel = review.provider === 'gitlab' ? `!${review.number}` : `#${review.number}`
-  const ReviewIcon = review.provider === 'gitlab' ? GitMerge : PullRequestIcon
-  const reviewHostLabel = review.provider === 'gitlab' ? 'GitLab' : 'GitHub'
-  const moreActionsLabel =
-    review.provider === 'gitlab'
-      ? translate('auto.components.right.sidebar.ChecksPanel.gitlabMoreActions', 'More MR actions')
-      : translate('auto.components.right.sidebar.ChecksPanel.653c105ecc', 'More PR actions')
+  const reviewNumberLabel = `#${review.number}`
+  const ReviewIcon = PullRequestIcon
+  const reviewHostLabel = 'GitHub'
+  const moreActionsLabel = translate(
+    'auto.components.right.sidebar.ChecksPanel.653c105ecc',
+    'More PR actions'
+  )
   const openTitle = translate(
     'auto.components.right.sidebar.ChecksPanel.5c88c6db07',
     'Open on {{value0}}',
     { value0: reviewHostLabel }
   )
-  const modifierHint =
-    modifierHintDestination === 'system-browser'
-      ? getTerminalUrlSystemBrowserHint()
-      : modifierHintDestination === 'orca'
-        ? getTerminalUrlOrcaBrowserHint()
-        : null
-  const title = modifierHint ? `${openTitle}. ${modifierHint}` : openTitle
+  const title = openTitle
 
   return (
     <div className="flex items-center gap-2">
@@ -123,7 +110,7 @@ export function ChecksPanelReviewHeader({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
           <HostedReviewUnlinkMenuItem
-            reviewLabel={review.provider === 'gitlab' ? 'MR' : 'PR'}
+            reviewLabel="PR"
             reviewIdentifier={reviewNumberLabel}
             providerLabel={reviewHostLabel}
             disabled={!canUnlinkReview}
@@ -131,15 +118,7 @@ export function ChecksPanelReviewHeader({
           />
           <DropdownMenuItem onSelect={onLinkAnotherReview}>
             <Link className="size-3.5" />
-            {review.provider === 'gitlab'
-              ? translate(
-                  'auto.components.right.sidebar.ChecksPanel.gitlabLinkAnother',
-                  'Link another MR'
-                )
-              : translate(
-                  'auto.components.right.sidebar.ChecksPanel.07871c0589',
-                  'Link another PR'
-                )}
+            {translate('auto.components.right.sidebar.ChecksPanel.07871c0589', 'Link another PR')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -12,7 +12,6 @@
  */
 import type { IBufferLine } from '@xterm/xterm'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { registerHttpLinkStoreAccessor } from '@/lib/http-link-routing'
 import { buildCandidateLogicalLinesForBufferPosition } from './terminal-file-link-hit-testing'
 import {
   extractTerminalHttpLinks,
@@ -78,10 +77,7 @@ function openUrlAt(
   cols = 120
 ) {
   openUrlMock.mockReset()
-  const opened = openHttpLinkAtBufferPosition(buffer, { x, y }, cols, {
-    worktreeId: 'wt-repro-8832',
-    modifierHeld: true
-  })
+  const opened = openHttpLinkAtBufferPosition(buffer, { x, y }, cols, {})
   return { opened, url: openUrlMock.mock.calls[0]?.[0] as string | undefined }
 }
 
@@ -89,11 +85,6 @@ describe('#8832 hard-wrapped path candidates glue next-line text into URLs', () 
   beforeEach(() => {
     vi.stubGlobal('navigator', { userAgent: 'Macintosh' })
     vi.stubGlobal('window', { api: { shell: { openUrl: openUrlMock } } })
-    registerHttpLinkStoreAccessor(() => ({
-      settings: { openLinksInApp: false },
-      setActiveWorktree: vi.fn(),
-      createBrowserTab: vi.fn()
-    }))
     openUrlMock.mockReset()
   })
 

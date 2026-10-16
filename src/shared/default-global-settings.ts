@@ -116,10 +116,6 @@ export function buildDefaultSettings(args: {
     httpProxyUrl: '',
     httpProxyBypassRules: '',
     electronHttp1CompatibilityMode: false,
-    openLinksInApp: false,
-    localhostWorktreeLabelsEnabled: false,
-    openLinksInAppPreferencePrompted: false,
-    openLinksInAppModifierInverts: false,
     terminalLinkActionPopoverEnabled: true,
     openInApplications: [...DEFAULT_OPEN_IN_APPLICATIONS],
     rightSidebarOpenByDefault: true,
@@ -141,7 +137,6 @@ export function buildDefaultSettings(args: {
     // Why: Orca-first keeps core shortcuts working from a focused terminal; TUI-ownership users opt in.
     terminalShortcutPolicy: 'orca-first',
     floatingTerminalEnabled: true,
-    browserClientHostedRemoteEnabled: true,
     floatingTerminalDefaultedForAllUsers: true,
     floatingTerminalCwd: '~',
     floatingTerminalTrustedCwds: [],
@@ -166,7 +161,6 @@ export function buildDefaultSettings(args: {
     // settings objects (which omit them) keep the default-on behavior.
     terminalSshViewParking: true,
     terminalHiddenWorktreeRetentionBudget: true,
-    browserGuestWorktreeRetentionBudget: true,
     terminalMainSideEffectAuthority: true,
     terminalHiddenDeliveryGate: true,
     terminalModelQueryAuthority: true,

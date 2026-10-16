@@ -2,7 +2,6 @@ import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { useAppStore } from '@/store'
 import { getConnectionId } from '@/lib/connection-context'
 import { detectLanguage } from '@/lib/language-detect'
-import { canShowWorkspaceFileBrowserAction, openFilePreviewToSide } from '@/lib/file-preview'
 import { getEditorHeaderCopyState } from './editor-header'
 import { isLocalPathOpenBlocked, showLocalPathOpenBlockedToast } from '@/lib/local-path-open-guard'
 import { settingsForRuntimeOwner } from '@/runtime/runtime-rpc-client'
@@ -46,11 +45,6 @@ function EditorPanelInner({
   const activeViewStateId = activeViewStateIdProp ?? activeFileId
   const activeFile = openFiles.find((f) => f.id === activeFileId) ?? null
   const activeWorktreeId = activeFile?.worktreeId
-  const canOpenWorkspaceFileBrowser = useAppStore((s) =>
-    activeWorktreeId && activeFile
-      ? canShowWorkspaceFileBrowserAction(s, activeWorktreeId, activeFile.filePath)
-      : false
-  )
   const markFileDirty = useAppStore((s) => s.markFileDirty)
   const pendingEditorReveal = useAppStore((s) => s.pendingEditorReveal)
   // Why: background Git refreshes for other worktrees must not wake every
@@ -216,24 +210,9 @@ function EditorPanelInner({
     gitBranchEntries,
     markdownViewMode,
     markdownRichModeSizeOverridden,
-    isChangesMode,
-    canOpenWorkspaceFileBrowser
+    isChangesMode
   })
 
-  const handleOpenPreviewToSide = (): void => {
-    const state = useAppStore.getState()
-    const sourceGroupId = activeViewStateId
-      ? ((state.unifiedTabsByWorktree[activeFile.worktreeId] ?? []).find(
-          (t) => t.id === activeViewStateId
-        )?.groupId ?? null)
-      : null
-    openFilePreviewToSide({
-      language: model.resolvedLanguage,
-      filePath: activeFile.filePath,
-      worktreeId: activeFile.worktreeId,
-      sourceGroupId
-    })
-  }
   const handleOpenDiffTargetFile = (preferredMarkdownViewMode?: 'rich'): void => {
     if (!model.openFileState.canOpen) {
       return
@@ -355,7 +334,6 @@ function EditorPanelInner({
         disableRenameBrowse={disableRenameBrowse}
         onCopyPath={() => void handleCopyPath()}
         onOpenDiffTargetFile={handleOpenDiffTargetFile}
-        onOpenPreviewToSide={handleOpenPreviewToSide}
         onOpenMarkdownPreview={handleOpenMarkdownPreview}
         onOpenContainingFolder={handleOpenContainingFolder}
         onToggleSideBySide={() => setSideBySide((prev) => !prev)}

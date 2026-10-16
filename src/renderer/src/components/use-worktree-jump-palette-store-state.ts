@@ -59,9 +59,6 @@ export function useWorktreeJumpPaletteStoreState({
   const activeFileId = useAppStore((state) => state.activeFileId)
   const activeFileIdByWorktree = useAppStore((state) => state.activeFileIdByWorktree)
   const activeTabTypeByWorktree = useAppStore((state) => state.activeTabTypeByWorktree)
-  const activeBrowserTabId = useAppStore((state) => state.activeBrowserTabId)
-  const browserTabsByWorktree = useAppStore((state) => state.browserTabsByWorktree)
-  const browserPagesByWorkspace = useAppStore((state) => state.browserPagesByWorkspace)
   const unifiedTabsByWorktree = useAppStore((state) => state.unifiedTabsByWorktree)
   const paletteIndexStatus = useMemo(
     () => selectPaletteIndexStatusSnapshot(useAppStore.getState(), paletteStatusInputsActive),
@@ -104,10 +101,6 @@ export function useWorktreeJumpPaletteStoreState({
     (state) => state.alwaysShowDefaultBranchWorkspace
   )
   const lastVisitedAtByWorktreeId = useAppStore((state) => state.lastVisitedAtByWorktreeId)
-  const workspacePortScan = useAppStore((state) => state.workspacePortScan?.result ?? null)
-  const openNewBrowserTabInActiveWorkspace = useAppStore(
-    (state) => state.openNewBrowserTabInActiveWorkspace
-  )
   const openNewMarkdownInActiveWorkspace = useAppStore(
     (state) => state.openNewMarkdownInActiveWorkspace
   )
@@ -151,9 +144,6 @@ export function useWorktreeJumpPaletteStoreState({
     activeFileId,
     activeFileIdByWorktree,
     activeTabTypeByWorktree,
-    activeBrowserTabId,
-    browserTabsByWorktree,
-    browserPagesByWorkspace,
     unifiedTabsByWorktree,
     agentStatusByPaneKey,
     runtimePaneTitlesByTabId,
@@ -179,8 +169,6 @@ export function useWorktreeJumpPaletteStoreState({
     showSleepingWorkspaces,
     alwaysShowDefaultBranchWorkspace,
     lastVisitedAtByWorktreeId,
-    workspacePortScan,
-    openNewBrowserTabInActiveWorkspace,
     openNewMarkdownInActiveWorkspace,
     openNewTerminalTabInActiveWorkspace,
     settingsSections,

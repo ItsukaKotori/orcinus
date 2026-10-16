@@ -57,7 +57,6 @@ describe('zh technical literal / sense fixes (#9574)', () => {
   it('preserves brand names in product copy', () => {
     expect(findByKey(zh, '855a76343a')).toBe('从 Ghostty 导入')
     expect(findByKey(zh, '0a75e5e2fa')).toBe('创建 Hermes 自动化')
-    expect(findByKey(zh, 'ff450194cd')).toBe('Kagi 私密会话链接')
   })
 })
 
@@ -133,7 +132,4 @@ describe('zh Duplicate vs Copy wording', () => {
     expect(findByKey(zh, '98a79948b3')).toBe('复制') // Copy keeps the clipboard sense
   })
 
-  it('reads Duplicate Tab as an action, matching the menu on 选项卡', () => {
-    expect(findByKey(zh, '5d6e89891f')).toBe('复制选项卡') // not 重复选项卡
-  })
 })

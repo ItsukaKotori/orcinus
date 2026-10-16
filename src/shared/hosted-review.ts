@@ -8,7 +8,6 @@ import type {
 
 export type HostedReviewProvider =
   | 'github'
-  | 'gitlab'
   | 'bitbucket'
   | 'azure-devops'
   | 'gitea'

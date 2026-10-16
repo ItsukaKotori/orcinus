@@ -28,8 +28,6 @@ export function resolveCreatedHostedReviewLink(
   switch (provider) {
     case 'github':
       return { worktree: { linkedPR: number }, lookup: { linkedGitHubPR: number } }
-    case 'gitlab':
-      return { worktree: { linkedGitLabMR: number }, lookup: { linkedGitLabMR: number } }
     case 'azure-devops':
       return {
         worktree: { linkedAzureDevOpsPR: number },

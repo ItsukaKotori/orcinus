@@ -6,10 +6,7 @@ import {
   COMPUTER_USE_SKILL_NAME,
   ORCHESTRATION_SKILL_NAME
 } from '@/lib/agent-feature-install-commands'
-import {
-  getAgentSkillNavInstallStatus,
-  getLinearAgentSkillNavInstallStatus
-} from '@/lib/agent-skill-nav-install-status'
+import { getAgentSkillNavInstallStatus } from '@/lib/agent-skill-nav-install-status'
 import { getProjectHostSetupProjectionFromState } from '../../store/selectors'
 import { getSettingsSectionSearchEntries, rankSettingsSearchItems } from './settings-search'
 import { deriveNeededSectionIds } from './settings-load-performance'
@@ -43,11 +40,6 @@ export function useSettingsNavigationModel(
   const baseNavSections = useSettingsNavigationMetadata()
   const { installed: orchestrationSkillInstalled, loading: orchestrationSkillLoading } =
     model.orchestrationSkill
-  const {
-    installed: linearSkillInstalled,
-    loading: linearSkillLoading,
-    skills: linearSkills
-  } = model.linearSkill
   const { installed: computerUseSkillInstalled, loading: computerUseSkillLoading } =
     model.computerUseSkill
   const capabilityInstallStatusBySectionId = useMemo(() => {
@@ -65,17 +57,6 @@ export function useSettingsNavigationModel(
         })
       ]
     ])
-    if (model.linearConnected) {
-      next.set(
-        'linear',
-        getLinearAgentSkillNavInstallStatus({
-          skills: linearSkills,
-          installed: linearSkillInstalled,
-          loading: linearSkillLoading,
-          inventory: applicableFreshnessInventory
-        })
-      )
-    }
     if (model.showDesktopOnlySettings) {
       next.set(
         'computer-use',
@@ -91,10 +72,6 @@ export function useSettingsNavigationModel(
   }, [
     computerUseSkillInstalled,
     computerUseSkillLoading,
-    linearSkillInstalled,
-    linearSkillLoading,
-    linearSkills,
-    model.linearConnected,
     model.settings,
     model.showDesktopOnlySettings,
     model.skillFreshnessApplies,

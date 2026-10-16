@@ -13,21 +13,15 @@ export function matchWorktreePaletteReview(
   query: string,
   numericQuery: string
 ): WorktreePaletteReviewMatch | null {
-  const isMergeRequest = review.provider === 'gitlab'
-  const numberPrefix = isMergeRequest ? 'MR !' : 'PR #'
-  const hasPullRequestSigil = query.startsWith('#')
+  const numberPrefix = 'PR #'
   const hasMergeRequestSigil = query.startsWith('!')
-  const sigilMatchesProvider =
-    (!hasPullRequestSigil && !hasMergeRequestSigil) ||
-    (hasPullRequestSigil && !isMergeRequest) ||
-    (hasMergeRequestSigil && isMergeRequest)
-  const reviewNumericQuery = hasMergeRequestSigil ? query.slice(1) : numericQuery
-  const reviewNumberIndex = sigilMatchesProvider
+  const reviewNumericQuery = numericQuery
+  const reviewNumberIndex = !hasMergeRequestSigil
     ? String(review.number).indexOf(reviewNumericQuery)
     : -1
   if (reviewNumericQuery && reviewNumberIndex !== -1) {
     return {
-      labelKind: isMergeRequest ? 'mr' : 'pr',
+      labelKind: 'pr',
       text: `${numberPrefix}${review.number}`,
       matchRange: {
         start: numberPrefix.length + reviewNumberIndex,
@@ -43,7 +37,7 @@ export function matchWorktreePaletteReview(
     return null
   }
   return {
-    labelKind: isMergeRequest ? 'mr' : 'pr',
+    labelKind: 'pr',
     text: title,
     matchRange: { start: titleIndex, end: titleIndex + query.length }
   }

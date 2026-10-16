@@ -130,7 +130,7 @@ export function WorktreeCardStatusSlot({
   const passiveStatus =
     canShowReviewStatus && prDisplay ? (
       <span className={cn('inline-flex size-5 items-center justify-center p-0.5', className)}>
-        <ReviewIcon review={prDisplay} className={reviewStatusIconClassName} variant="generic" />
+        <ReviewIcon review={prDisplay} className={reviewStatusIconClassName} />
         <span className="sr-only">{passiveStatusAnnouncement}</span>
       </span>
     ) : canShowBranchStatus ? (
@@ -192,11 +192,7 @@ export function WorktreeCardStatusSlot({
             {newCardStyle ? (
               showStatus && canShowReviewStatus && prDisplay ? (
                 <span className="inline-flex size-5 items-center justify-center p-0.5">
-                  <ReviewIcon
-                    review={prDisplay}
-                    className={reviewStatusIconClassName}
-                    variant="generic"
-                  />
+                  <ReviewIcon review={prDisplay} className={reviewStatusIconClassName} />
                 </span>
               ) : showStatus && canShowBranchStatus ? (
                 <span className="inline-flex size-5 items-center justify-center p-0.5">

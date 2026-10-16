@@ -246,13 +246,7 @@ export function closeTerminalTab(
           current.setActiveFile(worktreeFile.id)
           current.setActiveTabType('editor')
         } else {
-          const browserTab = (current.browserTabsByWorktree?.[owningWorktreeId] ?? [])[0]
-          if (browserTab) {
-            current.setActiveBrowserTab(browserTab.id)
-            current.setActiveTabType('browser')
-          } else {
-            current.setActiveWorktree(null)
-          }
+          current.setActiveWorktree(null)
         }
       }
     }

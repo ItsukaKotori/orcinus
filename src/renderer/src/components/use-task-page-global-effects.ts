@@ -1,43 +1,25 @@
-import type { TaskPageJiraIssueCreationModel } from './use-task-page-jira-issue-creation'
+import type { TaskPageGitHubIssueCreationModel } from './use-task-page-github-issue-creation'
 import { useEffect } from 'react'
-export function useTaskPageGlobalEffects(model: TaskPageJiraIssueCreationModel) {
+export function useTaskPageGlobalEffects(model: TaskPageGitHubIssueCreationModel) {
   const {
     closeTaskPage,
     activeModal,
-    linearStatusContextKey,
     preflightStatusChecked,
     preflightStatusContextKey,
-    checkLinearConnection,
     refreshPreflightStatus,
     expectedPreflightContextKey,
-    jiraStatusContextKey,
-    checkJiraConnection,
     providerRuntimeContextKey,
     preflightStatusCurrent,
-    linearStatusReady,
-    jiraStatusReady,
     tasksLoading,
     tasksRefreshing,
     tasksFiltering,
     dialogWorkItem,
-    newIssueOpen,
-    selectedLinearIssue,
-    selectedJiraIssue,
-    newLinearIssueOpen,
-    newJiraIssueOpen
+    newIssueOpen
   } = model
   const githubTasksBusy = tasksLoading || tasksRefreshing || tasksFiltering
   useEffect(() => {
     // Why: when a modal is open, let it own Esc dismissal.
-    if (
-      dialogWorkItem ||
-      selectedJiraIssue ||
-      selectedLinearIssue ||
-      newIssueOpen ||
-      newLinearIssueOpen ||
-      newJiraIssueOpen ||
-      activeModal !== 'none'
-    ) {
+    if (dialogWorkItem || newIssueOpen || activeModal !== 'none') {
       return
     }
     const onKeyDown = (event: KeyboardEvent): void => {
@@ -79,34 +61,13 @@ export function useTaskPageGlobalEffects(model: TaskPageJiraIssueCreationModel) 
       window.removeEventListener('keydown', onKeyDown, {
         capture: true
       })
-  }, [
-    activeModal,
-    closeTaskPage,
-    dialogWorkItem,
-    newIssueOpen,
-    newLinearIssueOpen,
-    newJiraIssueOpen,
-    selectedLinearIssue,
-    selectedJiraIssue
-  ])
+  }, [activeModal, closeTaskPage, dialogWorkItem, newIssueOpen])
   useEffect(() => {
     if (!preflightStatusCurrent || !preflightStatusChecked) {
       void refreshPreflightStatus()
     }
-    if (!linearStatusReady) {
-      void checkLinearConnection()
-    }
-    if (!jiraStatusReady) {
-      void checkJiraConnection()
-    }
   }, [
-    checkJiraConnection,
-    checkLinearConnection,
     expectedPreflightContextKey,
-    jiraStatusContextKey,
-    jiraStatusReady,
-    linearStatusContextKey,
-    linearStatusReady,
     providerRuntimeContextKey,
     preflightStatusContextKey,
     preflightStatusChecked,
@@ -114,7 +75,6 @@ export function useTaskPageGlobalEffects(model: TaskPageJiraIssueCreationModel) 
     refreshPreflightStatus
   ])
 
-  // Why: debounce the Linear search input so we don't fire a request per keystroke (300ms, matching GitHub search).
   const nextModel = model as typeof model & {
     githubTasksBusy: typeof githubTasksBusy
   }

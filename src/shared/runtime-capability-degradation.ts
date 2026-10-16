@@ -2,17 +2,6 @@ export const TERMINAL_UNAVAILABLE_ERROR_CODE = 'terminal_unavailable' as const
 
 export const TERMINAL_PTY_DEGRADATION_CAPABILITY = 'terminal.pty.v1' as const
 
-export type RuntimeBrowserUnavailableReason =
-  | 'unconfigured'
-  | 'driver_missing'
-  | 'executable_not_found'
-  | 'executable_not_executable'
-  | 'electron_start_failed'
-  | 'chromium_start_failed'
-  | 'provider_unhealthy'
-  | 'desktop_window_unavailable'
-  | 'unknown'
-
 /**
  * Why this host cannot spawn PTYs. Members are opaque to clients: render `message`,
  * never switch exhaustively. Dynamic-loader failures are proved out of process because
@@ -35,10 +24,10 @@ export type RuntimeDegradation = {
    * Open vocabulary. New codes ship without a protocol bump, so clients must render
    * `message` and must not switch exhaustively on this or the `reason` field.
    */
-  code: 'browser_unavailable' | typeof TERMINAL_UNAVAILABLE_ERROR_CODE
-  capability: 'browser.headless.v1' | typeof TERMINAL_PTY_DEGRADATION_CAPABILITY
+  code: typeof TERMINAL_UNAVAILABLE_ERROR_CODE
+  capability: typeof TERMINAL_PTY_DEGRADATION_CAPABILITY
   message: string
-  reason?: RuntimeBrowserUnavailableReason | RuntimeTerminalUnavailableReason
+  reason?: RuntimeTerminalUnavailableReason
   /** Underlying error text when the host has one. Diagnostic only; never load-bearing. */
   detail?: string
 }

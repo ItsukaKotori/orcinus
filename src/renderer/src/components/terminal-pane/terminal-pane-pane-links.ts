@@ -4,10 +4,6 @@ import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { TerminalPaneLifecycleRefs } from './use-terminal-pane-lifecycle-refs'
 import type { LinkHandlerDeps } from './terminal-link-handlers'
 import type { TerminalLinkActionContext } from './terminal-link-action-request'
-import type {
-  TerminalHttpLinkActionDestinations,
-  TerminalLinkRoutingPreferenceRequester
-} from './terminal-url-link-hit-testing'
 import {
   createFilePathLinkProvider,
   installFilePathLinkClickFallback
@@ -44,9 +40,7 @@ type PaneLinkContext = {
   >
   linkDeps: LinkHandlerDeps
   fileOpenLinkHint: string
-  requestOpenLinksInAppPreference: TerminalLinkRoutingPreferenceRequester
   getHttpLinkSourceOwnerForPane: (paneId: number) => HttpLinkSourceOwner
-  getHttpLinkActionDestinations: (paneId: number) => TerminalHttpLinkActionDestinations
   getLinkActionContext: (paneId: number) => TerminalLinkActionContext | null
   getPaneLinkCwd: (paneId: number) => string
   getUrlOpenLinkHint: (paneId: number) => string
@@ -63,9 +57,7 @@ export function installTerminalPaneLinkHandling(context: PaneLinkContext): void 
     refs,
     linkDeps,
     fileOpenLinkHint,
-    requestOpenLinksInAppPreference,
     getHttpLinkSourceOwnerForPane,
-    getHttpLinkActionDestinations,
     getLinkActionContext,
     getPaneLinkCwd,
     getUrlOpenLinkHint,
@@ -106,9 +98,7 @@ export function installTerminalPaneLinkHandling(context: PaneLinkContext): void 
     installHttpLinkClickFallback(pane.terminal, {
       ...linkDeps,
       getSourceOwner: () => getHttpLinkSourceOwnerForPane(pane.id),
-      requestOpenLinksInAppPreference,
-      getLinkActionContext: () => getLinkActionContext(pane.id),
-      getActionDestinations: () => getHttpLinkActionDestinations(pane.id)
+      getLinkActionContext: () => getLinkActionContext(pane.id)
     })
   )
   seedStartupSessionRestoredBanner(ptyStartup, pane.id, onShowSessionRestoredBanner)
@@ -176,9 +166,7 @@ export function installTerminalPaneLinkHandling(context: PaneLinkContext): void 
         startupCwd: getPaneLinkCwd(pane.id),
         runtimeEnvironmentId: linkDeps.getRuntimeEnvironmentIdForPane?.(pane.id) ?? null,
         sourceOwner: getHttpLinkSourceOwnerForPane(pane.id),
-        requestOpenLinksInAppPreference,
-        linkActionContext: getLinkActionContext(pane.id),
-        actionDestinations: getHttpLinkActionDestinations(pane.id)
+        linkActionContext: getLinkActionContext(pane.id)
       })
       if (handled) {
         pane.terminal.clearSelection()

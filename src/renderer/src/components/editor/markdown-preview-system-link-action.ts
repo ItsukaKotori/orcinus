@@ -8,8 +8,7 @@ import { absolutePathToFileUri, resolveMarkdownLinkTarget } from './markdown-int
 import type { MarkdownPreviewLinkContext } from './markdown-preview-link-actions'
 import {
   getMarkdownPreviewLinkTarget,
-  isMarkdownPreviewSystemBrowserModifier,
-  resolveMarkdownPreviewHttpOpenOptions
+  isMarkdownPreviewSystemBrowserModifier
 } from './markdown-preview-links'
 
 export function handleMarkdownPreviewSystemLinkClick({
@@ -26,7 +25,6 @@ export function handleMarkdownPreviewSystemLinkClick({
   const {
     isMac,
     sourceOwner,
-    sourceRoutingWorktreeId,
     sourceConnectionId,
     resolvedSourceRuntimeEnvironmentId,
     worktreeRoot
@@ -48,10 +46,7 @@ export function handleMarkdownPreviewSystemLinkClick({
     return true
   }
   if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-    openHttpLink(
-      parsed.toString(),
-      resolveMarkdownPreviewHttpOpenOptions(event, isMac, sourceRoutingWorktreeId, sourceOwner)
-    )
+    openHttpLink(parsed.toString(), { sourceOwner })
     return true
   }
   if (parsed.protocol !== 'file:') {

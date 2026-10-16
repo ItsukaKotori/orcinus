@@ -256,41 +256,41 @@ describe('TabsSlice', () => {
       })
       const sourceGroupId = store.getState().groupsByWorktree[WT][0].id
       store.setState({ activeWorktreeId: WT })
-      const publishedBrowserGroupIds: (string | null)[] = []
+      const publishedSplitGroupIds: (string | null)[] = []
       const unsubscribe = store.subscribe((state) => {
-        publishedBrowserGroupIds.push(
-          state.unifiedTabsByWorktree[WT]?.find((tab) => tab.contentType === 'browser')?.groupId ??
-            null
+        publishedSplitGroupIds.push(
+          state.unifiedTabsByWorktree[WT]?.find((tab) => tab.contentType === 'agent-session')
+            ?.groupId ?? null
         )
       })
 
-      const browser = store.getState().createUnifiedTabInSplit(
+      const splitTab = store.getState().createUnifiedTabInSplit(
         WT,
-        'browser',
+        'agent-session',
         {
           sourceGroupId,
           splitDirection: 'right'
         },
         {
-          id: 'browser-1',
-          label: 'Browser'
+          id: 'agent-session-1',
+          label: 'Agent'
         }
       )
       unsubscribe()
 
-      expect(browser).not.toBeNull()
-      expect(publishedBrowserGroupIds).not.toContain(sourceGroupId)
+      expect(splitTab).not.toBeNull()
+      expect(publishedSplitGroupIds).not.toContain(sourceGroupId)
       const state = store.getState()
-      const browserGroupId = browser!.groupId
+      const splitGroupId = splitTab!.groupId
       expect(state.activeWorktreeId).toBe(WT)
-      expect(state.activeTabType).toBe('browser')
-      expect(state.activeGroupIdByWorktree[WT]).toBe(browserGroupId)
+      expect(state.activeTabType).toBe('agent-session')
+      expect(state.activeGroupIdByWorktree[WT]).toBe(splitGroupId)
       expect(
         state.groupsByWorktree[WT].find((group) => group.id === sourceGroupId)?.tabOrder
       ).toEqual([terminal.id])
       expect(
-        state.groupsByWorktree[WT].find((group) => group.id === browserGroupId)?.tabOrder
-      ).toEqual([browser!.id])
+        state.groupsByWorktree[WT].find((group) => group.id === splitGroupId)?.tabOrder
+      ).toEqual([splitTab!.id])
       const layout = state.layoutByWorktree[WT]
       expect(layout.type).toBe('split')
       if (layout.type !== 'split') {
@@ -298,7 +298,7 @@ describe('TabsSlice', () => {
       }
       expect(layout.direction).toBe('horizontal')
       expect(layout.first).toEqual({ type: 'leaf', groupId: sourceGroupId })
-      expect(layout.second).toEqual({ type: 'leaf', groupId: browserGroupId })
+      expect(layout.second).toEqual({ type: 'leaf', groupId: splitGroupId })
     })
 
     it('creates a split tab without stealing focus when activation is disabled', () => {
@@ -309,26 +309,26 @@ describe('TabsSlice', () => {
       const sourceGroupId = store.getState().groupsByWorktree[WT][0].id
       store.setState({ activeWorktreeId: WT })
 
-      const browser = store.getState().createUnifiedTabInSplit(
+      const splitTab = store.getState().createUnifiedTabInSplit(
         WT,
-        'browser',
+        'agent-session',
         {
           sourceGroupId,
           splitDirection: 'right'
         },
         {
-          id: 'browser-1',
-          label: 'Browser',
+          id: 'agent-session-1',
+          label: 'Agent',
           activate: false
         }
       )
 
-      expect(browser).not.toBeNull()
+      expect(splitTab).not.toBeNull()
       const state = store.getState()
       expect(state.activeGroupIdByWorktree[WT]).toBe(sourceGroupId)
       expect(state.activeTabType).toBe('terminal')
       expect(
-        state.groupsByWorktree[WT].find((group) => group.id === browser!.groupId)?.recentTabIds
+        state.groupsByWorktree[WT].find((group) => group.id === splitTab!.groupId)?.recentTabIds
       ).toEqual([])
     })
 

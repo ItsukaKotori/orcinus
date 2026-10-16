@@ -11,7 +11,6 @@ const STARTUP_HYDRATION_PATH = 'src/renderer/src/app-shell/use-app-startup-hydra
 const DEGRADED_RECOVERY_PATH = 'src/renderer/src/startup/startup-degraded-recovery.ts'
 const CHROME_LAYOUT_PATH = 'src/renderer/src/app-shell/use-app-chrome-layout.ts'
 const SHELL_SERVICES_PATH = 'src/renderer/src/app-shell/use-app-shell-services.ts'
-const BACKGROUND_SERVICES_PATH = 'src/renderer/src/app-shell/AppBackgroundServices.tsx'
 const WORKSPACE_SHELL_PATH = 'src/renderer/src/app-shell/AppWorkspaceShell.tsx'
 const ROOT_SURFACES_PATH = 'src/renderer/src/app-shell/AppRootSurfaces.tsx'
 const LAZY_MODAL_MOUNTS_PATH = 'src/renderer/src/app-shell/use-lazy-modal-mounts.ts'
@@ -273,8 +272,9 @@ describe('renderer startup runtime routing', () => {
   it('does not eagerly import idle optional overlay surfaces on startup', () => {
     const source = readSource(ROOT_SURFACES_PATH)
 
-    expect(source).toContain("import('../components/UpdateCard').then")
-    expect(source).not.toContain("from '../components/UpdateCard'")
+    expect(source).toContain("import('../components/UnexpectedSignoutCard').then")
+    expect(source).not.toContain("from '../components/UnexpectedSignoutCard'")
+    expect(source).not.toContain('UpdateCard')
   })
 
   it('no longer mounts the removed dictation controller', () => {
@@ -295,9 +295,6 @@ describe('renderer startup runtime routing', () => {
   it('defers background polling until the workspace session is ready', () => {
     expect(readSource(SHELL_SERVICES_PATH)).toContain(
       'useGitStatusPolling({ enabled: workspaceSessionReady })'
-    )
-    expect(readSource(BACKGROUND_SERVICES_PATH)).toContain(
-      '<WorkspacePortScanner enabled={workspaceSessionReady} />'
     )
   })
 
@@ -443,22 +440,12 @@ describe('renderer startup runtime routing', () => {
     )
   })
 
-  it('loads Linear agent setup implementation only after the prompt opens it', () => {
-    const source = readSource('src/renderer/src/components/sidebar/LinearAgentSkillSetupPrompt.tsx')
-
-    expect(source).toContain("() => import('./LinearAgentSkillSetupDialog')")
-    expect(source).not.toContain("from './LinearAgentSkillSetupDialog'")
-    expect(source).toContain('const setupDialog = setupDialogOpen ? (')
-    expect(source).toContain('<Suspense fallback={null}>')
-  })
-
   it('does not eagerly import optional status-bar segments on startup', () => {
     const source = readSource('src/renderer/src/components/status-bar/StatusBarSurface.tsx')
 
     expect(source).toContain("import('./ResourceUsageStatusSegment').then")
-    expect(source).toContain("import('./PortsStatusSegment').then")
     expect(source).not.toContain("from './ResourceUsageStatusSegment'")
-    expect(source).not.toContain("from './PortsStatusSegment'")
+    expect(source).not.toContain('PortsStatusSegment')
   })
 
   it('does not eagerly import the status bar shell on startup', () => {

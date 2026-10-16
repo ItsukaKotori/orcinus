@@ -210,9 +210,6 @@ describe('workspace cleanup enrichment performance', () => {
       activeWorktreeId: BETA_ID,
       tabsByWorktree,
       openFiles,
-      browserTabsByWorktree: {
-        [ALPHA_ID]: [{}]
-      } as unknown as AppState['browserTabsByWorktree'],
       retainedAgentsByPaneKey,
       agentStatusByPaneKey,
       lastVisitedAtByWorktreeId: { [ALPHA_ID]: NOW - 1 }
@@ -243,7 +240,7 @@ describe('workspace cleanup enrichment performance', () => {
       localContext: {
         terminalTabCount: 1,
         cleanEditorTabCount: 1,
-        browserTabCount: 1,
+        browserTabCount: 0,
         retainedDoneAgentCount: 1
       }
     })

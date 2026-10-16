@@ -13,7 +13,6 @@ import {
 import type { ChecksPanelReviewState } from './use-checks-panel-review-state'
 import type { ChecksPanelControllerState } from './use-checks-panel-controller-state'
 import type { ChecksPanelContextState } from './use-checks-panel-context-state'
-import type { ChecksPanelPollingState } from './use-checks-panel-polling'
 import type { ChecksPanelComposerState } from './use-checks-panel-composer-state'
 import type { ChecksPanelBranchActionsState } from './use-checks-panel-branch-actions'
 import type { ChecksPanelCheckAndReviewActionsState } from './use-checks-panel-check-and-review-actions'
@@ -59,7 +58,6 @@ type ChecksPanelCreateReviewInput = Pick<
     | 'linkedGitLabMR'
     | 'linkedPR'
   > &
-  Pick<ChecksPanelPollingState, 'fetchGitLabDetails'> &
   Pick<ChecksPanelComposerState, 'prBase' | 'prBody' | 'prDraft' | 'prGenerating' | 'prTitle'> &
   Pick<ChecksPanelBranchActionsState, 'pushBeforeCreatePullRequest'> &
   Pick<ChecksPanelCheckAndReviewActionsState, 'refreshLinkedGitHubPullRequest'>
@@ -76,7 +74,6 @@ export function useChecksPanelCreateReview(model: ChecksPanelCreateReviewInput) 
     createPrPushFirst,
     createStackedHostedReview,
     fallbackGitHubPRNumber,
-    fetchGitLabDetails,
     fetchHostedReviewForBranch,
     hostedReviewCreateCopy,
     hostedReviewCreateProvider,
@@ -130,22 +127,6 @@ export function useChecksPanelCreateReview(model: ChecksPanelCreateReviewInput) 
           linkedGiteaPR,
           ...createdLink.lookup
         }
-        if (result.provider === 'gitlab') {
-          const refreshedReview = await refreshHostedReviewCard(fetchHostedReviewForBranch, {
-            repoPath: repo.path,
-            repoId: repo.id,
-            branch,
-            ...linkedReviewNumbers
-          })
-          const refreshedGitLabReview =
-            refreshedReview?.provider === 'gitlab' ? refreshedReview : null
-          await fetchGitLabDetails({
-            mrNumberOverride: result.number,
-            headShaOverride: refreshedGitLabReview?.headSha,
-            commitAsCurrent: true
-          })
-          return
-        }
         if (result.provider !== 'github') {
           await refreshHostedReviewCard(fetchHostedReviewForBranch, {
             repoPath: repo.path,
@@ -163,7 +144,6 @@ export function useChecksPanelCreateReview(model: ChecksPanelCreateReviewInput) 
     [
       branch,
       fallbackGitHubPRNumber,
-      fetchGitLabDetails,
       fetchHostedReviewForBranch,
       linkedAzureDevOpsPR,
       linkedBitbucketPR,
@@ -257,7 +237,7 @@ export function useChecksPanelCreateReview(model: ChecksPanelCreateReviewInput) 
             url: result.url
           })
           if (prCreationDefaults.openAfterCreate) {
-            openHttpLink(result.url, { worktreeId: activeWorktreeId })
+            openHttpLink(result.url)
           }
           if (activePullRequestGenerationKey) {
             updatePullRequestGenerationRecord(

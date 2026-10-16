@@ -43,17 +43,15 @@ export function resolveSourceControlManualReviewProvider(input: {
   return (
     input.hostedReviewProvider ??
     input.hostedReviewCreationProvider ??
-    (input.linkedGitLabMR != null
-      ? 'gitlab'
-      : input.linkedBitbucketPR != null
-        ? 'bitbucket'
-        : input.linkedAzureDevOpsPR != null
-          ? 'azure-devops'
-          : input.linkedGiteaPR != null
-            ? 'gitea'
-            : input.linkedGitHubPR != null || input.fallbackGitHubPRNumber != null
-              ? 'github'
-              : null)
+    (input.linkedBitbucketPR != null
+      ? 'bitbucket'
+      : input.linkedAzureDevOpsPR != null
+        ? 'azure-devops'
+        : input.linkedGiteaPR != null
+          ? 'gitea'
+          : input.linkedGitHubPR != null || input.fallbackGitHubPRNumber != null
+            ? 'github'
+            : null)
   )
 }
 
@@ -168,16 +166,6 @@ export function buildSourceControlManualReviewUrl(input: ManualReviewUrlInput): 
       return `${baseRepo.webBaseUrl}/compare/${encodeCompareRef(baseBranch)}...${encodeCompareRef(
         githubHeadRef(baseRepo, headRepo, headBranch)
       )}?expand=1`
-    case 'gitlab':
-      // Why: the source branch lives in the head repo, so the New-MR page must
-      // be opened on that project — a fork's branch is invisible to the base
-      // project and its /-/merge_requests/new page would 404 the source_branch.
-      // GitLab defaults the target to the fork's upstream. headRepo === baseRepo
-      // for the non-fork case, so this is a no-op there.
-      return appendQuery(`${headRepo.webBaseUrl}/-/merge_requests/new`, {
-        'merge_request[source_branch]': headBranch,
-        'merge_request[target_branch]': baseBranch
-      })
     case 'bitbucket':
       return appendQuery(`${baseRepo.webBaseUrl}/pull-requests/new`, {
         source: headBranch,

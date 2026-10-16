@@ -22,23 +22,19 @@ export function useTaskPageSourceSummary(model: TaskPageSourceAvailabilityPrelud
     preflightStatusChecked,
     preflightStatusCurrent,
     selectedRepos,
-    selectedLinearWorkspace,
-    selectedJiraSite,
     sourceOptions,
     taskSource,
     runtimePreflightStatusByHostId,
     taskSourceRepoContexts,
     hostRegistryById,
     hostLabelById,
-    taskSourceHostAvailability,
-    accountBackedTaskSourceHostId,
-    accountBackedTaskSourceHostAvailability
+    taskSourceHostAvailability
   } = model
   const taskSourceAvailabilityNoticeByProvider = useMemo<
     Partial<Record<TaskProvider, TaskSourceAvailabilityNotice>>
   >(() => {
     const availabilityForContexts = (
-      provider: Extract<TaskProvider, 'github' | 'gitlab'>,
+      provider: Extract<TaskProvider, 'github'>,
       contexts: readonly TaskSourceContext[]
     ): TaskSourceHostAvailability[] => [
       ...contexts.flatMap((context) => {
@@ -54,12 +50,6 @@ export function useTaskPageSourceSummary(model: TaskPageSourceAvailabilityPrelud
         runtimePreflightStatusByHostId
       })
     ]
-    const accountHost = hostRegistryById.get(accountBackedTaskSourceHostId)
-    const accountHostAvailability = getTaskSourceHostAvailabilityForHost(
-      accountHost,
-      accountBackedTaskSourceHostId
-    )
-    const accountAvailability = accountHostAvailability ? [accountHostAvailability] : []
     const labelFor = (provider: TaskProvider): string =>
       sourceOptions.find((source) => source.id === provider)?.label ?? provider
     return {
@@ -74,36 +64,9 @@ export function useTaskPageSourceSummary(model: TaskPageSourceAvailabilityPrelud
               .map((repo) => getTaskPageRepoSourceContext(repo, 'github'))
               .filter((context): context is TaskSourceContext => context !== null)
           )
-        }) ?? undefined,
-      gitlab:
-        getTaskSourceAvailabilityNotice({
-          providerLabel: labelFor('gitlab'),
-          sourceCount: selectedRepos.length,
-          hostLabelById,
-          hostAvailability: availabilityForContexts(
-            'gitlab',
-            selectedRepos
-              .map((repo) => getTaskPageRepoSourceContext(repo, 'gitlab'))
-              .filter((context): context is TaskSourceContext => context !== null)
-          )
-        }) ?? undefined,
-      linear:
-        getTaskSourceAvailabilityNotice({
-          providerLabel: labelFor('linear'),
-          sourceCount: 1,
-          hostLabelById,
-          hostAvailability: accountAvailability
-        }) ?? undefined,
-      jira:
-        getTaskSourceAvailabilityNotice({
-          providerLabel: labelFor('jira'),
-          sourceCount: 1,
-          hostLabelById,
-          hostAvailability: accountAvailability
         }) ?? undefined
     }
   }, [
-    accountBackedTaskSourceHostId,
     hostRegistryById,
     hostLabelById,
     preflightStatus,
@@ -120,25 +83,14 @@ export function useTaskPageSourceSummary(model: TaskPageSourceAvailabilityPrelud
       provider: taskSource,
       providerLabel,
       repoContexts: taskSourceRepoContexts,
-      hostAvailability:
-        taskSource === 'linear' || taskSource === 'jira'
-          ? accountBackedTaskSourceHostAvailability
-          : taskSourceHostAvailability,
-      accountHostId: accountBackedTaskSourceHostId,
+      hostAvailability: taskSourceHostAvailability,
       hostLabelById,
-      selectedRepoCount: selectedRepos.length,
-      linearWorkspaceName:
-        selectedLinearWorkspace?.organizationName ?? selectedLinearWorkspace?.id ?? null,
-      jiraSiteName: selectedJiraSite?.displayName ?? selectedJiraSite?.siteUrl ?? null
+      selectedRepoCount: selectedRepos.length
     })
   }, [
-    selectedJiraSite,
-    selectedLinearWorkspace,
     selectedRepos.length,
     sourceOptions,
     taskSource,
-    accountBackedTaskSourceHostAvailability,
-    accountBackedTaskSourceHostId,
     hostLabelById,
     taskSourceHostAvailability,
     taskSourceRepoContexts
@@ -148,18 +100,11 @@ export function useTaskPageSourceSummary(model: TaskPageSourceAvailabilityPrelud
       sourceOptions.find((source) => source.id === taskSource)?.label ?? taskSource
     return getTaskSourceAvailabilityNotice({
       providerLabel,
-      sourceCount:
-        taskSource === 'linear' || taskSource === 'jira'
-          ? 1
-          : Math.max(1, taskSourceRepoContexts.length),
-      hostAvailability:
-        taskSource === 'linear' || taskSource === 'jira'
-          ? accountBackedTaskSourceHostAvailability
-          : taskSourceHostAvailability,
+      sourceCount: Math.max(1, taskSourceRepoContexts.length),
+      hostAvailability: taskSourceHostAvailability,
       hostLabelById
     })
   }, [
-    accountBackedTaskSourceHostAvailability,
     hostLabelById,
     sourceOptions,
     taskSource,

@@ -4,16 +4,12 @@ import { shallow } from 'zustand/shallow'
 import { workItemsCacheKey } from '@/store/github/cache-identity'
 import type { CacheEntry } from '@/store/github/cache-model'
 import type { GitHubWorkItem } from '../../../shared/github/work-item-types'
-import type { LinearIssue } from '../../../shared/linear/issue-types'
-import type { LinearCollectionResult } from '../../../shared/linear/workspace-types'
 import {
   buildTaskPageRepoSourceState,
   selectTaskPageUnresolvedSourceRepos,
   deriveTaskPageGitHubWorkItemsFetchOptions,
   findTaskPageDialogWorkItem,
-  findTaskPageLinearDrawerIssue,
   reconcileTaskPageItemsAfterLandingRefresh,
-  reconcileTaskPageLinearIssuesAfterLandingRefresh,
   reconcileTaskPagePagesAfterLandingRefresh,
   reconcileTaskPagePagesWithWorkItemsCache,
   selectTaskPageWorkItemsCacheEntries,
@@ -29,9 +25,6 @@ function workItem(id: string, repoId: string): GitHubWorkItem {
   return { id, repoId, title: id } as GitHubWorkItem
 }
 
-function linearIssue(id: string): LinearIssue {
-  return { id, title: id } as LinearIssue
-}
 
 describe('task page cache selectors', () => {
   it('uses noCache only for nonce or preference forced GitHub work-item refreshes', () => {
@@ -321,57 +314,4 @@ describe('task page cache selectors', () => {
     expect(nextPages).toEqual([[first, refreshedSecond]])
   })
 
-  it('merges Linear landing refresh status changes without reordering issues', () => {
-    const first = {
-      ...linearIssue('LIN-1'),
-      identifier: 'ENG-1',
-      url: 'https://linear.test/ENG-1',
-      state: { name: 'Todo', type: 'unstarted', color: '#111111' },
-      team: { id: 'team-1', name: 'Team', key: 'ENG' },
-      labels: [],
-      labelIds: [],
-      priority: 2,
-      updatedAt: '2026-01-01'
-    } as LinearIssue
-    const second = {
-      ...first,
-      id: 'LIN-2',
-      identifier: 'ENG-2',
-      title: 'LIN-2',
-      updatedAt: '2026-01-02'
-    }
-    const refreshedFirst = {
-      ...first,
-      state: { name: 'Done', type: 'completed', color: '#222222' },
-      updatedAt: '2026-01-03'
-    }
-    const refreshedSecond = { ...second, updatedAt: '2026-01-04' }
-
-    const next = reconcileTaskPageLinearIssuesAfterLandingRefresh(
-      [first, second],
-      [refreshedSecond, refreshedFirst]
-    )
-
-    expect(next).toEqual([refreshedFirst, refreshedSecond])
-  })
-
-  it('returns null while the Linear drawer is closed and finds open issues by stable reference', () => {
-    const issue = linearIssue('LIN-1')
-    const searchIssue = linearIssue('LIN-2')
-    const issueCache = {
-      'LIN-1': entry(issue)
-    }
-    const searchCache = {
-      assigned: entry<LinearIssue[]>([searchIssue])
-    }
-    const listIssue = linearIssue('LIN-3')
-    const listCache = {
-      all: entry<LinearCollectionResult<LinearIssue>>({ items: [listIssue] })
-    }
-
-    expect(findTaskPageLinearDrawerIssue(issueCache, searchCache, listCache, null)).toBeNull()
-    expect(findTaskPageLinearDrawerIssue(issueCache, searchCache, listCache, 'LIN-1')).toBe(issue)
-    expect(findTaskPageLinearDrawerIssue({}, searchCache, listCache, 'LIN-2')).toBe(searchIssue)
-    expect(findTaskPageLinearDrawerIssue({}, {}, listCache, 'LIN-3')).toBe(listIssue)
-  })
 })

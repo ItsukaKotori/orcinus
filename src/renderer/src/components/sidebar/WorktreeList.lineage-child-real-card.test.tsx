@@ -206,11 +206,11 @@ function makeLineage(worktree: Worktree, parent: Worktree): WorktreeLineage {
 
 function makeHostedReview(overrides: Partial<HostedReviewInfo> = {}): HostedReviewInfo {
   return {
-    provider: 'gitlab',
+    provider: 'github',
     number: 42,
-    title: 'Child GitLab MR',
+    title: 'Child GH PR',
     state: 'open',
-    url: 'https://gitlab.com/acme/orca/-/merge_requests/42',
+    url: 'https://github.com/acme/orca/pull/42',
     status: 'success',
     updatedAt: '2026-06-09T00:00:00.000Z',
     mergeable: 'MERGEABLE',
@@ -246,7 +246,7 @@ function setLineageState(
     branch: 'child-branch',
     sortOrder: 10,
     overrides: {
-      linkedGitLabMR: 42,
+      linkedPR: 42,
       comment: 'Child handoff note'
     }
   })
@@ -290,7 +290,7 @@ function setLineageState(
       'local::repo-1::child-branch': {
         data: makeHostedReview(),
         fetchedAt: Date.now(),
-        linkedReviewHintKey: 'gitlab:42'
+        linkedReviewHintKey: 'github:42'
       }
     },
     issueCache: {},
@@ -404,8 +404,8 @@ describe('WorktreeList real child WorktreeCard integration', () => {
     const container = await renderWorktreeList()
     const childOption = container.querySelector('[id="worktree-list-option-all%3A%7Cchild"]')
 
-    expect(childOption?.textContent).toContain('MR #42')
-    expect(childOption?.textContent).toContain('Child GitLab MR')
+    expect(childOption?.textContent).toContain('PR #42')
+    expect(childOption?.textContent).toContain('Child GH PR')
     expect(childOption?.textContent).toContain('Child handoff note')
   })
 

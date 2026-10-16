@@ -4,10 +4,7 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { getExecutionHostLabel } from '../../../../shared/execution-host'
-import {
-  GitHubIntegrationCard,
-  GitLabIntegrationCard
-} from './cli-source-control-integration-cards'
+import { GitHubIntegrationCard } from './cli-source-control-integration-cards'
 
 const LOCAL_HOST_LABEL = getExecutionHostLabel('local')
 
@@ -22,7 +19,6 @@ const mocks = vi.hoisted(() => ({
   preflight: {
     statuses: {
       ghStatus: 'connected',
-      glabStatus: 'connected',
       bitbucketStatus: 'not-configured',
       azureDevOpsStatus: 'not-configured',
       giteaStatus: 'not-configured',
@@ -73,7 +69,6 @@ describe('CLI source-control integration card account scope', () => {
     container = null
     mocks.store.current = null
     mocks.preflight.statuses.ghStatus = 'connected'
-    mocks.preflight.statuses.glabStatus = 'connected'
     mocks.preflight.unavailable = false
     mocks.preflight.refresh.mockClear()
   })
@@ -95,21 +90,21 @@ describe('CLI source-control integration card account scope', () => {
     )
   })
 
-  it('shows remote-server ownership for GitLab CLI credential checks', async () => {
+  it('shows remote-server ownership for GitHub CLI credential checks', async () => {
     mocks.store.current = {
       settings: { activeRuntimeEnvironmentId: 'runtime-1' },
       openSettingsPage: vi.fn(),
       openSettingsTarget: vi.fn()
     }
-    mocks.preflight.statuses.glabStatus = 'not-authenticated'
+    mocks.preflight.statuses.ghStatus = 'not-authenticated'
 
-    const rendered = await renderCard(<GitLabIntegrationCard />)
+    const rendered = await renderCard(<GitHubIntegrationCard />)
 
-    expect(rendered.textContent).toContain('GitLab')
+    expect(rendered.textContent).toContain('GitHub')
     expect(rendered.textContent).toContain('Account scope: Remote server: runtime-1')
     expect(rendered.textContent).toContain(
       'Credentials and account checks for this provider are owned by this remote server.'
     )
-    expect(rendered.textContent).toContain('glab auth login')
+    expect(rendered.textContent).toContain('gh auth login')
   })
 })

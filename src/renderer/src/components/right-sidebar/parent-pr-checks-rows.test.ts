@@ -303,7 +303,7 @@ describe('buildParentPrChecksProjection', () => {
       id: 'repo-1::/feature',
       linkedPR: null,
       suppressedGitHubPR: 99,
-      linkedGitLabMR: 99
+      linkedBitbucketPR: 99
     })
     const cacheKey = getHostedReviewCacheKey(repo.path, 'feature', settings, repo.id)
 
@@ -313,13 +313,13 @@ describe('buildParentPrChecksProjection', () => {
         repo,
         hostedReviewCache: {
           [cacheKey]: {
-            data: makeReview({ provider: 'gitlab', number: 99 }),
+            data: makeReview({ provider: 'bitbucket', number: 99 }),
             fetchedAt: 2,
-            linkedReviewHintKey: 'gitlab:99'
+            linkedReviewHintKey: 'bitbucket:99'
           }
         }
       }).rows[0]
-    ).toMatchObject({ provider: 'gitlab', reviewNumber: 99 })
+    ).toMatchObject({ provider: 'bitbucket', reviewNumber: 99 })
   })
 
   it('uses legacy path-scoped PR cache for local persisted entries', () => {
@@ -571,7 +571,7 @@ describe('buildParentPrChecksProjection', () => {
         hostedReviewCache: {
           [hostedKey]: {
             data: makeReview({
-              provider: 'gitlab',
+              provider: 'bitbucket',
               number: 99,
               title: 'Wrong provider same number',
               status: 'failure'
@@ -641,13 +641,13 @@ describe('buildParentPrChecksProjection', () => {
 
   it('keeps linked unavailable and refresh-error rows out of No PR', () => {
     const repo = makeRepo()
-    const linked = makeWorktree({ id: 'repo-1::/linked', linkedGitLabMR: 42 })
+    const linked = makeWorktree({ id: 'repo-1::/linked', linkedBitbucketPR: 42 })
     const identity = getParentPrChecksRefreshIdentity(linked, repo, 'feature')
 
     const linkedUnavailable = makeProjection({ worktree: linked, repo })
     expect(linkedUnavailable.rows[0]).toMatchObject({
       status: 'linkedDetailsUnavailable',
-      reviewLabel: '!42'
+      reviewLabel: '#42'
     })
     expect(linkedUnavailable.summary.noPr).toBe(0)
 

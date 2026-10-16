@@ -17,7 +17,6 @@ import type { ChecksPanelManualRefreshInput } from './manual-refresh-dependencie
 export function useChecksPanelManualRefresh(model: ChecksPanelManualRefreshInput) {
   const {
     activeConnectionId,
-    activeGitLabReview,
     activeWorktreeId,
     activeWorktreePath,
     activeWorktreePushTarget,
@@ -25,7 +24,6 @@ export function useChecksPanelManualRefresh(model: ChecksPanelManualRefreshInput
     branch,
     expireGitHubPRRefreshState,
     fallbackGitHubPRNumber,
-    fetchGitLabDetails,
     fetchHostedReviewForBranch,
     fetchPRChecks,
     fetchPRComments,
@@ -33,11 +31,9 @@ export function useChecksPanelManualRefresh(model: ChecksPanelManualRefreshInput
     gitStatusSnapshot,
     isCurrentAsyncResult,
     isFolder,
-    isGitLabReviewContext,
     linkedAzureDevOpsPR,
     linkedBitbucketPR,
     linkedGiteaPR,
-    linkedGitLabMR,
     linkedPR,
     ownerSettings,
     panelContextKey,
@@ -153,36 +149,6 @@ export function useChecksPanelManualRefresh(model: ChecksPanelManualRefreshInput
           console.warn('[ChecksPanel] pre-refresh git identity refresh failed', error)
         }
       }
-      if (isGitLabReviewContext) {
-        const refreshedReview = await refreshHostedReviewCard(fetchHostedReviewForBranch, {
-          repoPath: repo.path,
-          repoId: repo.id,
-          branch,
-          admissionTier: 'interactive',
-          linkedGitHubPR: linkedPR,
-          fallbackGitHubPR: fallbackGitHubPRNumber,
-          linkedGitLabMR,
-          linkedBitbucketPR,
-          linkedAzureDevOpsPR,
-          linkedGiteaPR
-        })
-        if (!isCurrentRequest()) {
-          return
-        }
-        const refreshedGitLabReview =
-          refreshedReview?.provider === 'gitlab' ? refreshedReview : activeGitLabReview
-        if (refreshedGitLabReview) {
-          await fetchGitLabDetails({
-            mrNumberOverride: refreshedGitLabReview.number,
-            headShaOverride: refreshedGitLabReview.headSha,
-            commitAsCurrent: true
-          })
-        } else {
-          setChecks([])
-          setComments([])
-        }
-        return
-      }
       const refreshStoreState = useAppStore.getState()
       const rawPRRefreshState = refreshStoreState.prRefreshStates[prCacheKey]
       const startedPRRefreshToken = buildGitHubPRRefreshStateClearToken(
@@ -215,7 +181,6 @@ export function useChecksPanelManualRefresh(model: ChecksPanelManualRefreshInput
         admissionTier: 'interactive',
         linkedGitHubPR: linkedPR,
         fallbackGitHubPR: refreshedPR?.number ?? fallbackGitHubPRNumber,
-        linkedGitLabMR,
         linkedBitbucketPR,
         linkedAzureDevOpsPR,
         linkedGiteaPR
@@ -318,7 +283,6 @@ export function useChecksPanelManualRefresh(model: ChecksPanelManualRefreshInput
     activeWorktreeId,
     activeWorktreePath,
     activeWorktreePushTarget,
-    activeGitLabReview,
     prNumber,
     pr?.checksStatus,
     pr?.headSha,
@@ -327,13 +291,10 @@ export function useChecksPanelManualRefresh(model: ChecksPanelManualRefreshInput
     prCacheKey,
     linkedPR,
     fallbackGitHubPRNumber,
-    fetchGitLabDetails,
     linkedAzureDevOpsPR,
     linkedBitbucketPR,
     linkedGiteaPR,
-    linkedGitLabMR,
     isFolder,
-    isGitLabReviewContext,
     gitStatusSnapshot,
     panelContextKey,
     fetchPRForBranch,

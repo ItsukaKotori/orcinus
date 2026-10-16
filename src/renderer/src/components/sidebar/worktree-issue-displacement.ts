@@ -6,18 +6,12 @@ import {
   type WorktreeMetaSnapshot
 } from './worktree-meta-updates'
 
-function formatLinkLabel(provider: IssueLinkProvider, value: string): string {
-  return provider === 'linear'
-    ? translate(
-        'auto.components.sidebar.worktreeIssueDisplacement.3f61c0a8d2',
-        'Linear {{value}}',
-        { value }
-      )
-    : translate(
-        'auto.components.sidebar.worktreeIssueDisplacement.9c4b7e1f60',
-        'GitHub #{{value}}',
-        { value }
-      )
+function formatLinkLabel(_provider: IssueLinkProvider, value: string): string {
+  return translate(
+    'auto.components.sidebar.worktreeIssueDisplacement.9c4b7e1f60',
+    'GitHub #{{value}}',
+    { value }
+  )
 }
 
 /** Names the persisted links a save would drop. A workspace tracks one issue, so
@@ -29,18 +23,14 @@ export function getDisplacedLinkLabels(args: {
   snapshot: WorktreeMetaSnapshot
   isFolderWorkspace: boolean
   linkedIssue: number | null
-  linkedLinearIssue: string | null
 }): string[] | null {
-  const { draft, snapshot, isFolderWorkspace, linkedIssue, linkedLinearIssue } = args
+  const { draft, snapshot, isFolderWorkspace, linkedIssue } = args
   if (isFolderWorkspace || !isIssueFieldDirty(draft, snapshot)) {
     return null
   }
 
   const keeping = draft.issueInput.trim() === '' ? null : draft.issueProvider
   const displaced: string[] = []
-  if (keeping !== 'linear' && linkedLinearIssue) {
-    displaced.push(formatLinkLabel('linear', linkedLinearIssue))
-  }
   if (keeping !== 'github' && typeof linkedIssue === 'number') {
     displaced.push(formatLinkLabel('github', String(linkedIssue)))
   }

@@ -29,7 +29,6 @@ export function canUseParentPrChecksHostedReviewCacheEntry(
   const display = getWorktreeCardPrDisplay(
     review,
     worktree.linkedPR,
-    worktree.linkedGitLabMR ?? null,
     worktree.linkedBitbucketPR ?? null,
     worktree.linkedAzureDevOpsPR ?? null,
     worktree.linkedGiteaPR ?? null,
@@ -67,8 +66,6 @@ function getLinkedReviewNumberForProvider(
   switch (provider) {
     case 'github':
       return worktree.linkedPR
-    case 'gitlab':
-      return worktree.linkedGitLabMR ?? null
     case 'bitbucket':
       return worktree.linkedBitbucketPR ?? null
     case 'azure-devops':

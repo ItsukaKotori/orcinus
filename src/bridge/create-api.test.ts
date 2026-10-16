@@ -31,15 +31,6 @@ describe('createAdeApi mock mode', () => {
     expect(info.displayServer).toBeNull()
   })
 
-  it('browser WebAuthn subscriptions hand back unsubscribe functions', () => {
-    const api = createAdeApi({ mode: 'mock' })
-    const stopRequests = api.browser.onWebAuthnAccountRequest(() => {})
-    expect(typeof stopRequests).toBe('function')
-    stopRequests()
-    const stopClosed = api.browser.onWebAuthnAccountRequestClosed(() => {})
-    expect(typeof stopClosed).toBe('function')
-    stopClosed()
-  })
 })
 
 describe('createAdeApi mode resolution', () => {

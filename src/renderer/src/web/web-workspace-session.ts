@@ -8,11 +8,10 @@ export function sanitizeWebRuntimeWorkspaceSession(
   return {
     ...defaults,
     // Why: paired web clients get live tabs from the host runtime. Persisting
-    // those remote handles in browser storage replays stale terminal/browser
-    // selectors after a new pairing or host restart.
+    // those remote handles in browser storage replays stale terminal selectors
+    // after a new pairing or host restart.
     activeRepoId: session.activeRepoId ?? null,
     activeWorktreeId: session.activeWorktreeId ?? null,
-    browserUrlHistory: session.browserUrlHistory ?? defaults.browserUrlHistory,
     lastVisitedAtByWorktreeId: session.lastVisitedAtByWorktreeId
   }
 }

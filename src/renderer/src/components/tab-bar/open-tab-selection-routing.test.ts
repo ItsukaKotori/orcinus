@@ -5,22 +5,14 @@ import type { OpenTabSearchResult } from './open-tab-search'
 
 const mocks = vi.hoisted(() => ({
   activateWorkspaceTab: vi.fn(),
-  activateBrowserPage: vi.fn(),
-  focusTerminalTabSurface: vi.fn(),
-  requestBrowserFocus: vi.fn()
+  focusTerminalTabSurface: vi.fn()
 }))
 
 vi.mock('@/lib/workspace-tab-palette-activation', () => ({
   activateWorkspaceTabPaletteResult: mocks.activateWorkspaceTab
 }))
-vi.mock('@/lib/browser-page-palette-activation', () => ({
-  activateBrowserPagePaletteResult: mocks.activateBrowserPage
-}))
 vi.mock('@/lib/focus-terminal-tab-surface', () => ({
   focusTerminalTabSurface: mocks.focusTerminalTabSurface
-}))
-vi.mock('@/components/browser-pane/host-guest/browser-focus', () => ({
-  requestBrowserFocus: mocks.requestBrowserFocus
 }))
 
 import { activateOpenTabSearchResult } from './open-tab-selection-routing'
@@ -49,29 +41,11 @@ const editorResult: OpenTabSearchResult = {
   relativePath: 'src/zebra.ts'
 }
 
-const browserResult: OpenTabSearchResult = {
-  executionHostId: 'runtime:host-1',
-  source: 'browser',
-  id: 'open-tab:browser:page-1',
-  title: 'Project Docs',
-  matchedText: null,
-  worktreeId: 'wt-1',
-  contentType: 'browser',
-  pageId: 'page-1',
-  workspaceId: 'ws-1',
-  url: 'https://example.com/docs',
-  faviconUrl: null
-}
 
 describe('activateOpenTabSearchResult', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.activateWorkspaceTab.mockReturnValue({ status: 'activated' })
-    mocks.activateBrowserPage.mockReturnValue({
-      status: 'activated',
-      pageId: 'page-1',
-      focusTarget: 'address-bar'
-    })
   })
 
   it('activates a workspace tab by its identifiers and focuses the terminal surface', () => {
@@ -98,50 +72,18 @@ describe('activateOpenTabSearchResult', () => {
     expect(activateOpenTabSearchResult(editorResult)).toEqual({ status: 'activated', focus: null })
   })
 
-  it('carries the activation focus target into the browser focus request', () => {
-    const outcome = activateOpenTabSearchResult(browserResult)
-    expect(mocks.activateBrowserPage).toHaveBeenCalledWith({
-      executionHostId: 'runtime:host-1',
-      pageId: 'page-1',
-      workspaceId: 'ws-1',
-      worktreeId: 'wt-1'
-    })
-
-    if (outcome.status !== 'activated') {
-      throw new Error('expected activation')
-    }
-    outcome.focus?.()
-
-    expect(mocks.requestBrowserFocus).toHaveBeenCalledWith({
-      pageId: 'page-1',
-      target: 'address-bar'
-    })
-  })
-
-  it('reports a stale target per source', () => {
+  it('reports a stale tab target', () => {
     mocks.activateWorkspaceTab.mockReturnValue({ status: 'failed', reason: 'missing-tab' })
     expect(activateOpenTabSearchResult(terminalResult)).toEqual({
       status: 'failed',
       message: 'Tab no longer exists'
     })
-
-    mocks.activateBrowserPage.mockReturnValue({ status: 'failed', reason: 'missing-page' })
-    expect(activateOpenTabSearchResult(browserResult)).toEqual({
-      status: 'failed',
-      message: 'Browser page no longer exists'
-    })
-
   })
 
   it('reports a missing worktree distinguishably from a stale tab', () => {
     mocks.activateWorkspaceTab.mockReturnValue({ status: 'failed', reason: 'missing-worktree' })
-    mocks.activateBrowserPage.mockReturnValue({ status: 'failed', reason: 'missing-worktree' })
 
     expect(activateOpenTabSearchResult(terminalResult)).toEqual({
-      status: 'failed',
-      message: 'Workspace no longer exists'
-    })
-    expect(activateOpenTabSearchResult(browserResult)).toEqual({
       status: 'failed',
       message: 'Workspace no longer exists'
     })

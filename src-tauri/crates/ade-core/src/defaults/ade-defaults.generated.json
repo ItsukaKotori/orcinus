@@ -80,10 +80,6 @@
     "httpProxyUrl": "",
     "httpProxyBypassRules": "",
     "electronHttp1CompatibilityMode": false,
-    "openLinksInApp": false,
-    "localhostWorktreeLabelsEnabled": false,
-    "openLinksInAppPreferencePrompted": false,
-    "openLinksInAppModifierInverts": false,
     "terminalLinkActionPopoverEnabled": true,
     "openInApplications": [
       {
@@ -110,7 +106,6 @@
     "ctrlTabOrderMode": "mru",
     "terminalShortcutPolicy": "orca-first",
     "floatingTerminalEnabled": true,
-    "browserClientHostedRemoteEnabled": true,
     "floatingTerminalDefaultedForAllUsers": true,
     "floatingTerminalCwd": "~",
     "floatingTerminalTrustedCwds": [],
@@ -144,7 +139,6 @@
     "terminalHiddenViewParking": true,
     "terminalSshViewParking": true,
     "terminalHiddenWorktreeRetentionBudget": true,
-    "browserGuestWorktreeRetentionBudget": true,
     "terminalMainSideEffectAuthority": true,
     "terminalHiddenDeliveryGate": true,
     "terminalModelQueryAuthority": true,
@@ -343,7 +337,6 @@
       "automation",
       "cli",
       "comment",
-      "ports",
       "inline-agents"
     ],
     "_worktreeCardModeDefaulted": true,
@@ -388,8 +381,7 @@
       "minimax",
       "grok",
       "ssh",
-      "resource-usage",
-      "ports"
+      "resource-usage"
     ],
     "statusBarVisible": true,
     "usagePercentageDisplay": "used",
@@ -402,15 +394,13 @@
     "acknowledgedAgentsByPaneKey": {},
     "activityClearedAtByPaneKey": {},
     "manuallyUnreadTurnsByPaneKey": {},
-    "browserImportHintHidden": false,
     "trayMinimizeNoticeShown": false,
     "osc52ClipboardDefaultOnNoticePending": false,
     "projectOrderManualDefaultNoticeDismissed": true,
     "workspaceCleanup": {
       "dismissals": {}
     },
-    "featureInteractions": {},
-    "browserDefaultZoomLevel": 0
+    "featureInteractions": {}
   },
   "onboarding": {
     "flowVersion": 4,

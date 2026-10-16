@@ -4,7 +4,6 @@ import { useAppStore } from '../../store'
 import { requestEditorFileClose } from '../editor/editor-autosave'
 import { closeTerminalTab } from '../terminal/terminal-tab-actions'
 import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
-import { closeWorkspaceBrowserTab } from '@/lib/workspace-browser-tab-close'
 import { callRuntimeRpc, getActiveRuntimeTarget } from '@/runtime/runtime-rpc-client'
 import { withLocalSessionTabCloseOwner } from '@/runtime/local-session-tab-close-owner'
 import { toRuntimeWorktreeSelector } from '@/runtime/runtime-worktree-selector'
@@ -107,14 +106,7 @@ export function createWorkspaceTabCloseCommands({
       })
       return
     }
-    if (item.contentType === 'browser') {
-      const plan = closeWorkspaceBrowserTab(worktreeId, item.entityId, item.id)
-      // Why: the empty check below answers "the user emptied this worktree". Unwinding a create
-      // that never finished is not that — it must leave the selection as the click found it.
-      if (!plan.closesLocally || plan.localCloseReason === 'cleanup') {
-        return
-      }
-    } else {
+    {
       const canCloseTab = closeEditorIfUnreferenced(item.entityId, item.id)
       if (!canCloseTab) {
         return

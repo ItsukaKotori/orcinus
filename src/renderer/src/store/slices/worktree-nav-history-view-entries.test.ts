@@ -2,9 +2,7 @@ import { createStore, type StoreApi } from 'zustand/vanilla'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { AppState } from '../types'
 import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
-import type { JiraIssue } from '../../../../shared/jira-types'
 import type { Worktree } from '../../../../shared/worktree/types'
-import type { GitLabWorkItem } from '../../../../shared/gitlab-types'
 import type { TaskSourceContext } from '../../../../shared/task-source-context'
 import {
   createWorktreeNavHistorySlice,
@@ -62,40 +60,6 @@ function makeGitHubWorkItem(overrides: Partial<GitHubWorkItem> = {}): GitHubWork
     updatedAt: '2026-05-20T00:00:00.000Z',
     author: 'octocat',
     repoId: 'repo-1',
-    ...overrides
-  }
-}
-
-function makeGitLabWorkItem(overrides: Partial<GitLabWorkItem> = {}): GitLabWorkItem {
-  return {
-    id: 'mr-12',
-    type: 'mr',
-    number: 12,
-    title: 'Fix runner routing',
-    state: 'opened',
-    url: 'https://gitlab.com/acme/repo/-/merge_requests/12',
-    labels: [],
-    updatedAt: '2026-05-20T00:00:00.000Z',
-    author: 'gitlab-user',
-    repoId: 'repo-1',
-    ...overrides
-  }
-}
-
-function makeJiraIssue(overrides: Partial<JiraIssue> = {}): JiraIssue {
-  return {
-    id: 'ORC-1',
-    key: 'ORC-1',
-    title: 'Fix task source context',
-    url: 'https://example.atlassian.net/browse/ORC-1',
-    siteId: 'site-1',
-    siteName: 'Example Jira',
-    project: { id: '10000', key: 'ORC', name: 'Orca', siteId: 'site-1' },
-    issueType: { id: '10001', name: 'Bug' },
-    status: { id: '1', name: 'Todo', categoryKey: 'new', categoryName: 'To Do' },
-    labels: [],
-    createdAt: '2026-05-30T00:00:00.000Z',
-    updatedAt: '2026-05-30T00:00:00.000Z',
     ...overrides
   }
 }
@@ -247,69 +211,4 @@ describe('worktree-nav-history slice: view entries', () => {
     expect(store.getState().worktreeNavHistoryIndex).toBe(1)
   })
 
-  it('keeps same GitLab item details separate when the source host differs', () => {
-    const store = createHistoryStore(['a'])
-    const workItem = makeGitLabWorkItem()
-    const localSource: TaskSourceContext = {
-      kind: 'task-source',
-      provider: 'gitlab',
-      projectId: 'project-1',
-      hostId: 'local',
-      repoId: 'repo-1',
-      providerIdentity: { provider: 'gitlab', projectId: '1234' }
-    }
-    const sshSource: TaskSourceContext = {
-      ...localSource,
-      hostId: 'ssh:devbox',
-      projectHostSetupId: 'setup-ssh'
-    }
-
-    store.getState().recordViewVisit({
-      kind: 'task-detail',
-      source: 'gitlab',
-      workItem,
-      sourceContext: localSource
-    })
-    store.getState().recordViewVisit({
-      kind: 'task-detail',
-      source: 'gitlab',
-      workItem,
-      sourceContext: sshSource
-    })
-
-    expect(store.getState().worktreeNavHistory).toHaveLength(2)
-    expect(store.getState().worktreeNavHistoryIndex).toBe(1)
-  })
-
-  it('keeps same Jira issue details separate when the source host differs', () => {
-    const store = createHistoryStore(['a'])
-    const issue = makeJiraIssue()
-    const localSource: TaskSourceContext = {
-      kind: 'task-source',
-      provider: 'jira',
-      projectId: 'project-1',
-      hostId: 'local',
-      providerIdentity: { provider: 'jira', siteId: 'site-1' }
-    }
-    const remoteSource: TaskSourceContext = {
-      ...localSource,
-      hostId: 'runtime:remote-server'
-    }
-
-    store.getState().recordViewVisit({
-      kind: 'task-detail',
-      source: 'jira',
-      issue,
-      sourceContext: localSource
-    })
-    store.getState().recordViewVisit({
-      kind: 'task-detail',
-      source: 'jira',
-      issue,
-      sourceContext: remoteSource
-    })
-
-    expect(store.getState().worktreeNavHistory).toHaveLength(2)
-    expect(store.getState().worktreeNavHistoryIndex).toBe(1)
-  })
 })

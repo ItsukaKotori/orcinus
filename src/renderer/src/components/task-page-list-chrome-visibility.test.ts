@@ -7,12 +7,7 @@ import {
 
 const baseState: TaskPageListChromeVisibilityState = {
   taskSource: 'github',
-  hasGitHubDetail: false,
-  hasGitLabDetail: false,
-  hasJiraDetail: false,
-  hasLinearIssueDetail: false,
-  hasLinearProjectContext: false,
-  hasLinearViewContext: false
+  hasGitHubDetail: false
 }
 
 describe('shouldHideTaskPageListChrome', () => {
@@ -24,46 +19,13 @@ describe('shouldHideTaskPageListChrome', () => {
         hasGitHubDetail: true
       })
     ).toBe(true)
-    expect(
-      shouldHideTaskPageListChrome({
-        ...baseState,
-        taskSource: 'gitlab',
-        hasGitLabDetail: true
-      })
-    ).toBe(true)
-    expect(
-      shouldHideTaskPageListChrome({
-        ...baseState,
-        taskSource: 'jira',
-        hasJiraDetail: true
-      })
-    ).toBe(true)
-    expect(
-      shouldHideTaskPageListChrome({
-        ...baseState,
-        taskSource: 'linear',
-        hasLinearProjectContext: true
-      })
-    ).toBe(true)
   })
 
-  it('keeps chrome visible when only another provider has stale detail state', () => {
+  it('keeps chrome visible when no detail state is active', () => {
     expect(
       shouldHideTaskPageListChrome({
         ...baseState,
-        taskSource: 'github',
-        hasJiraDetail: true,
-        hasLinearProjectContext: true,
-        hasLinearViewContext: true
-      })
-    ).toBe(false)
-    expect(
-      shouldHideTaskPageListChrome({
-        ...baseState,
-        taskSource: 'jira',
-        hasGitHubDetail: true,
-        hasGitLabDetail: true,
-        hasLinearIssueDetail: true
+        taskSource: 'github'
       })
     ).toBe(false)
   })

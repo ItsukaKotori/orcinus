@@ -23,14 +23,6 @@ export function resolveSupportedHostedReviewCopyProvider(
 export function localizedHostedReviewCopy(
   provider: SupportedHostedReviewCopyProvider
 ): LocalizedHostedReviewCopy {
-  if (provider === 'gitlab') {
-    return {
-      shortLabel: translate('auto.i18n.hostedReview.copy.c4e8f1a2b9', 'MR'),
-      reviewLabel: translate('auto.i18n.hostedReview.copy.b3d7e0f1a8', 'merge request'),
-      titleLabel: translate('auto.i18n.hostedReview.copy.a2c6d9e0f7', 'Merge Request'),
-      providerName: translate('auto.i18n.hostedReview.copy.91b5c8d7e6', 'GitLab')
-    }
-  }
   if (provider === 'azure-devops') {
     return {
       shortLabel: translate('auto.i18n.hostedReview.copy.f0a4b8c2d1', 'PR'),

@@ -2,9 +2,6 @@ import type React from 'react'
 import type { useAppStore } from '@/store'
 import type { parseGitHubIssueOrPRLink, RepoSlug } from '@/lib/github-links'
 import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
-import type { GitLabWorkItem } from '../../../../shared/gitlab-types'
-import type { JiraIssue, JiraSite } from '../../../../shared/jira-types'
-import type { LinearIssue } from '../../../../shared/linear/issue-types'
 import type { BaseRefSearchResult } from '../../../../shared/repo-types'
 import type { TaskSourceContext } from '../../../../shared/task-source-context'
 import type { SmartNameMode, SmartWorkspaceSourceRow } from './smart-workspace-source-results'
@@ -18,16 +15,10 @@ export type SmartWorkspaceNameFieldProps = {
   value: string
   onValueChange: (value: string) => void
   onGitHubItemSelect: (item: GitHubWorkItem) => void
-  /** Optional; when omitted, GitLab paste-URL detection is silently skipped. */
-  onGitLabItemSelect?: (item: GitLabWorkItem) => void
   onBranchSelect: (refName: string, localBranchName: string) => void
-  onLinearIssueSelect: (issue: LinearIssue) => void
-  onJiraIssueSelect?: (issue: JiraIssue, sourceContext: TaskSourceContext) => void
-  onOpenJiraSettings?: () => void
   selectedSource: SmartWorkspaceNameSelection | null
   onClearSelectedSource: () => void
   githubSourceContext?: TaskSourceContext | null
-  jiraSourceContext?: TaskSourceContext | null
   inputRef?: React.RefObject<HTMLInputElement | null>
   onPlainEnter?: () => void
   disabled?: boolean
@@ -43,7 +34,6 @@ export type SmartWorkspaceNameFieldProps = {
 
 export type NormalizedSmartWorkspaceNameFieldProps = Omit<
   SmartWorkspaceNameFieldProps,
-  | 'jiraSourceContext'
   | 'disabled'
   | 'textOnly'
   | 'branchesEnabled'
@@ -52,7 +42,6 @@ export type NormalizedSmartWorkspaceNameFieldProps = Omit<
   | 'allowCrossRepoProjectAdd'
   | 'crossRepoSwitchTarget'
 > & {
-  jiraSourceContext: TaskSourceContext | null
   disabled: boolean
   textOnly: boolean
   branchesEnabled: boolean
@@ -63,19 +52,16 @@ export type NormalizedSmartWorkspaceNameFieldProps = Omit<
 }
 
 export type SmartWorkspaceNameSelection = {
-  kind: 'github-pr' | 'github-issue' | 'gitlab-mr' | 'gitlab-issue' | 'branch' | 'linear' | 'jira'
+  kind: 'github-pr' | 'github-issue' | 'branch'
   label: string
   url?: string
 }
 
-export type RowEntry =
-  | SmartWorkspaceSourceRow
-  | { kind: 'jira-account'; value: string; site: JiraSite }
+export type RowEntry = SmartWorkspaceSourceRow
 
 export type RepoBackedSearchTarget = {
   repo: RepoOption
   githubSourceContext: TaskSourceContext | null
-  gitlabSourceContext: TaskSourceContext | null
 }
 
 export type CrossRepoPrompt = {
@@ -91,11 +77,8 @@ export type RepoSlugTarget = {
 export type SmartWorkspaceNameFieldSearchState = {
   debouncedQuery: string
   githubItems: GitHubWorkItem[]
-  gitlabItems: GitLabWorkItem[]
   branches: BaseRefSearchResult[]
   branchResultsSource: { repoId: string; query: string } | null
-  linearIssues: LinearIssue[]
-  jiraIssues: JiraIssue[]
 }
 
 export type CachedRepoSlug = RepoSlug

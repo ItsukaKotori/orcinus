@@ -166,6 +166,7 @@ export function installRunDeferredConnect(session: ConnectPanePtySession): void 
     // that drives lastTitle parity for mobile subscribers. Wires the resulting
     // unregister into onDataDisposable.dispose so disposal stays a single
     // teardown point. See docs/mobile-prefer-renderer-scrollback.md.
+    bindPrepaintParkedSshSnapshot(session)
     bindRegisterPaneSerializer(session)
     bindSettlePaneSerializer(session)
     bindBuildColdRestoreAgentResumeStartup(session)
@@ -192,7 +193,6 @@ export function installRunDeferredConnect(session: ConnectPanePtySession): void 
     bindHiddenOutputSeqAndSkip(session)
     bindHiddenRestoreStateAndSshProbe(session)
 
-    bindPrepaintParkedSshSnapshot(session)
     bindHandleReattachResult(session)
     runDeferredSessionAttach(session)
   }

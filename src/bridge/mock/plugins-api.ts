@@ -1,4 +1,4 @@
-import type { PluginHostListEntry, PluginsApi } from '../../preload/api/plugin-host-api'
+import type { PluginHostListEntry, PluginsApi } from '../../shared/preload-api/api/plugin-host-api'
 import { UnimplementedBridgeError } from '../unimplemented-fallback'
 import { MOCK_GLOBAL_PLUGINS, MOCK_PROJECT_PLUGINS } from './fixtures'
 import { cloneMockValue } from './clone-mock-value'

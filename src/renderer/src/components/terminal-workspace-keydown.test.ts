@@ -190,17 +190,13 @@ describe('tab.close uses the unified active tab', () => {
     return event
   }
 
-  it.each(['editor', 'diff', 'conflict-review', 'check-details', 'browser'] as const)(
+  it.each(['editor', 'diff', 'conflict-review', 'check-details'] as const)(
     'closes the focused %s tab through the same command',
     (contentType) => {
       tab.contentType = contentType
       close()
-      expect(closeUnifiedTab).toHaveBeenCalledWith(
-        tab.id,
-        ...(contentType === 'browser' ? [undefined] : [])
-      )
+      expect(closeUnifiedTab).toHaveBeenCalledWith(tab.id)
       expect(controller.handleCloseFile).not.toHaveBeenCalled()
-      expect(controller.handleCloseBrowserTab).not.toHaveBeenCalled()
     }
   )
 

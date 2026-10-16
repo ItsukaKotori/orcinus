@@ -14,7 +14,6 @@ import {
 } from './terminal-file-link-hit-testing'
 import {
   getTerminalFileContext,
-  isHtmlFilePath,
   mapTerminalFilePath,
   shouldOpenTerminalFileWithSystemDefault,
   terminalLinkWslDistro
@@ -31,7 +30,6 @@ import {
   writeTerminalPathExistsCache
 } from './terminal-path-exists-cache'
 import {
-  getTerminalHtmlFileOpenHint,
   getTerminalOrcaFileOpenHint,
   getTerminalWorktreePathOpenHint,
   getTerminalFileOpenHint,
@@ -46,7 +44,7 @@ import { handleTerminalFileLink } from './terminal-file-link-actions'
 export { openDetectedFilePath } from './terminal-file-open-routing'
 export { mapTerminalFilePath } from './terminal-file-open-routing'
 export { openFilePathLinkAtBufferPosition } from './terminal-file-link-hit-testing'
-export { getTerminalFileOpenHint, getTerminalHtmlFileOpenHint, getTerminalUrlOpenHint }
+export { getTerminalFileOpenHint, getTerminalUrlOpenHint }
 export { isTerminalLinkActivation } from './terminal-link-activation'
 
 export type LinkHandlerDeps = {
@@ -218,11 +216,9 @@ export function createFilePathLinkProvider(
                     const hint = worktreeRootLink
                       ? getTerminalWorktreePathOpenHint(canOpenWithSystemDefault, showActions)
                       : canOpenWithSystemDefault
-                        ? isHtmlFilePath(mappedPath)
-                          ? getTerminalHtmlFileOpenHint(showActions)
-                          : showActions
-                            ? openLinkHint
-                            : getTerminalFileOpenHint(false)
+                        ? showActions
+                          ? openLinkHint
+                          : getTerminalFileOpenHint(false)
                         : getTerminalOrcaFileOpenHint(showActions)
                     linkTooltip.textContent = `${mappedPath} (${hint})`
                     linkTooltip.style.display = ''

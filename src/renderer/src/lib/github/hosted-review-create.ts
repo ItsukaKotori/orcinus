@@ -268,14 +268,6 @@ type HostedReviewCopy = {
 }
 
 function reviewCopy(provider: HostedReviewProvider): HostedReviewCopy {
-  if (provider === 'gitlab') {
-    return {
-      shortLabel: 'MR',
-      reviewLabel: 'merge request',
-      providerName: 'GitLab',
-      authInstruction: 'Run glab auth login'
-    }
-  }
   if (provider === 'azure-devops') {
     return {
       shortLabel: 'PR',

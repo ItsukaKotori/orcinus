@@ -54,11 +54,11 @@ function makeStore(settings: AppState['settings'] = null) {
 }
 
 const review: HostedReviewInfo = {
-  provider: 'gitlab',
+  provider: 'bitbucket',
   number: 5,
-  title: 'Shared MR status',
+  title: 'Shared PR status',
   state: 'open',
-  url: 'https://gitlab.com/g/p/-/merge_requests/5',
+  url: 'https://bitbucket.org/g/p/pull-requests/5',
   status: 'success',
   updatedAt: '2026-05-10T00:00:00.000Z',
   mergeable: 'MERGEABLE'
@@ -93,22 +93,22 @@ describe('hosted review slice', () => {
     const store = makeStore()
 
     await expect(
-      store.getState().fetchHostedReviewForBranch('/repo', 'feature/gitlab', {
-        linkedGitLabMR: 5
+      store.getState().fetchHostedReviewForBranch('/repo', 'feature/bitbucket', {
+        linkedBitbucketPR: 5
       })
     ).resolves.toEqual(review)
     await expect(
-      store.getState().fetchHostedReviewForBranch('/repo', 'feature/gitlab')
+      store.getState().fetchHostedReviewForBranch('/repo', 'feature/bitbucket')
     ).resolves.toEqual(review)
 
     expect(mockApi.hostedReview.forBranch).toHaveBeenCalledTimes(1)
     expect(mockApi.hostedReview.forBranch).toHaveBeenCalledWith({
       repoPath: '/repo',
-      branch: 'feature/gitlab',
+      branch: 'feature/bitbucket',
       currentHeadOid: null,
       linkedGitHubPR: null,
-      linkedGitLabMR: 5,
-      linkedBitbucketPR: null,
+      linkedBitbucketPR: 5,
+      linkedGitLabMR: null,
       linkedAzureDevOpsPR: null,
       linkedGiteaPR: null
     })
@@ -149,7 +149,7 @@ describe('hosted review slice', () => {
     const store = makeStore()
     store.setState({
       prCache: {
-        'repo-1::feature/gitlab': {
+        'repo-1::feature/bitbucket': {
           data: {
             number: 12,
             title: 'Old GitHub PR',
@@ -162,7 +162,7 @@ describe('hosted review slice', () => {
           },
           fetchedAt: 1
         },
-        '/repo::feature/gitlab': {
+        '/repo::feature/bitbucket': {
           data: {
             number: 99,
             title: 'Old path-scoped GitHub PR',
@@ -179,11 +179,11 @@ describe('hosted review slice', () => {
     } as unknown as Partial<AppState>)
 
     await expect(
-      store.getState().fetchHostedReviewForBranch('/repo', 'feature/gitlab')
+      store.getState().fetchHostedReviewForBranch('/repo', 'feature/bitbucket')
     ).resolves.toEqual(review)
 
-    expect(store.getState().prCache['repo-1::feature/gitlab']).toBeUndefined()
-    expect(store.getState().prCache['/repo::feature/gitlab']).toBeUndefined()
+    expect(store.getState().prCache['repo-1::feature/bitbucket']).toBeUndefined()
+    expect(store.getState().prCache['/repo::feature/bitbucket']).toBeUndefined()
   })
 
   it('uses SSH-scoped hosted review cache entries for SSH-backed repos', async () => {
@@ -194,15 +194,15 @@ describe('hosted review slice', () => {
     } as Partial<AppState>)
 
     await expect(
-      store.getState().fetchHostedReviewForBranch('/repo', 'feature/gitlab', {
+      store.getState().fetchHostedReviewForBranch('/repo', 'feature/bitbucket', {
         repoId: 'repo-1'
       })
     ).resolves.toEqual(review)
 
-    expect(store.getState().hostedReviewCache['ssh:ssh-1::repo-1::feature/gitlab']).toMatchObject({
+    expect(store.getState().hostedReviewCache['ssh:ssh-1::repo-1::feature/bitbucket']).toMatchObject({
       data: review
     })
-    expect(store.getState().hostedReviewCache['local::repo-1::feature/gitlab']).toBeUndefined()
+    expect(store.getState().hostedReviewCache['local::repo-1::feature/bitbucket']).toBeUndefined()
   })
 
   it('uses local hosted-review IPC for a known local repo while a runtime is focused', async () => {

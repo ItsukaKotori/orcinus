@@ -8,14 +8,12 @@ import {
   FilePlus,
   Files,
   FolderPlus,
-  Globe,
   ListCollapse,
   Pencil,
   Search,
   SquareTerminal,
   Trash2
 } from 'lucide-react'
-import { toast } from 'sonner'
 import {
   ContextMenuContent,
   ContextMenuItem,
@@ -25,7 +23,6 @@ import {
 import { useAppStore } from '@/store'
 import { useShortcutLabel } from '@/hooks/useShortcutLabel'
 import { detectLanguage } from '@/lib/language-detect'
-import { openFileInBrowserTab } from '@/lib/file-preview'
 import { isLocalPathOpenBlocked, showLocalPathOpenBlockedToast } from '@/lib/local-path-open-guard'
 import { translate } from '@/i18n/i18n'
 import type { FileExplorerRowProps } from './FileExplorerRow'
@@ -75,7 +72,6 @@ type FileExplorerRowContextMenuProps = Pick<
   | 'connectionId'
   | 'runtimeDownloadContext'
   | 'supportsFolderDownload'
-  | 'canOpenInOrcaBrowser'
   | 'canCollapseFolderSubtree'
   | 'targetDir'
   | 'targetDepth'
@@ -100,7 +96,6 @@ export function FileExplorerRowContextMenu({
   connectionId,
   runtimeDownloadContext,
   supportsFolderDownload,
-  canOpenInOrcaBrowser,
   canCollapseFolderSubtree,
   targetDir,
   targetDepth,
@@ -129,15 +124,6 @@ export function FileExplorerRowContextMenu({
     supportsFolderDownload
   )
   const showCopyFileAction = shouldShowCopyFileAction(node, connectionId, selectionSize)
-  const handleOpenInOrcaBrowser = useCallback(() => {
-    if (!activeWorktreeId) {
-      return
-    }
-    const result = openFileInBrowserTab({ filePath: node.path, worktreeId: activeWorktreeId })
-    if (result.status === 'unsupported') {
-      toast.error(result.message)
-    }
-  }, [activeWorktreeId, node.path])
   const handleDownload = useCallback(() => {
     const downloadTarget = connectionId || runtimeDownloadContext
     if (!downloadTarget) {
@@ -222,15 +208,6 @@ export function FileExplorerRowContextMenu({
         <ContextMenuItem onSelect={onViewFile}>
           <File />
           {translate('auto.components.right.sidebar.FileExplorerRow.1d8e182c32', 'View File')}
-        </ContextMenuItem>
-      )}
-      {!node.isDirectory && activeWorktreeId && canOpenInOrcaBrowser && (
-        <ContextMenuItem onSelect={handleOpenInOrcaBrowser}>
-          <Globe />
-          {translate(
-            'auto.components.right.sidebar.FileExplorerRow.dd112c81d2',
-            'Open in Orca Browser'
-          )}
         </ContextMenuItem>
       )}
       {!node.isDirectory && activeWorktreeId && detectLanguage(node.path) === 'markdown' && (

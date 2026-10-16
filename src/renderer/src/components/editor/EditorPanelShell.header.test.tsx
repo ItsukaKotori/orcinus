@@ -80,7 +80,6 @@ function renderShell(file: OpenFile, isCombinedDiff = false): string {
       disableRenameBrowse={false}
       onCopyPath={noop}
       onOpenDiffTargetFile={noop}
-      onOpenPreviewToSide={noop}
       onOpenMarkdownPreview={noop}
       onOpenContainingFolder={noop}
       onToggleSideBySide={noop}

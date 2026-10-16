@@ -1,6 +1,4 @@
 import { useMemo } from 'react'
-import { buildSearchableBrowserPages } from '@/lib/browser-palette-page-entries'
-import { searchBrowserPages, type SearchableBrowserPage } from '@/lib/browser-palette-search'
 import {
   buildSearchableWorkspaceTabs,
   searchWorkspaceTabs,
@@ -9,7 +7,6 @@ import {
 import { comparePaletteRankedItems } from '@/lib/cmd-j-section-leadership'
 import { getPaletteWorktreeIdentity } from '@/lib/palette-repo-resolution'
 import type {
-  BrowserPaletteItem,
   OpenTabPaletteItem,
   WorkspaceTabPaletteItem,
   WorktreePaletteItem
@@ -23,12 +20,10 @@ import {
   type PaletteSearchContext
 } from '@/lib/palette-match/palette-ranking'
 import {
-  buildBrowserPaletteItems,
   buildOpenTabPaletteItems,
   buildWorkspaceTabPaletteItems
 } from './worktree-jump-palette-open-tab-items'
 
-const EMPTY_BROWSER_PAGE_ENTRIES: SearchableBrowserPage[] = []
 const EMPTY_WORKSPACE_TAB_ENTRIES: SearchableWorkspaceTab[] = []
 
 type WorktreeJumpPaletteOpenTabsInput = WorktreeJumpPaletteStoreState &
@@ -45,9 +40,6 @@ export function useWorktreeJumpPaletteOpenTabs({
   repoMap,
   repoByHostIdentity,
   worktreeOrder,
-  browserTabsByWorktree,
-  browserPagesByWorkspace,
-  activeBrowserTabId,
   activeWorktreeId,
   activeWorkspaceExecutionHostId,
   activeTabType,
@@ -73,46 +65,6 @@ export function useWorktreeJumpPaletteOpenTabs({
   worktreeMatches,
   resolveWorktree
 }: WorktreeJumpPaletteOpenTabsInput) {
-  const browserPageEntries = useMemo<SearchableBrowserPage[]>(() => {
-    if (!paletteStatusInputsActive) {
-      return EMPTY_BROWSER_PAGE_ENTRIES
-    }
-    return buildSearchableBrowserPages({
-      worktrees: browserSortedWorktrees,
-      ownershipWorktrees: allWorktrees,
-      repoMap,
-      repoMapByHostIdentity: repoByHostIdentity,
-      worktreeOrder,
-      browserTabsByWorktree,
-      browserPagesByWorkspace,
-      activeBrowserTabId,
-      activeWorktreeId,
-      activeWorkspaceExecutionHostId,
-      activeTabType,
-      unifiedTabsByWorktree
-    })
-  }, [
-    paletteStatusInputsActive,
-    activeBrowserTabId,
-    activeTabType,
-    activeWorktreeId,
-    activeWorkspaceExecutionHostId,
-    allWorktrees,
-    browserPagesByWorkspace,
-    browserTabsByWorktree,
-    browserSortedWorktrees,
-    repoByHostIdentity,
-    repoMap,
-    unifiedTabsByWorktree,
-    worktreeOrder
-  ])
-  const browserMatches = useMemo(
-    () =>
-      searchBrowserPages(browserPageEntries, deferredQuery.trim(), {
-        context: paletteSearchContext
-      }),
-    [browserPageEntries, deferredQuery, paletteSearchContext]
-  )
   const workspaceTabEntries = useMemo<SearchableWorkspaceTab[]>(() => {
     if (!paletteStatusInputsActive) {
       return EMPTY_WORKSPACE_TAB_ENTRIES
@@ -214,24 +166,18 @@ export function useWorktreeJumpPaletteOpenTabs({
       )
     )
   }, [hasQuery, resolveWorktree, worktreeMatches])
-  const browserItems = useMemo<BrowserPaletteItem[]>(
-    () => buildBrowserPaletteItems(browserMatches),
-    [browserMatches]
-  )
   const workspaceTabItems = useMemo<WorkspaceTabPaletteItem[]>(
     () => buildWorkspaceTabPaletteItems(workspaceTabMatches),
     [workspaceTabMatches]
   )
   const openTabItems = useMemo<OpenTabPaletteItem[]>(
-    () => buildOpenTabPaletteItems({ browserItems, workspaceTabItems }),
-    [browserItems, workspaceTabItems]
+    () => buildOpenTabPaletteItems({ workspaceTabItems }),
+    [workspaceTabItems]
   )
 
   return {
-    browserPageEntries,
     workspaceTabEntries,
     worktreeItems,
-    browserItems,
     workspaceTabItems,
     openTabItems
   }

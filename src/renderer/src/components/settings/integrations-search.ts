@@ -26,32 +26,6 @@ export const getIntegrationsPaneSearchEntries = createLocalizedCatalog(() => [
   },
   {
     title: translate(
-      'auto.components.settings.integrations.search.b50b71ef9d',
-      'GitLab Integration'
-    ),
-    description: translate(
-      'auto.components.settings.integrations.search.6e2ab619c6',
-      'GitLab authentication via the glab CLI.'
-    ),
-    keywords: [
-      ...translateSearchKeyword(
-        'auto.components.settings.integrations.search.b939695c69',
-        'gitlab'
-      ),
-      ...translateSearchKeyword('auto.components.settings.integrations.search.b40cbe5de4', 'glab'),
-      ...translateSearchKeyword(
-        'auto.components.settings.integrations.search.c450244ad7',
-        'integration'
-      ),
-      ...translateSearchKeyword('auto.components.settings.integrations.search.581844769a', 'mr'),
-      ...translateSearchKeyword(
-        'auto.components.settings.integrations.search.371ee914d2',
-        'merge request'
-      )
-    ]
-  },
-  {
-    title: translate(
       'auto.components.settings.integrations.search.67a2a0e868',
       'Bitbucket Integration'
     ),

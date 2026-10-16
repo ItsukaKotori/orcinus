@@ -13,7 +13,6 @@ export {
   createWebRuntimeAgentSessionTerminal,
   createWebRuntimeAgentSessionTerminalWithLaunchDraft
 } from './web-runtime-terminal-creation'
-export { createWebRuntimeSessionBrowserTab } from './web-runtime-browser-creation'
 export { refreshWebRuntimeSessionTabsSnapshot } from './web-runtime-session-snapshot'
 export { activateWebRuntimeSessionWorktree } from './web-runtime-worktree-activation'
 export { activateWebRuntimeSessionTab } from './web-runtime-session-tab-lifecycle'

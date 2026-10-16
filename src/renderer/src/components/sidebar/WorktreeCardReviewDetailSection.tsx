@@ -107,8 +107,8 @@ export function WorktreeCardReviewDetailSection({
                     >
                       <Globe className="size-3.5" />
                       {translate(
-                        'auto.components.sidebar.WorktreeCardMeta.openInOrcaBrowser',
-                        'Open in Orca browser'
+                        'auto.components.GitHubItemDialog.checkOpenInBrowser',
+                        'Open in browser'
                       )}
                     </DropdownMenuItem>
                   )}

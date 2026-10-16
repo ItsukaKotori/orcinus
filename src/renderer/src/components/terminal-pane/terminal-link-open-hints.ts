@@ -1,6 +1,3 @@
-import { canSourceOwnerOpenInOrca } from '@/lib/http-link-destinations'
-import type { HttpLinkSourceOwner } from '@/lib/http-link-routing'
-
 export function isMacPlatform(): boolean {
   return navigator.userAgent.includes('Mac')
 }
@@ -23,65 +20,16 @@ export function getTerminalOrcaFileOpenHint(showActions = true): string {
     : `${prefix}Ctrl+click to open in Orca`
 }
 
-// Why: local HTML paths keep Shift+modifier as the system-browser shortcut.
-export function getTerminalHtmlFileOpenHint(showActions = true): string {
-  const prefix = terminalLinkActionHintPrefix(showActions)
-  return isMacPlatform()
-    ? `${prefix}⌘+click to open, or ⇧⌘+click for default browser`
-    : `${prefix}Ctrl+click to open, or Shift+Ctrl+click for default browser`
-}
-
 export type TerminalUrlOpenHintOptions = {
-  openLinksInApp?: boolean
-  modifierInverts?: boolean
   showActions?: boolean
 }
 
-// Why: remote owners advertise Orca only when their existing browser route is eligible.
-export function terminalUrlOpenHintOptionsFor(
-  settings:
-    | {
-        openLinksInApp?: boolean
-        openLinksInAppModifierInverts?: boolean
-        activeRuntimeEnvironmentId?: string | null
-      }
-    | null
-    | undefined,
-  sourceOwner?: HttpLinkSourceOwner,
-  canOpenOwnedBrowser = false
-): TerminalUrlOpenHintOptions {
-  const sourceCanOpenInOrca = sourceOwner
-    ? canSourceOwnerOpenInOrca(sourceOwner, canOpenOwnedBrowser)
-    : !settings?.activeRuntimeEnvironmentId?.trim()
-  return {
-    openLinksInApp: settings?.openLinksInApp === true,
-    modifierInverts: settings?.openLinksInAppModifierInverts === true && sourceCanOpenInOrca
-  }
-}
-
-// Why: with modifierInverts on, Shift no longer always means "system browser" —
-// it means "the other one" — so the hint has to name the actual destination.
+// Why: http links always open in the system browser now that the managed browser is gone.
 export function getTerminalUrlOpenHint(options: TerminalUrlOpenHintOptions = {}): string {
-  const invertsToOrca = options.modifierInverts === true && options.openLinksInApp !== true
   const prefix = terminalLinkActionHintPrefix(options.showActions !== false)
-  if (invertsToOrca) {
-    return isMacPlatform()
-      ? `${prefix}⌘+click to open, or ⇧⌘+click to open in Orca`
-      : `${prefix}Ctrl+click to open, or Shift+Ctrl+click to open in Orca`
-  }
   return isMacPlatform()
     ? `${prefix}⌘+click to open, or ⇧⌘+click for system browser`
     : `${prefix}Ctrl+click to open, or Shift+Ctrl+click for system browser`
-}
-
-export function getTerminalUrlSystemBrowserHint(): string {
-  return isMacPlatform() ? '⇧⌘+click for system browser' : 'Shift+Ctrl+click for system browser'
-}
-
-// Why: the mirror of the system-browser hint for surfaces where inverting sends the
-// modifier the other way; a plain click there already opens the system browser.
-export function getTerminalUrlOrcaBrowserHint(): string {
-  return isMacPlatform() ? '⇧⌘+click to open in Orca' : 'Shift+Ctrl+click to open in Orca'
 }
 
 export function getTerminalWorktreePathOpenHint(

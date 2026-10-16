@@ -284,11 +284,7 @@
         }
       },
       "browser-pane": {
-        "markup": {
-          "errorAttach": "Could not attach the markup screenshot.",
-          "errorCapture": "Could not capture the page to draw on.",
-          "errorUnavailable": "Screenshot markup is not available on this page."
-        }
+        "markup": {}
       },
       "browser": {
         "pane": {
@@ -477,8 +473,7 @@
         "project": {
           "view": {
             "surfaces": {
-              "2c4b1c2c08": "number",
-              "7616c986c6": "Open {{value0}} issues"
+              "2c4b1c2c08": "number"
             }
           }
         }
@@ -2398,9 +2393,7 @@
     "sshEgress": {
       "localChip": "This device"
     },
-    "sshRoute": {
-      "errorDescription": "Pages in this workspace browse through its SSH host, and that connection is not available right now."
-    }
+    "sshRoute": {}
   },
   "components": {
     "onboarding": {

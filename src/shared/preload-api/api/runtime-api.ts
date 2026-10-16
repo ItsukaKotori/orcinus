@@ -1,19 +1,13 @@
 import type { RuntimeHostStatusSnapshot } from '../../runtime-host-status'
 import type {
-  RuntimeBrowserDriverState,
   RuntimeRendererSyncWindowGraph,
   RuntimeStatus,
   RuntimeSyncWindowGraphResult,
   RuntimeTerminalDriverState
 } from '../../runtime-types'
 import type { RuntimeRpcResponse } from '../../runtime-rpc-envelope'
-import type { ClientHostedBrowserRowsEvent } from '../../client-hosted-browser-rows'
 import type { PublicKnownRuntimeEnvironment } from '../../runtime-environments'
 import type { VerifyAndAddRuntimeEnvironmentResult } from '../../remote-pairing-verification'
-import type {
-  BrowserClientHostPlacementPreparationRequest,
-  BrowserPageCreationPlacement
-} from '../../browser-client-host-placement'
 import type { RemoteRuntimeSharedConnectionDiagnostics } from '../../remote-runtime-shared-control-types'
 
 export type RuntimeEnvironmentSubscriptionHandle = {
@@ -41,16 +35,7 @@ export type RuntimeApi = {
         driver: RuntimeTerminalDriverState
       }[]
     >
-    getBrowserDrivers: () => Promise<
-      {
-        browserPageId: string
-        driver: RuntimeBrowserDriverState
-      }[]
-    >
-    getBrowserRemoteViewerPages?: () => Promise<string[]>
-    getClientHostedBrowserRows: () => Promise<ClientHostedBrowserRowsEvent[]>
     restoreTerminalFit: (ptyId: string) => Promise<{ restored: boolean }>
-    reclaimBrowserForDesktop: (browserPageId: string) => Promise<{ reclaimed: boolean }>
     onTerminalFitOverrideChanged: (
       callback: (event: {
         ptyId: string
@@ -61,17 +46,6 @@ export type RuntimeApi = {
     ) => () => void
     onTerminalDriverChanged: (
       callback: (event: { ptyId: string; driver: RuntimeTerminalDriverState }) => void
-    ) => () => void
-    onBrowserDriverChanged: (
-      callback: (event: { browserPageId: string; driver: RuntimeBrowserDriverState }) => void
-    ) => () => void
-    // Why optional: a renderer running against an older preload keeps working without the
-    // retention signal instead of throwing on every mount.
-    onBrowserRemoteViewersChanged?: (
-      callback: (event: { browserPageId: string; hasRemoteViewers: boolean }) => void
-    ) => () => void
-    onClientHostedBrowserRowsChanged: (
-      callback: (event: ClientHostedBrowserRowsEvent) => void
     ) => () => void
   }
   runtimeEnvironments: {
@@ -109,10 +83,7 @@ export type RuntimeApi = {
         diagnostics: RemoteRuntimeSharedConnectionDiagnostics
       }) => void
     ) => () => void
-    prepareBrowserClientHostPlacement: (
-      args: BrowserClientHostPlacementPreparationRequest
-    ) => Promise<BrowserPageCreationPlacement>
-    // Why: system resume / browser online advance pending shared-control reconnect timers only.
+    // Why: system resume advances pending shared-control reconnect timers only.
     retryConnectionsNow?: () => Promise<void>
     call: (args: {
       selector: string

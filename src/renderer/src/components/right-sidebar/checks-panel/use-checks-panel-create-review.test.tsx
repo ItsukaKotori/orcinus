@@ -31,7 +31,6 @@ describe('useChecksPanelCreateReview provider flow', () => {
       createPrPushFirst: false,
       createStackedHostedReview: vi.fn(),
       fallbackGitHubPRNumber: null,
-      fetchGitLabDetails: vi.fn(),
       fetchHostedReviewForBranch: vi.fn(),
       hostedReviewCreateCopy: {
         providerName: 'GitHub',

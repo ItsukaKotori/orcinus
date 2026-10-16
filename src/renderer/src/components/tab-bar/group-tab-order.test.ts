@@ -34,21 +34,6 @@ function editorTab(id: string, groupId: string, entityId: string, sortOrder: num
   }
 }
 
-function browserTab(id: string, groupId: string, entityId: string, sortOrder: number): Tab {
-  return {
-    id,
-    entityId,
-    groupId,
-    worktreeId: 'wt',
-    contentType: 'browser',
-    label: entityId,
-    customLabel: null,
-    color: null,
-    sortOrder,
-    createdAt: sortOrder
-  }
-}
-
 function agentSessionTab(id: string, groupId: string, sessionId: string, sortOrder: number): Tab {
   return {
     id,
@@ -98,7 +83,7 @@ describe('getGroupVisibleTabOrder', () => {
       terminalTab('tab-t1', 'g1', 'term-1', 0),
       agentSessionTab('tab-a1', 'g1', 'session-1', 1)
     ]
-    expect(getGroupVisibleTabOrder(group, tabs, new Set(['term-1']), new Set(), new Set())).toEqual(
+    expect(getGroupVisibleTabOrder(group, tabs, new Set(['term-1']), new Set())).toEqual(
       [
         { type: 'terminal', id: 'term-1', tabId: 'tab-t1' },
         { type: 'agent-session', id: 'session-1', tabId: 'tab-a1' }
@@ -123,8 +108,7 @@ describe('getGroupVisibleTabOrder', () => {
         group,
         tabs,
         new Set(['term-1', 'term-2']),
-        new Set(['/repo/file.md']),
-        new Set()
+        new Set(['/repo/file.md'])
       )
     ).toEqual([
       { type: 'terminal', id: 'term-1', tabId: 'tab-t1' },
@@ -154,7 +138,6 @@ describe('getGroupVisibleTabOrder', () => {
         group,
         tabs,
         new Set(['term-1', 'term-2', 'term-3']),
-        new Set(),
         new Set()
       ).map((t) => t.id)
     ).toEqual(['term-2', 'term-3', 'term-1'])
@@ -171,36 +154,9 @@ describe('getGroupVisibleTabOrder', () => {
       terminalTab('tab-t1', 'g1', 'term-1', 0),
       terminalTab('tab-t2', 'g1', 'term-zombie', 1)
     ]
-    expect(getGroupVisibleTabOrder(group, tabs, new Set(['term-1']), new Set(), new Set())).toEqual(
+    expect(getGroupVisibleTabOrder(group, tabs, new Set(['term-1']), new Set())).toEqual(
       [{ type: 'terminal', id: 'term-1', tabId: 'tab-t1' }]
     )
-  })
-
-  it('includes browser tabs keyed by entityId in the declared group order', () => {
-    const group: TabGroup = {
-      id: 'g1',
-      worktreeId: 'wt',
-      activeTabId: 'tab-b1',
-      tabOrder: ['tab-t1', 'tab-b1', 'tab-e1']
-    }
-    const tabs: Tab[] = [
-      terminalTab('tab-t1', 'g1', 'term-1', 0),
-      browserTab('tab-b1', 'g1', 'browser-1', 1),
-      editorTab('tab-e1', 'g1', '/repo/file.md', 2)
-    ]
-    expect(
-      getGroupVisibleTabOrder(
-        group,
-        tabs,
-        new Set(['term-1']),
-        new Set(['/repo/file.md']),
-        new Set(['browser-1'])
-      )
-    ).toEqual([
-      { type: 'terminal', id: 'term-1', tabId: 'tab-t1' },
-      { type: 'browser', id: 'browser-1', tabId: 'tab-b1' },
-      { type: 'editor', id: '/repo/file.md', tabId: 'tab-e1' }
-    ])
   })
 
   it('matches the strip lookup when duplicate entities resolve to the last tab copy', () => {
@@ -215,7 +171,7 @@ describe('getGroupVisibleTabOrder', () => {
       terminalTab('tab-t2', 'g1', 'term-1', 1)
     ]
 
-    expect(getGroupVisibleTabOrder(group, tabs, new Set(['term-1']), new Set(), new Set())).toEqual(
+    expect(getGroupVisibleTabOrder(group, tabs, new Set(['term-1']), new Set())).toEqual(
       [{ type: 'terminal', id: 'term-1', tabId: 'tab-t2' }]
     )
   })
@@ -238,8 +194,7 @@ describe('getGroupVisibleTabOrder', () => {
         group,
         tabs,
         new Set(['term-1']),
-        new Set(['/repo/file.md']),
-        new Set()
+        new Set(['/repo/file.md'])
       )
     ).toEqual([
       { type: 'terminal', id: 'term-1', tabId: 'tab-t1' },
@@ -253,21 +208,15 @@ describe('getGroupVisibleTabOrder', () => {
       id: 'g1',
       worktreeId: 'wt',
       activeTabId: 'tab-t1',
-      tabOrder: ['tab-b1', 'tab-t1']
+      tabOrder: ['tab-e1', 'tab-t1']
     }
     const tabs: Tab[] = [
-      browserTab('tab-b1', 'g1', 'collision', 0),
+      editorTab('collision', 'g1', '/repo/collision.md', 0),
       terminalTab('tab-t1', 'g1', 'collision', 1)
     ]
 
     expect(
-      getGroupVisibleTabOrder(
-        group,
-        tabs,
-        new Set(['collision']),
-        new Set(),
-        new Set(['collision'])
-      )
+      getGroupVisibleTabOrder(group, tabs, new Set(['collision']), new Set(['/repo/collision.md']))
     ).toEqual([{ type: 'terminal', id: 'collision', tabId: 'tab-t1' }])
   })
 
@@ -275,11 +224,11 @@ describe('getGroupVisibleTabOrder', () => {
     const group: TabGroup = {
       id: 'g1',
       worktreeId: 'wt',
-      activeTabId: 'tab-b1',
-      tabOrder: ['tab-b1', 'tab-t1']
+      activeTabId: 'tab-e1',
+      tabOrder: ['tab-e1', 'tab-t1']
     }
     const tabs: Tab[] = [
-      browserTab('tab-b1', 'g1', 'collision', 0),
+      editorTab('tab-e1', 'g1', '/repo/collision.md', 0),
       terminalTab('tab-t1', 'g1', 'collision', 1)
     ]
 
@@ -288,12 +237,11 @@ describe('getGroupVisibleTabOrder', () => {
         group,
         tabs,
         new Set(['collision']),
-        new Set(),
-        new Set(['collision']),
+        new Set(['/repo/collision.md']),
         true
       )
     ).toEqual([
-      { type: 'browser', id: 'collision', tabId: 'tab-b1' },
+      { type: 'editor', id: '/repo/collision.md', tabId: 'tab-e1' },
       { type: 'terminal', id: 'collision', tabId: 'tab-t1' }
     ])
   })
@@ -307,7 +255,6 @@ type NavState = Pick<
   | 'tabBarOrderByWorktree'
   | 'tabsByWorktree'
   | 'openFiles'
-  | 'browserTabsByWorktree'
 >
 
 function makeState(overrides: Partial<NavState>): NavState {
@@ -318,7 +265,6 @@ function makeState(overrides: Partial<NavState>): NavState {
     tabBarOrderByWorktree: {},
     tabsByWorktree: {},
     openFiles: [],
-    browserTabsByWorktree: {},
     ...overrides
   }
 }
@@ -455,7 +401,7 @@ describe('group order matches the rendered tab strip', () => {
       if (!tab) {
         return tabId
       }
-      return tab.contentType === 'terminal' || tab.contentType === 'browser' ? tab.entityId : tab.id
+      return tab.contentType === 'terminal' ? tab.entityId : tab.id
     })
     const terminalMap = new Map(
       groupTabs
@@ -468,12 +414,10 @@ describe('group order matches the rendered tab strip', () => {
         .filter((tab) => tab.contentType === 'terminal')
         .map((tab) => tab.entityId),
       editorFileIds: [],
-      browserTabIds: [],
       agentSessionTabIds: [],
       pluginTabIds: [],
       terminalMap: terminalMap as never,
       editorMap: new Map(),
-      browserMap: new Map(),
       agentSessionMap: new Map(),
       pluginTabMap: new Map(),
       unifiedTabByVisibleId: new Map()
@@ -495,7 +439,7 @@ describe('group order matches the rendered tab strip', () => {
 
     expect(renderedStripIds(group, tabs)).toEqual(['term-1', 'term-2'])
     expect(
-      getGroupVisibleTabOrder(group, tabs, new Set(['term-1', 'term-2']), new Set(), new Set()).map(
+      getGroupVisibleTabOrder(group, tabs, new Set(['term-1', 'term-2']), new Set()).map(
         (entry) => entry.id
       )
     ).toEqual(['term-1', 'term-2'])
@@ -521,7 +465,6 @@ describe('group order matches the rendered tab strip', () => {
         group,
         tabs,
         new Set(['term-1', 'term-2', 'term-3']),
-        new Set(),
         new Set()
       ).map((entry) => entry.id)
     ).toEqual(['term-3', 'term-2', 'term-1'])
@@ -540,7 +483,7 @@ describe('group order matches the rendered tab strip', () => {
     ]
 
     expect(
-      getGroupVisibleTabOrder(group, tabs, new Set(['term-1']), new Set(), new Set()).map(
+      getGroupVisibleTabOrder(group, tabs, new Set(['term-1']), new Set()).map(
         (entry) => entry.id
       )
     ).toEqual(['term-1'])

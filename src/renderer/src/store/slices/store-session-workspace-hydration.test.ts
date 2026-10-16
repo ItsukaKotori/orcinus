@@ -5,7 +5,7 @@ import type { SshProviderEpoch } from '../../../../shared/ssh-types'
 import { getDefaultWorkspaceSession } from '../../../../shared/constants'
 import { folderWorkspaceKey } from '../../../../shared/workspace-scope'
 import { createTestStore, makeWorktree, makeTab, makeLayout, TEST_REPO } from './store-test-helpers'
-import { createStoreSessionMockApi, makeBrowserTab } from './store-session-test-harness'
+import { createStoreSessionMockApi } from './store-session-test-harness'
 
 // Mock sonner (imported by repos.ts)
 vi.mock('sonner', () => ({ toast: { info: vi.fn(), success: vi.fn(), error: vi.fn() } }))
@@ -317,7 +317,7 @@ describe('restored folder workspace hydration', () => {
     vi.clearAllMocks()
   })
 
-  it('keeps runtime folder workspace tabs, files, and browsers before remote catalogs load', () => {
+  it('keeps runtime folder workspace tabs and files before remote catalogs load', () => {
     const store = createTestStore()
     const folderKey = folderWorkspaceKey('remote-folder')
     const groupId = 'group-folder'
@@ -341,34 +341,6 @@ describe('restored folder workspace hydration', () => {
         ]
       },
       activeFileIdByWorktree: { [folderKey]: editorFileId },
-      browserTabsByWorktree: {
-        [folderKey]: [
-          makeBrowserTab({
-            id: 'browser-folder',
-            worktreeId: folderKey,
-            url: 'https://example.com'
-          })
-        ]
-      },
-      browserPagesByWorkspace: {
-        'browser-folder': [
-          {
-            id: 'browser-page-folder',
-            workspaceId: 'browser-folder',
-            worktreeId: folderKey,
-            url: 'https://example.com',
-            title: 'Example',
-            loading: false,
-            faviconUrl: null,
-            canGoBack: false,
-            canGoForward: false,
-            loadError: null,
-            createdAt: 1
-          }
-        ]
-      },
-      activeBrowserTabIdByWorktree: { [folderKey]: 'browser-folder' },
-      activeTabTypeByWorktree: { [folderKey]: 'browser' as const },
       unifiedTabs: {
         [folderKey]: [
           {
@@ -394,18 +366,6 @@ describe('restored folder workspace hydration', () => {
             color: null,
             sortOrder: 1,
             createdAt: 2
-          },
-          {
-            id: 'browser-folder',
-            entityId: 'browser-folder',
-            groupId,
-            worktreeId: folderKey,
-            contentType: 'browser' as const,
-            label: 'Example',
-            customLabel: null,
-            color: null,
-            sortOrder: 2,
-            createdAt: 3
           }
         ]
       },
@@ -414,9 +374,9 @@ describe('restored folder workspace hydration', () => {
           {
             id: groupId,
             worktreeId: folderKey,
-            activeTabId: 'browser-folder',
-            tabOrder: ['terminal-folder', editorFileId, 'browser-folder'],
-            recentTabIds: ['terminal-folder', editorFileId, 'browser-folder']
+            activeTabId: editorFileId,
+            tabOrder: ['terminal-folder', editorFileId],
+            recentTabIds: ['terminal-folder', editorFileId]
           }
         ]
       },
@@ -430,7 +390,6 @@ describe('restored folder workspace hydration', () => {
     store.getState().hydrateWorkspaceSession(session, options)
     store.getState().hydrateTabsSession(session, options)
     store.getState().hydrateEditorSession(session, options)
-    store.getState().hydrateBrowserSession(session, options)
 
     const state = store.getState()
     expect(state.activeWorktreeId).toBe(folderKey)
@@ -438,14 +397,10 @@ describe('restored folder workspace hydration', () => {
     expect(state.tabsByWorktree[folderKey]?.map((tab) => tab.id)).toEqual(['terminal-folder'])
     expect(state.unifiedTabsByWorktree[folderKey]?.map((tab) => tab.id)).toEqual([
       'terminal-folder',
-      editorFileId,
-      'browser-folder'
+      editorFileId
     ])
     expect(state.openFiles.map((file) => file.worktreeId)).toEqual([folderKey])
     expect(state.activeFileIdByWorktree[folderKey]).toBe(editorFileId)
-    expect(state.browserTabsByWorktree[folderKey]?.map((tab) => tab.id)).toEqual(['browser-folder'])
-    expect(state.browserPagesByWorkspace['browser-folder']?.[0]?.worktreeId).toBe(folderKey)
-    expect(state.activeTabTypeByWorktree[folderKey]).toBe('browser')
   })
 
   it('clears unverified-loss markers for rows retired by scoped hydration', () => {
