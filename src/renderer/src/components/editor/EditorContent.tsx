@@ -1,8 +1,6 @@
-import { useAppStore } from '@/store'
 import type { MarkdownViewMode, OpenFile, PendingEditorReveal } from '@/store/slices/editor'
 import type { GitDiffResult } from '../../../../shared/git-diff-compare-types'
 import type { GitStatusEntry } from '../../../../shared/git-status-types'
-import { CheckRunDetailsPanel } from './CheckRunDetailsPanel'
 import { CombinedDiffViewer, MarkdownPreview } from './editor-lazy-views'
 import { EditorConflictReviewSurface } from './EditorConflictReviewSurface'
 import { EditorDiffFileSurface } from './EditorDiffFileSurface'
@@ -107,7 +105,6 @@ export function EditorContent({
       ? `${activeFile.filePath}:pdf`
       : `${activeFile.filePath}::${viewStateScopeId}:pdf`
   const monacoLanguage = resolvedLanguage === 'notebook' ? 'json' : resolvedLanguage
-  const reloadOpenCheckRunDetailsTab = useAppStore((state) => state.reloadOpenCheckRunDetailsTab)
   const markdownDocuments = useMarkdownDocuments(activeFile, isMarkdown, mdViewMode, handleSave)
   const getConflictNavigation = useEditorConflictNavigation()
   const activeConflictEntry =
@@ -118,34 +115,6 @@ export function EditorContent({
       activeFile.diffSource === 'combined-uncommitted' ||
       activeFile.diffSource === 'combined-branch' ||
       activeFile.diffSource === 'combined-commit')
-
-  if (activeFile.mode === 'check-details') {
-    const checkRunDetails = activeFile.checkRunDetails
-    if (!checkRunDetails) {
-      return (
-        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-          {translate(
-            'auto.components.editor.EditorContent.6c4f1a8d2e',
-            'Check details are unavailable.'
-          )}
-        </div>
-      )
-    }
-    const details = checkRunDetails.details
-    return (
-      <CheckRunDetailsPanel
-        check={checkRunDetails.check}
-        details={details}
-        loading={checkRunDetails.loading}
-        error={checkRunDetails.error}
-        openUrl={details?.detailsUrl ?? details?.url ?? checkRunDetails.check.url}
-        worktreeId={activeFile.worktreeId}
-        onRefresh={() => {
-          void reloadOpenCheckRunDetailsTab(activeFile.id)
-        }}
-      />
-    )
-  }
 
   if (activeFile.mode === 'conflict-review') {
     return (

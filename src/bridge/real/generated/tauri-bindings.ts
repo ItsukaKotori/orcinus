@@ -266,8 +266,6 @@ export const commands = {
 	gitRemoteUrls: (args: GitWorktreeArgs) => typedError<GitRemoteUrl[], BridgeError>(__TAURI_INVOKE("git_remote_urls", { args })),
 	gitRead: (args: GitReadArgs) => typedError<GitReadResult, BridgeError>(__TAURI_INVOKE("git_read", { args })),
 	gitPush: (args: GitPushArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_push", { args })),
-	ghExec: (args: GhExecArgs) => typedError<GhExecResult, BridgeError>(__TAURI_INVOKE("gh_exec", { args })),
-	ghEnvProbe: () => typedError<GhEnvProbe, BridgeError>(__TAURI_INVOKE("gh_env_probe")),
 	/**  `aiVault.listSessions`: `unlimited` is accepted and ignored (spec §5). */
 	aiVaultListSessions: (args: {
 	limit?: number | null,
@@ -1005,24 +1003,6 @@ export type FsWriteFileArgs = {
 export type GetBaseRefDefaultArgs = {
 	repoId: string,
 	hostId?: string | null,
-};
-
-export type GhEnvProbe = {
-	token: string | null,
-};
-
-export type GhExecArgs = {
-	args: string[],
-	cwd?: string | null,
-	timeoutMs?: number | null,
-	maxBuffer?: number | null,
-	stdin?: string | null,
-};
-
-export type GhExecResult = {
-	stdout: string,
-	stderr: string,
-	code: number | null,
 };
 
 /**  Mirrors `GitBranchChangeEntry` in `src/shared/git-diff-compare-types.ts`. */

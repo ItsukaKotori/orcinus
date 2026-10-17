@@ -59,7 +59,7 @@ describe('activateAndRevealWorktree', () => {
   it('records a visit when activating the same worktree changes the current view', () => {
     const worktree = makeWorktree()
     const { markWorktreeVisited, recordWorktreeVisit } = seedAlreadyActiveWorktree(worktree, {
-      activeView: 'tasks'
+      activeView: 'space'
     })
 
     const result = activateAndRevealWorktree(worktree.id)
@@ -196,7 +196,6 @@ describe('activateAndRevealWorktree', () => {
       } as unknown as ReturnType<typeof useAppStore.getState>['settings'],
       markWorktreeVisited: vi.fn(),
       recordWorktreeVisit: vi.fn(),
-      refreshGitHubForWorktreeIfStale: vi.fn(),
       revealWorktreeInSidebar
     })
 
@@ -248,7 +247,6 @@ describe('activateAndRevealWorktree', () => {
       } as unknown as ReturnType<typeof useAppStore.getState>['settings'],
       markWorktreeVisited: vi.fn(),
       recordWorktreeVisit: vi.fn(),
-      refreshGitHubForWorktreeIfStale: vi.fn(),
       revealWorktreeInSidebar
     })
 
@@ -303,7 +301,6 @@ describe('activateAndRevealWorktree', () => {
       } as unknown as ReturnType<typeof useAppStore.getState>['settings'],
       markWorktreeVisited: vi.fn(),
       recordWorktreeVisit: vi.fn(),
-      refreshGitHubForWorktreeIfStale: vi.fn(),
       revealWorktreeInSidebar: vi.fn()
     })
 
@@ -370,7 +367,6 @@ describe('activateAndRevealWorktree', () => {
       } as unknown as ReturnType<typeof useAppStore.getState>['settings'],
       markWorktreeVisited: vi.fn(),
       recordWorktreeVisit: vi.fn(),
-      refreshGitHubForWorktreeIfStale: vi.fn(),
       revealWorktreeInSidebar: vi.fn()
     })
 
@@ -438,7 +434,6 @@ describe('activateAndRevealWorktree', () => {
       },
       markWorktreeVisited: vi.fn(),
       recordWorktreeVisit: vi.fn(),
-      refreshGitHubForWorktreeIfStale: vi.fn(),
       revealWorktreeInSidebar: vi.fn()
     })
 
@@ -589,7 +584,6 @@ describe('activateAndRevealWorktree', () => {
       },
       markWorktreeVisited: vi.fn(),
       recordWorktreeVisit: vi.fn(),
-      refreshGitHubForWorktreeIfStale: vi.fn(),
       revealWorktreeInSidebar: vi.fn(),
       reconcileWorktreeTabModel: vi.fn(() => ({
         renderableTabCount: 1,

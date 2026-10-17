@@ -6,13 +6,13 @@ type NewWorkspaceShortcutModalData = {
 }
 
 export function buildNewWorkspaceShortcutModalData(
-  _state: Pick<AppState, 'activeView' | 'taskPageData'>
+  _state: Pick<AppState, 'activeView'>
 ): NewWorkspaceShortcutModalData {
   return { telemetrySource: 'shortcut' }
 }
 
 export function openNewWorkspaceFromShortcut(
-  state: Pick<AppState, 'activeModal' | 'activeView' | 'taskPageData' | 'openModal'>
+  state: Pick<AppState, 'activeModal' | 'activeView' | 'openModal'>
 ): void {
   if (state.activeModal === 'new-workspace-composer') {
     return

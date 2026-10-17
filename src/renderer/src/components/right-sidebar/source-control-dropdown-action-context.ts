@@ -11,16 +11,15 @@ import { formatForcePushTitle } from './source-control-dropdown-labels'
 
 export type DropdownActionContext = {
   upstreamStatus: PrimaryActionInputs['upstreamStatus']
-  hostedReviewCreation: PrimaryActionInputs['hostedReviewCreation']
   branchCommitsAhead: number | undefined
   conflictOperation: GitConflictOperation
-  isPullRequestOperationActive: boolean
-  canPushLinkedReviewWithoutUpstream: boolean
   rebaseBaseRef: string | null | undefined
   hasDirtyLocalChanges: boolean
   upstreamLoading: boolean
   hasUpstream: boolean
+  /** Hosted-review gates — inert after the GitHub trim. */
   hasOpenHostedReview: boolean
+  canPushLinkedReviewWithoutUpstream: boolean
   canPushUntrackedHostedReview: boolean
   pushBlockedByOpenHostedReviewTarget: boolean
   publishBlockedByMergedPR: boolean
@@ -46,15 +45,10 @@ export function deriveDropdownActionContext(inputs: DropdownActionInputs): Dropd
     isCommitting,
     isRemoteOperationActive,
     upstreamStatus,
-    prState,
-    isPRStateLoading,
-    hostedReviewCreation,
     conflictOperation = 'unknown',
     branchCommitsAhead,
     hasCurrentBranch = true,
-    canPushLinkedReviewWithoutUpstream = false,
-    rebaseBaseRef,
-    isPullRequestOperationActive = false
+    rebaseBaseRef
   } = inputs
 
   const hasStaged = stagedCount > 0
@@ -62,19 +56,6 @@ export function deriveDropdownActionContext(inputs: DropdownActionInputs): Dropd
   // Why: undefined upstreamStatus means loading (transient after a worktree switch), not unpublished — treating it as hasUpstream=false would re-enable Publish Branch and clobber the real upstream.
   const upstreamLoading = upstreamStatus === undefined
   const hasUpstream = upstreamStatus?.hasUpstream ?? false
-  const hasOpenHostedReview = prState === 'open' || prState === 'draft'
-  const canPushUntrackedHostedReview =
-    !hasUpstream &&
-    hasOpenHostedReview &&
-    hasCurrentBranch &&
-    branchCommitsAhead !== 0 &&
-    canPushLinkedReviewWithoutUpstream
-  // Why: only a missing review head hard-blocks; branchCommitsAhead === 0 still means the target is known, so Push stays available.
-  const pushBlockedByOpenHostedReviewTarget =
-    !hasUpstream && hasOpenHostedReview && !canPushLinkedReviewWithoutUpstream
-  const publishBlockedByMergedPR = !hasUpstream && prState === 'merged'
-  const publishBlockedByPRLoading = !hasUpstream && !!isPRStateLoading
-  const publishBlockedByOpenHostedReview = !hasUpstream && hasOpenHostedReview
   const publishBlockedByDetachedHead = !hasUpstream && !hasCurrentBranch
   const ahead = upstreamStatus?.ahead ?? 0
   const behind = upstreamStatus?.behind ?? 0
@@ -89,7 +70,7 @@ export function deriveDropdownActionContext(inputs: DropdownActionInputs): Dropd
   const forcePushTitle = formatForcePushTitle(branchCommitsAhead, upstreamStatus?.upstreamName)
 
   // Why: lock the whole menu during any in-flight op so a second click can't queue on a stale status snapshot.
-  const globalBusy = isCommitting || isRemoteOperationActive || isPullRequestOperationActive
+  const globalBusy = isCommitting || isRemoteOperationActive
 
   const commitDisabledReason = resolveCommitDisabledReason({
     stagedCount,
@@ -106,26 +87,26 @@ export function deriveDropdownActionContext(inputs: DropdownActionInputs): Dropd
       hasUnresolvedConflicts,
       isCommitting,
       isRemoteOperationActive,
-      isPullRequestOperationActive
+      isPullRequestOperationActive: false
     })
 
   return {
     upstreamStatus,
-    hostedReviewCreation,
     branchCommitsAhead,
     conflictOperation,
-    isPullRequestOperationActive,
-    canPushLinkedReviewWithoutUpstream,
     rebaseBaseRef,
     hasDirtyLocalChanges,
     upstreamLoading,
     hasUpstream,
-    hasOpenHostedReview,
-    canPushUntrackedHostedReview,
-    pushBlockedByOpenHostedReviewTarget,
-    publishBlockedByMergedPR,
-    publishBlockedByPRLoading,
-    publishBlockedByOpenHostedReview,
+    // Why: hosted-review gating is gone with the GitHub trim; the rows keep
+    // their review-aware copy branches, permanently unblocked.
+    hasOpenHostedReview: false,
+    canPushLinkedReviewWithoutUpstream: false,
+    canPushUntrackedHostedReview: false,
+    pushBlockedByOpenHostedReviewTarget: false,
+    publishBlockedByMergedPR: false,
+    publishBlockedByPRLoading: false,
+    publishBlockedByOpenHostedReview: false,
     publishBlockedByDetachedHead,
     ahead,
     behind,

@@ -7,8 +7,8 @@ import type { OnboardingState } from '../../../../shared/onboarding-state-types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import { STEPS } from './use-onboarding-flow-types'
 
-export function shouldSkipIntegrationsStep(status: AppState['preflightStatus']): boolean {
-  return status?.gh.installed === true
+export function shouldSkipIntegrationsStep(_status: AppState['preflightStatus']): boolean {
+  return false
 }
 
 export function shouldSkipWindowsTerminalStep(isWindows: boolean): boolean {

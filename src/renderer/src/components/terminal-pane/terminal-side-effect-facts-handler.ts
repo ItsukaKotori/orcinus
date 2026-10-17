@@ -14,7 +14,6 @@
  */
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { ParsedAgentStatusPayload } from '../../../../shared/agent-status-types'
-import type { TerminalGitHubPRLink } from '../../../../shared/terminal-github-pr-link-detector'
 import type {
   TerminalSideEffectBatch,
   TerminalSideEffectFact
@@ -80,7 +79,6 @@ export type TerminalSideEffectFactConsumerCallbacks = {
   /** OSC 133;D — same policy hook the byte-mode commandLifecycle drove
    *  (stale agent-status row drop + interrupt-inference coordination). */
   onCommandFinished?: (bestEffortExitCode: number | null) => void
-  onPrLink?: (link: TerminalGitHubPRLink) => void
   /** Command Code output scrape (no hooks): working seeds the status row;
    *  done is settle-checked by the pane policy before completing the turn. */
   onCommandCodeWorking?: (prompt: string) => void
@@ -134,9 +132,6 @@ function applyLiveFact(entry: ConsumerEntry, fact: TerminalSideEffectFact, seq: 
       return
     case 'command-finished':
       entry.callbacks.onCommandFinished?.(fact.exitCode)
-      return
-    case 'pr-link':
-      entry.callbacks.onPrLink?.(fact.link)
       return
     case 'command-code-working':
       entry.callbacks.onCommandCodeWorking?.(fact.prompt)

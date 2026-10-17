@@ -2,17 +2,14 @@ import { getArtifactsSettingsSearchEntries } from '@/components/settings/artifac
 import { getAutomationsSettingsSearchEntries } from '@/components/settings/automations-settings-search'
 import { getCommitMessageAiPaneSearchEntries } from '@/components/settings/commit-message-ai-search'
 import { getFloatingWorkspaceSearchEntries } from '@/components/settings/floating-workspace-search'
-import { getGitProviderApiBudgetSearchEntries } from '@/components/settings/git-provider-api-budget-search'
 import { getGitPaneSearchEntries } from '@/components/settings/git-search'
 import { getQuickCommandsPaneSearchEntries } from '@/components/settings/quick-commands-search'
-import { getTasksPaneSearchEntries } from '@/components/settings/tasks-search'
 import { translate } from '@/i18n/i18n'
 import type { SettingsNavSection } from '@/lib/settings-navigation-types'
 import {
   CalendarClock,
   Files,
   GitBranch,
-  ListChecks,
   PanelsTopLeft,
   Play,
   SquareTerminal
@@ -61,22 +58,7 @@ export function buildWorkflowSettingsSections(
       icon: GitBranch,
       // Why: Git AI Author is rendered inside Git, so shared
       // metadata must search both surfaces wherever Git appears.
-      searchEntries: [
-        ...getGitPaneSearchEntries(),
-        ...getCommitMessageAiPaneSearchEntries(),
-        ...getGitProviderApiBudgetSearchEntries()
-      ],
-      group: 'workflows'
-    },
-    {
-      id: 'tasks',
-      title: translate('auto.hooks.useSettingsNavigationMetadata.85f4fd7710', 'Task Sources'),
-      description: translate(
-        'auto.hooks.useSettingsNavigationMetadata.tasksDescription',
-        'Connect providers, install the Linear skill, and choose what appears in Tasks.'
-      ),
-      icon: ListChecks,
-      searchEntries: getTasksPaneSearchEntries(),
+      searchEntries: [...getGitPaneSearchEntries(), ...getCommitMessageAiPaneSearchEntries()],
       group: 'workflows'
     },
     {

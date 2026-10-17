@@ -232,28 +232,18 @@ describe('worktree-palette-create-action', () => {
   it('allows Enter for a typed create name without requiring arrow navigation', () => {
     expect(
       isWorktreePaletteCreateActivationAllowed({
-        hasTaskUrlIntent: false,
         hasCreateName: true,
         selectionMovedByUser: false
       })
     ).toBe(true)
     expect(
       isWorktreePaletteCreateActivationAllowed({
-        hasTaskUrlIntent: false,
         hasCreateName: false,
         selectionMovedByUser: true
       })
     ).toBe(true)
     expect(
       isWorktreePaletteCreateActivationAllowed({
-        hasTaskUrlIntent: true,
-        hasCreateName: false,
-        selectionMovedByUser: false
-      })
-    ).toBe(true)
-    expect(
-      isWorktreePaletteCreateActivationAllowed({
-        hasTaskUrlIntent: false,
         hasCreateName: false,
         selectionMovedByUser: false
       })

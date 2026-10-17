@@ -8,8 +8,6 @@ import { createTabsSlice } from './slices/tabs'
 import { createUISlice } from './slices/ui'
 import { createSettingsSlice } from './slices/settings'
 import { createKeybindingsSlice } from './slices/keybindings'
-import { createGitHubSlice } from './slices/github'
-import { createHostedReviewSlice } from './slices/hosted-review'
 import { createPreflightSlice } from './slices/preflight'
 import { createEditorSlice } from './slices/editor'
 import { createStatsSlice } from './slices/stats'
@@ -32,13 +30,10 @@ import { createWorktreeNavHistorySlice } from './slices/worktree-nav-history'
 import { createWorkspaceCleanupSlice } from './slices/workspace-cleanup'
 import { createWorkspaceCleanupBrowseSlice } from './slices/workspace-cleanup-browse'
 import { createRuntimeStatusSlice } from './slices/runtime-status'
-import { createPullRequestGenerationSlice } from './slices/pull-request-generation'
 import { createCommitMessageGenerationSlice } from './slices/commit-message-generation'
 import { createPinnedTabCloseConfirmSlice } from './slices/pinned-tab-close-confirm'
 import { createRecentlyClosedTabsSlice } from './slices/recently-closed-tabs'
 import { createOrcaProfilesSlice } from './slices/orca-profiles'
-import { createNewIssueDraftSlice } from './slices/new-issue-draft'
-import { createTaskCreationDraftsSlice } from './slices/task-creation-drafts'
 import { createTerminalQuickCommandHostsSlice } from './slices/terminal-quick-command-hosts'
 import { createPluginCenterSlice } from './slices/plugin-center/plugin-center-slice'
 import { e2eConfig } from '@/lib/e2e-config'
@@ -66,8 +61,6 @@ export const useAppStore = create<AppState>()(
       ...createUISlice(...a),
       ...createSettingsSlice(...a),
       ...createKeybindingsSlice(...a),
-      ...createGitHubSlice(...a),
-      ...createHostedReviewSlice(...a),
       ...createPreflightSlice(...a),
       ...createEditorSlice(...a),
       ...createStatsSlice(...a),
@@ -88,13 +81,10 @@ export const useAppStore = create<AppState>()(
       ...createWorkspaceCleanupSlice(...a),
       ...createWorkspaceCleanupBrowseSlice(...a),
       ...createRuntimeStatusSlice(...a),
-      ...createPullRequestGenerationSlice(...a),
       ...createCommitMessageGenerationSlice(...a),
       ...createPinnedTabCloseConfirmSlice(...a),
       ...createRecentlyClosedTabsSlice(...a),
       ...createOrcaProfilesSlice(...a),
-      ...createNewIssueDraftSlice(...a),
-      ...createTaskCreationDraftsSlice(...a),
       ...createTerminalQuickCommandHostsSlice(...a),
       ...createPluginCenterSlice(...a)
     }

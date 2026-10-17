@@ -1,7 +1,6 @@
 import React from 'react'
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card'
 import { Pencil, StickyNote } from 'lucide-react'
-import { toast } from 'sonner'
 import { SelectedTextCopyMenu } from '@/components/SelectedTextCopyMenu'
 import { WORKTREE_NATIVE_CONTEXT_MENU_ATTR } from './WorktreeContextMenu'
 import {
@@ -11,18 +10,14 @@ import {
 import { DetailHeader, MetadataActionIcon } from './WorktreeCardMetadataControls'
 import { hasWorktreeCardDetails, WorktreeCardMetaBadges } from './WorktreeCardMetaBadges'
 import { useWorktreeCardDetailsHoverControl } from './worktree-card-details-hover-state'
-import { getReviewLabel } from './worktree-review-helpers'
 import type {
-  WorktreeCardIssueDisplay,
   WorktreeCardMetaBadgesProps,
   WorktreeCardMetaBadgesRootProps,
   WorktreeCardDetailsHoverProps
 } from './worktree-card-meta-types'
 import { translate } from '@/i18n/i18n'
-import { WorktreeCardReviewDetailSection } from './WorktreeCardReviewDetailSection'
 import { WorktreeCardAutomationDetailSection } from './WorktreeCardAutomationDetailSection'
 import { WorktreeCardCliDetailSection } from './WorktreeCardCliDetailSection'
-import { WorktreeCardIssueDetailSection } from './WorktreeCardIssueDetailSection'
 import { WorktreeCardHoverIdentityHeader } from './WorktreeCardHoverIdentityHeader'
 import { CommentMarkdownAsync, preloadCommentMarkdown } from './comment-markdown-lazy'
 
@@ -30,7 +25,6 @@ const COMMENT_MARKDOWN_CLASS_NAME =
   'text-[11.5px] text-foreground break-words leading-normal [&_.comment-md-p]:block [&_.comment-md-p+.comment-md-p]:mt-1'
 
 export type {
-  WorktreeCardIssueDisplay,
   WorktreeCardMetaBadgesProps,
   WorktreeCardMetaBadgesRootProps,
   WorktreeCardDetailsHoverProps
@@ -45,8 +39,6 @@ function hasComment(comment: string | null): boolean {
 }
 
 export function WorktreeCardDetailsHover({
-  issue,
-  review,
   comment,
   automationProvenance,
   cliProvenance,
@@ -60,27 +52,13 @@ export function WorktreeCardDetailsHover({
   closeDelay = 120,
   onRenameWorkspaceTitle,
   onWorkspaceTitleEditingChange,
-  onEditIssue,
   onEditComment,
-  onOpenGitHubIssueInOrca,
-  onOpenIssueInBrowser,
-  onOpenReviewInOrca,
-  onOpenReviewInBrowser,
-  onUnlinkReview,
   onOpenAutomation,
   onOpenAutomationRun,
   hoverControl
 }: WorktreeCardDetailsHoverProps): React.JSX.Element {
   const internalHoverControl = useWorktreeCardDetailsHoverControl()
-  const {
-    hoverOpen,
-    issueMenuOpen,
-    reviewMenuOpen,
-    handleHoverOpenChange,
-    handleIssueMenuOpenChange,
-    handleReviewMenuOpenChange,
-    closeHover
-  } = hoverControl ?? internalHoverControl
+  const { hoverOpen, handleHoverOpenChange, closeHover } = hoverControl ?? internalHoverControl
   const [workspaceTitleEditing, setWorkspaceTitleEditing] = React.useState(false)
   const pendingWorkspaceTitleCloseRef = React.useRef(false)
   const handleWorkspaceTitleEditingChange = React.useCallback(
@@ -112,51 +90,12 @@ export function WorktreeCardDetailsHover({
     },
     [closeHover]
   )
-  const copyLinkedWorkItemLink = React.useCallback(async (url: string, label: string) => {
-    try {
-      // Why: Electron clipboard IPC remains reliable from nested hover/dropdown
-      // overlays where browser clipboard activation can be lost.
-      await window.api.ui.writeClipboardText(url)
-      toast.success(
-        translate('auto.components.sidebar.WorktreeCardMeta.copyLinkSuccess', '{{value0}} copied', {
-          value0: label
-        })
-      )
-    } catch {
-      toast.error(
-        translate('auto.components.sidebar.WorktreeCardMeta.copyLinkFailure', 'Failed to copy link')
-      )
-    }
-  }, [])
-  const handleCopyIssueLink = React.useCallback((): void => {
-    if (!issue?.url) {
-      return
-    }
-    closeHover()
-    void copyLinkedWorkItemLink(
-      issue.url,
-      translate('auto.components.sidebar.WorktreeCardMeta.issueLinkLabel', 'Issue link')
-    )
-  }, [closeHover, copyLinkedWorkItemLink, issue?.url])
-  const handleCopyReviewLink = React.useCallback((): void => {
-    if (!review?.url) {
-      return
-    }
-    void copyLinkedWorkItemLink(
-      review.url,
-      translate('auto.components.sidebar.WorktreeCardMeta.reviewLinkLabel', '{{value0}} link', {
-        value0: getReviewLabel(review)
-      })
-    )
-  }, [copyLinkedWorkItemLink, review])
 
   const showIdentityHeader = Boolean(branchName || workspaceTitle)
 
   if (
     !showIdentityHeader &&
     !hasWorktreeCardDetails({
-      issue,
-      review,
       comment,
       automationProvenance,
       cliProvenance
@@ -199,38 +138,6 @@ export function WorktreeCardDetailsHover({
               onWorkspaceTitleEditingChange={handleWorkspaceTitleEditingChange}
             />
           )}
-
-          <WorktreeCardIssueDetailSection
-            issue={issue}
-            issueMenuOpen={issueMenuOpen}
-            onIssueMenuOpenChange={handleIssueMenuOpenChange}
-            onCopyIssueLink={issue?.url ? handleCopyIssueLink : undefined}
-            onEditIssue={onEditIssue}
-            onOpenGitHubIssueInOrca={
-              onOpenGitHubIssueInOrca ? dismissAndRun(onOpenGitHubIssueInOrca) : undefined
-            }
-            onOpenIssueInBrowser={
-              onOpenIssueInBrowser && issue?.url
-                ? (url: string) => {
-                    closeHover()
-                    onOpenIssueInBrowser(url)
-                  }
-                : undefined
-            }
-          />
-
-          <WorktreeCardReviewDetailSection
-            review={review}
-            reviewMenuOpen={reviewMenuOpen}
-            onReviewMenuOpenChange={handleReviewMenuOpenChange}
-            onOpenReviewInOrca={onOpenReviewInOrca}
-            onOpenReviewInBrowser={
-              onOpenReviewInBrowser && review?.url ? onOpenReviewInBrowser : undefined
-            }
-            onCopyReviewLink={review?.url ? handleCopyReviewLink : undefined}
-            onUnlinkReview={onUnlinkReview}
-            closeHover={closeHover}
-          />
 
           {automationProvenance && (
             <WorktreeCardAutomationDetailSection

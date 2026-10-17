@@ -18,7 +18,7 @@ function command(handler: ActivePluginCommand['handler']): ActivePluginCommand {
     pluginName: 'Tasks',
     scope: 'global',
     id: 'open',
-    title: 'Open Tasks',
+    title: 'Open Settings',
     context: 'global',
     handler,
     keybindings: []
@@ -33,11 +33,11 @@ describe('plugin command execution', () => {
     Object.assign(window, { api: { plugins: { invokeCommand } } })
 
     await executePluginCommand(
-      command({ type: 'built-in', action: 'view.tasks' }),
+      command({ type: 'built-in', action: 'app.settings' }),
       'plugin-palette'
     )
 
-    expect(dispatcher).toHaveBeenCalledWith('view.tasks', 'plugin-palette')
+    expect(dispatcher).toHaveBeenCalledWith('app.settings', 'plugin-palette')
     expect(invokeCommand).not.toHaveBeenCalled()
   })
 

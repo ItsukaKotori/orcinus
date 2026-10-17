@@ -438,23 +438,6 @@ describe('AppearancePane', () => {
     ).toBeTruthy()
   })
 
-  it('reveals an advanced sidebar control when its search matches, even though it is hidden by default', async () => {
-    // The Show Tasks Button toggle lives behind the Window & Sidebar Advanced
-    // disclosure; with no search it stays collapsed, but a matching query must
-    // force the disclosure open so the control is reachable.
-    mocks.state.settingsSearchQuery = ''
-    const collapsedContainer = await renderAppearancePane(getDefaultSettings('/tmp'))
-    expect(
-      collapsedContainer.querySelector('button[role="switch"][aria-label="Show Tasks Button"]')
-    ).toBeNull()
-
-    mocks.state.settingsSearchQuery = 'tasks'
-    const searchedContainer = await renderAppearancePane(getDefaultSettings('/tmp'))
-    expect(
-      searchedContainer.querySelector('button[role="switch"][aria-label="Show Tasks Button"]')
-    ).not.toBeNull()
-  })
-
   it('shows and updates the menu bar icon preference only on desktop macOS', async () => {
     mocks.state.appPlatform = 'darwin'
     mocks.state.settingsSearchQuery = 'menu bar'

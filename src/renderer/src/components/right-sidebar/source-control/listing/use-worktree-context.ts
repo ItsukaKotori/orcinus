@@ -6,12 +6,9 @@ import { resolveSourceControlLaunchPlatform } from '@/lib/source-control-launch-
 import { getWorktreeGitIdentityDisplay } from '@/lib/worktree-git-identity-display'
 import { useAppStore } from '@/store'
 import { useActiveWorktree, useRepoById, useWorktreeMap } from '@/store/selectors'
-import { getGitHubPRCacheKey } from '@/store/slices/github-cache-key'
-import { getHostedReviewCacheKey } from '@/store/slices/hosted-review-cache-identity'
 import type { GitBranchChangeEntry } from '../../../../../../shared/git-diff-compare-types'
 import type { GitStatusEntry } from '../../../../../../shared/git-status-types'
 import { isFolderRepo } from '../../../../../../shared/repo-kind'
-import { selectReviewCacheData, selectReviewCacheEntry } from '../../review-cache-entry-selection'
 
 const EMPTY_GIT_STATUS_ENTRIES: GitStatusEntry[] = []
 const EMPTY_BRANCH_CHANGE_ENTRIES: GitBranchChangeEntry[] = []
@@ -76,36 +73,6 @@ export function useSourceControlWorktreeContext() {
   const isRemoteOperationActive = useAppStore((s) => s.isRemoteOperationActive)
   const inFlightRemoteOpKind = useAppStore((s) => s.inFlightRemoteOpKind)
   const settings = useAppStore((s) => s.settings)
-  const hostedReviewCacheKey =
-    activeRepo && branchName
-      ? getHostedReviewCacheKey(
-          activeRepo.path,
-          branchName,
-          settings,
-          activeRepo.id,
-          activeRepo.connectionId,
-          activeRepo.executionHostId,
-          true
-        )
-      : null
-  const activePrCacheKey =
-    activeRepo && branchName
-      ? getGitHubPRCacheKey(
-          activeRepo.path,
-          activeRepo.id,
-          branchName,
-          settings,
-          activeRepo.connectionId,
-          activeRepo.executionHostId,
-          true
-        )
-      : null
-  // Why: background review refreshes replace both cache maps; this panel only needs its active repo/branch entries.
-  const hostedReviewEntry = useAppStore((s) =>
-    selectReviewCacheEntry(s.hostedReviewCache, hostedReviewCacheKey)
-  )
-  const hostedReviewEntryData = hostedReviewEntry?.data ?? null
-  const activePrFromQueue = useAppStore((s) => selectReviewCacheData(s.prCache, activePrCacheKey))
   // Why: git/file mutations and repo metadata belong to the repo OWNER host, not the currently focused sidebar host.
   const activeRepoSettings = useMemo(
     () =>
@@ -144,8 +111,6 @@ export function useSourceControlWorktreeContext() {
     activeConnectionId,
     activeGitStatusHead,
     activeGroupId,
-    activePrCacheKey,
-    activePrFromQueue,
     activeRepo,
     activeRepoConnectionId,
     activeRepoExecutionHostId,
@@ -166,9 +131,6 @@ export function useSourceControlWorktreeContext() {
     entries,
     gitIdentityDisplay,
     hasUncommittedEntries,
-    hostedReviewCacheKey,
-    hostedReviewEntry,
-    hostedReviewEntryData,
     inFlightRemoteOpKind,
     isBranchVisible,
     isFolder,

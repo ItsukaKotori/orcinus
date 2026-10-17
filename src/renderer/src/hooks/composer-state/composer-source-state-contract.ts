@@ -2,11 +2,7 @@ import type { ComposerModel } from './composer-model'
 export type ComposerSourceState = {
   sourceIdentityActions: Pick<
     ComposerModel,
-    | 'handleSelectLinkedItem'
-    | 'handleLinkPopoverChange'
-    | 'handleRemoveLinkedWorkItem'
-    | 'handleNameValueChange'
-    | 'handleBranchNameOverrideChange'
+    'handleNameValueChange' | 'handleBranchNameOverrideChange'
   >
   attachmentDropState: Pick<
     ComposerModel,
@@ -26,10 +22,8 @@ export type ComposerSourceState = {
     | 'showProjectRequiredError'
     | 'handleSparseSelectPreset'
     | 'handleBaseBranchChange'
-    | 'handleBaseBranchPrSelect'
     | 'selectAddedProjectRepo'
   >
-  githubProviderSelection: Pick<ComposerModel, 'handleSmartGitHubItemSelect'>
   workItemSourceActions: Pick<
     ComposerModel,
     'handleSmartBranchSelect' | 'handleReuseSelectedBranchChange'

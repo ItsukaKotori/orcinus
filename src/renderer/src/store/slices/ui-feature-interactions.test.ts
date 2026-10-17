@@ -52,7 +52,7 @@ describe('createUISlice feature interactions', () => {
     store.getState().hydratePersistedUI(
       makePersistedUI({
         featureInteractions: {
-          tasks: { firstInteractedAt: 100 },
+          'cmd-j': { firstInteractedAt: 100 },
           automations: { firstInteractedAt: 150, interactionCount: 4 },
           browser: { firstInteractedAt: Number.NaN },
           unknown: { firstInteractedAt: 200 }
@@ -61,7 +61,7 @@ describe('createUISlice feature interactions', () => {
     )
 
     expect(store.getState().featureInteractions).toEqual({
-      tasks: { firstInteractedAt: 100, interactionCount: 1 },
+      'cmd-j': { firstInteractedAt: 100, interactionCount: 1 },
       automations: { firstInteractedAt: 150, interactionCount: 4 }
     })
   })
@@ -84,11 +84,11 @@ describe('createUISlice feature interactions', () => {
       store.getState().hydratePersistedUI(makePersistedUI())
       setMock.mockClear()
 
-      store.getState().recordFeatureInteraction('tasks')
-      store.getState().recordFeatureInteraction('tasks')
+      store.getState().recordFeatureInteraction('cmd-j')
+      store.getState().recordFeatureInteraction('cmd-j')
 
       const expected: FeatureInteractionState = {
-        tasks: { firstInteractedAt: now, interactionCount: 2 }
+        'cmd-j': { firstInteractedAt: now, interactionCount: 2 }
       }
       expect(store.getState().featureInteractions).toEqual(expected)
       expect(setMock).toHaveBeenCalledTimes(2)
@@ -103,7 +103,7 @@ describe('createUISlice feature interactions', () => {
       Promise.resolve(
         makePersistedUI({
           featureInteractions: {
-            tasks: { firstInteractedAt: 100, interactionCount: 3 }
+            'cmd-j': { firstInteractedAt: 100, interactionCount: 3 }
           }
         })
       )
@@ -121,18 +121,18 @@ describe('createUISlice feature interactions', () => {
     store.getState().hydratePersistedUI(
       makePersistedUI({
         featureInteractions: {
-          tasks: { firstInteractedAt: 100, interactionCount: 2 }
+          'cmd-j': { firstInteractedAt: 100, interactionCount: 2 }
         }
       })
     )
     setMock.mockClear()
 
-    store.getState().recordFeatureInteraction('tasks')
+    store.getState().recordFeatureInteraction('cmd-j')
     await Promise.resolve()
 
-    expect(recordFeatureInteractionMock).toHaveBeenCalledWith('tasks')
+    expect(recordFeatureInteractionMock).toHaveBeenCalledWith('cmd-j')
     expect(setMock).not.toHaveBeenCalled()
-    expect(store.getState().featureInteractions.tasks).toEqual({
+    expect(store.getState().featureInteractions['cmd-j']).toEqual({
       firstInteractedAt: 100,
       interactionCount: 3
     })
@@ -157,13 +157,13 @@ describe('createUISlice feature interactions', () => {
     const store = createUIStore()
     store.getState().hydratePersistedUI(makePersistedUI())
 
-    store.getState().recordFeatureInteraction('tasks')
-    store.getState().recordFeatureInteraction('tasks')
+    store.getState().recordFeatureInteraction('cmd-j')
+    store.getState().recordFeatureInteraction('cmd-j')
 
     pending[1](
       makePersistedUI({
         featureInteractions: {
-          tasks: { firstInteractedAt: 100, interactionCount: 2 }
+          'cmd-j': { firstInteractedAt: 100, interactionCount: 2 }
         }
       })
     )
@@ -171,13 +171,13 @@ describe('createUISlice feature interactions', () => {
     pending[0](
       makePersistedUI({
         featureInteractions: {
-          tasks: { firstInteractedAt: 100, interactionCount: 1 }
+          'cmd-j': { firstInteractedAt: 100, interactionCount: 1 }
         }
       })
     )
     await Promise.resolve()
 
-    expect(store.getState().featureInteractions.tasks).toEqual({
+    expect(store.getState().featureInteractions['cmd-j']).toEqual({
       firstInteractedAt: 100,
       interactionCount: 2
     })
@@ -194,7 +194,7 @@ describe('createUISlice feature interactions', () => {
     })
     const store = createUIStore()
 
-    store.getState().recordFeatureInteraction('tasks')
+    store.getState().recordFeatureInteraction('cmd-j')
 
     expect(store.getState().featureInteractions).toEqual({})
     expect(setMock).not.toHaveBeenCalled()

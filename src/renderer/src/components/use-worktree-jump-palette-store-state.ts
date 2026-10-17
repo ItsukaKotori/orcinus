@@ -9,7 +9,6 @@ import {
   selectPaletteIndexStatusSnapshot,
   selectPaletteStatusInputs
 } from './worktree-jump-palette-status-inputs'
-import { selectWorktreePaletteCacheInputs } from '@/components/cmd-j/worktree-palette-cache-inputs'
 
 export function useWorktreeJumpPaletteStoreState({
   visible,
@@ -43,9 +42,6 @@ export function useWorktreeJumpPaletteStoreState({
   const paletteStatusInputsActive = visible || lingering
   const { ptyIdsByTabId, terminalLayoutsByTabId, tabsByWorktree } = useAppStore(
     useShallow((state) => selectPaletteStatusInputs(state, paletteStatusInputsActive))
-  )
-  const { prCache, issueCache, hostedReviewCache } = useAppStore(
-    useShallow((state) => selectWorktreePaletteCacheInputs(state, paletteStatusInputsActive))
   )
   const migrationUnsupportedByPtyId = useAppStore((state) => state.migrationUnsupportedByPtyId)
   const activeView = useAppStore((state) => state.activeView)
@@ -131,9 +127,6 @@ export function useWorktreeJumpPaletteStoreState({
     ptyIdsByTabId,
     terminalLayoutsByTabId,
     tabsByWorktree,
-    prCache,
-    issueCache,
-    hostedReviewCache,
     migrationUnsupportedByPtyId,
     activeView,
     activeWorktreeId,

@@ -287,8 +287,6 @@ describe('setActiveWorktree', () => {
       activeFileIdByWorktree: { [wt]: fileId },
       // User was on the terminal, not the editor
       activeTabTypeByWorktree: { [wt]: 'terminal' },
-      refreshGitHubForWorktree: vi.fn(),
-      refreshGitHubForWorktreeIfStale: vi.fn()
     })
 
     store.getState().setActiveWorktree(wt)

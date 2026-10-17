@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Files, GitBranch, ListChecks, Workflow } from 'lucide-react'
+import { Files, GitBranch, Workflow } from 'lucide-react'
 import { useAppStore } from '@/store'
 import { useRepoById } from '@/store/selectors'
 import { isFolderRepo } from '../../../../shared/repo-kind'
@@ -35,10 +35,9 @@ export function useRightSidebarActivityItems({
 }): RightSidebarActivityItems {
   const explorerShortcut = useShortcutLabel('sidebar.explorer.toggle')
   const sourceControlShortcut = useShortcutLabel('sidebar.sourceControl.toggle')
-  const checksShortcut = useShortcutLabel('sidebar.checks.toggle')
   const activeWorktreeId = useAppStore((s) => (rightSidebarOpen ? s.activeWorktreeId : null))
-  // Why: source control and checks are meaningless for non-git folders.
-  // Hide those tabs so the activity bar only shows relevant actions.
+  // Why: source control is meaningless for non-git folders.
+  // Hide that tab so the activity bar only shows relevant actions.
   const activeWorktree = useAppStore((s) =>
     activeWorktreeId ? (s.getKnownWorktreeById(activeWorktreeId) ?? null) : null
   )
@@ -96,24 +95,10 @@ export function useRightSidebarActivityItems({
         folderOnly: true
       },
       {
-        id: 'pr-checks',
-        icon: ListChecks,
-        title: translate('auto.components.right.sidebar.index.parentPrChecks', 'PR Checks'),
-        shortcut: '',
-        folderOnly: true
-      },
-      {
         id: 'source-control',
         icon: GitBranch,
         title: translate('auto.components.right.sidebar.index.0314901467', 'Source Control'),
         shortcut: sourceControlShortcut === 'Unassigned' ? '' : sourceControlShortcut,
-        gitOnly: true
-      },
-      {
-        id: 'checks',
-        icon: ListChecks,
-        title: translate('auto.components.right.sidebar.index.83a10e3c44', 'Checks'),
-        shortcut: checksShortcut === 'Unassigned' ? '' : checksShortcut,
         gitOnly: true
       },
       // Why: plugin panels append after the built-in tabs so core navigation
@@ -121,7 +106,6 @@ export function useRightSidebarActivityItems({
       ...getPluginPanelActivityItems(visiblePluginPanels, pluginPanelErrors)
     ],
     [
-      checksShortcut,
       explorerShortcut,
       pluginPanelErrors,
       visiblePluginPanels,

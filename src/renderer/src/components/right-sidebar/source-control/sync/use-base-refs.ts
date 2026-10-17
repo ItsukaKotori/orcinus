@@ -1,4 +1,3 @@
-import type { HostedReviewInfo } from '../../../../../../shared/hosted-review'
 import type { SourceControlWorktreeContext } from '../listing/use-worktree-context'
 import {
   resolveSourceControlBaseRef,
@@ -18,7 +17,6 @@ export function useSourceControlBaseRefs({
   activeRepoRuntimeEnvironmentId,
   activeRepoWorktreeBaseRef,
   activeWorktreeBaseRef,
-  hostedReview,
   isBranchVisible,
   isFolder,
   remoteStatus,
@@ -30,7 +28,6 @@ export function useSourceControlBaseRefs({
   activeRepoRuntimeEnvironmentId: string | null
   activeRepoWorktreeBaseRef: string | undefined
   activeWorktreeBaseRef: string | undefined
-  hostedReview: HostedReviewInfo | null
   isBranchVisible: boolean
   isFolder: boolean
   remoteStatus: SourceControlWorktreeContext['remoteStatus']
@@ -52,7 +49,6 @@ export function useSourceControlBaseRefs({
 
   const effectiveBaseRef = resolveSourceControlBaseRef({
     worktreeBaseRef: normalizedWorktreeBaseRef,
-    reviewBaseRefName: hostedReview?.baseRefName,
     repoBaseRef: normalizedRepoBaseRef,
     defaultBaseRef
   })

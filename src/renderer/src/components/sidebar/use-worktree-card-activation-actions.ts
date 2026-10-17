@@ -124,8 +124,6 @@ export function useWorktreeCardActivationActions({
         repoId: worktree.repoId,
         executionHostId: worktree.hostId,
         currentDisplayName: worktree.displayName,
-        currentIssue: worktree.linkedIssue,
-        currentPR: worktree.linkedPR,
         currentComment: worktree.comment
       })
     },
@@ -136,8 +134,6 @@ export function useWorktreeCardActivationActions({
       worktree.displayName,
       worktree.hostId,
       worktree.id,
-      worktree.linkedIssue,
-      worktree.linkedPR,
       worktree.repoId
     ]
   )

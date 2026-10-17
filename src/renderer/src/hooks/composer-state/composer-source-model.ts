@@ -1,46 +1,29 @@
-import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import type { WorktreeMeta } from '../../../../shared/worktree/meta-types'
-import type { GitPushTarget } from '../../../../shared/worktree/types'
 import type { SparsePreset } from '../../../../shared/worktree/create-types'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { PendingSmartGitHubSubmitResolution } from './source-selection-decisions'
 import type { SmartWorkspaceNameSelection } from '@/components/new-workspace/SmartWorkspaceNameField'
 export type ComposerSourceModel = {
   addComposerAttachments: (paths: string[]) => void
-  applyLinkedWorkItem: (
-    item: GitHubWorkItem,
-    options?: { preserveBranchNameOverride?: boolean | undefined }
-  ) => void
   applyLocalComposerDrop: (paths: string[], canApply?: () => boolean) => Promise<void>
   applyWorktreeMeta: (worktreeId: string, meta: Partial<WorktreeMeta>) => Promise<void>
   canPrefetchSelectedRepoWorkItems: boolean
   folderCreateDisabled: boolean
   handleAddAttachment: () => Promise<void>
   handleBaseBranchChange: (next: string | undefined) => void
-  handleBaseBranchPrSelect: (
-    nextBaseBranch: string,
-    item: GitHubWorkItem,
-    nextPushTarget?: GitPushTarget | undefined,
-    nextBranchNameOverride?: string | undefined,
-    nextCompareBaseRef?: string | undefined
-  ) => void
   handleBranchNameOverrideChange: (value: string | undefined) => void
   handleClearSmartNameSelection: () => void
   handleFolderSourceRepoChange: (value: string) => void
-  handleLinkPopoverChange: (open: boolean) => void
   handleNameValueChange: (nextName: string) => void
   handleOpenAgentSettings: () => void
   handleProjectChange: (projectId: string) => void
   handleProjectHostSetupChange: (setupId: string) => void
-  handleRemoveLinkedWorkItem: () => void
   handleRepoChange: (
     value: string,
     options?: { preserveStartFrom?: boolean | undefined; forceResetStartFrom?: boolean | undefined }
   ) => void
   handleReuseSelectedBranchChange: (next: boolean) => void
-  handleSelectLinkedItem: (item: GitHubWorkItem) => void
   handleSmartBranchSelect: (refName: string, localBranchName: string) => void
-  handleSmartGitHubItemSelect: (item: GitHubWorkItem) => void
   handleSparseSelectPreset: (preset: SparsePreset | null) => void
   insertComposerFolderPaths: (folderPaths: string[]) => void
   onConnectSelectedProjectGroup: () => Promise<void>

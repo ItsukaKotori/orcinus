@@ -74,32 +74,14 @@ function secondaryDetailsArgs(settings: GlobalSettings) {
   return {
     worktree: makeWorktree(),
     repo: undefined,
-    statusPrDisplay: null,
     showStatus: false,
-    showIssue: false,
-    showLinearIssue: false,
-    showJiraIssue: false,
-    showPR: false,
     showAutomation: false,
     showCli: false,
     showComment: false,
-    showPorts: false,
-    issueDisplay: null,
-    linearIssue: null,
-    linearIssueDisplay: null,
-    jiraIssueDisplay: null,
-    prDisplay: null,
-    linkedGitLabMR: null,
-    linkedBitbucketPR: null,
-    linkedAzureDevOpsPR: null,
-    linkedGiteaPR: null,
     cardProps: [] as never,
     newCardStyle: false,
     compactCards: false,
     agentActivityDisplayMode: 'compact' as const,
-    workspacePorts: [],
-    openTaskPage: (() => {}) as never,
-    updateWorktreeMeta: (() => {}) as never,
     settings
   }
 }
@@ -170,55 +152,4 @@ describe('useWorktreeCardSecondaryDetails store subscriptions', () => {
     expect(cacheTtlMs).toBe(0)
   })
 
-  it('writes a suppression tombstone when the user unlinks a displayed GitHub PR', async () => {
-    const updateWorktreeMeta = vi.fn().mockResolvedValue({ ok: true })
-    let unlink: (() => Promise<void>) | null = null
-    function Probe(): null {
-      const details = useWorktreeCardSecondaryDetails({
-        ...secondaryDetailsArgs(makeSettings(300_000)),
-        worktree: { ...makeWorktree(), hostId: 'ssh:builder' },
-        prDisplay: {
-          provider: 'github',
-          number: 42,
-          title: 'Branch PR'
-        },
-        updateWorktreeMeta: updateWorktreeMeta as never
-      })
-      unlink = details.handleUnlinkReview
-      return null
-    }
-
-    mount(<Probe />)
-    await act(() => unlink?.())
-
-    expect(updateWorktreeMeta).toHaveBeenCalledWith(
-      WORKTREE_ID,
-      { linkedPR: null, suppressedGitHubPR: 42 },
-      { executionHostId: 'ssh:builder' }
-    )
-  })
-
-  it('surfaces a failed GitHub unlink after the optimistic card update is reverted', async () => {
-    const updateWorktreeMeta = vi.fn().mockResolvedValue({
-      ok: false,
-      error: 'Update the remote runtime to unlink GitHub pull requests'
-    })
-    let unlink: (() => Promise<void>) | null = null
-    function Probe(): null {
-      const details = useWorktreeCardSecondaryDetails({
-        ...secondaryDetailsArgs(makeSettings(300_000)),
-        prDisplay: { provider: 'github', number: 42, title: 'Branch PR' },
-        updateWorktreeMeta: updateWorktreeMeta as never
-      })
-      unlink = details.handleUnlinkReview
-      return null
-    }
-
-    mount(<Probe />)
-    await act(() => unlink?.())
-
-    expect(mocks.toastError).toHaveBeenCalledWith(
-      'Update the remote runtime to unlink GitHub pull requests'
-    )
-  })
 })

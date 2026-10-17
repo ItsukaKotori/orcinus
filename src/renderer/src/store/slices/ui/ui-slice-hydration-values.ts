@@ -1,5 +1,4 @@
 import type { PersistedUIState } from '../../../../../shared/persisted-ui-state-types'
-import type { TaskResumeState, TaskViewPresetId } from '../../../../../shared/ui-chrome-types'
 import type { FeatureInteractionState } from '../../../../../shared/feature-interactions'
 import { normalizeFeatureInteractions } from '../../../../../shared/feature-interactions'
 import type { UISlice } from './ui-slice-contract'
@@ -8,37 +7,6 @@ import {
   sanitizeActivityClearedAtByPaneKey,
   sanitizePaneKeyTimestampRecord
 } from './ui-slice-hydration-sanitizers'
-
-const VALID_TASK_PRESETS = new Set<TaskViewPresetId>([
-  'all',
-  'issues',
-  'review',
-  'my-issues',
-  'my-prs',
-  'prs'
-])
-export function sanitizeTaskResumeState(value: unknown): TaskResumeState | undefined {
-  if (!value || typeof value !== 'object') {
-    return undefined
-  }
-  const input = value as Record<string, unknown>
-  const next: TaskResumeState = {}
-  if (input.githubMode === 'items' || input.githubMode === 'project') {
-    next.githubMode = input.githubMode
-  }
-  if (input.githubItemsPreset === null) {
-    next.githubItemsPreset = null
-  } else if (
-    typeof input.githubItemsPreset === 'string' &&
-    VALID_TASK_PRESETS.has(input.githubItemsPreset as TaskViewPresetId)
-  ) {
-    next.githubItemsPreset = input.githubItemsPreset as TaskViewPresetId
-  }
-  if (typeof input.githubItemsQuery === 'string') {
-    next.githubItemsQuery = input.githubItemsQuery
-  }
-  return Object.keys(next).length > 0 ? next : undefined
-}
 
 export function mergeFeatureInteractionState(
   current: FeatureInteractionState,

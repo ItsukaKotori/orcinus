@@ -13,7 +13,6 @@ export type StartupActions = Pick<
   | 'fetchSettings'
   | 'awaitOwnerWorktreeVisibilityDefaultsHydration'
   | 'fetchKeybindings'
-  | 'initGitHubCache'
   | 'hydrateWorkspaceSession'
   | 'hydrateTabsSession'
   | 'hydrateEditorSession'
@@ -48,7 +47,6 @@ export function selectStartupActions(state: StartupActions): StartupActions {
     cachedStartupActions.awaitOwnerWorktreeVisibilityDefaultsHydration ===
       state.awaitOwnerWorktreeVisibilityDefaultsHydration &&
     cachedStartupActions.fetchKeybindings === state.fetchKeybindings &&
-    cachedStartupActions.initGitHubCache === state.initGitHubCache &&
     cachedStartupActions.hydrateWorkspaceSession === state.hydrateWorkspaceSession &&
     cachedStartupActions.hydrateTabsSession === state.hydrateTabsSession &&
     cachedStartupActions.hydrateEditorSession === state.hydrateEditorSession &&
@@ -81,7 +79,6 @@ export function selectStartupActions(state: StartupActions): StartupActions {
     awaitOwnerWorktreeVisibilityDefaultsHydration:
       state.awaitOwnerWorktreeVisibilityDefaultsHydration,
     fetchKeybindings: state.fetchKeybindings,
-    initGitHubCache: state.initGitHubCache,
     hydrateWorkspaceSession: state.hydrateWorkspaceSession,
     hydrateTabsSession: state.hydrateTabsSession,
     hydrateEditorSession: state.hydrateEditorSession,

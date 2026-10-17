@@ -5,7 +5,6 @@ import { getRepoBackedProviderAvailability } from './task-source-provider-availa
 
 const readyPreflight: PreflightStatus = {
   git: { installed: true },
-  gh: { installed: true, authenticated: true },
   glab: { installed: true, authenticated: true }
 }
 
@@ -20,20 +19,17 @@ function source(hostId: TaskSourceContext['hostId']): TaskSourceContext {
 }
 
 describe('task source provider availability', () => {
-  it('marks desktop-owned GitHub sources unavailable when gh auth is missing', () => {
+  it('marks desktop-owned GitHub sources unavailable on every host after the gh trim', () => {
     expect(
       getRepoBackedProviderAvailability({
         provider: 'github',
         contexts: [source('local'), source('ssh:builder')],
         preflightReady: true,
-        preflightStatus: {
-          ...readyPreflight,
-          gh: { installed: true, authenticated: false }
-        }
+        preflightStatus: readyPreflight
       })
     ).toEqual([
-      { hostId: 'local', reason: 'missing-provider-auth' },
-      { hostId: 'ssh:builder', reason: 'missing-provider-auth' }
+      { hostId: 'local', reason: 'unavailable-source-tool' },
+      { hostId: 'ssh:builder', reason: 'unavailable-source-tool' }
     ])
   })
 
@@ -70,10 +66,7 @@ describe('task source provider availability', () => {
         provider: 'github',
         contexts: [source('runtime:server')],
         preflightReady: true,
-        preflightStatus: {
-          ...readyPreflight,
-          gh: { installed: false, authenticated: false }
-        }
+        preflightStatus: readyPreflight
       })
     ).toEqual([])
   })
@@ -86,19 +79,10 @@ describe('task source provider availability', () => {
         preflightReady: true,
         preflightStatus: readyPreflight,
         runtimePreflightStatusByHostId: new Map([
-          [
-            'runtime:server',
-            {
-              checked: true,
-              status: {
-                ...readyPreflight,
-                gh: { installed: true, authenticated: false }
-              }
-            }
-          ]
+          ['runtime:server', { checked: true, status: readyPreflight }]
         ])
       })
-    ).toEqual([{ hostId: 'runtime:server', reason: 'missing-provider-auth' }])
+    ).toEqual([{ hostId: 'runtime:server', reason: 'unavailable-source-tool' }])
   })
 
   it('waits for runtime preflight before reporting runtime provider availability', () => {
@@ -149,10 +133,7 @@ describe('task source provider availability', () => {
         provider: 'github',
         contexts: [source('local')],
         preflightReady: false,
-        preflightStatus: {
-          ...readyPreflight,
-          gh: { installed: false, authenticated: false }
-        }
+        preflightStatus: readyPreflight
       })
     ).toEqual([])
   })

@@ -9,30 +9,17 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { getDisplacedLinkLabels } from './worktree-issue-displacement'
 import {
   buildWorktreeMetaUpdates,
-  parseGitHubWorkItemNumberForMetaField,
-  type WorktreeReviewProvider,
   type WorktreeMetaDraft,
   type WorktreeMetaSavedPayload,
   type WorktreeMetaSnapshot
 } from './worktree-meta-updates'
-import { useWorktreeIssueLink } from './use-worktree-issue-link'
-import { useWorktreeMetaWorkspace } from './use-worktree-meta-workspace'
-import { WorktreeIssueLinkField } from './WorktreeIssueLinkField'
 import { getScreenSubmitShortcutLabel, isScreenSubmitShortcut } from '@/lib/screen-submit-shortcut'
 import { useMountedRef } from '@/hooks/useMountedRef'
 import { translate } from '@/i18n/i18n'
-import { isWorkItemLinkQueryTooLarge } from '../../../../shared/new-workspace/work-item-link-query-bounds'
-import {
-  getIssueLinkProviderFromUrl,
-  parseIssueLinkInput,
-  type IssueLinkProvider
-} from '../../../../shared/issue-link-input'
 import { parseExecutionHostId } from '../../../../shared/execution-host'
 import { WorktreeDisplayNameField } from './WorktreeDisplayNameField'
-import { WorktreeReviewLinkField } from './WorktreeReviewLinkField'
 
 function resizeCommentTextarea(textarea: HTMLTextAreaElement): void {
   textarea.style.height = 'auto'
@@ -42,10 +29,7 @@ function resizeCommentTextarea(textarea: HTMLTextAreaElement): void {
 /** Only read before the first open, when nothing can be saved yet. */
 const EMPTY_SNAPSHOT: WorktreeMetaSnapshot = {
   displayName: '',
-  comment: '',
-  issueInput: '',
-  issueProvider: 'github',
-  prInput: ''
+  comment: ''
 }
 
 const WorktreeMetaDialog = React.memo(function WorktreeMetaDialog() {
@@ -68,89 +52,41 @@ const WorktreeMetaDialog = React.memo(function WorktreeMetaDialog() {
   const currentComment =
     typeof modalData.currentComment === 'string' ? modalData.currentComment : ''
   const focusField = typeof modalData.focus === 'string' ? modalData.focus : 'comment'
-  const reviewProvider: WorktreeReviewProvider = 'github'
-  const suppressHostedReviewRefresh = modalData.suppressHostedReviewRefresh === true
   const afterSave =
     typeof modalData.afterSave === 'function'
       ? (modalData.afterSave as (payload: WorktreeMetaSavedPayload) => void | Promise<void>)
       : null
 
-  // Why: the opening row names its repo bucket for workspace IDs the owner index
-  // reads as ambiguous across hosts.
-  const ownerRepoId = typeof modalData.repoId === 'string' ? modalData.repoId : null
-  const { worktree, linkedIssue, currentIssue, currentProvider, isFolderWorkspace, liveLinks } =
-    useWorktreeMetaWorkspace({ worktreeId, ownerRepoId, executionHostId })
-  // Why: ChecksPanel seeds the review it is looking at, which may not be linked yet.
-  const currentReview =
-    typeof modalData.currentReview === 'number'
-      ? String(modalData.currentReview)
-      : typeof modalData.currentPR === 'number'
-        ? String(modalData.currentPR)
-        : worktree?.linkedPR != null
-          ? String(worktree.linkedPR)
-          : ''
-
   const [displayNameInput, setDisplayNameInput] = useState('')
-  const [issueInput, setIssueInput] = useState('')
-  const [issueProvider, setIssueProvider] = useState<IssueLinkProvider>('github')
-  const [reviewInput, setReviewInput] = useState('')
   const [commentInput, setCommentInput] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const [snapshot, setSnapshot] = useState<WorktreeMetaSnapshot>(EMPTY_SNAPSHOT)
+  const [, setSnapshot] = useState<WorktreeMetaSnapshot>(EMPTY_SNAPSHOT)
   const [dialogElement, setDialogElement] = useState<HTMLElement | null>(null)
-  const { canOpenIssue, openingIssue, openIssueFailed, handleOpenIssue, resetOpeningIssue } =
-    useWorktreeIssueLink({
-      worktreeId,
-      ownerRepoId,
-      issueInput,
-      issueProvider
-    })
 
-  const issueInputRef = useRef<HTMLInputElement>(null)
-  const reviewInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const prevIsOpenRef = useRef(false)
   const displayNameInputRef = useRef<HTMLInputElement>(null)
   const mountedRef = useMountedRef()
   if (isOpen && !prevIsOpenRef.current) {
     setDisplayNameInput(currentDisplayName)
-    setIssueInput(currentIssue)
-    setIssueProvider(currentProvider)
-    setReviewInput(currentReview)
     setCommentInput(currentComment)
     // Why: the baseline is frozen with the seed instead of tracking the store.
-    // A background `orca worktree set --linear-issue` while the dialog is open
-    // would otherwise move it, making the untouched field read as dirty — and
-    // the next comment-only save would write the stale seed back over the new link.
+    // A background `orca worktree set` while the dialog is open would otherwise
+    // move it, making the untouched field read as dirty — and the next save
+    // would write the stale seed back over the newer value.
     setSnapshot({
       displayName: currentDisplayName,
-      comment: currentComment,
-      issueInput: currentIssue,
-      issueProvider: currentProvider,
-      prInput: worktree?.linkedPR != null ? String(worktree.linkedPR) : ''
+      comment: currentComment
     })
     setSaveError(null)
-    resetOpeningIssue()
   }
   prevIsOpenRef.current = isOpen
 
   const draft = useMemo<WorktreeMetaDraft>(
-    () => ({ displayNameInput, issueInput, issueProvider, reviewInput, commentInput }),
-    [displayNameInput, issueInput, issueProvider, reviewInput, commentInput]
+    () => ({ displayNameInput, commentInput }),
+    [displayNameInput, commentInput]
   )
-
-  // Why: a URL names its provider unambiguously. A bare key does not — Linear
-  // and Jira identifiers are the same shape — so typing never steers the chip.
-  const handleIssueInputChange = useCallback((next: string) => {
-    setIssueInput(next)
-    // Why: the same bound the save gate applies. Detection parses on every
-    // keystroke, and the field accepts pasted URLs of any length.
-    const detected = isWorkItemLinkQueryTooLarge(next) ? null : getIssueLinkProviderFromUrl(next)
-    if (detected) {
-      setIssueProvider(detected)
-    }
-  }, [])
 
   const setCommentTextareaRef = useCallback(
     (textarea: HTMLTextAreaElement | null) => {
@@ -168,41 +104,7 @@ const WorktreeMetaDialog = React.memo(function WorktreeMetaDialog() {
     resizeCommentTextarea(event.currentTarget)
   }, [])
 
-  // Why: bound the parse before it runs on every keystroke — the field accepts
-  // pasted URLs and has no length cap of its own.
-  const issueInvalid = useMemo(() => {
-    const trimmed = issueInput.trim()
-    if (trimmed === '' || isFolderWorkspace) {
-      return false
-    }
-    return (
-      isWorkItemLinkQueryTooLarge(trimmed) || parseIssueLinkInput(trimmed, issueProvider) === null
-    )
-  }, [isFolderWorkspace, issueInput, issueProvider])
-
-  const canSave = useMemo(() => {
-    if (!worktreeId) {
-      return false
-    }
-    const trimmedPR = reviewInput.trim()
-    // Same quadratic-parse bound as the issue field — this runs on every keystroke.
-    const prValid =
-      trimmedPR === '' ||
-      (!isWorkItemLinkQueryTooLarge(trimmedPR) &&
-        parseGitHubWorkItemNumberForMetaField(trimmedPR, 'pr') !== null)
-    return !issueInvalid && prValid
-  }, [worktreeId, issueInvalid, reviewInput])
-
-  const displacedLinkLabels = useMemo(
-    () =>
-      getDisplacedLinkLabels({
-        draft,
-        snapshot,
-        isFolderWorkspace,
-        linkedIssue
-      }),
-    [draft, snapshot, isFolderWorkspace, linkedIssue]
-  )
+  const canSave = Boolean(worktreeId)
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
@@ -221,19 +123,18 @@ const WorktreeMetaDialog = React.memo(function WorktreeMetaDialog() {
     // Why: a stale failure from the previous attempt must not sit under the
     // spinner for the whole in-flight save.
     setSaveError(null)
+    const snapshot: WorktreeMetaSnapshot = {
+      displayName: currentDisplayName,
+      comment: currentComment
+    }
     try {
-      const updates = buildWorktreeMetaUpdates(draft, snapshot, liveLinks)
+      const updates = buildWorktreeMetaUpdates(draft, snapshot)
 
-      const result =
-        executionHostId || suppressHostedReviewRefresh
-          ? await updateWorktreeMeta(worktreeId, updates, {
-              ...(executionHostId ? { executionHostId } : {}),
-              ...(suppressHostedReviewRefresh ? { suppressHostedReviewRefresh: true } : {})
-            })
-          : await updateWorktreeMeta(worktreeId, updates)
+      const result = executionHostId
+        ? await updateWorktreeMeta(worktreeId, updates, { executionHostId })
+        : await updateWorktreeMeta(worktreeId, updates)
       // Why: a failed save refetches and reverts the optimistic write. Closing
-      // here would report success for an edit that silently undid itself, and
-      // would discard the name, comment and PR changes in the same payload.
+      // here would report success for an edit that silently undid itself.
       if (!result.ok) {
         if (mountedRef.current) {
           setSaveError(result.error)
@@ -256,11 +157,10 @@ const WorktreeMetaDialog = React.memo(function WorktreeMetaDialog() {
   }, [
     worktreeId,
     executionHostId,
-    suppressHostedReviewRefresh,
     canSave,
     draft,
-    snapshot,
-    liveLinks,
+    currentDisplayName,
+    currentComment,
     updateWorktreeMeta,
     closeModal,
     afterSave,
@@ -279,16 +179,6 @@ const WorktreeMetaDialog = React.memo(function WorktreeMetaDialog() {
     [handleSave]
   )
 
-  const handleIssueKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        e.preventDefault()
-        handleSave()
-      }
-    },
-    [handleSave]
-  )
-
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent
@@ -298,10 +188,6 @@ const WorktreeMetaDialog = React.memo(function WorktreeMetaDialog() {
           e.preventDefault()
           if (focusField === 'displayName') {
             displayNameInputRef.current?.focus()
-          } else if (focusField === 'issue') {
-            issueInputRef.current?.focus()
-          } else if (focusField === 'pr') {
-            reviewInputRef.current?.focus()
           } else {
             textareaRef.current?.focus()
           }
@@ -316,8 +202,8 @@ const WorktreeMetaDialog = React.memo(function WorktreeMetaDialog() {
           </DialogTitle>
           <DialogDescription className="text-xs">
             {translate(
-              'auto.components.sidebar.WorktreeMetaDialog.a0d191b7a7',
-              'Edit issue links, pull request links, and notes for this workspace.'
+              'auto.components.sidebar.WorktreeMetaDialog.editDetailsDescription',
+              'Edit the display name and notes for this workspace.'
             )}
           </DialogDescription>
         </DialogHeader>
@@ -330,30 +216,6 @@ const WorktreeMetaDialog = React.memo(function WorktreeMetaDialog() {
             onValueChange={setDisplayNameInput}
             portalContainer={dialogElement}
             value={displayNameInput}
-          />
-
-          <WorktreeIssueLinkField
-            inputRef={issueInputRef}
-            value={issueInput}
-            provider={issueProvider}
-            isInvalid={issueInvalid}
-            displacedLinkLabels={displacedLinkLabels}
-            isReadOnly={isFolderWorkspace}
-            canOpenIssue={canOpenIssue}
-            openingIssue={openingIssue}
-            openIssueFailed={openIssueFailed}
-            onValueChange={handleIssueInputChange}
-            onProviderChange={setIssueProvider}
-            onOpenIssue={handleOpenIssue}
-            onKeyDown={handleIssueKeyDown}
-          />
-
-          <WorktreeReviewLinkField
-            inputRef={reviewInputRef}
-            onKeyDown={handleIssueKeyDown}
-            onValueChange={setReviewInput}
-            provider={reviewProvider}
-            value={reviewInput}
           />
 
           <div className="space-y-1">

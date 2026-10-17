@@ -7,12 +7,6 @@ import type {
 } from '../../../../../../shared/source-control-ai-actions'
 import type { SourceControlAiWriteTarget } from '../../../../../../shared/source-control-ai-recipe-save'
 
-export type CreatePrIntentNotice = {
-  message: string
-  tone: 'muted' | 'destructive'
-  action?: 'settings'
-}
-
 export type CommitAreaProps = {
   worktreeId: string | null
   groupId: string | null
@@ -24,12 +18,9 @@ export type CommitAreaProps = {
   commitFailureRecoveryPrompt: string | null
   pushRecovery: SourceControlPushRecovery | null
   remoteActionError: string | null
-  createPrIntentNotice?: CreatePrIntentNotice | null
   isCommitting: boolean
   isFixingCommitFailureWithAI: boolean
   isFixingPushFailureWithAI: boolean
-  isCreatingPr?: boolean
-  isCreatePrIntentInFlight?: boolean
   showComposer?: boolean
   sourceControlAiActionsVisible: boolean
   aiAgentConfigured: boolean
@@ -71,7 +62,6 @@ export type CommitNoticesProps = Pick<
   | 'commitFailureRecoveryPrompt'
   | 'pushRecovery'
   | 'remoteActionError'
-  | 'createPrIntentNotice'
   | 'generateError'
   | 'sourceControlAiActionsVisible'
   | 'isFixingCommitFailureWithAI'

@@ -24,18 +24,14 @@ export function useSmartWorkspaceFieldAvailability({
   expectedPreflightContextKey: string
   refreshPreflightStatus: () => Promise<void>
 }) {
-  const { disabled, textOnly, repoBackedSourcesDisabled, branchesEnabled, onActiveSourceModeChange, value } =
-    props
+  const { disabled, textOnly, branchesEnabled, onActiveSourceModeChange, value } = props
   const {
     mode,
     setMode,
     setOpen,
-    setGithubItems,
     setBranches,
-    setGithubLoading,
     setBranchesLoading,
     setBranchResultsSource,
-    setCrossRepoPrompt,
     setCommandValue,
     setDebouncedQuery
   } = state
@@ -48,11 +44,8 @@ export function useSmartWorkspaceFieldAvailability({
     if (textOnly) {
       return item.id === 'text'
     }
-    if (item.id === 'github') {
-      return !repoBackedSourcesDisabled
-    }
     if (item.id === 'branches') {
-      return branchesEnabled && !repoBackedSourcesDisabled
+      return branchesEnabled
     }
     return true
   })
@@ -63,26 +56,6 @@ export function useSmartWorkspaceFieldAvailability({
     }
     setMode(availableModes[0]?.id ?? 'text')
   }, [availableModes, mode, setMode])
-
-  useEffect(() => {
-    if (!repoBackedSourcesDisabled) {
-      return
-    }
-    setGithubItems([])
-    setBranches([])
-    setGithubLoading(false)
-    setBranchesLoading(false)
-    setBranchResultsSource(null)
-    setCrossRepoPrompt(null)
-  }, [
-    repoBackedSourcesDisabled,
-    setBranches,
-    setBranchesLoading,
-    setBranchResultsSource,
-    setCrossRepoPrompt,
-    setGithubItems,
-    setGithubLoading
-  ])
 
   const focusControls = useSmartWorkspaceFieldFocusControls({ props, state })
 
@@ -115,22 +88,16 @@ export function useSmartWorkspaceFieldAvailability({
       return
     }
     setOpen(false)
-    setGithubItems([])
     setBranches([])
     setBranchResultsSource(null)
-    setGithubLoading(false)
     setBranchesLoading(false)
     setCommandValue('')
-    setCrossRepoPrompt(null)
   }, [
     disabled,
     setBranches,
     setBranchesLoading,
     setBranchResultsSource,
     setCommandValue,
-    setCrossRepoPrompt,
-    setGithubItems,
-    setGithubLoading,
     setOpen
   ])
 

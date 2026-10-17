@@ -13,18 +13,12 @@ type NewWorkspaceComposerNameSectionProps = Pick<
   | 'onRepoChange'
   | 'name'
   | 'onNameValueChange'
-  | 'onSmartGitHubItemSelect'
   | 'onSmartBranchSelect'
   | 'smartNameSelection'
   | 'onClearSmartNameSelection'
-  | 'smartNameGitHubSourceContext'
   | 'selectedRepoRequiresConnection'
   | 'selectedRepoIsGit'
   | 'branchesEnabled'
-  | 'repoBackedSourcesDisabled'
-  | 'repoBackedSearchRepos'
-  | 'allowSmartNameAddProject'
-  | 'smartNameRepoSwitchTarget'
   | 'onSmartNameModeChange'
   | 'forkPushWarning'
   | 'canReuseSelectedBranch'
@@ -41,18 +35,12 @@ export function NewWorkspaceComposerNameSection({
   onRepoChange,
   name,
   onNameValueChange,
-  onSmartGitHubItemSelect,
   onSmartBranchSelect,
   smartNameSelection,
   onClearSmartNameSelection,
-  smartNameGitHubSourceContext,
   selectedRepoRequiresConnection,
   selectedRepoIsGit,
   branchesEnabled = true,
-  repoBackedSourcesDisabled = false,
-  repoBackedSearchRepos,
-  allowSmartNameAddProject = true,
-  smartNameRepoSwitchTarget = 'project',
   onSmartNameModeChange,
   onNamePlainEnter,
   forkPushWarning,
@@ -80,11 +68,9 @@ export function NewWorkspaceComposerNameSection({
         onRepoChange={onRepoChange}
         value={name}
         onValueChange={onNameValueChange}
-        onGitHubItemSelect={onSmartGitHubItemSelect}
         onBranchSelect={onSmartBranchSelect}
         selectedSource={smartNameSelection}
         onClearSelectedSource={onClearSmartNameSelection}
-        githubSourceContext={smartNameGitHubSourceContext}
         disabled={selectedRepoRequiresConnection}
         disabledPlaceholder={translate(
           'auto.components.NewWorkspaceComposerCard.connectProjectFirst',
@@ -92,10 +78,6 @@ export function NewWorkspaceComposerNameSection({
         )}
         textOnly={!selectedRepoIsGit}
         branchesEnabled={branchesEnabled}
-        repoBackedSourcesDisabled={repoBackedSourcesDisabled}
-        repoBackedSearchRepos={repoBackedSearchRepos}
-        allowCrossRepoProjectAdd={allowSmartNameAddProject}
-        crossRepoSwitchTarget={smartNameRepoSwitchTarget}
         onActiveSourceModeChange={onSmartNameModeChange}
         onPlainEnter={onNamePlainEnter}
       />

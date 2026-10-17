@@ -1,7 +1,4 @@
-import type { GitHubWorkItem } from '../github/work-item-types'
 import type { BaseRefSearchResult } from '../repo-types'
-import type { GitHubIssueOrPRLink } from '../github/links'
-import { buildSmartWorkspaceUrlSourceRows } from './smart-workspace-url-source-results'
 import { isSmartWorkspaceSourceQueryWithinLimit } from './smart-workspace-source-query'
 
 export {
@@ -9,42 +6,21 @@ export {
   isSmartWorkspaceSourceQueryWithinLimit
 } from './smart-workspace-source-query'
 
-export type SmartNameMode = 'smart' | 'github' | 'branches' | 'text'
+export type SmartNameMode = 'smart' | 'branches' | 'text'
 
 export type SmartWorkspaceSourceRow =
   | { kind: 'use-name'; value: string; name: string }
   | { kind: 'create-branch'; value: string; name: string }
-  | { kind: 'github'; value: string; item: GitHubWorkItem }
   | { kind: 'branch'; value: string; refName: string; localBranchName: string }
 
 const EMPTY_HINT_BY_MODE: Record<SmartNameMode, string> = {
   smart: 'Start typing to create a name or find a source.',
-  github: 'Start typing to search GitHub PRs and issues.',
   branches: 'No matching branches.',
   text: ''
 }
 
 export function getSmartWorkspaceEmptyHint(mode: SmartNameMode): string {
   return EMPTY_HINT_BY_MODE[mode]
-}
-
-export function isBlockingTaskUrlResolution({
-  sourceIntent,
-  isQueryStale,
-  githubLoading
-}: {
-  sourceIntent: 'github' | null
-  isQueryStale: boolean
-  githubLoading: boolean
-}): boolean {
-  if (sourceIntent === null) {
-    return false
-  }
-  return isQueryStale || githubLoading
-}
-
-function toGitHubSourceRow(item: GitHubWorkItem): SmartWorkspaceSourceRow {
-  return { kind: 'github', value: `github-${item.repoId}-${item.type}-${item.number}`, item }
 }
 
 export function getBranchSearchRequest({
@@ -79,29 +55,6 @@ export function getBranchSearchRequest({
     return null
   }
   return { repoId: selectedRepoId, query: trimmedQuery, limit }
-}
-
-/**
- * Why: provider arrays lag the live input (200ms debounce). Keep them while the
- * user is still typing, but hide immediately when the field is cleared so prior
- * non-empty results cannot stay selectable until debounce catches up.
- */
-export function getVisibleHeldProviderResults<T>({
-  items,
-  value,
-  debouncedQuery
-}: {
-  items: readonly T[]
-  value: string
-  debouncedQuery: string
-}): T[] {
-  if (!isSmartWorkspaceSourceQueryWithinLimit(value)) {
-    return []
-  }
-  if (value.trim() === '' && debouncedQuery.trim() !== '') {
-    return []
-  }
-  return items.slice()
 }
 
 export function getVisibleBranchResults({
@@ -169,32 +122,17 @@ export function shouldHoldSourceResultsForQuery({
 
 export function buildSmartWorkspaceSourceRows({
   branches,
-  githubItems,
-  githubUrlIntent,
   mode,
   resultLimit,
   value
 }: {
   branches: BaseRefSearchResult[]
-  githubItems: GitHubWorkItem[]
-  githubUrlIntent?: GitHubIssueOrPRLink | null
   mode: SmartNameMode
   resultLimit: number
   value: string
 }): SmartWorkspaceSourceRow[] {
   if (!isSmartWorkspaceSourceQueryWithinLimit(value)) {
     return []
-  }
-  // Why: a full task URL is unambiguous, so unrelated held rows must never remain selectable.
-  const urlSourceRows = buildSmartWorkspaceUrlSourceRows({
-    githubItems,
-    githubUrlIntent,
-    mode,
-    resultLimit,
-    value
-  })
-  if (urlSourceRows !== null) {
-    return urlSourceRows
   }
   const trimmed = value.trim()
   const nextRows: SmartWorkspaceSourceRow[] = []
@@ -204,9 +142,6 @@ export function buildSmartWorkspaceSourceRows({
   }
   if (mode === 'text') {
     return nextRows
-  }
-  if (mode === 'smart' || mode === 'github') {
-    nextRows.push(...githubItems.map(toGitHubSourceRow))
   }
   const shouldShowBranches = mode === 'branches' || (mode === 'smart' && trimmed.length > 0)
   if (shouldShowBranches) {

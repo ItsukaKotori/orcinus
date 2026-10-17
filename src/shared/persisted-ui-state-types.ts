@@ -11,7 +11,6 @@ import type {
   RightSidebarExplorerView,
   RightSidebarTab,
   StatusBarItem,
-  TaskResumeState,
   TopLevelView,
   VisibleWorkspaceHostIds,
   WorkspaceHostOrder,
@@ -33,7 +32,7 @@ export type PersistedUIState = {
   rightSidebarWidth: number
   markdownTocPanelWidth?: number
   combinedDiffFileTreeWidth?: number
-  groupBy: 'none' | 'workspace-status' | 'repo' | 'pr-status'
+  groupBy: 'none' | 'workspace-status' | 'repo'
   sortBy: 'name' | 'smart' | 'recent' | 'repo' | 'manual'
   /** Project header ordering in `groupBy: 'repo'`, independent of `sortBy`: 'manual' uses persisted order + header drag, 'recent' by latest visible activity. */
   projectOrderBy: ProjectOrderBy
@@ -157,7 +156,6 @@ export type PersistedUIState = {
   trustedOrcaHooks?: PersistedTrustedOrcaHooks
   setupScriptPromptDismissedRepoIds?: string[]
   /** Page-position state for Tasks: only transient tabs/searches (source/repo/team/project selections use their own settings paths). */
-  taskResumeState?: TaskResumeState
   workspaceCleanup?: WorkspaceCleanupUIState
   /** Feature ids the user has actually used; education surfaces skip teaching already-discovered features. */
   featureInteractions?: FeatureInteractionState

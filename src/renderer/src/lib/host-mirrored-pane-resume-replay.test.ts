@@ -94,7 +94,6 @@ function seedState(worktree: ReturnType<typeof makeCreatedAgentWorktree>): void 
     } as unknown as AppState['settings'],
     markWorktreeVisited: vi.fn(),
     recordWorktreeVisit: vi.fn(),
-    refreshGitHubForWorktreeIfStale: vi.fn(),
     revealWorktreeInSidebar: vi.fn()
   }
   useAppStore.setState(state)

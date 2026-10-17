@@ -1,8 +1,7 @@
 import {
   AzureDevOpsIntegrationCard,
   BitbucketIntegrationCard,
-  GiteaIntegrationCard,
-  GitHubIntegrationCard
+  GiteaIntegrationCard
 } from './source-control-integration-cards'
 import { useIntegrationProviderStatusRefresh } from './use-integration-provider-status-refresh'
 import { translate } from '@/i18n/i18n'
@@ -26,7 +25,6 @@ export function IntegrationsPane(): React.JSX.Element {
           </p>
         </div>
         <div className="space-y-3">
-          <GitHubIntegrationCard />
           <BitbucketIntegrationCard />
           <AzureDevOpsIntegrationCard />
           <GiteaIntegrationCard />

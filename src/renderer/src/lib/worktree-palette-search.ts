@@ -13,26 +13,18 @@ import {
   WORKTREE_PALETTE_HOST_FIELD_ID,
   WORKTREE_PALETTE_NAME_FIELD_ID,
   WORKTREE_PALETTE_REPO_FIELD_ID,
-  type IssueCacheEntry,
-  type PRCacheEntry,
   type WorktreePaletteDocumentSources
 } from './worktree-palette-document'
 import {
   applyWorktreeCommentSnippet,
   type PaletteSupportingKind
 } from './worktree-palette-evidence'
-import type { HostedReviewInfo } from '../../../shared/hosted-review'
 import type { Repo } from '../../../shared/repo-types'
 import type { Worktree } from '../../../shared/worktree/types'
 import {
   getPaletteWorktreeExecutionHostId,
-  getPaletteWorktreeIdentity,
-  resolvePaletteRepoForWorktree
+  getPaletteWorktreeIdentity
 } from './palette-repo-resolution'
-import {
-  matchWorktreePaletteTaskUrl,
-  parseCmdJTaskSourceUrl
-} from './worktree-palette-task-url-match'
 import {
   createPaletteSearchContext,
   preparePaletteActivity,
@@ -181,7 +173,6 @@ export type WorktreePaletteSearchArgs = {
   documents: ReadonlyMap<string, PaletteDocument>
   repoMap: ReadonlyMap<string, Repo>
   repoMapByHostIdentity?: ReadonlyMap<string, Repo>
-  checksReviewByWorktree?: ReadonlyMap<Worktree, HostedReviewInfo | null>
   context?: PaletteSearchContext
 }
 
@@ -203,27 +194,8 @@ export function searchWorktreeDocuments(args: WorktreePaletteSearchArgs): Palett
     )
   }
 
-  const taskSourceUrl = parseCmdJTaskSourceUrl(args.query.trim())
   const results: PaletteSearchResult[] = []
   for (const worktree of args.worktrees) {
-    if (taskSourceUrl) {
-      const match = matchWorktreePaletteTaskUrl({
-        worktree,
-        intent: taskSourceUrl,
-        repo: resolvePaletteRepoForWorktree(worktree, args.repoMap, args.repoMapByHostIdentity),
-        review: args.checksReviewByWorktree?.get(worktree)
-      })
-      if (match) {
-        const activity = preparePaletteActivity(worktree.lastActivityAt, context)
-        results.push({
-          ...match,
-          lastActiveAt: activity.timestamp || null,
-          activity
-        })
-      }
-      continue
-    }
-
     const document = args.documents.get(getPaletteWorktreeIdentity(worktree))
     if (!document) {
       continue
@@ -262,9 +234,7 @@ export function searchWorktrees(
     query,
     documents: buildWorktreePaletteDocuments(worktrees, documentSources),
     repoMap,
-    repoMapByHostIdentity: sources.repoMapByHostIdentity,
-    checksReviewByWorktree: sources.checksReviewByWorktree
+    repoMapByHostIdentity: sources.repoMapByHostIdentity
   })
 }
 
-export type { IssueCacheEntry, PRCacheEntry }

@@ -1,7 +1,6 @@
 import type { Repo } from '../../../../../../shared/repo-types'
 import type { ProjectOrderBy } from '../../../../../../shared/ui-chrome-types'
 import type { WorkspaceStatusDefinition, Worktree } from '../../../../../../shared/worktree/types'
-import type { AppState } from '../../../../store/types'
 import {
   getWorkspaceStatus,
   getWorkspaceStatusFromGroupKey,
@@ -12,8 +11,6 @@ import {
   getFolderWorkspaceLaneKey,
   type RenderableFolderWorkspace
 } from './folder-workspace-lanes'
-import { PR_GROUP_META, PR_GROUP_ORDER, getPRGroupKey, getPRLaneKey } from './group-keys'
-import type { PRGroupKey } from './group-keys'
 import { addRepoIdToGroup, getProjectGroupingForRepo } from './project-grouping'
 import type {
   OrderedGroupEntry,
@@ -38,9 +35,6 @@ function getLaneLabelForKey(
     const status = getWorkspaceStatusFromGroupKey(key, workspaceStatuses)
     return workspaceStatuses.find((entry) => entry.id === status)?.label ?? status ?? key
   }
-  if (groupBy === 'pr-status') {
-    return PR_GROUP_META[key.replace(/^pr:/, '') as PRGroupKey].label
-  }
   return key
 }
 
@@ -49,8 +43,6 @@ export function buildOrderedGroups(args: {
   groupBy: WorktreeGroupBy
   naturalWorktrees: readonly Worktree[]
   repoMap: Map<string, Repo>
-  prCache: Record<string, unknown> | null
-  settings: AppState['settings'] | undefined
   workspaceStatuses: readonly WorkspaceStatusDefinition[]
   projectIndex: ProjectGroupingIndex | null
   placeholderRepoIds: ReadonlySet<string>
@@ -65,8 +57,6 @@ export function buildOrderedGroups(args: {
     groupBy,
     naturalWorktrees,
     repoMap,
-    prCache,
-    settings,
     workspaceStatuses,
     projectIndex,
     placeholderRepoIds,
@@ -80,23 +70,21 @@ export function buildOrderedGroups(args: {
 
   const grouped = new Map<string, WorktreeGroupEntry>()
   for (const w of naturalWorktrees) {
+    let repo: Repo | undefined
     let key: string
     let label: string
-    let repo: Repo | undefined
     if (groupBy === 'repo') {
       const grouping = getProjectGroupingForRepo(w.repoId, repoMap, projectIndex)
       key = grouping.key
       label = grouping.label
       repo = grouping.repo
-    } else if (groupBy === 'workspace-status') {
+    } else {
+      // Why: 'none' returns before grouping runs, so the remaining mode here is
+      // workspace-status; folder lanes arrive via the dedicated loop below.
       const workspaceStatus = getWorkspaceStatus(w, workspaceStatuses)
       key = getWorkspaceStatusGroupKey(workspaceStatus)
       label =
         workspaceStatuses.find((status) => status.id === workspaceStatus)?.label ?? workspaceStatus
-    } else {
-      const prGroup = getPRGroupKey(w, repoMap, prCache, settings)
-      key = getPRLaneKey(prGroup)
-      label = PR_GROUP_META[prGroup].label
     }
     if (!grouped.has(key)) {
       grouped.set(key, { label, items: [], repo, repoIds: new Set() })
@@ -205,15 +193,7 @@ export function buildOrderedGroups(args: {
   }
 
   const orderedGroups: OrderedGroupEntry[] = []
-  if (groupBy === 'pr-status') {
-    for (const prGroup of PR_GROUP_ORDER) {
-      const key = `pr:${prGroup}`
-      const group = grouped.get(key)
-      if (group) {
-        orderedGroups.push([key, group])
-      }
-    }
-  } else if (groupBy === 'workspace-status') {
+  if (groupBy === 'workspace-status') {
     // Why: status grouping is opt-in while the board drawer remains the wider
     // all-lanes drag target; keep the sidebar compact by omitting empty lanes.
     for (const status of workspaceStatuses) {

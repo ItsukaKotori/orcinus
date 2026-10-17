@@ -47,7 +47,7 @@ const ACTION_KEYS = Object.keys(originalState).filter(
 )
 
 describe('useSourceControlStoreActions store subscriptions', () => {
-  it('keeps only the two generation-record maps subscribed', () => {
+  it('keeps only the commit-message generation-record map subscribed', () => {
     const baseline = listenerCount()
 
     function Probe(): null {
@@ -56,9 +56,9 @@ describe('useSourceControlStoreActions store subscriptions', () => {
     }
     mount(<Probe />)
 
-    // Why 2: `pullRequestGenerationRecords` and `commitMessageGenerationRecords` are the only
-    // entries that are state; the other 40 are actions read through getState().
-    expect(listenerCount() - baseline).toBe(2)
+    // Why 1: `commitMessageGenerationRecords` is the only entry that is state;
+    // the other 31 are actions read through getState().
+    expect(listenerCount() - baseline).toBe(1)
 
     unmount()
     expect(listenerCount()).toBe(baseline)
@@ -89,7 +89,7 @@ describe('useSourceControlStoreActions store subscriptions', () => {
     expect(latest).toBe(first)
   })
 
-  it('still tracks the generation-record maps it subscribes to', () => {
+  it('still tracks the generation-record map it subscribes to', () => {
     let latest: SourceControlStoreActions | null = null
     function Probe(): null {
       latest = useSourceControlStoreActions()
@@ -107,20 +107,11 @@ describe('useSourceControlStoreActions store subscriptions', () => {
     const record = { status: 'pending' } as never
     act(() => {
       useAppStore.setState({
-        pullRequestGenerationRecords: { 'wt-1': record }
+        commitMessageGenerationRecords: { 'wt-1': record }
       })
     })
 
     expect(read()).not.toBe(before)
-    expect(read().prGenerationRecords).toEqual({ 'wt-1': record })
-
-    const afterPr = read()
-    act(() => {
-      useAppStore.setState({
-        commitMessageGenerationRecords: { 'wt-1': record }
-      })
-    })
-    expect(read()).not.toBe(afterPr)
     expect(read().commitMessageGenerationRecords).toEqual({ 'wt-1': record })
   })
 
@@ -138,7 +129,7 @@ describe('useSourceControlStoreActions store subscriptions', () => {
       (key) => typeof returned[key] === 'function'
     )
 
-    expect(returnedActionKeys.length).toBe(40)
+    expect(returnedActionKeys.length).toBe(30)
     for (const key of returnedActionKeys) {
       expect(returned[key]).toBe(state[key])
     }
@@ -152,8 +143,6 @@ describe('useSourceControlStoreActions store subscriptions', () => {
     act(() => {
       useAppStore.getState().setRightSidebarOpen(true)
       useAppStore.getState().setRightSidebarTab('source-control')
-      useAppStore.getState().allocatePullRequestGenerationRequestId()
-      useAppStore.getState().setPullRequestGenerationRecord('wt-1', { status: 'pending' } as never)
       useAppStore.getState().setCommitMessageGenerationRecord('wt-1', {
         status: 'pending'
       } as never)

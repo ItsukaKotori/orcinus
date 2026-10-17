@@ -2,7 +2,7 @@ import type { StateCreator } from 'zustand'
 import type { AppState } from '../types'
 import type { UISlice } from './ui/ui-slice-contract'
 import { createUiAgentActions } from './ui/ui-slice-agent-actions'
-import { createUiTaskActions } from './ui/ui-slice-task-actions'
+import { createUiViewStateActions } from './ui/ui-slice-view-state-actions'
 import { createUiViewActions } from './ui/ui-slice-view-actions'
 import { createUiSettingsActions } from './ui/ui-slice-settings-actions'
 import { createUiModalActions } from './ui/ui-slice-modal-actions'
@@ -20,14 +20,13 @@ export type {
   OpenAgentSendPopoverTargetModeArgs,
   PendingSidebarRowReveal,
   PendingSidebarWorktreeReveal,
-  TaskPageData,
   UISlice
 } from './ui/ui-slice-contract'
 
 export const createUISlice: StateCreator<AppState, [], [], UISlice> = (set, get) =>
   ({
     ...createUiAgentActions(set, get),
-    ...createUiTaskActions(set, get),
+    ...createUiViewStateActions(set),
     ...createUiViewActions(set, get),
     ...createUiSettingsActions(set, get),
     ...createUiModalActions(set, get),

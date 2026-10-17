@@ -48,8 +48,8 @@ describe('OnboardingFlow', () => {
   })
 
   it.each([
-    [3, 'Set up GitHub tasks'],
-    [4, 'Set up GitHub tasks'],
+    [3, 'Connect your task sources'],
+    [4, 'Connect your task sources'],
     [5, 'Set up notifications'],
     [9, 'Set up notifications']
   ])(
@@ -71,7 +71,7 @@ describe('OnboardingFlow', () => {
   )
 
   it.each([
-    [3, 'Set up GitHub tasks'],
+    [3, 'Connect your task sources'],
     [4, 'Set up notifications'],
     [5, 'Set up notifications'],
     [9, 'Set up notifications']
@@ -129,13 +129,10 @@ describe('OnboardingFlow', () => {
     expect(html).toContain('4 of 5')
   })
 
-  it('drops the skipped integrations step from the stepper on Windows', () => {
+  it('keeps the integrations step in the stepper on Windows', () => {
     vi.stubGlobal('navigator', { userAgent: 'Windows' })
     useAppStore.setState({
-      preflightStatus: {
-        git: { installed: true },
-        gh: { installed: true, authenticated: false }
-      },
+      preflightStatus: { git: { installed: true } },
       preflightStatusChecked: true
     })
 
@@ -147,69 +144,30 @@ describe('OnboardingFlow', () => {
       onOnboardingChange: vi.fn()
     })
 
-    expect(html).toContain('Set Windows terminal defaults')
-    // Why: integrations is skipped (gh already installed), so it is not a
-    // stepper dot at all — the four real steps are agent, theme, Windows
-    // terminal, notifications, and Windows terminal is the third of four.
+    // Why: the integrations step is always shown after the GitHub trim, so it
+    // is the third page and Windows terminal stays the fourth step.
+    expect(html).toContain('Connect your task sources')
+    expect(html).toContain('Go to onboarding step 4: Windows Terminal')
+    expect(html).toContain('3 of 5')
+  })
+
+  it('keeps the integrations step on the task setup page', () => {
+    useAppStore.setState({
+      preflightStatus: { git: { installed: true } },
+      preflightStatusChecked: true
+    })
+
+    const html = renderOnboardingFlow({
+      onboarding: {
+        ...getDefaultOnboardingState(),
+        lastCompletedStep: 2
+      },
+      onOnboardingChange: vi.fn()
+    })
+
+    expect(html).toContain('Connect your task sources')
+    expect(html).toContain('Go to onboarding step 3: Integrations')
     expect(html).toContain('3 of 4')
-    expect(html).not.toContain('Set up GitHub tasks')
-    expect(html).not.toContain('Integrations')
-  })
-
-  it('skips GitHub task setup when the GitHub CLI is already detected', () => {
-    useAppStore.setState({
-      preflightStatus: {
-        git: { installed: true },
-        gh: { installed: true, authenticated: false }
-      },
-      preflightStatusChecked: true
-    })
-
-    const html = renderOnboardingFlow({
-      onboarding: {
-        ...getDefaultOnboardingState(),
-        lastCompletedStep: 2
-      },
-      onOnboardingChange: vi.fn()
-    })
-
-    expect(html).toContain('Set up notifications')
-    expect(html).toContain('Add your first project')
-    expect(html).not.toContain('Set up GitHub tasks')
-    expect(html).not.toContain('Connect your task sources')
-    expect(html).not.toContain('Point Orca at some code')
-    // Why: with both integrations (gh installed) and Windows terminal (Mac)
-    // skipped, the stepper shows only the three real steps — no dead dots.
-    expect(html).toContain('3 of 3')
-    expect(html).not.toContain('Integrations')
-  })
-
-  it('shows only GitHub on the task setup page when the GitHub CLI is missing', () => {
-    useAppStore.setState({
-      preflightStatus: {
-        git: { installed: true },
-        gh: { installed: false, authenticated: false }
-      },
-      preflightStatusChecked: true
-    })
-
-    const html = renderOnboardingFlow({
-      onboarding: {
-        ...getDefaultOnboardingState(),
-        lastCompletedStep: 2
-      },
-      onOnboardingChange: vi.fn()
-    })
-
-    expect(html).toContain('Set up GitHub tasks')
-    expect(html).toContain('Install the GitHub CLI to:')
-    expect(html).toContain('GitHub')
-    expect(html).not.toContain(
-      '<h3 class="text-[15px] font-semibold leading-tight text-foreground">Linear</h3>'
-    )
-    expect(html).toContain(
-      'GitLab, Bitbucket, Azure DevOps, and Gitea live in Settings &gt; Integrations.'
-    )
   })
 
   it('renders onboarding inside a centered modal shell', () => {

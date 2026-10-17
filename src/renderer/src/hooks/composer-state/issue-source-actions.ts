@@ -25,7 +25,6 @@ type IssueSourceActionsInput = Pick<
   | 'setReuseEligibleBranch'
   | 'setReuseSelectedBranch'
   | 'setStartFromResetHint'
-  | 'smartGitHubPrStartPointSelectionRef'
 >
 
 import { useCallback, useMemo } from 'react'
@@ -57,12 +56,10 @@ export function useIssueSourceActions(input: IssueSourceActionsInput) {
     setPushTarget,
     setReuseEligibleBranch,
     setReuseSelectedBranch,
-    setStartFromResetHint,
-    smartGitHubPrStartPointSelectionRef
+    setStartFromResetHint
   } = input
 
   const handleClearSmartNameSelection = useCallback((): void => {
-    smartGitHubPrStartPointSelectionRef.current = null
     setLinkedIssue('')
     setLinkedPR(null)
     setLinkedWorkItem(null)
@@ -105,8 +102,7 @@ export function useIssueSourceActions(input: IssueSourceActionsInput) {
     setPushTarget,
     setReuseEligibleBranch,
     setReuseSelectedBranch,
-    setStartFromResetHint,
-    smartGitHubPrStartPointSelectionRef
+    setStartFromResetHint
   ])
 
   const smartNameSelection = useMemo<SmartWorkspaceNameSelection | null>(() => {

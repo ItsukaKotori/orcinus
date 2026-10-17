@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  getInitialGitHubPrStartPointSelection,
   getMatchingLinkedTaskSourceContext,
   resolveInitialWorkspaceRunSeed,
   resolveSmartGitHubCreateNames
@@ -26,33 +25,6 @@ describe('useComposerState public decisions', () => {
         nameIsAutoManaged: false
       })
     ).toEqual({ workspaceName: 'smart-name', displayName: 'Smart name' })
-  })
-
-  it('accepts a nullable repo seed without manufacturing a PR start point', () => {
-    expect(
-      getInitialGitHubPrStartPointSelection({
-        item: {
-          id: 'pr-42',
-          type: 'pr',
-          number: 42,
-          title: 'Fix it',
-          state: 'open',
-          url: 'https://github.com/orca/orca/pull/42',
-          labels: [],
-          updatedAt: '2026-08-23T00:00:00.000Z',
-          author: 'octocat',
-          repoId: 'repo-1'
-        },
-        linkedWorkItem: {
-          provider: 'github',
-          type: 'pr',
-          number: 42,
-          title: 'Fix it',
-          url: 'https://github.com/orca/orca/pull/42'
-        },
-        repoId: null
-      })
-    ).toBeNull()
   })
 
   it('preserves host-qualified task context while draft host values take precedence', () => {

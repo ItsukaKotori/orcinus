@@ -98,7 +98,7 @@ describe('purgeWorktreeTerminalState direct (design §4.4)', () => {
       },
       rightSidebarTabByWorktree: {
         'repoA::/a/wt1': 'search' as never,
-        'repoA::/a/wt2': 'checks'
+        'repoA::/a/wt2': 'source-control'
       },
       activeWorktreeId: 'repoA::/a/wt1',
       worktreeLineageById: {
@@ -142,7 +142,7 @@ describe('purgeWorktreeTerminalState direct (design §4.4)', () => {
       'repoA::/a/wt2': 'head-2'
     })
     expect(s.gitIgnoredPathsByWorktree).toEqual({ 'repoA::/a/wt2': ['coverage/'] })
-    expect(s.rightSidebarTabByWorktree).toEqual({ 'repoA::/a/wt2': 'checks' })
+    expect(s.rightSidebarTabByWorktree).toEqual({ 'repoA::/a/wt2': 'source-control' })
     expect(s.activeWorktreeId).toBeNull()
     expect(s.activeFileId).toBeNull()
     expect(s.activeTabId).toBeNull()

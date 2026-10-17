@@ -3,7 +3,6 @@ import {
   ExternalLink,
   FileWarning,
   GitBranch,
-  GitPullRequest,
   Terminal,
   Trash2
 } from 'lucide-react'
@@ -137,8 +136,6 @@ export function WorkspaceDecisionHoverCard({
   onOpenWorkspace: () => void
 }): React.JSX.Element {
   const deleteDecision = getDeleteDecisionLabel(worktree, details)
-  const issueLabel =
-    [details.issueLabel, details.linearIssueLabel].filter(Boolean).join(' · ') || 'No linked issue'
   return (
     <HoverCardContent
       align="end"
@@ -212,22 +209,6 @@ export function WorkspaceDecisionHoverCard({
             'Branch'
           )}
           value={details.branchStatus ?? getWorkspaceSpaceBranchLabel(worktree)}
-        />
-        <DecisionLine
-          icon={<GitPullRequest />}
-          label={translate(
-            'auto.components.status.bar.WorkspaceSpaceManagerPanel.fb2069acb7',
-            'Review'
-          )}
-          value={details.reviewLabel ?? 'No linked PR'}
-        />
-        <DecisionLine
-          icon={<ExternalLink />}
-          label={translate(
-            'auto.components.status.bar.WorkspaceSpaceManagerPanel.66870929fb',
-            'Issue'
-          )}
-          value={issueLabel}
         />
       </div>
 

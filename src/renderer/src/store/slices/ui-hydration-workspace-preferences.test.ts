@@ -222,24 +222,6 @@ describe('createUISlice hydratePersistedUI', () => {
     expect(store.getState().statusBarUsageMode).toBe('verbose')
   })
 
-  it('sanitizes task resume state field-by-field during hydration', () => {
-    const store = createUIStore()
-
-    store.getState().hydratePersistedUI(
-      makePersistedUI({
-        taskResumeState: {
-          githubMode: 'project',
-          githubItemsPreset: 'invalid',
-          githubItemsQuery: 42
-        } as unknown as PersistedUIState['taskResumeState']
-      })
-    )
-
-    expect(store.getState().taskResumeState).toEqual({
-      githubMode: 'project'
-    })
-  })
-
   it('restores acknowledgedAgentsByPaneKey from persisted UI state', () => {
     const now = 1_700_000_000_000
     vi.useFakeTimers()
@@ -414,19 +396,6 @@ describe('createUISlice hydratePersistedUI', () => {
     } finally {
       vi.useRealTimers()
     }
-  })
-
-  it('merges and persists partial task resume updates', () => {
-    const setUI = vi.fn().mockResolvedValue(undefined)
-    vi.stubGlobal('window', { api: { ui: { set: setUI } } })
-    const store = createUIStore()
-
-    store.setState({ taskResumeState: { githubMode: 'project' } })
-    store.getState().setTaskResumeState({ githubItemsPreset: 'my-prs' })
-
-    const expected = { githubMode: 'project', githubItemsPreset: 'my-prs' }
-    expect(store.getState().taskResumeState).toEqual(expected)
-    expect(setUI).toHaveBeenCalledWith({ taskResumeState: expected })
   })
 
   it('sets Default worktree card mode with matching settings and UI writes', () => {

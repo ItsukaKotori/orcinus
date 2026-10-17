@@ -25,28 +25,18 @@ export function WorktreeCardParentContent({
     unreadTooltip,
     stopQuickActionPointerPropagation,
     handleToggleUnreadQuick,
-    statusLaneReview,
     branchIdentityDisplay,
     showInlineAgentList,
     titleRenaming,
     isDeleting,
-    hoverIssue,
-    hoverReview,
     hoverComment,
     metaAutomationProvenance,
     metaCliProvenance,
     detailsHoverControl,
     handleRenameTitle,
-    handleEditIssue,
     handleEditComment,
-    handleOpenGitHubIssueInOrca,
-    handleOpenIssueInBrowser,
-    handleOpenReviewInOrca,
-    handleOpenReviewInBrowser,
     handleOpenAutomation,
-    handleOpenAutomationRun,
-    canUnlinkReview,
-    handleUnlinkReview
+    handleOpenAutomationRun
   } = card
   const {
     titleOnlyCard,
@@ -71,8 +61,6 @@ export function WorktreeCardParentContent({
   const identityContentWithHover =
     hasHoverDetails && !titleRenaming ? (
       <WorktreeCardDetailsHover
-        issue={hoverIssue}
-        review={hoverReview}
         comment={hoverComment}
         automationProvenance={metaAutomationProvenance}
         cliProvenance={metaCliProvenance}
@@ -82,23 +70,9 @@ export function WorktreeCardParentContent({
         openDelay={100}
         hoverControl={detailsHoverControl}
         onRenameWorkspaceTitle={affiliateListMode ? undefined : handleRenameTitle}
-        onEditIssue={affiliateListMode ? undefined : handleEditIssue}
         onEditComment={affiliateListMode ? undefined : handleEditComment}
-        onOpenGitHubIssueInOrca={
-          hoverIssue && 'url' in hoverIssue && hoverIssue.url
-            ? handleOpenGitHubIssueInOrca
-            : undefined
-        }
-        onOpenIssueInBrowser={
-          hoverIssue && 'url' in hoverIssue && hoverIssue.url ? handleOpenIssueInBrowser : undefined
-        }
-        onOpenReviewInOrca={
-          hoverReview?.url && hoverReview.provider === 'github' ? handleOpenReviewInOrca : undefined
-        }
-        onOpenReviewInBrowser={hoverReview?.url ? handleOpenReviewInBrowser : undefined}
         onOpenAutomation={affiliateListMode ? undefined : handleOpenAutomation}
         onOpenAutomationRun={affiliateListMode ? undefined : handleOpenAutomationRun}
-        onUnlinkReview={!affiliateListMode && canUnlinkReview ? handleUnlinkReview : undefined}
       >
         {identityContent}
       </WorktreeCardDetailsHover>
@@ -134,7 +108,6 @@ export function WorktreeCardParentContent({
             unreadTooltip={unreadTooltip}
             onPointerDown={stopQuickActionPointerPropagation}
             onToggleUnread={handleToggleUnreadQuick}
-            prDisplay={statusLaneReview}
             newCardStyle={newCardStyle}
             hasBranchIdentity={Boolean(branchIdentityDisplay)}
           />

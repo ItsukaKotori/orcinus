@@ -9,7 +9,6 @@ import type { Repo } from '../../../../shared/repo-types'
 import type { WorktreeMeta } from '../../../../shared/worktree/meta-types'
 import type { WorktreeMetaUpdateOptions } from '@/store/slices/worktree-helpers'
 import type { Worktree } from '../../../../shared/worktree/types'
-import { folderWorkspaceKey } from '../../../../shared/workspace-scope'
 
 // Why: Radix tooltips need a provider the dialog does not own, and the menu's
 // portal needs real layout. Stand-ins keep these tests on provider selection.
@@ -164,14 +163,6 @@ function openDialog(
   render(<WorktreeMetaDialog />)
 }
 
-function issueInput(): HTMLInputElement {
-  return screen.getByPlaceholderText('Issue # or GitHub URL')
-}
-
-function providerChip(): HTMLButtonElement {
-  return screen.getByRole('button', { name: 'Issue provider' })
-}
-
 function saveButton(): HTMLButtonElement {
   return screen.getByRole('button', { name: 'Save' })
 }
@@ -193,13 +184,6 @@ describe('WorktreeMetaDialog issue link row', () => {
     useAppStore.setState(initialState, true)
   })
 
-  it('seeds the chip and value from a GitHub link', () => {
-    openDialog({ worktree: { linkedIssue: 42 } })
-
-    expect(providerChip().textContent).toContain('GitHub')
-    expect(issueInput().value).toBe('42')
-  })
-
   it('replaces a completed emoji shortcode in the display name', () => {
     openDialog()
     const displayNameInput = screen.getByRole('textbox', { name: 'Display Name' })
@@ -209,14 +193,6 @@ describe('WorktreeMetaDialog issue link row', () => {
     })
 
     expect((displayNameInput as HTMLInputElement).value).toBe('Feature 😉')
-  })
-
-  it('keeps the chip on GitHub when a bare issue key is typed', () => {
-    openDialog({ worktree: { linkedIssue: 42 } })
-
-    fireEvent.change(issueInput(), { target: { value: 'GH-1234' } })
-
-    expect(providerChip().textContent).toContain('GitHub')
   })
 
   it('qualifies a save with the host selected by the opening row', async () => {
@@ -243,33 +219,8 @@ describe('WorktreeMetaDialog issue link row', () => {
 
   // updateWorktreeMeta stamps lastActivityAt on any comment write, which would
   // reorder the workspace under the time-decay sidebar sort.
-  it('sends no comment when only the issue link changed', async () => {
-    openDialog({ worktree: { linkedIssue: 42 } })
-
-    fireEvent.change(issueInput(), { target: { value: '99' } })
-    await act(async () => {
-      fireEvent.click(saveButton())
-    })
-
-    await waitFor(() => expect(updateWorktreeMeta).toHaveBeenCalledTimes(1))
-    expect(updateWorktreeMeta.mock.calls[0]?.[1] ?? {}).not.toHaveProperty('comment')
-  })
-
   // A failed save refetches and reverts the optimistic write, so closing here
   // would report success for an edit that silently undid itself.
-  it('keeps the dialog open and reports why when the save fails', async () => {
-    openDialog({ worktree: { linkedIssue: 42 } })
-    updateWorktreeMeta.mockResolvedValue({ ok: false, error: 'Runtime is offline' })
-
-    fireEvent.change(issueInput(), { target: { value: '99' } })
-    await act(async () => {
-      fireEvent.click(saveButton())
-    })
-
-    expect(screen.getByRole('alert').textContent).toBe('Runtime is offline')
-    expect(useAppStore.getState().activeModal).toBe('edit-meta')
-  })
-
   it('leaves the issue link alone when only the comment is edited', async () => {
     openDialog({ worktree: { linkedIssue: 42 } })
 
@@ -289,36 +240,8 @@ describe('WorktreeMetaDialog issue link row', () => {
     expect(updates.comment).toBe('updated note')
   })
 
-  it('blocks saving an unparseable value', () => {
-    openDialog({ worktree: { linkedIssue: 42 } })
-
-    fireEvent.change(issueInput(), { target: { value: 'not an issue' } })
-
-    expect(screen.getByText('Not a GitHub issue number or issue URL.')).toBeTruthy()
-    expect(saveButton().disabled).toBe(true)
-  })
-
-  it('is read-only for a folder workspace', () => {
-    openDialog({ worktreeId: folderWorkspaceKey('fw-1') })
-
-    expect(issueInput().disabled).toBe(true)
-    expect(providerChip().disabled).toBe(true)
-    expect(
-      screen.getByText(
-        "Issue links are set when a folder workspace is created and can't be changed here yet."
-      )
-    ).toBeTruthy()
-  })
-
   // Folder workspaces live outside worktreesByRepo, so the indexed lookup alone
   // leaves the row blank and the link it does hold looks lost.
-  it('shows a folder workspace its own linked issue', () => {
-    openDialog({ worktreeId: folderWorkspaceKey('fw-1'), folderWorkspace: {} })
-
-    expect(issueInput().value).toBe('901')
-    expect(providerChip().textContent).toContain('GitHub')
-  })
-
   // A background `orca worktree set` must not move the baseline mid-edit: the
   // field would read as dirty and a comment-only save would write the stale seed.
   it('keeps the baseline frozen when the store changes while open', async () => {
@@ -345,57 +268,6 @@ describe('WorktreeMetaDialog issue link row', () => {
 
   // Same issue, different spelling: the link is unchanged, so its title and
   // SSH/runtime source context must survive the save.
-  it('keeps the linked work item when the value is only respelled', async () => {
-    openDialog({
-      worktree: {
-        linkedIssue: 42,
-        linkedWorkItem: {
-          provider: 'github',
-          type: 'issue',
-          number: 42,
-          title: 'Fix auth',
-          url: 'https://github.com/acme/orca/issues/42'
-        }
-      }
-    })
-
-    fireEvent.change(issueInput(), { target: { value: '#42' } })
-
-    expect(screen.queryByText(/Saving unlinks/)).toBeNull()
-
-    await act(async () => {
-      fireEvent.click(saveButton())
-    })
-
-    await waitFor(() => expect(updateWorktreeMeta).toHaveBeenCalledTimes(1))
-    const updates = updateWorktreeMeta.mock.calls[0]?.[1] ?? {}
-    expect(updates).not.toHaveProperty('linkedWorkItem')
-    expect(updates).not.toHaveProperty('linkedTaskSourceContext')
-    expect(updates).not.toHaveProperty('linkedIssue')
-  })
-
   // The owner index reports a duplicated workspace ID as ambiguous rather than
   // guessing, so the opening row has to name its own bucket.
-  it('shows the clicked row when the same workspace ID exists under two hosts', () => {
-    openDialog({
-      worktree: { linkedIssue: 42 },
-      otherRepos: [{ repoId: 'repo-2', worktree: { linkedIssue: 77 } }],
-      modalRepoId: 'repo-2'
-    })
-
-    expect(issueInput().value).toBe('77')
-    expect(providerChip().textContent).toContain('GitHub')
-  })
-
-  it('dispatches nothing when the dialog is cancelled', async () => {
-    openDialog({ worktree: { linkedIssue: 42 } })
-
-    fireEvent.change(issueInput(), { target: { value: '99' } })
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
-    })
-
-    expect(updateWorktreeMeta).not.toHaveBeenCalled()
-    expect(useAppStore.getState().activeModal).toBe('none')
-  })
 })

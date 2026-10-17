@@ -17,7 +17,6 @@ import {
 } from './settings-setup-workflow-section-renderers'
 import {
   renderGitSettingsSection,
-  renderTasksSettingsSection
 } from './settings-git-task-section-renderers'
 import {
   renderFloatingWorkspaceSettingsSection,
@@ -108,7 +107,6 @@ export function renderSettingsPage(context: SettingsRenderContext): React.JSX.El
                 {renderAutomationsSettingsSection(context)}
                 {renderArtifactsSettingsSection(context)}
                 {renderGitSettingsSection(context)}
-                {renderTasksSettingsSection(context)}
                 {renderTerminalSettingsSection(context)}
                 {renderQuickCommandsSettingsSection(context)}
                 {renderFloatingWorkspaceSettingsSection(context)}

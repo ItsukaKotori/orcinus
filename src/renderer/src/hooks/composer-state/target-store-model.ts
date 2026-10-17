@@ -1,5 +1,4 @@
 import type { ExecutionHostId } from '../../../../shared/execution-host'
-import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import type { ProjectGroup } from '../../../../shared/project-group-types'
 import type { Repo } from '../../../../shared/repo-types'
 import type { SshConnectionState } from '../../../../shared/ssh-types'
@@ -28,7 +27,6 @@ export type ComposerTargetStoreModel = {
   initialName: string
   initialPrompt: string
   initialLinkedWorkItem: LinkedWorkItemSummary | null
-  initialGitHubWorkItem: GitHubWorkItem | null
   initialTaskSourceContext: TaskSourceContext | null
   initialWorkspaceStatus: WorkspaceStatus | undefined
   initialBaseBranch: string | undefined
@@ -55,7 +53,6 @@ export type ComposerTargetStoreModel = {
   openSettingsTarget: ComposerStoreActions['openSettingsTarget']
   setActiveRuntimeEnvironmentPreference: ComposerStoreActions['setActiveRuntimeEnvironmentPreference']
   prefetchWorktreeCreateBase: ComposerStoreActions['prefetchWorktreeCreateBase']
-  prefetchWorkItems: ComposerStoreActions['prefetchWorkItems']
   fetchSparsePresets: ComposerStoreActions['fetchSparsePresets']
   repos: readonly Repo[]
   projects: readonly Project[]

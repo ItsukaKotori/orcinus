@@ -180,32 +180,12 @@ export function AppearanceWindowSidebarSection({
 
                   <SearchableSetting
                     title={translate(
-                      'auto.components.settings.AppearancePane.cf81907069',
-                      'Show Tasks Button'
-                    )}
-                    description={sidebarEntries[0]?.description}
-                    keywords={sidebarEntries[0]?.keywords ?? ['tasks', 'sidebar', 'button']}
-                  >
-                    <SettingsSwitchRow
-                      label={translate(
-                        'auto.components.settings.AppearancePane.cf81907069',
-                        'Show Tasks Button'
-                      )}
-                      checked={settings.showTasksButton !== false}
-                      onChange={() =>
-                        updateSettings({ showTasksButton: !(settings.showTasksButton !== false) })
-                      }
-                    />
-                  </SearchableSetting>
-
-                  <SearchableSetting
-                    title={translate(
                       'auto.components.settings.AppearancePane.511f270ebb',
                       'Show Automations Button'
                     )}
-                    description={sidebarEntries[1]?.description}
+                    description={sidebarEntries[0]?.description}
                     keywords={
-                      sidebarEntries[1]?.keywords ?? ['automations', 'automation', 'schedule']
+                      sidebarEntries[0]?.keywords ?? ['automations', 'automation', 'schedule']
                     }
                   >
                     <SettingsSwitchRow

@@ -46,7 +46,6 @@ describe('project groups', () => {
       'repo',
       [groupedWorktree],
       new Map([[groupedRepo.id, groupedRepo]]),
-      null,
       new Set(),
       new Map([[groupedRepo.id, 0]]),
       undefined,
@@ -105,7 +104,6 @@ describe('project groups', () => {
       'repo',
       [],
       new Map(),
-      null,
       new Set(),
       undefined,
       undefined,
@@ -183,7 +181,6 @@ describe('project groups', () => {
       'repo',
       [],
       new Map(),
-      null,
       new Set(),
       undefined,
       undefined,
@@ -253,7 +250,6 @@ describe('project groups', () => {
       'repo',
       [],
       new Map(),
-      null,
       new Set(),
       undefined,
       undefined,
@@ -330,7 +326,6 @@ describe('project groups', () => {
         [serviceA.id, serviceA],
         [serviceB.id, serviceB]
       ]),
-      null,
       new Set(),
       new Map([
         [serviceA.id, 0],
@@ -378,8 +373,6 @@ describe('project groups', () => {
         'repo',
         worktree,
         new Map([[groupedRepo.id, groupedRepo]]),
-        null,
-        undefined,
         undefined,
         [group]
       )
@@ -406,8 +399,6 @@ describe('project groups', () => {
         'repo',
         worktree,
         new Map([[groupedRepo.id, groupedRepo]]),
-        null,
-        undefined,
         undefined,
         [loadedGroup]
       )
@@ -415,6 +406,6 @@ describe('project groups', () => {
   })
 
   it('returns only the repo key for ungrouped repo reveals', () => {
-    expect(getGroupKeysForWorktree('repo', worktree, repoMap, null)).toEqual(['repo:repo-1'])
+    expect(getGroupKeysForWorktree('repo', worktree, repoMap)).toEqual(['repo:repo-1'])
   })
 })

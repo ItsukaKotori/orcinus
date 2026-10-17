@@ -17,7 +17,7 @@ import type { WorktreeJumpPaletteLocalState } from './use-worktree-jump-palette-
 
 type WorktreeJumpPaletteListEntriesInput = WorktreeJumpPaletteSections &
   Pick<WorktreeJumpPaletteWorktrees, 'hasQuery'> &
-  Pick<WorktreeJumpPaletteLocalState, 'autoSelectedItemIdRef' | 'taskSourceUrl'> &
+  Pick<WorktreeJumpPaletteLocalState, 'autoSelectedItemIdRef'> &
   Pick<WorktreeJumpPaletteSections, 'middleLeadsSections' | 'handleExpandSection'>
 
 export function useWorktreeJumpPaletteListEntries({
@@ -26,7 +26,6 @@ export function useWorktreeJumpPaletteListEntries({
   paletteSections,
   showCreateAction,
   autoSelectedItemIdRef,
-  taskSourceUrl,
   handleExpandSection,
   middleLeadsSections
 }: WorktreeJumpPaletteListEntriesInput) {
@@ -141,17 +140,6 @@ export function useWorktreeJumpPaletteListEntries({
         )
       }
     }
-    // Why: a pasted issue/PR URL is decisive. Show linked worktrees first so
-    // Enter jumps; keep create available underneath when the user wants a new one.
-    if (taskSourceUrl) {
-      if (visibleWorktreeItems.length > 0) {
-        pushWorktreeSection()
-      }
-      if (showCreateAction) {
-        entries.push({ id: CREATE_WORKTREE_ITEM_ID, type: 'create-worktree' })
-      }
-      return entries
-    }
     if (!hasQuery) {
       pushOpenTabSection()
       pushWorktreeSection()
@@ -233,8 +221,7 @@ export function useWorktreeJumpPaletteListEntries({
     middleLeadsSections,
     openTabsLeadSections,
     paletteSections,
-    showCreateAction,
-    taskSourceUrl
+    showCreateAction
   ])
   const selectableItems = useMemo<PaletteItem[]>(
     () =>

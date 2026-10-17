@@ -4,7 +4,6 @@ import { Popover, PopoverAnchor } from '@/components/ui/popover'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { translate } from '@/i18n/i18n'
 import { WorkspaceEmojiSuggestionPopover } from '@/components/workspace-emoji/WorkspaceEmojiSuggestionPopover'
-import { renderSmartWorkspaceCrossRepoDialog } from './smart-workspace-cross-repo-dialog'
 import { renderSmartWorkspaceNameInput } from './smart-workspace-name-input-surface'
 import { renderSmartWorkspaceSourceResults } from './smart-workspace-source-results-surface'
 import type { SmartWorkspaceNameFieldController } from './use-smart-workspace-name-field-controller'
@@ -134,7 +133,6 @@ export function renderSmartWorkspaceNameField(
           }
         }}
       />
-      {renderSmartWorkspaceCrossRepoDialog(controller)}
     </div>
   )
 }

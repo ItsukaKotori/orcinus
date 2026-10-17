@@ -71,7 +71,6 @@ describe('activateAndRevealWorktree automation filters', () => {
       hideAutomationGeneratedWorkspaces: true,
       markWorktreeVisited: vi.fn(),
       recordWorktreeVisit: vi.fn(),
-      refreshGitHubForWorktreeIfStale: vi.fn(),
       revealWorktreeInSidebar
     })
 

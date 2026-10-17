@@ -85,9 +85,8 @@ describe('token coverage', () => {
 })
 
 describe('evidence and ranking', () => {
-  it('reads automation and linked-task data without optional caches', () => {
+  it('reads automation provenance without optional caches', () => {
     expect(ids('nightly review run-184')).toEqual(['wt-scan-daily'])
-    expect(ids('sta-4052')).toEqual(['wt-reconnect'])
   })
 
   it('renders one supporting-evidence row for a hidden match', () => {
@@ -106,12 +105,6 @@ describe('evidence and ranking', () => {
     const [result] = search('docs')
     expect(result.rank?.coverage).toBeLessThan(3)
     expect(result.qualityClass).toBe('exact-visible')
-  })
-
-  it('ranks an exact identifier above an incidental numeric substring', () => {
-    const [exact] = search('#4123')
-    expect(exact.supportingText?.labelKind).toBe('pr')
-    expect(exact.qualityClass).toBe('exact-intent')
   })
 
   it('classifies a typo hit as fuzzy evidence', () => {

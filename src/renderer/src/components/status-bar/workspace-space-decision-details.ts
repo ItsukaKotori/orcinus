@@ -3,19 +3,12 @@ import type {
   MigrationUnsupportedPtyEntry
 } from '../../../../shared/agent-status-types'
 import type { ExecutionHostId } from '../../../../shared/execution-host'
-import type { HostedReviewProvider } from '../../../../shared/hosted-review'
 import type { Repo } from '../../../../shared/repo-types'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
 import type { Worktree } from '../../../../shared/worktree/types'
-import { isGitHubPRSuppressed } from '../../../../shared/worktree/github-pr-suppression'
 import type { WorkspaceSpaceWorktree } from '../../../../shared/workspace-space-types'
-import { branchDisplayName } from '../sidebar/WorktreeCardHelpers'
-import { findRepoForHost } from '../../store/slices/repo-host-identity'
-import { getHostedReviewCacheKey } from '../../store/slices/hosted-review-cache-identity'
-import { issueCacheKey as getIssueCacheKey } from '../../store/github/cache-identity'
 import { countWorkspaceSpaceActiveAgents } from './workspace-space-presentation'
 import { getWorkspaceSpaceWorktreeIdentity } from './workspace-space-delete-selection'
-import { getWorkspaceSpaceBranchLabel } from './workspace-space-format'
 
 export type WorkspaceDecisionDetails = {
   isActive: boolean
@@ -29,8 +22,6 @@ export type WorkspaceDecisionDetails = {
   browserTabCount: number
   changedFileCount: number | null
   branchStatus: string | null
-  reviewLabel: string | null
-  issueLabel: string | null
   linearIssueLabel: string | null
 }
 
@@ -49,20 +40,7 @@ export type WorkspaceDecisionInputs = {
   gitStatusByWorktree: Record<string, readonly unknown[]>
   gitStatusByWorktreeIdentity?: ReadonlyMap<string, readonly { path: string }[]>
   remoteStatusesByWorktree: Record<string, { hasUpstream: boolean; ahead: number; behind: number }>
-  hostedReviewCache: Record<
-    string,
-    {
-      data?: {
-        number: number
-        state: string
-        status: string
-        title: string
-        provider?: HostedReviewProvider
-      } | null
-    }
-  >
-  issueCache: Record<string, { data?: { number: number; title: string; state: string } | null }>
-  settings: Parameters<typeof getHostedReviewCacheKey>[2]
+  settings: import('../../../../shared/global-settings-types').GlobalSettings | null
   activeWorktreeId: string | null
   activeWorkspaceExecutionHostId: ExecutionHostId | null
   now: number
@@ -70,10 +48,6 @@ export type WorkspaceDecisionInputs = {
 
 export function pluralize(count: number, singular: string, plural = `${singular}s`): string {
   return `${count} ${count === 1 ? singular : plural}`
-}
-
-function formatReviewState(state: string): string {
-  return state.charAt(0).toUpperCase() + state.slice(1)
 }
 
 function countLiveTerminals(
@@ -115,64 +89,6 @@ export function getWorkspaceDecisionDetails(
   const gitEntries = inputs.gitStatusByWorktreeIdentity
     ? inputs.gitStatusByWorktreeIdentity.get(getWorkspaceSpaceWorktreeIdentity(worktree))
     : inputs.gitStatusByWorktree[worktree.worktreeId]
-  const branch = workspaceRecord
-    ? branchDisplayName(workspaceRecord.branch)
-    : getWorkspaceSpaceBranchLabel(worktree)
-  const repo = inputs.repos
-    ? findRepoForHost(inputs.repos, worktree.repoId, {
-        hostId: worktree.executionHostId,
-        settings: inputs.settings
-      })
-    : inputs.repoMap.get(worktree.repoId)
-  const ownerExecutionHostId = repo?.executionHostId ?? worktree.executionHostId ?? null
-  const reviewCacheKey = getHostedReviewCacheKey(
-    worktree.repoPath,
-    branch,
-    inputs.settings,
-    worktree.repoId,
-    repo?.connectionId,
-    ownerExecutionHostId,
-    repo !== null && repo !== undefined
-  )
-  const cachedHostedReview = inputs.hostedReviewCache[reviewCacheKey]?.data
-  const hostedReview =
-    cachedHostedReview?.provider === 'github' &&
-    workspaceRecord &&
-    isGitHubPRSuppressed(workspaceRecord, cachedHostedReview.number)
-      ? null
-      : cachedHostedReview
-  const linkedPR = workspaceRecord?.linkedPR ?? null
-  const reviewLabel =
-    hostedReview !== undefined && hostedReview !== null
-      ? `PR #${hostedReview.number} ${formatReviewState(hostedReview.state)}${
-          hostedReview.status && hostedReview.status !== 'none' ? `, ${hostedReview.status}` : ''
-        }`
-      : linkedPR
-        ? `PR #${linkedPR}`
-        : null
-  const linkedIssue = workspaceRecord?.linkedIssue ?? null
-  const issue =
-    linkedIssue && repo
-      ? inputs.issueCache[
-          getIssueCacheKey(
-            repo.path,
-            repo.id,
-            linkedIssue,
-            inputs.settings,
-            repo.connectionId,
-            ownerExecutionHostId,
-            true
-          )
-        ]?.data
-      : null
-  const issueLabel = linkedIssue
-    ? issue
-      ? `#${issue.number} ${issue.state}: ${issue.title}`
-      : `#${linkedIssue}`
-    : null
-  const linkedLinearIssue = workspaceRecord?.linkedLinearIssue ?? null
-  const linearIssueLabel = linkedLinearIssue
-
   return {
     isActive:
       inputs.activeWorktreeId === worktree.worktreeId &&
@@ -198,8 +114,6 @@ export function getWorkspaceDecisionDetails(
     browserTabCount: 0,
     changedFileCount: gitEntries ? gitEntries.length : null,
     branchStatus: getBranchStatus(inputs.remoteStatusesByWorktree[worktree.worktreeId]),
-    reviewLabel,
-    issueLabel,
-    linearIssueLabel
+    linearIssueLabel: workspaceRecord?.linkedLinearIssue ?? null
   }
 }

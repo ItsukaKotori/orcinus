@@ -1,7 +1,7 @@
 // Why: slice 3 of terminal-side-effect-authority.md adds OSC 133;D
-// command-finished and GitHub pr-link scanning to the shared tracker so main
-// emits those facts for local/SSH PTYs. These tests pin the chunk-boundary
-// carry, exit-code best-effort, dedupe, and synthetic-frame isolation rules.
+// command-finished scanning to the shared tracker so main emits those facts
+// for local/SSH PTYs. These tests pin the chunk-boundary carry, exit-code
+// best-effort, dedupe, and synthetic-frame isolation rules.
 import { describe, expect, it } from 'vitest'
 import {
   createTerminalTitleTracker,
@@ -16,7 +16,6 @@ type RecordedEvent =
   | ['title', string]
   | ['bell']
   | ['finished', number | null]
-  | ['pr', string, number]
   | ['2031-subscribe']
   | ['2031-unsubscribe']
 
@@ -29,7 +28,6 @@ function createRecordingTracker(overrides: TerminalTitleTrackerCallbacks = {}): 
     onTitle: (normalized) => events.push(['title', normalized]),
     onBell: () => events.push(['bell']),
     onCommandFinished: (exitCode) => events.push(['finished', exitCode]),
-    onPrLink: (link) => events.push(['pr', link.url, link.number]),
     onMode2031Subscribe: () => events.push(['2031-subscribe']),
     onMode2031Unsubscribe: () => events.push(['2031-unsubscribe']),
     ...overrides
@@ -76,45 +74,6 @@ describe('createTerminalTitleTracker command-finished facts', () => {
     tracker.handleChunk(`${ESC}]0;zsh${BEL}${ESC}]133;D;0${BEL}done${BEL}`)
 
     expect(events).toEqual([['title', 'zsh'], ['finished', 0], ['bell']])
-  })
-})
-
-describe('createTerminalTitleTracker pr-link facts', () => {
-  it('emits one fact per PR URL including multiple links in one chunk', () => {
-    const { events, tracker } = createRecordingTracker()
-
-    tracker.handleChunk(
-      'see https://github.com/acme/orca/pull/42 and https://github.com/acme/orca/pull/43 \r\n'
-    )
-
-    expect(events).toEqual([
-      ['pr', 'https://github.com/acme/orca/pull/42', 42],
-      ['pr', 'https://github.com/acme/orca/pull/43', 43]
-    ])
-  })
-
-  it('waits for a boundary when a URL splits across chunks and dedupes repeats', () => {
-    const { events, tracker } = createRecordingTracker()
-
-    tracker.handleChunk('PR: https://github.com/acme/orca/pull/4')
-    expect(events).toEqual([])
-    tracker.handleChunk('2\r\n')
-    tracker.handleChunk('again https://github.com/acme/orca/pull/42\r\n')
-
-    expect(events).toEqual([['pr', 'https://github.com/acme/orca/pull/42', 42]])
-  })
-
-  it('skips the 133/URL scans entirely when no consumer is registered', () => {
-    // Mirrors headless serve: no pty:sideEffect consumer means no callbacks,
-    // so the scanners must not be created (no carry state, no scan cost).
-    const titles: string[] = []
-    const tracker = createTerminalTitleTracker({
-      onTitle: (normalized) => titles.push(normalized)
-    })
-
-    tracker.handleChunk(`${ESC}]133;D;0${BEL}https://github.com/acme/orca/pull/42\r\n`)
-
-    expect(titles).toEqual([])
   })
 })
 
@@ -178,12 +137,10 @@ describe('createTerminalTitleTracker 2031-subscribe facts', () => {
 })
 
 describe('createTerminalTitleTracker synthetic-frame isolation', () => {
-  it('never feeds synthetic frames to the 133/PR scanners', () => {
+  it('never feeds synthetic frames to the 133 scanner', () => {
     const { events, tracker } = createRecordingTracker()
 
-    tracker.applySyntheticTitleFrame(
-      `${ESC}]0;⠋ Cursor Agent${BEL}${ESC}]133;D;0${BEL}https://github.com/acme/orca/pull/42\r\n`
-    )
+    tracker.applySyntheticTitleFrame(`${ESC}]0;⠋ Cursor Agent${BEL}${ESC}]133;D;0${BEL}`)
 
     expect(events).toEqual([['title', '⠋ Cursor Agent']])
   })
@@ -204,13 +161,11 @@ describe('createTerminalTitleTracker synthetic-frame isolation', () => {
 })
 
 describe('createTerminalTitleTracker transient-fact scanning suppression', () => {
-  it('skips bell/133/pr-link/2031 while suppressed but keeps title processing', () => {
+  it('skips bell/133/2031 while suppressed but keeps title processing', () => {
     const { events, tracker } = createRecordingTracker()
 
     tracker.setTransientFactScanningSuppressed(true)
-    tracker.handleChunk(
-      `${ESC}]0;zsh${BEL}${ESC}]133;D;0${BEL}ding${BEL}https://github.com/acme/orca/pull/42\r\n${ESC}[?2031h`
-    )
+    tracker.handleChunk(`${ESC}]0;zsh${BEL}${ESC}]133;D;0${BEL}ding${BEL}${ESC}[?2031h`)
 
     expect(events).toEqual([['title', 'zsh']])
   })

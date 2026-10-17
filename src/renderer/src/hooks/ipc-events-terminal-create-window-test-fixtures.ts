@@ -44,7 +44,6 @@ export function buildTerminalCreateWindow(args: {
         onOpenQuickOpen: () => () => {},
         onToggleQuickCommandsMenu: () => () => {},
         onOpenNewWorkspace: () => () => {},
-        onOpenTasks: () => () => {},
         onJumpToWorktreeIndex: () => () => {},
         onJumpToTabIndex: () => () => {},
         onActivateWorktree: () => () => {},

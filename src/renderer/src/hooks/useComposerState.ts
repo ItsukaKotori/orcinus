@@ -4,21 +4,16 @@ import {
   getLinkedWorkItemWorkspaceName,
   type LinkedWorkItemSummary
 } from '@/lib/new-workspace'
-import type { GitHubWorkItem } from '../../../shared/github/work-item-types'
 import type { TuiAgent } from '../../../shared/tui-agent'
 import type { TaskSourceContext } from '../../../shared/task-source-context'
 import type { WorkspaceSource as WorkspaceCreateTelemetrySource } from '../../../shared/workspace-source'
 import type { WorkspaceStatus } from '../../../shared/worktree/types'
 import { normalizeExecutionHostId, type ExecutionHostId } from '../../../shared/execution-host'
 import { isWorkItemLookupText } from '@/lib/work-item-lookup-text'
-import { resolveGitHubWorkItemIdentity } from '@/lib/github-work-item-identity'
 import { isWorkspaceLinkedItemSourceContextMatch } from '../../../shared/workspace-linked-item-source-context'
-import {
-  getGitHubLinkedWorkItemIdentity,
-  type SmartGitHubPrStartPointSelection
-} from './composer-state/source-selection-decisions'
 import { buildComposerCardProps } from './composer-state/composer-card-props'
 import type { ComposerDecisions } from './composer-state/composer-decisions'
+import type { SmartGitHubPrStartPointSelection } from './composer-state/source-selection-decisions'
 import { useComposerTargetState } from './composer-state/composer-target-state'
 import { useComposerExternalSync } from './composer-state/composer-external-sync'
 import { useComposerSourceState } from './composer-state/composer-source-state'
@@ -36,7 +31,6 @@ export type UseComposerStateOptions = {
   initialName?: string
   initialPrompt?: string
   initialLinkedWorkItem?: LinkedWorkItemSummary | null
-  initialGitHubWorkItem?: GitHubWorkItem | null
   initialTaskSourceContext?: TaskSourceContext | null
   initialWorkspaceStatus?: WorkspaceStatus
   initialBaseBranch?: string
@@ -154,34 +148,7 @@ export function resolveInitialWorkspaceRunSeed({
   }
 }
 
-export function getInitialGitHubPrStartPointSelection({
-  item,
-  linkedWorkItem,
-  repoId
-}: {
-  item: GitHubWorkItem | null | undefined
-  linkedWorkItem: LinkedWorkItemSummary | null | undefined
-  repoId: string | null | undefined
-}): SmartGitHubPrStartPointSelection | null {
-  if (!item || !repoId) {
-    return null
-  }
-  const itemIdentity = resolveGitHubWorkItemIdentity(item)
-  const linkedIdentity = getGitHubLinkedWorkItemIdentity(linkedWorkItem)
-  if (
-    itemIdentity.type !== 'pr' ||
-    linkedIdentity?.type !== 'pr' ||
-    linkedIdentity.number !== itemIdentity.number
-  ) {
-    return null
-  }
-  return {
-    repoId,
-    item: { ...item, type: itemIdentity.type, number: itemIdentity.number }
-  }
-}
-
-export function retargetGitHubPrStartPointSelection(
+function retargetLegacyPrStartPointSelection(
   selection: SmartGitHubPrStartPointSelection | null,
   repoId: string
 ): SmartGitHubPrStartPointSelection | null {
@@ -198,12 +165,11 @@ export function getMatchingLinkedTaskSourceContext(
 const COMPOSER_DECISIONS: ComposerDecisions = {
   canResolveFolderSmartGitHubSubmit,
   getInitialAutoManagedWorkspaceName,
-  getInitialGitHubPrStartPointSelection,
   getMatchingLinkedTaskSourceContext,
   isExplicitWorkspaceNameInput,
   resolveInitialWorkspaceRunSeed,
   resolveSmartGitHubCreateNames,
-  retargetGitHubPrStartPointSelection
+  retargetGitHubPrStartPointSelection: retargetLegacyPrStartPointSelection
 }
 
 export function useComposerState(options: UseComposerStateOptions): UseComposerStateResult {

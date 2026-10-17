@@ -19,12 +19,6 @@ export const GROUP_BY_OPTIONS = [
     }
   },
   {
-    id: 'pr-status',
-    get label() {
-      return translate('auto.components.sidebar.SidebarWorkspaceOptionsMenu.0f9b959b31', 'PR')
-    }
-  },
-  {
     id: 'repo',
     get label() {
       return translate('auto.components.sidebar.SidebarWorkspaceOptionsMenu.2170d553cf', 'Project')

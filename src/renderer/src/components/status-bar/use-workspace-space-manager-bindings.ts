@@ -32,8 +32,6 @@ export function useWorkspaceSpaceManagerBindings() {
   const editorDrafts = useAppStore((state) => state.editorDrafts)
   const gitStatusByWorktree = useAppStore((state) => state.gitStatusByWorktree)
   const remoteStatusesByWorktree = useAppStore((state) => state.remoteStatusesByWorktree)
-  const hostedReviewCache = useAppStore((state) => state.hostedReviewCache)
-  const issueCache = useAppStore((state) => state.issueCache)
   const settings = useAppStore((state) => state.settings)
   const activeWorktreeId = useAppStore((state) => state.activeWorktreeId)
   const activeWorkspaceExecutionHostId = useAppStore(
@@ -84,8 +82,6 @@ export function useWorkspaceSpaceManagerBindings() {
     editorDrafts,
     gitStatusByWorktree,
     remoteStatusesByWorktree,
-    hostedReviewCache,
-    issueCache,
     settings,
     activeWorktreeId,
     activeWorkspaceExecutionHostId,

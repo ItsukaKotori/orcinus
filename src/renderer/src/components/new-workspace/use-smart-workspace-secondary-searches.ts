@@ -14,7 +14,6 @@ export function useSmartWorkspaceSecondarySearches({
   const {
     disabled,
     branchesEnabled,
-    repoBackedSourcesDisabled,
     textOnly,
     mode,
     selectedRepo,
@@ -28,7 +27,7 @@ export function useSmartWorkspaceSecondarySearches({
     () =>
       getBranchSearchRequest({
         disabled,
-        branchesEnabled: branchesEnabled && !repoBackedSourcesDisabled,
+        branchesEnabled,
         textOnly,
         mode,
         selectedRepoId: selectedRepo?.id ?? null,
@@ -40,7 +39,6 @@ export function useSmartWorkspaceSecondarySearches({
       debouncedQuery,
       disabled,
       mode,
-      repoBackedSourcesDisabled,
       selectedRepo?.id,
       textOnly
     ]

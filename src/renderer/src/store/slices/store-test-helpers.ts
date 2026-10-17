@@ -12,8 +12,6 @@ import { createTabsSlice } from './tabs'
 import { createUISlice } from './ui'
 import { createSettingsSlice } from './settings'
 import { createKeybindingsSlice } from './keybindings'
-import { createGitHubSlice } from './github'
-import { createHostedReviewSlice } from './hosted-review'
 import { createPreflightSlice } from './preflight'
 import { createEditorSlice } from './editor'
 import { createStatsSlice } from './stats'
@@ -36,13 +34,10 @@ import { createWorktreeNavHistorySlice } from './worktree-nav-history'
 import { createWorkspaceCleanupSlice } from './workspace-cleanup'
 import { createWorkspaceCleanupBrowseSlice } from './workspace-cleanup-browse'
 import { createRuntimeStatusSlice } from './runtime-status'
-import { createPullRequestGenerationSlice } from './pull-request-generation'
 import { createCommitMessageGenerationSlice } from './commit-message-generation'
 import { createPinnedTabCloseConfirmSlice } from './pinned-tab-close-confirm'
 import { createRecentlyClosedTabsSlice } from './recently-closed-tabs'
 import { createOrcaProfilesSlice } from './orca-profiles'
-import { createNewIssueDraftSlice } from './new-issue-draft'
-import { createTaskCreationDraftsSlice } from './task-creation-drafts'
 import { createTerminalQuickCommandHostsSlice } from './terminal-quick-command-hosts'
 import { createPluginCenterSlice } from './plugin-center/plugin-center-slice'
 import { translate } from '@/i18n/i18n'
@@ -65,8 +60,6 @@ export function createTestStore() {
     ...createUISlice(...a),
     ...createSettingsSlice(...a),
     ...createKeybindingsSlice(...a),
-    ...createGitHubSlice(...a),
-    ...createHostedReviewSlice(...a),
     ...createPreflightSlice(...a),
     ...createEditorSlice(...a),
     ...createStatsSlice(...a),
@@ -87,13 +80,10 @@ export function createTestStore() {
     ...createWorkspaceCleanupSlice(...a),
     ...createWorkspaceCleanupBrowseSlice(...a),
     ...createRuntimeStatusSlice(...a),
-    ...createPullRequestGenerationSlice(...a),
     ...createCommitMessageGenerationSlice(...a),
     ...createPinnedTabCloseConfirmSlice(...a),
     ...createRecentlyClosedTabsSlice(...a),
     ...createOrcaProfilesSlice(...a),
-    ...createNewIssueDraftSlice(...a),
-    ...createTaskCreationDraftsSlice(...a),
     ...createTerminalQuickCommandHostsSlice(...a),
     ...createPluginCenterSlice(...a)
   }))

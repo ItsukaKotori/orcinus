@@ -1,16 +1,15 @@
 import type { PreflightStatus } from '../../../../preload/api-types'
 
-export type GhStatus = 'checking' | 'connected' | 'not-installed' | 'not-authenticated'
-// Why: parallel to GhStatus — GitLab uses glab and the same three failure
-// modes (probe in-flight / installed-but-unauth / missing entirely).
-export type GlabStatus = GhStatus
+// Why: GitLab uses glab and the same three failure modes (probe in-flight /
+// installed-but-unauth / missing entirely); gh (GitHub CLI) is gone with the
+// GitHub trim, so this doubles as its own alias base for token providers.
+export type GlabStatus = 'checking' | 'connected' | 'not-installed' | 'not-authenticated'
 export type BitbucketStatus = 'checking' | 'connected' | 'not-configured' | 'not-authenticated'
 export type AzureDevOpsStatus = 'checking' | 'configured' | 'not-configured' | 'not-authenticated'
 export type GiteaStatus = 'checking' | 'configured' | 'not-configured' | 'not-authenticated'
-export type PreflightRefreshProvider = 'gh' | 'glab' | 'bitbucket' | 'azureDevOps' | 'gitea'
+export type PreflightRefreshProvider = 'glab' | 'bitbucket' | 'azureDevOps' | 'gitea'
 
 export type PreflightIntegrationStatuses = {
-  ghStatus: GhStatus
   glabStatus: GlabStatus
   bitbucketStatus: BitbucketStatus
   bitbucketAccount: string | null
@@ -63,13 +62,6 @@ export function giteaStatusFromPreflight(status: GiteaPreflightStatus | undefine
   return 'configured'
 }
 
-function ghStatusFromPreflight(status: PreflightStatus['gh']): GhStatus {
-  if (!status.installed) {
-    return 'not-installed'
-  }
-  return status.authenticated ? 'connected' : 'not-authenticated'
-}
-
 function glabStatusFromPreflight(status: PreflightStatus['glab']): GlabStatus {
   if (!status?.installed) {
     return 'not-installed'
@@ -98,7 +90,6 @@ export function getPreflightIntegrationStatuses(
 ): PreflightIntegrationStatuses {
   if (!preflightStatus) {
     return {
-      ghStatus: 'checking',
       glabStatus: 'checking',
       bitbucketStatus: 'checking',
       bitbucketAccount: null,
@@ -115,7 +106,6 @@ export function getPreflightIntegrationStatuses(
   const azureDevOps = preflightStatus.azureDevOps
   const gitea = preflightStatus.gitea
   return {
-    ghStatus: maybeChecking('gh', refreshingProviders, ghStatusFromPreflight(preflightStatus.gh)),
     glabStatus: maybeChecking(
       'glab',
       refreshingProviders,

@@ -252,7 +252,6 @@ export function createSetActiveWorktree(
 
     // Why: activation is explicit enough to revalidate PR state now; the coordinator still coalesces and rate-guards.
     if (worktreeId) {
-      get().refreshGitHubForWorktreeIfStale(worktreeId)
     }
 
     if (!worktreeId || !get().getKnownWorktreeById(worktreeId, executionHostId)) {

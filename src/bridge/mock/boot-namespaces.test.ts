@@ -4,7 +4,6 @@ import { createAgentStatusApi } from './agent-status-api'
 import { createCacheApi } from './cache-api'
 import { createCliApi } from './cli-api'
 import { createFolderWorkspacesApi } from './folder-workspaces-api'
-import { createGhApi } from './gh-api'
 import { createKeybindingsApi } from './keybindings-api'
 import { createMacosTccPromptsApi } from './macos-tcc-prompts-api'
 import { createMemoryApi } from './memory-api'
@@ -97,13 +96,6 @@ describe('Phase 0 boot query mocks', () => {
     expect(agentStatus.drop('pane-1')).toBeUndefined()
   })
 
-  it('gh: checkOrcaStarred resolves null (web fallback) and refresh reports are handled', async () => {
-    const gh = createGhApi()
-    await expect(gh.checkOrcaStarred()).resolves.toBeNull()
-    await expect(
-      gh.reportVisiblePRRefreshCandidates({ candidates: [], generation: 0 })
-    ).resolves.toBe(false)
-  })
 
   it('runtime: status and driver queries resolve benign empty values', async () => {
     const runtime = createRuntimeApi()
@@ -144,8 +136,7 @@ describe('Phase 0 boot query mocks', () => {
   it('preflight: check reports not-probed tools and refreshAgents reports no agents', async () => {
     const preflight = createPreflightApi()
     await expect(preflight.check()).resolves.toEqual({
-      git: { installed: false },
-      gh: { installed: false, authenticated: false }
+      git: { installed: false }
     })
     await expect(preflight.refreshAgents()).resolves.toMatchObject({ agents: [] })
   })

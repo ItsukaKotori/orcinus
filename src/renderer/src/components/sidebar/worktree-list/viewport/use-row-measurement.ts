@@ -1,6 +1,5 @@
 import { useCallback, useLayoutEffect, useMemo } from 'react'
 import type React from 'react'
-import { useAppStore } from '@/store'
 import {
   useVirtualizedScrollAnchor,
   type VirtualizedScrollAnchor
@@ -49,8 +48,6 @@ export function useVirtualRowMeasurementSync(args: {
     shouldSkipScrollAnchorRestore
   } = args
   const { virtualizer, isCurrentVirtualRowElement } = virtualization
-  const prCacheLen = useAppStore((s) => countRecordKeysByReference(s.prCache))
-  const issueCacheLen = useAppStore((s) => countRecordKeysByReference(s.issueCache))
   const activeRenderRowKeys = useMemo(() => new Set(renderRows.map(getRenderRowKey)), [renderRows])
   const lineageRowRekeys = useMemo(() => buildLineageRowRekeyMap(renderRows), [renderRows])
   const totalSize = virtualizer.getTotalSize()
@@ -96,7 +93,7 @@ export function useVirtualRowMeasurementSync(args: {
     measureMountedRows()
     const frameId = window.requestAnimationFrame(measureMountedRows)
     return () => window.cancelAnimationFrame(frameId)
-  }, [activeRenderRowKeys, prCacheLen, issueCacheLen, measureMountedRows, virtualizer])
+  }, [activeRenderRowKeys, measureMountedRows, virtualizer])
 
   useVirtualizedScrollAnchor({
     anchorRef: scrollAnchorRef,

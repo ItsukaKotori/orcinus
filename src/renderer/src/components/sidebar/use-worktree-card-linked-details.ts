@@ -1,6 +1,4 @@
 import { translate } from '@/i18n/i18n'
-import type { IssueInfo } from '../../../../shared/github/pull-request-types'
-import type { WorktreeCardIssueDisplay } from './WorktreeCardMeta'
 import {
   coerceWorktreeCardVisibleTitle,
   getWorktreeCardTitleDisplay
@@ -8,41 +6,22 @@ import {
 import { useWorkspaceDeleteModifierPressed } from './workspace-delete-quick-action'
 import type { WorktreeCardProps } from './worktree-card-model'
 import type { useWorktreeCardFoundation } from './use-worktree-card-foundation'
-import type { useWorktreeCardReviewDetails } from './use-worktree-card-review-details'
+import type { useWorktreeCardIdentityDetails } from './use-worktree-card-identity-details'
 
 type Foundation = ReturnType<typeof useWorktreeCardFoundation>
-type ReviewDetails = ReturnType<typeof useWorktreeCardReviewDetails>
+type IdentityDetails = ReturnType<typeof useWorktreeCardIdentityDetails>
 
 export function useWorktreeCardLinkedDetails({
   worktree,
   newCardStyle,
   deleteState,
-  branch,
-  issueEntry,
-  prDisplay
+  branch
 }: Pick<WorktreeCardProps, 'worktree'> &
   Pick<Foundation, 'newCardStyle' | 'deleteState'> &
-  Pick<ReviewDetails, 'branch' | 'issueEntry' | 'prDisplay'>) {
-  const issue: IssueInfo | null | undefined = worktree.linkedIssue
-    ? issueEntry !== undefined
-      ? issueEntry.data
-      : undefined
-    : null
-  const issueDisplay: WorktreeCardIssueDisplay | null =
-    issue ??
-    (worktree.linkedIssue
-      ? {
-          number: worktree.linkedIssue,
-          // Why: linked metadata persists immediately but GitHub details arrive async; show the link number so it doesn't look unlinked.
-          title: issue === null ? 'Issue details unavailable' : 'Loading issue...'
-        }
-      : null)
-
+  Pick<IdentityDetails, 'branch'>) {
   const cardTitleDisplay = getWorktreeCardTitleDisplay({
     storedDisplayName: worktree.displayName,
-    branchName: branch,
-    issueTitle: issueDisplay?.title,
-    reviewTitle: prDisplay?.title
+    branchName: branch
   })
   const legacyCardTitleDisplay = coerceWorktreeCardVisibleTitle(worktree.displayName)
   const visibleCardTitle = newCardStyle ? cardTitleDisplay : legacyCardTitleDisplay
@@ -54,7 +33,6 @@ export function useWorktreeCardLinkedDetails({
   const deleteModifierPressed = useWorkspaceDeleteModifierPressed()
 
   return {
-    issueDisplay,
     visibleCardTitle,
     isDeleting,
     isQueuedForDeletion,

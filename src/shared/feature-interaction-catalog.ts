@@ -4,8 +4,6 @@ export type FeatureInteractionId =
   | 'cmd-j-settings-open'
   | 'cmd-j-quick-action'
   | 'cmd-j-create-workspace'
-  | 'tasks'
-  | 'github-tasks'
   | 'automations'
   | 'automation-created'
   | 'automation-run'
@@ -13,7 +11,6 @@ export type FeatureInteractionId =
   | 'workspace-creation'
   | 'agent-orchestration-setup'
   | 'ai-commit-generation'
-  | 'ai-pr-generation'
   | 'claude-account-switching'
   | 'computer-use-setup'
   | 'computer-use'
@@ -47,8 +44,6 @@ export const FEATURE_INTERACTIONS = [
   { id: 'cmd-j-settings-open', interaction: 'settings opened from Cmd+J' },
   { id: 'cmd-j-quick-action', interaction: 'quick action run from Cmd+J' },
   { id: 'cmd-j-create-workspace', interaction: 'workspace creation started from Cmd+J' },
-  { id: 'tasks', interaction: 'Tasks page opened' },
-  { id: 'github-tasks', interaction: 'GitHub task item workflow used' },
   { id: 'automations', interaction: 'Automations page opened' },
   { id: 'automation-created', interaction: 'automation created' },
   { id: 'automation-run', interaction: 'automation run queued' },
@@ -62,7 +57,6 @@ export const FEATURE_INTERACTIONS = [
     id: 'ai-commit-generation',
     interaction: 'AI commit message generation enabled or used'
   },
-  { id: 'ai-pr-generation', interaction: 'AI pull request generation used' },
   {
     id: 'claude-account-switching',
     interaction: 'Claude managed account added, selected, reauthenticated, or removed'

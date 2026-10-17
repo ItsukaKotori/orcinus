@@ -415,58 +415,6 @@ impl Default for GitCancelRegistry {
     }
 }
 
-/// gh 子进程并发闸（全局 4，FIFO 近似——Condvar 唤醒不保证顺序，可接受）。
-pub struct GhConcurrencyGate {
-    permits: Mutex<usize>,
-    available: Condvar,
-}
-
-impl GhConcurrencyGate {
-    pub fn new(max: usize) -> Self {
-        Self {
-            permits: Mutex::new(max),
-            available: Condvar::new(),
-        }
-    }
-
-    pub fn acquire(&self) -> GhGateGuard<'_> {
-        let mut permits = lock(&self.permits);
-        while *permits == 0 {
-            permits = self
-                .available
-                .wait(permits)
-                .unwrap_or_else(|poisoned| poisoned.into_inner());
-        }
-        *permits -= 1;
-        GhGateGuard { gate: self }
-    }
-}
-
-pub struct GhGateGuard<'a> {
-    gate: &'a GhConcurrencyGate,
-}
-
-impl Drop for GhGateGuard<'_> {
-    fn drop(&mut self) {
-        let mut permits = lock(&self.gate.permits);
-        *permits += 1;
-        self.gate.available.notify_one();
-    }
-}
-
-/// gh 可执行文件解析结果的进程内缓存（成功才写；失败每次重试）。
-#[derive(Clone, Default)]
-pub struct GhPathCache(Arc<Mutex<Option<std::path::PathBuf>>>);
-
-impl GhPathCache {
-    pub fn get(&self) -> Option<std::path::PathBuf> {
-        lock(&self.0).clone()
-    }
-    pub fn set(&self, value: std::path::PathBuf) {
-        *lock(&self.0) = Some(value);
-    }
-}
-
 /// `ade_automations::EventSink` 的生产实现：把内核的写入/派发转成 Tauri 事件
 /// （`automations:changed` 与 `automations:dispatch-requested`，规格 §3.2）。
 pub struct ServiceEventSink {
@@ -569,10 +517,6 @@ pub struct AppState {
     pub home: String,
     /// 登录 shell PATH 水合的进程内缓存（Task 11）：进程生命周期内最多水合一次。
     pub path_hydration_cache: PathHydrationCache,
-    /// gh 执行器并发闸（规格 §3.1；全局 4）。
-    pub gh_gate: Arc<GhConcurrencyGate>,
-    /// gh 可执行文件解析缓存（成功才写）。
-    pub gh_path_cache: GhPathCache,
     pub git_cancels: GitCancelRegistry,
     /// AI vault 会话历史（Phase 2F 规格 §3.2）：roots 配置 + 60s 列表缓存
     /// + 扫描取消注册表；无后台任务。
@@ -765,8 +709,6 @@ impl AppState {
             close_flush_latch: CloseFlushLatch::default(),
             home,
             path_hydration_cache: PathHydrationCache::default(),
-            gh_gate: Arc::new(GhConcurrencyGate::new(4)),
-            gh_path_cache: GhPathCache::default(),
             git_cancels: GitCancelRegistry::new(),
             ai_vault,
             computer,

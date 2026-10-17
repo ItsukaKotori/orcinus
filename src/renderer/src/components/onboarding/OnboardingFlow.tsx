@@ -63,13 +63,13 @@ const stepCopy = {
     get title() {
       return translate(
         'auto.components.onboarding.OnboardingFlow.ae3b00ca82',
-        'Set up GitHub tasks'
+        'Connect your task sources'
       )
     },
     get subtitle() {
       return translate(
         'auto.components.onboarding.OnboardingFlow.97c42cda00',
-        'Install the GitHub CLI to:'
+        'Orca reads issues, reviews, and checks straight from your code host.'
       )
     }
   },

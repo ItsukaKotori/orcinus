@@ -391,31 +391,6 @@ describe('connectPanePty', () => {
       expect(mockStoreState.removeAgentStatus).not.toHaveBeenCalled()
     })
 
-    it('routes pr-link facts to the worktree PR observer', async () => {
-      enableMainAuthority()
-      const { connectPanePty } = await import('./pty-connection')
-      const handler = await import('./terminal-side-effect-facts-handler')
-      const transport = createMockTransport()
-      transportFactoryQueue.push(transport)
-
-      connectPanePty(createPane(1) as never, createManager(1) as never, createDeps() as never)
-      const onPtySpawn = createdTransportOptions[0]?.onPtySpawn as (ptyId: string) => void
-      onPtySpawn('pty-fact-pr')
-
-      const link = {
-        url: 'https://github.com/acme/orca/pull/42',
-        slug: { owner: 'acme', repo: 'orca' },
-        number: 42
-      }
-      handler._dispatchTerminalSideEffectBatchForTest({
-        ptyId: 'pty-fact-pr',
-        seq: 1,
-        facts: [{ kind: 'pr-link', link }]
-      })
-
-      expect(mockStoreState.observeTerminalGitHubPullRequestLink).toHaveBeenCalledWith('wt-1', link)
-    })
-
     it('does not byte-scan PR links or OSC 133 — facts are the only consumer', async () => {
       enableMainAuthority()
       const { connectPanePty } = await import('./pty-connection')
@@ -448,7 +423,6 @@ describe('connectPanePty', () => {
       capturedDataCallback.current?.('Created https://github.com/acme/orca/pull/42\r\n')
       capturedDataCallback.current?.('\x1b]133;D;130\x07prompt $ ')
 
-      expect(mockStoreState.observeTerminalGitHubPullRequestLink).not.toHaveBeenCalled()
       expect(mockStoreState.dropAgentStatus).not.toHaveBeenCalled()
     })
 

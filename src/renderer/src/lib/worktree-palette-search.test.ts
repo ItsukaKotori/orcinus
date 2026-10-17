@@ -10,7 +10,6 @@ import {
 } from './worktree-palette-query-bounds'
 import type { Repo } from '../../../shared/repo-types'
 import type { Worktree } from '../../../shared/worktree/types'
-import type { HostedReviewInfo } from '../../../shared/hosted-review'
 
 function makeWorktree(overrides: Partial<Worktree> = {}): Worktree {
   return {
@@ -48,19 +47,6 @@ const repoMap = new Map<string, Repo>([
   ]
 ])
 
-function bitbucketReview(overrides: Partial<HostedReviewInfo> = {}): HostedReviewInfo {
-  return {
-    provider: 'bitbucket',
-    number: 17,
-    title: 'Reuse checks tab review metadata',
-    state: 'open',
-    url: 'https://bitbucket.org/acme/orca/pull-requests/17',
-    status: 'success',
-    updatedAt: '2026-07-12T00:00:00Z',
-    mergeable: 'MERGEABLE',
-    ...overrides
-  }
-}
 
 describe('worktree-palette-search', () => {
   it('uses the filtered recent list for empty queries', () => {
@@ -217,112 +203,6 @@ describe('worktree-palette-search', () => {
     expect(results[0].supportingText?.text.slice(range.start, range.end)).toBe('implementation')
   })
 
-  it('keeps PR matches in the search result model instead of inferring them during render', () => {
-    const results = searchWorktrees(
-      [makeWorktree({ branch: 'refs/heads/feature/palette-refresh', linkedPR: 426 })],
-      'quick jump',
-      repoMap,
-      {
-        prCache: {
-          '/repo/orca::feature/palette-refresh': {
-            data: { number: 426, title: 'Refresh the worktree quick jump palette' }
-          }
-        }
-      }
-    )
-
-    expect(results).toHaveLength(1)
-    // `jump` also hits the visible display name, so only `quick` is left to explain.
-    expect(results[0].displayNameRanges).toEqual([{ start: 0, end: 4 }])
-    expect(results[0].supportingText).toEqual({
-      labelKind: 'pr',
-      text: '#426 · Refresh the worktree quick jump palette',
-      matchRanges: [{ start: 28, end: 33 }],
-      accessibilityLabel: 'Pull request'
-    })
-  })
-
-  it('matches a review number only exactly, not as an incidental substring', () => {
-    const worktree = makeWorktree()
-    const checksReviewByWorktree = new Map([
-      [worktree, bitbucketReview({ number: 4123, title: 'Fix reconnect' })]
-    ])
-
-    expect(searchWorktrees([worktree], '4123', repoMap, { checksReviewByWorktree })).toHaveLength(
-      1
-    )
-    expect(searchWorktrees([worktree], '123', repoMap, { checksReviewByWorktree })).toEqual([])
-  })
-
-  it('does not search stale GitHub cache metadata when Checks selected another review', () => {
-    const staleWorktree = makeWorktree({
-      branch: 'refs/heads/feature/palette-refresh',
-      linkedPR: 99
-    })
-    const checksReviewByWorktree = new Map([
-      [staleWorktree, bitbucketReview({ title: 'Current pull request' })]
-    ])
-    const prCache = {
-      '/repo/orca::feature/palette-refresh': { data: { number: 99, title: 'Stale GitHub title' } }
-    }
-
-    expect(
-      searchWorktrees([staleWorktree], 'stale github title', repoMap, {
-        prCache,
-        checksReviewByWorktree
-      })
-    ).toEqual([])
-    expect(searchWorktrees([staleWorktree], '#99', repoMap, { checksReviewByWorktree })).toEqual([])
-  })
-
-  it('does not search stale GitHub metadata while a linked non-GitHub review is loading', () => {
-    const prCache = {
-      '/repo/orca::feature/palette-refresh': { data: { number: 99, title: 'Stale GitHub title' } }
-    }
-    const staleWorktree = makeWorktree({
-      branch: 'refs/heads/feature/palette-refresh',
-      linkedPR: 99,
-      linkedBitbucketPR: 17
-    })
-    const checksReviewByWorktree = new Map<Worktree, HostedReviewInfo | null>([
-      [staleWorktree, null]
-    ])
-
-    expect(
-      searchWorktrees([staleWorktree], 'stale github title', repoMap, {
-        prCache,
-        checksReviewByWorktree
-      })
-    ).toEqual([])
-    expect(
-      searchWorktrees([staleWorktree], '#99', repoMap, { prCache, checksReviewByWorktree })
-    ).toEqual([])
-  })
-
-  it('keeps review matches isolated between worktrees on different hosts', () => {
-    const localWorktree = makeWorktree({ id: 'repo-1::/local/wt', hostId: 'local' })
-    const sshWorktree = makeWorktree({ id: 'repo-1-ssh::/remote/wt', hostId: 'ssh:staging' })
-    const review = bitbucketReview({ title: 'Remote-only pull request' })
-
-    const results = searchWorktrees([localWorktree, sshWorktree], 'remote-only', repoMap, {
-      checksReviewByWorktree: new Map([[sshWorktree, review]])
-    })
-
-    expect(results).toHaveLength(1)
-    expect(results[0].supportingText?.text).toBe('#17 · Remote-only pull request')
-  })
-
-  it('matches PR numbers through the # sigil only', () => {
-    const worktree = makeWorktree()
-    const checksReviewByWorktree = new Map([[worktree, bitbucketReview()]])
-
-    expect(
-      searchWorktrees([worktree], '#17', repoMap, { checksReviewByWorktree })
-    ).toHaveLength(1)
-    expect(searchWorktrees([worktree], '!17', repoMap, { checksReviewByWorktree })).toEqual([])
-    expect(searchWorktrees([makeWorktree({ linkedIssue: 42 })], '!42', repoMap)).toEqual([])
-  })
-
   it('preserves input order when query matches a repo name', () => {
     const worktrees = [
       makeWorktree({
@@ -400,66 +280,6 @@ describe('worktree-palette-search', () => {
     ).toMatchObject({ matchedFields: ['host'], hostRanges: [{ start: 0, end: 7 }] })
     // Without a rendered chip there is nothing to explain the hit, so it must not match.
     expect(searchWorktrees([worktree], 'staging', repoMap)).toEqual([])
-  })
-
-  it('matches issue numbers with a leading hash and returns issue render context', () => {
-    const results = searchWorktrees([makeWorktree({ linkedIssue: 304 })], '#304', repoMap)
-
-    expect(results).toHaveLength(1)
-    expect(results[0].supportingText).toEqual({
-      labelKind: 'issue',
-      text: '#304',
-      matchRanges: [{ start: 0, end: 4 }],
-      accessibilityLabel: 'Linked issue'
-    })
-  })
-
-  it('matches a pasted GitHub issue URL to the linked worktree instead of the URL text', () => {
-    const results = searchWorktrees(
-      [
-        makeWorktree({ id: 'wt-issue', linkedIssue: 14198 }),
-        makeWorktree({ id: 'wt-other', linkedIssue: 7, displayName: 'github.com' })
-      ],
-      'https://github.com/stablyai/orca/issues/14198',
-      repoMap
-    )
-
-    expect(results).toEqual([
-      expect.objectContaining({
-        worktreeId: 'wt-issue',
-        matchedFields: ['issue'],
-        qualityClass: 'exact-intent',
-        supportingText: {
-          labelKind: 'issue',
-          text: 'Issue #14198',
-          matchRanges: [{ start: 0, end: 'Issue #14198'.length }],
-          accessibilityLabel: 'Linked issue'
-        }
-      })
-    ])
-  })
-
-  it('matches a pasted GitHub pull URL to the linked worktree', () => {
-    const results = searchWorktrees(
-      [
-        makeWorktree({
-          id: 'wt-pr',
-          linkedPR: 12789,
-          linkedWorkItem: {
-            provider: 'github',
-            type: 'pr',
-            number: 12789,
-            title: 'Perf',
-            url: 'https://github.com/stablyai/orca/pull/12789'
-          }
-        }),
-        makeWorktree({ id: 'wt-issue', linkedIssue: 12789 })
-      ],
-      'https://github.com/stablyai/orca/pull/12789',
-      repoMap
-    )
-
-    expect(results.map((result) => result.worktreeId)).toEqual(['wt-pr'])
   })
 
 

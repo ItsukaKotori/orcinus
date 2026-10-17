@@ -6,7 +6,6 @@ import {
   hasDismissedHugeRepoWarning,
   markHugeRepoWarningDismissed
 } from '@/lib/source-control-huge-repo-warning-dismissals'
-import { getHostedReviewLinkMutationGenerationForTests } from './worktrees'
 import { makeLineage, makeTerminalTab, makeWorktree } from './worktrees-slice-test-fixtures'
 import {
   createTestStore,
@@ -96,13 +95,9 @@ describe('removeWorktree state cleanup', () => {
     await store.getState().updateWorktreeMeta(removed.id, { linkedBitbucketPR: 101 })
     await store.getState().updateWorktreeMeta(surviving.id, { linkedAzureDevOpsPR: 202 })
 
-    expect(getHostedReviewLinkMutationGenerationForTests(removed.id)).toBeGreaterThan(0)
-    expect(getHostedReviewLinkMutationGenerationForTests(surviving.id)).toBeGreaterThan(0)
 
     await store.getState().removeWorktree({ id: removed.id, executionHostId: null })
 
-    expect(getHostedReviewLinkMutationGenerationForTests(removed.id)).toBe(0)
-    expect(getHostedReviewLinkMutationGenerationForTests(surviving.id)).toBeGreaterThan(0)
   })
 
   it('cleans up expandedPaneByTabId/canExpandPaneByTabId for removed worktree tabs', async () => {

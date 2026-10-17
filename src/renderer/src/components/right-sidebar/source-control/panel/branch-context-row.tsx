@@ -1,5 +1,5 @@
 import React from 'react'
-import { ExternalLink, Loader2, RefreshCw } from 'lucide-react'
+import { Loader2, RefreshCw } from 'lucide-react'
 import type { GitBranchCompareSummary } from '../../../../../../shared/git-diff-compare-types'
 import type { GitBranchLineTotal } from '../../../../../../shared/git-status-types'
 import { cn } from '@/lib/utils'
@@ -64,28 +64,6 @@ function ContextStat({ stat }: { stat: SourceControlBranchContextStat }): React.
         {stat.title}
       </TooltipContent>
     </Tooltip>
-  )
-}
-
-function ManualReviewLinkButton({
-  url
-}: {
-  url: string | null | undefined
-}): React.JSX.Element | null {
-  if (!url) {
-    return null
-  }
-  return (
-    <SourceControlHeaderIconButton
-      icon={ExternalLink}
-      label={translate(
-        'auto.components.right.sidebar.SourceControl.4b4a7de138',
-        'Open review page in browser'
-      )}
-      onClick={() => {
-        void window.api.shell.openUrl(url)
-      }}
-    />
   )
 }
 
@@ -280,7 +258,6 @@ export function SourceControlBranchContextRow({
   summary,
   compareBaseRef,
   headDisplay = null,
-  manualReviewUrl,
   branchLineTotal,
   onChangeBaseRef,
   onRetry
@@ -288,7 +265,6 @@ export function SourceControlBranchContextRow({
   summary: GitBranchCompareSummary | null
   compareBaseRef: string | null
   headDisplay?: WorktreeGitIdentityDisplay | null
-  manualReviewUrl?: string | null
   branchLineTotal?: GitBranchLineTotal | null
   onChangeBaseRef: () => void
   onRetry: () => void
@@ -337,7 +313,6 @@ export function SourceControlBranchContextRow({
           onChangeBaseRef={onChangeBaseRef}
           changeBaseTitle={changeBaseTitle}
           leading={<Loader2 className="size-3 shrink-0 animate-spin" aria-hidden="true" />}
-          trailing={<ManualReviewLinkButton url={manualReviewUrl} />}
         />
         <span className="sr-only">
           {translate('auto.components.right.sidebar.SourceControl.11b5dd8e41', 'Comparing against')}
@@ -360,7 +335,6 @@ export function SourceControlBranchContextRow({
           changeBaseTitle={changeBaseTitle}
           trailing={
             <>
-              <ManualReviewLinkButton url={manualReviewUrl} />
               <SourceControlHeaderIconButton
                 icon={RefreshCw}
                 label={translate('auto.components.right.sidebar.SourceControl.286dbda4d6', 'Retry')}
@@ -396,12 +370,7 @@ export function SourceControlBranchContextRow({
         baseLabel={baseLabel}
         onChangeBaseRef={onChangeBaseRef}
         changeBaseTitle={changeBaseTitle}
-        trailing={
-          <>
-            {compareStatNodes}
-            <ManualReviewLinkButton url={manualReviewUrl} />
-          </>
-        }
+        trailing={<>{compareStatNodes}</>}
         headTrailing={<SourceControlBranchLineTotalChip branchLineTotal={branchLineTotal} />}
       />
     </CompareFlowGroup>

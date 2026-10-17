@@ -7,12 +7,8 @@ export type ComposerProviderRuntimeSyncInput = Pick<
   | 'selectedRepo'
   | 'selectedRepoExecutionHostId'
   | 'selectedRepoHookContextKey'
-  | 'selectedRepoIsGit'
-  | 'selectedRepoPath'
-  | 'selectedRepoSettings'
   | 'selectedRepoSettingsRef'
   | 'setCheckedHooksContextKey'
-  | 'setSelectedRepoSlug'
   | 'setSetupAgentStartupPolicy'
   | 'setYamlHooks'
   | 'setupAgentStartupPolicyDraftRef'
@@ -28,8 +24,6 @@ import { isGitRepoKind } from '../../../../shared/repo-kind'
 import { toast } from 'sonner'
 import { translate } from '@/i18n/i18n'
 import { type HookCheckResult, checkRuntimeHooks } from '@/runtime/runtime-hooks-client'
-import { getActiveRuntimeTarget, callRuntimeRpc } from '@/runtime/runtime-rpc-client'
-import type { GitHubRepositoryIdentity } from '../../../../shared/github/pull-request-types'
 import {
   getRepoSetupAgentStartupPolicy,
   buildSetupAgentStartupHookSettings
@@ -42,13 +36,9 @@ export function useComposerProviderRuntimeSync(input: ComposerProviderRuntimeSyn
     selectedRepo,
     selectedRepoExecutionHostId,
     selectedRepoHookContextKey,
-    selectedRepoIsGit,
-    selectedRepoPath,
-    selectedRepoSettings,
     selectedRepoSettingsRef,
     setCheckedHooksContextKey,
-    setSelectedRepoSlug,
-    setSetupAgentStartupPolicy,
+      setSetupAgentStartupPolicy,
     setYamlHooks,
     setupAgentStartupPolicyDraftRef,
     setupAgentStartupPolicyRef,
@@ -225,48 +215,6 @@ export function useComposerProviderRuntimeSync(input: ComposerProviderRuntimeSyn
     [selectedRepoHookContextKey, setCheckedHooksContextKey, setYamlHooks]
   )
 
-  useEffect(() => {
-    if (!selectedRepo || !selectedRepoPath || !selectedRepoIsGit) {
-      setSelectedRepoSlug(null)
-      return
-    }
-    let cancelled = false
-    const target = getActiveRuntimeTarget(selectedRepoSettings)
-    const slugRequest =
-      target.kind === 'environment'
-        ? callRuntimeRpc<GitHubRepositoryIdentity | null>(
-            target,
-            'github.repoSlug',
-            { repo: repoId },
-            { timeoutMs: 30_000 }
-          )
-        : (window.api.gh.repoSlug({ repoPath: selectedRepoPath, repoId }) as Promise<{
-            owner: string
-            repo: string
-          } | null>)
-    void slugRequest
-      .then((result) => {
-        if (cancelled) {
-          return
-        }
-        setSelectedRepoSlug(result)
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setSelectedRepoSlug(null)
-        }
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [
-    repoId,
-    selectedRepo,
-    selectedRepoIsGit,
-    selectedRepoPath,
-    selectedRepoSettings,
-    setSelectedRepoSlug
-  ])
 
   return {
     persistedSetupAgentStartupPolicy,

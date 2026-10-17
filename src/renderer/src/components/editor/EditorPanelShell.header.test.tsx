@@ -103,7 +103,7 @@ function renderShell(file: OpenFile, isCombinedDiff = false): string {
 
 describe('EditorPanelShell path header', () => {
   // Why assert every remaining mode: a gate that hides the header everywhere would satisfy the
-  // check-details claim below while silently removing the path from every ordinary file tab.
+  // combined-diff claim below while silently removing the path from every ordinary file tab.
   it.each(['edit', 'diff', 'conflict-review', 'markdown-preview'] as const)(
     'keeps the header for a %s tab',
     (mode) => {
@@ -111,13 +111,11 @@ describe('EditorPanelShell path header', () => {
     }
   )
 
-  it('hides the header for check-details and combined diffs, as it always has', () => {
-    expect(renderShell(openFile('check-details'))).not.toContain('data-editor-panel-header')
+  it('hides the header for combined diffs, as it always has', () => {
     expect(renderShell(openFile('edit'), true)).not.toContain('data-editor-panel-header')
   })
 
   it('renders the editor surface either way', () => {
-    expect(renderShell(openFile('check-details'))).toContain('data-editor-content')
     expect(renderShell(openFile('edit'))).toContain('data-editor-content')
   })
 })

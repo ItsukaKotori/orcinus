@@ -92,12 +92,5 @@ export type ComposerStoreActions = {
   openSettingsTarget: (target: NonNullable<UISlice['settingsNavigationTarget']>) => void
   setActiveRuntimeEnvironmentPreference: (environmentId: string | null) => Promise<boolean>
   prefetchWorktreeCreateBase: (repoId: string, baseBranch?: string) => Promise<void>
-  prefetchWorkItems: (
-    repoId: string,
-    repoPath: string,
-    limit?: number,
-    query?: string,
-    options?: { sourceContext?: TaskSourceContext | null }
-  ) => void
   fetchSparsePresets: (repoId: string) => Promise<void>
 }

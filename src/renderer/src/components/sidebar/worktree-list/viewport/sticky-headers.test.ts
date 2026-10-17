@@ -113,7 +113,6 @@ describe('getStickyHeaderIndexes', () => {
         [groupedRepo.id, groupedRepo],
         [ungroupedRepo.id, ungroupedRepo]
       ]),
-      null,
       new Set(),
       new Map([
         [groupedRepo.id, 0],

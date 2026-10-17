@@ -58,8 +58,6 @@ describe('setActiveWorktree', () => {
           })
         ]
       },
-      refreshGitHubForWorktree: vi.fn(),
-      refreshGitHubForWorktreeIfStale: vi.fn()
     })
 
     store.getState().setActiveWorktree(worktreeId)
@@ -87,8 +85,6 @@ describe('setActiveWorktree', () => {
           })
         ]
       },
-      refreshGitHubForWorktree: vi.fn(),
-      refreshGitHubForWorktreeIfStale: vi.fn()
     })
 
     store.getState().setActiveWorktree(worktreeId)
@@ -127,8 +123,6 @@ describe('setActiveWorktree', () => {
           })
         ]
       },
-      refreshGitHubForWorktree: vi.fn(),
-      refreshGitHubForWorktreeIfStale: vi.fn()
     })
 
     store.getState().setActiveWorktree(focusedId)
@@ -153,18 +147,18 @@ describe('setActiveWorktree', () => {
           makeWorktree({ id: wt2, repoId: 'repo1', path: '/path/wt2' })
         ]
       },
-      rightSidebarTab: 'checks',
+      rightSidebarTab: 'source-control',
       rightSidebarTabByWorktree: { [wt1]: 'search' as never, [wt2]: 'explorer' }
     })
 
     store.getState().setActiveWorktree(wt1)
-    expect(store.getState().rightSidebarTab).toBe('checks')
+    expect(store.getState().rightSidebarTab).toBe('source-control')
 
     store.getState().setActiveWorktree(wt2)
-    expect(store.getState().rightSidebarTab).toBe('checks')
+    expect(store.getState().rightSidebarTab).toBe('source-control')
 
     store.getState().setActiveWorktree(wt1)
-    expect(store.getState().rightSidebarTab).toBe('checks')
+    expect(store.getState().rightSidebarTab).toBe('source-control')
   })
 
   it('restores the Explorer files/search subview per worktree when switching', () => {
@@ -210,12 +204,12 @@ describe('setActiveWorktree', () => {
       worktreesByRepo: {
         repo1: [makeWorktree({ id: wt, repoId: 'repo1', path: '/path/wt1' })]
       },
-      rightSidebarTab: 'checks'
+      rightSidebarTab: 'source-control'
     })
 
     store.getState().setActiveWorktree(wt)
 
-    expect(store.getState().rightSidebarTab).toBe('checks')
+    expect(store.getState().rightSidebarTab).toBe('source-control')
   })
 
   it('does not notify subscribers when reselecting the already-active reconciled worktree', () => {
@@ -260,8 +254,6 @@ describe('setActiveWorktree', () => {
       activeGroupIdByWorktree: { [wt]: groupId },
       layoutByWorktree: { [wt]: { type: 'leaf', groupId } },
       everActivatedWorktreeIds: new Set([wt]),
-      refreshGitHubForWorktree: vi.fn(),
-      refreshGitHubForWorktreeIfStale: vi.fn()
     })
 
     const before = store.getState()
@@ -280,14 +272,14 @@ describe('setActiveWorktree', () => {
 
     seedStore(store, {
       activeWorktreeId: 'repo1::/path/wt1',
-      rightSidebarTab: 'checks',
+      rightSidebarTab: 'source-control',
       rightSidebarTabByWorktree: { 'repo1::/path/wt1': 'search' as never }
     })
 
     store.getState().setActiveWorktree(null)
 
     expect(store.getState().activeWorktreeId).toBeNull()
-    expect(store.getState().rightSidebarTab).toBe('checks')
+    expect(store.getState().rightSidebarTab).toBe('source-control')
     expect(store.getState().rightSidebarTabByWorktree).toEqual({ 'repo1::/path/wt1': 'search' })
   })
 

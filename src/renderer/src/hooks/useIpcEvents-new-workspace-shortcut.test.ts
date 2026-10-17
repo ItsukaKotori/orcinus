@@ -7,17 +7,7 @@ import {
 describe('buildNewWorkspaceShortcutModalData', () => {
   it('opens the plain composer without provider context', () => {
     const data = buildNewWorkspaceShortcutModalData({
-      activeView: 'tasks',
-      taskPageData: {}
-    })
-
-    expect(data).toEqual({ telemetrySource: 'shortcut' })
-  })
-
-  it('does not reuse stale task context outside the Tasks view', () => {
-    const data = buildNewWorkspaceShortcutModalData({
-      activeView: 'terminal',
-      taskPageData: {}
+      activeView: 'terminal'
     })
 
     expect(data).toEqual({ telemetrySource: 'shortcut' })
@@ -31,7 +21,6 @@ describe('openNewWorkspaceFromShortcut', () => {
     openNewWorkspaceFromShortcut({
       activeModal: 'none',
       activeView: 'terminal',
-      taskPageData: {},
       openModal
     })
 
@@ -46,7 +35,6 @@ describe('openNewWorkspaceFromShortcut', () => {
     openNewWorkspaceFromShortcut({
       activeModal: 'new-workspace-composer',
       activeView: 'terminal',
-      taskPageData: {},
       openModal
     })
 

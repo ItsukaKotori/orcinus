@@ -47,7 +47,14 @@ import {
   hydratedUIPartialMatchesState,
   migrateStatusBarItems
 } from './ui-slice-hydration-sanitizers'
-import { hydrateAgentReadState, sanitizeTaskResumeState } from './ui-slice-hydration-values'
+import { hydrateAgentReadState } from './ui-slice-hydration-values'
+
+// Why: persisted profiles may carry retired Group by values (`parent`, `pr-status`);
+// they must degrade to the default project grouping instead of leaking into the union.
+function normalizeHydratedWorktreeGroupBy(value: unknown): UISlice['groupBy'] {
+  return value === 'none' || value === 'workspace-status' || value === 'repo' ? value : 'repo'
+}
+
 
 const MAX_LEFT_SIDEBAR_WIDTH = 500
 const MAX_RIGHT_SIDEBAR_WIDTH = 4000
@@ -118,7 +125,7 @@ export function createUiHydrationActions(set: UISliceSet, _get: UISliceGet): Par
           rightSidebarOpen: typeof ui.rightSidebarOpen === 'boolean' ? ui.rightSidebarOpen : true,
           rightSidebarTab: rightSidebarRoute.rightSidebarTab,
           rightSidebarExplorerView: rightSidebarRoute.rightSidebarExplorerView,
-          groupBy: (ui.groupBy as UISlice['groupBy'] | 'parent') === 'parent' ? 'repo' : ui.groupBy,
+          groupBy: normalizeHydratedWorktreeGroupBy(ui.groupBy),
           sortBy,
           // Why: main-process getUI() already normalized this (defaulting to 'manual'); read it through without migrating.
           projectOrderBy: ui.projectOrderBy,
@@ -169,7 +176,6 @@ export function createUiHydrationActions(set: UISliceSet, _get: UISliceGet): Par
             : null,
           updateReassuranceSeen: ui.updateReassuranceSeen ?? false,
           osc52ClipboardDefaultOnNoticePending: ui.osc52ClipboardDefaultOnNoticePending === true,
-          taskResumeState: sanitizeTaskResumeState(ui.taskResumeState),
           featureInteractions: normalizeFeatureInteractions(ui.featureInteractions),
           trustedOrcaHooks: hydrateTrustedOrcaHooks(ui.trustedOrcaHooks, validRepoIds),
           setupScriptPromptDismissedRepoIds:

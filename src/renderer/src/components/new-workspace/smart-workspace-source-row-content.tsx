@@ -1,8 +1,8 @@
 import React from 'react'
-import { CaseSensitive, CircleDot, GitBranch, GitBranchPlus, GitPullRequest } from 'lucide-react'
+import { CaseSensitive, GitBranch, GitBranchPlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { translate } from '@/i18n/i18n'
-import type { RowEntry, SmartWorkspaceNameSelection } from './smart-workspace-name-field-model'
+import type { RowEntry } from './smart-workspace-name-field-model'
 
 const ROW_ITEM_CLASS_NAME = 'gap-2 px-3 py-2 text-xs'
 
@@ -24,27 +24,10 @@ export function RowIcon({ row }: { row: RowEntry }): React.JSX.Element {
   if (row.kind === 'create-branch') {
     return <GitBranchPlus className="size-3.5 shrink-0 text-muted-foreground" />
   }
-  if (row.kind === 'github') {
-    return row.item.type === 'pr' ? (
-      <GitPullRequest className="size-3.5 shrink-0 text-muted-foreground" />
-    ) : (
-      <CircleDot className="size-3.5 shrink-0 text-muted-foreground" />
-    )
-  }
   return <GitBranch className="size-3.5 shrink-0 text-muted-foreground" />
 }
 
-export function SelectionIcon({
-  kind
-}: {
-  kind: SmartWorkspaceNameSelection['kind']
-}): React.JSX.Element {
-  if (kind === 'github-pr') {
-    return <GitPullRequest className="size-3.5 shrink-0 text-muted-foreground" />
-  }
-  if (kind === 'github-issue') {
-    return <CircleDot className="size-3.5 shrink-0 text-muted-foreground" />
-  }
+export function SelectionIcon(): React.JSX.Element {
   return <GitBranch className="size-3.5 shrink-0 text-muted-foreground" />
 }
 
@@ -73,13 +56,6 @@ export function RowLabel({ row }: { row: RowEntry }): React.JSX.Element {
           'Create new branch'
         )}{' '}
         <span className="font-mono text-[11px] font-medium text-foreground">{row.name}</span>
-      </span>
-    )
-  }
-  if (row.kind === 'github') {
-    return (
-      <span className="min-w-0 truncate">
-        <span className="font-medium text-foreground">#{row.item.number}</span> {row.item.title}
       </span>
     )
   }

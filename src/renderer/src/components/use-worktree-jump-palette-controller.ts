@@ -11,7 +11,6 @@ import { useWorktreeJumpPaletteListEntries } from './use-worktree-jump-palette-l
 import { useWorktreeJumpPaletteSelectionLifecycle } from './use-worktree-jump-palette-selection-lifecycle'
 import { useWorktreeJumpPaletteSelectionActions } from './use-worktree-jump-palette-selection-actions'
 import { useWorktreeJumpPaletteCreateAction } from './use-worktree-jump-palette-create-action'
-import { useWorktreeJumpPaletteTaskUrl } from './use-worktree-jump-palette-task-url'
 import { useWorkspaceEmojiShortcodeInput } from '@/components/workspace-emoji/useWorkspaceEmojiShortcodeInput'
 import { usePaletteSearchEvaluationContext } from '@/hooks/use-palette-search-evaluation-context'
 import type { WorktreePaletteRequestGuard } from '@/lib/worktree-palette-create-action'
@@ -52,12 +51,6 @@ export function useWorktreeJumpPaletteController({
   )
   const paletteSearchContext = usePaletteSearchEvaluationContext(paletteEvaluationSnapshot)
   const evaluation = { paletteSearchContext }
-  const taskUrl = useWorktreeJumpPaletteTaskUrl({
-    visible,
-    createWorktreeName: localState.createWorktreeName,
-    taskSourceUrl: localState.taskSourceUrl,
-    createLookupGuard
-  })
   const filter = useWorktreeJumpPaletteFilter({ ...storeState, ...localState })
   const worktrees = useWorktreeJumpPaletteWorktrees({
     ...storeState,
@@ -99,15 +92,13 @@ export function useWorktreeJumpPaletteController({
     ...openTabs,
     ...recentTabs,
     ...projectTargets,
-    ...quickActions,
-    ...taskUrl
+    ...quickActions
   })
   const listEntries = useWorktreeJumpPaletteListEntries({
     ...localState,
     ...worktrees,
     ...openTabs,
-    ...sections,
-    ...taskUrl
+    ...sections
   })
   const selectionLifecycle = useWorktreeJumpPaletteSelectionLifecycle({
     ...storeState,
@@ -119,8 +110,7 @@ export function useWorktreeJumpPaletteController({
     ...projectTargets,
     ...quickActions,
     ...sections,
-    ...listEntries,
-    ...taskUrl
+    ...listEntries
   })
   const selectionActions = useWorktreeJumpPaletteSelectionActions({
     ...storeState,
@@ -141,14 +131,12 @@ export function useWorktreeJumpPaletteController({
     ...quickActions,
     ...sections,
     ...selectionLifecycle,
-    ...selectionActions,
-    ...taskUrl
+    ...selectionActions
   })
 
   return {
     ...storeState,
     ...localState,
-    ...taskUrl,
     ...filter,
     ...worktrees,
     ...openTabs,

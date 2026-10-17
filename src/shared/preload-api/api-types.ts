@@ -23,9 +23,7 @@ import type { EphemeralVmApi } from './api/ephemeral-vm-api'
 import type { ExportApi, FilesystemApi } from './api/filesystem-api'
 import type { GitInspectionApi } from './api/git-inspection-api'
 import type { GitOperationApi } from './api/git-operation-api'
-import type { GithubPullRequestApi } from './api/github-pull-request-api'
-import type { GithubWorkItemApi } from './api/github-work-item-api'
-import type { BitbucketApi, HostedReviewApi } from './api/hosted-review-api'
+import type { BitbucketApi } from './api/bitbucket-api'
 import type { OnboardingApi, StarNagApi } from './api/onboarding-api'
 import type { OrcaProfileApi } from './api/orca-profile-api'
 import type {
@@ -81,8 +79,6 @@ export type PreloadApi = {
   workspaceSpace: WorkspaceSpaceApi
   pty: PtyApi
   export: ExportApi
-  gh: Merged<GithubPullRequestApi & GithubWorkItemApi>
-  hostedReview: HostedReviewApi
   bitbucket: BitbucketApi
   starNag: StarNagApi
   settings: SettingsApi

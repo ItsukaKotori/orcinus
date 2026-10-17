@@ -10,15 +10,11 @@ import { translate } from '@/i18n/i18n'
 import type { RuntimeGitContext } from '@/runtime/runtime-git-client'
 import { useAppStore } from '@/store'
 import type { GitPushTarget } from '../../../../../../shared/worktree/types'
-import type { PullRequestGenerationContext } from '@/store/slices/pull-request-generation'
 import { refreshGitStatusForWorktree } from '../../git-status-refresh'
 
 export type SourceControlStatusRefresh = {
   refreshActiveGitStatus: (signal?: AbortSignal) => Promise<void>
   refreshActiveGitStatusAfterMutation: () => Promise<void>
-  refreshGitStatusAfterPullRequestGeneration: (
-    context: PullRequestGenerationContext
-  ) => Promise<void>
 }
 
 export function useSourceControlStatusRefresh({
@@ -29,8 +25,7 @@ export function useSourceControlStatusRefresh({
   isFolder,
   repositoryHuge,
   activeConnectionId,
-  activeWorktreeInstanceId,
-  worktreeMap
+  activeWorktreeInstanceId
 }: {
   activeRepoSettings: RuntimeGitContext['settings']
   activeWorktreeId: string | null
@@ -40,7 +35,6 @@ export function useSourceControlStatusRefresh({
   repositoryHuge: { limit: number } | null | undefined
   activeConnectionId: string | null
   activeWorktreeInstanceId?: string
-  worktreeMap: ReadonlyMap<string, { pushTarget?: GitPushTarget }>
 }): SourceControlStatusRefresh {
   const setGitStatus = useAppStore((s) => s.setGitStatus)
   const updateWorktreeGitIdentity = useAppStore((s) => s.updateWorktreeGitIdentity)
@@ -150,43 +144,8 @@ export function useSourceControlStatusRefresh({
     refreshActiveGitStatus
   ])
 
-  const refreshGitStatusAfterPullRequestGeneration = useCallback(
-    async (context: PullRequestGenerationContext): Promise<void> => {
-      if (!context.worktreeId || isFolder) {
-        return
-      }
-      try {
-        await refreshGitStatusForWorktree({
-          // Why: generation can finish after a host switch; refresh the host that owned the generation request.
-          settings: context.runtimeTargetSettings,
-          worktreeId: context.worktreeId,
-          worktreePath: context.worktreePath,
-          connectionId: context.connectionId,
-          pushTarget: worktreeMap.get(context.worktreeId)?.pushTarget,
-          deps: {
-            setGitStatus,
-            updateWorktreeGitIdentity,
-            setUpstreamStatus,
-            fetchUpstreamStatus
-          }
-        })
-      } catch (error) {
-        console.warn('[SourceControl] post-generation git status refresh failed', error)
-      }
-    },
-    [
-      fetchUpstreamStatus,
-      isFolder,
-      setGitStatus,
-      setUpstreamStatus,
-      updateWorktreeGitIdentity,
-      worktreeMap
-    ]
-  )
-
   return {
     refreshActiveGitStatus,
-    refreshActiveGitStatusAfterMutation,
-    refreshGitStatusAfterPullRequestGeneration
+    refreshActiveGitStatusAfterMutation
   }
 }

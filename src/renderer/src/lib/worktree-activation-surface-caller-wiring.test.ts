@@ -8,10 +8,8 @@ import { describe, expect, it } from 'vitest'
 // the census: activation callers that open their own surface (editor, browser, diff, agent tab)
 // must appear here, and adding or removing an opt-out anywhere must update this list.
 const SURFACE_PROVIDING_CALLERS = [
-  'src/renderer/src/components/editor/check-annotation-open.ts',
   'src/renderer/src/components/sidebar/run-worktree-delete-with-toast.ts',
-  'src/renderer/src/components/terminal-pane/terminal-file-open-routing.ts',
-  'src/renderer/src/lib/fix-checks-agent-launch.ts'
+  'src/renderer/src/components/terminal-pane/terminal-file-open-routing.ts'
 ]
 
 // The activation seam itself: declares the option and forwards it into the tombstone gate.

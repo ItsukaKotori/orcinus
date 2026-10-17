@@ -8,7 +8,6 @@ import type { WorktreeJumpPaletteSelectionActions } from './use-worktree-jump-pa
 import type { WorktreeJumpPaletteSelectionLifecycle } from './use-worktree-jump-palette-selection-lifecycle'
 import type { WorktreeJumpPaletteStoreState } from './use-worktree-jump-palette-store-state'
 import type { WorktreeJumpPaletteWorktrees } from './use-worktree-jump-palette-worktrees'
-import type { WorktreeJumpPaletteTaskUrl } from './use-worktree-jump-palette-task-url'
 import { createWorktreeJumpPaletteWorktreeHandler } from './worktree-jump-palette-create-worktree'
 
 type WorktreeJumpPaletteCreateActionInput = WorktreeJumpPaletteStoreState &
@@ -18,7 +17,6 @@ type WorktreeJumpPaletteCreateActionInput = WorktreeJumpPaletteStoreState &
   WorktreeJumpPaletteSections &
   WorktreeJumpPaletteSelectionActions &
   WorktreeJumpPaletteSelectionLifecycle &
-  WorktreeJumpPaletteTaskUrl &
   Pick<WorktreeJumpPaletteWorktrees, 'hasQuery'>
 
 export function useWorktreeJumpPaletteCreateAction({

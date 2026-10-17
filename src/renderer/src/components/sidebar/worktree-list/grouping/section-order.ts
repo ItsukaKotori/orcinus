@@ -1,7 +1,6 @@
 import type { Repo } from '../../../../../../shared/repo-types'
 import type { ProjectOrderBy } from '../../../../../../shared/ui-chrome-types'
 import type { WorkspaceStatusDefinition, Worktree } from '../../../../../../shared/worktree/types'
-import type { AppState } from '../../../../store/types'
 import { getRepoDisplayLabelKey, getRepoDisplayLabelsByPath } from '@/lib/repo-display-labels'
 import { ALL_GROUP_KEY } from './group-keys'
 import type {
@@ -16,19 +15,15 @@ export function getRenderedNaturalAnchorRepoIds({
   groupBy,
   worktrees,
   repoMap,
-  prCache,
   collapsedGroups,
   workspaceStatuses,
-  settings,
   projectGrouping
 }: {
   groupBy: WorktreeGroupBy
   worktrees: readonly Worktree[]
   repoMap: Map<string, Repo>
-  prCache: Record<string, unknown> | null
   collapsedGroups: ReadonlySet<string>
   workspaceStatuses: readonly WorkspaceStatusDefinition[]
-  settings?: AppState['settings']
   projectGrouping?: ProjectGroupingModel
 }): Set<string> {
   const renderedRepoIds = new Set<string>()
@@ -51,9 +46,7 @@ export function getRenderedNaturalAnchorRepoIds({
       groupBy,
       worktree,
       repoMap,
-      prCache,
       workspaceStatuses,
-      settings,
       projectGrouping
     )
     if (groupKey && !collapsedGroups.has(groupKey)) {

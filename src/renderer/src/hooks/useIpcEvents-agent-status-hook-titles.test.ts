@@ -541,7 +541,6 @@ describe('useIpcEvents agent status snapshot integration', () => {
 
   it('preserves a SessionStart boundary from snapshot IPC without completion side effects', async () => {
     const now = Date.now()
-    const refreshGitHubForWorktreeIfStale = vi.fn()
     const observeAgentHookCompletionForNotification = vi.fn()
     const store = createTestStore()
     store.setState({
@@ -566,8 +565,7 @@ describe('useIpcEvents agent status snapshot integration', () => {
           activeLeafId: FUTURE_LEAF_ID,
           expandedLeafId: null
         }
-      },
-      refreshGitHubForWorktreeIfStale
+      }
     })
     store
       .getState()
@@ -625,7 +623,6 @@ describe('useIpcEvents agent status snapshot integration', () => {
     })
     await Promise.resolve()
 
-    expect(refreshGitHubForWorktreeIfStale).not.toHaveBeenCalled()
     expect(observeAgentHookCompletionForNotification).not.toHaveBeenCalled()
   })
 })

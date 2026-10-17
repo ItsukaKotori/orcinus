@@ -32,7 +32,6 @@ function buildPinnedRows(
       [repo.id, repo],
       [remoteRepo.id, remoteRepo]
     ]),
-    null,
     new Set(),
     undefined,
     undefined,

@@ -35,8 +35,6 @@ describe('feature interactions', () => {
       'cmd-j-settings-open',
       'cmd-j-quick-action',
       'cmd-j-create-workspace',
-      'tasks',
-      'github-tasks',
       'automations',
       'automation-created',
       'automation-run',
@@ -44,7 +42,6 @@ describe('feature interactions', () => {
       'workspace-creation',
       'agent-orchestration-setup',
       'ai-commit-generation',
-      'ai-pr-generation',
       'claude-account-switching',
       'computer-use-setup',
       'computer-use',
@@ -74,7 +71,7 @@ describe('feature interactions', () => {
   it('normalizes persisted records by removing unknown ids and malformed values', () => {
     expect(
       normalizeFeatureInteractions({
-        tasks: { firstInteractedAt: 100 },
+        'cmd-j': { firstInteractedAt: 100 },
         notifications: { firstInteractedAt: Number.NaN },
         automations: { firstInteractedAt: 200, interactionCount: 3 },
         'review-notes': { firstInteractedAt: 250, interactionCount: 0 },
@@ -82,7 +79,7 @@ describe('feature interactions', () => {
         'usage-tracking': { firstInteractedAt: 300 }
       })
     ).toEqual({
-      tasks: { firstInteractedAt: 100, interactionCount: 1 },
+      'cmd-j': { firstInteractedAt: 100, interactionCount: 1 },
       automations: { firstInteractedAt: 200, interactionCount: 3 },
       'review-notes': { firstInteractedAt: 250, interactionCount: 1 },
       'usage-tracking': { firstInteractedAt: 300, interactionCount: 1 }
@@ -91,18 +88,21 @@ describe('feature interactions', () => {
 
   it('treats only valid known records as interacted', () => {
     expect(
-      hasFeatureInteraction({ tasks: { firstInteractedAt: 100, interactionCount: 1 } }, 'tasks')
+      hasFeatureInteraction(
+        { 'cmd-j': { firstInteractedAt: 100, interactionCount: 1 } },
+        'cmd-j'
+      )
     ).toBe(true)
     expect(
       hasFeatureInteraction(
-        { tasks: { firstInteractedAt: 100, interactionCount: 1 } },
+        { 'cmd-j': { firstInteractedAt: 100, interactionCount: 1 } },
         'notifications'
       )
     ).toBe(false)
     expect(
       hasFeatureInteraction(
-        { tasks: { firstInteractedAt: Number.POSITIVE_INFINITY, interactionCount: 1 } },
-        'tasks'
+        { 'cmd-j': { firstInteractedAt: Number.POSITIVE_INFINITY, interactionCount: 1 } },
+        'cmd-j'
       )
     ).toBe(false)
   })

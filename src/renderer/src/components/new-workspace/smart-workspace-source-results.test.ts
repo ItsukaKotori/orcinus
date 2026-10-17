@@ -4,8 +4,6 @@ import {
   getBranchSearchRequest,
   getSmartWorkspaceEmptyHint,
   getVisibleBranchResults,
-  getVisibleHeldProviderResults,
-  isBlockingTaskUrlResolution,
   shouldHoldSourceResultsForQuery
 } from './smart-workspace-source-results'
 import {
@@ -96,7 +94,6 @@ describe('Branch source results', () => {
       mode: 'smart',
       value: '',
       branches: [{ refName: 'origin/old-result', localBranchName: 'old-result' }],
-      githubItems: [],
       resultLimit: 12
     })
 
@@ -187,43 +184,12 @@ describe('Branch source results', () => {
     ).toEqual([{ refName: 'origin/feature', localBranchName: 'feature' }])
   })
 
-  it('hides held provider results immediately when the field is cleared ahead of debounce', () => {
-    expect(
-      getVisibleHeldProviderResults({
-        items: [{ id: 'pr-1' }],
-        value: '',
-        debouncedQuery: 'fix'
-      })
-    ).toEqual([])
-  })
-
-  it('keeps held provider results while the user types ahead of debounce', () => {
-    expect(
-      getVisibleHeldProviderResults({
-        items: [{ id: 'pr-1' }],
-        value: 'fix',
-        debouncedQuery: 'fi'
-      })
-    ).toEqual([{ id: 'pr-1' }])
-  })
-
-  it('shows provider results once the cleared field and debounce are both empty', () => {
-    expect(
-      getVisibleHeldProviderResults({
-        items: [{ id: 'default-1' }],
-        value: '',
-        debouncedQuery: ''
-      })
-    ).toEqual([{ id: 'default-1' }])
-  })
-
   it('uses stable cmdk values for typed-text actions', () => {
     expect(
       buildSmartWorkspaceSourceRows({
         mode: 'smart',
         value: 'refund-flow',
         branches: [],
-        githubItems: [],
         resultLimit: 12
       })[0]
     ).toMatchObject({ kind: 'use-name', value: 'use-name', name: 'refund-flow' })
@@ -233,7 +199,6 @@ describe('Branch source results', () => {
         mode: 'branches',
         value: 'new-branch',
         branches: [],
-        githubItems: [],
         resultLimit: 12
       })[0]
     ).toMatchObject({ kind: 'create-branch', value: 'create-branch', name: 'new-branch' })
@@ -273,7 +238,6 @@ describe('Branch source results', () => {
         { refName: 'main', localBranchName: 'main' },
         { refName: 'origin/feature/autofill', localBranchName: 'feature/autofill' }
       ],
-      githubItems: [],
       resultLimit: 12
     })
 
@@ -288,37 +252,12 @@ describe('Branch source results', () => {
     ])
   })
 
-  it('keeps GitHub row values unique for the same item number across repos', () => {
-    const rows = buildSmartWorkspaceSourceRows({
-      mode: 'github',
-      value: '',
-      branches: [],
-      githubItems: [
-        { repoId: 'repo-a', type: 'issue', number: 123, title: 'Repo A issue' } as never,
-        { repoId: 'repo-b', type: 'issue', number: 123, title: 'Repo B issue' } as never
-      ],
-      resultLimit: 12
-    })
-
-    expect(rows.map((row) => row.value)).toEqual([
-      'github-repo-a-issue-123',
-      'github-repo-b-issue-123'
-    ])
-  })
-
   it('returns no rows for oversized pasted values before echoing or scanning results', () => {
     expect(
       buildSmartWorkspaceSourceRows({
         mode: 'smart',
         value: 'x'.repeat(SMART_WORKSPACE_SOURCE_QUERY_MAX_BYTES + 1),
         branches: [{ refName: 'origin/main', localBranchName: 'main' }],
-        githubItems: [
-          {
-            get number(): number {
-              throw new Error('oversized smart workspace rows must not scan GitHub results')
-            }
-          } as never
-        ],
         resultLimit: 12
       })
     ).toEqual([])
@@ -337,42 +276,6 @@ describe('source query byte limits', () => {
       isSmartWorkspaceSourceQueryWithinLimit(
         'é'.repeat(SMART_WORKSPACE_SOURCE_QUERY_MAX_BYTES / 2 + 1)
       )
-    ).toBe(false)
-  })
-})
-
-describe('Task URL Enter protection', () => {
-  it('blocks Enter while a pasted GitHub URL is resolving', () => {
-    expect(
-      isBlockingTaskUrlResolution({
-        sourceIntent: 'github',
-        isQueryStale: true,
-        githubLoading: false
-      })
-    ).toBe(true)
-    expect(
-      isBlockingTaskUrlResolution({
-        sourceIntent: 'github',
-        isQueryStale: false,
-        githubLoading: true
-      })
-    ).toBe(true)
-  })
-
-  it('keeps the workspace-name fallback after lookup settles without a match', () => {
-    expect(
-      isBlockingTaskUrlResolution({
-        sourceIntent: 'github',
-        isQueryStale: false,
-        githubLoading: false
-      })
-    ).toBe(false)
-    expect(
-      isBlockingTaskUrlResolution({
-        sourceIntent: null,
-        isQueryStale: true,
-        githubLoading: true
-      })
     ).toBe(false)
   })
 })

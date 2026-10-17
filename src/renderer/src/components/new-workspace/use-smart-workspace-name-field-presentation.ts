@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from 'react'
 import { CaseSensitive, LoaderCircle, Search } from 'lucide-react'
-import { parseGitHubIssueOrPRLink } from '@/lib/github-links'
 import {
   getActiveWorkspaceEmojiShortcode,
   searchWorkspaceEmojiShortcodes,
@@ -10,8 +9,6 @@ import { resolveSmartWorkspaceCommandValue } from './smart-workspace-command-val
 import {
   buildSmartWorkspaceSourceRows,
   getVisibleBranchResults,
-  getVisibleHeldProviderResults,
-  isBlockingTaskUrlResolution,
   isSmartWorkspaceSourceQueryWithinLimit
 } from './smart-workspace-source-results'
 import { RESULT_LIMIT, type RowEntry } from './smart-workspace-name-field-model'
@@ -30,7 +27,6 @@ export function useSmartWorkspaceNameFieldPresentation(foundation: Foundation) {
     branchResultsSource,
     selectedRepo,
     value,
-    githubItems,
     debouncedQuery,
     commandValue,
     setCommandValue,
@@ -38,16 +34,8 @@ export function useSmartWorkspaceNameFieldPresentation(foundation: Foundation) {
     disabled,
     selectedSource,
     emojiCommandValue,
-    githubLoading,
     branchesLoading
   } = foundation
-  const githubUrlIntent = useMemo(
-    () =>
-      isSmartWorkspaceSourceQueryWithinLimit(value) && (mode === 'smart' || mode === 'github')
-        ? parseGitHubIssueOrPRLink(value)
-        : null,
-    [mode, value]
-  )
   const rows = useMemo<RowEntry[]>(
     () =>
       buildSmartWorkspaceSourceRows({
@@ -59,26 +47,11 @@ export function useSmartWorkspaceNameFieldPresentation(foundation: Foundation) {
           selectedRepoId: selectedRepo?.id ?? null,
           value
         }),
-        githubItems: getVisibleHeldProviderResults({
-          items: githubItems,
-          value,
-          debouncedQuery
-        }),
-        githubUrlIntent,
         mode,
         resultLimit: RESULT_LIMIT,
         value
       }),
-    [
-      branches,
-      branchResultsSource,
-      debouncedQuery,
-      githubItems,
-      githubUrlIntent,
-      mode,
-      selectedRepo?.id,
-      value
-    ]
+    [branches, branchResultsSource, mode, selectedRepo?.id, value]
   )
   const { typedTextActionRow, searchResultRows } = useMemo(() => {
     const typedTextRow = rows.find(isTypedTextSourceRow) ?? null
@@ -94,30 +67,10 @@ export function useSmartWorkspaceNameFieldPresentation(foundation: Foundation) {
   const trimmedValue = valueWithinSourceLimit ? value.trim() : ''
   const trimmedDebouncedQuery = debouncedQueryWithinSourceLimit ? debouncedQuery.trim() : ''
   const isQueryStale = trimmedValue.length > 0 && trimmedDebouncedQuery !== trimmedValue
-  // Why: unambiguous refs highlight their source row instead of the typed-text fallback.
-  const sourceIntent = useMemo<'github' | null>(() => {
-    if (!isSmartWorkspaceSourceQueryWithinLimit(value)) {
-      return null
-    }
-    const trimmed = value.trim()
-    if (!trimmed) {
-      return null
-    }
-    if (/^#\d+$/.test(trimmed) || parseGitHubIssueOrPRLink(trimmed) !== null) {
-      return 'github'
-    }
-    return null
-  }, [value])
-  const blockingTaskUrlResolution = isBlockingTaskUrlResolution({
-    sourceIntent,
-    isQueryStale,
-    githubLoading
-  })
   const resolvedCommandValue = resolveSmartWorkspaceCommandValue({
     currentValue: commandValue,
     rows,
-    isQueryStale,
-    sourceIntent
+    isQueryStale
   })
   // Why: ignored stale cmdk changes must not reappear after the query settles.
   useEffect(() => {
@@ -153,7 +106,7 @@ export function useSmartWorkspaceNameFieldPresentation(foundation: Foundation) {
     emojiSuggestions.find(
       (suggestion) => `emoji:${suggestion.shortcode}` === resolvedEmojiCommandValue
     ) ?? null
-  const loading = githubLoading || branchesLoading
+  const loading = branchesLoading
   // Why: only spin on first load, not refreshes with retained rows.
   const showSearchSpinner = loading && searchResultRows.length === 0
   const ActiveInputIcon =
@@ -172,8 +125,6 @@ export function useSmartWorkspaceNameFieldPresentation(foundation: Foundation) {
     selectedEmojiSuggestion,
     loading,
     showSearchSpinner,
-    sourceIntent,
-    blockingTaskUrlResolution,
     ActiveInputIcon
   }
 }

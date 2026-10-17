@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  resolveCommitAreaPrimaryAction,
   resolvePrimaryAction,
   type PrimaryActionInputs
 } from './source-control-primary-action'
@@ -204,39 +203,6 @@ describe('resolvePrimaryAction', () => {
     })
   })
 
-  it('returns Push when no upstream exists but an open linked review already owns the branch', () => {
-    const result = resolvePrimaryAction(
-      inputs({
-        upstreamStatus: { hasUpstream: false, ahead: 0, behind: 0 },
-        branchCommitsAhead: 1,
-        prState: 'open',
-        canPushLinkedReviewWithoutUpstream: true
-      })
-    )
-    expect(result).toEqual({
-      kind: 'push',
-      label: 'Push',
-      title: 'Push updates to the linked review branch',
-      disabled: false
-    })
-  })
-
-  it('does not push an open linked review when its branch target is unavailable', () => {
-    const result = resolvePrimaryAction(
-      inputs({
-        upstreamStatus: { hasUpstream: false, ahead: 0, behind: 0 },
-        branchCommitsAhead: 1,
-        prState: 'open'
-      })
-    )
-    expect(result).toEqual({
-      kind: 'commit',
-      label: 'Commit',
-      title: 'Linked review branch target is unavailable.',
-      disabled: true
-    })
-  })
-
   it('does not offer Publish Branch when HEAD is detached', () => {
     const result = resolvePrimaryAction(
       inputs({
@@ -263,16 +229,6 @@ describe('resolvePrimaryAction', () => {
       title: 'Publish this branch to origin',
       disabled: false
     })
-  })
-
-  it.each([
-    [{ prState: 'merged' as const }, 'Nothing to commit. PR is already merged.'],
-    [{ isPRStateLoading: true }, 'Checking PR status…']
-  ])('does not offer Publish Branch when linked PR state blocks it', (overrides, title) => {
-    const result = resolvePrimaryAction(
-      inputs({ upstreamStatus: { hasUpstream: false, ahead: 0, behind: 0 }, ...overrides })
-    )
-    expect(result).toEqual({ kind: 'commit', label: 'Commit', title, disabled: true })
   })
 
   it('returns Sync when clean + tracked + diverged both ways', () => {
@@ -416,60 +372,6 @@ describe('resolvePrimaryAction', () => {
     expect(result.disabled).toBe(false)
   })
 
-  it('keeps Stage All available in the commit area when Create PR intent is additive', () => {
-    const input = inputs({
-      stagedCount: 0,
-      hasUnstagedChanges: true,
-      hasStageableChanges: true,
-      hasPartiallyStagedChanges: false,
-      hasMessage: false,
-      upstreamStatus: upstreamInSync,
-      hostedReviewCreation: {
-        provider: 'github',
-        review: null,
-        canCreate: false,
-        blockedReason: 'dirty',
-        nextAction: 'commit',
-        reviewLookupOutcome: 'not_found'
-      }
-    })
-
-    expect(resolvePrimaryAction(input).kind).toBe('create_pr_intent')
-    expect(resolveCommitAreaPrimaryAction(input)).toEqual({
-      kind: 'stage',
-      label: 'Stage All',
-      title: 'Stage all changes',
-      disabled: false
-    })
-  })
-
-  it('keeps the additive commit-area action on Commit for partially staged files', () => {
-    const input = inputs({
-      stagedCount: 1,
-      hasUnstagedChanges: true,
-      hasStageableChanges: true,
-      hasPartiallyStagedChanges: true,
-      hasMessage: true,
-      upstreamStatus: upstreamInSync,
-      hostedReviewCreation: {
-        provider: 'github',
-        review: null,
-        canCreate: false,
-        blockedReason: 'dirty',
-        nextAction: 'commit',
-        reviewLookupOutcome: 'not_found'
-      }
-    })
-
-    expect(resolvePrimaryAction(input).kind).toBe('create_pr_intent')
-    expect(resolveCommitAreaPrimaryAction(input)).toEqual({
-      kind: 'commit',
-      label: 'Commit',
-      title: 'Commit staged changes',
-      disabled: false
-    })
-  })
-
   it('still resolves to Commit when staged and unrelated unstaged files exist', () => {
     const result = resolvePrimaryAction(
       inputs({
@@ -534,73 +436,4 @@ describe('resolvePrimaryAction', () => {
       disabled: true
     })
   })
-
-  it('returns Create PR when a clean tracked branch is eligible for review creation', () => {
-    const result = resolvePrimaryAction(
-      inputs({
-        upstreamStatus: upstreamInSync,
-        hostedReviewCreation: {
-          provider: 'github',
-          review: null,
-          canCreate: true,
-          blockedReason: null,
-          nextAction: null,
-          reviewLookupOutcome: 'not_found'
-        }
-      })
-    )
-    expect(result).toEqual({
-      kind: 'create_pr',
-      label: 'Create PR',
-      title: 'Create a pull request for this branch',
-      disabled: false
-    })
-  })
-
-  it('returns Create PR when a clean tracked Bitbucket branch is eligible for review creation', () => {
-    const result = resolvePrimaryAction(
-      inputs({
-        upstreamStatus: upstreamInSync,
-        hostedReviewCreation: {
-          provider: 'bitbucket',
-          review: null,
-          canCreate: true,
-          blockedReason: null,
-          nextAction: null,
-          reviewLookupOutcome: 'not_found'
-        }
-      })
-    )
-    expect(result).toEqual({
-      kind: 'create_pr',
-      label: 'Create PR',
-      title: 'Create a pull request for this branch',
-      disabled: false
-    })
-  })
-
-  it.each(['azure-devops', 'gitea'] as const)(
-    'returns Create PR when a clean tracked %s branch is eligible for review creation',
-    (provider) => {
-      const result = resolvePrimaryAction(
-        inputs({
-          upstreamStatus: upstreamInSync,
-          hostedReviewCreation: {
-            provider,
-            review: null,
-            canCreate: true,
-            blockedReason: null,
-            nextAction: null,
-            reviewLookupOutcome: 'not_found'
-          }
-        })
-      )
-      expect(result).toEqual({
-        kind: 'create_pr',
-        label: 'Create PR',
-        title: 'Create a pull request for this branch',
-        disabled: false
-      })
-    }
-  )
 })

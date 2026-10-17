@@ -15,7 +15,6 @@ import WorktreeCard from '../../WorktreeCard'
 import type { WorktreeGroupBy } from '../grouping/row-types'
 import { getVirtualRowTransform } from '../viewport/virtual-rows'
 import { getFolderWorkspaceRowGeometry } from './indentation'
-import { getFolderWorkspaceCardPrDisplay } from '../../folder-workspace-card-pr-display'
 import { FolderPathStatusIndicator } from './FolderPathStatusIndicator'
 import type { FolderWorkspaceItemRow } from '../listing/renderable-rows'
 import { getWorktreeOptionId } from './option-dom'
@@ -31,8 +30,6 @@ export type FolderWorkspaceRowContext = {
   worktreeMap: Map<string, Worktree>
   worktreeLineageById: Record<string, WorktreeLineage>
   workspaceLineageByChildKey: Record<string, WorkspaceLineage>
-  prCache: AppState['prCache'] | null
-  hostedReviewCache: AppState['hostedReviewCache'] | null
   getCachedFolderWorkspacePathStatus: (request: {
     scope: 'folder-workspace'
     folderWorkspaceId: string
@@ -67,16 +64,6 @@ export function renderFolderWorkspaceVirtualRow(args: {
   const activationDisabled =
     pathStatus?.exists === false &&
     (isConfirmedStaleFolderPathStatus(pathStatus) || pathStatus.reason === 'ambiguous-connection')
-  const folderPrDisplay = getFolderWorkspaceCardPrDisplay({
-    folderWorkspaceId: row.folderWorkspace.id,
-    workspaceLineageByChildKey: ctx.workspaceLineageByChildKey,
-    worktreeLineageById: ctx.worktreeLineageById,
-    worktreeMap: ctx.worktreeMap,
-    repoMap: ctx.repoMap,
-    hostedReviewCache: ctx.hostedReviewCache,
-    prCache: ctx.prCache,
-    settings: ctx.settings
-  })
   const { surfaceInset, cardContentIndent } = getFolderWorkspaceRowGeometry({
     experimentalNewWorktreeCardStyle: ctx.newCardStyle,
     isFolderBackedWorkspaceChild:
@@ -121,7 +108,6 @@ export function renderFolderWorkspaceVirtualRow(args: {
           activationRowKey={folderWorktree.id}
           onSelectionGesture={(event) => ctx.onSelectionGesture(event, folderWorktree)}
           onContextMenuSelect={ctx.onContextMenuSelect}
-          statusPrDisplay={folderPrDisplay}
         />
         <div className="pointer-events-auto absolute right-3 top-1.5">
           <FolderPathStatusIndicator status={pathStatus} />

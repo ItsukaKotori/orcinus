@@ -127,62 +127,6 @@ describe('createAdeApi real assembly', () => {
     expect(invokeMock).not.toHaveBeenCalled()
   })
 
-  it('routes the hostedReview domain through the real worktree identity lookup', async () => {
-    const api = createAdeApi()
-    invokeMock.mockResolvedValue([])
-    await expect(
-      api.hostedReview.forBranch({ repoPath: '/repo', branch: 'main' })
-    ).resolves.toBeNull()
-    expect(invokeMock).toHaveBeenCalledWith('git_remote_urls', {
-      args: { worktreePath: '/repo' }
-    })
-  })
-
-  it('routes hostedReview creation eligibility through the real probes', async () => {
-    const api = createAdeApi()
-    invokeMock.mockImplementation(async (command: string) => {
-      if (command === 'git_remote_urls') return []
-      if (command === 'git_read') return { stdout: '', stderr: '', code: 1 }
-      throw new Error(`unexpected ${command}`)
-    })
-    await expect(
-      api.hostedReview.getCreationEligibility({ repoPath: '/repo', branch: 'main' })
-    ).resolves.toMatchObject({
-      provider: 'unsupported',
-      canCreate: false,
-      blockedReason: 'unsupported_provider'
-    })
-    expect(invokeMock).toHaveBeenCalledWith('git_remote_urls', {
-      args: { worktreePath: '/repo' }
-    })
-  })
-
-  it('routes the gh domain through its commands', async () => {
-    const api = createAdeApi()
-    invokeMock.mockImplementation(async (command: string) => {
-      if (command === 'gh_exec') {
-        return {
-          stdout: [
-            'github.com',
-            '  ✓ Logged in to github.com account alice (keyring)',
-            '  - Active account: true',
-            "  - Token scopes: 'project', 'read:org', 'repo'",
-            ''
-          ].join('\n'),
-          stderr: '',
-          code: 0
-        }
-      }
-      if (command === 'gh_env_probe') return { token: null }
-      throw new Error(`unexpected ${command}`)
-    })
-    await api.gh.diagnoseAuth()
-    expect(invokeMock.mock.calls.map(([command]) => command)).toEqual([
-      'gh_exec',
-      'gh_env_probe'
-    ])
-  })
-
   it('routes the git domain through its commands', async () => {
     const api = createAdeApi()
     invokeMock.mockResolvedValue({})

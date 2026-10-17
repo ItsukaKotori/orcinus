@@ -73,8 +73,6 @@ export function disposeClosedEditorTabs(
       }
       case 'conflict-review':
         break
-      case 'check-details':
-        break
     }
   }
 

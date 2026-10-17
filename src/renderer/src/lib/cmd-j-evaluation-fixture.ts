@@ -4,7 +4,7 @@ import type { Worktree } from '../../../shared/worktree/types'
 /**
  * Anonymized Cmd+J corpus used as the evaluation gate for the multi-keyword
  * matcher. Names, identifiers, and titles are synthetic; the shapes (automation
- * provenance, linked work items, ports, reviews, Unicode) mirror real workspaces.
+ * provenance, comments, Unicode) mirror real workspaces.
  */
 export const CMD_J_FIXTURE_REPOS: Repo[] = [
   {
@@ -169,14 +169,14 @@ export const CMD_J_FIXTURE_CASES: readonly CmdJFixtureCase[] = [
   { query: 'scan daily 13/08', expected: [] },
   { query: '4182', expected: ['wt-scan-daily'] },
   { query: 'nightly review run-184', expected: ['wt-scan-daily'] },
-  { query: 'sta-4052 reconnect', expected: ['wt-reconnect'] },
+  { query: 'sta-4052 reconnect', expected: [] },
   { query: 'reconnect infra', expected: ['wt-reconnect'] },
   { query: 'acme/orca main', expected: ['wt-main-orca'] },
   { query: 'orca/main', expected: ['wt-main-orca'] },
   { query: 'docs terminal', expected: ['wt-docs'] },
-  { query: '#4123', expected: ['wt-docs'] },
+  { query: '#4123', expected: [] },
   { query: '123', expected: [] },
-  { query: 'orc-912', expected: ['wt-linear'] },
+  { query: 'orc-912', expected: [] },
   { query: '登录', expected: ['wt-cjk'] },
   { query: 'café', expected: ['wt-accent'] },
   { query: 'cafe', expected: ['wt-accent'] },

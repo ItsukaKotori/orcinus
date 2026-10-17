@@ -4,7 +4,6 @@ type TargetChangeActionsInput = Pick<
   ComposerModel,
   | 'baseBranch'
   | 'branchAutoNameRef'
-  | 'decisions'
   | 'folderSourceRepos'
   | 'hostOptions'
   | 'linkedWorkItem'
@@ -30,7 +29,6 @@ type TargetChangeActionsInput = Pick<
   | 'setSparseEnabled'
   | 'setSparseSelectedPresetId'
   | 'setStartFromResetHint'
-  | 'smartGitHubPrStartPointSelectionRef'
 >
 
 import { useCallback } from 'react'
@@ -46,7 +44,6 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
   const {
     baseBranch,
     branchAutoNameRef,
-    decisions,
     folderSourceRepos,
     hostOptions,
     linkedWorkItem,
@@ -72,9 +69,7 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
     setSparseEnabled,
     setSparseSelectedPresetId,
     setStartFromResetHint,
-    smartGitHubPrStartPointSelectionRef
   } = input
-  const { retargetGitHubPrStartPointSelection } = decisions
 
   const handleRepoChange = useCallback(
     (
@@ -102,11 +97,7 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
       if (!options.preserveStartFrom) {
         setSelectedProjectHostSetupOverrideId(null)
       }
-      if (options.preserveStartFrom && smartGitHubPrStartPointSelectionRef.current) {
-        smartGitHubPrStartPointSelectionRef.current = retargetGitHubPrStartPointSelection(
-          smartGitHubPrStartPointSelectionRef.current,
-          value
-        )
+      if (options.preserveStartFrom) {
         setBaseBranch(undefined)
         setCompareBaseRef(undefined)
         setPushTarget(undefined)
@@ -116,7 +107,6 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
         setForkPushWarning(null)
       }
       if (!options.preserveStartFrom) {
-        smartGitHubPrStartPointSelectionRef.current = null
         setLinkedIssue('')
         setLinkedPR(null)
         // Why: a repo change invalidates repo-scoped sources; workspace-scoped
@@ -149,7 +139,6 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
       baseBranch,
       linkedWorkItem,
       repoId,
-      retargetGitHubPrStartPointSelection,
       setRepoId,
       branchAutoNameRef,
       setBaseBranch,
@@ -169,8 +158,7 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
       setSparseDirectories,
       setSparseEnabled,
       setSparseSelectedPresetId,
-      setStartFromResetHint,
-      smartGitHubPrStartPointSelectionRef
+      setStartFromResetHint
     ]
   )
 
@@ -180,7 +168,6 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
         return
       }
       setRepoId(value)
-      smartGitHubPrStartPointSelectionRef.current = null
       setLinkedWorkItem((current) =>
         current && !shouldPreserveWorkspaceSourceOnRepoChange(current) ? null : current
       )
@@ -197,8 +184,7 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
       setLinkedIssue,
       setLinkedPR,
       setLinkedTaskSourceContext,
-      setLinkedWorkItem,
-      smartGitHubPrStartPointSelectionRef
+      setLinkedWorkItem
     ]
   )
 

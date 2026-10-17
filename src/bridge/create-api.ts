@@ -9,9 +9,7 @@ import { createCliApi } from './mock/cli-api'
 import { createEphemeralVmApi } from './mock/ephemeral-vm-api'
 import { createFolderWorkspacesApi } from './mock/folder-workspaces-api'
 import { createFsApi } from './mock/fs-api'
-import { createGhApi } from './mock/gh-api'
 import { createGitApi } from './mock/git-api'
-import { createHostedReviewApi } from './mock/hosted-review-api'
 import { createKeybindingsApi } from './mock/keybindings-api'
 import { createMacosTccPromptsApi } from './mock/macos-tcc-prompts-api'
 import { createMemoryApi } from './mock/memory-api'
@@ -44,9 +42,7 @@ import { createCliRealApi } from './real/cli'
 import { createComputerUsePermissionsRealApi } from './real/computer-use-permissions'
 import { createFolderWorkspacesRealApi } from './real/folder-workspaces'
 import { createFsRealApi } from './real/fs'
-import { createGhRealApi } from './real/gh'
 import { createGitRealApi } from './real/git'
-import { createHostedReviewRealApi } from './real/hosted-review'
 import { createNotificationsRealApi } from './real/notifications'
 import { createOnboardingRealApi } from './real/onboarding'
 import { createPlatformRealApi } from './real/platform'
@@ -79,9 +75,7 @@ type RealDomains = Pick<
   | 'computerUsePermissions'
   | 'folderWorkspaces'
   | 'fs'
-  | 'gh'
   | 'git'
-  | 'hostedReview'
   | 'notifications'
   | 'onboarding'
   | 'platform'
@@ -113,10 +107,8 @@ function createMockDomains(): Partial<PreloadApi> {
     ephemeralVm: createEphemeralVmApi(),
     folderWorkspaces: createFolderWorkspacesApi(),
     fs: createFsApi(),
-    gh: createGhApi(),
     git: createGitApi(),
     hooks: createHooksApi(),
-    hostedReview: createHostedReviewApi(),
     keybindings: createKeybindingsApi(),
     macosTccPrompts: createMacosTccPromptsApi(),
     memory: createMemoryApi(),
@@ -155,9 +147,7 @@ function createRealDomains(): RealDomains {
     computerUsePermissions: createComputerUsePermissionsRealApi(),
     folderWorkspaces: createFolderWorkspacesRealApi(),
     fs: createFsRealApi(),
-    gh: createGhRealApi(),
     git: createGitRealApi(),
-    hostedReview: createHostedReviewRealApi(),
     notifications: createNotificationsRealApi(),
     onboarding: createOnboardingRealApi(),
     platform: createPlatformRealApi(),

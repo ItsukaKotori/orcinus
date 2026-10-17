@@ -120,9 +120,9 @@ describe('createEditorSlice right sidebar state', () => {
   it('setRightSidebarTab updates the global tab without writing a worktree entry', () => {
     const store = createEditorStore()
 
-    store.getState().setRightSidebarTab('checks')
+    store.getState().setRightSidebarTab('source-control')
 
-    expect(store.getState().rightSidebarTab).toBe('checks')
+    expect(store.getState().rightSidebarTab).toBe('source-control')
     expect(store.getState().rightSidebarTabByWorktree).toEqual({})
   })
 
@@ -131,7 +131,7 @@ describe('createEditorSlice right sidebar state', () => {
 
     expect(store.getState().rightSidebarRouteRequestId).toBe(0)
 
-    store.getState().setRightSidebarTab('checks')
+    store.getState().setRightSidebarTab('source-control')
     expect(store.getState().rightSidebarRouteRequestId).toBe(1)
 
     store.getState().setRightSidebarExplorerView('files')
@@ -146,18 +146,18 @@ describe('createEditorSlice right sidebar state', () => {
 
   it('setRightSidebarTab with no active worktree does not mutate the worktree map', () => {
     const store = createEditorStore()
-    const remembered = { 'wt-1': 'checks' as const }
+    const remembered = { 'wt-1': 'source-control' as const }
     store.setState({ activeWorktreeId: null, rightSidebarTabByWorktree: remembered })
 
-    store.getState().setRightSidebarTab('checks')
+    store.getState().setRightSidebarTab('source-control')
 
-    expect(store.getState().rightSidebarTab).toBe('checks')
+    expect(store.getState().rightSidebarTab).toBe('source-control')
     expect(store.getState().rightSidebarTabByWorktree).toBe(remembered)
   })
 
   it('showRightSidebarFiles opens Explorer files', () => {
     const store = createEditorStore()
-    store.setState({ rightSidebarOpen: false, rightSidebarTab: 'checks' })
+    store.setState({ rightSidebarOpen: false, rightSidebarTab: 'source-control' })
 
     store.getState().showRightSidebarFiles()
 
@@ -235,7 +235,7 @@ describe('createEditorSlice right sidebar state', () => {
 
   it('revealInExplorer selects explorer globally without writing a worktree entry', () => {
     const store = createEditorStore()
-    const remembered = { 'wt-1': 'explorer' as const, 'wt-2': 'checks' as const }
+    const remembered = { 'wt-1': 'explorer' as const, 'wt-2': 'source-control' as const }
     store.setState({
       activeWorktreeId: 'wt-1',
       rightSidebarTab: 'explorer',

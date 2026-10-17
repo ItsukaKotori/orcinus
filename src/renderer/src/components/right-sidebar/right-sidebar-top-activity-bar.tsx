@@ -1,6 +1,5 @@
 import React from 'react'
 import type { ActiveRightSidebarTab, ActivityBarPosition } from '@/store/slices/editor'
-import type { CheckStatus } from '../../../../shared/github/pull-request-types'
 import { cn } from '@/lib/utils'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ContextMenu, ContextMenuTrigger } from '@/components/ui/context-menu'
@@ -19,7 +18,6 @@ export function RightSidebarTopActivityBar({
   topActivityLayout,
   effectiveTab,
   onSelectTab,
-  checksStatus,
   closeButton,
   activityBarPosition,
   onChangeActivityBarPosition
@@ -29,7 +27,6 @@ export function RightSidebarTopActivityBar({
   topActivityLayout: { visibleItems: ActivityBarItem[]; overflowItems: ActivityBarItem[] }
   effectiveTab: ActiveRightSidebarTab
   onSelectTab: (tab: ActiveRightSidebarTab) => void
-  checksStatus: CheckStatus | null
   closeButton: React.ReactNode
   activityBarPosition: ActivityBarPosition
   onChangeActivityBarPosition: (pos: ActivityBarPosition) => void
@@ -58,7 +55,6 @@ export function RightSidebarTopActivityBar({
                         active={effectiveTab === item.id}
                         onClick={() => onSelectTab(item.id)}
                         layout="top"
-                        statusIndicator={item.id === 'checks' ? checksStatus : null}
                       />
                     ))}
                   </div>
@@ -67,7 +63,6 @@ export function RightSidebarTopActivityBar({
                       items={topActivityLayout.overflowItems}
                       activeTab={effectiveTab}
                       onSelect={onSelectTab}
-                      checksStatus={checksStatus}
                     />
                   )}
                 </div>
@@ -115,7 +110,6 @@ export function RightSidebarTopActivityBar({
                     active={effectiveTab === item.id}
                     onClick={() => onSelectTab(item.id)}
                     layout="top"
-                    statusIndicator={item.id === 'checks' ? checksStatus : null}
                   />
                 ))}
               </div>
@@ -124,7 +118,6 @@ export function RightSidebarTopActivityBar({
                   items={topActivityLayout.overflowItems}
                   activeTab={effectiveTab}
                   onSelect={onSelectTab}
-                  checksStatus={checksStatus}
                 />
               )}
             </div>

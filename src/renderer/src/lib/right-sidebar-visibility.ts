@@ -6,7 +6,6 @@ type ActiveView = AppState['activeView']
 
 const RIGHT_SIDEBAR_SUPPRESSED_VIEWS = new Set<ActiveView>([
   'settings',
-  'tasks',
   'automations',
   'space',
   'artifacts',
@@ -16,8 +15,8 @@ const RIGHT_SIDEBAR_SUPPRESSED_VIEWS = new Set<ActiveView>([
 const PLUGIN_HOSTED_VIEW_PREFIX = 'plugin:'
 
 function isPluginHostedView(activeView: ActiveView): boolean {
-  // Why optional: partial-store tests (github refresh sweeps) drive this with state
-  // that omits activeView; the fork's original check was a plain Set.has.
+  // Why optional: partial-store tests drive this with state that omits activeView;
+  // the fork's original check was a plain Set.has.
   return activeView?.startsWith(PLUGIN_HOSTED_VIEW_PREFIX) ?? false
 }
 
@@ -39,7 +38,7 @@ export function rightSidebarShowsPullRequestData(
   if (
     !canShowRightSidebarForView(state.activeView) ||
     !state.rightSidebarOpen ||
-    (state.rightSidebarTab !== 'checks' && state.rightSidebarTab !== 'source-control')
+    state.rightSidebarTab !== 'source-control'
   ) {
     return false
   }

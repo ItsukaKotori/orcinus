@@ -68,6 +68,5 @@ export async function tearDownRemovedWorktreeRendererState(args: {
       .map((w) => w.id)
   )
   // Optional-chained: minimal store assemblies (some unit tests) omit the generation slices.
-  get().prunePullRequestGenerationRecords?.(liveWorktreeKeys)
   get().pruneCommitMessageGenerationRecords?.(liveWorktreeKeys)
 }

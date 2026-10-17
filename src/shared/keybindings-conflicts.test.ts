@@ -38,11 +38,11 @@ describe('keybindings', () => {
   it('reports conflicts across default and customized actions', () => {
     expect(findKeybindingConflicts('linux')).toEqual([])
 
-    const conflicts = findKeybindingConflicts('linux', { 'view.tasks': ['Mod+P'] })
+    const conflicts = findKeybindingConflicts('linux', { 'app.settings': ['Mod+P'] })
 
     expect(conflicts).toContainEqual({
       binding: 'Mod+P',
-      actionIds: expect.arrayContaining(['worktree.quickOpen', 'view.tasks'])
+      actionIds: expect.arrayContaining(['worktree.quickOpen', 'app.settings'])
     })
   })
 
@@ -87,9 +87,9 @@ describe('keybindings', () => {
     expect(findKeybindingActionsForBinding('Mod+P', 'darwin')).toContain('worktree.quickOpen')
     expect(
       findKeybindingActionsForBinding('Mod+Alt+T', 'linux', {
-        'view.tasks': ['Mod+Alt+T']
+        'app.settings': ['Mod+Alt+T']
       })
-    ).toContain('view.tasks')
+    ).toContain('app.settings')
     expect(findKeybindingActionsForBinding('Mod+F', 'darwin')).not.toContain('editor.find')
   })
 

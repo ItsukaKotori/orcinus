@@ -17,7 +17,6 @@ const SETTINGS_NAV_TARGETS = [
   'integrations',
   'browser',
   'git',
-  'tasks',
   'appearance',
   'input',
   'floating-workspace',

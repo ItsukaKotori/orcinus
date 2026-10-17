@@ -40,7 +40,6 @@ export const UI_NOOP_SUBSCRIPTION_METHODS = [
   'onOpenNewWorkspace',
   'onOpenQuickOpen',
   'onOpenSettings',
-  'onOpenTasks',
   'onRenameTerminal',
   'onRequestTabClose',
   'onRequestTabCreate',

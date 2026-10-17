@@ -12,10 +12,11 @@ import { useQuickSubmitSourcePreparation } from './quick-submit-source-preparati
 import { useQuickSubmitPreparation } from './quick-submit-preparation'
 import { useQuickCreationExecution } from './quick-creation-execution'
 import { useQuickSubmitAction } from './quick-submit-action'
+import { resolvePendingSmartGitHubSubmit } from './pending-smart-submit-resolution'
 
 export function useComposerSubmitOrchestration(
   target: ComposerTargetState,
-  external: ComposerExternalSyncState,
+  _external: ComposerExternalSyncState,
   source: ComposerSourceState
 ): ComposerSubmitState {
   const folderSubmitOrchestration = useFolderSubmitOrchestration({
@@ -36,8 +37,7 @@ export function useComposerSubmitOrchestration(
     note: target.sourceContextState.note,
     onCreated: target.composerTargetStore.onCreated,
     persistDraft: target.composerTargetStore.persistDraft,
-    resolvePendingSmartGitHubSubmit:
-      external.githubSubmitResolution.resolvePendingSmartGitHubSubmit,
+    resolvePendingSmartGitHubSubmit,
     selectedProjectGroup: target.initialTargetState.selectedProjectGroup,
     setCreateError: target.asyncComposerState.setCreateError,
     setCreating: target.asyncComposerState.setCreating,
@@ -119,8 +119,7 @@ export function useComposerSubmitOrchestration(
     isSubmissionCancelled: target.composerTargetStore.isSubmissionCancelled,
     repoId: target.initialTargetState.repoId,
     requiresExplicitSetupChoice: target.derivedComposerState.requiresExplicitSetupChoice,
-    resolvePendingSmartGitHubSubmit:
-      external.githubSubmitResolution.resolvePendingSmartGitHubSubmit,
+    resolvePendingSmartGitHubSubmit,
     selectedRepo: target.runtimeTargetSelection.selectedRepo,
     selectedRepoRequiresConnection: target.runtimeTargetSelection.selectedRepoRequiresConnection,
     setCreateError: target.asyncComposerState.setCreateError,
@@ -230,8 +229,7 @@ export function useComposerSubmitOrchestration(
     parsedLinkedIssueNumber: target.derivedComposerState.parsedLinkedIssueNumber,
     repoId: target.initialTargetState.repoId,
     requiresExplicitSetupChoice: target.derivedComposerState.requiresExplicitSetupChoice,
-    resolvePendingSmartGitHubSubmit:
-      external.githubSubmitResolution.resolvePendingSmartGitHubSubmit,
+    resolvePendingSmartGitHubSubmit,
     selectedRepo: target.runtimeTargetSelection.selectedRepo,
     selectedRepoRequiresConnection: target.runtimeTargetSelection.selectedRepoRequiresConnection,
     selectedWorkspaceTarget: target.runtimeTargetSelection.selectedWorkspaceTarget,

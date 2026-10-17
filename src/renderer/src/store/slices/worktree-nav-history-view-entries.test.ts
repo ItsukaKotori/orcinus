@@ -1,9 +1,7 @@
 import { createStore, type StoreApi } from 'zustand/vanilla'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { AppState } from '../types'
-import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import type { Worktree } from '../../../../shared/worktree/types'
-import type { TaskSourceContext } from '../../../../shared/task-source-context'
 import {
   createWorktreeNavHistorySlice,
   findPrevLiveWorktreeHistoryIndex,
@@ -43,26 +41,9 @@ function createHistoryStore(worktreeIds: string[] = []): StoreApi<MinimalState> 
 }
 
 const viewCases: { entry: WorktreeNavHistorySimpleViewEntry; label: string }[] = [
-  { entry: 'tasks', label: 'Tasks' },
   { entry: 'automations', label: 'Automations' },
   { entry: 'artifacts', label: 'Artifacts' }
 ]
-
-function makeGitHubWorkItem(overrides: Partial<GitHubWorkItem> = {}): GitHubWorkItem {
-  return {
-    id: 'pr-95',
-    type: 'pr',
-    number: 95,
-    title: 'feat: add file upload command',
-    state: 'open',
-    url: 'https://github.com/acme/repo/pull/95',
-    labels: [],
-    updatedAt: '2026-05-20T00:00:00.000Z',
-    author: 'octocat',
-    repoId: 'repo-1',
-    ...overrides
-  }
-}
 
 describe('worktree-nav-history slice: view entries', () => {
   afterEach(() => {
@@ -147,68 +128,4 @@ describe('worktree-nav-history slice: view entries', () => {
       expect(store.getState().worktreeNavHistoryIndex).toBe(1)
     })
   }
-
-  it('replays task detail entries through the same back/forward stack', () => {
-    const store = createHistoryStore(['a'])
-    const detail = {
-      kind: 'task-detail',
-      source: 'github',
-      workItem: makeGitHubWorkItem(),
-      initialTab: 'checks'
-    } as const
-    const viewed: unknown[] = []
-    setWorktreeNavViewActivator((v) => {
-      viewed.push(v)
-    })
-
-    store.getState().recordWorktreeVisit('a')
-    store.getState().recordViewVisit('tasks')
-    store.getState().recordViewVisit(detail)
-
-    expect(store.getState().worktreeNavHistory).toEqual(['a', 'tasks', detail])
-    expect(store.getState().worktreeNavHistoryIndex).toBe(2)
-
-    store.getState().goBackWorktree()
-    expect(viewed).toEqual(['tasks'])
-    expect(store.getState().worktreeNavHistoryIndex).toBe(1)
-
-    store.getState().goForwardWorktree()
-    expect(viewed).toEqual(['tasks', detail])
-    expect(store.getState().worktreeNavHistoryIndex).toBe(2)
-  })
-
-  it('keeps same GitHub item details separate when the source host differs', () => {
-    const store = createHistoryStore(['a'])
-    const workItem = makeGitHubWorkItem()
-    const localSource: TaskSourceContext = {
-      kind: 'task-source',
-      provider: 'github',
-      projectId: 'project-1',
-      hostId: 'local',
-      repoId: 'repo-1',
-      providerIdentity: { provider: 'github', owner: 'acme', repo: 'repo' }
-    }
-    const sshSource: TaskSourceContext = {
-      ...localSource,
-      hostId: 'ssh:devbox',
-      projectHostSetupId: 'setup-ssh'
-    }
-
-    store.getState().recordViewVisit({
-      kind: 'task-detail',
-      source: 'github',
-      workItem,
-      sourceContext: localSource
-    })
-    store.getState().recordViewVisit({
-      kind: 'task-detail',
-      source: 'github',
-      workItem,
-      sourceContext: sshSource
-    })
-
-    expect(store.getState().worktreeNavHistory).toHaveLength(2)
-    expect(store.getState().worktreeNavHistoryIndex).toBe(1)
-  })
-
 })

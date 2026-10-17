@@ -13,13 +13,6 @@ const items: ActivityBarItem[] = [
     folderOnly: true
   },
   {
-    id: 'pr-checks',
-    icon: Files,
-    title: 'PR Checks',
-    shortcut: '',
-    folderOnly: true
-  },
-  {
     id: 'source-control',
     icon: Files,
     title: 'Source Control',
@@ -62,13 +55,7 @@ describe('getVisibleRightSidebarActivityItems', () => {
         isFolderWorkspace: true,
         isSshRepo: true
       }).map((item) => item.id)
-    ).toEqual([
-      'explorer',
-      'workspaces',
-      'pr-checks',
-      'vault',
-      'plugin:orca-samples.my-plugin/dashboard'
-    ])
+    ).toEqual(['explorer', 'workspaces', 'vault', 'plugin:orca-samples.my-plugin/dashboard'])
 
     expect(
       getVisibleRightSidebarActivityItems(items, {

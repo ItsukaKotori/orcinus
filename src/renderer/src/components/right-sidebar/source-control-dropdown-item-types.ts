@@ -6,7 +6,6 @@ import type { GitConflictOperation } from '../../../../shared/git-status-types'
 
 export type DropdownActionInputs = PrimaryActionInputs & {
   conflictOperation?: GitConflictOperation
-  isPullRequestOperationActive?: boolean
   rebaseBaseRef?: string | null
 }
 
@@ -16,8 +15,6 @@ export type DropdownActionKind =
   | 'commit_sync'
   | 'abort_merge'
   | 'abort_rebase'
-  | 'create_pr'
-  | 'push_create_pr'
   | 'push'
   | 'force_push'
   | 'pull'

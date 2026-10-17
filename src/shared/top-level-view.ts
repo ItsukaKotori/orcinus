@@ -5,7 +5,6 @@ import type { StaticTopLevelView, TopLevelView } from './ui-chrome-types'
 const TOP_LEVEL_VIEW_LOOKUP: Record<StaticTopLevelView, true> = {
   terminal: true,
   settings: true,
-  tasks: true,
   automations: true,
   space: true,
   artifacts: true,

@@ -23,7 +23,6 @@ import type {
   Worktree
 } from '../../../../shared/worktree/types'
 import type { WorktreeRemovalTarget } from '../../../../shared/worktree/removal'
-import type { TerminalGitHubPRLink } from '../../../../shared/terminal-github-pr-link-detector'
 import type { ExecutionHostId } from '../../../../shared/execution-host'
 import type { TerminalPaneRecoveryOutcome } from '../../../../shared/terminal-tab-types'
 import type {
@@ -73,8 +72,6 @@ export type WorktreeMetaUpdateOptions = {
   /** Required to mutate one row when the legacy locator exists on multiple hosts. */
   executionHostId?: ExecutionHostId
   shouldApply?: WorktreeMetaUpdateGuard
-  /** Skip the automatic review refetch when the caller owns an equivalent refresh. */
-  suppressHostedReviewRefresh?: boolean
 }
 export type WorktreeMetaBatchUpdate = {
   worktreeId: string
@@ -263,7 +260,6 @@ export type WorktreeSlice = {
     updates: Partial<WorktreeMeta>,
     options?: WorktreeMetaUpdateOptions
   ) => Promise<{ ok: true } | { ok: false; error: string }>
-  ensureHostedReviewPushTarget: (worktreeId: string) => Promise<void>
   updateWorktreesMeta: (updatesByWorktreeId: readonly WorktreeMetaBatchUpdate[]) => Promise<void>
   /**
    * Pin/unpin worktrees, then reveal the first changed one. The reveal keeps
@@ -272,7 +268,6 @@ export type WorktreeSlice = {
    */
   setWorktreesPinnedAndReveal: (worktreeIds: readonly string[], isPinned: boolean) => void
   markWorktreeUnread: (worktreeId: string) => void
-  observeTerminalGitHubPullRequestLink: (worktreeId: string, link: TerminalGitHubPRLink) => void
   /** Clear the worktree's unread dot. Called on user interaction with any
    *  terminal pane inside the worktree (keystroke, click) — matches
    *  ghostty's "show until interact" model. Persists isUnread=false. */

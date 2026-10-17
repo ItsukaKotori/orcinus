@@ -1,10 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getDefaultSettings } from '../../../../shared/constants'
-import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import type { Worktree } from '../../../../shared/worktree/types'
 import type { FeatureInteractionState } from '../../../../shared/feature-interactions'
-import type { TaskSourceContext } from '../../../../shared/task-source-context'
-import type { AppState } from '../types'
 import { createUIStore, makePersistedUI } from './ui-slice-test-harness'
 
 const mocks = vi.hoisted(() => ({
@@ -53,22 +50,6 @@ function makeWorktree(id: string): Worktree {
   return { id } as unknown as Worktree
 }
 
-function makeGitHubWorkItem(overrides: Partial<GitHubWorkItem> = {}): GitHubWorkItem {
-  return {
-    id: 'pr-95',
-    type: 'pr',
-    number: 95,
-    title: 'feat: add file upload command',
-    state: 'open',
-    url: 'https://github.com/acme/repo/pull/95',
-    labels: [],
-    updatedAt: '2026-05-20T00:00:00.000Z',
-    author: 'octocat',
-    repoId: 'repo-1',
-    ...overrides
-  }
-}
-
 describe('createUISlice settings navigation', () => {
   it('accepts a host-qualified settings target', () => {
     const store = createUIStore()
@@ -92,83 +73,6 @@ describe('createUISlice settings navigation', () => {
     expect(store.getState().settingsNavigationTarget).toBeNull()
   })
 
-  it('prefetches direct GitHub task opens with their source context', () => {
-    const store = createUIStore()
-    const prefetchWorkItems = vi.fn()
-    const workItem = makeGitHubWorkItem()
-    const sourceContext: TaskSourceContext = {
-      kind: 'task-source',
-      provider: 'github',
-      projectId: 'project-1',
-      hostId: 'ssh:devbox',
-      projectHostSetupId: 'setup-1',
-      repoId: 'repo-1',
-      providerIdentity: { provider: 'github', owner: 'acme', repo: 'repo' }
-    }
-
-    store.setState({
-      repos: [
-        {
-          id: 'repo-1',
-          path: '/repo',
-          displayName: 'Repo',
-          badgeColor: 'blue',
-          addedAt: 1,
-          kind: 'git'
-        }
-      ],
-      settings: {
-        visibleTaskProviders: ['github'],
-        defaultTaskSource: 'github',
-        defaultTaskViewPreset: 'all'
-      } as unknown as AppState['settings'],
-      prefetchWorkItems
-    } as unknown as Partial<AppState>)
-
-    store.getState().openTaskPage({
-      taskSource: 'github',
-      preselectedRepoId: 'repo-1',
-      openGitHubWorkItem: workItem,
-      openGitHubSourceContext: sourceContext
-    })
-
-    expect(prefetchWorkItems).toHaveBeenCalledWith(
-      'repo-1',
-      '/repo',
-      expect.any(Number),
-      'is:issue is:open',
-      { sourceContext }
-    )
-  })
-
-  it('returns to the tasks page after visiting settings from an in-progress draft', () => {
-    const store = createUIStore()
-
-    store.getState().openTaskPage({ preselectedRepoId: 'repo-1' })
-    store.getState().openSettingsPage()
-
-    expect(store.getState().activeView).toBe('settings')
-    expect(store.getState().previousViewBeforeSettings).toBe('tasks')
-
-    store.getState().closeSettingsPage()
-
-    expect(store.getState().activeView).toBe('tasks')
-  })
-
-  it('keeps the original return target when settings is reopened while already visible', () => {
-    const store = createUIStore()
-
-    store.getState().openTaskPage()
-    store.getState().openSettingsPage()
-    store.getState().openSettingsPage()
-
-    expect(store.getState().previousViewBeforeSettings).toBe('tasks')
-
-    store.getState().closeSettingsPage()
-
-    expect(store.getState().activeView).toBe('tasks')
-  })
-
   it('clears transient settings search when opening settings', () => {
     const store = createUIStore()
 
@@ -182,130 +86,6 @@ describe('createUISlice settings navigation', () => {
 })
 
 describe('createUISlice page navigation history', () => {
-  it('records and rewinds Tasks visits on close', () => {
-    const store = createUIStore()
-    store.setState({ worktreesByRepo: { 'repo-1': [makeWorktree('a')] } })
-
-    store.getState().recordWorktreeVisit('a')
-    store.getState().openTaskPage()
-    expect(store.getState().worktreeNavHistory).toEqual(['a', 'tasks'])
-    expect(store.getState().worktreeNavHistoryIndex).toBe(1)
-
-    store.getState().closeTaskPage()
-    expect(store.getState().activeView).toBe('terminal')
-    expect(store.getState().worktreeNavHistoryIndex).toBe(0)
-  })
-
-  it('rewinds Tasks detail visits on close', () => {
-    const store = createUIStore()
-    const workItem = makeGitHubWorkItem()
-    store.setState({ worktreesByRepo: { 'repo-1': [makeWorktree('a')] } })
-
-    store.getState().recordWorktreeVisit('a')
-    store.getState().openTaskPage({ taskSource: 'github', openGitHubWorkItem: workItem })
-    expect(store.getState().worktreeNavHistory).toEqual([
-      'a',
-      'tasks',
-      {
-        kind: 'task-detail',
-        source: 'github',
-        workItem,
-        sourceContext: undefined,
-        initialTab: undefined
-      }
-    ])
-    expect(store.getState().worktreeNavHistoryIndex).toBe(2)
-
-    store.getState().closeTaskPage()
-    expect(store.getState().activeView).toBe('terminal')
-    expect(store.getState().taskPageData).toEqual({})
-    expect(store.getState().githubTaskDrawerWorkItem).toBeNull()
-    expect(store.getState().worktreeNavHistoryIndex).toBe(0)
-  })
-
-  it('records provider-depth interactions for direct Tasks detail opens', () => {
-    const store = createUIStore()
-    const recordFeatureInteraction = vi.fn()
-    store.setState({ recordFeatureInteraction } as Partial<AppState>)
-    const workItem = makeGitHubWorkItem()
-
-    store.getState().openTaskPage({ taskSource: 'github', openGitHubWorkItem: workItem })
-
-    expect(recordFeatureInteraction).toHaveBeenCalledWith('tasks')
-    expect(recordFeatureInteraction).toHaveBeenCalledWith('github-tasks')
-  })
-
-  it('preserves GitHub task detail source context in navigation history', () => {
-    const store = createUIStore()
-    const workItem = makeGitHubWorkItem({ repoId: 'repo-remote' })
-    const sourceContext: TaskSourceContext = {
-      kind: 'task-source',
-      provider: 'github',
-      projectId: 'project-1',
-      hostId: 'ssh:devbox',
-      projectHostSetupId: 'setup-1',
-      repoId: 'repo-remote',
-      providerIdentity: { provider: 'github', owner: 'stablyai', repo: 'orca' }
-    }
-
-    store.getState().openTaskPage({
-      taskSource: 'github',
-      openGitHubWorkItem: workItem,
-      openGitHubSourceContext: sourceContext
-    })
-
-    expect(store.getState().worktreeNavHistory.at(-1)).toEqual({
-      kind: 'task-detail',
-      source: 'github',
-      workItem,
-      sourceContext,
-      initialTab: undefined
-    })
-  })
-
-  it('can suppress the Tasks surface interaction for in-page provider navigation', () => {
-    const store = createUIStore()
-    const recordFeatureInteraction = vi.fn()
-    store.setState({ recordFeatureInteraction } as Partial<AppState>)
-    const workItem = makeGitHubWorkItem()
-
-    store
-      .getState()
-      .openTaskPage(
-        { taskSource: 'github', openGitHubWorkItem: workItem },
-        { recordTasksInteraction: false }
-      )
-
-    expect(recordFeatureInteraction).not.toHaveBeenCalledWith('tasks')
-    expect(recordFeatureInteraction).toHaveBeenCalledWith('github-tasks')
-  })
-
-  it('skips the whole Tasks detail stack on close', () => {
-    const store = createUIStore()
-    const workItem = makeGitHubWorkItem()
-    store.setState({ worktreesByRepo: { 'repo-1': [makeWorktree('a')] } })
-
-    store.getState().recordWorktreeVisit('a')
-    store.getState().openTaskPage({ taskSource: 'github', openGitHubWorkItem: workItem })
-    store.getState().openTaskPage({ taskSource: 'github' })
-    expect(store.getState().worktreeNavHistory).toEqual([
-      'a',
-      'tasks',
-      {
-        kind: 'task-detail',
-        source: 'github',
-        workItem,
-        sourceContext: undefined,
-        initialTab: undefined
-      },
-      'tasks'
-    ])
-
-    store.getState().closeTaskPage()
-    expect(store.getState().activeView).toBe('terminal')
-    expect(store.getState().worktreeNavHistoryIndex).toBe(0)
-  })
-
   it('records and rewinds Automations visits on close', () => {
     const store = createUIStore()
     store.setState({ worktreesByRepo: { 'repo-1': [makeWorktree('a')] } })
@@ -392,46 +172,46 @@ describe('createUISlice space navigation', () => {
     }
   })
 
-  it('returns to the tasks page after opening Space from an in-progress draft', () => {
+  it('returns to the originating view after opening Space', () => {
     const store = createUIStore()
 
-    store.getState().openTaskPage({ preselectedRepoId: 'repo-1' })
+    store.getState().setActiveView('plugin-center')
     store.getState().openSpacePage()
 
     expect(store.getState().activeView).toBe('space')
-    expect(store.getState().previousViewBeforeSpace).toBe('tasks')
+    expect(store.getState().previousViewBeforeSpace).toBe('plugin-center')
 
     store.getState().closeSpacePage()
 
-    expect(store.getState().activeView).toBe('tasks')
+    expect(store.getState().activeView).toBe('plugin-center')
   })
 
   it('keeps the original return target when Space is reopened while already visible', () => {
     const store = createUIStore()
 
-    store.getState().openTaskPage()
+    store.getState().setActiveView('plugin-center')
     store.getState().openSpacePage()
     store.getState().openSpacePage()
 
-    expect(store.getState().previousViewBeforeSpace).toBe('tasks')
+    expect(store.getState().previousViewBeforeSpace).toBe('plugin-center')
 
     store.getState().closeSpacePage()
 
-    expect(store.getState().activeView).toBe('tasks')
+    expect(store.getState().activeView).toBe('plugin-center')
   })
 
   it('returns to the originating view after closing Artifacts', () => {
     const store = createUIStore()
 
-    store.getState().openTaskPage()
+    store.getState().setActiveView('plugin-center')
     store.getState().openArtifactsPage()
 
     expect(store.getState().activeView).toBe('artifacts')
-    expect(store.getState().previousViewBeforeArtifacts).toBe('tasks')
+    expect(store.getState().previousViewBeforeArtifacts).toBe('plugin-center')
 
     store.getState().closeArtifactsPage()
 
-    expect(store.getState().activeView).toBe('tasks')
+    expect(store.getState().activeView).toBe('plugin-center')
   })
 
   it('records and rewinds Artifacts visits on close', () => {

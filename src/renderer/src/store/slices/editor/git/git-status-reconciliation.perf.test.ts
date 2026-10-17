@@ -48,7 +48,7 @@ describe('open conflict status indexing', () => {
         openFile(),
         openFile({ worktreeId: 'folder:other', conflict }),
         openFile({ mode: 'conflict-review', conflict }),
-        openFile({ mode: 'check-details', conflict })
+        openFile({ mode: 'markdown-preview' })
       ]
 
       for (let refresh = 0; refresh < 10; refresh++) {

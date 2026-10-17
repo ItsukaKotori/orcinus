@@ -22,13 +22,13 @@ describe('content-pack manifest contributions', () => {
         languagePacks: [{ locale: 'pt-BR', path: 'locales/pt-BR.json' }],
         commands: [
           {
-            id: 'workspace.openTasks',
-            title: 'Open tasks',
+            id: 'workspace.rename',
+            title: 'Rename workspace',
             context: 'worktree',
-            action: 'view.tasks'
+            action: 'workspace.rename'
           }
         ],
-        keybindings: [{ command: 'workspace.openTasks', key: 'Mod+Alt+T' }],
+        keybindings: [{ command: 'workspace.rename', key: 'Mod+Alt+T' }],
         vmRecipes: [{ path: 'recipes/fly.json' }],
         agents: [{ path: 'agents/custom.json' }]
       })
@@ -84,7 +84,7 @@ describe('content-pack manifest contributions', () => {
     [
       'invalid chord',
       {
-        commands: [{ id: 'open', title: 'Open', action: 'view.tasks' }],
+        commands: [{ id: 'open', title: 'Open', action: 'workspace.rename' }],
         keybindings: [{ command: 'open', key: 'Mod+NotAKey' }]
       },
       'key'
@@ -92,7 +92,7 @@ describe('content-pack manifest contributions', () => {
     [
       'global binding for a worktree command',
       {
-        commands: [{ id: 'open', title: 'Open', context: 'worktree', action: 'view.tasks' }],
+        commands: [{ id: 'open', title: 'Open', context: 'worktree', action: 'workspace.rename' }],
         keybindings: [{ command: 'open', key: 'Mod+K', when: 'global' }]
       },
       'command context'
@@ -101,7 +101,7 @@ describe('content-pack manifest contributions', () => {
       'platform-equivalent duplicate chords',
       {
         commands: [
-          { id: 'first', title: 'First', action: 'view.tasks' },
+          { id: 'first', title: 'First', action: 'workspace.rename' },
           { id: 'second', title: 'Second', action: 'sidebar.left.toggle' }
         ],
         keybindings: [
@@ -134,7 +134,7 @@ describe('content-pack manifest contributions', () => {
           { locale: 'pt-BR', path: 'pt-br.json' },
           { locale: 'pt-br', path: 'other.json' }
         ],
-        commands: [{ id: 'open', title: 'Open', action: 'view.tasks' }],
+        commands: [{ id: 'open', title: 'Open', action: 'workspace.rename' }],
         keybindings: [
           { command: 'open', key: 'Mod+T' },
           { command: 'open', key: 'mod+t' }

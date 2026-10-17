@@ -49,7 +49,6 @@ export function buildRows(
   groupBy: WorktreeGroupBy,
   worktrees: Worktree[],
   repoMap: Map<string, Repo>,
-  prCache: Record<string, unknown> | null,
   collapsedGroups: Set<string>,
   repoOrder?: Map<string, number>,
   workspaceStatuses: readonly WorkspaceStatusDefinition[] = cloneDefaultWorkspaceStatuses(),
@@ -129,10 +128,8 @@ export function buildRows(
     groupBy,
     worktrees: naturalWorktrees,
     repoMap,
-    prCache,
     collapsedGroups,
     workspaceStatuses,
-    settings,
     projectGrouping
   })
   emitPinnedGroup(
@@ -199,8 +196,6 @@ export function buildRows(
     groupBy,
     naturalWorktrees,
     repoMap,
-    prCache,
-    settings,
     workspaceStatuses,
     projectIndex,
     placeholderRepoIds,

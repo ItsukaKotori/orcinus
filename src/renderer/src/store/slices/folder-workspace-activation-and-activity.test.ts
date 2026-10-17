@@ -77,7 +77,6 @@ function seedLocalFolderStore(folderWorkspace: FolderWorkspace) {
   store.setState({
     projectGroups: [{ ...projectGroup, executionHostId: 'local' }],
     folderWorkspaces: [folderWorkspace],
-    refreshGitHubForWorktreeIfStale: vi.fn()
   } as Partial<AppState>)
   return store
 }

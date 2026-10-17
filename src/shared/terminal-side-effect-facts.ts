@@ -6,7 +6,6 @@
  */
 
 import type { ParsedAgentStatusPayload } from './agent-status-types'
-import type { TerminalGitHubPRLink } from './terminal-github-pr-link-detector'
 
 /** Why tagged: stale-clear facts come from main's unthrottled 3s timer, not
  *  observed bytes. Renderer policy clears title/cache state from them but
@@ -23,7 +22,6 @@ export type TerminalSideEffectFact =
   | { kind: 'command-finished'; exitCode: number | null }
   /** Carries the parsed link so the renderer store consumer never re-parses
    *  the URL (parse drift would break the per-PTY dedupe contract). */
-  | { kind: 'pr-link'; link: TerminalGitHubPRLink }
   /** Command Code output scrape (that CLI lacks hooks). Working seeds the
    *  agent-status row immediately; done is a hint the renderer settle-checks
    *  against its live status row before completing the turn. */

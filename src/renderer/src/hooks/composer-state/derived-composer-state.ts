@@ -3,12 +3,6 @@ import type { DerivedComposerStateInput } from './composer-target-input-contract
 import { useMemo } from 'react'
 import { normalizeSparseDirectoryLines, sparseDirectoriesMatch } from '@/lib/sparse-paths'
 import {
-  parseGitHubIssueOrPRNumber,
-  parseGitHubIssueOrPRLink,
-  normalizeGitHubLinkQuery
-} from '@/lib/github-links'
-import { githubRepoIdentityKey } from '../../../../shared/github/repository-identity-key'
-import {
   getSetupConfig,
   getLinkedWorkItemProvider,
   canUseIssueCommandForLinkedItemProvider,
@@ -29,9 +23,6 @@ export function useDerivedComposerState(input: DerivedComposerStateInput) {
     enableIssueAutomation,
     hasLoadedIssueCommand,
     issueCommandTemplate,
-    linkDebouncedQuery,
-    linkDirectItem,
-    linkItems,
     linkedIssue,
     linkedPR,
     linkedWorkItem,
@@ -40,7 +31,6 @@ export function useDerivedComposerState(input: DerivedComposerStateInput) {
     selectedRepo,
     selectedRepoHookContextKey,
     selectedRepoIsGit,
-    selectedRepoSlug,
     setupDecision,
     sparseDirectories,
     sparseEnabled,
@@ -94,28 +84,13 @@ export function useDerivedComposerState(input: DerivedComposerStateInput) {
     return null
   }, [normalizedSparseDirectories, selectedRepo?.connectionId, selectedRepoIsGit, sparseEnabled])
 
-  const parsedLinkedIssueNumber = useMemo(
-    () => (linkedIssue.trim() ? parseGitHubIssueOrPRNumber(linkedIssue) : null),
-    [linkedIssue]
-  )
+  const parsedLinkedIssueNumber = useMemo(() => {
+    const trimmed = linkedIssue.trim()
+    // Why: legacy linked-issue seeds persist the bare number; anything else is not a link.
+    return /^\d+$/.test(trimmed) ? Number(trimmed) : null
+  }, [linkedIssue])
 
-  // Why: a PR URL pasted into the name field (not picked) leaves linkedPR null; recover the number so the worktree still links back to its PR.
-  const effectiveLinkedPR = useMemo<number | null>(() => {
-    if (linkedPR !== null) {
-      return linkedPR
-    }
-    const fromName = parseGitHubIssueOrPRLink(name)
-    if (fromName && fromName.type === 'pr') {
-      // Why: adopt the number only when the URL slug matches the selected repo (and the slug has resolved), else a foreign PR URL mislinks to a same-numbered PR here.
-      if (
-        selectedRepoSlug &&
-        githubRepoIdentityKey(fromName.slug) === githubRepoIdentityKey(selectedRepoSlug)
-      ) {
-        return fromName.number
-      }
-    }
-    return null
-  }, [linkedPR, name, selectedRepoSlug])
+  const effectiveLinkedPR = linkedPR
 
   const currentYamlHooks = checkedHooksContextKey === selectedRepoHookContextKey ? yamlHooks : null
 
@@ -206,46 +181,6 @@ export function useDerivedComposerState(input: DerivedComposerStateInput) {
     })
   }, [issueCommandTemplate, linkedWorkItem, shouldApplyLinkedOnlyTemplate])
 
-  const normalizedLinkQuery = useMemo(
-    () => normalizeGitHubLinkQuery(linkDebouncedQuery),
-    [linkDebouncedQuery]
-  )
-
-  const filteredLinkItems = useMemo(() => {
-    if (normalizedLinkQuery.tooLarge) {
-      return []
-    }
-    if (normalizedLinkQuery.directNumber !== null) {
-      return linkDirectItem ? [linkDirectItem] : []
-    }
-
-    const query = normalizedLinkQuery.query.trim().toLowerCase()
-    if (!query) {
-      return linkItems
-    }
-
-    return linkItems.filter((item) => {
-      const text = [
-        item.type,
-        item.number,
-        item.title,
-        item.author ?? '',
-        item.labels.join(' '),
-        item.branchName ?? '',
-        item.baseRefName ?? ''
-      ]
-        .join(' ')
-        .toLowerCase()
-      return text.includes(query)
-    })
-  }, [
-    linkDirectItem,
-    linkItems,
-    normalizedLinkQuery.directNumber,
-    normalizedLinkQuery.query,
-    normalizedLinkQuery.tooLarge
-  ])
-
   return {
     sparsePresetsForRepo,
     sparsePresets,
@@ -269,8 +204,6 @@ export function useDerivedComposerState(input: DerivedComposerStateInput) {
     fallbackCreatureName,
     workspaceSeedName,
     shouldApplyLinkedOnlyTemplate,
-    linkedOnlyTemplatePrompt,
-    normalizedLinkQuery,
-    filteredLinkItems
+    linkedOnlyTemplatePrompt
   }
 }

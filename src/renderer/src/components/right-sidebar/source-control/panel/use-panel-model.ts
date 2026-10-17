@@ -1,15 +1,11 @@
-import { useCallback } from 'react'
-import { openGitHubPRLinkModal } from '../../github-pr-link-modal'
-import { useGitHistoryCommitActions } from '../sync/use-git-history-commit-actions'
 import { useSourceControlCommitFlows } from '../commit/use-commit-flows'
 import { useSourceControlDiscardConfirmation } from '../commit/use-discard-confirmation'
 import { useSourceControlEntryMutations } from '../commit/use-entry-mutations'
 import { useSourceControlNoteOpening } from '../notes/use-note-opening'
-import { useSourceControlActionDispatch } from '../review/use-action-dispatch'
-import { useSourceControlActionModel } from '../review/use-action-model'
-import { useSourceControlCreatePrIntentFlows } from '../review/use-create-pr-intent-flows'
-import { useSourceControlReviewFlows } from '../review/use-review-flows'
+import { useGitHistoryCommitActions } from '../sync/use-git-history-commit-actions'
 import { useSourceControlUpstreamStatusFetch } from '../sync/use-upstream-status-fetch'
+import { useSourceControlActionDispatch } from './use-action-dispatch'
+import { useSourceControlActionModel } from './use-action-model'
 import { useSourceControlPanelFoundation } from './use-panel-foundation'
 
 /**
@@ -19,12 +15,6 @@ import { useSourceControlPanelFoundation } from './use-panel-foundation'
 export function useSourceControlPanelModel() {
   const foundation = useSourceControlPanelFoundation()
   const commitFlows = useSourceControlCommitFlows(foundation)
-  const reviewFlows = useSourceControlReviewFlows(foundation)
-  const createPrIntentFlows = useSourceControlCreatePrIntentFlows(
-    foundation,
-    commitFlows,
-    reviewFlows
-  )
   const {
     activeRepoSettings,
     activeWorktree,
@@ -32,7 +22,6 @@ export function useSourceControlPanelModel() {
     branchEntries,
     branchName,
     branchSummary,
-    canUseHostedReviewPushTarget,
     clearSelection,
     commitMessage,
     conflictOperation,
@@ -42,42 +31,24 @@ export function useSourceControlPanelModel() {
     grouped,
     handleOpenDiff,
     handleStageAllPrimary,
-    hostedReview,
-    hostedReviewCreateCopy,
-    hostedReviewCreation,
-    hostedReviewCreationForHeader,
-    hostedReviewStateForActions,
     inFlightRemoteOpKind,
     isAbortingOperation,
     isBranchVisible,
     isCommitting,
-    isCreatePrIntentInFlight,
-    isCreatingPr,
     isExecutingBulk,
     isFolder,
-    isHostedReviewCreationLoading,
-    isHostedReviewStateLoading,
     isRemoteOperationActive,
-    openModal,
     openCommittedDiff,
     refreshActiveGitStatusAfterMutation,
     remoteStatus,
-    remoteStatusForActions,
     resolveSplitTargetGroupId,
     setIsExecutingBulk,
     sourceControlRef,
-    suppressedGitHubPRState,
     unresolvedConflicts,
     worktreePath
   } = foundation
-  const {
-    handleAbortMerge,
-    handleAbortRebase,
-    handleCommit,
-    runCompoundCommitAction,
-    runRemoteAction
-  } = commitFlows
-  const { handleCreatePullRequest, prGenerating } = reviewFlows
+  const { handleAbortMerge, handleAbortRebase, handleCommit, runCompoundCommitAction, runRemoteAction } =
+    commitFlows
 
   const actionModel = useSourceControlActionModel({
     grouped,
@@ -86,52 +57,21 @@ export function useSourceControlPanelModel() {
     isCommitting,
     isRemoteOperationActive,
     isAbortingOperation,
-    remoteStatusForActions,
-    hostedReviewStateForActions,
-    isHostedReviewStateLoading,
+    remoteStatus,
     inFlightRemoteOpKind,
-    hostedReviewCreation,
     branchSummary,
     branchName,
-    canUseHostedReviewPushTarget,
-    isCreatePrIntentInFlight,
-    remoteStatus,
-    hostedReviewState: hostedReview?.state ?? null,
-    hostedReviewCreationForHeader,
-    isHostedReviewCreationLoading,
-    prGenerating,
-    isCreatingPr,
-    hostedReviewReviewLabel: hostedReviewCreateCopy.reviewLabel,
-    hasSuppressedGitHubPRState: suppressedGitHubPRState !== null,
     conflictOperation,
     effectiveBaseRef
   })
-  const handleRelinkSuppressedGitHubPR = useCallback(() => {
-    if (!activeWorktree || !activeWorktreeId || suppressedGitHubPRState?.status !== 'matched') {
-      return
-    }
-    openGitHubPRLinkModal({
-      openModal,
-      worktree: activeWorktree,
-      worktreeId: activeWorktreeId,
-      currentPR: suppressedGitHubPRState.number
-    })
-  }, [activeWorktree, activeWorktreeId, openModal, suppressedGitHubPRState])
   const actionDispatch = useSourceControlActionDispatch({
-    createPrHeaderAction: actionModel.createPrHeaderAction,
     handleAbortMerge,
     handleAbortRebase,
     handleCommit,
-    handleCreatePullRequest,
     handleStageAllPrimary,
-    isCreatePrIntentInFlight,
-    isCreatingPr,
     primaryAction: actionModel.primaryAction,
-    prGenerating,
     remoteStatus,
-    remoteStatusForActions,
     runCompoundCommitAction,
-    runCreatePrIntent: createPrIntentFlows.runCreatePrIntent,
     runRemoteAction
   })
   useSourceControlUpstreamStatusFetch({
@@ -181,15 +121,12 @@ export function useSourceControlPanelModel() {
   return {
     ...foundation,
     ...commitFlows,
-    ...reviewFlows,
-    ...createPrIntentFlows,
     ...actionModel,
     ...actionDispatch,
     ...gitHistoryCommitActions,
     ...noteOpening,
     ...entryMutations,
-    ...discardConfirmation,
-    handleRelinkSuppressedGitHubPR
+    ...discardConfirmation
   }
 }
 

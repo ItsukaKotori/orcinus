@@ -65,7 +65,6 @@ export function useAppStartupHydration(onOnboardingLoaded: (state: OnboardingSta
 
   useEffect(() => installCodexDetachedPaneRestartExecutor(), [])
 
-  // Fetch initial data + hydrate GitHub cache from disk
   useEffect(() => {
     // Why first and ungated: the local capability set is a static fact the main process can answer
     // immediately, but its only other writer is the structured-session-tabs sync, which waits for
@@ -332,7 +331,6 @@ export function useAppStartupHydration(onOnboardingLoaded: (state: OnboardingSta
           abortSignal: abortController.signal
         })
       }
-      void actions.initGitHubCache()
     })()
 
     return () => {

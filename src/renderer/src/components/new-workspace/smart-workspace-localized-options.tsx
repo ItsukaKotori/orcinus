@@ -1,5 +1,5 @@
 import type React from 'react'
-import { CaseSensitive, GitBranch, Github, Sparkles } from 'lucide-react'
+import { CaseSensitive, GitBranch, Sparkles } from 'lucide-react'
 
 import { translate } from '@/i18n/i18n'
 import type { SmartNameMode } from './smart-workspace-source-results'
@@ -16,14 +16,6 @@ export function getSmartWorkspaceNameModes(): SmartWorkspaceNameModeOption[] {
       id: 'smart',
       label: translate('auto.components.new.workspace.SmartWorkspaceNameField.b3c60c2b7c', 'Smart'),
       Icon: Sparkles
-    },
-    {
-      id: 'github',
-      label: translate(
-        'auto.components.new.workspace.SmartWorkspaceNameField.0a180280bd',
-        'GitHub'
-      ),
-      Icon: Github
     },
     {
       id: 'branches',

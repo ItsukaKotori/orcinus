@@ -7,8 +7,6 @@ import { getWorktreeStatusLabel, type WorktreeStatus } from '@/lib/worktree-stat
 import { FilledBellIcon } from './WorktreeCardHelpers'
 import StatusIndicator from './StatusIndicator'
 import { useWorktreeActivityStatus } from './use-worktree-activity-status'
-import type { WorktreeCardPrDisplay } from './worktree-card-pr-display'
-import { getReviewLabel, ReviewIcon } from './worktree-review-helpers'
 
 type WorktreeCardStatusSlotProps = {
   worktreeId: string
@@ -18,23 +16,22 @@ type WorktreeCardStatusSlotProps = {
   unreadTooltip: string
   onToggleUnread: React.MouseEventHandler<HTMLButtonElement>
   onPointerDown: React.PointerEventHandler<HTMLButtonElement>
-  prDisplay?: WorktreeCardPrDisplay | null
   newCardStyle?: boolean
   hasBranchIdentity?: boolean
   branchIdentityLabel?: string
   className?: string
 }
 
-const QUIET_REVIEW_REPLACEABLE_STATUSES = new Set<WorktreeStatus>(['active', 'done', 'inactive'])
-// Why: a missing review display can also mean provider state is unavailable,
-// so the passive label names the identity cue without claiming no review exists.
+const QUIET_BRANCH_REPLACEABLE_STATUSES = new Set<WorktreeStatus>(['active', 'done', 'inactive'])
+// Why: a missing branch identity can also mean the card is mid-load,
+// so the passive label names the identity cue without claiming anything else.
 function getDefaultBranchIdentityLabel(): string {
   return translate('auto.components.sidebar.WorktreeCardStatusSlot.branchIdentity', 'Branch')
 }
 // Why: branch-style SVGs are optically left-heavy; this keeps them aligned with
 // the centered activity dots in the shared status column.
-const compactReviewAndBranchStatusIconClassName = 'size-[13px] translate-x-px'
-const branchStatusIconClassName = `${compactReviewAndBranchStatusIconClassName} text-muted-foreground/70`
+const compactBranchStatusIconClassName = 'size-[13px] translate-x-px'
+const branchStatusIconClassName = `${compactBranchStatusIconClassName} text-muted-foreground/70`
 // Why: a left-edge badge overlays unread on the status glyph without widening
 // the lane or indenting the title; ring-sidebar cuts the dot out from busy icons.
 const newCardUnreadAlertClassName =
@@ -63,29 +60,6 @@ function overlayNewCardUnreadStatus(
   )
 }
 
-function getReviewStatusLabel(review: WorktreeCardPrDisplay): string {
-  const label = getReviewLabel(review)
-  if (review.state === 'merged') {
-    return `${label}: Merged`
-  }
-  if (review.state === 'closed') {
-    return `${label}: Closed`
-  }
-  if (review.state === 'draft') {
-    return `${label}: Draft`
-  }
-  if (review.status === 'failure') {
-    return `${label} checks: Failed`
-  }
-  if (review.status === 'pending') {
-    return `${label} checks: Pending`
-  }
-  if (review.status === 'success') {
-    return `${label} checks: Passing`
-  }
-  return `${label}: Open`
-}
-
 export function WorktreeCardStatusSlot({
   worktreeId,
   showStatus,
@@ -94,7 +68,6 @@ export function WorktreeCardStatusSlot({
   unreadTooltip,
   onToggleUnread,
   onPointerDown,
-  prDisplay = null,
   newCardStyle = false,
   hasBranchIdentity = false,
   branchIdentityLabel,
@@ -102,60 +75,44 @@ export function WorktreeCardStatusSlot({
 }: WorktreeCardStatusSlotProps): React.JSX.Element | null {
   const status = useWorktreeActivityStatus(worktreeId)
   const statusLabel = getWorktreeStatusLabel(status) || status
-  const canShowReviewStatus =
-    newCardStyle &&
-    showStatus &&
-    prDisplay !== null &&
-    QUIET_REVIEW_REPLACEABLE_STATUSES.has(status)
   const canShowBranchStatus =
     newCardStyle &&
     showStatus &&
     hasBranchIdentity &&
-    prDisplay === null &&
-    QUIET_REVIEW_REPLACEABLE_STATUSES.has(status)
-  const passiveStatusLabel =
-    canShowReviewStatus && prDisplay
-      ? getReviewStatusLabel(prDisplay)
-      : canShowBranchStatus
-        ? (branchIdentityLabel ?? getDefaultBranchIdentityLabel())
-        : statusLabel
+    QUIET_BRANCH_REPLACEABLE_STATUSES.has(status)
+  const passiveStatusLabel = canShowBranchStatus
+    ? (branchIdentityLabel ?? getDefaultBranchIdentityLabel())
+    : statusLabel
   const passiveStatusAnnouncement =
     newCardStyle && isUnread ? `${passiveStatusLabel} · Unread` : passiveStatusLabel
   // Why: working and permission already own the new-card status lane, but
   // unread state should still surface to assistive technology and reappear afterward.
   const showNewCardUnreadAlert =
     newCardStyle && isUnread && showStatus && status !== 'working' && status !== 'permission'
-  const reviewStatusIconClassName = compactReviewAndBranchStatusIconClassName
   const branchStatusIcon = <GitBranch className={branchStatusIconClassName} aria-hidden="true" />
-  const passiveStatus =
-    canShowReviewStatus && prDisplay ? (
-      <span className={cn('inline-flex size-5 items-center justify-center p-0.5', className)}>
-        <ReviewIcon review={prDisplay} className={reviewStatusIconClassName} />
-        <span className="sr-only">{passiveStatusAnnouncement}</span>
+  const passiveStatus = canShowBranchStatus ? (
+    <span className={cn('inline-flex size-5 items-center justify-center p-0.5', className)}>
+      {branchStatusIcon}
+      <span className="sr-only">{passiveStatusAnnouncement}</span>
+    </span>
+  ) : newCardStyle && showStatus ? (
+    <>
+      <span className={cn('inline-flex size-5 items-center justify-center', className)}>
+        <StatusIndicator status={status} aria-hidden="true" tooltipSide="right" />
       </span>
-    ) : canShowBranchStatus ? (
-      <span className={cn('inline-flex size-5 items-center justify-center p-0.5', className)}>
-        {branchStatusIcon}
-        <span className="sr-only">{passiveStatusAnnouncement}</span>
-      </span>
-    ) : newCardStyle && showStatus ? (
-      <>
-        <span className={cn('inline-flex size-5 items-center justify-center', className)}>
-          <StatusIndicator status={status} aria-hidden="true" tooltipSide="right" />
-        </span>
-        <span className="sr-only">{passiveStatusAnnouncement}</span>
-      </>
-    ) : (
-      <>
-        <StatusIndicator
-          status={status}
-          aria-hidden="true"
-          className={className}
-          tooltipSide="right"
-        />
-        <span className="sr-only">{statusLabel}</span>
-      </>
-    )
+      <span className="sr-only">{passiveStatusAnnouncement}</span>
+    </>
+  ) : (
+    <>
+      <StatusIndicator
+        status={status}
+        aria-hidden="true"
+        className={className}
+        tooltipSide="right"
+      />
+      <span className="sr-only">{statusLabel}</span>
+    </>
+  )
 
   const unreadActionEnabled = showUnreadAction && !newCardStyle
 
@@ -190,11 +147,7 @@ export function WorktreeCardStatusSlot({
             aria-label={actionLabel}
           >
             {newCardStyle ? (
-              showStatus && canShowReviewStatus && prDisplay ? (
-                <span className="inline-flex size-5 items-center justify-center p-0.5">
-                  <ReviewIcon review={prDisplay} className={reviewStatusIconClassName} />
-                </span>
-              ) : showStatus && canShowBranchStatus ? (
+              showStatus && canShowBranchStatus ? (
                 <span className="inline-flex size-5 items-center justify-center p-0.5">
                   {branchStatusIcon}
                 </span>

@@ -1,8 +1,6 @@
-import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import type { OrcaHooks, SetupRunPolicy } from '../../../../shared/orca-yaml-hook-types'
 import type { SparsePreset } from '../../../../shared/worktree/create-types'
 import type { RetiredNameRegistry } from '../../../../shared/worktree/retired-name-registry'
-import type { GitHubLinkQuery } from '@/lib/github-links'
 import type { SetupConfig } from '@/lib/new-workspace'
 
 export type ComposerDerivedModel = {
@@ -29,6 +27,4 @@ export type ComposerDerivedModel = {
   workspaceSeedName: string
   shouldApplyLinkedOnlyTemplate: boolean
   linkedOnlyTemplatePrompt: string
-  normalizedLinkQuery: GitHubLinkQuery
-  filteredLinkItems: GitHubWorkItem[]
 }

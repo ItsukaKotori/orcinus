@@ -344,8 +344,7 @@ describe('createSettingsSlice runtime switching', () => {
       markdownFrontmatterVisible: { '/env-1/repo/stale.md': false },
       editorCursorLine: { '/env-1/repo/stale.md': 4 },
       showDotfilesByWorktree: { 'repo-env-1::/env-1/repo': false },
-      gitIgnoredPathsByWorktree: { 'repo-env-1::/env-1/repo': ['dist/'] },
-      prCache: { '/env-1/repo::main': { data: null, fetchedAt: Date.now() } }
+      gitIgnoredPathsByWorktree: { 'repo-env-1::/env-1/repo': ['dist/'] }
     })
 
     await expect(store.getState().setActiveRuntimeEnvironmentPreference('env-2')).resolves.toBe(
@@ -408,9 +407,6 @@ describe('createSettingsSlice runtime switching', () => {
       'repo-env-1::/env-1/repo': ['dist/']
     })
     expect(store.getState().ptyIdsByTabId).toEqual({ tab1: ['remote:env-1@@terminal-a'] })
-    expect(store.getState().prCache).toEqual({
-      '/env-1/repo::main': expect.objectContaining({ data: null })
-    })
   })
 
   it('does not close host-owned mirrored resources when a paired web client switches servers', async () => {

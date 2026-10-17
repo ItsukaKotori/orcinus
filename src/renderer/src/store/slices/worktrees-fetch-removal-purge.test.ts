@@ -6,7 +6,6 @@ import {
   hasDismissedHugeRepoWarning,
   markHugeRepoWarningDismissed
 } from '@/lib/source-control-huge-repo-warning-dismissals'
-import { getHostedReviewLinkMutationGenerationForTests } from './worktrees'
 import { makeDetectedResult, qualifyDetectedResult } from './worktrees-detected-listing-fixtures'
 import { makeWorktree } from './worktrees-slice-test-fixtures'
 import {
@@ -60,7 +59,7 @@ describe('fetchWorktrees', () => {
       sortEpoch: 7,
       rightSidebarTabByWorktree: {
         [removed.id]: 'search' as never,
-        [surviving.id]: 'checks'
+        [surviving.id]: 'source-control'
       },
       rightSidebarExplorerViewByWorktree: {
         [removed.id]: 'search',
@@ -71,7 +70,7 @@ describe('fetchWorktrees', () => {
     await store.getState().fetchWorktrees('repo1')
 
     expect(store.getState().worktreesByRepo.repo1).toEqual([surviving])
-    expect(store.getState().rightSidebarTabByWorktree).toEqual({ [surviving.id]: 'checks' })
+    expect(store.getState().rightSidebarTabByWorktree).toEqual({ [surviving.id]: 'source-control' })
     expect(store.getState().rightSidebarExplorerViewByWorktree).toEqual({
       [surviving.id]: 'files'
     })
@@ -97,7 +96,7 @@ describe('fetchWorktrees', () => {
       sortEpoch: 7,
       rightSidebarTabByWorktree: {
         [removed.id]: 'search' as never,
-        [surviving.id]: 'pr-checks' as never
+        [surviving.id]: 'source-control' as never
       },
       rightSidebarExplorerViewByWorktree: {
         [removed.id]: 'search',
@@ -107,8 +106,10 @@ describe('fetchWorktrees', () => {
 
     await store.getState().fetchWorktrees('repo1')
 
-    // pr-checks is not dropped like unknown values; it survives the purge.
-    expect(store.getState().rightSidebarTabByWorktree).toEqual({ [surviving.id]: 'pr-checks' })
+    // A valid tab is not dropped like unknown values; it survives the purge.
+    expect(store.getState().rightSidebarTabByWorktree).toEqual({
+      [surviving.id]: 'source-control'
+    })
 
     // A shape-valid plugin panel tab also survives the purge.
     store.setState({
@@ -140,13 +141,9 @@ describe('fetchWorktrees', () => {
     await store.getState().updateWorktreeMeta(removed.id, { linkedBitbucketPR: 101 })
     await store.getState().updateWorktreeMeta(surviving.id, { linkedAzureDevOpsPR: 202 })
 
-    expect(getHostedReviewLinkMutationGenerationForTests(removed.id)).toBeGreaterThan(0)
-    expect(getHostedReviewLinkMutationGenerationForTests(surviving.id)).toBeGreaterThan(0)
 
     await store.getState().fetchWorktrees('repo1')
 
-    expect(getHostedReviewLinkMutationGenerationForTests(removed.id)).toBe(0)
-    expect(getHostedReviewLinkMutationGenerationForTests(surviving.id)).toBeGreaterThan(0)
   })
 
   it('retains hidden state until an authoritative refresh removes the worktree', async () => {
@@ -176,7 +173,7 @@ describe('fetchWorktrees', () => {
       detectedWorktreesByRepo: { repo1: previousDetected },
       sortEpoch: 7,
       rightSidebarTabByWorktree: {
-        [visible.id]: 'checks',
+        [visible.id]: 'source-control',
         [hidden.id]: 'search' as never
       },
       rightSidebarExplorerViewByWorktree: {
@@ -196,7 +193,7 @@ describe('fetchWorktrees', () => {
     await store.getState().fetchWorktrees('repo1')
 
     expect(store.getState().worktreesByRepo.repo1).toEqual([visible])
-    expect(store.getState().rightSidebarTabByWorktree).toEqual({ [visible.id]: 'checks' })
+    expect(store.getState().rightSidebarTabByWorktree).toEqual({ [visible.id]: 'source-control' })
     expect(store.getState().rightSidebarExplorerViewByWorktree).toEqual({ [visible.id]: 'files' })
     expect(store.getState().tabsByWorktree[hidden.id]).toBeUndefined()
     expect(store.getState().sortEpoch).toBe(7)
@@ -420,7 +417,7 @@ describe('fetchWorktrees', () => {
       sortEpoch: 7,
       rightSidebarTabByWorktree: {
         [missingFromFallback.id]: 'search' as never,
-        [fallback.id]: 'checks'
+        [fallback.id]: 'source-control'
       },
       tabsByWorktree: {
         [missingFromFallback.id]: [{ id: 'tab-missing', worktreeId: missingFromFallback.id }]
@@ -431,7 +428,7 @@ describe('fetchWorktrees', () => {
 
     expect(store.getState().rightSidebarTabByWorktree).toEqual({
       [missingFromFallback.id]: 'search',
-      [fallback.id]: 'checks'
+      [fallback.id]: 'source-control'
     })
     expect(store.getState().tabsByWorktree[missingFromFallback.id]).toEqual([
       { id: 'tab-missing', worktreeId: missingFromFallback.id }

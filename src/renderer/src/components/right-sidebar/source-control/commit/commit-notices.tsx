@@ -6,7 +6,6 @@ import {
 import { SourceControlRecoveryNotice } from './recovery-notice'
 import type { CommitNoticesProps } from './commit-area-types'
 import { translate } from '@/i18n/i18n'
-import { cn } from '@/lib/utils'
 
 export function CommitNotices({
   worktreeId,
@@ -21,7 +20,6 @@ export function CommitNotices({
   commitFailureRecoveryPrompt,
   pushRecovery,
   remoteActionError,
-  createPrIntentNotice,
   generateError,
   sourceControlAiActionsVisible,
   isFixingCommitFailureWithAI,
@@ -107,36 +105,6 @@ export function CommitNotices({
           {remoteActionError}
         </p>
       ) : null}
-      {createPrIntentNotice && (
-        <div
-          id="commit-area-create-pr-intent"
-          role={createPrIntentNotice.tone === 'destructive' ? 'alert' : 'status'}
-          aria-live="polite"
-          className={cn(
-            'mt-1 flex min-w-0 flex-col items-start gap-1 text-[11px]',
-            createPrIntentNotice.tone === 'destructive'
-              ? 'text-destructive'
-              : 'text-muted-foreground'
-          )}
-        >
-          {/* Why: Create Review blockers carry recovery steps; truncating hides the action the user needs in a narrow sidebar. */}
-          <span className="min-w-0 self-stretch break-words leading-4 [overflow-wrap:anywhere]">
-            {createPrIntentNotice.message}
-          </span>
-          {createPrIntentNotice.action === 'settings' && onOpenSourceControlAiSettings ? (
-            <button
-              type="button"
-              className="text-left font-medium text-foreground underline decoration-border underline-offset-2 hover:decoration-foreground"
-              onClick={() => onOpenSourceControlAiSettings()}
-            >
-              {translate(
-                'auto.components.right.sidebar.SourceControl.473f18758e',
-                'Source Control AI settings'
-              )}
-            </button>
-          ) : null}
-        </div>
-      )}
       {generateError && (
         <p
           id="commit-area-generate-error"

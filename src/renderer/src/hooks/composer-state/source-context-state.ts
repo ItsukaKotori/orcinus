@@ -23,10 +23,6 @@ import {
   type TaskSourceContext,
   buildTaskSourceContextFromRepo
 } from '../../../../shared/task-source-context'
-import {
-  normalizeGitHubLinkedWorkItem,
-  getGitHubLinkedWorkItemIdentity
-} from './source-selection-decisions'
 
 export function useComposerSourceContextState(input: ComposerSourceContextStateInput) {
   const {
@@ -70,10 +66,12 @@ export function useComposerSourceContextState(input: ComposerSourceContextStateI
     persistDraft ? (newWorkspaceDraft?.attachments ?? []) : []
   )
 
-  const normalizedInitialLinkedWorkItem = normalizeGitHubLinkedWorkItem(initialLinkedWorkItem)
+  // Why: the linked-item summary stays as seeded; the GitHub identity
+  // normalization that used to rewrite type/number is gone with the trim.
+  const normalizedInitialLinkedWorkItem = initialLinkedWorkItem ?? null
 
   const normalizedDraftLinkedWorkItem = persistDraft
-    ? normalizeGitHubLinkedWorkItem(newWorkspaceDraft?.linkedWorkItem)
+    ? (newWorkspaceDraft?.linkedWorkItem ?? null)
     : null
 
   const draftLinkedTaskSourceContext = persistDraft
@@ -96,7 +94,12 @@ export function useComposerSourceContextState(input: ComposerSourceContextStateI
     ? (draftLinkedWorkItemSeed ?? initialLinkedWorkItemSeed)
     : initialLinkedWorkItemSeed
 
-  const linkedWorkItemSeedIdentity = getGitHubLinkedWorkItemIdentity(linkedWorkItemSeed)
+  const linkedWorkItemSeedIdentity = linkedWorkItemSeed
+    ? {
+        type: (linkedWorkItemSeed.type === 'pr' ? 'pr' : 'issue') as 'issue' | 'pr',
+        number: linkedWorkItemSeed.number
+      }
+    : null
 
   const [linkedWorkItem, setLinkedWorkItem] = useState<LinkedWorkItemSummary | null>(
     () => linkedWorkItemSeed

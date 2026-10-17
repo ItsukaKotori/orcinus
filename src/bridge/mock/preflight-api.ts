@@ -7,8 +7,7 @@ import { cloneMockValue } from './clone-mock-value'
 // Why all-negative: the Phase 0 shell has not probed the machine, and "not installed" is the
 // status the UI already handles by advertising setup steps instead of claiming tooling exists.
 const NOT_PROBED: PreflightStatus = {
-  git: { installed: false },
-  gh: { installed: false, authenticated: false }
+  git: { installed: false }
 }
 
 const NO_AGENTS: RefreshAgentsResult = {

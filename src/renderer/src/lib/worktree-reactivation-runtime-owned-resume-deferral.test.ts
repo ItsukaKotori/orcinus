@@ -95,7 +95,6 @@ function baseState(worktree: ReturnType<typeof makeCreatedAgentWorktree>): Parti
     } as unknown as ReturnType<typeof useAppStore.getState>['settings'],
     markWorktreeVisited: vi.fn(),
     recordWorktreeVisit: vi.fn(),
-    refreshGitHubForWorktreeIfStale: vi.fn(),
     revealWorktreeInSidebar: vi.fn()
   }
 }

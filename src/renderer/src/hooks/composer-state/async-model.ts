@@ -1,9 +1,7 @@
 import type * as React from 'react'
 import type { RefObject } from 'react'
-import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import type { OrcaHooks, SetupAgentStartupPolicy } from '../../../../shared/orca-yaml-hook-types'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
-import type { GitHubRepositoryIdentity } from '../../../../shared/github/pull-request-types'
 import type { WorkspaceCreateErrorDisplay } from '@/lib/workspace-create-error-format'
 import type { IssueCommandReadResult } from '@/runtime/runtime-hooks-client'
 import type { SmartGitHubPrStartPointSelection } from './source-selection-decisions'
@@ -48,20 +46,6 @@ export type ComposerAsyncModel = {
   setSparseDirectories: React.Dispatch<React.SetStateAction<string>>
   sparseSelectedPresetId: string | null
   setSparseSelectedPresetId: React.Dispatch<React.SetStateAction<string | null>>
-  linkPopoverOpen: boolean
-  setLinkPopoverOpen: React.Dispatch<React.SetStateAction<boolean>>
-  linkQuery: string
-  setLinkQuery: React.Dispatch<React.SetStateAction<string>>
-  linkDebouncedQuery: string
-  setLinkDebouncedQuery: React.Dispatch<React.SetStateAction<string>>
-  linkItems: GitHubWorkItem[]
-  setLinkItems: React.Dispatch<React.SetStateAction<GitHubWorkItem[]>>
-  linkItemsLoading: boolean
-  setLinkItemsLoading: React.Dispatch<React.SetStateAction<boolean>>
-  linkDirectItem: GitHubWorkItem | null
-  setLinkDirectItem: React.Dispatch<React.SetStateAction<GitHubWorkItem | null>>
-  linkDirectLoading: boolean
-  setLinkDirectLoading: React.Dispatch<React.SetStateAction<boolean>>
   lastAutoNameRef: RefObject<string>
   nameRef: RefObject<string>
   branchAutoNameRef: RefObject<string>
@@ -75,8 +59,6 @@ export type ComposerAsyncModel = {
   agentPromptRef: RefObject<string>
   connectionIdRef: RefObject<string | null>
   selectedRepoConnectionIdRef: RefObject<string | null>
-  selectedRepoSlug: GitHubRepositoryIdentity | null
-  setSelectedRepoSlug: React.Dispatch<React.SetStateAction<GitHubRepositoryIdentity | null>>
   selectedRepoPath: string | undefined
   selectedRepoPathRef: RefObject<string | undefined>
   selectedRepoSettingsRef: RefObject<Pick<GlobalSettings, 'activeRuntimeEnvironmentId'> | null>

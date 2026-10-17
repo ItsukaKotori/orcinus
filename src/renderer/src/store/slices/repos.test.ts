@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createTestStore, makeWorktree } from './store-test-helpers'
-import { workItemsCacheKey } from '../github/cache-identity'
 import type { Project, ProjectHostSetup } from '../../../../shared/project-types'
 import type { Repo } from '../../../../shared/repo-types'
 import { toast } from 'sonner'
@@ -742,32 +741,6 @@ describe('repo slice runtime routing', () => {
       timeoutMs: 15_000
     })
     expect(reposRemove).not.toHaveBeenCalled()
-  })
-
-  it('evicts GitHub caches for removed repos using repo id and legacy path keys', async () => {
-    const store = createTestStore()
-    store.setState({
-      repos: [localRepo],
-      workItemsInvalidationNonce: 2,
-      workItemsCache: {
-        [workItemsCacheKey(localRepo.id, 20, '')]: { data: [], fetchedAt: 1 },
-        [workItemsCacheKey(localRepo.path, 20, '')]: { data: [], fetchedAt: 1 },
-        [workItemsCacheKey('other-repo', 20, '')]: { data: [], fetchedAt: 1 }
-      },
-      prCache: {
-        [`${localRepo.id}::branch`]: { data: {} as never, fetchedAt: 1 },
-        [`${localRepo.path}::branch`]: { data: {} as never, fetchedAt: 1 },
-        'other-repo::branch': { data: {} as never, fetchedAt: 1 }
-      }
-    })
-
-    await store.getState().removeProject(localRepo.id)
-
-    expect(Object.keys(store.getState().workItemsCache)).toEqual([
-      workItemsCacheKey('other-repo', 20, '')
-    ])
-    expect(Object.keys(store.getState().prCache)).toEqual(['other-repo::branch'])
-    expect(store.getState().workItemsInvalidationNonce).toBe(3)
   })
 
   it('stops remote runtime terminals instead of killing remote ids through local pty IPC', async () => {

@@ -1,33 +1,15 @@
 import type { StateCreator } from 'zustand'
 import type { AppState } from '../types'
 import { findWorktreeById } from './worktree-helpers'
-import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
-import {
-  getTaskSourceCacheScope,
-  type TaskSourceContext
-} from '../../../../shared/task-source-context'
 import { parseWorkspaceKey } from '../../../../shared/workspace-scope'
 
 // Why: bound per-session history growth; 50 keeps goBack/goForward's linear scans cheap yet is never hit in normal use.
 const MAX_HISTORY = 50
 
 // Why: entries may be page sentinels, not just worktree IDs; names keep the "worktree" prefix for call-site stability.
-export type WorktreeNavHistorySimpleViewEntry = 'tasks' | 'automations' | 'artifacts'
-const SIMPLE_VIEW_ENTRIES: readonly WorktreeNavHistorySimpleViewEntry[] = [
-  'tasks',
-  'automations',
-  'artifacts'
-]
-export type WorktreeNavHistoryTaskDetailEntry = {
-  kind: 'task-detail'
-  source: 'github'
-  workItem: GitHubWorkItem
-  sourceContext?: TaskSourceContext | null
-  initialTab?: 'conversation' | 'checks' | 'files'
-}
-export type WorktreeNavHistoryViewEntry =
-  | WorktreeNavHistorySimpleViewEntry
-  | WorktreeNavHistoryTaskDetailEntry
+export type WorktreeNavHistorySimpleViewEntry = 'automations' | 'artifacts'
+const SIMPLE_VIEW_ENTRIES: readonly WorktreeNavHistorySimpleViewEntry[] = ['automations', 'artifacts']
+export type WorktreeNavHistoryViewEntry = WorktreeNavHistorySimpleViewEntry
 export type WorktreeNavHistoryEntry = (string & {}) | WorktreeNavHistoryViewEntry
 
 export type WorktreeNavHistorySlice = {
@@ -74,22 +56,8 @@ function isViewEntry(entry: WorktreeNavHistoryEntry): entry is WorktreeNavHistor
   return isSimpleViewEntry(entry) || typeof entry === 'object'
 }
 
-function isTaskStackEntry(entry: WorktreeNavHistoryEntry): boolean {
-  return entry === 'tasks' || (typeof entry === 'object' && entry.kind === 'task-detail')
-}
-
 function getHistoryEntryKey(entry: WorktreeNavHistoryEntry): string {
-  if (typeof entry === 'string') {
-    return isSimpleViewEntry(entry) ? `view:${entry}` : `worktree:${entry}`
-  }
-  if (entry.source === 'github') {
-    const sourceScope =
-      entry.sourceContext?.provider === 'github'
-        ? getTaskSourceCacheScope(entry.sourceContext)
-        : 'legacy'
-    return `view:task-detail:github:${sourceScope}:${entry.workItem.repoId}:${entry.workItem.type}:${entry.workItem.number}:${entry.initialTab ?? 'conversation'}`
-  }
-  return 'view:task-detail:unknown'
+  return isSimpleViewEntry(entry) ? `view:${entry}` : `worktree:${entry}`
 }
 
 function isLiveEntry(entry: WorktreeNavHistoryEntry, state: AppState): boolean {
@@ -136,16 +104,6 @@ function appendHistoryEntry(
 export function findPrevLiveWorktreeHistoryIndex(state: AppState): number | null {
   for (let i = state.worktreeNavHistoryIndex - 1; i >= 0; i--) {
     if (isLiveEntry(state.worktreeNavHistory[i], state)) {
-      return i
-    }
-  }
-  return null
-}
-
-export function findPrevLiveNonTaskStackHistoryIndex(state: AppState): number | null {
-  for (let i = state.worktreeNavHistoryIndex - 1; i >= 0; i--) {
-    const entry = state.worktreeNavHistory[i]
-    if (!isTaskStackEntry(entry) && isLiveEntry(entry, state)) {
       return i
     }
   }

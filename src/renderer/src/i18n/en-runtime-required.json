@@ -29,7 +29,6 @@
       },
       "GitHubItemDialog": {
         "04539beb48": "issue",
-        "307c98e8e3": "Show {{value0}} more lines above",
         "3853476a97": "GitHub item",
         "3ab6ac0fc8": "Preview and edit the selected GitHub issue or pull request.",
         "45af57999b": "Close preview",
@@ -40,7 +39,6 @@
         "b0b7344684": "Request up to 15 reviewers",
         "b1157c78ff": "sheet",
         "ce8a85d209": "default",
-        "checkActionRequiredHint": "This check needs a manual action on GitHub (for example, approving the workflow run) before merging is unblocked.",
         "d0a05e73f5": "compact",
         "e517b4d641": "closed",
         "e9b7cb7d17": "Failed to {{value0}} PR"
@@ -117,7 +115,6 @@
         "b0e80f083d": "wants to merge into",
         "b6bda618cf": "compact",
         "c9de94b07a": "Show more lines above",
-        "checkActionRequiredHint": "This check needs a manual action on GitHub (for example, approving the workflow run) before merging is unblocked.",
         "d65f70786e": "closed",
         "e1f3641bfd": "from",
         "e295a78c11": "Show {{value0}} more lines above",
@@ -446,8 +443,6 @@
           "ProjectPicker": {
             "43a88ae574": "BOARD_LAYOUT",
             "ab1a2c357d": "Roadmap (unsupported)",
-            "b787682111": "Browse all",
-            "ba0ab9a117": "Browse all (loading…)",
             "cafb908f34": "TABLE_LAYOUT"
           },
           "ProjectRow": {

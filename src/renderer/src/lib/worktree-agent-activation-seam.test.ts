@@ -51,7 +51,6 @@ function baseState(): Partial<AppState> {
     } as AppState['settings'],
     markWorktreeVisited: vi.fn(),
     recordWorktreeVisit: vi.fn(),
-    refreshGitHubForWorktreeIfStale: vi.fn(),
     revealWorktreeInSidebar: vi.fn()
   }
 }

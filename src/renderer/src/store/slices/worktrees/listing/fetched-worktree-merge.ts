@@ -2,7 +2,7 @@ import type { StateCreator } from 'zustand'
 import type { AppState } from '../../../types'
 import type { WorktreeSlice } from '../../worktree-helpers'
 import type { Worktree } from '../../../../../../shared/worktree/types'
-import { routeListingBranchSwitchesThroughGitIdentity } from '../../worktree-listing-branch-switch'
+import { preserveNewerListingBranchIdentities } from '../../worktree-listing-branch-switch'
 import { areDetectedWorktreeResultsEqual, areWorktreesEqual } from './worktree-catalog-visibility'
 import { mergeDetectedWorktreesForHost } from './detected-worktree-host-merge'
 import {
@@ -13,10 +13,6 @@ import {
   worktreeHostMatchOptions,
   worktreeMatchesHost
 } from './worktree-host-ownership'
-import {
-  hasBranchScopedHostedReviewContext,
-  sanitizeHostedReviewLinksForBranchClears
-} from '../metadata/hosted-review-link-mutation'
 import { isCurrentDetectedWorktreeRefresh } from './detected-worktree-refresh-admission'
 import { buildWorktreePurgeState } from '../teardown/worktree-purge-state'
 import { isDisplayNamePersistencePending } from '../metadata/worktree-meta-persist'
@@ -166,18 +162,13 @@ export function mergeFetchedWorktrees(
       )
     }
     let incoming = toVisibleWorktrees(refreshResult, args.hostId, args.setup)
-    incoming = routeListingBranchSwitchesThroughGitIdentity({
+    incoming = preserveNewerListingBranchIdentities({
       requestStarted: args.requestStartedWorktrees,
       current: s.worktreesByRepo[args.repoId],
       incoming,
-      matchesRefreshHost: (worktree) => worktreeMatchesHost(worktree, args.hostId, matchOptions),
-      hasBranchScopedReviewContext: hasBranchScopedHostedReviewContext,
-      updateWorktreeGitIdentity: s.updateWorktreeGitIdentity
+      matchesRefreshHost: (worktree) => worktreeMatchesHost(worktree, args.hostId, matchOptions)
     })
-    const worktrees = sanitizeHostedReviewLinksForBranchClears(
-      incoming,
-      s.worktreesByRepo[args.repoId]
-    )
+    const worktrees = incoming
     const currentForHost = (s.worktreesByRepo[args.repoId] ?? []).filter((worktree) =>
       worktreeMatchesHost(worktree, args.hostId, matchOptions)
     )

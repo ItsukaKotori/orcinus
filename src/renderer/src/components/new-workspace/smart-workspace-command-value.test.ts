@@ -12,32 +12,19 @@ describe('resolveSmartWorkspaceCommandValue', () => {
   it('keeps the current command value when the row still exists', () => {
     expect(
       resolveSmartWorkspaceCommandValue({
-        currentValue: 'github-12',
-        rows: [row('use-name', 'use-name'), row('github', 'github-12')],
-        isQueryStale: false,
-        sourceIntent: null
+        currentValue: 'branch-main',
+        rows: [row('use-name', 'use-name'), row('branch', 'branch-main')],
+        isQueryStale: false
       })
-    ).toBe('github-12')
+    ).toBe('branch-main')
   })
 
   it('falls back to the first row when the current value is no longer rendered', () => {
     expect(
       resolveSmartWorkspaceCommandValue({
-        currentValue: 'github-12',
+        currentValue: 'branch-other',
         rows: [row('use-name', 'use-name'), row('branch', 'branch-main')],
-        isQueryStale: false,
-        sourceIntent: null
-      })
-    ).toBe('use-name')
-  })
-
-  it('keeps arbitrary text armed when Linear search results are present', () => {
-    expect(
-      resolveSmartWorkspaceCommandValue({
-        currentValue: '',
-        rows: [row('use-name', 'use-name'), row('linear', 'linear-STA-4084')],
-        isQueryStale: false,
-        sourceIntent: null
+        isQueryStale: false
       })
     ).toBe('use-name')
   })
@@ -45,10 +32,9 @@ describe('resolveSmartWorkspaceCommandValue', () => {
   it('keeps typed text armed while the query is ahead of debounced search', () => {
     expect(
       resolveSmartWorkspaceCommandValue({
-        currentValue: 'github-12',
-        rows: [row('use-name', 'use-name'), row('github', 'github-12')],
-        isQueryStale: true,
-        sourceIntent: null
+        currentValue: 'branch-main',
+        rows: [row('use-name', 'use-name'), row('branch', 'branch-main')],
+        isQueryStale: true
       })
     ).toBe('use-name')
   })
@@ -56,90 +42,47 @@ describe('resolveSmartWorkspaceCommandValue', () => {
   it('falls back to typed-text when a frozen arm is no longer rendered', () => {
     expect(
       resolveSmartWorkspaceCommandValue({
-        currentValue: 'github-12',
-        rows: [row('use-name', 'use-name'), row('github', 'github-99')],
-        isQueryStale: true,
-        sourceIntent: null
+        currentValue: 'branch-other',
+        rows: [row('use-name', 'use-name'), row('branch', 'branch-main')],
+        isQueryStale: true
       })
     ).toBe('use-name')
   })
 
-  it('does not resurrect a provider arm when the stale query settles', () => {
-    const rows = [row('use-name', 'use-name'), row('github', 'github-12')]
+  it('does not resurrect a stale arm when the query settles', () => {
+    const rows = [row('use-name', 'use-name'), row('branch', 'branch-main')]
     const typedTextArm = resolveSmartWorkspaceCommandValue({
-      currentValue: 'github-12',
+      currentValue: 'branch-main',
       rows,
-      isQueryStale: true,
-      sourceIntent: null
+      isQueryStale: true
     })
 
     expect(
       resolveSmartWorkspaceCommandValue({
         currentValue: typedTextArm,
         rows,
-        isQueryStale: false,
-        sourceIntent: null
+        isQueryStale: false
       })
     ).toBe('use-name')
   })
 
-  it('falls back to the first provider row when stale with no typed-text', () => {
+  it('falls back to the first row when stale with no typed-text row', () => {
     expect(
       resolveSmartWorkspaceCommandValue({
-        currentValue: 'github-12',
-        rows: [row('github', 'github-99')],
-        isQueryStale: true,
-        sourceIntent: null
+        currentValue: 'branch-other',
+        rows: [row('branch', 'branch-main')],
+        isQueryStale: true
       })
-    ).toBe('github-99')
-  })
-
-  it('prefers matching source-intent rows once fresh results arrive', () => {
-    expect(
-      resolveSmartWorkspaceCommandValue({
-        currentValue: 'use-name',
-        rows: [row('use-name', 'use-name'), row('github', 'github-123')],
-        isQueryStale: false,
-        sourceIntent: 'github'
-      })
-    ).toBe('github-123')
-
-    expect(
-      resolveSmartWorkspaceCommandValue({
-        currentValue: 'use-name',
-        rows: [row('use-name', 'use-name'), row('gitlab', 'gitlab-123')],
-        isQueryStale: false,
-        sourceIntent: 'gitlab'
-      })
-    ).toBe('gitlab-123')
-
-    expect(
-      resolveSmartWorkspaceCommandValue({
-        currentValue: 'use-name',
-        rows: [row('use-name', 'use-name'), row('linear', 'linear-ENG-123')],
-        isQueryStale: false,
-        sourceIntent: 'linear'
-      })
-    ).toBe('linear-ENG-123')
-
-    expect(
-      resolveSmartWorkspaceCommandValue({
-        currentValue: 'jira-account-site-1',
-        rows: [row('jira-account', 'jira-account-site-1'), row('jira', 'jira-ORCA-123')],
-        isQueryStale: false,
-        sourceIntent: 'jira'
-      })
-    ).toBe('jira-ORCA-123')
+    ).toBe('branch-main')
   })
 
   it('leaves the current value alone when no rows are rendered', () => {
     expect(
       resolveSmartWorkspaceCommandValue({
-        currentValue: 'github-12',
+        currentValue: 'branch-main',
         rows: [],
-        isQueryStale: false,
-        sourceIntent: null
+        isQueryStale: false
       })
-    ).toBe('github-12')
+    ).toBe('branch-main')
   })
 })

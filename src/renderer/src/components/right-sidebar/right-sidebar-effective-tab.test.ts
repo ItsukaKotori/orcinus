@@ -5,33 +5,31 @@ import { resolveRightSidebarEffectiveTab } from './right-sidebar-effective-tab'
 const folderVisibleItems = [
   { id: 'explorer' },
   { id: 'vault' },
-  { id: 'workspaces' },
-  { id: 'pr-checks' }
+  { id: 'workspaces' }
 ] satisfies { id: ActiveRightSidebarTab }[]
 
 const gitVisibleItems = [
   { id: 'explorer' },
   { id: 'vault' },
-  { id: 'source-control' },
-  { id: 'checks' }
+  { id: 'source-control' }
 ] satisfies { id: ActiveRightSidebarTab }[]
 
 describe('resolveRightSidebarEffectiveTab', () => {
-  it('lets remembered folder PR Checks win over a visible global Explorer route', () => {
+  it('lets remembered folder Attached worktrees win over a visible global Explorer route', () => {
     expect(
       resolveRightSidebarEffectiveTab({
         normalizedActiveTab: 'explorer',
         visibleItems: folderVisibleItems,
         activeFolderWorkspaceKey: 'folder:folder-1',
-        rememberedFolderTab: 'pr-checks'
+        rememberedFolderTab: 'workspaces'
       })
-    ).toBe('pr-checks')
+    ).toBe('workspaces')
   })
 
   it('lets an explicit remembered folder Explorer selection win over another visible route', () => {
     expect(
       resolveRightSidebarEffectiveTab({
-        normalizedActiveTab: 'pr-checks',
+        normalizedActiveTab: 'workspaces',
         visibleItems: folderVisibleItems,
         activeFolderWorkspaceKey: 'folder:folder-1',
         rememberedFolderTab: 'explorer'
@@ -45,7 +43,7 @@ describe('resolveRightSidebarEffectiveTab', () => {
         normalizedActiveTab: 'explorer',
         visibleItems: gitVisibleItems,
         activeFolderWorkspaceKey: null,
-        rememberedFolderTab: 'pr-checks'
+        rememberedFolderTab: 'workspaces'
       })
     ).toBe('explorer')
   })
@@ -56,7 +54,7 @@ describe('resolveRightSidebarEffectiveTab', () => {
         normalizedActiveTab: 'workspaces',
         visibleItems: folderVisibleItems,
         activeFolderWorkspaceKey: 'folder:folder-1',
-        rememberedFolderTab: 'checks'
+        rememberedFolderTab: 'source-control'
       })
     ).toBe('workspaces')
   })
@@ -64,8 +62,8 @@ describe('resolveRightSidebarEffectiveTab', () => {
   it('falls back to the first visible item when the global route is hidden', () => {
     expect(
       resolveRightSidebarEffectiveTab({
-        normalizedActiveTab: 'pr-checks',
-        visibleItems: gitVisibleItems,
+        normalizedActiveTab: 'source-control',
+        visibleItems: folderVisibleItems,
         activeFolderWorkspaceKey: null,
         rememberedFolderTab: null
       })

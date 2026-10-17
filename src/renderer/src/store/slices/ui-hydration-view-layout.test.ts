@@ -118,9 +118,9 @@ describe('createUISlice hydratePersistedUI', () => {
   it('restores the persisted active top-level view on hydration', () => {
     const store = createUIStore()
 
-    store.getState().hydratePersistedUI(makePersistedUI({ activeView: 'tasks' }), 'startup')
+    store.getState().hydratePersistedUI(makePersistedUI({ activeView: 'space' }), 'startup')
 
-    expect(store.getState().activeView).toBe('tasks')
+    expect(store.getState().activeView).toBe('space')
   })
 
   it('restores a persisted plugin-center top-level view on hydration', () => {
@@ -146,7 +146,7 @@ describe('createUISlice hydratePersistedUI', () => {
 
   it('falls back to terminal when persisted active view is missing (older data)', () => {
     const store = createUIStore()
-    store.setState({ activeView: 'tasks' })
+    store.setState({ activeView: 'space' })
 
     store.getState().hydratePersistedUI(
       {
@@ -185,8 +185,8 @@ describe('createUISlice hydratePersistedUI', () => {
 
   it('does not overwrite the current view on a later cross-window sync hydration', () => {
     const store = createUIStore()
-    store.getState().hydratePersistedUI(makePersistedUI({ activeView: 'tasks' }), 'startup')
-    expect(store.getState().activeView).toBe('tasks')
+    store.getState().hydratePersistedUI(makePersistedUI({ activeView: 'space' }), 'startup')
+    expect(store.getState().activeView).toBe('space')
 
     store
       .getState()
@@ -195,7 +195,7 @@ describe('createUISlice hydratePersistedUI', () => {
         'sync'
       )
 
-    expect(store.getState().activeView).toBe('tasks')
+    expect(store.getState().activeView).toBe('space')
     expect(store.getState().rightSidebarOpen).toBe(false)
   })
 
@@ -230,9 +230,9 @@ describe('createUISlice hydratePersistedUI', () => {
   it('hydrates a persisted right sidebar tab preference', () => {
     const store = createUIStore()
 
-    store.getState().hydratePersistedUI(makePersistedUI({ rightSidebarTab: 'checks' }))
+    store.getState().hydratePersistedUI(makePersistedUI({ rightSidebarTab: 'source-control' }))
 
-    expect(store.getState().rightSidebarTab).toBe('checks')
+    expect(store.getState().rightSidebarTab).toBe('source-control')
     expect(store.getState().rightSidebarExplorerView).toBe('files')
   })
 
@@ -505,7 +505,7 @@ describe('createUISlice hydratePersistedUI', () => {
   it('does not churn persisted UI references when hydration is identical by value', () => {
     const store = createUIStore()
     const persistedUI = makePersistedUI({
-      featureInteractions: { tasks: { firstInteractedAt: 1, interactionCount: 1 } },
+      featureInteractions: { 'cmd-j': { firstInteractedAt: 1, interactionCount: 1 } },
       showDotfilesByWorktree: { 'repo-1::/repo': false },
       collapsedGroups: ['repo:one'],
       workspaceHostOrder: ['local'],

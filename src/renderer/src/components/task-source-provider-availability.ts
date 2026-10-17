@@ -29,7 +29,9 @@ function getRepoBackedProviderToolStatus(
     return null
   }
   if (provider === 'github') {
-    return preflightStatus.gh
+    // Why: the gh probe is gone with the GitHub trim; GitHub sources read as
+    // tooling-unavailable on every host.
+    return { installed: false, authenticated: false }
   }
   // Why: older remote servers can predate GitLab preflight entirely. That is a
   // host capability gap, not a user-fixable missing `glab` install.

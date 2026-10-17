@@ -94,7 +94,6 @@
     "sourceControlGroupOrder": "changes-first",
     "sourceControlCompareAgainstUpstream": false,
     "showTitlebarAppName": true,
-    "showTasksButton": true,
     "showAutomationsButton": true,
     "artifactsEnabled": true,
     "artifactSharingEnabled": false,

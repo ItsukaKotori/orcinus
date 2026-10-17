@@ -55,21 +55,12 @@ export type StatusBarItem =
   | 'resource-usage'
 export type FloatingTerminalTriggerLocation = 'floating-button' | 'status-bar'
 
-export type TaskResumeState = {
-  githubMode?: 'items' | 'project'
-  githubItemsPreset?: TaskViewPresetId | null
-  githubItemsQuery?: string
-  githubProjectHiddenFieldIdsByView?: Record<string, string[]>
-}
-
 export type RightSidebarTab =
   | 'explorer'
   | 'search'
   | 'vault'
   | 'workspaces'
-  | 'pr-checks'
   | 'source-control'
-  | 'checks'
   // Plugin-contributed panels are keyed `plugin:<pluginId>/<panelId>` so the
   // static union stays closed while plugin tabs remain type-representable.
   | `plugin:${string}`
@@ -89,7 +80,6 @@ export type ManualRepoOrderEntry = {
 export type StaticTopLevelView =
   | 'terminal'
   | 'settings'
-  | 'tasks'
   | 'automations'
   | 'space'
   | 'artifacts'

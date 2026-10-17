@@ -310,8 +310,6 @@ describe('restored editor owner reparent', () => {
       id: 'target-terminal',
       generation: 5
     })
-    expect(refreshGitHubForWorktreeIfStale).toHaveBeenCalledOnce()
-    expect(refreshGitHubForWorktreeIfStale).toHaveBeenCalledWith(TARGET)
   })
 
   it('repairs a duplicate migrated tab id held by a non-selected destination group', () => {

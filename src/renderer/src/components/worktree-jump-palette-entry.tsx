@@ -63,7 +63,6 @@ export function WorktreeJumpPaletteEntry({
       <PaletteCreateWorktreeRow
         className="group mx-0.5 mt-1 flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-1.5 text-left outline-none transition-[background-color,border-color,box-shadow] data-[selected=true]:border-border data-[selected=true]:bg-accent data-[selected=true]:text-foreground"
         createWorktreeName={controller.createWorktreeName}
-        taskUrlPreview={controller.taskUrlCreatePreview}
         onSelect={controller.handleCreateWorktree}
       />
     )

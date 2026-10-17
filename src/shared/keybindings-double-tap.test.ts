@@ -134,11 +134,11 @@ describe('keybindings', () => {
     // are in customizedActions and the conflict detector must flag them.
     const conflicts = findKeybindingConflicts('darwin', {
       'worktree.quickOpen': ['DoubleTap+Shift'],
-      'view.tasks': ['DoubleTap+Shift']
+      'app.settings': ['DoubleTap+Shift']
     })
     expect(conflicts).toContainEqual({
       binding: 'DoubleTap+Shift',
-      actionIds: expect.arrayContaining(['worktree.quickOpen', 'view.tasks'])
+      actionIds: expect.arrayContaining(['worktree.quickOpen', 'app.settings'])
     })
   })
 
@@ -146,21 +146,21 @@ describe('keybindings', () => {
     expect(
       findKeybindingConflicts('darwin', {
         'worktree.quickOpen': ['DoubleTap+Mod'],
-        'view.tasks': ['DoubleTap+Cmd']
+        'app.settings': ['DoubleTap+Cmd']
       })
     ).toContainEqual({
       binding: 'DoubleTap+Mod',
-      actionIds: expect.arrayContaining(['worktree.quickOpen', 'view.tasks'])
+      actionIds: expect.arrayContaining(['worktree.quickOpen', 'app.settings'])
     })
 
     expect(
       findKeybindingConflicts('linux', {
         'worktree.quickOpen': ['DoubleTap+Mod'],
-        'view.tasks': ['DoubleTap+Ctrl']
+        'app.settings': ['DoubleTap+Ctrl']
       })
     ).toContainEqual({
       binding: 'DoubleTap+Mod',
-      actionIds: expect.arrayContaining(['worktree.quickOpen', 'view.tasks'])
+      actionIds: expect.arrayContaining(['worktree.quickOpen', 'app.settings'])
     })
   })
 

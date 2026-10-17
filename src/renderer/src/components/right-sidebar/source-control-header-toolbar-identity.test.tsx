@@ -4,9 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { SourceControlHeaderToolbar } from './source-control/panel/header-toolbar'
 import type { GitBranchCompareSummary } from '../../../../shared/git-diff-compare-types'
 import type { GitBranchLineTotal } from '../../../../shared/git-status-types'
-import type { HostedReviewInfo } from '../../../../shared/hosted-review'
 import type { WorktreeGitIdentityDisplay } from '@/lib/worktree-git-identity-display'
-import type { PrimaryAction } from './source-control-primary-action'
 
 vi.mock('@/components/ui/tooltip', () => ({
   Tooltip: ({ children }: { children: ReactNode }) => <>{children}</>,
@@ -17,13 +15,6 @@ vi.mock('@/components/ui/tooltip', () => ({
 vi.mock('./source-control/panel/header-overflow-menu', () => ({
   SourceControlHeaderOverflowMenu: () => <button type="button">More actions</button>
 }))
-
-const CREATE_PR_ACTION: PrimaryAction = {
-  kind: 'create_pr',
-  label: 'Create PR',
-  title: 'Create a pull request',
-  disabled: false
-}
 
 const readySummary: GitBranchCompareSummary = {
   baseRef: 'origin/main',
@@ -41,9 +32,6 @@ function renderToolbar(options?: {
   branchSummary?: GitBranchCompareSummary | null
   compareBaseRef?: string | null
   branchLineTotal?: GitBranchLineTotal | null
-  visibleCreatePrHeaderAction?: PrimaryAction | null
-  hostedReview?: HostedReviewInfo | null
-  suppressedGitHubPRNumber?: number | null
 }): string {
   return renderToStaticMarkup(
     <SourceControlHeaderToolbar
@@ -51,18 +39,6 @@ function renderToolbar(options?: {
       filterExpanded={false}
       onFilterQueryChange={vi.fn()}
       onFilterExpandedChange={vi.fn()}
-      visibleCreatePrHeaderAction={
-        options?.visibleCreatePrHeaderAction === undefined
-          ? CREATE_PR_ACTION
-          : options.visibleCreatePrHeaderAction
-      }
-      hostedReview={options?.hostedReview ?? null}
-      isCreatePrIntentInFlight={false}
-      isCreatingPr={false}
-      onCreatePrHeaderClick={vi.fn()}
-      onOpenHostedReviewInChecks={vi.fn()}
-      suppressedGitHubPRNumber={options?.suppressedGitHubPRNumber ?? null}
-      onRelinkSuppressedGitHubPR={vi.fn()}
       sourceControlViewMode="list"
       viewModeToggleDisabled={false}
       onToggleViewMode={vi.fn()}
@@ -84,59 +60,29 @@ function renderToolbar(options?: {
 }
 
 describe('SourceControlHeaderToolbar branch identity', () => {
-  it('shows the relink recovery instead of blank chrome for a matched unlinked PR', () => {
-    const markup = renderToolbar({
-      visibleCreatePrHeaderAction: null,
-      suppressedGitHubPRNumber: 42
-    })
-
-    expect(markup).toContain('PR #42 unlinked')
-    expect(markup).toContain('Link PR #42')
-    expect(markup).not.toContain('Create PR')
-  })
-
-  it('keeps the relink recovery ahead of transient Create PR loading chrome', () => {
-    const markup = renderToolbar({
-      visibleCreatePrHeaderAction: {
-        ...CREATE_PR_ACTION,
-        title: 'Checking whether this branch can create a pull request…',
-        disabled: true
-      },
-      suppressedGitHubPRNumber: 42
-    })
-
-    expect(markup).toContain('Link PR #42')
-    expect(markup).not.toContain('Create PR')
-    expect(markup).not.toContain('Checking whether')
-  })
-
-  it('keeps Create PR while stacking head above base in the context row', () => {
+  it('stacks head above base in the context row', () => {
     const markup = renderToolbar()
     const branchIndex = markup.indexOf('brennanb2025/source-control-branch-name')
-    const createPrIndex = markup.indexOf('Create PR')
 
-    // Why: the #9787 regression — identity must not evict Create PR.
     expect(branchIndex).toBeGreaterThan(-1)
-    expect(createPrIndex).toBeGreaterThan(-1)
     expect(markup).toContain('aria-label="brennanb2025/source-control-branch-name → origin/main"')
     expect(markup).toContain('aria-label="Current branch: brennanb2025/source-control-branch-name"')
     expect(markup).toContain('data-testid="source-control-head-identity"')
   })
 
-  it('shows head-only identity with Create PR when no compare base is configured', () => {
+  it('shows head-only identity when no compare base is configured', () => {
     const markup = renderToolbar({
       branchSummary: null,
       compareBaseRef: null,
       headDisplay: { kind: 'branch', branchName: 'local-only-branch' }
     })
 
-    expect(markup).toContain('Create PR')
     expect(markup).toContain('data-testid="source-control-head-identity"')
     expect(markup).toContain('local-only-branch')
     expect(markup).not.toContain('→')
   })
 
-  it('renders detached HEAD with Create PR when compare base is present', () => {
+  it('renders detached HEAD when compare base is present', () => {
     const markup = renderToolbar({
       headDisplay: {
         kind: 'detached',
@@ -149,7 +95,6 @@ describe('SourceControlHeaderToolbar branch identity', () => {
 
     expect(markup).toContain('Detached HEAD · 8cec248')
     expect(markup).toContain('tabindex="0"')
-    expect(markup).toContain('Create PR')
     expect(markup).toContain('aria-label="Detached HEAD · 8cec248 → origin/main"')
   })
 
@@ -162,7 +107,6 @@ describe('SourceControlHeaderToolbar branch identity', () => {
 
     expect(markup).not.toContain('data-testid="source-control-head-identity"')
     expect(markup).not.toContain('→')
-    expect(markup).toContain('Create PR')
   })
 
   it('threads the branch line total down to the base-ref line', () => {

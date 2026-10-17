@@ -7,7 +7,6 @@ import {
 } from '@/components/sidebar/visible-worktrees'
 import { isDefaultBranchWorkspace } from '@/components/sidebar/default-branch-workspace'
 import { sortWorktreesSmart } from '@/components/sidebar/smart-sort'
-import { buildWorktreeChecksReviewIndex } from '@/components/cmd-j/worktree-checks-review-index'
 import { getLiveAgentStatusByWorktreeId, isInactiveWorkspace } from '@/lib/worktree-activity-state'
 import { orderEmptyQueryWorktrees } from '@/lib/order-empty-query-worktrees'
 import {
@@ -67,11 +66,7 @@ export function useWorktreeJumpPaletteWorktrees({
   terminalLayoutsByTabId,
   repoByHostIdentity,
   hostOptions,
-  hostFilterActive,
-  prCache,
-  hostedReviewCache,
-  settings,
-  issueCache
+  hostFilterActive
 }: WorktreeJumpPaletteWorktreesInput) {
   const hasQuery = paletteSearchQuery.length > 0
   const isLoading = repos.length > 0 && Object.keys(worktreesByRepo).length === 0
@@ -217,17 +212,6 @@ export function useWorktreeJumpPaletteWorktrees({
     () => buildWorktreeJumpPaletteWorktreeMaps(browserSortedWorktrees),
     [browserSortedWorktrees]
   )
-  const checksReviewByWorktree = useMemo(
-    () =>
-      buildWorktreeChecksReviewIndex({
-        worktrees: allWorktrees,
-        repoByHostIdentity,
-        prCache,
-        hostedReviewCache,
-        settings
-      }),
-    [allWorktrees, hostedReviewCache, prCache, repoByHostIdentity, settings]
-  )
   const worktreeDocuments = useMemo(
     () =>
       buildWorktreeJumpPaletteDocumentIndex({
@@ -235,21 +219,9 @@ export function useWorktreeJumpPaletteWorktrees({
         repoMap,
         repoByHostIdentity,
         hostOptions,
-        hostFilterActive,
-        prCache,
-        issueCache,
-        checksReviewByWorktree
+        hostFilterActive
       }),
-    [
-      allWorktrees,
-      checksReviewByWorktree,
-      hostFilterActive,
-      hostOptions,
-      issueCache,
-      prCache,
-      repoByHostIdentity,
-      repoMap
-    ]
+    [allWorktrees, hostFilterActive, hostOptions, repoByHostIdentity, repoMap]
   )
   const worktreeMatches = useMemo(
     () =>
@@ -259,11 +231,9 @@ export function useWorktreeJumpPaletteWorktrees({
         documents: worktreeDocuments,
         repoMap,
         repoMapByHostIdentity: repoByHostIdentity,
-        checksReviewByWorktree,
         context: paletteSearchContext
       }),
     [
-      checksReviewByWorktree,
       paletteSearchQuery,
       paletteSearchContext,
       repoByHostIdentity,

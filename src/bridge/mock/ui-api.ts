@@ -34,7 +34,6 @@ export function createUiApi(): PreloadApi['ui'] {
     onToggleQuickCommandsMenu: noopUnsubscribe,
     onOpenNewWorkspace: noopUnsubscribe,
     onDeleteCurrentWorkspace: noopUnsubscribe,
-    onOpenTasks: noopUnsubscribe,
     onJumpToWorktreeIndex: noopUnsubscribe,
     onJumpToTabIndex: noopUnsubscribe,
     onWorktreeHistoryNavigate: noopUnsubscribe,

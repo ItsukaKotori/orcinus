@@ -1,8 +1,7 @@
 import React from 'react'
-import { CalendarClock, CircleDot, SquareTerminal, StickyNote } from 'lucide-react'
+import { CalendarClock, SquareTerminal, StickyNote } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MetaIconBadge } from './WorktreeCardMetadataControls'
-import { getReviewLabel, ReviewIcon } from './worktree-review-helpers'
 import type {
   WorktreeCardMetaBadgesProps,
   WorktreeCardMetaBadgesRootProps
@@ -14,28 +13,22 @@ function hasComment(comment: string | null): boolean {
 }
 
 export function hasWorktreeCardDetails({
-  issue,
-  review,
   comment,
   automationProvenance,
   cliProvenance
 }: WorktreeCardMetaBadgesProps): boolean {
-  return Boolean(
-    issue || review || hasComment(comment) || automationProvenance || cliProvenance
-  )
+  return Boolean(hasComment(comment) || automationProvenance || cliProvenance)
 }
 
 export const WorktreeCardMetaBadges = React.forwardRef<
   HTMLDivElement,
   WorktreeCardMetaBadgesRootProps
 >(function WorktreeCardMetaBadges(
-  { issue, review, comment, automationProvenance, cliProvenance, className, ...props },
+  { comment, automationProvenance, cliProvenance, className, ...props },
   ref
 ): React.JSX.Element | null {
   if (
     !hasWorktreeCardDetails({
-      issue,
-      review,
       comment,
       automationProvenance,
       cliProvenance
@@ -84,28 +77,6 @@ export const WorktreeCardMetaBadges = React.forwardRef<
           )}
         >
           <SquareTerminal className="text-muted-foreground" />
-        </MetaIconBadge>
-      )}
-      {issue && (
-        <MetaIconBadge
-          label={translate(
-            'auto.components.sidebar.WorktreeCardMeta.3f2649eeb8',
-            'Linked issue #{{value0}}',
-            { value0: issue.number }
-          )}
-        >
-          <CircleDot className="text-muted-foreground" />
-        </MetaIconBadge>
-      )}
-      {review && (
-        <MetaIconBadge
-          label={translate(
-            'auto.components.sidebar.WorktreeCardMeta.3ea2702e62',
-            'Linked {{value0}} #{{value1}}',
-            { value0: getReviewLabel(review), value1: review.number }
-          )}
-        >
-          <ReviewIcon review={review} />
         </MetaIconBadge>
       )}
     </div>

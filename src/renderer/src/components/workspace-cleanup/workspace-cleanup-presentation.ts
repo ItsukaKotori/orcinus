@@ -1,12 +1,10 @@
-import { getHostedReviewCacheKey } from '@/store/slices/hosted-review-cache-identity'
 import type { AppState } from '@/store/types'
 import { translate } from '@/i18n/i18n'
 import { getRepoExecutionHostId } from '../../../../shared/execution-host'
-import type { HostedReviewInfo, HostedReviewProvider } from '../../../../shared/hosted-review'
 import type { Repo } from '../../../../shared/repo-types'
 import type { Worktree } from '../../../../shared/worktree/types'
+import type { HostedReviewProvider } from '../../../../shared/hosted-review'
 import type { WorkspaceCleanupCandidate } from '../../../../shared/workspace-cleanup'
-import { isGitHubPRSuppressed } from '../../../../shared/worktree/github-pr-suppression'
 import { getWorkspaceCleanupCandidateHostId } from './workspace-cleanup-host-identity'
 
 export type WorkspaceCleanupSortKey = 'activity' | 'name' | 'repo' | 'review' | 'git'
@@ -37,10 +35,7 @@ export type WorkspaceCleanupReviewInfo = {
   title: string | null
 }
 
-export type WorkspaceCleanupRendererStateInputs = Pick<
-  AppState,
-  'worktreesByRepo' | 'hostedReviewCache' | 'repos' | 'settings'
->
+export type WorkspaceCleanupRendererStateInputs = Pick<AppState, 'worktreesByRepo' | 'repos'>
 
 export type WorkspaceCleanupReviewLookup = {
   reposById: ReadonlyMap<string, readonly Repo[]>
@@ -62,23 +57,6 @@ export function getWorkspaceCleanupReviewInfo(
 ): WorkspaceCleanupReviewInfo {
   const repo = findCandidateRepo(candidate, lookup)
   const worktree = findCandidateWorktree(candidate, repo, lookup)
-  const cachedHostedReview = getCachedHostedReview(candidate, worktree, repo, state)
-  const hostedReview =
-    cachedHostedReview?.provider === 'github' &&
-    worktree &&
-    isGitHubPRSuppressed(worktree, cachedHostedReview.number)
-      ? null
-      : cachedHostedReview
-  if (hostedReview) {
-    return {
-      hasReview: true,
-      label: `${getReviewShortLabel(hostedReview.provider)} #${hostedReview.number}`,
-      state: hostedReview.state,
-      provider: hostedReview.provider,
-      title: hostedReview.title
-    }
-  }
-
   const linkedReview = getLinkedReviewFallback(worktree)
   if (linkedReview) {
     return {
@@ -120,27 +98,6 @@ export function buildWorkspaceCleanupReviewLookup(
   return { reposById, worktreesByRepoAndId }
 }
 
-function getCachedHostedReview(
-  candidate: WorkspaceCleanupCandidate,
-  worktree: Worktree | null,
-  repo: Repo | null,
-  state: WorkspaceCleanupRendererStateInputs
-): HostedReviewInfo | null {
-  if (!repo) {
-    return null
-  }
-  const cacheKey = getHostedReviewCacheKey(
-    repo.path,
-    getBranchDisplayName(worktree?.branch ?? candidate.branch),
-    state.settings,
-    repo.id,
-    repo.connectionId,
-    repo.executionHostId,
-    true
-  )
-  return state.hostedReviewCache[cacheKey]?.data ?? null
-}
-
 function findCandidateRepo(
   candidate: WorkspaceCleanupCandidate,
   lookup: WorkspaceCleanupReviewLookup
@@ -173,7 +130,7 @@ function findCandidateWorktree(
 
 function getLinkedReviewFallback(worktree: Worktree | null): {
   label: string
-  provider: HostedReviewProvider
+  provider: WorkspaceCleanupReviewInfo['provider']
 } | null {
   if (!worktree) {
     return null
@@ -189,12 +146,4 @@ function getLinkedReviewFallback(worktree: Worktree | null): {
     }
   }
   return null
-}
-
-function getReviewShortLabel(_provider: HostedReviewProvider): string {
-  return 'PR'
-}
-
-function getBranchDisplayName(branch: string): string {
-  return branch.replace(/^refs\/heads\//, '') || 'HEAD'
 }

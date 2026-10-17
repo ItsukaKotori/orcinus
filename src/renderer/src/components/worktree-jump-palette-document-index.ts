@@ -6,29 +6,21 @@ import {
   resolvePaletteRepoForWorktree
 } from '@/lib/palette-repo-resolution'
 import type { PaletteDocument } from '@/lib/palette-match/palette-document'
-import type { AppState } from '@/store/types'
 import type { Repo } from '../../../shared/repo-types'
 import type { Worktree } from '../../../shared/worktree/types'
-import type { HostedReviewInfo } from '../../../shared/hosted-review'
 
 export function buildWorktreeJumpPaletteDocumentIndex({
   worktrees,
   repoMap,
   repoByHostIdentity,
   hostOptions,
-  hostFilterActive,
-  prCache,
-  issueCache,
-  checksReviewByWorktree
+  hostFilterActive
 }: {
   worktrees: readonly Worktree[]
   repoMap: ReadonlyMap<string, Repo>
   repoByHostIdentity: ReadonlyMap<string, Repo>
   hostOptions: readonly SidebarHostOption[]
   hostFilterActive: boolean
-  prCache: AppState['prCache'] | null
-  issueCache: AppState['issueCache'] | null
-  checksReviewByWorktree: ReadonlyMap<Worktree, HostedReviewInfo | null>
 }): Map<string, PaletteDocument> {
   const hostLabelByWorktreeId = new Map<string, string>()
   for (const worktree of worktrees) {
@@ -43,9 +35,6 @@ export function buildWorktreeJumpPaletteDocumentIndex({
     {
       repoMap,
       repoMapByHostIdentity: repoByHostIdentity,
-      prCache,
-      issueCache,
-      checksReviewByWorktree,
       hostLabelByWorktreeId
     }
   )

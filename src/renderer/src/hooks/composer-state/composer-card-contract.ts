@@ -22,13 +22,6 @@ export type ComposerCardSourceProps = Pick<
   | 'createMultiple'
   | 'agentPrompt'
   | 'attachmentPaths'
-  | 'linkedWorkItem'
-  | 'linkPopoverOpen'
-  | 'linkQuery'
-  | 'filteredLinkItems'
-  | 'linkItemsLoading'
-  | 'linkDirectLoading'
-  | 'normalizedLinkQuery'
   | 'tuiAgent'
   | 'detectedAgentIds'
   | 'advancedOpen'
@@ -60,31 +53,20 @@ export type ComposerCardActionProps = {
   onProjectChange: ComposerModel['handleProjectChange']
   onProjectHostSetupChange: ComposerModel['handleProjectHostSetupChange']
   onEphemeralVmRecipeChange: ComposerModel['setSelectedEphemeralVmRecipeId']
-  repoBackedSearchRepos?: ComposerModel['eligibleRepos']
-  repoBackedSourcesDisabled?: boolean
-  allowSmartNameAddProject?: boolean
-  smartNameRepoSwitchTarget?: 'project' | 'task-source'
   onNameValueChange: ComposerModel['handleNameValueChange']
   onBranchNameOverrideChange: ComposerModel['handleBranchNameOverrideChange']
   onParentWorktreeIdChange: ComposerModel['setParentWorktreeId']
-  onSmartGitHubItemSelect: ComposerModel['handleSmartGitHubItemSelect']
   onSmartBranchSelect: ComposerModel['handleSmartBranchSelect']
   onSmartNameModeChange?: ComposerModel['setSmartNameMode']
-  smartNameGitHubSourceContext?: ComposerModel['selectedRepoGitHubSourceContext']
   onClearSmartNameSelection: ComposerModel['handleClearSmartNameSelection']
   canReuseSelectedBranch: boolean
   onReuseSelectedBranchChange: ComposerModel['handleReuseSelectedBranchChange']
   showCreateMultiple: boolean
   onCreateMultipleChange: ComposerModel['setCreateMultiple']
   onAgentPromptChange: ComposerModel['setAgentPrompt']
-  linkedOnlyTemplatePreview: string | null
   getAttachmentLabel: (pathValue: string) => string
   onAddAttachment: () => void
   onRemoveAttachment: (pathValue: string) => void
-  onRemoveLinkedWorkItem: ComposerModel['handleRemoveLinkedWorkItem']
-  onLinkPopoverOpenChange: ComposerModel['handleLinkPopoverChange']
-  onLinkQueryChange: ComposerModel['setLinkQuery']
-  onSelectLinkedItem: ComposerModel['handleSelectLinkedItem']
   onTuiAgentChange: ComposerModel['setTuiAgent']
   onOpenAgentSettings: ComposerModel['handleOpenAgentSettings']
   onToggleAdvanced: () => void
@@ -92,8 +74,6 @@ export type ComposerCardActionProps = {
   onCreate: () => void
   onNoteChange: ComposerModel['setNote']
   onBaseBranchChange: ComposerModel['handleBaseBranchChange']
-  onBaseBranchPrSelect: ComposerModel['handleBaseBranchPrSelect']
-  baseBranchLinkedPrNumber: number | null
   branchesEnabled?: boolean
   setupControlsEnabled?: boolean
   onSetupDecisionChange: ComposerModel['setSetupDecision']

@@ -22,7 +22,7 @@ function makeState(
       }
     ],
     rightSidebarOpen: true,
-    rightSidebarTab: 'checks',
+    rightSidebarTab: 'source-control',
     worktreesByRepo: { 'repo-1': [{ id: 'wt-1', repoId: 'repo-1' }] },
     ...overrides
   } as Parameters<typeof rightSidebarShowsPullRequestData>[0]
@@ -30,14 +30,7 @@ function makeState(
 
 describe('right sidebar visibility helpers', () => {
   it('suppresses right sidebar controls on full-page views', () => {
-    for (const view of [
-      'settings',
-      'tasks',
-      'automations',
-      'space',
-      'artifacts',
-      'plugin-center'
-    ]) {
+    for (const view of ['settings', 'automations', 'space', 'artifacts', 'plugin-center']) {
       expect(canShowRightSidebarForView(view as AppState['activeView'])).toBe(false)
     }
   })
@@ -57,7 +50,7 @@ describe('right sidebar visibility helpers', () => {
   })
 
   it('does not treat hidden full-page sidebars as visible PR panels', () => {
-    expect(rightSidebarShowsPullRequestData(makeState({ activeView: 'tasks' }))).toBe(false)
+    expect(rightSidebarShowsPullRequestData(makeState({ activeView: 'settings' }))).toBe(false)
   })
 
   it('does not treat hidden folder-repo fallbacks as visible PR panels', () => {
@@ -97,7 +90,7 @@ describe('right sidebar visibility helpers', () => {
       activeWorktreeId: 'wt-1',
       repos: [],
       rightSidebarOpen: true,
-      rightSidebarTab: 'checks',
+      rightSidebarTab: 'source-control',
       worktreesByRepo: {}
     } as unknown as Parameters<typeof rightSidebarShowsPullRequestData>[0]
 

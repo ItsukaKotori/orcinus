@@ -1,8 +1,6 @@
 import React from 'react'
 import { SourceControlPanel } from './source-control/panel/panel'
 
-export { HostedReviewHeaderLink } from './source-control/review/hosted-review-header-chrome'
-
 export {
   CompareSummary,
   CompareSummaryToolbarButton,

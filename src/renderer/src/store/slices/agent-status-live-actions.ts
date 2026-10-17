@@ -131,10 +131,6 @@ export function createAgentStatusLiveActions(
       ...(shouldReplaceGeneratedTitle ? { options: { replaceExistingGeneratedTitle: true } } : {})
     })
     requestFreshness(true)
-    if (builtResult.completionRefreshWorktreeId) {
-      const worktreeId = builtResult.completionRefreshWorktreeId
-      queueMicrotask(() => get().refreshGitHubForWorktreeIfStale(worktreeId))
-    }
   }
 
   const setAgentStatuses = (updates: Parameters<AgentStatusSlice['setAgentStatuses']>[0]) =>

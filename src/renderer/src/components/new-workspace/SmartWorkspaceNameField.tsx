@@ -7,7 +7,6 @@ export type {
   SmartWorkspaceNameSelection,
   SmartWorkspaceNameFieldProps
 } from './smart-workspace-name-field-model'
-export { getRepoSlugCached } from './smart-workspace-repo-slug'
 
 export default function SmartWorkspaceNameField(
   props: SmartWorkspaceNameFieldProps

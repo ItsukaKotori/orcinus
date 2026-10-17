@@ -58,8 +58,7 @@ export function useSourceControlPanelState() {
     isFolder,
     repositoryHuge,
     activeConnectionId,
-    activeWorktreeInstanceId,
-    worktreeMap
+    activeWorktreeInstanceId
   })
 
   return {

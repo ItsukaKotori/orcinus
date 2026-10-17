@@ -7,7 +7,6 @@ import {
 } from '@/lib/new-workspace-composer-repo'
 import { buildExecutionHostRegistry } from '../../../../shared/execution-host-registry'
 import { getHostDisplayLabelOverrides } from '../../../../shared/host-setting-overrides'
-import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import type { TaskSourceContext } from '../../../../shared/task-source-context'
 import type { WorkspaceStatus } from '../../../../shared/worktree/types'
 import type { WorkspaceSource as WorkspaceCreateTelemetrySource } from '../../../../shared/workspace-source'
@@ -21,7 +20,6 @@ export type ComposerStateInput = {
   initialName?: string
   initialPrompt?: string
   initialLinkedWorkItem?: LinkedWorkItemSummary | null
-  initialGitHubWorkItem?: GitHubWorkItem | null
   initialTaskSourceContext?: TaskSourceContext | null
   initialWorkspaceStatus?: WorkspaceStatus
   initialBaseBranch?: string
@@ -44,7 +42,6 @@ export function useComposerTargetStore(options: ComposerStateInput, decisions: C
     initialName = '',
     initialPrompt = '',
     initialLinkedWorkItem = null,
-    initialGitHubWorkItem = null,
     initialTaskSourceContext = null,
     initialWorkspaceStatus,
     initialBaseBranch,
@@ -73,7 +70,6 @@ export function useComposerTargetStore(options: ComposerStateInput, decisions: C
       openSettingsTarget: s.openSettingsTarget,
       setActiveRuntimeEnvironmentPreference: s.setActiveRuntimeEnvironmentPreference,
       prefetchWorktreeCreateBase: s.prefetchWorktreeCreateBase,
-      prefetchWorkItems: s.prefetchWorkItems,
       fetchSparsePresets: s.fetchSparsePresets
     }))
   )
@@ -91,7 +87,6 @@ export function useComposerTargetStore(options: ComposerStateInput, decisions: C
     openSettingsTarget,
     setActiveRuntimeEnvironmentPreference,
     prefetchWorktreeCreateBase,
-    prefetchWorkItems,
     fetchSparsePresets
   } = actions
 
@@ -167,7 +162,6 @@ export function useComposerTargetStore(options: ComposerStateInput, decisions: C
     initialName,
     initialPrompt,
     initialLinkedWorkItem,
-    initialGitHubWorkItem,
     initialTaskSourceContext,
     initialWorkspaceStatus,
     initialBaseBranch,
@@ -194,7 +188,6 @@ export function useComposerTargetStore(options: ComposerStateInput, decisions: C
     openSettingsTarget,
     setActiveRuntimeEnvironmentPreference,
     prefetchWorktreeCreateBase,
-    prefetchWorkItems,
     fetchSparsePresets,
     repos,
     projects,

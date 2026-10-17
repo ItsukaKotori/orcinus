@@ -63,10 +63,6 @@ export function createGitRemotePushPull(
       void get().fetchUpstreamStatus(worktreeId, worktreePath, connectionId, pushTarget, {
         runtimeTargetSettings: runtimeSettings
       })
-      const refreshGitHubForWorktree = get().refreshGitHubForWorktree
-      if (typeof refreshGitHubForWorktree === 'function') {
-        refreshGitHubForWorktree(worktreeId)
-      }
     },
     pullBranch: async (worktreeId, worktreePath, connectionId, pushTarget, options) => {
       get().beginRemoteOperation('pull')
@@ -85,10 +81,6 @@ export function createGitRemotePushPull(
       void get().fetchUpstreamStatus(worktreeId, worktreePath, connectionId, pushTarget, {
         runtimeTargetSettings: runtimeSettings
       })
-      const refreshGitHubForWorktree = get().refreshGitHubForWorktree
-      if (typeof refreshGitHubForWorktree === 'function') {
-        refreshGitHubForWorktree(worktreeId)
-      }
     },
     fastForwardBranch: async (worktreeId, worktreePath, connectionId, pushTarget, options) => {
       get().beginRemoteOperation('fast_forward')
@@ -107,10 +99,6 @@ export function createGitRemotePushPull(
       void get().fetchUpstreamStatus(worktreeId, worktreePath, connectionId, pushTarget, {
         runtimeTargetSettings: runtimeSettings
       })
-      const refreshGitHubForWorktree = get().refreshGitHubForWorktree
-      if (typeof refreshGitHubForWorktree === 'function') {
-        refreshGitHubForWorktree(worktreeId)
-      }
     }
   }
 }
