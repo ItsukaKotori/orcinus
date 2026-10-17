@@ -14,10 +14,6 @@ const updateCapableCallers = new Map<string, readonly string[]>([
   [
     'src/renderer/src/components/floating-terminal/FloatingTerminalOrchestrationDialog.tsx',
     ['ORCHESTRATION_SKILL_UPDATE_COMMAND', 'installedCommand={updateCommand}']
-  ],
-  [
-    'src/renderer/src/components/settings/ComputerUseSkillSetupPanel.tsx',
-    ['COMPUTER_USE_SKILL_UPDATE_COMMAND', 'installedCommand={updateCommand}']
   ]
 ])
 

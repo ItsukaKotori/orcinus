@@ -670,8 +670,6 @@
         "2b043783ef": "연동",
         "2cd4ea75da": "워크스페이스 기본값, 앱 설정 및 유지 관리.",
         "13241992bd": "일반",
-        "0059bd17f3": "agents가 컴퓨터의 모든 앱을 제어할 수 있도록 하세요.",
-        "b35e92364b": "컴퓨터 사용",
         "cd50cec5d7": "Orcinus를 통해 여러 코딩 agents를 조정합니다.",
         "58a868e8e4": "오케스트레이션",
         "7c79d3b7bf": "선택 사항",
@@ -4369,27 +4367,7 @@
           "54038660e0": "명령",
           "25350d670f": "custom"
         },
-        "ComputerUsePane": {
-          "1735461723": "agents가 로컬 데스크톱 앱을 검사하고 작동할 수 있습니다.",
-          "93255aaf18": "Computer Use 스킬",
-          "45f8e22c2e": "열기",
-          "d95d1cfab8": "새로고침",
-          "0c29da5805": "준비됨",
-          "3383ea1aab": "컴퓨터 사용 권한을 재설정할 수 없습니다.",
-          "f189f448a3": "컴퓨터 사용 액세스 재설정",
-          "5c45349665": "컴퓨터 사용 권한을 열 수 없습니다.",
-          "7801ac08ec": "컴퓨터 사용 권한은 macOS에서만 필요합니다.",
-          "740766c291": "컴퓨터 사용 설정이 이미 완료되었습니다.",
-          "697005758f": "macOS 개인정보 보호 및 보안 오픈",
-          "2168fa5ab0": "컴퓨터 사용 권한을 로드할 수 없습니다.",
-          "0c9a33f468": "agents가 시각적 상태를 검사할 수 있도록 앱 창을 캡처합니다.",
-          "07bbe4c4cb": "스크린샷",
-          "4d03dec2d0": "앱 인터페이스 트리를 읽고 요청된 작업을 수행합니다.",
-          "6b5a2cd3a5": "접근성",
-          "6b17602073": "액세스 재설정",
-          "506f2acf7a": "액세스 재설정 중...",
-          "4b65070096": "darwin"
-        },
+        "ComputerUsePane": {},
         "DeveloperPermissionsPane": {
           "4c17304beb": "새로고침",
           "6326a4c5cc": "CLI, 로컬 앱 또는 자동화 도구에 macOS 개인 정보 보호 액세스가 필요한 경우 이러한 컨트롤을 사용하십시오. Orcinus는 시작 시 묻지 않습니다.",
@@ -5381,8 +5359,6 @@
           "c9ca101a3b": "연동",
           "f9b77539fd": "워크스페이스 기본값, 앱 설정 및 유지 관리.",
           "7807c11c4d": "일반",
-          "7118953f14": "agents가 컴퓨터의 모든 앱을 제어할 수 있도록 하세요.",
-          "c9841721cb": "컴퓨터 사용",
           "475980f53d": "Orcinus를 통해 여러 코딩 agents를 조정합니다.",
           "00c3a7950d": "오케스트레이션",
           "21f09426ea": "선택 사항. Orcinus는 기존 공급자 로그인과 함께 작동합니다. Orcinus가 계정 간 전환을 돕도록 원하는 경우에만 계정을 추가하세요.",
@@ -6298,16 +6274,7 @@
         },
         "computer": {
           "use": {
-            "search": {
-              "6e88da3508": "스킬",
-              "798be54d7e": "오토메이션",
-              "e27f8bafbf": "스크린샷",
-              "26c1290d83": "화면 녹화",
-              "82f01c2d2c": "접근성",
-              "fefb452f5b": "컴퓨터 사용",
-              "9210db582b": "요청 시 agents가 스크린샷을 검사하고 로컬 앱을 작동할 수 있도록 허용합니다.",
-              "442bec10fe": "컴퓨터 사용"
-            }
+            "search": {}
           }
         },
         "developer": {
@@ -7492,20 +7459,8 @@
             }
           }
         },
-        "computerUseSummary": {
-          "permissionsRequired_one": "agents가 앱 창을 조작하려면 먼저 1 권한이 필요합니다.",
-          "permissionsRequired_other": "agents가 앱 창을 조작하려면 먼저 {{value0}} 권한이 필요합니다.",
-          "checkingTitle": "Computer Use 액세스 확인 중입니다.",
-          "checkingDescription": "Orcinus가 Computer Use 도우미의 macOS 개인정보 보호 권한을 확인하고 있습니다.",
-          "unavailableTitle": "Computer Use를 사용할 수 없습니다.",
-          "unavailableDescription": "{{value0}} 때문에 Computer Use 권한을 사용할 수 없습니다.",
-          "readyTitle": "Computer Use를 사용할 준비가 되었습니다.",
-          "readyDescription": "요청하면 Agents가 앱 창을 검사하고 조작할 수 있습니다.",
-          "permissionsTitle": "로컬 앱을 사용하려면 설정을 완료하세요."
-        },
-        "computerUseSkillRuntime": {
-          "thisDevice": "이 기기"
-        },
+        "computerUseSummary": {},
+        "computerUseSkillRuntime": {},
         "WorkspaceDirectorySetting": {
           "1a2b3c4d5e": "클라이언트 기본값",
           "2b3c4d5e6f": "적용 대상",

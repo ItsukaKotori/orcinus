@@ -1,5 +1,7 @@
-//! `orcinus` — the Orcinus agent CLI (spec §3.6): `status`, `open`,
-//! `skills get` and the 14 `computer *` subcommands.
+//! `orcinus` — the Orcinus agent CLI (spec §3.6): `status` and `open`. The
+//! runtime RPC was removed with the computer-use trim, so neither command
+//! observes a live runtime: `status` reports the local runtime metadata file
+//! state and `open` launches the app without waiting.
 //!
 //! Output contract: with `--json`, success prints
 //! `{"id":<uuid>,"ok":true,"result":…,"_meta":{"runtimeId":…}}` and failure
@@ -7,16 +9,15 @@
 //! 1.
 //!
 //! Human mode prints readable text; errors print `error <code>: <message>`
-//! and exit 1 (and `status` exits 1 when the runtime is unreachable).
+//! and exit 1.
 
 mod client;
-mod computer;
 mod errors;
 mod open;
-mod skills;
 mod status;
 
 use clap::{Parser, Subcommand};
+use serde_json::json;
 
 use errors::{success_envelope, CliError};
 
@@ -24,7 +25,7 @@ use errors::{success_envelope, CliError};
 #[command(
     name = "orcinus",
     version,
-    about = "Drive Orcinus and its computer-use runtime from the terminal",
+    about = "Launch Orcinus and report its local runtime metadata",
     disable_help_subcommand = true
 )]
 struct Cli {
@@ -34,41 +35,15 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// Report whether the Orcinus runtime is running (never launches it).
+    /// Report local Orcinus runtime metadata state (never launches it).
     Status {
         /// Emit the JSON envelope instead of readable text.
         #[arg(long)]
         json: bool,
     },
-    /// Launch Orcinus and wait for its runtime to become reachable.
+    /// Launch Orcinus (does not wait for a runtime).
     Open {
         /// Emit the JSON envelope instead of readable text.
-        #[arg(long)]
-        json: bool,
-    },
-    /// Work with bundled agent-guide skills.
-    Skills {
-        #[command(subcommand)]
-        command: SkillsCommand,
-    },
-    /// Drive the computer-use runtime (snapshots, actions, permissions).
-    Computer {
-        #[command(subcommand)]
-        command: Box<computer::ComputerCommand>,
-    },
-}
-
-#[derive(Debug, Subcommand)]
-enum SkillsCommand {
-    /// Print a bundled skill guide.
-    Get {
-        /// Guide topic; the only bundled topic today is `computer-use`.
-        topic: String,
-        /// Accepted for oracle parity; the embedded guide has no separate
-        /// full/reference split, so the body is identical either way.
-        #[arg(long)]
-        full: bool,
-        /// Emit the JSON envelope instead of readable markdown.
         #[arg(long)]
         json: bool,
     },
@@ -78,10 +53,6 @@ fn main() {
     let cli = Cli::parse();
     let json_output = match &cli.command {
         Command::Status { json } | Command::Open { json } => *json,
-        Command::Skills {
-            command: SkillsCommand::Get { json, .. },
-        } => *json,
-        Command::Computer { command } => command.json(),
     };
     match run(cli) {
         Ok(()) => {}
@@ -96,46 +67,15 @@ fn run(cli: Cli) -> Result<(), CliError> {
     match cli.command {
         Command::Status { json } => run_status(json),
         Command::Open { json } => run_open(json),
-        Command::Skills { command } => run_skills(command),
-        Command::Computer { command } => computer::run(*command),
     }
 }
 
 fn run_status(json_output: bool) -> Result<(), CliError> {
-    let (snapshot, runtime_id) = status::read_status();
-    let envelope_runtime_id = if runtime_id.is_empty() {
+    let snapshot = status::read_status();
+    let envelope_runtime_id = if snapshot.runtime_id.is_empty() {
         "none"
     } else {
-        runtime_id.as_str()
-    };
-
-    if json_output {
-        println!(
-            "{}",
-            success_envelope(
-                &uuid::Uuid::new_v4().to_string(),
-                envelope_runtime_id,
-                snapshot.to_result()
-            )
-        );
-        return Ok(());
-    }
-
-    println!("{}", snapshot.to_human());
-    if !snapshot.reachable {
-        // Why: human-mode exit 1 mirrors the oracle; --json always exits 0 so
-        // scripts can read `runtime.reachable` from the envelope.
-        std::process::exit(1);
-    }
-    Ok(())
-}
-
-fn run_open(json_output: bool) -> Result<(), CliError> {
-    let (snapshot, runtime_id) = open::open()?;
-    let envelope_runtime_id = if runtime_id.is_empty() {
-        "none"
-    } else {
-        runtime_id.as_str()
+        snapshot.runtime_id.as_str()
     };
 
     if json_output {
@@ -153,24 +93,22 @@ fn run_open(json_output: bool) -> Result<(), CliError> {
     Ok(())
 }
 
-fn run_skills(command: SkillsCommand) -> Result<(), CliError> {
-    match command {
-        SkillsCommand::Get {
-            topic,
-            full: _full,
-            json,
-        } => {
-            let guide = skills::get(&topic)?;
-            if json {
-                let envelope =
-                    success_envelope(&uuid::Uuid::new_v4().to_string(), "none", guide.json());
-                println!("{envelope}");
-            } else {
-                println!("{}", guide.markdown);
-            }
-            Ok(())
-        }
+fn run_open(json_output: bool) -> Result<(), CliError> {
+    open::open()?;
+
+    if json_output {
+        println!(
+            "{}",
+            success_envelope(
+                &uuid::Uuid::new_v4().to_string(),
+                "none",
+                json!({ "launched": true })
+            )
+        );
+    } else {
+        println!("Orcinus launched.");
     }
+    Ok(())
 }
 
 fn report_error(error: &CliError, json_output: bool) {

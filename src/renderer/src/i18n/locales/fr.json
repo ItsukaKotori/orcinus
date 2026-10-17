@@ -757,8 +757,6 @@
         "2b043783ef": "Intégrations",
         "2cd4ea75da": "Valeurs par défaut des espaces de travail, configuration de l'app et maintenance.",
         "13241992bd": "Général",
-        "0059bd17f3": "Permettez aux agents de contrôler n'importe quelle app de votre ordinateur.",
-        "b35e92364b": "Computer Use",
         "cd50cec5d7": "Coordonnez plusieurs agents de codage via Orcinus.",
         "58a868e8e4": "Orchestration",
         "7c79d3b7bf": "Facultatif",
@@ -5037,30 +5035,7 @@
           "54038660e0": "command",
           "25350d670f": "custom"
         },
-        "ComputerUsePane": {
-          "1735461723": "Permet aux agents d'inspecter et de piloter des applications de bureau locales.",
-          "93255aaf18": "Compétence Computer Use",
-          "45f8e22c2e": "Ouvert",
-          "d95d1cfab8": "Actualiser",
-          "0c29da5805": "Prêt",
-          "3383ea1aab": "Impossible de réinitialiser les autorisations Computer Use",
-          "f189f448a3": "Réinitialiser l'accès Computer Use",
-          "5c45349665": "Impossible d'ouvrir les autorisations Computer Use",
-          "7801ac08ec": "Les autorisations Computer Use ne sont requises que sur macOS",
-          "740766c291": "La configuration de Computer Use est déjà terminée",
-          "697005758f": "Panneau Confidentialité et sécurité de macOS ouvert",
-          "2168fa5ab0": "Impossible de charger les autorisations Computer Use",
-          "0c9a33f468": "Capture les fenêtres des applications pour que les agents puissent inspecter leur état visuel.",
-          "07bbe4c4cb": "Captures d'écran",
-          "4d03dec2d0": "Lit les arborescences d'interface des applications et effectue les actions demandées.",
-          "6b5a2cd3a5": "Accessibilité",
-          "6b17602073": "Réinitialiser l'accès",
-          "506f2acf7a": "Réinitialisation de l'accès...",
-          "4b65070096": "darwin",
-          "statusGranted": "Accordée",
-          "statusUnsupported": "macOS uniquement",
-          "statusNotEnabled": "Non activé"
-        },
+        "ComputerUsePane": {},
         "DeveloperPermissionsPane": {
           "4c17304beb": "Actualiser",
           "6326a4c5cc": "Utilisez ces contrôles quand une CLI, une application locale ou un outil d'automatisation a besoin d'une autorisation de confidentialité macOS. Orcinus ne le demande pas au démarrage.",
@@ -6143,8 +6118,6 @@
           "c9ca101a3b": "Intégrations",
           "f9b77539fd": "Valeurs par défaut des espaces de travail, configuration de l'app et maintenance.",
           "7807c11c4d": "Général",
-          "7118953f14": "Permettez aux agents de contrôler n'importe quelle app de votre ordinateur.",
-          "c9841721cb": "Computer Use",
           "475980f53d": "Coordonnez plusieurs agents de codage via Orcinus.",
           "00c3a7950d": "Orchestration",
           "21f09426ea": "Facultatif. Orcinus fonctionne avec vos connexions de fournisseurs existantes ; ajoutez des comptes uniquement si vous voulez qu'Orcinus aide à basculer entre eux.",
@@ -7065,16 +7038,7 @@
         },
         "computer": {
           "use": {
-            "search": {
-              "6e88da3508": "skill",
-              "798be54d7e": "automatisation",
-              "e27f8bafbf": "capture d'écran",
-              "26c1290d83": "enregistrement d'écran",
-              "82f01c2d2c": "accessibilité",
-              "fefb452f5b": "computer use",
-              "9210db582b": "Autoriser les agents à analyser des captures d'écran et à piloter des applications locales à votre demande.",
-              "442bec10fe": "Computer Use"
-            }
+            "search": {}
           }
         },
         "developer": {
@@ -8226,20 +8190,8 @@
           "scope_label": "{{value0}} : {{value1}}",
           "change_host": "Ouvrir les serveurs distants"
         },
-        "computerUseSkillRuntime": {
-          "thisDevice": "Cet appareil"
-        },
-        "computerUseSummary": {
-          "checkingTitle": "Vérification de l'accès Computer Use.",
-          "checkingDescription": "Orcinus vérifie les autorisations de confidentialité macOS pour l'assistant Computer Use.",
-          "unavailableTitle": "Computer Use est indisponible.",
-          "unavailableDescription": "Les autorisations Computer Use sont indisponibles car {{value0}}.",
-          "readyTitle": "Computer Use est prêt.",
-          "readyDescription": "Les agents peuvent inspecter et manipuler des fenêtres d'applications à votre demande.",
-          "permissionsTitle": "Terminez la configuration pour utiliser les applications locales.",
-          "permissionsRequired_one": "1 autorisation requise avant que les agents puissent manipuler des fenêtres d'applications.",
-          "permissionsRequired_other": "{{value0}} autorisations requises avant que les agents puissent manipuler des fenêtres d'applications."
-        },
+        "computerUseSkillRuntime": {},
+        "computerUseSummary": {},
         "providerAccountScope": {
           "remoteServer": "Serveur distant : {{value0}}"
         },

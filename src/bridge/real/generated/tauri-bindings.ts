@@ -280,11 +280,6 @@ export const commands = {
 	aiVaultCancelListSessions: (args: AiVaultCancelListSessionsArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("ai_vault_cancel_list_sessions", { args })),
 	aiVaultPrepareSessionResume: (args: AiVaultPrepareSessionResumeArgs) => typedError<AiVaultPrepareSessionResumeResult_Serialize, BridgeError>(__TAURI_INVOKE("ai_vault_prepare_session_resume", { args })),
 	aiVaultDeleteSession: (args: AiVaultDeleteSessionArgs) => typedError<AiVaultDeleteSessionResult, BridgeError>(__TAURI_INVOKE("ai_vault_delete_session", { args })),
-	computerUsePermissionsGetStatus: () => typedError<ComputerUsePermissionStatusResult, BridgeError>(__TAURI_INVOKE("computer_use_permissions_get_status")),
-	computerUsePermissionsOpenSetup: (args: {
-	id?: ComputerUsePermissionId | null,
-} | null) => typedError<ComputerUseOpenSetupResult_Serialize, BridgeError>(__TAURI_INVOKE("computer_use_permissions_open_setup", { args })),
-	computerUsePermissionsReset: () => typedError<ComputerUseResetResult, BridgeError>(__TAURI_INVOKE("computer_use_permissions_reset")),
 	cliGetInstallStatus: () => typedError<CliInstallStatusDto, BridgeError>(__TAURI_INVOKE("cli_get_install_status")),
 	cliInstall: () => typedError<CliInstallStatusDto, BridgeError>(__TAURI_INVOKE("cli_install")),
 	cliRemove: () => typedError<CliInstallStatusDto, BridgeError>(__TAURI_INVOKE("cli_remove")),
@@ -587,74 +582,6 @@ export type CliInstallUnsupportedReason = "platform_not_supported" | "launcher_m
  */
 export type CliWslInstallArgs = {
 	distro?: string | null,
-};
-
-/**  `computerUsePermissions.openSetup` args (`{ id? }`). */
-export type ComputerUseOpenSetupArgs = {
-	id?: ComputerUsePermissionId | null,
-};
-
-/**
- *  `ComputerUsePermissionSetupResult` (`permissionId`/`permissions` omitted
- *  when absent; `nextStep` stays nullable).
- */
-export type ComputerUseOpenSetupResult = ComputerUseOpenSetupResult_Serialize | ComputerUseOpenSetupResult_Deserialize;
-
-/**
- *  `ComputerUsePermissionSetupResult` (`permissionId`/`permissions` omitted
- *  when absent; `nextStep` stays nullable).
- */
-export type ComputerUseOpenSetupResult_Deserialize = {
-	platform: string,
-	helperAppPath: string | null,
-	permissionId: ComputerUsePermissionId | null,
-	openedSettings: boolean,
-	launchedHelper: boolean,
-	permissions: ComputerUsePermissionState[] | null,
-	nextStep: string | null,
-};
-
-/**
- *  `ComputerUsePermissionSetupResult` (`permissionId`/`permissions` omitted
- *  when absent; `nextStep` stays nullable).
- */
-export type ComputerUseOpenSetupResult_Serialize = {
-	platform: string,
-	helperAppPath: string | null,
-	permissionId?: ComputerUsePermissionId | null,
-	openedSettings: boolean,
-	launchedHelper: boolean,
-	permissions?: ComputerUsePermissionState[] | null,
-	nextStep: string | null,
-};
-
-/**  `ComputerUsePermissionId` (`'accessibility' | 'screenshots'`). */
-export type ComputerUsePermissionId = "accessibility" | "screenshots";
-
-/**  `ComputerUsePermissionState` (`{id, status}`). */
-export type ComputerUsePermissionState = {
-	id: ComputerUsePermissionId,
-	status: ComputerUsePermissionStatus,
-};
-
-/**  `ComputerUsePermissionStatus` (`'granted' | 'not-granted' | 'unsupported'`). */
-export type ComputerUsePermissionStatus = "granted" | "not-granted" | "unsupported";
-
-/**  `ComputerUsePermissionStatusResult`. */
-export type ComputerUsePermissionStatusResult = {
-	platform: string,
-	helperAppPath: string | null,
-	helperUnavailableReason: string | null,
-	permissions: ComputerUsePermissionState[],
-};
-
-/**  `ComputerUsePermissionResetResult` (status plus the reset `bundleId`). */
-export type ComputerUseResetResult = {
-	platform: string,
-	helperAppPath: string | null,
-	helperUnavailableReason: string | null,
-	permissions: ComputerUsePermissionState[],
-	bundleId: string | null,
 };
 
 export type DiffLineCountMinimums = {

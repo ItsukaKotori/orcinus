@@ -3,7 +3,6 @@ import { applyDocumentTheme } from '@/lib/document-theme'
 import { useSettingsNavigationMetadata } from '@/hooks/useSettingsNavigationMetadata'
 import type { SettingsNavInstallStatus } from '@/lib/settings-navigation-types'
 import {
-  COMPUTER_USE_SKILL_NAME,
   ORCHESTRATION_SKILL_NAME
 } from '@/lib/agent-feature-install-commands'
 import { getAgentSkillNavInstallStatus } from '@/lib/agent-skill-nav-install-status'
@@ -40,13 +39,11 @@ export function useSettingsNavigationModel(
   const baseNavSections = useSettingsNavigationMetadata()
   const { installed: orchestrationSkillInstalled, loading: orchestrationSkillLoading } =
     model.orchestrationSkill
-  const { installed: computerUseSkillInstalled, loading: computerUseSkillLoading } =
-    model.computerUseSkill
   const capabilityInstallStatusBySectionId = useMemo(() => {
     const applicableFreshnessInventory = model.skillFreshnessApplies
       ? model.skillFreshnessInventory
       : null
-    const next = new Map<string, SettingsNavInstallStatus>([
+    return new Map<string, SettingsNavInstallStatus>([
       [
         'orchestration',
         getAgentSkillNavInstallStatus({
@@ -57,23 +54,8 @@ export function useSettingsNavigationModel(
         })
       ]
     ])
-    if (model.showDesktopOnlySettings) {
-      next.set(
-        'computer-use',
-        getAgentSkillNavInstallStatus({
-          name: COMPUTER_USE_SKILL_NAME,
-          installed: computerUseSkillInstalled,
-          loading: computerUseSkillLoading,
-          inventory: applicableFreshnessInventory
-        })
-      )
-    }
-    return next
   }, [
-    computerUseSkillInstalled,
-    computerUseSkillLoading,
     model.settings,
-    model.showDesktopOnlySettings,
     model.skillFreshnessApplies,
     model.skillFreshnessInventory,
     orchestrationSkillInstalled,

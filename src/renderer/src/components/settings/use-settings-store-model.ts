@@ -7,7 +7,6 @@ import { useSystemPrefersDark } from '@/components/terminal-pane/use-system-pref
 import { isMacUserAgent, isWindowsUserAgent } from '@/components/terminal-pane/pane-helpers'
 import { useConfirmationDialog } from '@/components/confirmation-dialog-context'
 import {
-  COMPUTER_USE_SKILL_NAME,
   ORCHESTRATION_SKILL_NAME
 } from '@/lib/agent-feature-install-commands'
 import {
@@ -82,11 +81,6 @@ export function useSettingsStoreModel() {
     discoveryTarget: activeSkillRuntime.discoveryTarget,
     sourceKinds: GLOBAL_AGENT_SKILL_SOURCE_KINDS
   })
-  const computerUseSkill = useInstalledAgentSkill(COMPUTER_USE_SKILL_NAME, {
-    enabled: showDesktopOnlySettings,
-    discoveryTarget: activeSkillRuntime.discoveryTarget,
-    sourceKinds: GLOBAL_AGENT_SKILL_SOURCE_KINDS
-  })
   const skillFreshnessApplies = activeSkillRuntime.canUseLocalSkillFreshness
   const { inventory: skillFreshnessInventory } = useSkillFreshness(skillFreshnessApplies)
   // Why: trim platform-only Terminal entries from the shared search index so search never reveals hidden controls.
@@ -152,7 +146,6 @@ export function useSettingsStoreModel() {
     isMac,
     showDesktopOnlySettings,
     orchestrationSkill,
-    computerUseSkill,
     skillFreshnessApplies,
     skillFreshnessInventory,
     scrollbackMode,

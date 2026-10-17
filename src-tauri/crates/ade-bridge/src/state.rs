@@ -27,7 +27,6 @@ use tauri::{AppHandle, Manager};
 use crate::commands::ai_vault::AiVaultService;
 use crate::commands::platform::{platform_info, PlatformInfo};
 use crate::commands::preflight::PathHydrationCache;
-use crate::computer_service::{ComputerService, StoreFeatureRecorder, USER_DATA_PATH_ENV};
 use crate::errors::BridgeError;
 use crate::events;
 use crate::json::Json;
@@ -35,6 +34,10 @@ use crate::plugins_service::{
     build_plugin_service, keychain_secrets, notification_id, EventEmitter, HostPtyTerminals,
     NotificationDispatcher, PluginServiceDeps, PluginTicker,
 };
+
+/// Env override for the app data directory, honored so both the app and the
+/// `orcinus` CLI agree on where session state lives.
+pub const USER_DATA_PATH_ENV: &str = "ORCINUS_USER_DATA_PATH";
 
 /// Debounce window for settings/ui-state disk writes (spec §4.1).
 pub const WRITE_DEBOUNCE: Duration = Duration::from_millis(1000);
@@ -493,9 +496,6 @@ pub struct AppState {
     /// AI vault 会话历史（Phase 2F 规格 §3.2）：roots 配置 + 60s 列表缓存
     /// + 扫描取消注册表；无后台任务。
     pub ai_vault: Arc<AiVaultService>,
-    /// computer-use（Phase 2G 规格 §3.4/§3.5）：provider + TCC 权限面 +
-    /// runtime RPC server（`runtime.json`/`runtime.sock`，Exit 时 shutdown）。
-    pub computer: Arc<ComputerService>,
     /// 插件内核（Phase 3A 规格 §3.3/§3.9，T12a）：装配好的 PluginService
     /// 本体；T12b 在其上加命令面。Ticker 每 10s `pump()`（闲置回收）。
     pub plugins: Arc<PluginService>,
@@ -507,8 +507,7 @@ pub struct AppState {
 
 impl AppState {
     pub fn initialize(app: &AppHandle, pty_host: Arc<PtyHost>) -> Result<Self, BridgeError> {
-        // `orcinus` CLI reads `runtime.json` from the same directory; tests can
-        // redirect every store with one env var (spec §3.5).
+        // Tests can redirect every store with one env var (spec §3.5).
         let data_dir = match std::env::var(USER_DATA_PATH_ENV) {
             Ok(value) if !value.is_empty() => std::path::PathBuf::from(value),
             _ => app.path().app_data_dir().map_err(|error| {
@@ -570,20 +569,6 @@ impl AppState {
             move || lock(&store).persist()
         }));
 
-        // computer-use（规格 §3.4/§3.5）：helper 解析 → provider/RPC server →
-        // TCC 权限面。RPC feature 记录经 `StoreFeatureRecorder` 落 UI store
-        // （内存记录 + 复用 UI 去抖写盘）；helper 缺失也照常装配。
-        let recorder = Arc::new(StoreFeatureRecorder::new(
-            Arc::clone(&ui),
-            Arc::clone(&ui_writer),
-        ));
-        let resource_dir = app.path().resource_dir().ok();
-        let computer = Arc::new(ComputerService::initialize(
-            &data_dir,
-            resource_dir.as_deref(),
-            recorder,
-        )?);
-
         let watchers = FsWatcher::new();
         {
             let app_handle = app.clone();
@@ -614,6 +599,7 @@ impl AppState {
         let worktree_meta = Arc::new(persisted.worktree_meta);
         let fs = Arc::new(persisted.fs);
         let projects = Arc::new(Mutex::new(persisted.projects));
+        let resource_dir = app.path().resource_dir().ok();
         let plugins_deps = PluginServiceDeps {
             app_data_dir: data_dir.clone(),
             resource_dir,
@@ -671,7 +657,6 @@ impl AppState {
             path_hydration_cache: PathHydrationCache::default(),
             git_cancels: GitCancelRegistry::new(),
             ai_vault,
-            computer,
             plugins,
             plugins_ticker: Mutex::new(Some(plugins_ticker)),
             settings_writer,

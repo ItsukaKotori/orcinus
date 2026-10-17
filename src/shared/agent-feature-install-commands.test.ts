@@ -2,12 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   buildAgentFeatureSkillInstallArgs,
   buildAgentFeatureSkillInstallCommand,
-  COMPUTER_USE_SKILL_INSTALL_COMMAND,
-  COMPUTER_USE_SKILL_REPOSITORY_URL,
   ORCA_CLI_SKILL_INSTALL_COMMAND,
   buildAgentFeatureSkillUpdateArgs,
   buildAgentFeatureSkillUpdateCommand,
-  COMPUTER_USE_SKILL_UPDATE_COMMAND,
   EPHEMERAL_VMS_SKILL_INSTALL_COMMAND,
   EPHEMERAL_VMS_SKILL_UPDATE_COMMAND,
   LINEAR_TICKETS_SKILL_UPDATE_COMMAND,
@@ -21,16 +18,8 @@ import {
 } from './agent-feature-install-commands'
 
 describe('agent feature skill commands', () => {
-  it('routes only computer-use to the fork repository and every other skill upstream', () => {
-    // Why: the fork carries only the computer-use skill. Any other skill must
-    // keep installing from the upstream repo or `skills add` 404s.
+  it('installs every skill from the upstream repository', () => {
     expect(ORCA_SKILLS_REPOSITORY_URL).toBe('https://github.com/stablyai/orca')
-    expect(COMPUTER_USE_SKILL_REPOSITORY_URL).toBe(
-      'https://github.com/ItsukaKotori/orcinus'
-    )
-    expect(COMPUTER_USE_SKILL_INSTALL_COMMAND).toBe(
-      `npx skills add ${COMPUTER_USE_SKILL_REPOSITORY_URL} --skill computer-use --global`
-    )
     for (const command of [
       ORCA_CLI_SKILL_INSTALL_COMMAND,
       ORCHESTRATION_SKILL_INSTALL_COMMAND,
@@ -39,16 +28,8 @@ describe('agent feature skill commands', () => {
       ORCA_CLI_ORCHESTRATION_SKILL_INSTALL_COMMAND
     ]) {
       expect(command).toContain(ORCA_SKILLS_REPOSITORY_URL)
-      expect(command).not.toContain(COMPUTER_USE_SKILL_REPOSITORY_URL)
     }
-    expect(
-      buildAgentFeatureSkillInstallArgs(['computer-use'], {
-        repositoryUrl: COMPUTER_USE_SKILL_REPOSITORY_URL
-      })[2]
-    ).toBe(COMPUTER_USE_SKILL_REPOSITORY_URL)
-    expect(buildAgentFeatureSkillInstallArgs(['computer-use'])[2]).toBe(
-      ORCA_SKILLS_REPOSITORY_URL
-    )
+    expect(buildAgentFeatureSkillInstallArgs(['orca-cli'])[2]).toBe(ORCA_SKILLS_REPOSITORY_URL)
   })
 
   it('builds a global install command by default', () => {
@@ -154,7 +135,6 @@ describe('agent feature skill commands', () => {
 
   it('exports single-skill update constants without changing install bundles', () => {
     expect(ORCA_CLI_SKILL_UPDATE_COMMAND).toBe('npx skills update orca-cli --global')
-    expect(COMPUTER_USE_SKILL_UPDATE_COMMAND).toBe('npx skills update computer-use --global')
     expect(ORCHESTRATION_SKILL_UPDATE_COMMAND).toBe('npx skills update orchestration --global')
     expect(EPHEMERAL_VMS_SKILL_UPDATE_COMMAND).toBe(
       'npx skills update orca-per-workspace-env --global'

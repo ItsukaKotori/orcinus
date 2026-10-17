@@ -9,8 +9,6 @@ export type FeatureInteractionId =
   | 'agent-orchestration-setup'
   | 'ai-commit-generation'
   | 'claude-account-switching'
-  | 'computer-use-setup'
-  | 'computer-use'
   | 'codex-account-switching'
   | 'floating-workspace'
   | 'floating-workspace-hidden'
@@ -55,11 +53,6 @@ export const FEATURE_INTERACTIONS = [
     id: 'claude-account-switching',
     interaction: 'Claude managed account added, selected, reauthenticated, or removed'
   },
-  {
-    id: 'computer-use-setup',
-    interaction: 'Computer Use setup or permission flow opened'
-  },
-  { id: 'computer-use', interaction: 'computer-use runtime method used' },
   {
     id: 'codex-account-switching',
     interaction: 'Codex managed account added, selected, reauthenticated, or removed'

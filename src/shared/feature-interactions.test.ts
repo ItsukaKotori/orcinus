@@ -17,9 +17,6 @@ const REPO_ROOT = join(__dirname, '..', '..')
 const SOURCE_ROOTS = ['src/renderer/src', 'src/preload']
 const PRODUCTION_FILE_PATTERN = /\.(ts|tsx)$/
 const TEST_FILE_PATTERN = /(?:^|\.)(test|spec)\.(ts|tsx)$/
-const RUST_MAPPING_ROOTS = ['src-tauri/crates/ade-computer/src']
-const RUST_FILE_PATTERN = /\.rs$/
-const RUST_MAPPING_FUNCTION_PATTERN = /pub fn feature_id_for_method[\s\S]*?\n}\n/
 
 describe('feature interactions', () => {
   it('defines local interaction semantics for product education features', () => {
@@ -40,8 +37,6 @@ describe('feature interactions', () => {
       'agent-orchestration-setup',
       'ai-commit-generation',
       'claude-account-switching',
-      'computer-use-setup',
-      'computer-use',
       'codex-account-switching',
       'floating-workspace',
       'floating-workspace-hidden',
@@ -105,21 +100,13 @@ describe('feature interactions', () => {
 
   it('keeps every catalog id wired to a production writer', () => {
     const productionText = collectProductionSourceText()
-    const rustMappingText = collectRustFeatureMappingText()
     const missingWriters = FEATURE_INTERACTIONS.map((feature) => feature.id).filter((id) => {
       const escaped = escapeRegex(id)
       const directRecord = new RegExp(
         `recordFeatureInteraction(?:\\?\\.)?\\(\\s*['"]${escaped}['"]`
       )
       const runtimeMappingReturn = new RegExp(`return[^\\n]*['"]${escaped}['"]`)
-      // Why: `computer-use` has no renderer writer; its production writer is the
-      // Rust RPC feature-id mapping (`feature_id_for_method`, spec §3.10).
-      const rustMappingLiteral = new RegExp(`['"]${escaped}['"]`)
-      return (
-        !directRecord.test(productionText) &&
-        !runtimeMappingReturn.test(productionText) &&
-        !rustMappingLiteral.test(rustMappingText)
-      )
+      return !directRecord.test(productionText) && !runtimeMappingReturn.test(productionText)
     })
 
     expect(missingWriters).toEqual([])
@@ -155,36 +142,6 @@ function collectSourceFiles(directory: string): string[] {
       continue
     }
     files.push(path)
-  }
-  return files
-}
-
-function collectRustFeatureMappingText(): string {
-  const files = RUST_MAPPING_ROOTS.flatMap((root) =>
-    collectRustSourceFiles(join(REPO_ROOT, root))
-  )
-  return files
-    .sort()
-    .map((file) => RUST_MAPPING_FUNCTION_PATTERN.exec(readFileSync(file, 'utf8'))?.[0] ?? '')
-    .filter((body) => body.length > 0)
-    .join('\n')
-}
-
-function collectRustSourceFiles(directory: string): string[] {
-  const files: string[] = []
-  for (const entry of readdirSync(directory)) {
-    const path = join(directory, entry)
-    const stats = statSync(path)
-    if (stats.isDirectory()) {
-      if (entry === 'target') {
-        continue
-      }
-      files.push(...collectRustSourceFiles(path))
-      continue
-    }
-    if (RUST_FILE_PATTERN.test(entry)) {
-      files.push(path)
-    }
   }
   return files
 }

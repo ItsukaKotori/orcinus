@@ -6,7 +6,6 @@ import type { SettingsInteractionController } from './use-settings-interaction-c
 import type { SettingsRenderContext } from './settings-render-context'
 import {
   renderAgentsSettingsSection,
-  renderDesktopCapabilitySettingsSections,
   renderOrchestrationSettingsSection
 } from './settings-capability-section-renderers'
 import {
@@ -100,7 +99,6 @@ export function renderSettingsPage(context: SettingsRenderContext): React.JSX.El
               <ActiveSettingsSectionProvider value={model.activeSectionId}>
                 {renderAgentsSettingsSection(context)}
                 {renderOrchestrationSettingsSection(context)}
-                {renderDesktopCapabilitySettingsSections(context)}
                 {renderGeneralSettingsSection(context)}
                 {renderIntegrationsSettingsSection(context)}
                 {renderArtifactsSettingsSection(context)}

@@ -34,10 +34,10 @@ describe('settings navigation metadata', () => {
     expect(ids().slice(0, 6)).toEqual([
       'agents',
       'orchestration',
-      'computer-use',
       'general',
       'integrations',
-      'artifacts'
+      'artifacts',
+      'git'
     ])
   })
 
@@ -99,7 +99,6 @@ describe('settings navigation metadata', () => {
     expect(webIds).not.toContain('browser')
     expect(webIds).not.toContain('ssh')
     expect(webIds).not.toContain('mobile')
-    expect(webIds).not.toContain('computer-use')
     expect(webIds).not.toContain('advanced')
     expect(webIds).not.toContain('servers')
     expect(webIds).toContain('repo-repo-1')
@@ -126,7 +125,7 @@ describe('settings navigation metadata', () => {
       repos: [repo]
     })
 
-    expect(sections.find((section) => section.id === 'computer-use')?.badge).toBeUndefined()
+    expect(sections.find((section) => section.id === 'orchestration')?.badge).toBeUndefined()
   })
 
   it('places Plugins under Experimental on desktop and omits it on the web', () => {

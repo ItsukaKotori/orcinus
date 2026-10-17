@@ -3,7 +3,6 @@ pub mod agent_status;
 pub mod ai_vault;
 pub mod app;
 pub mod cli_install;
-pub mod computer_use;
 pub mod folder_workspaces;
 pub mod fs;
 pub mod git;

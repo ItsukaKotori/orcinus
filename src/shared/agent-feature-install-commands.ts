@@ -1,12 +1,8 @@
 import { isSkillsCliAgentKeyShaped } from './skills-cli-agent-keys'
 
 export const ORCA_SKILLS_REPOSITORY_URL = 'https://github.com/stablyai/orca'
-// Why: the fork ships only the computer-use skill; every other skill still
-// installs from the upstream repository.
-export const COMPUTER_USE_SKILL_REPOSITORY_URL = 'https://github.com/ItsukaKotori/orcinus'
 
 export const ORCA_CLI_SKILL_NAME = 'orca-cli'
-export const COMPUTER_USE_SKILL_NAME = 'computer-use'
 export const ORCHESTRATION_SKILL_NAME = 'orchestration'
 export const EPHEMERAL_VMS_SKILL_NAME = 'orca-per-workspace-env'
 export const ORCA_LINEAR_SKILL_NAME = 'orca-linear'
@@ -101,14 +97,6 @@ export const ORCA_CLI_SKILL_INSTALL_COMMAND = buildAgentFeatureSkillInstallComma
 
 export const ORCA_CLI_SKILL_UPDATE_COMMAND =
   buildAgentFeatureSkillUpdateCommand(ORCA_CLI_SKILL_NAME)
-
-export const COMPUTER_USE_SKILL_INSTALL_COMMAND = buildAgentFeatureSkillInstallCommand(
-  [COMPUTER_USE_SKILL_NAME],
-  { repositoryUrl: COMPUTER_USE_SKILL_REPOSITORY_URL }
-)
-
-export const COMPUTER_USE_SKILL_UPDATE_COMMAND =
-  buildAgentFeatureSkillUpdateCommand(COMPUTER_USE_SKILL_NAME)
 
 export const ORCHESTRATION_SKILL_INSTALL_COMMAND = buildAgentFeatureSkillInstallCommand([
   ORCHESTRATION_SKILL_NAME

@@ -667,8 +667,6 @@
         "2b043783ef": "Integraciones",
         "2cd4ea75da": "Ajustes predeterminados del espacio de trabajo, configuración de la app y mantenimiento.",
         "13241992bd": "General",
-        "0059bd17f3": "Permite que los agentes controlen cualquier app en tu computadora.",
-        "b35e92364b": "Computer Use",
         "cd50cec5d7": "Coordina múltiples coding agents a través de Orcinus.",
         "58a868e8e4": "Orquestación",
         "7c79d3b7bf": "Opcional",
@@ -4381,27 +4379,7 @@
           "54038660e0": "comando",
           "25350d670f": "personalizado"
         },
-        "ComputerUsePane": {
-          "1735461723": "Permite a los agents inspeccionar y operar apps de escritorio locales.",
-          "93255aaf18": "Skill Computer Use",
-          "45f8e22c2e": "Abrir",
-          "d95d1cfab8": "Actualizar",
-          "0c29da5805": "Listo",
-          "3383ea1aab": "No se pudieron restablecer los permisos de Computer Use",
-          "f189f448a3": "Restablecer acceso de Computer Use",
-          "5c45349665": "No se pudieron abrir los permisos de Computer Use",
-          "7801ac08ec": "Los permisos de Computer Use solo se requieren en macOS",
-          "740766c291": "La configuración de Computer Use ya está completa",
-          "697005758f": "Se abrió Privacidad y seguridad de macOS",
-          "2168fa5ab0": "No se pudieron cargar los permisos de Computer Use",
-          "0c9a33f468": "Captura ventanas de apps para que los agents puedan inspeccionar el estado visual.",
-          "07bbe4c4cb": "Capturas de pantalla",
-          "4d03dec2d0": "Lee árboles de interfaz de apps y realiza las acciones solicitadas.",
-          "6b5a2cd3a5": "Accesibilidad",
-          "6b17602073": "Restablecer acceso",
-          "506f2acf7a": "Restableciendo acceso...",
-          "4b65070096": "darwin"
-        },
+        "ComputerUsePane": {},
         "DeveloperPermissionsPane": {
           "4c17304beb": "Actualizar",
           "6326a4c5cc": "Usa estos controles cuando una CLI, una app local o una herramienta de automatización necesite permisos de privacidad de macOS. Orcinus no pregunta al iniciar.",
@@ -5393,8 +5371,6 @@
           "c9ca101a3b": "Integraciones",
           "f9b77539fd": "Valores predeterminados del workspace, configuración de la app y mantenimiento.",
           "7807c11c4d": "General",
-          "7118953f14": "Permite que los agentes controlen cualquier app en tu computadora.",
-          "c9841721cb": "Computer Use",
           "475980f53d": "Coordina varios agentes de codificación a través de Orcinus.",
           "00c3a7950d": "Orquestación",
           "21f09426ea": "Opcional. Orcinus funciona con tus inicios de sesión de proveedores existentes; agrega cuentas solo si quieres que Orcinus te ayude a cambiar entre ellas.",
@@ -6310,16 +6286,7 @@
         },
         "computer": {
           "use": {
-            "search": {
-              "6e88da3508": "skill",
-              "798be54d7e": "automatización",
-              "e27f8bafbf": "captura de pantalla",
-              "26c1290d83": "grabación de pantalla",
-              "82f01c2d2c": "accesibilidad",
-              "fefb452f5b": "uso de la computadora",
-              "9210db582b": "Permite que los agentes inspeccionen capturas de pantalla y controlen aplicaciones locales cuando lo pidas.",
-              "442bec10fe": "Uso de la computadora"
-            }
+            "search": {}
           }
         },
         "developer": {
@@ -7489,20 +7456,8 @@
             }
           }
         },
-        "computerUseSummary": {
-          "permissionsRequired_one": "Se requiere 1 permiso antes de que los agentes puedan operar ventanas de apps.",
-          "permissionsRequired_other": "Se requieren {{value0}} permisos antes de que los agentes puedan operar ventanas de apps.",
-          "checkingTitle": "Comprobando el acceso a Computer Use.",
-          "checkingDescription": "Orcinus está comprobando los permisos de privacidad de macOS para el helper de Computer Use.",
-          "unavailableTitle": "Computer Use no está disponible.",
-          "unavailableDescription": "Los permisos de Computer Use no están disponibles porque {{value0}}.",
-          "readyTitle": "Computer Use está listo.",
-          "readyDescription": "Los agentes pueden inspeccionar y operar ventanas de apps cuando se lo pidas.",
-          "permissionsTitle": "Completa la configuración para usar apps locales."
-        },
-        "computerUseSkillRuntime": {
-          "thisDevice": "Este dispositivo"
-        },
+        "computerUseSummary": {},
+        "computerUseSkillRuntime": {},
         "WorkspaceDirectorySetting": {
           "1a2b3c4d5e": "Predeterminado del cliente",
           "2b3c4d5e6f": "Aplicar a",

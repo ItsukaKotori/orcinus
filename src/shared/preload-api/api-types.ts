@@ -26,7 +26,6 @@ import type { BitbucketApi } from './api/bitbucket-api'
 import type { OnboardingApi, StarNagApi } from './api/onboarding-api'
 import type { OrcaProfileApi } from './api/orca-profile-api'
 import type {
-  ComputerUsePermissionsApi,
   DeveloperPermissionsApi,
   MacosTccPromptsApi,
   NotificationsApi
@@ -94,7 +93,6 @@ export type PreloadApi = {
   terminalPreview: TerminalPreviewApi
   macosTccPrompts: MacosTccPromptsApi
   developerPermissions: DeveloperPermissionsApi
-  computerUsePermissions: ComputerUsePermissionsApi
   shell: ShellApi
   skills: SkillsApi
   hooks: HooksApi

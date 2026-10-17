@@ -1,18 +1,16 @@
 import { getAgentsPaneSearchEntries } from '@/components/settings/agents-search'
-import { getComputerUsePaneSearchEntries } from '@/components/settings/computer-use-search'
 import { getGeneralPaneSearchEntries } from '@/components/settings/general-search'
 import { getIntegrationsPaneSearchEntries } from '@/components/settings/integrations-search'
 import { getOrchestrationPaneSearchEntries } from '@/components/settings/orchestration-search'
 import { translate } from '@/i18n/i18n'
 import type { SettingsNavSection } from '@/lib/settings-navigation-types'
-import { Blocks, Bot, MousePointerClick, Network, SlidersHorizontal } from 'lucide-react'
+import { Blocks, Bot, Network, SlidersHorizontal } from 'lucide-react'
 import type { SettingsNavigationBuildOptions } from './settings-navigation-build-options'
 
 export function buildCapabilitySettingsSections({
   isLocalWindowsHost,
   isWebClient
 }: SettingsNavigationBuildOptions): SettingsNavSection[] {
-  const showDesktopOnlySettings = !isWebClient
   return [
     {
       id: 'agents',
@@ -40,22 +38,7 @@ export function buildCapabilitySettingsSections({
         includeNestedWorkerDepth: !isWebClient
       }),
       group: 'capabilities'
-    },
-    ...(showDesktopOnlySettings
-      ? [
-          {
-            id: 'computer-use',
-            title: translate('auto.hooks.useSettingsNavigationMetadata.b35e92364b', 'Computer Use'),
-            description: translate(
-              'auto.hooks.useSettingsNavigationMetadata.0059bd17f3',
-              'Enable agents to control any app on your computer.'
-            ),
-            icon: MousePointerClick,
-            searchEntries: getComputerUsePaneSearchEntries(),
-            group: 'capabilities'
-          }
-        ]
-      : [])
+    }
   ]
 }
 

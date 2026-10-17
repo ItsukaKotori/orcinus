@@ -968,13 +968,7 @@
         "CommitMessageAiPane": {
           "841ed9884a": "Used by repositories that have not customized Source Control AI."
         },
-        "ComputerUsePane": {
-          "07bbe4c4cb": "Screenshots",
-          "0c9a33f468": "Capture app windows so agents can inspect visual state.",
-          "4b65070096": "darwin",
-          "4d03dec2d0": "Read app interface trees and perform requested actions.",
-          "6b5a2cd3a5": "Accessibility"
-        },
+        "ComputerUsePane": {},
         "EphemeralVmRuntimesSection": {
           "cleaned": "Cleaned up temporary VM runtime.",
           "cleanupFailedToast": "Couldn’t clean up temporary VM runtime.",
@@ -1406,13 +1400,8 @@
             }
           }
         },
-        "computerUseSkillRuntime": {
-          "thisDevice": "This device"
-        },
-        "computerUseSummary": {
-          "permissionsRequired_one": "1 permission required before agents can operate app windows.",
-          "permissionsRequired_other": "{{value0}} permissions required before agents can operate app windows."
-        },
+        "computerUseSkillRuntime": {},
+        "computerUseSummary": {},
         "experimental": {
           "search": {
             "10b52f79c1": "worktrees",

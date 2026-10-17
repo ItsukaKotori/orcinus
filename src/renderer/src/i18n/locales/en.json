@@ -821,8 +821,6 @@
         "2b043783ef": "Integrations",
         "2cd4ea75da": "Workspace defaults, app setup, and maintenance.",
         "13241992bd": "General",
-        "0059bd17f3": "Enable agents to control any app on your computer.",
-        "b35e92364b": "Computer Use",
         "cd50cec5d7": "Coordinate multiple coding agents through Orcinus.",
         "58a868e8e4": "Orchestration",
         "7c79d3b7bf": "Optional",
@@ -5211,30 +5209,7 @@
           "54038660e0": "command",
           "25350d670f": "custom"
         },
-        "ComputerUsePane": {
-          "1735461723": "Enables agents to inspect and operate local desktop apps.",
-          "93255aaf18": "Computer Use skill",
-          "45f8e22c2e": "Open",
-          "d95d1cfab8": "Refresh",
-          "0c29da5805": "Ready",
-          "3383ea1aab": "Could not reset Computer Use permissions",
-          "f189f448a3": "Reset Computer Use access",
-          "5c45349665": "Could not open Computer Use permissions",
-          "7801ac08ec": "Computer Use permissions are only required on macOS",
-          "740766c291": "Computer Use setup is already complete",
-          "697005758f": "Opened macOS Privacy & Security",
-          "2168fa5ab0": "Could not load Computer Use permissions",
-          "0c9a33f468": "Capture app windows so agents can inspect visual state.",
-          "07bbe4c4cb": "Screenshots",
-          "4d03dec2d0": "Read app interface trees and perform requested actions.",
-          "6b5a2cd3a5": "Accessibility",
-          "6b17602073": "Reset access",
-          "506f2acf7a": "Resetting access...",
-          "4b65070096": "darwin",
-          "statusGranted": "Granted",
-          "statusUnsupported": "macOS only",
-          "statusNotEnabled": "Not enabled"
-        },
+        "ComputerUsePane": {},
         "DeveloperPermissionsPane": {
           "4c17304beb": "Refresh",
           "6326a4c5cc": "Use these controls when a CLI, local app, or automation tool needs macOS privacy access. Orcinus does not ask at startup.",
@@ -6331,8 +6306,6 @@
           "c9ca101a3b": "Integrations",
           "f9b77539fd": "Workspace defaults, app setup, and maintenance.",
           "7807c11c4d": "General",
-          "7118953f14": "Enable agents to control any app on your computer.",
-          "c9841721cb": "Computer Use",
           "475980f53d": "Coordinate multiple coding agents through Orcinus.",
           "00c3a7950d": "Orchestration",
           "21f09426ea": "Optional. Orcinus works with your existing provider logins; add accounts only if you want Orcinus to help switch between them.",
@@ -7290,16 +7263,7 @@
         },
         "computer": {
           "use": {
-            "search": {
-              "6e88da3508": "skill",
-              "798be54d7e": "automation",
-              "e27f8bafbf": "screenshot",
-              "26c1290d83": "screen recording",
-              "82f01c2d2c": "accessibility",
-              "fefb452f5b": "computer use",
-              "9210db582b": "Allow agents to inspect screenshots and operate local apps when you ask.",
-              "442bec10fe": "Computer Use"
-            }
+            "search": {}
           }
         },
         "developer": {
@@ -8523,20 +8487,8 @@
           "scope_label": "{{value0}}: {{value1}}",
           "change_host": "Open Remote Servers"
         },
-        "computerUseSkillRuntime": {
-          "thisDevice": "This device"
-        },
-        "computerUseSummary": {
-          "checkingTitle": "Checking Computer Use access.",
-          "checkingDescription": "Orcinus is checking macOS privacy permissions for the Computer Use helper.",
-          "unavailableTitle": "Computer Use is unavailable.",
-          "unavailableDescription": "Computer Use permissions are unavailable because {{value0}}.",
-          "readyTitle": "Computer Use is ready.",
-          "readyDescription": "Agents can inspect and operate app windows when you ask.",
-          "permissionsTitle": "Finish setup to use local apps.",
-          "permissionsRequired_one": "1 permission required before agents can operate app windows.",
-          "permissionsRequired_other": "{{value0}} permissions required before agents can operate app windows."
-        },
+        "computerUseSkillRuntime": {},
+        "computerUseSummary": {},
         "providerAccountScope": {
           "remoteServer": "Remote server: {{value0}}",
           "remoteServerCredentials": "Credentials and account checks for this provider are owned by this remote server.",
