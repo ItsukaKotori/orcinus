@@ -7,8 +7,6 @@ import zh from './locales/zh.json'
 
 const repairedEntries = [
   ['es', 'auto.components.sidebar.AddRepoCreateStep.0ae45b8238'],
-  ['es', 'auto.components.settings.IntegrationsPane.e74de656ce'],
-  ['es', 'auto.components.settings.IntegrationsPane.51000487c4'],
   ['es', 'auto.components.settings.RepositoryHooksSection.925f9e0dc4'],
   ['es', 'auto.components.settings.RepositoryHooksSection.c90b858573'],
   ['es', 'auto.components.settings.RepositoryHooksSection.32f417fe17'],
@@ -17,7 +15,6 @@ const repairedEntries = [
   ['es', 'auto.components.editor.CombinedDiffViewer.8368d256ec'],
   ['es', 'auto.components.editor.MarkdownTemplatePicker.22cd94426f'],
   ['ko', 'auto.components.terminal.pane.stale.agent.row.090d607412'],
-  ['ko', 'auto.components.settings.IntegrationsPane.51000487c4'],
   ['ko', 'auto.components.settings.git.search.upstream'],
   ['ko', 'auto.components.right.sidebar.index.6306b48afd'],
   ['ko', 'auto.components.editor.CombinedDiffViewer.8368d256ec'],
@@ -29,8 +26,6 @@ const repairedEntries = [
   ['zh', 'auto.components.settings.AutoRenameBranchFromWorkSetting.800edb1e54'],
   ['zh', 'auto.components.settings.AutoRenameBranchPromptEditor.ebb942a2ec'],
   ['zh', 'auto.components.settings.BaseRefPicker.915ad97875'],
-  ['zh', 'auto.components.settings.IntegrationsPane.e74de656ce'],
-  ['zh', 'auto.components.settings.IntegrationsPane.51000487c4'],
   ['zh', 'auto.components.settings.RepositoryHooksSection.39da2ae12f'],
   ['zh', 'auto.components.settings.RepositoryHooksSection.925f9e0dc4'],
   ['zh', 'auto.components.settings.RepositoryHooksSection.c90b858573'],
@@ -57,7 +52,7 @@ function readValue(catalog: object, key: string): unknown {
 
 describe('technical literal catalog repairs (#13121)', () => {
   it('keeps every repaired value identical to English', () => {
-    expect(repairedEntries).toHaveLength(36)
+    expect(repairedEntries).toHaveLength(31)
 
     for (const [locale, key] of repairedEntries) {
       expect(readValue(catalogs[locale], key), `${locale}:${key}`).toBe(readValue(en, key))

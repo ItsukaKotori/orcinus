@@ -1227,9 +1227,7 @@
         },
         "bitbucket": {
           "credentials": {
-            "dialog": {
-              "remoteRuntime": "Bitbucket credentials saved here are stored on this local machine only. Set ORCA_BITBUCKET_* environment variables on the remote runtime instead."
-            }
+            "dialog": {}
           }
         },
         "computerUseSkillRuntime": {},
@@ -1282,9 +1280,7 @@
           }
         },
         "integrations": {
-          "search": {
-            "c97d58a0f3": "Bitbucket Cloud authentication via API token environment variables."
-          }
+          "search": {}
         },
         "jira": {
           "integration": {
@@ -1344,19 +1340,7 @@
           "source": {
             "control": {
               "integration": {
-                "cards": {
-                  "19416c874c": "ORCA_BITBUCKET_API_TOKEN",
-                  "63a7f47392": "ORCA_BITBUCKET_EMAIL",
-                  "a924e8dcd1": "Pull requests and build statuses via Bitbucket Cloud API tokens.",
-                  "e63fe8f627": "ORCA_BITBUCKET_ACCESS_TOKEN",
-                  "fc71a0e7aa": "and",
-                  "statusAuthFailed": "Auth failed",
-                  "statusConfigured": "Configured",
-                  "statusConnected": "Connected",
-                  "statusNotConfigured": "Not configured",
-                  "statusOptionalSetup": "Optional setup",
-                  "statusUnavailable": "Unavailable"
-                }
+                "cards": {}
               }
             }
           }

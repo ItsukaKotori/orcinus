@@ -651,8 +651,6 @@
         "85f4fd7710": "Fuentes de tareas",
         "ab4b21b58e": "Nombres de rama, refs base y Git AI Author.",
         "09607cb0fe": "Git y Source Control",
-        "33a5e1d597": "Conecta Bitbucket, Azure DevOps y Gitea con un token de API guardado o variables de entorno.",
-        "2b043783ef": "Integraciones",
         "2cd4ea75da": "Ajustes predeterminados del espacio de trabajo, configuración de la app y mantenimiento.",
         "13241992bd": "General",
         "cd50cec5d7": "Coordina múltiples coding agents a través de Orcinus.",
@@ -4586,9 +4584,7 @@
           "15cf990798": "No autenticado",
           "f7eb5f0b24": "No instalado",
           "3ba07f933b": "Conecta issue trackers que Orcinus puede usar para explorar tareas e iniciar espacios de trabajo con contexto vinculado.",
-          "70e885705b": "Proveedores de tareas",
-          "1683acbac4": "Conecta los hosts de código que Orcinus puede usar para pull requests, merge requests, checks y estado de revisión.",
-          "298c65ecac": "Proveedores de revisión"
+          "70e885705b": "Proveedores de tareas"
         },
         "KagiSessionLinkForm": {},
         "KeybindingsFileActions": {
@@ -5237,8 +5233,6 @@
           "11faa2f7dd": "Fuentes de tareas",
           "cfa34f4465": "Nombres de rama, refs base y Git AI Author.",
           "70100f94c7": "Git y control de código fuente",
-          "b07041697f": "Conecta Bitbucket, Azure DevOps y Gitea con un token de API guardado o variables de entorno.",
-          "c9ca101a3b": "Integraciones",
           "f9b77539fd": "Valores predeterminados del workspace, configuración de la app y mantenimiento.",
           "7807c11c4d": "General",
           "475980f53d": "Coordina varios agentes de codificación a través de Orcinus.",
@@ -6500,26 +6494,7 @@
           }
         },
         "integrations": {
-          "search": {
-            "a626990bd2": "desconectar",
-            "3c3d3d8ffa": "conectar",
-            "c450244ad7": "integración",
-            "20540996ef": "credenciales",
-            "2ec2bd328c": "token de API",
-            "8c568d761c": "pull request",
-            "33180e8c10": "self-hosted",
-            "129fc59aa8": "gitea",
-            "d0d019dc29": "Autenticación de Gitea a través de variables de entorno de token API.",
-            "aab86d64e5": "Integración de Gitea",
-            "03a7b275be": "ado",
-            "ed63380247": "azure repos",
-            "b38b5d27f1": "azure devops",
-            "7b1f3984bb": "Autenticación de Azure DevOps Repos mediante variables de entorno de token.",
-            "af6611fa6e": "Integración de Azure DevOps",
-            "50d20817f7": "bitbucket",
-            "c97d58a0f3": "Autenticación de Bitbucket Cloud a través de variables de entorno de token API.",
-            "67a2a0e868": "Integración de Bitbucket"
-          }
+          "search": {}
         },
         "jira": {
           "integration": {
@@ -7216,40 +7191,7 @@
           "source": {
             "control": {
               "integration": {
-                "cards": {
-                  "793a06e899": "Volver a comprobar",
-                  "1a9475dace": "Más información",
-                  "19fb419c12": "Las credenciales de Gitea están configuradas, pero no se pudo autenticar. Comprueba el token, la URL base de la API y los permisos del repositorio; después reinicia Orcinus si cambiaron las variables de entorno.",
-                  "60708f23da": "solo cuando Orcinus no pueda derivar la URL de la API desde el remote.",
-                  "709057ad91": "ORCA_GITEA_API_BASE_URL",
-                  "6da9dfa5de": "para repositorios privados, y configura",
-                  "6d5c2a3005": "ORCA_GITEA_TOKEN",
-                  "fcbe0469fd": "Los repositorios públicos se detectan desde su remote de git. Configura",
-                  "0613928cb3": "El estado de Gitea aún no está disponible en este runtime.",
-                  "05863d2599": "Pull requests y estados de commit mediante la API REST de Gitea.",
-                  "52f75876be": "Pull requests y estados de commit para los repositorios detectados",
-                  "0b5242f8a2": "{{value0}} · Pull requests y estados de commit",
-                  "40f678df73": "Las credenciales de Azure DevOps están configuradas, pero no se pudo autenticar. Comprueba el token, la URL base de la API y los permisos del repositorio; después reinicia Orcinus si cambiaron las variables de entorno.",
-                  "7bd345e3f6": "solo cuando Orcinus no pueda derivar la URL base de la API desde el remote de git.",
-                  "186a6689df": "ORCA_AZURE_DEVOPS_API_BASE_URL",
-                  "b8a10b07c1": ". Configura",
-                  "fbfd237f5e": "ORCA_AZURE_DEVOPS_ACCESS_TOKEN",
-                  "087feb92f1": ", o configura",
-                  "48842720d2": "ORCA_AZURE_DEVOPS_TOKEN",
-                  "7bbc9c64f0": "Configura",
-                  "f3f47dc7de": "El estado de Azure DevOps aún no está disponible en este runtime.",
-                  "0eb50d5593": "Pull requests y estados de build mediante tokens de la API REST de Azure DevOps.",
-                  "54636c65d4": "Pull requests y estados de build para Azure Repos detectados",
-                  "ea204f5e03": "{{value0}} · Pull requests y estados de build",
-                  "6154b02093": "Las credenciales de Bitbucket están configuradas, pero no se pudo autenticar. Comprueba el token y los permisos del repositorio; después reinicia Orcinus si cambiaron las variables de entorno.",
-                  "e63fe8f627": "ORCA_BITBUCKET_ACCESS_TOKEN",
-                  "19416c874c": "ORCA_BITBUCKET_API_TOKEN",
-                  "fc71a0e7aa": "y",
-                  "63a7f47392": "ORCA_BITBUCKET_EMAIL",
-                  "24ac1c69dc": "El estado de Bitbucket aún no está disponible en este runtime.",
-                  "a924e8dcd1": "Pull requests y estados de build mediante tokens de la API de Bitbucket Cloud.",
-                  "0fa5629dad": "Pull requests y estados de build"
-                }
+                "cards": {}
               }
             }
           }

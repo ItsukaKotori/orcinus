@@ -654,8 +654,6 @@
         "85f4fd7710": "작업 소스",
         "ab4b21b58e": "브랜치 이름 지정, 기본 참조 및 Git AI Author.",
         "09607cb0fe": "Git 및 소스 제어",
-        "33a5e1d597": "저장된 API 토큰 또는 환경 변수로 Bitbucket, Azure DevOps, Gitea에 연결하세요.",
-        "2b043783ef": "연동",
         "2cd4ea75da": "워크스페이스 기본값, 앱 설정 및 유지 관리.",
         "13241992bd": "일반",
         "cd50cec5d7": "Orcinus를 통해 여러 코딩 agents를 조정합니다.",
@@ -4574,9 +4572,7 @@
           "15cf990798": "인증되지 않음",
           "f7eb5f0b24": "설치되지 않음",
           "3ba07f933b": "Orcinus가 작업을 탐색하고 연결된 컨텍스트로 워크스페이스를 시작하는 데 사용할 이슈 트래커를 연결합니다.",
-          "70e885705b": "작업 제공자",
-          "1683acbac4": "Orcinus가 PR, MR, 체크, 리뷰 상태에 사용할 소스 호스트를 연결합니다.",
-          "298c65ecac": "리뷰 제공자"
+          "70e885705b": "작업 제공자"
         },
         "KagiSessionLinkForm": {},
         "KeybindingsFileActions": {
@@ -5225,8 +5221,6 @@
           "11faa2f7dd": "작업 소스",
           "cfa34f4465": "브랜치 이름 지정, 기본 참조 및 Git AI Author.",
           "70100f94c7": "Git 및 소스 제어",
-          "b07041697f": "저장된 API 토큰 또는 환경 변수로 Bitbucket, Azure DevOps, Gitea에 연결하세요.",
-          "c9ca101a3b": "연동",
           "f9b77539fd": "워크스페이스 기본값, 앱 설정 및 유지 관리.",
           "7807c11c4d": "일반",
           "475980f53d": "Orcinus를 통해 여러 코딩 agents를 조정합니다.",
@@ -6488,26 +6482,7 @@
           }
         },
         "integrations": {
-          "search": {
-            "a626990bd2": "연결 해제",
-            "3c3d3d8ffa": "연결",
-            "c450244ad7": "연동",
-            "20540996ef": "자격 증명",
-            "2ec2bd328c": "API 토큰",
-            "8c568d761c": "PR",
-            "33180e8c10": "자체 호스팅",
-            "129fc59aa8": "Gitea",
-            "d0d019dc29": "API 토큰 환경 변수를 통한 Gitea 인증.",
-            "aab86d64e5": "Gitea 연동",
-            "03a7b275be": "ADO",
-            "ed63380247": "Azure Repos",
-            "b38b5d27f1": "Azure DevOps",
-            "7b1f3984bb": "토큰 환경 변수를 통한 Azure DevOps Repos 인증.",
-            "af6611fa6e": "Azure DevOps 연동",
-            "50d20817f7": "bitbucket",
-            "c97d58a0f3": "API 토큰 환경 변수를 통한 Bitbucket Cloud 인증.",
-            "67a2a0e868": "Bitbucket 연동"
-          }
+          "search": {}
         },
         "jira": {
           "integration": {
@@ -7219,40 +7194,7 @@
           "source": {
             "control": {
               "integration": {
-                "cards": {
-                  "793a06e899": "다시 확인",
-                  "1a9475dace": "자세히 알아보기",
-                  "19fb419c12": "Gitea 자격 증명이 구성되어 있지만 인증할 수 없습니다. 토큰, API 기본 URL, repos 권한을 확인하고, 환경 변수가 변경되었다면 Orcinus를 다시 시작하세요.",
-                  "60708f23da": "Orcinus가 원격에서 API URL을 추론할 수 없는 경우에만 사용하세요.",
-                  "709057ad91": "ORCA_GITEA_API_BASE_URL",
-                  "6da9dfa5de": "비공개 repos의 경우, 그리고",
-                  "6d5c2a3005": "ORCA_GITEA_TOKEN",
-                  "fcbe0469fd": "공개 repos는 Git 원격에서 감지됩니다. 설정하세요",
-                  "0613928cb3": "이 런타임에서는 아직 Gitea 상태를 사용할 수 없습니다.",
-                  "05863d2599": "Gitea REST API를 통한 PR 및 commit 상태입니다.",
-                  "52f75876be": "감지된 repos의 PR 및 commit 상태",
-                  "0b5242f8a2": "{{value0}} · PR 및 commit 상태",
-                  "40f678df73": "Azure DevOps 자격 증명이 구성되어 있지만 인증할 수 없습니다. 토큰, API 기본 URL, repos 권한을 확인하고, 환경 변수가 변경되었다면 Orcinus를 다시 시작하세요.",
-                  "7bd345e3f6": "Orcinus가 Git 원격에서 API 기본 URL을 추론할 수 없는 경우에만 사용하세요.",
-                  "186a6689df": "ORCA_AZURE_DEVOPS_API_BASE_URL",
-                  "b8a10b07c1": ". 설정하세요",
-                  "fbfd237f5e": "ORCA_AZURE_DEVOPS_ACCESS_TOKEN",
-                  "087feb92f1": ", 또는 설정",
-                  "48842720d2": "ORCA_AZURE_DEVOPS_TOKEN",
-                  "7bbc9c64f0": "설정",
-                  "f3f47dc7de": "이 런타임에서는 아직 Azure DevOps 상태를 사용할 수 없습니다.",
-                  "0eb50d5593": "Azure DevOps REST API 토큰을 통한 PR 및 빌드 상태입니다.",
-                  "54636c65d4": "감지된 Azure Repos의 PR 및 빌드 상태",
-                  "ea204f5e03": "{{value0}} · PR 및 빌드 상태",
-                  "6154b02093": "Bitbucket 자격 증명이 구성되어 있지만 인증할 수 없습니다. 토큰과 repos 권한을 확인하고, 환경 변수가 변경되었다면 Orcinus를 다시 시작하세요.",
-                  "e63fe8f627": "ORCA_BITBUCKET_ACCESS_TOKEN",
-                  "19416c874c": "ORCA_BITBUCKET_API_TOKEN",
-                  "fc71a0e7aa": "및",
-                  "63a7f47392": "ORCA_BITBUCKET_EMAIL",
-                  "24ac1c69dc": "이 런타임에서는 아직 Bitbucket 상태를 사용할 수 없습니다.",
-                  "a924e8dcd1": "Bitbucket Cloud API 토큰을 통한 PR 및 빌드 상태입니다.",
-                  "0fa5629dad": "PR 및 빌드 상태"
-                }
+                "cards": {}
               }
             }
           }

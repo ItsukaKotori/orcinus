@@ -1,5 +1,4 @@
 import { GeneralPane } from './GeneralPane'
-import { IntegrationsPane } from './IntegrationsPane'
 import { SettingsSection } from './SettingsSection'
 import { translate } from '@/i18n/i18n'
 import type { SettingsRenderContext } from './settings-render-context'
@@ -29,26 +28,6 @@ export function renderGeneralSettingsSection(context: SettingsRenderContext): Re
           wslCapabilitiesLoading={terminal.localWindowsRuntimeCapabilities.isLoading}
         />
       ) : null}
-    </SettingsSection>
-  )
-}
-
-export function renderIntegrationsSettingsSection(
-  context: SettingsRenderContext
-): React.JSX.Element {
-  const { navigation, view } = context
-  return (
-    <SettingsSection
-      id="integrations"
-      title={translate('auto.components.settings.Settings.c9ca101a3b', 'Integrations')}
-      description={translate(
-        'auto.components.settings.Settings.b07041697f',
-        'Connect Bitbucket, Azure DevOps, and Gitea with saved API tokens or environment variables.'
-      )}
-      searchEntries={navigation.getSectionSearchEntries('integrations')}
-      bodyClassName="rounded-none border-0 bg-transparent p-0 shadow-none"
-    >
-      {view.isSectionMounted('integrations') ? <IntegrationsPane /> : null}
     </SettingsSection>
   )
 }

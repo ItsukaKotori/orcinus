@@ -739,8 +739,6 @@
         "85f4fd7710": "Sources de tâches",
         "ab4b21b58e": "Nommage des branches, refs de base et Git AI Author.",
         "09607cb0fe": "Git & gestion de code source",
-        "33a5e1d597": "Connectez Bitbucket, Azure DevOps et Gitea avec un jeton API enregistré ou des variables d'environnement.",
-        "2b043783ef": "Intégrations",
         "2cd4ea75da": "Valeurs par défaut des espaces de travail, configuration de l'app et maintenance.",
         "13241992bd": "Général",
         "cd50cec5d7": "Coordonnez plusieurs agents de codage via Orcinus.",
@@ -5301,9 +5299,7 @@
           "15cf990798": "Non authentifié",
           "f7eb5f0b24": "Non installé",
           "3ba07f933b": "Connectez les trackers d'issues qu'Orcinus peut utiliser pour parcourir les tâches et démarrer des espaces de travail avec le contexte associé.",
-          "70e885705b": "Fournisseurs de tâches",
-          "1683acbac4": "Connectez les hébergeurs de code qu'Orcinus peut utiliser pour les pull requests, merge requests, checks et statuts de revue.",
-          "298c65ecac": "Fournisseurs de revue"
+          "70e885705b": "Fournisseurs de tâches"
         },
         "KagiSessionLinkForm": {},
         "KeybindingsFileActions": {
@@ -5976,8 +5972,6 @@
           "11faa2f7dd": "Sources de tâches",
           "cfa34f4465": "Nommage des branches, refs de base et Git AI Author.",
           "70100f94c7": "Git & gestion de code source",
-          "b07041697f": "Connectez Bitbucket, Azure DevOps et Gitea avec un jeton API enregistré ou des variables d'environnement.",
-          "c9ca101a3b": "Intégrations",
           "f9b77539fd": "Valeurs par défaut des espaces de travail, configuration de l'app et maintenance.",
           "7807c11c4d": "Général",
           "475980f53d": "Coordonnez plusieurs agents de codage via Orcinus.",
@@ -7244,28 +7238,7 @@
           }
         },
         "integrations": {
-          "search": {
-            "a626990bd2": "déconnexion",
-            "3c3d3d8ffa": "connect",
-            "c450244ad7": "intégration",
-            "20540996ef": "identifiants",
-            "2ec2bd328c": "jeton API",
-            "8c568d761c": "pull request",
-            "33180e8c10": "auto-hébergé",
-            "129fc59aa8": "gitea",
-            "d0d019dc29": "Authentification Gitea via des variables d'environnement de jeton API.",
-            "aab86d64e5": "Intégration Gitea",
-            "03a7b275be": "ado",
-            "ed63380247": "azure repos",
-            "b38b5d27f1": "azure devops",
-            "7b1f3984bb": "Authentification Azure DevOps Repos via des variables d'environnement de jeton.",
-            "af6611fa6e": "Intégration Azure DevOps",
-            "50d20817f7": "bitbucket",
-            "c97d58a0f3": "Authentification Bitbucket Cloud via des variables d'environnement de jeton API.",
-            "67a2a0e868": "Intégration Bitbucket",
-            "760e2446e0": "Authentification Bitbucket Cloud avec un jeton API enregistré ou des variables d'environnement.",
-            "af5ae87847": "jeton d'accès"
-          }
+          "search": {}
         },
         "jira": {
           "integration": {
@@ -7933,46 +7906,7 @@
           "source": {
             "control": {
               "integration": {
-                "cards": {
-                  "793a06e899": "Revérifier",
-                  "1a9475dace": "En savoir plus",
-                  "19fb419c12": "Les identifiants Gitea sont configurés mais l'authentification a échoué. Vérifiez le token, l'URL de base de l'API et les permissions du dépôt, puis redémarrez Orcinus si les variables d'environnement ont changé.",
-                  "60708f23da": "uniquement quand Orcinus ne peut pas déduire l'URL de l'API depuis le remote.",
-                  "709057ad91": "ORCA_GITEA_API_BASE_URL",
-                  "6da9dfa5de": "pour les dépôts privés, et définissez",
-                  "6d5c2a3005": "ORCA_GITEA_TOKEN",
-                  "fcbe0469fd": "Les dépôts publics sont détectés via leur remote git. Définissez",
-                  "0613928cb3": "Le statut de Gitea n'est pas encore disponible dans ce runtime.",
-                  "05863d2599": "Pull requests et statuts de commits via l'API REST Gitea.",
-                  "52f75876be": "Pull requests et statuts de commits pour les dépôts détectés",
-                  "0b5242f8a2": "{{value0}} · Pull requests et statuts de commits",
-                  "40f678df73": "Les identifiants Azure DevOps sont configurés mais l'authentification a échoué. Vérifiez le token, l'URL de base de l'API et les permissions du dépôt, puis redémarrez Orcinus si les variables d'environnement ont changé.",
-                  "7bd345e3f6": "uniquement quand Orcinus ne peut pas déduire l'URL de base de l'API depuis le remote git.",
-                  "186a6689df": "ORCA_AZURE_DEVOPS_API_BASE_URL",
-                  "b8a10b07c1": ". Définissez",
-                  "fbfd237f5e": "ORCA_AZURE_DEVOPS_ACCESS_TOKEN",
-                  "087feb92f1": ", ou définissez",
-                  "48842720d2": "ORCA_AZURE_DEVOPS_TOKEN",
-                  "7bbc9c64f0": "Définissez",
-                  "f3f47dc7de": "Le statut d'Azure DevOps n'est pas encore disponible dans ce runtime.",
-                  "0eb50d5593": "Pull requests et statuts de builds via des tokens de l'API REST Azure DevOps.",
-                  "54636c65d4": "Pull requests et statuts de builds pour les Azure Repos détectés",
-                  "ea204f5e03": "{{value0}} · Pull requests et statuts de builds",
-                  "6154b02093": "Les identifiants Bitbucket sont configurés mais l'authentification a échoué. Vérifiez le token et les permissions du dépôt, puis redémarrez Orcinus si les variables d'environnement ont changé.",
-                  "e63fe8f627": "ORCA_BITBUCKET_ACCESS_TOKEN",
-                  "19416c874c": "ORCA_BITBUCKET_API_TOKEN",
-                  "fc71a0e7aa": "et",
-                  "63a7f47392": "ORCA_BITBUCKET_EMAIL",
-                  "24ac1c69dc": "Le statut de Bitbucket n'est pas encore disponible dans ce runtime.",
-                  "a924e8dcd1": "Pull requests et statuts de builds via des tokens de l'API Bitbucket Cloud.",
-                  "0fa5629dad": "Pull requests et statuts de builds",
-                  "statusConnected": "Connecté",
-                  "statusUnavailable": "Indisponible",
-                  "statusNotConfigured": "Non configuré",
-                  "statusAuthFailed": "Échec de l'authentification",
-                  "statusConfigured": "Configuré",
-                  "statusOptionalSetup": "Configuration facultative"
-                }
+                "cards": {}
               }
             }
           }
@@ -8741,47 +8675,10 @@
         },
         "bitbucket": {
           "credentials": {
-            "dialog": {
-              "connectFailed": "Échec de la connexion",
-              "title": "Connecter Bitbucket",
-              "description": "Utilisez un identifiant Bitbucket Cloud pour parcourir les pull requests et les statuts de build. Orcinus le vérifie avant de l'enregistrer.",
-              "remoteRuntime": "Les identifiants Bitbucket enregistrés ici ne sont stockés que sur cette machine locale. Définissez plutôt les variables d'environnement ORCA_BITBUCKET_* sur le runtime distant.",
-              "environmentManaged": "Bitbucket est déjà configuré via les variables d'environnement ORCA_BITBUCKET_*, qui ont priorité. Désactivez-les pour enregistrer un identifiant dans Orcinus.",
-              "authModeLabel": "Méthode d'authentification Bitbucket",
-              "modeBasic": "E-mail & token API",
-              "modeToken": "Token d'accès",
-              "accessToken": "Token d'accès",
-              "accessTokenPlaceholder": "Token d'accès de dépôt, projet ou espace de travail",
-              "email": "E-mail du compte Atlassian",
-              "emailPlaceholder": "you@example.com",
-              "apiToken": "Token API",
-              "apiTokenPlaceholder": "Token API Atlassian",
-              "baseUrl": "URL de base de l'API (facultatif)",
-              "baseUrlPlaceholder": "https://api.bitbucket.org/2.0",
-              "tokenHint": "Les tokens d'accès de dépôt, projet et espace de travail se créent depuis la page de paramètres Bitbucket correspondante et nécessitent un accès en lecture aux pull requests.",
-              "basicHint": "Créez un token API Atlassian pour votre compte, puis associez-le à l'adresse e-mail qui en est propriétaire.",
-              "docsLink": "Documentation des tokens API Bitbucket",
-              "storageNote": "Stocké sur cette machine avec chiffrement quand le trousseau de l'OS est disponible. Les variables d'environnement ORCA_BITBUCKET_* ont toujours priorité sur ce que vous enregistrez ici.",
-              "cancel": "Annuler",
-              "verifying": "Vérification...",
-              "connect": "Se connecter"
-            }
+            "dialog": {}
           },
           "integration": {
-            "card": {
-              "description": "Pull requests et statuts de build pour Bitbucket Cloud.",
-              "edit": "Modifier les identifiants",
-              "connect": "Se connecter",
-              "accountUnknown": "Bitbucket Cloud",
-              "authModeToken": "Token d'accès",
-              "authModeBasic": "E-mail & token API",
-              "disconnect": "Déconnecter Bitbucket",
-              "envManaged": "Configuré via des variables d'environnement. Désactivez les variables ORCA_BITBUCKET_* pour gérer cet identifiant dans Orcinus.",
-              "storedAuthFailed": "L'identifiant Bitbucket enregistré n'a pas réussi à s'authentifier. Modifiez-le ou vérifiez que le token garde l'accès aux pull requests.",
-              "storedCredential": "Enregistré dans Orcinus sur cette machine. Les variables d'environnement ORCA_BITBUCKET_* ont priorité quand elles sont définies.",
-              "notConfigured": "Connectez un compte Bitbucket Cloud avec un token API Atlassian ou un token d'accès. Les variables d'environnement ORCA_BITBUCKET_* marchent aussi et ont priorité.",
-              "disconnectFailed": "Impossible de supprimer l'identifiant Bitbucket enregistré."
-            }
+            "card": {}
           }
         },
         "GlobalWorktreeVisibilitySourcesSetting": {

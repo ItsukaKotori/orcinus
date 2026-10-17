@@ -8,10 +8,7 @@ import {
   renderAgentsSettingsSection,
   renderOrchestrationSettingsSection
 } from './settings-capability-section-renderers'
-import {
-  renderGeneralSettingsSection,
-  renderIntegrationsSettingsSection,
-} from './settings-setup-workflow-section-renderers'
+import { renderGeneralSettingsSection } from './settings-setup-workflow-section-renderers'
 import {
   renderGitSettingsSection,
 } from './settings-git-task-section-renderers'
@@ -99,7 +96,6 @@ export function renderSettingsPage(context: SettingsRenderContext): React.JSX.El
                 {renderAgentsSettingsSection(context)}
                 {renderOrchestrationSettingsSection(context)}
                 {renderGeneralSettingsSection(context)}
-                {renderIntegrationsSettingsSection(context)}
                 {renderGitSettingsSection(context)}
                 {renderTerminalSettingsSection(context)}
                 {renderQuickCommandsSettingsSection(context)}

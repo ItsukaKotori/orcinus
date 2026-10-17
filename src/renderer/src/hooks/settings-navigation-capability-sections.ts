@@ -1,10 +1,9 @@
 import { getAgentsPaneSearchEntries } from '@/components/settings/agents-search'
 import { getGeneralPaneSearchEntries } from '@/components/settings/general-search'
-import { getIntegrationsPaneSearchEntries } from '@/components/settings/integrations-search'
 import { getOrchestrationPaneSearchEntries } from '@/components/settings/orchestration-search'
 import { translate } from '@/i18n/i18n'
 import type { SettingsNavSection } from '@/lib/settings-navigation-types'
-import { Blocks, Bot, Network, SlidersHorizontal } from 'lucide-react'
+import { Bot, Network, SlidersHorizontal } from 'lucide-react'
 import type { SettingsNavigationBuildOptions } from './settings-navigation-build-options'
 
 export function buildCapabilitySettingsSections({
@@ -55,17 +54,6 @@ export function buildSetupSettingsSections({
       ),
       icon: SlidersHorizontal,
       searchEntries: getGeneralPaneSearchEntries({ includeProjectRuntime: isLocalWindowsHost }),
-      group: 'setup'
-    },
-    {
-      id: 'integrations',
-      title: translate('auto.hooks.useSettingsNavigationMetadata.2b043783ef', 'Integrations'),
-      description: translate(
-        'auto.hooks.useSettingsNavigationMetadata.33a5e1d597',
-        'Connect Bitbucket, Azure DevOps, and Gitea with saved API tokens or environment variables.'
-      ),
-      icon: Blocks,
-      searchEntries: getIntegrationsPaneSearchEntries(),
       group: 'setup'
     }
   ]
