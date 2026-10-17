@@ -1,6 +1,6 @@
 import type { PublicKnownRuntimeEnvironment } from '../../../../shared/runtime-environments'
 
-/** Matches the renderer's other catalog-style cache TTLs (checks, work items, Jira). */
+/** Matches the renderer's other catalog-style cache TTLs. */
 export const RUNTIME_CATALOG_STALE_MS = 60_000
 
 let lastCatalogListedAt = 0

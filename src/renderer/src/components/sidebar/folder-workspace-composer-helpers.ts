@@ -1,6 +1,5 @@
 import type { LinkedWorkItemSummary } from '@/lib/new-workspace'
 import {
-  buildGitHubWorkspaceSource,
   buildWorkspaceSourceSelection,
   getWorkspaceSourceName,
   getWorkspaceSourceProvider
@@ -16,7 +15,6 @@ import {
 import { getProjectGroupSubtreeIds } from '../../../../shared/project-groups'
 import { isGitRepoKind } from '../../../../shared/repo-kind'
 import type { FolderWorkspace } from '../../../../shared/folder-workspace-types'
-import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import type { ProjectGroup } from '../../../../shared/project-group-types'
 import type { Repo } from '../../../../shared/repo-types'
 import type { SmartWorkspaceNameSelection } from '@/components/new-workspace/SmartWorkspaceNameField'
@@ -81,10 +79,6 @@ export function getSmartNameSelection(
 
 export function getLinkedItemDisplayName(item: LinkedWorkItemSummary): string | null {
   return getWorkspaceSourceName(item).displayName || null
-}
-
-export function toGitHubLinkedWorkItem(item: GitHubWorkItem): LinkedWorkItemSummary {
-  return buildGitHubWorkspaceSource(item)
 }
 
 export function getFolderWorkspacePrimaryActionLabel(): string {

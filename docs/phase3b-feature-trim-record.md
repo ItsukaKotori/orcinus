@@ -176,11 +176,22 @@ Running `target/debug/orcinus-app`
 | `.gitignore` 死规则 | 第 5 行 `src-tauri/native/computer-use-macos/.build/` | computer-use 目录已删，规则无害留存（Task 5 deferred） |
 | 守卫专属 CLI 状态键 | en/fr 各 4 键（`...cli.source.control.integration.cards.status*`） | 守卫测试锁定；当前无生产写入者（CLI 集成卡随任务收敛），删除需同步改守卫 |
 | stale 测试夹具（stub 已删 API/域） | `startup-actions-selector.test.ts`（`initGitHubCache`/`hydrateBrowserSession`）、7 处 `automations: { onChanged }` mock、`RecoverableRenderErrorBoundary.lazy-chunk.test.tsx:23`（`boundaryId="page.automations"`） | 无害残留，随相应测试后续清理 |
-| stale 注释/文案 | 已删 crate/域注释（`spawn.rs:4`、`service.rs:398`、`list-row-interaction.ts:1` 等）、`UnexpectedSignoutCard` 文案仍提 Artifact sharing / Orca Relay（含键 `6e3f1a9c5b`）、`source-control-generation-plan.ts`/`HostedReviewCreationDefaults.tsx` PR 文案、`git-remote-sync.ts:25` 缩进、`use-store-actions.ts` 计数句 | 全部为注释/文案级残留，无功能影响 |
+| stale 注释/文案 | 已删 crate/域注释（`spawn.rs:4`、`service.rs:398`、`list-row-interaction.ts:1` 等）、`UnexpectedSignoutCard` 文案仍提 Artifact sharing / Orca Relay（含键 `6e3f1a9c5b`）、`source-control-generation-plan.ts`/`HostedReviewCreationDefaults.tsx` PR 文案、`git-remote-sync.ts:25` 缩进、`use-store-actions.ts` 计数句、`shared/work-items.ts:1-3` 的 gh 预算说明 | 全部为注释/文案级残留，无功能影响 |
 | `SETTINGS_NAV_TARGETS` 目标 | `'linear'`（18 行区）、`'browser'`（34 行区） | 导航目标枚举残留，入口已无渲染者 |
+| **Preview-to-side 连带 descope**（终审记录） | `src/renderer/src/components/editor/editor-panel-render-model.ts:183-185` 固定 `canOpenPreviewToSide: false`；combined-diff 的 `openSectionPreview` 一并剥离 | 侧开预览由内嵌浏览器承载，随浏览器域删除；tab 内 Markdown/图片/PDF 预览保留，无功能回退 |
+| Task-provider/automation 展示残留（终审记录） | `worktree-card-display-property-options.ts:5-33`（GitHub ticket / Linear issue / Jira issue / Automation 属性项）、`sidebar-workspace-option-items.ts:133-164`、automation 来源徽章与 Hide automation-created 过滤（`SidebarWorkspaceFilterSection.tsx:86-90` 及 sidebar filter actions）、`worktree-card-title-display.ts:42-66` 的 `jiraIssueTitle`/`linearIssueTitle` 展示值 | 展示遗留/URL 关联的 worktree 数据（worktree-model 保护）；生产者已删，删列会破坏旧数据渲染 |
 | inert 桌面分支/常量 | `isWebClient` 常量喂参、~10 处 `__ORCA_WEB_CLIENT__` 检测路径、`mobilePairingConnectionMode` 默认值 | 终审已验证 inert（恒定桌面分支）；统一收尾再清 |
 | 其他 Task 1–7 deferred minor | `terminal-drop` `remotePlatform` 不再传递；`StatusBarItem 'ssh'` 无渲染者；测试夹具 `'Orca Browser'` 字符串；`star-nag-api.ts` 失 exec 位；`'Update the remote runtime…'` 不可达字符串；Task 0 报告统计口径/日志噪音/prune 双次 grep | 逐条见 `.superpowers/sdd/…/progress.md` ledger（均已不影响行为） |
 | 历史文档旧语义 | `docs/superpowers/specs/2026-10-11-computer-use-design.md`、`docs/phase2g-computer-use-record.md` 保留删除前语义 | 历史记录不改写，以本记录为准 |
+
+## 终审修复轮（2026-10-17，must-fix）
+
+全分支终审（Ready to merge WITH FIXES）后的单提交修复：
+
+- Settings Integrations 残留：`integrations-search.ts` 删除 GitHub/Jira/Linear 搜索项（保留 Bitbucket/Azure/Gitea）；`SETTINGS_ALIASES` 移除 `browser`/`ssh`/`mobile` 死目标别名与 `integrations` 的 `gitlab`/`github`/`linear` 词；Integrations 两处描述（`Settings.b07041697f`、`useSettingsNavigationMetadata.33a5e1d597`）改为「Bitbucket/Azure DevOps/Gitea 令牌连接」并同步 6 语言 catalog；`orcinus-i18n-prune.mjs --apply` 净删 12 键 × 6 catalog（19 条仍被引用保留）。
+- 死导出 `toGitHubLinkedWorkItem`（`grep -rn` 零引用）删除，连带清理 `buildGitHubWorkspaceSource`/`GitHubWorkItem` 导入。
+- stale 注释：`integrations-pane-status.ts:3`、`runtime-status-hydration.ts:3` 改写；`shared/work-items.ts:1-3` 记入残留表。
+- 门禁：冷 `typecheck`/`build:web` exit 0；守卫子集与 settings/cmd-j 聚焦测试全绿（详见 `.superpowers/sdd/2026-10-13-phase3b-local-focus-trim/final-fix-report.md`）。
 
 ## 验证命令与结果
 

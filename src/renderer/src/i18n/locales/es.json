@@ -651,7 +651,7 @@
         "85f4fd7710": "Fuentes de tareas",
         "ab4b21b58e": "Nombres de rama, refs base y Git AI Author.",
         "09607cb0fe": "Git y Source Control",
-        "33a5e1d597": "Conecta GitHub, GitLab, Linear y servicios de hosting de código.",
+        "33a5e1d597": "Conecta Bitbucket, Azure DevOps y Gitea con un token de API guardado o variables de entorno.",
         "2b043783ef": "Integraciones",
         "2cd4ea75da": "Ajustes predeterminados del espacio de trabajo, configuración de la app y mantenimiento.",
         "13241992bd": "General",
@@ -5237,7 +5237,7 @@
           "11faa2f7dd": "Fuentes de tareas",
           "cfa34f4465": "Nombres de rama, refs base y Git AI Author.",
           "70100f94c7": "Git y control de código fuente",
-          "b07041697f": "Conecta GitHub, GitLab, Linear y servicios de alojamiento de código fuente.",
+          "b07041697f": "Conecta Bitbucket, Azure DevOps y Gitea con un token de API guardado o variables de entorno.",
           "c9ca101a3b": "Integraciones",
           "f9b77539fd": "Valores predeterminados del workspace, configuración de la app y mantenimiento.",
           "7807c11c4d": "General",
@@ -6503,17 +6503,9 @@
           "search": {
             "a626990bd2": "desconectar",
             "3c3d3d8ffa": "conectar",
-            "faa0b5a0d9": "clave API",
             "c450244ad7": "integración",
-            "7319e3015b": "linear",
-            "16a486a49d": "Conecta Linear para explorar y vincular issues.",
-            "b027b4b318": "Integración Linear",
             "20540996ef": "credenciales",
             "2ec2bd328c": "token de API",
-            "7345b7c3e6": "atlassian",
-            "e1263dd748": "jira",
-            "76f6af7c57": "Conecta Jira Cloud o actualiza las credenciales del token de API de Jira.",
-            "617603509b": "Integración de Jira",
             "8c568d761c": "pull request",
             "33180e8c10": "self-hosted",
             "129fc59aa8": "gitea",
@@ -6526,11 +6518,7 @@
             "af6611fa6e": "Integración de Azure DevOps",
             "50d20817f7": "bitbucket",
             "c97d58a0f3": "Autenticación de Bitbucket Cloud a través de variables de entorno de token API.",
-            "67a2a0e868": "Integración de Bitbucket",
-            "41ccade05c": "gh",
-            "b79c21bd42": "github",
-            "7166b9090c": "Autenticación de GitHub a través de la CLI de gh.",
-            "f16e41cc72": "Integración de GitHub"
+            "67a2a0e868": "Integración de Bitbucket"
           }
         },
         "jira": {

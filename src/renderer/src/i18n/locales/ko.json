@@ -654,7 +654,7 @@
         "85f4fd7710": "작업 소스",
         "ab4b21b58e": "브랜치 이름 지정, 기본 참조 및 Git AI Author.",
         "09607cb0fe": "Git 및 소스 제어",
-        "33a5e1d597": "GitHub, GitLab, Linear 및 소스 호스팅 서비스를 연결하세요.",
+        "33a5e1d597": "저장된 API 토큰 또는 환경 변수로 Bitbucket, Azure DevOps, Gitea에 연결하세요.",
         "2b043783ef": "연동",
         "2cd4ea75da": "워크스페이스 기본값, 앱 설정 및 유지 관리.",
         "13241992bd": "일반",
@@ -5225,7 +5225,7 @@
           "11faa2f7dd": "작업 소스",
           "cfa34f4465": "브랜치 이름 지정, 기본 참조 및 Git AI Author.",
           "70100f94c7": "Git 및 소스 제어",
-          "b07041697f": "GitHub, GitLab, Linear 및 소스 호스팅 서비스를 연결하세요.",
+          "b07041697f": "저장된 API 토큰 또는 환경 변수로 Bitbucket, Azure DevOps, Gitea에 연결하세요.",
           "c9ca101a3b": "연동",
           "f9b77539fd": "워크스페이스 기본값, 앱 설정 및 유지 관리.",
           "7807c11c4d": "일반",
@@ -6491,17 +6491,9 @@
           "search": {
             "a626990bd2": "연결 해제",
             "3c3d3d8ffa": "연결",
-            "faa0b5a0d9": "API 키",
             "c450244ad7": "연동",
-            "7319e3015b": "Linear",
-            "16a486a49d": "Linear에 연결해 이슈를 탐색하고 연결합니다.",
-            "b027b4b318": "Linear 연동",
             "20540996ef": "자격 증명",
             "2ec2bd328c": "API 토큰",
-            "7345b7c3e6": "Atlassian",
-            "e1263dd748": "Jira",
-            "76f6af7c57": "Jira Cloud를 연결하거나 Jira API 토큰 자격 증명을 업데이트하세요.",
-            "617603509b": "Jira 연동",
             "8c568d761c": "PR",
             "33180e8c10": "자체 호스팅",
             "129fc59aa8": "Gitea",
@@ -6514,11 +6506,7 @@
             "af6611fa6e": "Azure DevOps 연동",
             "50d20817f7": "bitbucket",
             "c97d58a0f3": "API 토큰 환경 변수를 통한 Bitbucket Cloud 인증.",
-            "67a2a0e868": "Bitbucket 연동",
-            "41ccade05c": "gh",
-            "b79c21bd42": "GitHub",
-            "7166b9090c": "gh CLI를 통한 GitHub 인증.",
-            "f16e41cc72": "GitHub 연동"
+            "67a2a0e868": "Bitbucket 연동"
           }
         },
         "jira": {

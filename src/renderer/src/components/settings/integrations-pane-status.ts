@@ -1,6 +1,7 @@
 import type { PreflightStatus } from '../../../../preload/api-types'
 
-// Why: GitLab uses glab and the same three failure modes (probe in-flight /
+// Why: the glab (GitLab CLI) status shape is still part of the preload preflight
+// contract and shares the same three failure modes (probe in-flight /
 // installed-but-unauth / missing entirely); gh (GitHub CLI) is gone with the
 // GitHub trim, so this doubles as its own alias base for token providers.
 export type GlabStatus = 'checking' | 'connected' | 'not-installed' | 'not-authenticated'

@@ -62,7 +62,7 @@ export function buildSetupSettingsSections({
       title: translate('auto.hooks.useSettingsNavigationMetadata.2b043783ef', 'Integrations'),
       description: translate(
         'auto.hooks.useSettingsNavigationMetadata.33a5e1d597',
-        'Connect GitHub, GitLab, and source-hosting services.'
+        'Connect Bitbucket, Azure DevOps, and Gitea with saved API tokens or environment variables.'
       ),
       icon: Blocks,
       searchEntries: getIntegrationsPaneSearchEntries(),
