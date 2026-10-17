@@ -176,8 +176,6 @@
   },
   "auto": {
     "App": {
-      "221a95ba38": "Retry onboarding or close it and continue in the app.",
-      "f02d37278a": "Onboarding hit an error.",
       "8a023cea1f": "Retry the status bar to remount its controls.",
       "2e8ff36f94": "The status bar hit an error.",
       "7cbfbf622f": "Retry the floating workspace or close and reopen it.",
@@ -3880,7 +3878,6 @@
           "4e8f5710d3": "Couldn't restart Orcinus.",
           "5161eef55d": "Restarting Orcinus…",
           "d396773ef0": "checking",
-          "b7e4d2a19c": "Onboarding",
           "c4f8e1b72a": "X"
         },
         "SidebarToolbar": {
@@ -10836,166 +10833,35 @@
         }
       },
       "onboarding": {
-        "AgentStep": {
-          "e6a369bd04": "Popular agents",
-          "d7b3ef168b": "Detected on your system",
-          "9c163bb0e0": "Install instructions",
-          "69af7e9c1c": "isn't on your PATH yet. Orcinus will set it as your default and you can install it any time.",
-          "1eee1c7bd8": "No agents detected on your PATH. Pick one to install later, or continue with a blank terminal.",
-          "hideAgents": "Hide agents",
-          "showMoreAgents": "Show {{value0}} more agents→",
-          "yoloPermissionsLabel": "Yolo / Dangerously skip permissions",
-          "yoloPermissionsInfo": "Agent permission info",
-          "yoloPermissionsTooltip": "Skip permission checks for agents for less interruptions"
-        },
-        "FeatureSetupInlineTerminal": {
-          "789b59936e": "Press Enter to run the command and confirm npx if asked. You can also set this up later in Settings.",
-          "47fc6cc6dc": "Skill setup command",
-          "c767ab7061": "Skill setup"
-        },
-        "IntegrationsStep": {
-          "277f30eb34": "Linear, GitLab, Bitbucket, Azure DevOps, Gitea, and Jira live in Settings > Integrations.",
-          "3a3e360289": "More task sources",
-          "80e3ce0bc9": "Re-check",
-          "04ef416712": "Add Linear access",
-          "dd9c186a8b": "Add workspace access",
-          "c91a5782f1": "Connected",
-          "27743304b1": "Linear",
-          "af69f42372": "Press Enter to run GitHub CLI auth. Re-check GitHub after the browser or device flow finishes.",
-          "f9d2e12d17": "GitHub sign in command",
-          "6d469169f2": "GitHub setup",
-          "bd5d976fb2": "Install gh",
-          "50db38cf4b": "Pull requests, issues, and check status.",
-          "c1547656f0": "Checking…",
-          "8405043962": "Sign in needed",
-          "5c115cb713": "CLI not installed",
-          "217beb0658": "GitHub",
-          "4983ae7433": "Add Linear access with a Personal API key. Full-access keys can show every team the key owner can access.",
-          "b08a6ac93c": "{{value0}} workspace{{value1}} linked. Add another workspace or replace a restricted key any time.",
-          "93f0c49ad1": "not-authenticated",
-          "a3bcf13694": "connected",
-          "d6e5dba05a": "Sign in",
-          "0b4a7d23ab": "Signing in",
-          "a74c6d6b18": "not-installed"
-        },
+        "AgentStep": {},
+        "FeatureSetupInlineTerminal": {},
+        "IntegrationsStep": {},
         "NotificationStep": {
-          "3bede04483": "Send Test Notification",
-          "dc897423e1": "Choose notification sound",
-          "53aaffe49a": "Notification Sound",
-          "0fe570690c": "Pick the alert Orcinus plays after a desktop notification is delivered.",
-          "0af746e41f": "Choose a sound",
-          "8124d085a6": "Open Mac Settings",
-          "aa36281b00": "Open System Settings and make sure Orcinus is allowed to send notifications.",
-          "d2dba86837": "Allow Orcinus in macOS",
-          "e52aacf380": "Loading notification settings…",
-          "3cd5374e22": "Notification settings are still loading",
-          "b6a994e36e": "Notification sound could not be played",
-          "c0692baa52": "Choose Custom File",
-          "ac80d97e02": "Change Custom File",
           "56b836215c": "Checking notification permission…",
           "fd84d3e9b8": "Notifications are enabled",
           "4f7bce5644": "macOS will alert you when agents finish or terminals need attention.",
           "95d99b52fa": "Allow notifications for Orcinus",
-          "94562ba367": "macOS is asking for permission. Click Allow in the dialog and this step updates automatically.",
           "4f6a1da718": "Open System Settings",
-          "90b5d2e363": "macOS is not delivering Orcinus notifications",
-          "2c47f5465f": "Turn on Allow notifications for Orcinus in System Settings. This step updates automatically once enabled."
+          "90b5d2e363": "macOS is not delivering Orcinus notifications"
         },
-        "OnboardingFlow": {
-          "1b5e182e9f": "Welcome to Orcinus",
-          "4db04f2f57": "of",
-          "adaa0aa627": "Go to onboarding step {{value0}}: {{value1}}",
-          "a249f81538": "Orcinus",
-          "277ba45540": "Orcinus onboarding",
-          "97c42cda00": "Orca reads issues, reviews, and checks straight from your code host.",
-          "ae3b00ca82": "Connect your task sources",
-          "ff92d15436": "Orcinus will notify you know when agents are done or need help.",
-          "b054332836": "Set up notifications",
-          "04ae28d8ca": "Pick the look you want to stare at for hours.",
-          "f396db9f20": "Make it feel like home",
-          "322fc50a18": "Orcinus works with every CLI agent. Choose the one you'll reach for most. Switch any time.",
-          "198b148b3c": "Pick your default agent",
-          "a5e5da02f7": "integrations",
-          "35bbaf5ae0": "notifications",
-          "984338477a": "theme",
-          "c47e1bd149": "agent",
-          "windowsTerminalTitle": "Set Windows terminal defaults",
-          "windowsTerminalSubtitle": "Choose the DEFAULT Shell for new panes and how right-click behaves in the terminal."
-        },
-        "OnboardingFooter": {
-          "ba58547306": "Back",
-          "111d3f8d92": "Skip to project setup"
-        },
+        "OnboardingFlow": {},
+        "OnboardingFooter": {},
         "OnboardingInlineCommandTerminal": {
           "4123609efd": "Starting terminal..."
         },
-        "OnboardingSkipConfirmationDialog": {
-          "9f47f345a4": "It won't take long!",
-          "e4726b2d50": "Skip onboarding?"
-        },
-        "ThemeStep": {
-          "a4b254779d": "macOS Option key",
-          "6c51398942": "Mouse",
-          "8ca01945f2": "Dividers",
-          "b3a99a2d29": "Window",
-          "86c0f1caa2": "Padding",
-          "06a24f4f2d": "Colors",
-          "c021e9dddd": "Theme palette",
-          "ab2a583a97": "Cursor",
-          "cc1858e19e": "Font",
-          "248c812283": "Import",
-          "7ee9234e54": "Ghostty config detected.",
-          "78b6386140": "Imported from Ghostty.",
-          "2c3aa538f8": "Looking for a Ghostty config…",
-          "94b9dc561d": "Settings → Terminal",
-          "dd5c16ad1b": "More terminal options, including font, cursor, and palette, in",
-          "ad192706e6": "Light",
-          "fa7b673ea9": "Dark",
-          "827ea7b4a2": "System",
-          "699ddf83c2": "Failed to import Ghostty settings",
-          "16a9f0446a": "No Ghostty settings found to import",
-          "ad19e5c916": "Importing…",
-          "906c4373fe": "settings"
-        },
+        "OnboardingSkipConfirmationDialog": {},
+        "ThemeStep": {},
         "use": {
           "onboarding": {
-            "flow": {
-              "52acfbef51": "Could not save progress"
-            }
+            "flow": {}
           }
         },
-        "WindowsTerminalStep": {
-          "powerShell": "PowerShell",
-          "powerShellPwsh": "Uses PowerShell 7+ when available, with Windows PowerShell as fallback.",
-          "powerShellInbox": "Uses the Windows PowerShell available on every supported Windows install.",
-          "commandPrompt": "Command Prompt",
-          "commandPromptDescription": "Opens new terminal panes with classic cmd.exe behavior.",
-          "gitBash": "Git Bash",
-          "gitBashDescription": "Uses Git for Windows bash.exe for Unix-style shell workflows.",
-          "gitBashUnavailable": "Selected, but Git Bash was not detected on this machine.",
-          "wsl": "WSL",
-          "wslDescription": "Starts new terminal panes inside your Windows Subsystem for Linux default.",
-          "wslUnavailable": "Selected, but WSL was not detected on this machine.",
-          "rightClickPaste": "Paste on right-click",
-          "rightClickPasteDescription": "Right-click pastes the clipboard. Ctrl+right-click opens the context menu.",
-          "rightClickMenu": "Open context menu",
-          "rightClickMenuDescription": "Right-click opens the terminal menu. Paste from the menu or keyboard.",
-          "loading": "Loading terminal settings...",
-          "defaultShell": "Default Shell",
-          "defaultShellDescription": "Choose the shell Orcinus opens for new Windows terminal panes.",
-          "wslDistribution": "WSL Distribution",
-          "wslDistributionDescription": "Use the Windows default distribution or choose a specific installed distro.",
-          "loadingDistros": "Loading distributions",
-          "windowsDefault": "Windows default",
-          "rightClickBehavior": "Right-click behavior",
-          "rightClickBehaviorDescription": "Pick the terminal mouse behavior that matches your Windows muscle memory."
-        },
+        "WindowsTerminalStep": {},
         "mac": {
           "notification": {
             "permission": {
               "card": {
                 "f696515944": "Click Allow in the macOS dialog.",
-                "3d18cf71f9": "Updates automatically.",
                 "721d2bedb6": "Turn on Allow notifications for Orcinus in System Settings."
               }
             }
@@ -12618,37 +12484,15 @@
   "components": {
     "onboarding": {
       "flow": {
-        "stepTooltip": {
-          "agent": "Default Agent",
-          "theme": "Appearance",
-          "windowsTerminal": "Windows Terminal",
-          "notifications": "Notifications",
-          "integrations": "Integrations"
-        },
-        "actions": {
-          "addFirstProject": "Add your first project",
-          "continue": "Continue",
-          "openingAddProject": "Opening Add Project..."
-        }
+        "stepTooltip": {},
+        "actions": {}
       },
-      "skipConfirmation": {
-        "skip": "Skip",
-        "keepGoing": "No, keep going"
-      },
+      "skipConfirmation": {},
       "theme": {
-        "hints": {
-          "system": "Match OS",
-          "dark": "Easy on the eyes",
-          "light": "Bright & crisp"
-        }
+        "hints": {}
       },
       "integrations": {
-        "capabilities": {
-          "startWorkspaceFromIssue": "Start a workspace from any GitHub issue or pull request, prefilled with its title and context",
-          "browseIssues": "Browse GitHub issues and pull requests in the Tasks view without leaving Orcinus",
-          "reviewStatus": "See issue state, review status, and CI checks on every worktree",
-          "managePullRequests": "Read, comment on, and merge pull requests without leaving Orcinus"
-        }
+        "capabilities": {}
       }
     },
     "jiraUserPicker": {},

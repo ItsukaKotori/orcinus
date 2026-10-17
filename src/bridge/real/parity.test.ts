@@ -13,7 +13,6 @@ import { createAppRealApi } from './app'
 import { createCliRealApi } from './cli'
 import { createFsRealApi } from './fs'
 import { createNotificationsRealApi } from './notifications'
-import { createOnboardingRealApi } from './onboarding'
 import { createPlatformRealApi } from './platform'
 import { createPluginsRealApi } from './plugins'
 import { createPreflightRealApi } from './preflight'
@@ -548,7 +547,6 @@ const surfaceCases: SurfaceCase[] = [
     explicit: ptySurfaceMethods('explicit'),
     missing: ptySurfaceMethods('missing')
   },
-  { domain: 'onboarding', explicit: ['get', 'update'], missing: [] },
   { domain: 'platform', explicit: ['get'], missing: [] },
   {
     domain: 'agentStatus',
@@ -936,8 +934,6 @@ function realApiFor(domain: keyof PreloadApi): unknown {
       return createSessionRealApi()
     case 'fs':
       return createFsRealApi()
-    case 'onboarding':
-      return createOnboardingRealApi()
     case 'projects':
       return createProjectsRealApi()
     case 'worktrees':

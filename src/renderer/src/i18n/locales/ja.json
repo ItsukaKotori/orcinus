@@ -87,8 +87,6 @@
   },
   "auto": {
     "App": {
-      "221a95ba38": "オンボーディングを再試行するか、オンボーディングを閉じてアプリで続行します。",
-      "f02d37278a": "オンボーディングでエラーが発生しました。",
       "8a023cea1f": "ステータスバーを再試行してコントロールを再マウントします。",
       "2e8ff36f94": "ステータスバーにエラーが発生しました。",
       "7cbfbf622f": "フローティングワークスペースを再試行するか、閉じてから再度開きます。",
@@ -3159,7 +3157,6 @@
           "4e8f5710d3": "Orcinus を再起動できませんでした。",
           "5161eef55d": "Orcinus を再起動しています…",
           "d396773ef0": "チェック中",
-          "b7e4d2a19c": "オンボーディング",
           "c4f8e1b72a": "X"
         },
         "SidebarToolbar": {
@@ -9418,166 +9415,35 @@
         }
       },
       "onboarding": {
-        "AgentStep": {
-          "e6a369bd04": "人気の Agent",
-          "d7b3ef168b": "システム上で検出されました",
-          "9c163bb0e0": "インストール手順",
-          "69af7e9c1c": "はまだ PATH 上にありません。 Orcinus はこれをデフォルトとして設定し、いつでもインストールできます。",
-          "1eee1c7bd8": "PATH 上に Agent が検出されませんでした。後でインストールするものを選択するか、空のターミナルを使用して続行します。",
-          "hideAgents": "Agent を非表示にする",
-          "showMoreAgents": "{{value0}} 件の Agent をさらに表示→",
-          "yoloPermissionsLabel": "Yolo / 危険: 権限チェックをスキップ",
-          "yoloPermissionsInfo": "Agent 権限情報",
-          "yoloPermissionsTooltip": "Agent の権限チェックをスキップして割り込みを減らす"
-        },
-        "FeatureSetupInlineTerminal": {
-          "789b59936e": "Enter キーを押してコマンドを実行し、要求されたら npx を確認します。これは、後で [設定] で設定することもできます。",
-          "47fc6cc6dc": "スキルセットアップコマンド",
-          "c767ab7061": "スキルセットアップ"
-        },
-        "IntegrationsStep": {
-          "277f30eb34": "Linear、GitLab、Bitbucket、Azure DevOps、Gitea、Jira は [設定] > [連携] にあります。",
-          "3a3e360289": "その他のタスクソース",
-          "80e3ce0bc9": "再確認",
-          "04ef416712": "Linear アクセスを追加",
-          "dd9c186a8b": "ワークスペースへのアクセスを追加",
-          "c91a5782f1": "接続済み",
-          "27743304b1": "Linear",
-          "af69f42372": "Enter を押して GitHub CLI 認証を実行します。ブラウザまたはデバイスのフローが完了したら、GitHub を再確認します。",
-          "f9d2e12d17": "GitHub サインインコマンド",
-          "6d469169f2": "GitHub のセットアップ",
-          "bd5d976fb2": "ghをインストールする",
-          "50db38cf4b": "PR、Issue、チェックの状態。",
-          "c1547656f0": "確認中…",
-          "8405043962": "サインインが必要です",
-          "5c115cb713": "CLI がインストールされていません",
-          "217beb0658": "GitHub",
-          "4983ae7433": "Personal API キーを使用して Linear アクセスを追加します。フルアクセスキーは、キーの所有者がアクセスできるすべてのチームを表示できます。",
-          "b08a6ac93c": "{{value0}} ワークスペース{{value1}} がリンクされました。いつでも別のワークスペースを追加したり、制限付きキーを置き換えたりできます。",
-          "93f0c49ad1": "未認証",
-          "a3bcf13694": "接続されています",
-          "d6e5dba05a": "サインイン",
-          "0b4a7d23ab": "サインインする",
-          "a74c6d6b18": "未インストール"
-        },
+        "AgentStep": {},
+        "FeatureSetupInlineTerminal": {},
+        "IntegrationsStep": {},
         "NotificationStep": {
-          "3bede04483": "テスト通知を送信する",
-          "dc897423e1": "通知音を選択する",
-          "53aaffe49a": "通知音",
-          "0fe570690c": "デスクトップ通知が配信された後に Orcinus が再生するアラートを選択します。",
-          "0af746e41f": "サウンドを選択",
-          "8124d085a6": "Macの設定を開く",
-          "aa36281b00": "システム設定を開き、Orcinus が通知の送信を許可されていることを確認します。",
-          "d2dba86837": "macOS で Orcinus を許可する",
-          "e52aacf380": "通知設定を読み込んでいます…",
-          "3cd5374e22": "通知設定をまだ読み込み中です",
-          "b6a994e36e": "通知音が再生できませんでした",
-          "c0692baa52": "カスタムファイルの選択",
-          "ac80d97e02": "カスタムファイルの変更",
           "56b836215c": "通知の権限を確認しています…",
           "fd84d3e9b8": "通知は有効です",
           "4f7bce5644": "Agent の完了やターミナルの要対応時に macOS が通知します。",
           "95d99b52fa": "Orcinus の通知を許可",
-          "94562ba367": "macOS が権限を求めています。ダイアログで許可をクリックすると、このステップは自動的に更新されます。",
           "4f6a1da718": "システム設定を開く",
-          "90b5d2e363": "macOS が Orcinus の通知を配信していません",
-          "2c47f5465f": "システム設定で Orcinus の通知を許可するをオンにします。有効になると、このステップは自動的に更新されます。"
+          "90b5d2e363": "macOS が Orcinus の通知を配信していません"
         },
-        "OnboardingFlow": {
-          "1b5e182e9f": "Orcinus へようこそ",
-          "4db04f2f57": "の",
-          "adaa0aa627": "オンボーディングステップ {{value0}}: {{value1}} に進みます。",
-          "a249f81538": "Orcinus",
-          "277ba45540": "Orcinus のオンボーディング",
-          "97c42cda00": "GitHub CLI をインストールして以下を実行します。",
-          "ae3b00ca82": "GitHub タスクをセットアップする",
-          "ff92d15436": "Orcinus は、Agent の作業が完了したとき、またはサポートが必要になったときに通知します。",
-          "b054332836": "通知を設定する",
-          "04ae28d8ca": "何時間も眺めていたくなるテーマを選んでください。",
-          "f396db9f20": "まるで家にいるような気分にさせてくれる",
-          "322fc50a18": "Orcinus はすべての CLI Agent で動作します。最もよく使うものを選択してください。いつでも切り替えられます。",
-          "198b148b3c": "デフォルトの Agent を選択",
-          "a5e5da02f7": "連携",
-          "35bbaf5ae0": "通知",
-          "984338477a": "テーマ",
-          "c47e1bd149": "Agent",
-          "windowsTerminalTitle": "Windows ターミナルの既定値を設定",
-          "windowsTerminalSubtitle": "新規ペインで使う既定のシェルと、ターミナルでの右クリックの動作を選びます。"
-        },
-        "OnboardingFooter": {
-          "ba58547306": "戻る",
-          "111d3f8d92": "プロジェクトのセットアップにスキップ"
-        },
+        "OnboardingFlow": {},
+        "OnboardingFooter": {},
         "OnboardingInlineCommandTerminal": {
           "4123609efd": "ターミナルを起動しています…"
         },
-        "OnboardingSkipConfirmationDialog": {
-          "9f47f345a4": "それほど時間はかかりません！",
-          "e4726b2d50": "オンボーディングをスキップしますか?"
-        },
-        "ThemeStep": {
-          "a4b254779d": "macOS の Option キー",
-          "6c51398942": "マウス",
-          "8ca01945f2": "ディバイダー",
-          "b3a99a2d29": "ウィンドウ",
-          "86c0f1caa2": "パディング",
-          "06a24f4f2d": "色",
-          "c021e9dddd": "テーマパレット",
-          "ab2a583a97": "カーソル",
-          "cc1858e19e": "フォント",
-          "248c812283": "インポート",
-          "7ee9234e54": "Ghostty 構成が検出されました。",
-          "78b6386140": "Ghostty からインポートしました。",
-          "2c3aa538f8": "Ghostty 設定を検索中…",
-          "94b9dc561d": "設定→Terminal",
-          "dd5c16ad1b": "フォント、カーソル、パレットを含むその他のターミナルオプション",
-          "ad192706e6": "ライト",
-          "fa7b673ea9": "ダーク",
-          "827ea7b4a2": "システム",
-          "699ddf83c2": "Ghostty 設定のインポートに失敗しました",
-          "16a9f0446a": "インポートする Ghostty 設定が見つかりません",
-          "ad19e5c916": "インポート中…",
-          "906c4373fe": "設定"
-        },
+        "OnboardingSkipConfirmationDialog": {},
+        "ThemeStep": {},
         "use": {
           "onboarding": {
-            "flow": {
-              "52acfbef51": "進行状況を保存できませんでした"
-            }
+            "flow": {}
           }
         },
-        "WindowsTerminalStep": {
-          "powerShell": "PowerShell",
-          "powerShellPwsh": "利用可能な場合は PowerShell 7+ を使い、代わりに Windows PowerShell を使用します。",
-          "powerShellInbox": "対応するすべての Windows に搭載されている Windows PowerShell を使います。",
-          "commandPrompt": "コマンドプロンプト",
-          "commandPromptDescription": "従来の cmd.exe の動作で新規ターミナルペインを開きます。",
-          "gitBash": "Git Bash",
-          "gitBashDescription": "Unix スタイルのシェル操作には Git for Windows の bash.exe を使います。",
-          "gitBashUnavailable": "選択されていますが、このマシンでは Git Bash が検出されませんでした。",
-          "wsl": "WSL",
-          "wslDescription": "Windows Subsystem for Linux の既定の環境で新規ターミナルペインを起動します。",
-          "wslUnavailable": "選択されていますが、このマシンでは WSL が検出されませんでした。",
-          "rightClickPaste": "右クリックで貼り付け",
-          "rightClickPasteDescription": "右クリックでクリップボードを貼り付けます。Ctrl+右クリックでコンテキストメニューを開きます。",
-          "rightClickMenu": "コンテキストメニューを開く",
-          "rightClickMenuDescription": "右クリックでターミナルメニューを開きます。メニューまたはキーボードから貼り付けます。",
-          "loading": "ターミナル設定を読み込み中…",
-          "defaultShell": "デフォルトのシェル",
-          "defaultShellDescription": "Orcinus が Windows ターミナルの新規ペインで開くシェルを選びます。",
-          "wslDistribution": "WSL ディストリビューション",
-          "wslDistributionDescription": "Windows の既定のディストリビューションを使うか、インストール済みの特定のディストリを選びます。",
-          "loadingDistros": "ディストリビューションを読み込んでいます",
-          "windowsDefault": "Windows のデフォルト",
-          "rightClickBehavior": "右クリックの動作",
-          "rightClickBehaviorDescription": "Windows で慣れたターミナルのマウス操作に合うものを選びます。"
-        },
+        "WindowsTerminalStep": {},
         "mac": {
           "notification": {
             "permission": {
               "card": {
                 "f696515944": "macOS のダイアログで許可をクリックします。",
-                "3d18cf71f9": "自動的に更新されます。",
                 "721d2bedb6": "システム設定で Orcinus の通知を許可するをオンにします。"
               }
             }
@@ -10843,37 +10709,15 @@
   "components": {
     "onboarding": {
       "flow": {
-        "stepTooltip": {
-          "agent": "デフォルトの Agent",
-          "theme": "外観",
-          "windowsTerminal": "Windows ターミナル",
-          "notifications": "通知",
-          "integrations": "連携"
-        },
-        "actions": {
-          "addFirstProject": "最初のプロジェクトを追加",
-          "continue": "続行",
-          "openingAddProject": "[プロジェクトを追加] を開いています…"
-        }
+        "stepTooltip": {},
+        "actions": {}
       },
-      "skipConfirmation": {
-        "skip": "スキップ",
-        "keepGoing": "いいえ、続ける"
-      },
+      "skipConfirmation": {},
       "theme": {
-        "hints": {
-          "system": "OS に合わせる",
-          "dark": "目にやさしい",
-          "light": "明るく鮮明"
-        }
+        "hints": {}
       },
       "integrations": {
-        "capabilities": {
-          "startWorkspaceFromIssue": "GitHub の Issue や PR から、タイトルとコンテキストがあらかじめ入力されたワークスペースを開始",
-          "browseIssues": "Orcinus から離れずに、「タスク」ページで GitHub の Issue と PR を閲覧",
-          "reviewStatus": "すべてのワークツリーで Issue の状態、レビュー状況、CI チェックを確認",
-          "managePullRequests": "Orcinus から離れずに、PR の閲覧、コメント、マージ"
-        }
+        "capabilities": {}
       }
     },
     "tab": {

@@ -13,7 +13,6 @@ import { createKeybindingsApi } from './mock/keybindings-api'
 import { createMacosTccPromptsApi } from './mock/macos-tcc-prompts-api'
 import { createMemoryApi } from './mock/memory-api'
 import { createNotificationsApi } from './mock/notifications-api'
-import { createOnboardingApi } from './mock/onboarding-api'
 import { createOrcaProfilesApi } from './mock/orca-profiles-api'
 import { createPlatformApi } from './mock/platform-api'
 import { createPluginsApi } from './mock/plugins-api'
@@ -41,7 +40,6 @@ import { createFolderWorkspacesRealApi } from './real/folder-workspaces'
 import { createFsRealApi } from './real/fs'
 import { createGitRealApi } from './real/git'
 import { createNotificationsRealApi } from './real/notifications'
-import { createOnboardingRealApi } from './real/onboarding'
 import { createPlatformRealApi } from './real/platform'
 import { createPluginsRealApi } from './real/plugins'
 import { createPreflightRealApi } from './real/preflight'
@@ -72,7 +70,6 @@ type RealDomains = Pick<
   | 'fs'
   | 'git'
   | 'notifications'
-  | 'onboarding'
   | 'platform'
   | 'plugins'
   | 'preflight'
@@ -107,7 +104,6 @@ function createMockDomains(): Partial<PreloadApi> {
     macosTccPrompts: createMacosTccPromptsApi(),
     memory: createMemoryApi(),
     notifications: createNotificationsApi(),
-    onboarding: createOnboardingApi(),
     orcaProfiles: createOrcaProfilesApi(),
     platform: createPlatformApi(),
     plugins: createPluginsApi(),
@@ -141,7 +137,6 @@ function createRealDomains(): RealDomains {
     fs: createFsRealApi(),
     git: createGitRealApi(),
     notifications: createNotificationsRealApi(),
-    onboarding: createOnboardingRealApi(),
     platform: createPlatformRealApi(),
     plugins: createPluginsRealApi(),
     preflight: createPreflightRealApi(),

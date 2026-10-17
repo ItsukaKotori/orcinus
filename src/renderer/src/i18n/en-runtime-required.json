@@ -468,34 +468,14 @@
         }
       },
       "onboarding": {
-        "IntegrationsStep": {
-          "93f0c49ad1": "not-authenticated",
-          "a3bcf13694": "connected",
-          "a74c6d6b18": "not-installed"
-        },
-        "NotificationStep": {
-          "2c47f5465f": "Turn on Allow notifications for Orcinus in System Settings. This step updates automatically once enabled.",
-          "8124d085a6": "Open Mac Settings",
-          "94562ba367": "macOS is asking for permission. Click Allow in the dialog and this step updates automatically.",
-          "aa36281b00": "Open System Settings and make sure Orcinus is allowed to send notifications.",
-          "d2dba86837": "Allow Orcinus in macOS"
-        },
-        "OnboardingFlow": {
-          "35bbaf5ae0": "notifications",
-          "984338477a": "theme",
-          "a5e5da02f7": "integrations",
-          "c47e1bd149": "agent",
-          "ff92d15436": "Orcinus will notify you know when agents are done or need help."
-        },
-        "ThemeStep": {
-          "ad19e5c916": "Importing…"
-        },
+        "IntegrationsStep": {},
+        "NotificationStep": {},
+        "OnboardingFlow": {},
+        "ThemeStep": {},
         "mac": {
           "notification": {
             "permission": {
-              "card": {
-                "3d18cf71f9": "Updates automatically."
-              }
+              "card": {}
             }
           }
         }
@@ -2368,12 +2348,7 @@
   "components": {
     "onboarding": {
       "integrations": {
-        "capabilities": {
-          "browseIssues": "Browse GitHub issues and pull requests in the Tasks view without leaving Orcinus",
-          "managePullRequests": "Read, comment on, and merge pull requests without leaving Orcinus",
-          "reviewStatus": "See issue state, review status, and CI checks on every worktree",
-          "startWorkspaceFromIssue": "Start a workspace from any GitHub issue or pull request, prefilled with its title and context"
-        }
+        "capabilities": {}
       }
     },
     "workspace": {

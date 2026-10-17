@@ -8,7 +8,6 @@ import { createKeybindingsApi } from './keybindings-api'
 import { createMacosTccPromptsApi } from './macos-tcc-prompts-api'
 import { createMemoryApi } from './memory-api'
 import { createNotificationsApi } from './notifications-api'
-import { createOnboardingApi } from './onboarding-api'
 import { createOrcaProfilesApi } from './orca-profiles-api'
 import { createPreflightApi } from './preflight-api'
 import { createProjectGroupsApi } from './project-groups-api'
@@ -39,11 +38,6 @@ describe('Phase 0 boot namespace mocks', () => {
     const unsubscribe = remoteWorkspace.onChanged(() => {})
     expect(typeof unsubscribe).toBe('function')
     unsubscribe()
-  })
-
-  it('onboarding: get resolves the default state', async () => {
-    const onboarding = createOnboardingApi()
-    await expect(onboarding.get()).resolves.toBeDefined()
   })
 
   it('cli: getInstallStatus resolves a not-installed status', async () => {

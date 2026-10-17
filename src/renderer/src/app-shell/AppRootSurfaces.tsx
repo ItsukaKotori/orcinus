@@ -10,7 +10,6 @@ import { ZoomOverlay } from '../components/ZoomOverlay'
 import { useAppStore } from '../store'
 import { useLazyModalMounts } from './use-lazy-modal-mounts'
 import type { FloatingWorkspacePanelState } from './use-floating-workspace-panel'
-import type { OnboardingGate } from './use-onboarding'
 
 const QuickOpen = lazy(() => import('../components/QuickOpen'))
 const WorktreeJumpPalette = lazy(() => import('../components/WorktreeJumpPalette'))
@@ -40,8 +39,6 @@ const FloatingTerminalPanel = lazy(() =>
     default: module.FloatingTerminalPanel
   }))
 )
-// Why: lazy so onboarding's step modules + assets aren't fetched for users past first-launch.
-const OnboardingFlow = lazy(() => import('../components/onboarding/OnboardingFlow'))
 
 type BoundaryProps = {
   boundaryId: string
@@ -73,9 +70,8 @@ function OverlayBoundary({ children, ...props }: BoundaryProps): React.JSX.Eleme
  */
 export function AppRootSurfaces(props: {
   floatingWorkspace: FloatingWorkspacePanelState
-  onboardingGate: OnboardingGate
 }): React.JSX.Element {
-  const { floatingWorkspace, onboardingGate } = props
+  const { floatingWorkspace } = props
   const { mountedLazyModalIds, shouldMountAddRepoDialog } = useLazyModalMounts()
   const activeView = useAppStore((s) => s.activeView)
   const activeModal = useAppStore((s) => s.activeModal)
@@ -200,23 +196,6 @@ export function AppRootSurfaces(props: {
       <ModalBoundary boundaryId="modal.markdown-template-picker" resetKey={activeModal}>
         <MarkdownTemplatePicker />
       </ModalBoundary>
-      {onboardingGate.onboarding && onboardingGate.shouldRender ? (
-        <Suspense fallback={null}>
-          <RecoverableRenderErrorBoundary
-            boundaryId="modal.onboarding"
-            title={translate('auto.App.f02d37278a', 'Onboarding hit an error.')}
-            description={translate(
-              'auto.App.221a95ba38',
-              'Retry onboarding or close it and continue in the app.'
-            )}
-          >
-            <OnboardingFlow
-              onboarding={onboardingGate.onboarding}
-              onOnboardingChange={onboardingGate.setOnboarding}
-            />
-          </RecoverableRenderErrorBoundary>
-        </Suspense>
-      ) : null}
       <OverlayBoundary boundaryId="overlay.recent-tab-switcher" resetKey={activeView}>
         <RecentTabSwitcher />
       </OverlayBoundary>

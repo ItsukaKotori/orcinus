@@ -87,8 +87,6 @@
   },
   "auto": {
     "App": {
-      "221a95ba38": "Vuelve a intentar la configuración inicial o ciérrala y continúa en la aplicación.",
-      "f02d37278a": "La configuración inicial tuvo un error.",
       "8a023cea1f": "Vuelve a intentarlo para recargar los controles de la barra de estado.",
       "2e8ff36f94": "La barra de estado tuvo un error.",
       "7cbfbf622f": "Vuelve a intentarlo, o cierra y vuelve a abrir el espacio de trabajo flotante.",
@@ -3178,7 +3176,6 @@
           "4e8f5710d3": "No se pudo reiniciar Orcinus.",
           "5161eef55d": "Reiniciando Orcinus...",
           "d396773ef0": "comprobando",
-          "b7e4d2a19c": "Onboarding",
           "c4f8e1b72a": "X"
         },
         "SidebarToolbar": {
@@ -9418,166 +9415,35 @@
         }
       },
       "onboarding": {
-        "AgentStep": {
-          "e6a369bd04": "Agentes populares",
-          "d7b3ef168b": "Detectados en tu sistema",
-          "9c163bb0e0": "Instrucciones de instalación",
-          "69af7e9c1c": "aún no está en tu PATH. Orcinus lo configurará como predeterminado y podrás instalarlo en cualquier momento.",
-          "1eee1c7bd8": "No se detectaron agentes en tu PATH. Elige uno para instalarlo más tarde o continúa con una terminal en blanco.",
-          "hideAgents": "Ocultar agentes",
-          "showMoreAgents": "Mostrar {{value0}} agentes más→",
-          "yoloPermissionsLabel": "Yolo / Omitir permisos de forma peligrosa",
-          "yoloPermissionsInfo": "Información de permisos del agente",
-          "yoloPermissionsTooltip": "Omite las comprobaciones de permisos de los agentes para reducir interrupciones"
-        },
-        "FeatureSetupInlineTerminal": {
-          "789b59936e": "Pulsa Enter para ejecutar el comando y confirma npx si se te solicita. También puedes configurarlo más tarde en Configuración.",
-          "47fc6cc6dc": "Comando de configuración de skills",
-          "c767ab7061": "Configuración de skills"
-        },
-        "IntegrationsStep": {
-          "277f30eb34": "Linear, GitLab, Bitbucket, Azure DevOps, Gitea y Jira se encuentran en Configuración > Integraciones.",
-          "3a3e360289": "Más fuentes de tareas",
-          "80e3ce0bc9": "Volver a comprobar",
-          "04ef416712": "Agregar acceso Linear",
-          "dd9c186a8b": "Agregar acceso al espacio de trabajo",
-          "c91a5782f1": "Conectado",
-          "27743304b1": "Linear",
-          "af69f42372": "Pulsa Enter para ejecutar la autenticación de la CLI de GitHub. Vuelve a comprobar GitHub cuando termine el flujo del navegador o del dispositivo.",
-          "f9d2e12d17": "Comando de inicio de sesión de GitHub",
-          "6d469169f2": "Configuración de GitHub",
-          "bd5d976fb2": "Instalar gh",
-          "50db38cf4b": "Pull requests, issues y estado de checks.",
-          "c1547656f0": "Comprobando…",
-          "8405043962": "Se requiere iniciar sesión",
-          "5c115cb713": "CLI no instalada",
-          "217beb0658": "GitHub",
-          "4983ae7433": "Agregue acceso Linear con una clave API personal. Las claves de acceso total pueden mostrar todos los equipos a los que puede acceder el propietario de la clave.",
-          "b08a6ac93c": "{{value0}} workspace{{value1}} vinculado. Agrega otro workspace o reemplaza una clave restringida en cualquier momento.",
-          "93f0c49ad1": "no autenticado",
-          "a3bcf13694": "conectado",
-          "d6e5dba05a": "Iniciar sesión",
-          "0b4a7d23ab": "Iniciando sesión",
-          "a74c6d6b18": "no instalado"
-        },
+        "AgentStep": {},
+        "FeatureSetupInlineTerminal": {},
+        "IntegrationsStep": {},
         "NotificationStep": {
-          "3bede04483": "Enviar notificación de prueba",
-          "dc897423e1": "Elige sonido de notificación",
-          "53aaffe49a": "Sonido de notificación",
-          "0fe570690c": "Elija la alerta que Orcinus reproduce después de que se envía una notificación de escritorio.",
-          "0af746e41f": "Elige un sonido",
-          "8124d085a6": "Abra la configuración de Mac",
-          "aa36281b00": "Abra Configuración del sistema y asegúrese de que Orcinus pueda enviar notificaciones.",
-          "d2dba86837": "Permitir Orcinus en macOS",
-          "e52aacf380": "Cargando configuración de notificaciones…",
-          "3cd5374e22": "La configuración de notificaciones aún se está cargando",
-          "b6a994e36e": "No se pudo reproducir el sonido de notificación",
-          "c0692baa52": "Elija un archivo personalizado",
-          "ac80d97e02": "Cambiar archivo personalizado",
           "56b836215c": "Comprobando el permiso de notificaciones…",
           "fd84d3e9b8": "Las notificaciones están activadas",
           "4f7bce5644": "macOS te avisará cuando los agentes terminen o los terminales necesiten atención.",
           "95d99b52fa": "Permitir notificaciones de Orcinus",
-          "94562ba367": "macOS está pidiendo permiso. Haz clic en Permitir en el diálogo y este paso se actualizará automáticamente.",
           "4f6a1da718": "Abrir Configuración del sistema",
-          "90b5d2e363": "macOS no está entregando las notificaciones de Orcinus",
-          "2c47f5465f": "Activa Permitir notificaciones para Orcinus en Configuración del sistema. Este paso se actualizará automáticamente cuando estén activadas."
+          "90b5d2e363": "macOS no está entregando las notificaciones de Orcinus"
         },
-        "OnboardingFlow": {
-          "1b5e182e9f": "Bienvenido a Orcinus",
-          "4db04f2f57": "de",
-          "adaa0aa627": "Vaya al paso de incorporación {{value0}}: {{value1}}",
-          "a249f81538": "Orcinus",
-          "277ba45540": "Incorporación de Orcinus",
-          "97c42cda00": "Instale la CLI de GitHub para:",
-          "ae3b00ca82": "Configurar tareas de GitHub",
-          "ff92d15436": "Orcinus te notificará cuando los agentes terminen o necesiten ayuda.",
-          "b054332836": "Configurar notificaciones",
-          "04ae28d8ca": "Elige la apariencia que quieras ver durante horas.",
-          "f396db9f20": "Haz que te sientas como en casa",
-          "322fc50a18": "Orcinus funciona con cualquier agente CLI. Elige el que más usarás. Puedes cambiarlo en cualquier momento.",
-          "198b148b3c": "Elija su agente predeterminado",
-          "a5e5da02f7": "integraciones",
-          "35bbaf5ae0": "notificaciones",
-          "984338477a": "tema",
-          "c47e1bd149": "agente",
-          "windowsTerminalTitle": "Configura los valores predeterminados de la terminal de Windows",
-          "windowsTerminalSubtitle": "Elige la Shell predeterminada para los paneles nuevos y cómo se comporta el clic derecho en la terminal."
-        },
-        "OnboardingFooter": {
-          "ba58547306": "Atrás",
-          "111d3f8d92": "Saltar a la configuración del proyecto"
-        },
+        "OnboardingFlow": {},
+        "OnboardingFooter": {},
         "OnboardingInlineCommandTerminal": {
           "4123609efd": "Iniciando terminal..."
         },
-        "OnboardingSkipConfirmationDialog": {
-          "9f47f345a4": "¡No tardará mucho!",
-          "e4726b2d50": "¿Saltar la incorporación?"
-        },
-        "ThemeStep": {
-          "a4b254779d": "Tecla de opción de macOS",
-          "6c51398942": "Ratón",
-          "8ca01945f2": "Divisores",
-          "b3a99a2d29": "Ventana",
-          "86c0f1caa2": "Relleno",
-          "06a24f4f2d": "Colores",
-          "c021e9dddd": "paleta temática",
-          "ab2a583a97": "Cursor",
-          "cc1858e19e": "Fuente",
-          "248c812283": "Importar",
-          "7ee9234e54": "Se detectó una configuración de Ghostty.",
-          "78b6386140": "Importado de Ghostty.",
-          "2c3aa538f8": "Buscando una configuración de Ghostty...",
-          "94b9dc561d": "Configuración → Terminal",
-          "dd5c16ad1b": "Más opciones de terminal, incluyendo fuente, cursor y paleta, en",
-          "ad192706e6": "Claro",
-          "fa7b673ea9": "Oscuro",
-          "827ea7b4a2": "Sistema",
-          "699ddf83c2": "No se pudo importar la configuración de Ghostty",
-          "16a9f0446a": "No se encontraron configuraciones de Ghostty para importar",
-          "ad19e5c916": "Importando…",
-          "906c4373fe": "ajustes"
-        },
+        "OnboardingSkipConfirmationDialog": {},
+        "ThemeStep": {},
         "use": {
           "onboarding": {
-            "flow": {
-              "52acfbef51": "No se pudo guardar el progreso"
-            }
+            "flow": {}
           }
         },
-        "WindowsTerminalStep": {
-          "powerShell": "PowerShell",
-          "powerShellPwsh": "Usa PowerShell 7+ cuando está disponible, con Windows PowerShell como alternativa.",
-          "powerShellInbox": "Usa el Windows PowerShell disponible en todas las instalaciones compatibles de Windows.",
-          "commandPrompt": "Símbolo del sistema",
-          "commandPromptDescription": "Abre nuevos paneles de terminal con el comportamiento clásico de cmd.exe.",
-          "gitBash": "Git Bash",
-          "gitBashDescription": "Usa bash.exe de Git for Windows para flujos de trabajo de shell al estilo Unix.",
-          "gitBashUnavailable": "Seleccionado, pero Git Bash no se detectó en esta máquina.",
-          "wsl": "WSL",
-          "wslDescription": "Inicia nuevos paneles de terminal dentro de tu distribución predeterminada de Windows Subsystem for Linux.",
-          "wslUnavailable": "Seleccionado, pero WSL no se detectó en esta máquina.",
-          "rightClickPaste": "Pegar con clic derecho",
-          "rightClickPasteDescription": "El clic derecho pega el contenido del portapapeles. Ctrl+clic derecho abre el menú contextual.",
-          "rightClickMenu": "Abrir menú contextual",
-          "rightClickMenuDescription": "El clic derecho abre el menú de la terminal. Pega desde el menú o con el teclado.",
-          "loading": "Cargando ajustes de la terminal...",
-          "defaultShell": "Shell predeterminada",
-          "defaultShellDescription": "Elige la shell que Orcinus abre para nuevos paneles de la terminal de Windows.",
-          "wslDistribution": "Distribución de WSL",
-          "wslDistributionDescription": "Usa la distribución predeterminada de Windows o elige una distro instalada específica.",
-          "loadingDistros": "Cargando distribuciones",
-          "windowsDefault": "Predeterminada de Windows",
-          "rightClickBehavior": "Comportamiento del clic derecho",
-          "rightClickBehaviorDescription": "Elige el comportamiento del ratón en la terminal que coincida con tu memoria muscular de Windows."
-        },
+        "WindowsTerminalStep": {},
         "mac": {
           "notification": {
             "permission": {
               "card": {
                 "f696515944": "Haz clic en Permitir en el diálogo de macOS.",
-                "3d18cf71f9": "Se actualizará automáticamente.",
                 "721d2bedb6": "Activa Permitir notificaciones para Orcinus en Configuración del sistema."
               }
             }

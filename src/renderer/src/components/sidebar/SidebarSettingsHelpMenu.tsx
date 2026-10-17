@@ -8,7 +8,6 @@ import {
   Loader2,
   RefreshCw,
   RotateCw,
-  School,
   ScrollText,
   Settings
 } from 'lucide-react'
@@ -26,7 +25,6 @@ import {
 import { useMountedRef } from '@/hooks/useMountedRef'
 import { useShortcutKeyDetails } from '@/hooks/useShortcutLabel'
 import { ShortcutKeyCombo } from '@/components/ShortcutKeyCombo'
-import { showOnboardingFromRenderer } from '../onboarding/show-onboarding-event'
 import { translate } from '@/i18n/i18n'
 import { getUpdateCheckClickOptions, getUpdateCheckHint } from '@/lib/update-check-click-options'
 
@@ -88,7 +86,6 @@ export function SidebarSettingsHelpMenu(): React.JSX.Element {
   const settingsShortcut = useShortcutKeyDetails('app.settings')
   const [menuOpen, setMenuOpen] = useState(false)
   const [isRestartingOrca, setIsRestartingOrca] = useState(false)
-  const lastShowOnboardingAtRef = React.useRef(0)
   const updateCheckModifiersRef = React.useRef(NO_UPDATE_CHECK_MODIFIERS)
   const mountedRef = useMountedRef()
   const updateCheckHint = getUpdateCheckHint()
@@ -96,15 +93,6 @@ export function SidebarSettingsHelpMenu(): React.JSX.Element {
   const handleMenuOpenChange = (open: boolean): void => {
     setMenuOpen(open)
     updateCheckModifiersRef.current = NO_UPDATE_CHECK_MODIFIERS
-  }
-
-  const handleShowOnboarding = (): void => {
-    const now = Date.now()
-    if (now - lastShowOnboardingAtRef.current < 500) {
-      return
-    }
-    lastShowOnboardingAtRef.current = now
-    void showOnboardingFromRenderer()
   }
 
   const handleRestartOrca = (): void => {
@@ -214,17 +202,6 @@ export function SidebarSettingsHelpMenu(): React.JSX.Element {
               )}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="whitespace-nowrap"
-              onClick={handleShowOnboarding}
-              onSelect={handleShowOnboarding}
-            >
-              <School className="size-3.5" />
-              {translate(
-                'auto.components.sidebar.SidebarSettingsHelpMenu.b7e4d2a19c',
-                'Onboarding'
-              )}
-            </DropdownMenuItem>
             <ExternalMenuItem
               label={translate(
                 'auto.components.sidebar.SidebarSettingsHelpMenu.cdc87f897e',

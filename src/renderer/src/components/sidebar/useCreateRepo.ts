@@ -5,7 +5,6 @@ import { toast } from 'sonner'
 import { useAppStore } from '@/store'
 import { useMountedRef } from '@/hooks/useMountedRef'
 import { activateAndRevealWorktree } from '@/lib/worktree-activation'
-import { markOnboardingProjectAdded } from '@/lib/onboarding-project-checklist'
 import { callRuntimeRpc, getActiveRuntimeTarget } from '@/runtime/runtime-rpc-client'
 import { isGitRepoKind } from '../../../../shared/repo-kind'
 import type { Repo } from '../../../../shared/repo-types'
@@ -194,7 +193,6 @@ export function useCreateRepo(
               : {})
           })
         }
-        await markOnboardingProjectAdded('addedFolder')
         closeModal()
       }
     } catch (err) {

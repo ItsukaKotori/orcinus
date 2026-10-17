@@ -18,8 +18,7 @@ const mocks = vi.hoisted(() => ({
   callRuntimeRpc: vi.fn(),
   fetchWorktrees: vi.fn(),
   onGitRepoReady: vi.fn(),
-  activateAndRevealWorktree: vi.fn(),
-  markOnboardingProjectAdded: vi.fn()
+  activateAndRevealWorktree: vi.fn()
 }))
 
 vi.mock('react', async (importOriginal) => {
@@ -49,10 +48,6 @@ vi.mock('@/hooks/useMountedRef', () => ({
 
 vi.mock('@/lib/worktree-activation', () => ({
   activateAndRevealWorktree: mocks.activateAndRevealWorktree
-}))
-
-vi.mock('@/lib/onboarding-project-checklist', () => ({
-  markOnboardingProjectAdded: mocks.markOnboardingProjectAdded
 }))
 
 vi.mock('@/store', () => {
@@ -216,7 +211,6 @@ describe('useCreateRepo default-checkout handoff', () => {
     expect(mocks.activateAndRevealWorktree).toHaveBeenCalledWith(worktree.id, {
       sidebarRevealBehavior: 'auto'
     })
-    expect(mocks.markOnboardingProjectAdded).toHaveBeenCalledWith('addedFolder')
     expect(closeModal).toHaveBeenCalled()
     expect(mocks.onGitRepoReady).not.toHaveBeenCalled()
   })

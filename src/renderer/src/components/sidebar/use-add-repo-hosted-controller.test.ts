@@ -13,8 +13,7 @@ vi.mock('react', async (importOriginal) => {
 const mocks = vi.hoisted(() => ({
   state: {
     closeModal: vi.fn()
-  },
-  markOnboardingProjectAdded: vi.fn(() => Promise.resolve())
+  }
 }))
 
 vi.mock('@/store', () => ({
@@ -22,10 +21,6 @@ vi.mock('@/store', () => ({
     (selector: (state: typeof mocks.state) => unknown) => selector(mocks.state),
     { getState: () => mocks.state }
   )
-}))
-
-vi.mock('@/lib/onboarding-project-checklist', () => ({
-  markOnboardingProjectAdded: mocks.markOnboardingProjectAdded
 }))
 
 import { useAddRepoHostedController } from './use-add-repo-hosted-controller'
@@ -84,7 +79,6 @@ describe('useAddRepoHostedController', () => {
       onProjectAdded
     })
     await finishProjectAdd?.('repo-1')
-    expect(mocks.markOnboardingProjectAdded).toHaveBeenCalledWith('addedRepo')
     expect(onProjectAdded).toHaveBeenCalledWith('repo-1')
     // Why: closing before selection keeps the composer visible under the
     // dialog's close animation while the new project lands in the picker.

@@ -23,7 +23,7 @@ import type { ExportApi, FilesystemApi } from './api/filesystem-api'
 import type { GitInspectionApi } from './api/git-inspection-api'
 import type { GitOperationApi } from './api/git-operation-api'
 import type { BitbucketApi } from './api/bitbucket-api'
-import type { OnboardingApi, StarNagApi } from './api/onboarding-api'
+import type { StarNagApi } from './api/star-nag-api'
 import type { OrcaProfileApi } from './api/orca-profile-api'
 import type {
   DeveloperPermissionsApi,
@@ -89,7 +89,6 @@ export type PreloadApi = {
   agentTrust: AgentTrustApi
   preflight: PreflightApi
   notifications: NotificationsApi
-  onboarding: OnboardingApi
   terminalPreview: TerminalPreviewApi
   macosTccPrompts: MacosTccPromptsApi
   developerPermissions: DeveloperPermissionsApi
