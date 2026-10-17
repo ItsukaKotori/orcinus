@@ -201,6 +201,66 @@ describe('/shared ai-vault-session-filters (lifted core)', () => {
   })
 })
 
+describe('/shared ai-vault-session-filters operator shapes', () => {
+  it('keeps a value that only looks like an operator as ordinary text', () => {
+    expect(parseVaultQuery('myrepo:x https://host/path:y')).toEqual({
+      terms: ['myrepo:x', 'https://host/path:y'],
+      repoTerms: [],
+      pathTerms: []
+    })
+  })
+
+  it('does not let an apostrophe in prose swallow the operator between quotes', () => {
+    expect(parseVaultQuery("it's a repo:orca thing's").repoTerms).toEqual(['orca'])
+  })
+
+  it('preserves operator case through the split, then folds it for matching', () => {
+    // cwd_key keeps execution-host case, so folding before the split would lose
+    // a POSIX directory whose name differs only in case.
+    expect(parseVaultQuery('path:/Work/App').pathTerms).toEqual(['/work/app'])
+  })
+
+  it.each([
+    ['repo:"" x', 'repoTerms'],
+    ['path:"" x', 'pathTerms'],
+    ['repo:"  " x', 'repoTerms'],
+    ['path:"  " x', 'pathTerms']
+  ] as const)('drops the empty operator value in %s instead of filtering on `""`', (query, key) => {
+    // The old tokenizer kept the quote characters as the value, so `repo:""`
+    // filtered on a label no session has and silently emptied the list. An
+    // operator with nothing in it is not a narrowing.
+    expect(parseVaultQuery(query)[key]).toEqual([])
+  })
+
+  it('trims a quoted operator value rather than searching for the spaces', () => {
+    expect(parseVaultQuery('repo:" session-search "').repoTerms).toEqual(['session-search'])
+  })
+
+  it.each(['"" empty', "'' empty", '"  " empty'])(
+    'reads the empty quotes in %s as an empty term',
+    (query) => {
+      // Same reason one level up: the old parser searched for the two characters
+      // and found nothing, where an empty term matches everything and leaves the
+      // rest of the query to do the work.
+      expect(parseVaultQuery(query).terms).toEqual(['', 'empty'])
+    }
+  )
+
+  it.each([
+    ['"foo"bar', { terms: ['foo', 'bar'], repoTerms: [], pathTerms: [] }],
+    ['"a b"c', { terms: ['a b', 'c'], repoTerms: [], pathTerms: [] }],
+    ['repo:"a"b', { terms: ['b'], repoTerms: ['a'], pathTerms: [] }],
+    ['path:"a"b', { terms: ['b'], repoTerms: [], pathTerms: ['a'] }],
+    ['repo:"a b"c d', { terms: ['c', 'd'], repoTerms: ['a b'], pathTerms: [] }]
+  ])('reads %s exactly as the panel always has', (query, expected) => {
+    // A closing quote does not have to end a word. Requiring it turned each of
+    // these into one term carrying its own quote characters, which matches
+    // nothing; the apostrophe case above is protected by the token start, not
+    // by that rule.
+    expect(parseVaultQuery(query)).toEqual(expected)
+  })
+})
+
 describe('/shared ai-vault-session-filters (hoisted matchers and sort keys)', () => {
   it('prepares workspace path matching once for a large session filter pass', () => {
     const sessions = Array.from({ length: 1000 }, (_, i) => ({

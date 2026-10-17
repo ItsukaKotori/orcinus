@@ -53,7 +53,6 @@
     "toggleLeftSidebar": "显示/隐藏左侧边栏",
     "toggleRightSidebar": "显示/隐藏右侧边栏",
     "showStatusBar": "显示状态栏",
-    "showTasksButton": "显示任务按钮",
     "showAutomationsButton": "显示自动化按钮",
     "showTitlebarAppName": "显示标题栏应用名称",
     "view": "查看",
@@ -155,15 +154,7 @@
           "checkRunDetailsUnavailable": "此检查没有可用的详细信息。",
           "checkRunDetailsLoadFailed": "加载检查详细信息失败。"
         },
-        "github": {
-          "f129c42773": "GitHub 没有回复新评论。",
-          "683a21264b": "行没有所有者/仓库/编号。",
-          "83f9b126ad": "议题类型只能在议题上设置。",
-          "f963485d37": "未找到行",
-          "a967f23983": "项目视图未加载",
-          "87020f6605": "行没有所有者/仓库/编号 - 无法修补底层项目",
-          "d49ef4b944": "无法保存议题源首选项"
-        },
+        "github": {},
         "sparse": {
           "presets": {
             "ef13e994e6": "保存之前必须加载预设。",
@@ -923,7 +914,6 @@
       },
       "TaskPage": {
         "513cddfa7a": "正在验证...",
-        "ff69a30681": "取消",
         "2abe22ef76": "您的token通过操作系统钥匙串加密并存储在本地。",
         "246c2b3dd3": "Atlassian 账户设置",
         "59c14d34a2": "创建一个token",
@@ -932,25 +922,9 @@
         "163df31e0e": "https://example.atlassian.net",
         "33fc2bcb30": "使用 Jira Cloud 站点 URL、Atlassian 电子邮件和 API token来浏览议题。",
         "60f806ce99": "连接 Jira 站点",
-        "8ff6fdc368": "创建中…",
-        "fc0d8a1fa4": "提交。",
-        "34d97ca682": "这是怎么回事？",
-        "578f730c16": "简短摘要",
-        "16cba35bee": "标题",
-        "00022ec0ba": "项目",
-        "d0ca4aa1d0": "标签",
-        "42a9160321": "未分配",
-        "154b0fa623": "状态",
-        "7d08e8be0f": "开始",
         "7f3f7b4c18": "描述（可选，markdown）",
         "9f2b4c03a6": "提交",
         "d3d0998b7d": "新的 GitHub 议题",
-        "606a85c774": "开放",
-        "f362667d55": "已更新",
-        "b1eaa18ace": "议题",
-        "9c57663908": "查看",
-        "dfc0c79bd8": "议题",
-        "eb10c32872": "ID",
         "c1d1600362": "在浏览器中打开",
         "b6329379ca": "启动新工作区",
         "054bf695cc": "草稿",
@@ -965,8 +939,6 @@
         "f6fa3c97d0": "评审人",
         "8aba10579d": "负责人",
         "5eccb3c841": "标题/上下文",
-        "dfd72673e7": "无法保存项目选择。",
-        "b797bdd7c3": "清除搜索",
         "ff53631e6f": "刷新 GitHub 工作",
         "6ffa6be99f": "刷新 GitHub 工作",
         "b15ceb409d": "搜索 GitHub 议题...",
@@ -1047,7 +1019,6 @@
         "887efe9140": "连接",
         "a70153f583": "连接",
         "6459faa8b3": "错误",
-        "e15ba2d2eb": "创建议题",
         "3b11c8e8fc": "数组",
         "cfb730b73e": "议题",
         "3659f9792a": "看板",
@@ -1085,7 +1056,6 @@
         "bc46d8204e": "选择一个项目在 GitHub 中打开",
         "d1132848f8": "选择一个 GitHub 项目在 GitHub 中打开",
         "2af3ab5c58": "选择一个团队在 Linear 中打开",
-        "7437e340b4": "无法创建议题。",
         "9e03c17847": "打开 PR 详情以查看当前评审人。",
         "3b7f34282f": "关闭",
         "fe28c9821f": "视图",
@@ -1185,63 +1155,19 @@
       "github": {
         "pr": {
           "merge": {
-            "state": {
-              "a80132573b": "GitHub 仍在计算此PR合并状态",
-              "f958920f3a": "检查中",
-              "9bd983ce8f": "GitHub 表示此 PR 可以合并，但检查仍在运行",
-              "4e2507176b": "检查待处理",
-              "1432ecff30": "GitHub 说这个 PR 可以合并，但有些检查失败",
-              "87fa36ac83": "检查失败",
-              "1766eb46ba": "GitHub 报告此拉取请求已被阻塞",
-              "bf5e4c6c92": "已阻塞",
-              "c614e2660a": "合并前更新分支",
-              "039c072f94": "在后面",
-              "b37d45bca9": "GitHub 报告合并冲突",
-              "7e8bbe3cd7": "冲突",
-              "09896aad26": "此 PR 的合并状态不可用",
-              "bd4f27b50e": "合并",
-              "35ec24bc43": "该基础分支使用 GitHub 合并队列",
-              "b289646bcd": "GitHub 报告请求对此PR进行更改",
-              "c606463dc2": "要求更改",
-              "a20db875ed": "GitHub 需要评审批准才能合并此拉取请求",
-              "1f8eb81c0e": "需要批准",
-              "f03028e055": "这个PR仍然是一个草稿",
-              "ec8e2cebaa": "草稿",
-              "820fd21663": "此PR已关闭",
-              "4f976d3450": "已关闭",
-              "62eb8d39da": "此PR已合并",
-              "83ecdbb4a6": "已合并",
-              "331ebe1170": "将此PR添加到 GitHub 合并队列",
-              "b169f943e1": "准备好后合并",
-              "62703b1dc4": "为此PR启用了 GitHub 自动合并",
-              "48d75ae118": "禁用自动合并",
-              "a5b66afb58": "检查已通过",
-              "fbd4f57f0a": "检查已通过。合并资格将在合并前再次验证。",
-              "4ab19a62ef": "启用自动合并",
-              "8f6cb3772f": "满足要求后自动合并此PR"
-            }
+            "state": {}
           }
         },
         "project": {
           "ColumnResizeHandle": {},
           "GhAuthErrorHelp": {},
-          "ProjectCell": {
-            "ffeff79861": "PULL_REQUEST"
-          },
+          "ProjectCell": {},
           "ProjectGroupHeader": {},
           "ProjectItemSlugDialog": {},
-          "ProjectPicker": {
-            "ab1a2c357d": "路线图（不支持）",
-            "43a88ae574": "板布局",
-            "cafb908f34": "表布局"
-          },
-          "ProjectRow": {
-            "c3b81ddea2": "DRAFT_ISSUE"
-          },
+          "ProjectPicker": {},
+          "ProjectRow": {},
           "ProjectViewList": {},
-          "ProjectViewWrapper": {
-            "1bf8c01c8b": "切换到表格视图以在 Orcinus 中处理此项目。"
-          },
+          "ProjectViewWrapper": {},
           "slug": {
             "dialog": {
               "AssigneesEditor": {},
@@ -1252,22 +1178,10 @@
           }
         },
         "GitHubMarkdownComposer": {},
-        "IssueSourceSelector": {
-          "643d7e9496": "upstream",
-          "cdc9bd64fa": "紧凑"
-        },
-        "PRFilterDropdowns": {
-          "19bb6f115f": "已审查"
-        },
+        "IssueSourceSelector": {},
+        "PRFilterDropdowns": {},
         "PRFilterPickers": {},
-        "PRFilterSections": {
-          "2e639b84fa": "评审人",
-          "712c5abdbf": "标签",
-          "4e50c7bc03": "负责人",
-          "7bf3a6e5ac": "作者",
-          "66256a73b3": "状态",
-          "3ce4d5e96e": "PR"
-        },
+        "PRFilterSections": {},
         "github": {
           "rate": {
             "limit": {
@@ -1275,56 +1189,20 @@
             }
           }
         },
-        "CloseReasonDropdown": {
-          "e1f2a3b4c5": "选择关闭原因"
-        },
-        "GitHubIssueCommentComposer": {
-          "082515176a": "添加评论失败",
-          "9f88657c4e": "议题已关闭",
-          "e9b7cb7d17": "关闭议题失败",
-          "bd3b4492a0": "议题已重新打开",
-          "f2a8c1d903": "重新打开议题失败",
-          "a1b2c3d4e5": "添加评论",
-          "c5c117270e": "在此添加评论，请保持友善",
-          "f6a7b8c9d0": "关闭议题",
-          "b1c2d3e4f5": "重新打开议题",
-          "0a73f59e85": "发送评论",
-          "bf43425540": "评论",
-          "commentTooLarge": "评论过长，无法安全提交。"
-        },
-        "GitHubWorkItemAssigneePopoverContent": {
-          "cddd9b04a7": "加载负责人",
-          "a00830d3f7": "没有用户",
-          "4f8b6f2c1d": "筛选负责人..."
-        },
-        "GitHubWorkItemLabelPopoverContent": {
-          "2aa9acdf34": "在 GitHub 上编辑标签",
-          "cddd9b04a7": "加载标签",
-          "de26e2eb06": "没有标签",
-          "8b0d52ee3a": "筛选标签..."
-        },
+        "CloseReasonDropdown": {},
+        "GitHubIssueCommentComposer": {},
+        "GitHubWorkItemAssigneePopoverContent": {},
+        "GitHubWorkItemLabelPopoverContent": {},
         "githubIssueCloseReasons": {
-          "completed": {
-            "label": "标记为已完成",
-            "description": "已完成、已关闭、已修复、已解决"
-          },
-          "notPlanned": {
-            "label": "标记为未计划",
-            "description": "不会修复、无法复现、已过时"
-          },
-          "duplicate": {
-            "label": "标记为重复",
-            "description": "与其他议题重复"
-          }
+          "completed": {},
+          "notPlanned": {},
+          "duplicate": {}
         }
       },
       "linear": {
         "api": {
           "key": {
-            "dialog": {
-              "57a66522c8": "连接",
-              "e689a4d0a6": "错误"
-            }
+            "dialog": {}
           }
         },
         "priority": {
@@ -1332,9 +1210,7 @@
         },
         "project": {
           "view": {
-            "surfaces": {
-              "2c4b1c2c08": "数字"
-            }
+            "surfaces": {}
           }
         },
         "scope": {
@@ -3772,7 +3648,6 @@
           "host": "主机",
           "local": "本地",
           "runtime": "服务器",
-          "ssh": "SSH",
           "connecting": "正在连接",
           "connect": "连接",
           "addSshHost": "添加 SSH 主机",
@@ -6715,32 +6590,7 @@
         },
         "jira": {
           "integration": {
-            "card": {
-              "8ff73fef62": "Jira token由活动运行时加密并存储在本地。重新输入相同的站点 URL 和电子邮件将替换该站点的 API token。",
-              "9046a20d4c": "断开 {{value0}}",
-              "eaffa454e9": "更新",
-              "cec06a0f79": "测试...",
-              "ab350991b8": "已验证",
-              "d914d7ab70": "正在验证...",
-              "5936977fcd": "取消",
-              "1666f8d562": "创建 Atlassian API token",
-              "1ab7f551f3": "Atlassian API 令牌",
-              "09d310e42d": "你@example.com",
-              "27dae4ab60": "https://example.atlassian.net",
-              "a28f417220": "连接 Jira",
-              "9bb34706ca": "已连接",
-              "efaab83c5d": "添加站点",
-              "09742875cd": "Jira",
-              "255bfe98ec": "测试",
-              "5fb1562315": "错误",
-              "3df81cb0ac": "好的",
-              "2e8bb790fd": "连接",
-              "33a8b261ee": "更新凭证",
-              "d5c5b47bb9": "更新",
-              "fb854902d9": "连接",
-              "9a9f8d4910": "连接 Jira Cloud 以浏览、创建和链接议题。",
-              "74f3063026": "{{value0}} 站点{{value1}} 已连接"
-            }
+            "card": {}
           }
         },
         "mobile": {
@@ -7004,7 +6854,6 @@
             "availableHosts": "可用主机",
             "availableHostsDescription": "已设置此项目的主机。",
             "host": "主机",
-            "ssh": "ssh",
             "remote": "远程",
             "vm": "vm",
             "keepForkUpToDate": "保持 Fork 最新",
@@ -7058,29 +6907,7 @@
           }
         },
         "ssh": {
-          "search": {
-            "d41f296f64": "平",
-            "237b391f7c": "联系",
-            "8cb870b109": "测试",
-            "7efd17e816": "SSH",
-            "96ca5d9a0b": "测试与 SSH 目标的连接。",
-            "a3058f3605": "测试连接",
-            "2cd40ba0d0": "主机",
-            "5220501141": "配置",
-            "3b12e064a4": "导入",
-            "7f251a45a8": "从 ~/.ssh/config 导入主机。",
-            "41a3127094": "从 SSH 配置导入",
-            "f9493b80c0": "服务器",
-            "8fb1cc87cc": "主机",
-            "09395490af": "目标",
-            "00d1fda01a": "新的",
-            "f7b6383aec": "添加",
-            "62826efbe9": "添加新的远程 SSH 目标。",
-            "f5a691bb6c": "添加 SSH 目标",
-            "d4bcd497c7": "远程",
-            "74c6d90d78": "管理远程 SSH 目标。",
-            "380a788da7": "SSH 连接"
-          }
+          "search": {}
         },
         "tasks": {
           "search": {
@@ -7455,19 +7282,7 @@
           "source": {
             "control": {
               "integration": {
-                "cards": {
-                  "d5b3be8ecd": "重新检查",
-                  "8cbc39f862": "了解更多",
-                  "a47f71e357": "CLI。",
-                  "8d90249d22": "gh auth login",
-                  "2e44dda68a": "GitHub CLI 已安装但未通过身份验证。请在终端中运行此命令：",
-                  "7755c28af5": "安装 GitHub CLI",
-                  "23cb5a0dee": "安装 GitHub CLI 以启用拉取请求、议题和检查。",
-                  "6f30fc4216": "此运行时暂不支持 GitHub CLI 状态。",
-                  "6b2cfb52b4": "gh",
-                  "b4d900e7f1": "通过",
-                  "account_scope_prefix": "账户范围"
-                }
+                "cards": {}
               }
             }
           }
@@ -8199,53 +8014,19 @@
             "60ed678138": "已选择"
           },
           "ChecksPanel": {
-            "2ef90c9819": "已启动 AI 智能体处理失败的检查。",
-            "a0181a8d76": "已启动 AI 智能体处理冲突。",
             "34464d00b9": "已更新",
-            "058039787c": "取消",
-            "2ab7fd4b6d": "保存",
-            "dda5924a40": "检查需要 Git 分支和托管评审上下文",
-            "976cefd02f": "检查不可用",
-            "b5dd73a105": "选择一个工作区以查看检查",
-            "a4ef4e0832": "未选择工作区",
-            "5594400d73": "没有需要修复的失败检查。",
-            "abf59262fb": "启动智能体前请查看并编辑完整提示词。",
-            "4ede779461": "使用 AI 解决评审冲突",
             "3b203c62f8": "这将从 PR 中永久删除该评论。",
             "ea9b649ce3": "删除评论？",
             "5788d1059d": "无法更新评论主题。检查 GitHub API 预算。",
-            "07871c0589": "链接另一个 PR",
             "7202f4a40a": "取消PR链接",
-            "7f4489f370": "刷新",
-            "5c88c6db07": "打开于 {{value0}}",
-            "7fad8509fe": "用 AI 修复",
-            "71026ca2cb": "刷新中…",
-            "889cdfba04": "创建 {{value0}}",
-            "98f4c37b33": "推送并创建 {{value0}}",
-            "b6ce28da5b": "{{value0}} #{{value1}} 已打开",
-            "cf9e69f3be": "{{value0}} 已打开",
-            "192e686e57": "打开于 {{value0}}",
-            "6633c7a1fb": "发布分支",
-            "fdb27637f2": "出版…",
             "e56c42122e": "destructive",
             "786e3c143f": "删除",
-            "653c105ecc": "更多 PR 操作",
-            "f316a8ca2b": "未选择未解决的评论。",
-            "d00ebdc402": "使用 AI 解决 {{value0}} 评论",
-            "5eb2163b6b": "启动 agent 前请检查提示词。提示词送达后，Orcinus 会解决选中的主机讨论串，并回复无法解决的评论。",
             "f273f2271c": "已启动智能体。已标记 {{value0}} 个为已解决，回复 {{value1}} 个，跳过 {{value2}} 个，失败 {{value3}} 个。{{value4}}",
             "aa95b81a3a": "已启动智能体。已标记 {{value0}} 个为已解决，回复 {{value1}} 个，跳过 {{value2}} 个，失败 {{value3}} 个。",
             "495b2f8c4b": "已启动智能体，但无法解决或回复选中的评论。",
             "3c3ad3a1d2": "已启动智能体。选中的评论中没有可在托管平台上标记为已解决的评论。",
-            "review": {
-              "auto_retry": "Orcinus 将在 {{time}} 重试。",
-              "open_review": "打开评审",
-              "retry": "重试"
-            },
-            "sync": {
-              "pending": "Syncing…",
-              "branch": "Sync Branch"
-            },
+            "review": {},
+            "sync": {},
             "7e4b2a19c0": "无法确定要回复的 GitHub PR。",
             "430f1a62d4": "无法在主机上解决选中的讨论串。"
           },
@@ -8449,11 +8230,6 @@
             "dd43c47089": "选择针对此提交失败的智能体",
             "30b8d4f181": "使用 AI 修复提交失败",
             "4b37ae99b0": "启动默认 AI 智能体来修复此提交失败",
-            "ae743199cd": "在创建 {{value0}} 之前，请选择其他基础分支。",
-            "318e2a7f88": "请等待 AI 生成完成。",
-            "f76307c1f7": "请选择基础分支。",
-            "4f76c0a9de": "基础分支必须与 head 分支不同。",
-            "c5e4175139": "更多 {{value0}} 和远程操作",
             "78ddfd0bb4": "创建为草稿",
             "e64a632456": "main",
             "6055949c50": "{{value0}} 基础分支",
@@ -8463,12 +8239,7 @@
             "a8873e1d62": "{{value0}} 描述",
             "7d6a8f0082": "标题",
             "a6eda33521": "{{value0}} 标题",
-            "02d8c04339": "使用 AI 生成 {{value0}} 详细信息",
-            "aee92f8684": "生成",
-            "e868cec4e1": "生成…",
-            "b355e740b2": "停止生成 {{value0}} 详细信息",
             "527e130b6f": "停止生成",
-            "e1970d327d": "新建 {{value0}}",
             "f4c766f1ca": "为此运行选择智能体和提示词模板。",
             "1a6a6e0bc5": "生成托管评论详细信息",
             "6b122529d4": "生成提交信息",
@@ -8492,9 +8263,7 @@
             "a5e5a11090": "放弃所有失败 - 无法在放弃之前取消暂存文件",
             "8a5ba6a988": "无法加载提交差异",
             "fe5bd1a610": "创建 {{value0}}...",
-            "812cb992ee": "打开于 {{value0}}",
             "eef5446523": "{{value0}} #{{value1}} 已开放",
-            "0453ca3a9a": "{{value0}} 已创建，但 Orcinus 尚无法刷新它。",
             "f99560ab29": "中止 {{value0}} 失败",
             "eae7a1da5f": "无法清除笔记。",
             "657e0c90ad": "{{value0}} 注{{value1}}",
@@ -8568,8 +8337,6 @@
             "31f6d46278": "未解决",
             "2c417432b7": "已在本地解决",
             "d206117f90": "{{value0}} 冲突 ({{value1}})",
-            "f3a8b2c1d0e5": "请输入 {{value0}} 标题。",
-            "e2b7a1c0d9f4": "创建 {{value0}} 失败",
             "hugeRepoIgnorePrompt": "此存储库的活动更改过多。是否将 \"{{value0}}\" 添加到 .gitignore？",
             "hugeRepoIgnoreAction": "添加到 .gitignore",
             "tooManyChanges": "检测到过多更改。仅显示前 {{value0}} 项。",
@@ -9067,8 +8834,6 @@
               "primary": {
                 "action": {
                   "ed93b4f14f": "提交",
-                  "946a8a05ea": "为此分支创建 {{value0}}",
-                  "e7ffa46946": "创建 {{value0}}",
                   "95550cff15": "推",
                   "d64292a938": "拉",
                   "795f1509c5": "同步",
@@ -9094,21 +8859,8 @@
                   "1d47e850cf": "将更新推送到已关联的评审分支",
                   "c39d0c75c3": "已关联的评审分支目标不可用。",
                   "8c6d15a07d": "创建 PR",
-                  "d37e68f61d": "正在准备分支以供评审…",
-                  "c72e5e65d1": "准备此分支并创建 {{value0}}",
-                  "b8e4f2a901": "等待远程操作完成。",
-                  "c9f3a1b802": "在创建 {{value0}} 之前解决冲突。",
                   "d2a8c4e703": "此分支上没有需要包含在 {{value0}} 中的更改。",
-                  "e3b9d5f814": "无法从默认分支创建 {{value0}}。",
-                  "f4c0e6a925": "在创建 {{value0}} 之前提交更改。",
-                  "a5d1f7b036": "在创建 {{value0}} 之前发布提交。",
-                  "b6e2a8c147": "在创建 {{value0}} 之前推送提交。",
-                  "c7f3b9d258": "在创建 {{value0}} 之前同步此分支。",
-                  "d8a4c0e369": "在创建 {{value0}} 之前进行身份验证。",
-                  "e9b5d1f470": "在创建 {{value0}} 之前检出一个分支。",
-                  "f0c6e2a581": "此分支尚未准备好创建 {{value0}}。",
-                  "8f9a0b1c2d": "没有可提交的内容。分支已是最新状态。",
-                  "h3i4j5k607": "正在检查此分支是否可以创建 {{value0}}…"
+                  "8f9a0b1c2d": "没有可提交的内容。分支已是最新状态。"
                 }
               }
             }
@@ -9284,19 +9036,7 @@
             "recoverableEmptyOpenLogHint": "打开日志以恢复它们。",
             "emptyConversationDetail": "此会话没有已保存的对话，无法恢复。",
             "queuedMessages": "{{value0}} 条排队消息",
-            "subagentTranscripts": "{{value0}} 个子智能体记录",
-            "prompt": "提示",
-            "firstPrompt": "首次提示",
-            "recentPrompt": "最近提示",
-            "firstPromptCopied": "已复制首次提示",
-            "recentPromptCopied": "已复制最近提示",
-            "copyFirstPrompt": "复制首次提示",
-            "copyRecentPrompt": "复制最近提示",
-            "copyPrompt": "复制提示",
-            "copied": "已复制",
-            "copy": "复制",
-            "noFirstPromptAvailable": "没有可用的首次提示",
-            "loadingFirstPrompt": "正在加载首次提示…"
+            "subagentTranscripts": "{{value0}} 个子智能体记录"
           },
           "AiVaultSessionRow": {
             "resumeAgentSession": "恢复 {{value0}} 会话",
@@ -9390,11 +9130,7 @@
             "noActiveWorktreeMatch": "没有与此会话匹配的活动工作树。",
             "noActiveWorktreeTarget": "没有可用的活动工作树。"
           },
-          "AiVaultSessionSubagents": {
-            "subagentsCount": "子智能体（{{value0}}）",
-            "messageCount": "{{value0}} 条消息",
-            "viewLog": "查看日志"
-          },
+          "AiVaultSessionSubagents": {},
           "aiVaultSessionLogOpen": {
             "workspaceGone": "无法打开日志 — 工作区已不可用。",
             "notAuthorized": "无法打开日志 — 路径未授权。",
@@ -9403,18 +9139,7 @@
           "github": {
             "refresh": {
               "error": {
-                "copy": {
-                  "580025e7b7": "GitHub 不可用",
-                  "01c85b5770": "GitHub 的 API 暂时不可用。恢复后此面板会自动重新加载。",
-                  "d1a9f2b165": "无法访问 GitHub",
-                  "7d01d42a3a": "现在无法访问 GitHub。请检查网络连接，稍后重试。",
-                  "e9d681894a": "已达到 GitHub 速率限制",
-                  "8c77434d6f": "GitHub 正在限制请求频率。限制重置后此面板会自动刷新。",
-                  "79aa06bb2c": "刷新失败。GitHub 的 API 暂时不可用。正在显示上次已知状态。",
-                  "6ec12cee0c": "刷新失败。现在无法访问 GitHub。正在显示上次已知状态。",
-                  "de088015e8": "刷新失败。GitHub 正在限制请求频率。正在显示上次已知状态。",
-                  "d9dd7c6687": "无法从 GitHub 刷新。正在显示上次已知状态。"
-                }
+                "copy": {}
               }
             }
           },
@@ -10238,9 +9963,6 @@
               "fix": {
                 "with": {
                   "ai": {
-                    "1a8c4e2b90": "启动 AI 操作前请选择工作区。",
-                    "4f2d9a8c17": "启动 AI 操作前请选择仓库。",
-                    "7c3e1b5d42": "启动 AI 修复前请打开 PR 或 MR。",
                     "9b2f6d4a81": "此检查没有失败。",
                     "2ef90c9819": "已为此检查启动 AI 智能体。"
                   }
@@ -10405,28 +10127,8 @@
           "BrowserFind": {},
           "BrowserImportHintButton": {},
           "BrowserMobileDriverOverlay": {},
-          "BrowserPane": {
-            "a3508d7e6e": "{{value0}} 注释{{value1}} 准备就绪。选择另一个元素或复制所有反馈。",
-            "1c78adc73d": "在外部打开",
-            "da68d35f7b": "在默认浏览器中打开失败页面",
-            "93be92f8d1": "复制地址",
-            "3c085f638d": "复制失败页面 URL",
-            "c6be71329e": "刷新",
-            "8b6fab9ffa": "保存",
-            "e7ca5a098c": "成功",
-            "b2856516e2": "无法加载此页面",
-            "db325a7eeb": "无法到达 {{value0}}",
-            "e72dfa268a": "注释",
-            "a5dcd0fd1d": "确认",
-            "26615e116b": "错误",
-            "8aec5bc044": "空闲",
-            "c8bc7f1f9e": "要求的",
-            "31375046b7": "从 {{value0}} 下载",
-            "5f66313863": "注释"
-          },
-          "BrowserToolbarMenu": {
-            "6aa42813e4": "从 {{value1}}{{value2}} 导入 {{value0}} cookie。"
-          },
+          "BrowserPane": {},
+          "BrowserToolbarMenu": {},
           "GrabConfirmationSheet": {},
           "browser": {
             "address": {
@@ -10439,73 +10141,25 @@
       },
       "automations": {
         "AutomationListToolbar": {},
-        "AutomationRunsDashboard": {
-          "local": "本地",
-          "remote": "远程"
-        },
+        "AutomationRunsDashboard": {},
         "AutomationsPageBreadcrumb": {},
-        "AutomationCustomCronPanel": {
-          "cadb7b0bc9": "无效的"
-        },
+        "AutomationCustomCronPanel": {},
         "AutomationPromptDisclosure": {},
-        "AutomationDetail": {
-          "007c8ad874": "提示词",
-          "de0fedac06": "每次运行新的",
-          "51a470b966": "SSH"
-        },
-        "AutomationEditorDialog": {
-          "ff5db28639": "现存的"
-        },
+        "AutomationDetail": {},
+        "AutomationEditorDialog": {},
         "AutomationEditorDialogHeader": {},
         "AutomationMissedRunGraceField": {},
         "AutomationPrecheckFields": {},
-        "AutomationRunHistory": {
-          "fdb3caa8fb": "已知的"
-        },
+        "AutomationRunHistory": {},
         "AutomationRunPageFrame": {},
         "AutomationSchedulePicker": {},
         "AutomationTimeField": {},
         "AutomationSessionField": {},
-        "AutomationsPage": {
-          "2695883141": "删除",
-          "97ff587ee3": "连接此源以检查远程配置文件中的 Hermes 自动化。",
-          "aaa007846f": "来源不可用",
-          "82eb6cb933": "来源",
-          "587a4b205c": "下一步",
-          "761a35834d": "自动化",
-          "8d1afa8269": "添加自动化",
-          "0329f9bef1": "关闭 · Esc",
-          "67c7ff795b": "关闭自动化",
-          "3e42a5cc1b": "SSH 连接失败。",
-          "9f2855677c": "SSH 连接。",
-          "7934ee0d81": "连接SSH",
-          "f93ed7a6f8": "正在连接...",
-          "8705757e27": "工作",
-          "0ae52dd760": "Hermes",
-          "e059042585": "只读",
-          "aecdc3681f": "易于管理",
-          "dd0bc7a1ba": "每次运行新的",
-          "7b2e285552": "SSH 连接在此客户端中不可用。",
-          "d441032f7e": "暂停",
-          "5918020edc": "执行",
-          "a21f6c33ad": "自动化来源已刷新。",
-          "53f06f0ad5": "重试来源",
-          "noSearchMatches": "没有匹配的自动化。",
-          "runCount": "{{count}} 次运行",
-          "runCount_one": "{{count}} 次运行",
-          "runCount_other": "{{count}} 次运行",
-          "projectDefaultBaseRef": "项目默认",
-          "createFromBaseRef": "从 {{baseRef}} 创建"
-        },
+        "AutomationsPage": {},
         "CreateFromPicker": {},
-        "ExternalAutomationManagers": {
-          "bf5f67b590": "Hermes",
-          "330b3c32e8": "可用的"
-        },
+        "ExternalAutomationManagers": {},
         "ExternalAutomationRunTable": {},
-        "HermesCronOutputView": {
-          "88d48157fc": "默认"
-        },
+        "HermesCronOutputView": {},
         "WorkspaceCombobox": {},
         "automation": {
           "templates": {
@@ -10574,10 +10228,7 @@
           "emptyTitle": "还没有附加的工作树",
           "emptyCopy": "将工作树附加到此文件夹工作区后，PR 检查会显示在这里。",
           "openChecksTab": "打开 {{value0}} 的检查标签页",
-          "openReviewExternally": "在外部打开 {{value0}}",
           "summary": "已附加 {{value0}} 个 · 有 PR/MR {{value1}} 个 · 需注意 {{value2}} 个 · 等待中 {{value3}} 个 · 通过 {{value4}} 个 · 无 PR {{value5}} 个 · 未知 {{value6}} 个",
-          "showDetails": "显示 {{value0}} 的 PR 检查详情",
-          "hideDetails": "隐藏 {{value0}} 的 PR 检查详情",
           "reviewChecks": "评审检查",
           "allChecksPassing": "所有检查均通过",
           "oneWorktree": "1 个工作树",

@@ -582,8 +582,8 @@ const surfaceCases: SurfaceCase[] = [
     missing: []
   },
   {
-    // Task 7（2F）：宿主五命令 + 焦点事件接线；搜索/子代理/首条提示无宿主面，
-    // 保持 rejecting fallback（renderer 以 `typeof` 特征探测）。
+    // Task 7（2F）：宿主五命令 + 焦点事件接线；Task 8（3B 收尾）随死子面删除
+    // 搜索/子代理/首条提示的契约，方法面已同步，无缺失。
     domain: 'aiVault',
     explicit: [
       'listSessions',
@@ -593,7 +593,7 @@ const surfaceCases: SurfaceCase[] = [
       'deleteSession',
       'onWindowFocused'
     ],
-    missing: ['searchSessions', 'searchStatus', 'listSubagentSessions', 'getFirstUserPrompt']
+    missing: []
   },
   {
     // Task 8（2G）：宿主六命令全接真（桌面三 + WSL 三 stub），无缺失面。

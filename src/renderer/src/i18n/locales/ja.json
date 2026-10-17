@@ -53,7 +53,6 @@
     "toggleLeftSidebar": "左サイドバーの表示/非表示",
     "toggleRightSidebar": "右サイドバーの表示/非表示",
     "showStatusBar": "ステータスバーを表示",
-    "showTasksButton": "タスクボタンを表示",
     "showAutomationsButton": "オートメーションボタンを表示",
     "showTitlebarAppName": "タイトルバーのアプリ名を表示",
     "view": "表示",
@@ -155,15 +154,7 @@
           "checkRunDetailsUnavailable": "このチェックの詳細はありません。",
           "checkRunDetailsLoadFailed": "チェック詳細の読み込みに失敗しました。"
         },
-        "github": {
-          "f129c42773": "GitHub は新規コメントを返しませんでした。",
-          "683a21264b": "行には所有者/repo/番号がありません。",
-          "83f9b126ad": "Issue タイプは Issue にのみ設定できます。",
-          "f963485d37": "行が見つかりません",
-          "a967f23983": "プロジェクトビューがロードされていません",
-          "87020f6605": "行には所有者/repo/番号がありません - 基になるアイテムにパッチを適用できません",
-          "d49ef4b944": "Issue ソースの設定を保存できませんでした"
-        },
+        "github": {},
         "sparse": {
           "presets": {
             "ef13e994e6": "プリセットは保存する前にロードする必要があります。",
@@ -920,7 +911,6 @@
       },
       "TaskPage": {
         "513cddfa7a": "確認中…",
-        "ff69a30681": "キャンセル",
         "2abe22ef76": "トークンは OS キーチェーンを介して暗号化され、ローカルに保存されます。",
         "246c2b3dd3": "Atlassian のアカウント設定",
         "59c14d34a2": "でトークンを作成します",
@@ -929,25 +919,9 @@
         "163df31e0e": "https://example.atlassian.net",
         "33fc2bcb30": "Jira Cloud のサイト URL、Atlassian のメールアドレス、API トークンを使って Issue を閲覧します。",
         "60f806ce99": "Jira サイトに接続",
-        "8ff6fdc368": "作成中…",
-        "fc0d8a1fa4": "提出する。",
-        "34d97ca682": "どうしたの？",
-        "578f730c16": "短い要約",
-        "16cba35bee": "タイトル",
-        "00022ec0ba": "プロジェクト",
-        "d0ca4aa1d0": "ラベル",
-        "42a9160321": "未割り当て",
-        "154b0fa623": "状態",
-        "7d08e8be0f": "開始",
         "7f3f7b4c18": "説明 (オプション、markdown)",
         "9f2b4c03a6": "提出する",
         "d3d0998b7d": "GitHub の新規 Issue",
-        "606a85c774": "オープン",
-        "f362667d55": "更新済み",
-        "b1eaa18ace": "Issue",
-        "9c57663908": "表示",
-        "dfc0c79bd8": "Issue",
-        "eb10c32872": "ID",
         "c1d1600362": "ブラウザで開く",
         "b6329379ca": "新規ワークスペースを開始",
         "054bf695cc": "下書き",
@@ -962,8 +936,6 @@
         "f6fa3c97d0": "レビュアー",
         "8aba10579d": "担当者",
         "5eccb3c841": "タイトル/コンテキスト",
-        "dfd72673e7": "プロジェクトの選択を保存できませんでした。",
-        "b797bdd7c3": "検索をクリア",
         "ff53631e6f": "GitHub の作業を更新する",
         "6ffa6be99f": "GitHub の作業を更新しています",
         "b15ceb409d": "GitHub Issue を検索…",
@@ -1044,7 +1016,6 @@
         "887efe9140": "接続",
         "a70153f583": "接続する",
         "6459faa8b3": "エラー",
-        "e15ba2d2eb": "Issue の作成",
         "3b11c8e8fc": "配列",
         "cfb730b73e": "Issue",
         "3659f9792a": "ボード",
@@ -1082,7 +1053,6 @@
         "bc46d8204e": "GitHub で開くプロジェクトを 1 つ選択",
         "d1132848f8": "GitHub で開く GitHub プロジェクトを 1 つ選択",
         "2af3ab5c58": "Linear で開くチームを 1 つ選択",
-        "7437e340b4": "Issue の作成に失敗しました。",
         "9e03c17847": "PR の詳細を開いて、現在のレビュアーを表示します。",
         "3b7f34282f": "閉まっている",
         "fe28c9821f": "ビュー",
@@ -1182,63 +1152,19 @@
       "github": {
         "pr": {
           "merge": {
-            "state": {
-              "a80132573b": "GitHub はまだこの PR のマージステータスを計算中です",
-              "f958920f3a": "確認中",
-              "9bd983ce8f": "GitHub によると、この PR はマージ可能ですが、チェックはまだ実行中です",
-              "4e2507176b": "保留中のチェック",
-              "1432ecff30": "GitHub は、この PR はマージできると言っていますが、一部のチェックが失敗しました",
-              "87fa36ac83": "チェックに失敗しました",
-              "1766eb46ba": "GitHub がこの PR がブロックされていると報告しています",
-              "bf5e4c6c92": "ブロック中",
-              "c614e2660a": "マージする前にブランチを更新する",
-              "039c072f94": "遅れ",
-              "b37d45bca9": "GitHub がマージ競合を報告",
-              "7e8bbe3cd7": "競合",
-              "09896aad26": "この PR ではマージステータスを利用できません",
-              "bd4f27b50e": "マージ",
-              "35ec24bc43": "このベースブランチは GitHub マージキューを使用します",
-              "b289646bcd": "GitHub は、この PR で要求された変更を報告します",
-              "c606463dc2": "変更要求",
-              "a20db875ed": "この PR をマージするには、GitHub でレビューの承認が必要です",
-              "1f8eb81c0e": "承認が必要です",
-              "f03028e055": "この PR はまだドラフトです",
-              "ec8e2cebaa": "下書き",
-              "820fd21663": "この PR は終了しました",
-              "4f976d3450": "クローズ",
-              "62eb8d39da": "この PR はすでにマージされています",
-              "83ecdbb4a6": "マージ済み",
-              "331ebe1170": "この PR を GitHub マージキューに追加します",
-              "b169f943e1": "準備ができたらマージ",
-              "62703b1dc4": "この PR では GitHub 自動マージが有効になっています",
-              "48d75ae118": "自動マージを無効にする",
-              "a5b66afb58": "チェックに合格しました",
-              "fbd4f57f0a": "チェックは通過しました。マージ可否はマージ前に再確認されます。",
-              "4ab19a62ef": "自動マージを有効にする",
-              "8f6cb3772f": "要件が満たされると、この PR を自動的にマージします"
-            }
+            "state": {}
           }
         },
         "project": {
           "ColumnResizeHandle": {},
           "GhAuthErrorHelp": {},
-          "ProjectCell": {
-            "ffeff79861": "PULL_REQUEST"
-          },
+          "ProjectCell": {},
           "ProjectGroupHeader": {},
           "ProjectItemSlugDialog": {},
-          "ProjectPicker": {
-            "ab1a2c357d": "ロードマップ (未サポート)",
-            "43a88ae574": "ボード_レイアウト",
-            "cafb908f34": "テーブルレイアウト"
-          },
-          "ProjectRow": {
-            "c3b81ddea2": "DRAFT_ISSUE"
-          },
+          "ProjectPicker": {},
+          "ProjectRow": {},
           "ProjectViewList": {},
-          "ProjectViewWrapper": {
-            "1bf8c01c8b": "Orcinus でこのプロジェクトを操作するには、テーブルビューに切り替えます。"
-          },
+          "ProjectViewWrapper": {},
           "slug": {
             "dialog": {
               "AssigneesEditor": {},
@@ -1249,22 +1175,10 @@
           }
         },
         "GitHubMarkdownComposer": {},
-        "IssueSourceSelector": {
-          "643d7e9496": "upstream",
-          "cdc9bd64fa": "コンパクト"
-        },
-        "PRFilterDropdowns": {
-          "19bb6f115f": "reviewed-by"
-        },
+        "IssueSourceSelector": {},
+        "PRFilterDropdowns": {},
         "PRFilterPickers": {},
-        "PRFilterSections": {
-          "2e639b84fa": "レビュアー",
-          "712c5abdbf": "ラベル",
-          "4e50c7bc03": "担当者",
-          "7bf3a6e5ac": "著者",
-          "66256a73b3": "状態",
-          "3ce4d5e96e": "PRs"
-        },
+        "PRFilterSections": {},
         "github": {
           "rate": {
             "limit": {
@@ -1272,56 +1186,20 @@
             }
           }
         },
-        "CloseReasonDropdown": {
-          "e1f2a3b4c5": "クローズ理由を選択"
-        },
-        "GitHubIssueCommentComposer": {
-          "082515176a": "コメントの追加に失敗しました",
-          "9f88657c4e": "Issue を閉じました",
-          "e9b7cb7d17": "Issue を閉じられませんでした",
-          "bd3b4492a0": "Issue を再オープンしました",
-          "f2a8c1d903": "Issue を再オープンできませんでした",
-          "a1b2c3d4e5": "コメントを追加",
-          "c5c117270e": "ここにコメントを追加してください。丁寧にお願いします",
-          "f6a7b8c9d0": "Issue を閉じる",
-          "b1c2d3e4f5": "Issue を再オープン",
-          "0a73f59e85": "コメントを送信",
-          "bf43425540": "コメント",
-          "commentTooLarge": "コメントが大きすぎるため安全に送信できません。"
-        },
-        "GitHubWorkItemAssigneePopoverContent": {
-          "cddd9b04a7": "担当者を読み込み中",
-          "a00830d3f7": "ユーザーがいません",
-          "4f8b6f2c1d": "担当者を絞り込み…"
-        },
-        "GitHubWorkItemLabelPopoverContent": {
-          "2aa9acdf34": "GitHub でラベルを編集",
-          "cddd9b04a7": "ラベルを読み込んでいます",
-          "de26e2eb06": "ラベルなし",
-          "8b0d52ee3a": "ラベルを絞り込み…"
-        },
+        "CloseReasonDropdown": {},
+        "GitHubIssueCommentComposer": {},
+        "GitHubWorkItemAssigneePopoverContent": {},
+        "GitHubWorkItemLabelPopoverContent": {},
         "githubIssueCloseReasons": {
-          "completed": {
-            "label": "完了として閉じる",
-            "description": "完了、クローズ、修正済み、解決済み"
-          },
-          "notPlanned": {
-            "label": "対応予定なしとして閉じる",
-            "description": "修正しない、再現不可、古い"
-          },
-          "duplicate": {
-            "label": "重複として閉じる",
-            "description": "別の Issue と重複"
-          }
+          "completed": {},
+          "notPlanned": {},
+          "duplicate": {}
         }
       },
       "linear": {
         "api": {
           "key": {
-            "dialog": {
-              "57a66522c8": "接続する",
-              "e689a4d0a6": "エラー"
-            }
+            "dialog": {}
           }
         },
         "priority": {
@@ -1329,9 +1207,7 @@
         },
         "project": {
           "view": {
-            "surfaces": {
-              "2c4b1c2c08": "番号"
-            }
+            "surfaces": {}
           }
         },
         "scope": {
@@ -3724,7 +3600,6 @@
           "host": "ホスト",
           "local": "ローカル",
           "runtime": "サーバー",
-          "ssh": "SSH",
           "connecting": "接続中",
           "connect": "接続",
           "addSshHost": "SSH ホストを追加",
@@ -6682,32 +6557,7 @@
         },
         "jira": {
           "integration": {
-            "card": {
-              "8ff73fef62": "Jira トークンはアクティブなランタイムによって暗号化され、ローカルに保存されます。同じサイト URL と電子メールを再入力すると、そのサイトの API トークンが置き換えられます。",
-              "9046a20d4c": "{{value0}} の接続を解除",
-              "eaffa454e9": "更新",
-              "cec06a0f79": "テスト中…",
-              "ab350991b8": "確認済み",
-              "d914d7ab70": "確認中…",
-              "5936977fcd": "キャンセル",
-              "1666f8d562": "アトラシアン API トークンを作成する",
-              "1ab7f551f3": "Atlassian API トークン",
-              "09d310e42d": "you@example.com",
-              "27dae4ab60": "https://example.atlassian.net",
-              "a28f417220": "Jira に接続",
-              "9bb34706ca": "接続済み",
-              "efaab83c5d": "サイトを追加",
-              "09742875cd": "Jira",
-              "255bfe98ec": "テスト",
-              "5fb1562315": "エラー",
-              "3df81cb0ac": "わかりました",
-              "2e8bb790fd": "接続",
-              "33a8b261ee": "認証情報を更新する",
-              "d5c5b47bb9": "更新",
-              "fb854902d9": "接続する",
-              "9a9f8d4910": "Jira Cloud に接続して、Issue を参照、作成、リンクします。",
-              "74f3063026": "{{value0}} サイト{{value1}} が接続されました"
-            }
+            "card": {}
           }
         },
         "mobile": {
@@ -6971,7 +6821,6 @@
             "availableHosts": "利用可能なホスト",
             "availableHostsDescription": "このプロジェクトがセットアップ済みのホスト。",
             "host": "ホスト",
-            "ssh": "ssh",
             "remote": "リモート",
             "vm": "vm",
             "keepForkUpToDate": "フォークを最新に保つ",
@@ -7025,29 +6874,7 @@
           }
         },
         "ssh": {
-          "search": {
-            "d41f296f64": "ピング",
-            "237b391f7c": "接続",
-            "8cb870b109": "テスト",
-            "7efd17e816": "ssh",
-            "96ca5d9a0b": "SSH ターゲットへの接続をテストします。",
-            "a3058f3605": "テスト接続",
-            "2cd40ba0d0": "ホスト",
-            "5220501141": "構成",
-            "3b12e064a4": "インポート",
-            "7f251a45a8": "~/.ssh/config からホストをインポートします。",
-            "41a3127094": "SSH 構成からインポート",
-            "f9493b80c0": "サーバー",
-            "8fb1cc87cc": "ホスト",
-            "09395490af": "対象",
-            "00d1fda01a": "新規",
-            "f7b6383aec": "追加",
-            "62826efbe9": "新規リモート SSH ターゲットを追加します。",
-            "f5a691bb6c": "SSH ターゲットの追加",
-            "d4bcd497c7": "リモート",
-            "74c6d90d78": "リモート SSH ターゲットを管理します。",
-            "380a788da7": "SSH 接続"
-          }
+          "search": {}
         },
         "tasks": {
           "search": {
@@ -7385,19 +7212,7 @@
           "source": {
             "control": {
               "integration": {
-                "cards": {
-                  "d5b3be8ecd": "再確認",
-                  "8cbc39f862": "詳しく見る",
-                  "a47f71e357": "CLI。",
-                  "8d90249d22": "gh auth login",
-                  "2e44dda68a": "GitHub CLI はインストールされていますが、認証されていません。ターミナルで次のコマンドを実行してください:",
-                  "7755c28af5": "GitHub CLI をインストール",
-                  "23cb5a0dee": "GitHub CLI をインストールして PR、Issue、チェックを有効にします。",
-                  "6f30fc4216": "このランタイムでは、GitHub CLI の状態をまだ取得できません。",
-                  "6b2cfb52b4": "gh",
-                  "b4d900e7f1": "PR、Issue、チェックは",
-                  "account_scope_prefix": "アカウントスコープ"
-                }
+                "cards": {}
               }
             }
           }
@@ -8129,53 +7944,19 @@
             "60ed678138": "選択中"
           },
           "ChecksPanel": {
-            "2ef90c9819": "失敗したチェックに対して AI Agent を開始しました。",
-            "a0181a8d76": "競合の解決のために AI Agent を開始しました。",
             "34464d00b9": "更新されました",
-            "058039787c": "キャンセル",
-            "2ab7fd4b6d": "保存",
-            "dda5924a40": "チェックには Git ブランチとホストされたレビューコンテキストが必要です",
-            "976cefd02f": "チェックは利用できません",
-            "b5dd73a105": "チェックを表示するワークスペースを選択",
-            "a4ef4e0832": "ワークスペースが選択されていません",
-            "5594400d73": "修正が必要なチェックはありません。",
-            "abf59262fb": "Agent を開始する前に、プロンプトを確認してください。",
-            "4ede779461": "AI を使用してレビューの競合を解決する",
             "3b203c62f8": "これにより、PR からコメントが完全に削除されます。",
             "ea9b649ce3": "コメントを削除しますか?",
             "5788d1059d": "レビュースレッドを更新できませんでした。 GitHub API の予算を確認してください。",
-            "07871c0589": "別の PR をリンクする",
             "7202f4a40a": "PR のリンクを解除する",
-            "7f4489f370": "更新",
-            "5c88c6db07": "{{value0}} で開く",
-            "7fad8509fe": "AI で修正する",
-            "71026ca2cb": "更新中…",
-            "889cdfba04": "{{value0}} を作成",
-            "98f4c37b33": "プッシュして{{value0}}を作成",
-            "b6ce28da5b": "{{value0}} #{{value1}} はすでに開いています",
-            "cf9e69f3be": "{{value0}} はすでに開いています",
-            "192e686e57": "{{value0}} で開く",
-            "6633c7a1fb": "ブランチを公開",
-            "fdb27637f2": "公開中…",
             "e56c42122e": "破壊的な",
             "786e3c143f": "削除",
-            "653c105ecc": "その他の PR 操作",
-            "f316a8ca2b": "未解決のコメントが選択されていません。",
-            "d00ebdc402": "{{value0}} のコメントを AI で解決",
-            "5eb2163b6b": "Agent を開始する前にプロンプトを確認してください。プロンプトの送信後、Orcinus は選択したホスト上のスレッドを解決し、解決できないコメントには返信します。",
             "f273f2271c": "Agent を開始しました。{{value0}} 件を解決し、{{value1}} 件に返信し、{{value2}} 件をスキップし、{{value3}} 件の処理に失敗しました。{{value4}}",
             "aa95b81a3a": "Agent を開始しました。{{value0}} 件を解決し、{{value1}} 件に返信し、{{value2}} 件をスキップし、{{value3}} 件の処理に失敗しました。",
             "495b2f8c4b": "Agent を開始しましたが、選択したコメントの解決または返信ができませんでした。",
             "3c3ad3a1d2": "Agent を開始しました。選択したコメントにホスト上で解決済みにできるものはありません。",
-            "review": {
-              "auto_retry": "Orcinus は {{time}} に再試行します。",
-              "open_review": "レビューを開く",
-              "retry": "再試行"
-            },
-            "sync": {
-              "pending": "同期中…",
-              "branch": "ブランチを同期"
-            },
+            "review": {},
+            "sync": {},
             "7e4b2a19c0": "返信先の GitHub PR を特定できませんでした。",
             "430f1a62d4": "選択したスレッドをホスト上で解決できませんでした。"
           },
@@ -8379,11 +8160,6 @@
             "dd43c47089": "このコミット失敗に対する Agent を選択",
             "30b8d4f181": "AI によるコミット失敗の修正",
             "4b37ae99b0": "デフォルトの AI Agent を開始して、このコミットの失敗を修正します",
-            "ae743199cd": "{{value0}} を作成する前に、別のベースブランチを選択してください。",
-            "318e2a7f88": "AI 生成が完了するまでお待ちください。",
-            "f76307c1f7": "ベースブランチを選択してください。",
-            "4f76c0a9de": "ベースブランチは head ブランチとは異なる必要があります。",
-            "c5e4175139": "その他の {{value0}} とリモート操作",
             "78ddfd0bb4": "下書きとして作成",
             "e64a632456": "main",
             "6055949c50": "{{value0}} ベースブランチ",
@@ -8393,12 +8169,7 @@
             "a8873e1d62": "{{value0}} の説明",
             "7d6a8f0082": "タイトル",
             "a6eda33521": "{{value0}} タイトル",
-            "02d8c04339": "AI を使用して {{value0}} の詳細を生成する",
-            "aee92f8684": "生成",
-            "e868cec4e1": "生成中…",
-            "b355e740b2": "{{value0}} の詳細生成を停止する",
             "527e130b6f": "生成を停止する",
-            "e1970d327d": "新規 {{value0}}",
             "f4c766f1ca": "この実行用の Agent とコマンドテンプレートを選択します。",
             "1a6a6e0bc5": "ホストされたレビューの詳細を生成する",
             "6b122529d4": "コミットメッセージの生成",
@@ -8422,9 +8193,7 @@
             "a5e5a11090": "失敗したすべての破棄 - 破棄する前にファイルをステージング解除できません",
             "8a5ba6a988": "コミット差分をロードできませんでした",
             "fe5bd1a610": "{{value0}} を作成しています…",
-            "812cb992ee": "{{value0}} で開く",
             "eef5446523": "{{value0}} #{{value1}} はすでに開いています",
-            "0453ca3a9a": "{{value0}} が作成されましたが、Orcinus はまだ更新できませんでした。",
             "f99560ab29": "{{value0}} の中止に失敗しました",
             "eae7a1da5f": "メモを消去できませんでした。",
             "657e0c90ad": "{{value0}} 注{{value1}}",
@@ -8498,8 +8267,6 @@
             "31f6d46278": "未解決",
             "2c417432b7": "ローカルで解決済み",
             "d206117f90": "{{value0}} コンフリクト ({{value1}})",
-            "f3a8b2c1d0e5": "{{value0}} のタイトルを入力してください。",
-            "e2b7a1c0d9f4": "{{value0}} の作成に失敗しました",
             "hugeRepoIgnorePrompt": "このリポジトリにはアクティブな変更が多すぎます。「{{value0}}」を .gitignore に追加しますか？",
             "hugeRepoIgnoreAction": ".gitignore に追加",
             "tooManyChanges": "検出された変更が多すぎます。最初の {{value0}} 件のみ表示しています。",
@@ -8997,8 +8764,6 @@
               "primary": {
                 "action": {
                   "ed93b4f14f": "Commit",
-                  "946a8a05ea": "このブランチの {{value0}} を作成します",
-                  "e7ffa46946": "{{value0}} を作成",
                   "95550cff15": "プッシュ",
                   "d64292a938": "プル",
                   "795f1509c5": "同期",
@@ -9024,21 +8789,8 @@
                   "1d47e850cf": "リンクされたレビューブランチに更新をプッシュ",
                   "c39d0c75c3": "リンクされたレビューブランチのターゲットを利用できません。",
                   "8c6d15a07d": "PR を作成",
-                  "d37e68f61d": "レビュー用にブランチを準備中…",
-                  "c72e5e65d1": "このブランチを準備して {{value0}} を作成",
-                  "b8e4f2a901": "リモート操作が終了するまでお待ちください。",
-                  "c9f3a1b802": "{{value0}} を作成する前に競合を解決してください。",
                   "d2a8c4e703": "このブランチに {{value0}} に含める変更はありません。",
-                  "e3b9d5f814": "デフォルトブランチから {{value0}} を作成することはできません。",
-                  "f4c0e6a925": "{{value0}} を作成する前に変更をコミットしてください。",
-                  "a5d1f7b036": "{{value0}} を作成する前にコミットを公開してください。",
-                  "b6e2a8c147": "{{value0}} を作成する前にコミットをプッシュしてください。",
-                  "c7f3b9d258": "{{value0}} を作成する前にこのブランチを同期してください。",
-                  "d8a4c0e369": "{{value0}} を作成する前に認証してください。",
-                  "e9b5d1f470": "{{value0}} を作成する前にブランチをチェックアウトしてください。",
-                  "f0c6e2a581": "このブランチはまだ {{value0}} の準備ができていません。",
-                  "8f9a0b1c2d": "コミットするものがありません。ブランチは最新です。",
-                  "h3i4j5k607": "このブランチが {{value0}} を作成できるか確認中…"
+                  "8f9a0b1c2d": "コミットするものがありません。ブランチは最新です。"
                 }
               }
             }
@@ -9214,19 +8966,7 @@
             "recoverableEmptyOpenLogHint": "ログを開いて復元できます。",
             "emptyConversationDetail": "このセッションには保存された会話がなく、再開できません。",
             "queuedMessages": "キュー内のメッセージ {{value0}} 件",
-            "subagentTranscripts": "サブ Agent の履歴 {{value0}} 件",
-            "prompt": "プロンプト",
-            "firstPrompt": "最初のプロンプト",
-            "recentPrompt": "最近のプロンプト",
-            "firstPromptCopied": "最初のプロンプトをコピーしました",
-            "recentPromptCopied": "最近のプロンプトをコピーしました",
-            "copyFirstPrompt": "最初のプロンプトをコピー",
-            "copyRecentPrompt": "最近のプロンプトをコピー",
-            "copyPrompt": "プロンプトをコピー",
-            "copied": "コピーしました",
-            "copy": "コピー",
-            "noFirstPromptAvailable": "最初のプロンプトはありません",
-            "loadingFirstPrompt": "最初のプロンプトを読み込み中…"
+            "subagentTranscripts": "サブ Agent の履歴 {{value0}} 件"
           },
           "AiVaultSessionRow": {
             "resumeAgentSession": "{{value0}} セッションを再開",
@@ -9320,11 +9060,7 @@
             "noActiveWorktreeMatch": "このセッションに一致するアクティブなワークツリーはありません。",
             "noActiveWorktreeTarget": "利用可能なアクティブなワークツリーはありません。"
           },
-          "AiVaultSessionSubagents": {
-            "subagentsCount": "サブ Agent ({{value0}})",
-            "messageCount": "{{value0}} 件のメッセージ",
-            "viewLog": "ログを表示"
-          },
+          "AiVaultSessionSubagents": {},
           "aiVaultSessionLogOpen": {
             "workspaceGone": "ログを開けませんでした。ワークスペースが利用できなくなっています。",
             "notAuthorized": "ログを開けませんでした。このパスは許可されていません。",
@@ -9333,18 +9069,7 @@
           "github": {
             "refresh": {
               "error": {
-                "copy": {
-                  "580025e7b7": "GitHub を利用できません",
-                  "01c85b5770": "GitHub の API を一時的に利用できません。復旧すると、このパネルは自動的に再読み込みされます。",
-                  "d1a9f2b165": "GitHub に接続できません",
-                  "7d01d42a3a": "現在 GitHub に接続できません。接続を確認して、しばらくしてからもう一度お試しください。",
-                  "e9d681894a": "GitHub のレート制限に達しました",
-                  "8c77434d6f": "GitHub がリクエストを制限しています。制限が解除されると、このパネルは更新されます。",
-                  "79aa06bb2c": "更新できませんでした。GitHub の API を一時的に利用できません。最後に取得した状態を表示しています。",
-                  "6ec12cee0c": "更新できませんでした。現在 GitHub に接続できません。最後に取得した状態を表示しています。",
-                  "de088015e8": "更新できませんでした。GitHub がリクエストを制限しています。最後に取得した状態を表示しています。",
-                  "d9dd7c6687": "GitHub から更新できませんでした。最後に取得した状態を表示しています。"
-                }
+                "copy": {}
               }
             }
           },
@@ -10168,9 +9893,6 @@
               "fix": {
                 "with": {
                   "ai": {
-                    "1a8c4e2b90": "AI 操作を開始する前に、ワークスペースを選択してください。",
-                    "4f2d9a8c17": "AI 操作を開始する前に、リポジトリを選択してください。",
-                    "7c3e1b5d42": "AI による修正を開始する前に、PR または MR を開いてください。",
                     "9b2f6d4a81": "このチェックは失敗していません。",
                     "2ef90c9819": "このチェックに対して AI Agent を開始しました。"
                   }
@@ -10335,28 +10057,8 @@
           "BrowserFind": {},
           "BrowserImportHintButton": {},
           "BrowserMobileDriverOverlay": {},
-          "BrowserPane": {
-            "a3508d7e6e": "{{value0}} アノテーション{{value1}} が準備されました。別の要素を選択するか、すべてのフィードバックをコピーします。",
-            "1c78adc73d": "外部で開く",
-            "da68d35f7b": "失敗したページをデフォルトのブラウザで開く",
-            "93be92f8d1": "アドレスをコピー",
-            "3c085f638d": "失敗したページの URL をコピーする",
-            "c6be71329e": "更新",
-            "8b6fab9ffa": "保存",
-            "e7ca5a098c": "成功",
-            "b2856516e2": "このページを読み込めません",
-            "db325a7eeb": "{{value0}} に接続できません",
-            "e72dfa268a": "注釈を付ける",
-            "a5dcd0fd1d": "確認する",
-            "26615e116b": "エラー",
-            "8aec5bc044": "idle",
-            "c8bc7f1f9e": "要求された",
-            "31375046b7": "{{value0}} からダウンロード",
-            "5f66313863": "注釈"
-          },
-          "BrowserToolbarMenu": {
-            "6aa42813e4": "{{value1}}{{value2}} から {{value0}} Cookie をインポートしました。"
-          },
+          "BrowserPane": {},
+          "BrowserToolbarMenu": {},
           "GrabConfirmationSheet": {},
           "browser": {
             "address": {
@@ -10369,73 +10071,25 @@
       },
       "automations": {
         "AutomationListToolbar": {},
-        "AutomationRunsDashboard": {
-          "local": "ローカル",
-          "remote": "リモート"
-        },
+        "AutomationRunsDashboard": {},
         "AutomationsPageBreadcrumb": {},
-        "AutomationCustomCronPanel": {
-          "cadb7b0bc9": "無効"
-        },
+        "AutomationCustomCronPanel": {},
         "AutomationPromptDisclosure": {},
-        "AutomationDetail": {
-          "007c8ad874": "プロンプト",
-          "de0fedac06": "実行ごとの新規",
-          "51a470b966": "ssh"
-        },
-        "AutomationEditorDialog": {
-          "ff5db28639": "既存 "
-        },
+        "AutomationDetail": {},
+        "AutomationEditorDialog": {},
         "AutomationEditorDialogHeader": {},
         "AutomationMissedRunGraceField": {},
         "AutomationPrecheckFields": {},
-        "AutomationRunHistory": {
-          "fdb3caa8fb": "知られている"
-        },
+        "AutomationRunHistory": {},
         "AutomationRunPageFrame": {},
         "AutomationSchedulePicker": {},
         "AutomationTimeField": {},
         "AutomationSessionField": {},
-        "AutomationsPage": {
-          "2695883141": "削除",
-          "97ff587ee3": "このソースに接続すると、リモートプロファイル内の Hermes オートメーションを確認できます。",
-          "aaa007846f": "ソースが利用できない",
-          "82eb6cb933": "ソース",
-          "587a4b205c": "次へ",
-          "761a35834d": "オートメーション",
-          "8d1afa8269": "自動化を追加する",
-          "0329f9bef1": "閉じる・Esc",
-          "67c7ff795b": "オートメーションを閉じる",
-          "3e42a5cc1b": "SSH 接続に失敗しました。",
-          "9f2855677c": "SSH 接続済み。",
-          "7934ee0d81": "SSH 接続",
-          "f93ed7a6f8": "接続中…",
-          "8705757e27": "仕事",
-          "0ae52dd760": "Hermes",
-          "e059042585": "読み取り専用",
-          "aecdc3681f": "管理可能",
-          "dd0bc7a1ba": "実行ごとの新規",
-          "7b2e285552": "このクライアントでは SSH 接続は利用できません。",
-          "d441032f7e": "一時停止",
-          "5918020edc": "走る",
-          "a21f6c33ad": "オートメーションのソースを更新しました。",
-          "53f06f0ad5": "ソースを再試行",
-          "noSearchMatches": "検索に一致する自動化がありません。",
-          "runCount": "{{count}} 回の実行",
-          "runCount_one": "{{count}} 回の実行",
-          "runCount_other": "{{count}} 回の実行",
-          "projectDefaultBaseRef": "プロジェクトのデフォルト",
-          "createFromBaseRef": "{{baseRef}} から作成"
-        },
+        "AutomationsPage": {},
         "CreateFromPicker": {},
-        "ExternalAutomationManagers": {
-          "bf5f67b590": "Hermes",
-          "330b3c32e8": "利用可能"
-        },
+        "ExternalAutomationManagers": {},
         "ExternalAutomationRunTable": {},
-        "HermesCronOutputView": {
-          "88d48157fc": "デフォルト"
-        },
+        "HermesCronOutputView": {},
         "WorkspaceCombobox": {},
         "automation": {
           "templates": {
@@ -10504,10 +10158,7 @@
           "emptyTitle": "紐づくワークツリーはまだありません",
           "emptyCopy": "このフォルダーワークスペースにワークツリーを添付すると、ここに PR チェックが表示されます。",
           "openChecksTab": "{{value0}} のチェックタブを開く",
-          "openReviewExternally": "{{value0}} を外部で開く",
           "summary": "{{value0}} 件添付 · PR/MR あり {{value1}} 件 · 要対応 {{value2}} 件 · 保留中 {{value3}} 件 · 成功 {{value4}} 件 · PR なし {{value5}} 件 · 不明 {{value6}} 件",
-          "showDetails": "{{value0}} の PR チェック詳細を表示",
-          "hideDetails": "{{value0}} の PR チェック詳細を非表示",
           "reviewChecks": "レビューのチェック",
           "allChecksPassing": "すべてのチェックが成功",
           "oneWorktree": "1 件のワークツリー",

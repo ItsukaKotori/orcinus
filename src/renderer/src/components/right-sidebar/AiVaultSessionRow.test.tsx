@@ -2,7 +2,7 @@
 
 import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import type { AiVaultSession } from '../../../../shared/ai-vault-types'
 import type { AiVaultSessionWorktreeInfo } from './ai-vault-session-worktree'
@@ -36,17 +36,6 @@ const worktreeInfo: AiVaultSessionWorktreeInfo = {
   label: 'feature-branch',
   path: '/home/a/worktrees/feature-branch'
 }
-
-beforeEach(() => {
-  // The expanded details panel reads these while rendering (first-prompt card)
-  // and on mount (subagent list), so the row cannot expand without them.
-  ;(window as unknown as { api: unknown }).api = {
-    aiVault: {
-      getFirstUserPrompt: vi.fn().mockResolvedValue({ prompt: null }),
-      listSubagentSessions: vi.fn().mockResolvedValue({ sessions: [] })
-    }
-  }
-})
 
 afterEach(() => {
   // No `globals: true`, so Testing Library's auto-cleanup never runs and rows

@@ -8,7 +8,6 @@ import {
   normalizeRuntimePathSeparators
 } from './cross-platform-path'
 import { isClipboardTextByteLengthOverLimit } from './clipboard-text'
-import { splitAiVaultSearchQuery } from './ai-vault-search-query-operators'
 import { parseWslUncPath } from './wsl-paths'
 import type {
   AiVaultAgent,
@@ -181,21 +180,97 @@ export function agentLabel(agent: AiVaultAgent): string {
 }
 
 /**
- * One reading of `repo:` / `path:` for the whole product.
- *
- * Delegates to `splitAiVaultSearchQuery`, which the search index also plans
- * from, so a query cannot mean one thing in this list and another in the index.
- * The values come back folded because everything this file compares is folded;
- * the index keeps the unfolded form, which is why the split itself does not.
+ * One reading of `repo:` / `path:` for this list: the tokens are split by
+ * `splitVaultQueryOperators` and folded, because everything this file compares
+ * is folded. The split itself keeps the operand case; the fold happens here.
  */
 export function parseVaultQuery(query: string): ParsedQuery {
-  const split = splitAiVaultSearchQuery(query)
+  const split = splitVaultQueryOperators(query)
   const fold = (values: readonly string[]): string[] => values.map((value) => value.toLowerCase())
   return {
     terms: fold(split.terms),
     repoTerms: fold(split.repoTerms),
     pathTerms: fold(split.pathTerms)
   }
+}
+
+type SplitVaultQuery = {
+  /** The free text as tokens with quotes stripped; what a substring matcher wants. */
+  terms: string[]
+  /** Operator values as typed apart from surrounding space. */
+  repoTerms: string[]
+  pathTerms: string[]
+}
+
+/** Anchored at a token start only, so `myrepo:x` and `https://h/path:x` stay literal. */
+const VAULT_QUERY_OPERATOR = /(repo|path):/iy
+
+function splitVaultQueryOperators(query: string): SplitVaultQuery {
+  const terms: string[] = []
+  const repoTerms: string[] = []
+  const pathTerms: string[] = []
+  let index = 0
+  while (index < query.length) {
+    if (isVaultQueryBoundary(query[index])) {
+      index += 1
+      continue
+    }
+    VAULT_QUERY_OPERATOR.lastIndex = index
+    const operator = VAULT_QUERY_OPERATOR.exec(query)
+    if (operator) {
+      const at = index + operator[0].length
+      const quoted = readVaultQueryQuoted(query, at)
+      const value = quoted?.value ?? readVaultQueryBare(query, at)
+      index = quoted ? quoted.end : at + value.length
+      // Trimmed for the same reason an empty value is dropped: `repo:"  "` is
+      // not a narrowing anyone typed on purpose, and an untrimmed one matches
+      // no label at all, which silently empties the list.
+      const operand = value.trim()
+      if (operand) {
+        ;(operator[1]!.toLowerCase() === 'repo' ? repoTerms : pathTerms).push(operand)
+      }
+      continue
+    }
+    const quoted = readVaultQueryQuoted(query, index)
+    const value = quoted?.value ?? readVaultQueryBare(query, index)
+    const end = quoted ? quoted.end : index + value.length
+    // Only the substring matcher's copy is trimmed, so `"  "` reads as the
+    // empty term `""` already does rather than as a term no session's text
+    // contains; the quote characters themselves stay out of the token.
+    terms.push(value.trim())
+    index = end
+  }
+  return { terms, repoTerms, pathTerms }
+}
+
+function isVaultQueryBoundary(char: string | undefined): boolean {
+  return char === undefined || /\s/.test(char)
+}
+
+/**
+ * A quoted span, or null when this is not one.
+ *
+ * What keeps the apostrophes in `it's a repo:orca thing's` from opening a span
+ * that swallows the operator is the caller: this only ever runs at a token
+ * start, and the quote in `it's` is not at one. The closing quote is then just
+ * the next one, wherever it falls, so `"a b"c` reads as the panel has always
+ * read it — the span, then the rest as its own token.
+ */
+function readVaultQueryQuoted(query: string, at: number): { value: string; end: number } | null {
+  const quote = query[at]
+  if (quote !== '"' && quote !== "'") {
+    return null
+  }
+  const close = query.indexOf(quote, at + 1)
+  return close === -1 ? null : { value: query.slice(at + 1, close), end: close + 1 }
+}
+
+function readVaultQueryBare(query: string, at: number): string {
+  let end = at
+  while (end < query.length && !isVaultQueryBoundary(query[end])) {
+    end += 1
+  }
+  return query.slice(at, end)
 }
 
 /** What `repo:` and `path:` are compared against for one session. */

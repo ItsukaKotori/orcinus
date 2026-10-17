@@ -17,15 +17,12 @@
     "loadFailure": {},
     "guestRecovery": {},
     "clientHosted": {
-      "download": {},
-      "popupBlocked": "Popup blocked: {{origin}}"
+      "download": {}
     },
     "navigation": {},
     "reopenOnServer": {},
     "sshRoute": {},
-    "sshEgress": {
-      "localChip": "This device"
-    },
+    "sshEgress": {},
     "remoteEgress": {},
     "remote": {}
   },
@@ -75,17 +72,8 @@
       }
     },
     "browser": {
-      "clientHostedRemote": {
-        "title": "Host remote browser pages on this device",
-        "description": "Render remote workspace pages on this desktop; network traffic still goes through the remote host. Applies to new pages only."
-      },
-      "sshWorkspaceRouting": {
-        "title": "Browse through SSH workspace hosts",
-        "description": "Browser pages in SSH workspaces send their traffic through the workspace's SSH host, with DNS resolved there. Off means pages browse from this machine.",
-        "enableHost": "Route again",
-        "probeSkippedHosts": "Hosts routed without the connection check (Try anyway):",
-        "probeAgain": "Check again"
-      },
+      "clientHostedRemote": {},
+      "sshWorkspaceRouting": {},
       "remoteBrowsing": {}
     }
   },
@@ -102,7 +90,6 @@
     "toggleLeftSidebar": "Toggle Left Sidebar",
     "toggleRightSidebar": "Toggle Right Sidebar",
     "showStatusBar": "Show Status Bar",
-    "showTasksButton": "Show Tasks Button",
     "showAutomationsButton": "Show Automations Button",
     "showTitlebarAppName": "Show Titlebar App Name",
     "view": "View",
@@ -245,15 +232,7 @@
           "checkRunDetailsLoadFailed": "Failed to load check details.",
           "checkRunDetailsRepoUnavailable": "Repository details are unavailable for this check."
         },
-        "github": {
-          "f129c42773": "GitHub did not return the new comment.",
-          "683a21264b": "Row has no owner/repo/number.",
-          "83f9b126ad": "Issue Type can only be set on Issues.",
-          "f963485d37": "Row not found",
-          "a967f23983": "Project view not loaded",
-          "87020f6605": "Row has no owner/repo/number — cannot patch underlying item",
-          "d49ef4b944": "Failed to save issue-source preference"
-        },
+        "github": {},
         "sparse": {
           "presets": {
             "ef13e994e6": "Presets must load before saving.",
@@ -719,9 +698,7 @@
       "browser": {
         "cookie": {
           "import": {
-            "toast": {
-              "googleCookiesSkipped": "Google cookies were not imported. Open a browser in Orcinus on {{value0}} with this profile, then sign into Google."
-            }
+            "toast": {}
           }
         }
       },
@@ -1110,7 +1087,6 @@
       },
       "TaskPage": {
         "513cddfa7a": "Verifying…",
-        "ff69a30681": "Cancel",
         "2abe22ef76": "Your token is encrypted via the OS keychain and stored locally.",
         "246c2b3dd3": "Atlassian account settings",
         "59c14d34a2": "Create a token in",
@@ -1119,25 +1095,9 @@
         "163df31e0e": "https://example.atlassian.net",
         "33fc2bcb30": "Use a Jira Cloud site URL, Atlassian email, and API token to browse issues.",
         "60f806ce99": "Connect Jira site",
-        "8ff6fdc368": "Creating…",
-        "fc0d8a1fa4": "to submit.",
-        "34d97ca682": "What's going on?",
-        "578f730c16": "Short summary",
-        "16cba35bee": "Title",
-        "00022ec0ba": "Project",
-        "d0ca4aa1d0": "Labels",
-        "42a9160321": "Unassigned",
-        "154b0fa623": "Status",
-        "7d08e8be0f": "Start",
         "7f3f7b4c18": "Description (optional, markdown)",
         "9f2b4c03a6": "Filing in",
         "d3d0998b7d": "New GitHub issue",
-        "606a85c774": "Open",
-        "f362667d55": "Updated",
-        "b1eaa18ace": "Issue",
-        "9c57663908": "View",
-        "dfc0c79bd8": "Issues",
-        "eb10c32872": "ID",
         "c1d1600362": "Open in browser",
         "b6329379ca": "Start new workspace",
         "054bf695cc": "Draft",
@@ -1152,8 +1112,6 @@
         "f6fa3c97d0": "Reviewers",
         "8aba10579d": "Assignees",
         "5eccb3c841": "Title / Context",
-        "dfd72673e7": "Failed to save project selection.",
-        "b797bdd7c3": "Clear search",
         "ff53631e6f": "Refresh GitHub work",
         "6ffa6be99f": "Refreshing GitHub work",
         "b15ceb409d": "Search GitHub issues...",
@@ -1234,7 +1192,6 @@
         "887efe9140": "Connect",
         "a70153f583": "connecting",
         "6459faa8b3": "error",
-        "e15ba2d2eb": "Create issue",
         "3b11c8e8fc": "array",
         "cfb730b73e": "issue",
         "3659f9792a": "board",
@@ -1272,7 +1229,6 @@
         "bc46d8204e": "Select one project to open in GitHub",
         "d1132848f8": "Select one GitHub project to open in GitHub",
         "2af3ab5c58": "Select one team to open in Linear",
-        "7437e340b4": "Failed to create issue.",
         "9e03c17847": "Open the PR details to view current reviewers.",
         "3b7f34282f": "closed",
         "fe28c9821f": "view",
@@ -1375,63 +1331,19 @@
       "github": {
         "pr": {
           "merge": {
-            "state": {
-              "a80132573b": "GitHub is still computing this pull request merge status",
-              "f958920f3a": "Checking",
-              "9bd983ce8f": "GitHub says this PR can merge, but checks are still running",
-              "4e2507176b": "Checks pending",
-              "1432ecff30": "GitHub says this PR can merge, but some checks failed",
-              "87fa36ac83": "Checks failed",
-              "1766eb46ba": "GitHub reports this pull request is blocked",
-              "bf5e4c6c92": "Blocked",
-              "c614e2660a": "Update the branch before merging",
-              "039c072f94": "Behind",
-              "b37d45bca9": "GitHub reports merge conflicts",
-              "7e8bbe3cd7": "Conflicts",
-              "09896aad26": "Merge status is unavailable for this PR",
-              "bd4f27b50e": "Merge",
-              "35ec24bc43": "This base branch uses GitHub merge queue",
-              "b289646bcd": "GitHub reports requested changes on this pull request",
-              "c606463dc2": "Changes requested",
-              "a20db875ed": "GitHub requires review approval before this pull request can merge",
-              "1f8eb81c0e": "Approval required",
-              "f03028e055": "This pull request is still a draft",
-              "ec8e2cebaa": "Draft",
-              "820fd21663": "This pull request is closed",
-              "4f976d3450": "Closed",
-              "62eb8d39da": "This pull request is already merged",
-              "83ecdbb4a6": "Merged",
-              "331ebe1170": "Add this pull request to the GitHub merge queue",
-              "b169f943e1": "Merge when ready",
-              "62703b1dc4": "GitHub auto-merge is enabled for this pull request",
-              "48d75ae118": "Disable auto-merge",
-              "a5b66afb58": "Checks passed",
-              "fbd4f57f0a": "Checks passed. Merge eligibility will be checked again before merging.",
-              "4ab19a62ef": "Enable auto-merge",
-              "8f6cb3772f": "Merge this pull request automatically once requirements are met"
-            }
+            "state": {}
           }
         },
         "project": {
           "ColumnResizeHandle": {},
           "GhAuthErrorHelp": {},
-          "ProjectCell": {
-            "ffeff79861": "PULL_REQUEST"
-          },
+          "ProjectCell": {},
           "ProjectGroupHeader": {},
           "ProjectItemSlugDialog": {},
-          "ProjectPicker": {
-            "ab1a2c357d": "Roadmap (unsupported)",
-            "43a88ae574": "BOARD_LAYOUT",
-            "cafb908f34": "TABLE_LAYOUT"
-          },
-          "ProjectRow": {
-            "c3b81ddea2": "DRAFT_ISSUE"
-          },
+          "ProjectPicker": {},
+          "ProjectRow": {},
           "ProjectViewList": {},
-          "ProjectViewWrapper": {
-            "1bf8c01c8b": "Switch to a Table view to work with this project in Orcinus."
-          },
+          "ProjectViewWrapper": {},
           "slug": {
             "dialog": {
               "AssigneesEditor": {},
@@ -1446,22 +1358,10 @@
           "ProjectViewStates": {}
         },
         "GitHubMarkdownComposer": {},
-        "IssueSourceSelector": {
-          "643d7e9496": "upstream",
-          "cdc9bd64fa": "compact"
-        },
-        "PRFilterDropdowns": {
-          "19bb6f115f": "reviewed-by"
-        },
+        "IssueSourceSelector": {},
+        "PRFilterDropdowns": {},
         "PRFilterPickers": {},
-        "PRFilterSections": {
-          "2e639b84fa": "reviewer",
-          "712c5abdbf": "label",
-          "4e50c7bc03": "assignee",
-          "7bf3a6e5ac": "author",
-          "66256a73b3": "status",
-          "3ce4d5e96e": "prs"
-        },
+        "PRFilterSections": {},
         "github": {
           "rate": {
             "limit": {
@@ -1469,57 +1369,21 @@
             }
           }
         },
-        "CloseReasonDropdown": {
-          "e1f2a3b4c5": "Choose close reason"
-        },
-        "GitHubIssueCommentComposer": {
-          "082515176a": "Failed to add comment",
-          "9f88657c4e": "Issue closed",
-          "e9b7cb7d17": "Failed to close issue",
-          "bd3b4492a0": "Issue reopened",
-          "f2a8c1d903": "Failed to reopen issue",
-          "a1b2c3d4e5": "Add a comment",
-          "c5c117270e": "Add your comment here, be kind",
-          "f6a7b8c9d0": "Close issue",
-          "b1c2d3e4f5": "Reopen issue",
-          "0a73f59e85": "Send comment",
-          "bf43425540": "Comment",
-          "commentTooLarge": "Comment is too large to submit safely."
-        },
-        "GitHubWorkItemAssigneePopoverContent": {
-          "cddd9b04a7": "Loading assignees",
-          "a00830d3f7": "No users",
-          "4f8b6f2c1d": "Filter assignees..."
-        },
-        "GitHubWorkItemLabelPopoverContent": {
-          "2aa9acdf34": "Edit labels on GitHub",
-          "cddd9b04a7": "Loading labels",
-          "de26e2eb06": "No labels",
-          "8b0d52ee3a": "Filter labels..."
-        },
+        "CloseReasonDropdown": {},
+        "GitHubIssueCommentComposer": {},
+        "GitHubWorkItemAssigneePopoverContent": {},
+        "GitHubWorkItemLabelPopoverContent": {},
         "githubIssueCloseReasons": {
-          "completed": {
-            "label": "Close as completed",
-            "description": "Done, closed, fixed, resolved"
-          },
-          "notPlanned": {
-            "label": "Close as not planned",
-            "description": "Won't fix, can't repro, stale"
-          },
-          "duplicate": {
-            "label": "Close as duplicate",
-            "description": "Duplicate of another issue"
-          }
+          "completed": {},
+          "notPlanned": {},
+          "duplicate": {}
         },
         "CommentReactions": {}
       },
       "linear": {
         "api": {
           "key": {
-            "dialog": {
-              "57a66522c8": "connecting",
-              "e689a4d0a6": "error"
-            }
+            "dialog": {}
           }
         },
         "priority": {
@@ -1527,9 +1391,7 @@
         },
         "project": {
           "view": {
-            "surfaces": {
-              "2c4b1c2c08": "number"
-            }
+            "surfaces": {}
           }
         },
         "scope": {
@@ -3586,7 +3448,6 @@
           "host": "Host",
           "local": "Local",
           "runtime": "Server",
-          "ssh": "SSH",
           "connecting": "Connecting",
           "connect": "Connect",
           "addSshHost": "Add SSH host",
@@ -7651,32 +7512,7 @@
         },
         "jira": {
           "integration": {
-            "card": {
-              "8ff73fef62": "Jira tokens are encrypted by the active runtime and stored locally. Re-entering the same site URL and email replaces that site's API token.",
-              "9046a20d4c": "Disconnect {{value0}}",
-              "eaffa454e9": "Update",
-              "cec06a0f79": "Testing…",
-              "ab350991b8": "Verified",
-              "d914d7ab70": "Verifying…",
-              "5936977fcd": "Cancel",
-              "1666f8d562": "Create an Atlassian API token",
-              "1ab7f551f3": "Atlassian API token",
-              "09d310e42d": "you@example.com",
-              "27dae4ab60": "https://example.atlassian.net",
-              "a28f417220": "Connect Jira",
-              "9bb34706ca": "Connected",
-              "efaab83c5d": "Add site",
-              "09742875cd": "Jira",
-              "255bfe98ec": "Test",
-              "5fb1562315": "error",
-              "3df81cb0ac": "ok",
-              "2e8bb790fd": "Connect",
-              "33a8b261ee": "Update credentials",
-              "d5c5b47bb9": "update",
-              "fb854902d9": "connecting",
-              "9a9f8d4910": "Connect Jira Cloud to browse, create, and link issues.",
-              "74f3063026": "{{value0}} site{{value1}} connected"
-            }
+            "card": {}
           }
         },
         "mobile": {
@@ -7911,7 +7747,6 @@
             "availableHosts": "Available Hosts",
             "availableHostsDescription": "Hosts where this project is set up.",
             "host": "host",
-            "ssh": "ssh",
             "remote": "remote",
             "vm": "vm",
             "cc876ca5f2": "repository",
@@ -8016,29 +7851,7 @@
           }
         },
         "ssh": {
-          "search": {
-            "d41f296f64": "ping",
-            "237b391f7c": "connection",
-            "8cb870b109": "test",
-            "7efd17e816": "ssh",
-            "96ca5d9a0b": "Test connectivity to an SSH target.",
-            "a3058f3605": "Test Connection",
-            "2cd40ba0d0": "hosts",
-            "5220501141": "config",
-            "3b12e064a4": "import",
-            "7f251a45a8": "Import hosts from ~/.ssh/config.",
-            "41a3127094": "Import from SSH Config",
-            "f9493b80c0": "server",
-            "8fb1cc87cc": "host",
-            "09395490af": "target",
-            "00d1fda01a": "new",
-            "f7b6383aec": "add",
-            "62826efbe9": "Add a new remote SSH target.",
-            "f5a691bb6c": "Add SSH Target",
-            "d4bcd497c7": "remote",
-            "74c6d90d78": "Manage remote SSH targets.",
-            "380a788da7": "SSH Connections"
-          }
+          "search": {}
         },
         "tasks": {
           "search": {
@@ -8397,17 +8210,6 @@
             "control": {
               "integration": {
                 "cards": {
-                  "d5b3be8ecd": "Re-check",
-                  "8cbc39f862": "Learn more",
-                  "a47f71e357": "CLI.",
-                  "8d90249d22": "gh auth login",
-                  "2e44dda68a": "The GitHub CLI is installed but not authenticated. Run this command in a terminal:",
-                  "7755c28af5": "Install GitHub CLI",
-                  "23cb5a0dee": "Install the GitHub CLI to enable pull requests, issues, and checks.",
-                  "6f30fc4216": "GitHub CLI status is not available in this runtime yet.",
-                  "6b2cfb52b4": "gh",
-                  "b4d900e7f1": "Pull requests, issues, and checks via the",
-                  "account_scope_prefix": "Account scope",
                   "statusConnected": "Connected",
                   "statusUnavailable": "Unavailable",
                   "statusNotInstalled": "Not installed",
@@ -9174,14 +8976,7 @@
           "openManageSessions": "Open Manage Sessions",
           "title": "macOS permission grants aren’t reaching terminals"
         },
-        "artifacts": {
-          "enable": "Enable Artifacts",
-          "enableDescription": "Add Artifacts to the sidebar so you can open and delete shared files.",
-          "account": "Orcinus account",
-          "connected": "Connected",
-          "signInRequired": "Sign in is required to upload and manage artifacts.",
-          "openArtifactsDescription": "View and delete links shared through your account."
-        },
+        "artifacts": {},
         "orcaAccount": {
           "connected": "Connected",
           "reconnectRequired": "Your session expired. Sign in again to use cloud features.",
@@ -9349,53 +9144,19 @@
             "60ed678138": "selected"
           },
           "ChecksPanel": {
-            "2ef90c9819": "Started an AI agent for the broken checks.",
-            "a0181a8d76": "Started an AI agent for the conflicts.",
             "34464d00b9": "updated",
-            "058039787c": "Cancel",
-            "2ab7fd4b6d": "Save",
-            "dda5924a40": "Checks require a Git branch and hosted review context",
-            "976cefd02f": "Checks unavailable",
-            "b5dd73a105": "Select a workspace to view checks",
-            "a4ef4e0832": "No workspace selected",
-            "5594400d73": "No broken checks to fix.",
-            "abf59262fb": "Review the prompt before starting an agent.",
-            "4ede779461": "Resolve Review Conflicts With AI",
             "3b203c62f8": "This will permanently remove the comment from the PR.",
             "ea9b649ce3": "Delete comment?",
             "5788d1059d": "Could not update review thread. Check the GitHub API budget.",
-            "07871c0589": "Link another PR",
             "7202f4a40a": "unlink PR",
-            "7f4489f370": "Refresh",
-            "5c88c6db07": "Open on {{value0}}",
-            "7fad8509fe": "Fix With AI",
-            "71026ca2cb": "Refreshing…",
-            "889cdfba04": "Create {{value0}}",
-            "98f4c37b33": "Push & Create {{value0}}",
-            "b6ce28da5b": "{{value0}} #{{value1}} is already open",
-            "cf9e69f3be": "{{value0}} is already open",
-            "192e686e57": "Open on {{value0}}",
-            "6633c7a1fb": "Publish Branch",
-            "fdb27637f2": "Publishing…",
             "e56c42122e": "destructive",
             "786e3c143f": "Delete",
-            "653c105ecc": "More PR actions",
-            "f316a8ca2b": "No unresolved comments selected.",
-            "d00ebdc402": "Resolve {{value0}} Comments With AI",
-            "5eb2163b6b": "Review the prompt before starting an agent. After the prompt is delivered, Orcinus resolves the selected host threads and replies to comments it cannot resolve.",
             "f273f2271c": "Started the agent. Marked {{value0}} resolved, replied to {{value1}}, skipped {{value2}}, failed {{value3}}.{{value4}}",
             "aa95b81a3a": "Started the agent. Marked {{value0}} resolved, replied to {{value1}}, skipped {{value2}}, failed {{value3}}.",
             "495b2f8c4b": "Started the agent, but could not resolve or reply on the selected comments.",
             "3c3ad3a1d2": "Started the agent. No selected comments can be marked resolved on the host.",
-            "review": {
-              "auto_retry": "Orcinus will retry at {{time}}.",
-              "open_review": "Open Review",
-              "retry": "Retry"
-            },
-            "sync": {
-              "pending": "Syncing…",
-              "branch": "Sync Branch"
-            },
+            "review": {},
+            "sync": {},
             "7e4b2a19c0": "Could not resolve the GitHub PR to reply on.",
             "430f1a62d4": "Could not resolve the selected thread on the host.",
             "updateReactionFailed": "Failed to update reaction.",
@@ -9617,11 +9378,6 @@
             "dd43c47089": "Choose an agent for this commit failure",
             "30b8d4f181": "Fix commit failure with AI",
             "4b37ae99b0": "Start the default AI agent to fix this commit failure",
-            "ae743199cd": "Choose a different base branch before creating a {{value0}}.",
-            "318e2a7f88": "Wait for AI generation to finish.",
-            "f76307c1f7": "Choose a base branch.",
-            "4f76c0a9de": "Base branch must differ from the head branch.",
-            "c5e4175139": "More {{value0}} and remote actions",
             "78ddfd0bb4": "Create as draft",
             "e64a632456": "main",
             "6055949c50": "{{value0}} base branch",
@@ -9631,12 +9387,7 @@
             "a8873e1d62": "{{value0}} description",
             "7d6a8f0082": "Title",
             "a6eda33521": "{{value0}} title",
-            "02d8c04339": "Generate {{value0}} details with AI",
-            "aee92f8684": "Generate",
-            "e868cec4e1": "Generating…",
-            "b355e740b2": "Stop generating {{value0}} details",
             "527e130b6f": "Stop generating",
-            "e1970d327d": "New {{value0}}",
             "f4c766f1ca": "Choose the agent and command template for this run.",
             "1a6a6e0bc5": "Generate Hosted Review Details",
             "6b122529d4": "Generate Commit Message",
@@ -9660,9 +9411,7 @@
             "a5e5a11090": "Discard all failed — unable to unstage files before discard",
             "8a5ba6a988": "Failed to load commit diff",
             "fe5bd1a610": "Creating {{value0}}...",
-            "812cb992ee": "Open on {{value0}}",
             "eef5446523": "{{value0}} #{{value1}} is already open",
-            "0453ca3a9a": "{{value0}} created, but Orcinus could not refresh it yet.",
             "f99560ab29": "Abort {{value0}} failed",
             "eae7a1da5f": "Failed to clear notes.",
             "657e0c90ad": "{{value0}} note{{value1}}",
@@ -9736,8 +9485,6 @@
             "5b176fa431": "both deleted",
             "31f6d46278": "Unresolved",
             "2c417432b7": "Resolved locally",
-            "f3a8b2c1d0e5": "Enter a {{value0}} title.",
-            "e2b7a1c0d9f4": "Failed to create {{value0}}",
             "hugeRepoIgnorePrompt": "This repository has too many active changes. Add \"{{value0}}\" to .gitignore?",
             "hugeRepoIgnoreAction": "Add to .gitignore",
             "tooManyChanges": "Too many changes detected. Only the first {{value0}} changes are shown.",
@@ -10238,8 +9985,6 @@
               "primary": {
                 "action": {
                   "ed93b4f14f": "Commit",
-                  "946a8a05ea": "Create a {{value0}} for this branch",
-                  "e7ffa46946": "Create {{value0}}",
                   "95550cff15": "Push",
                   "d64292a938": "Pull",
                   "795f1509c5": "Sync",
@@ -10265,21 +10010,8 @@
                   "1d47e850cf": "Push updates to the linked review branch",
                   "c39d0c75c3": "Linked review branch target is unavailable.",
                   "8c6d15a07d": "Create PR",
-                  "d37e68f61d": "Preparing branch for review…",
-                  "c72e5e65d1": "Prepare this branch and create a {{value0}}",
-                  "b8e4f2a901": "Wait for the remote operation to finish.",
-                  "c9f3a1b802": "Resolve conflicts before creating a {{value0}}.",
                   "d2a8c4e703": "No changes on this branch to include in a {{value0}}.",
-                  "e3b9d5f814": "Cannot create a {{value0}} from the default branch.",
-                  "f4c0e6a925": "Commit changes before creating a {{value0}}.",
-                  "a5d1f7b036": "Publish commits before creating a {{value0}}.",
-                  "b6e2a8c147": "Push commits before creating a {{value0}}.",
-                  "c7f3b9d258": "Sync this branch before creating a {{value0}}.",
-                  "d8a4c0e369": "Authenticate before creating a {{value0}}.",
-                  "e9b5d1f470": "Check out a branch before creating a {{value0}}.",
-                  "f0c6e2a581": "This branch is not ready for a {{value0}} yet.",
-                  "8f9a0b1c2d": "Nothing to commit. Branch is up to date.",
-                  "h3i4j5k607": "Checking whether this branch can create a {{value0}}…"
+                  "8f9a0b1c2d": "Nothing to commit. Branch is up to date."
                 }
               },
               "branch": {
@@ -10537,19 +10269,7 @@
             "sessionRole": "Session",
             "jumpToOriginalPane": "Jump to Original Pane",
             "worktree": "Worktree",
-            "jumpToWorktree": "Jump to Worktree",
-            "prompt": "Prompt",
-            "firstPrompt": "First prompt",
-            "recentPrompt": "Recent prompt",
-            "firstPromptCopied": "First prompt copied",
-            "recentPromptCopied": "Recent prompt copied",
-            "copyFirstPrompt": "Copy first prompt",
-            "copyRecentPrompt": "Copy recent prompt",
-            "copyPrompt": "Copy prompt",
-            "copied": "Copied",
-            "copy": "Copy",
-            "noFirstPromptAvailable": "No first prompt available",
-            "loadingFirstPrompt": "Loading first prompt…"
+            "jumpToWorktree": "Jump to Worktree"
           },
           "AiVaultSessionRow": {
             "noPreviewAvailable": "No conversation preview available",
@@ -10643,11 +10363,7 @@
             "noActiveWorktreeMatch": "No active worktree matches this session.",
             "noActiveWorktreeTarget": "No active worktree is available."
           },
-          "AiVaultSessionSubagents": {
-            "subagentsCount": "Subagents ({{value0}})",
-            "messageCount": "{{value0}} msgs",
-            "viewLog": "View Log"
-          },
+          "AiVaultSessionSubagents": {},
           "aiVaultSessionLogOpen": {
             "workspaceGone": "Couldn't open log — workspace is no longer available.",
             "notAuthorized": "Couldn't open log — path not authorized.",
@@ -10656,46 +10372,13 @@
           "github": {
             "refresh": {
               "error": {
-                "copy": {
-                  "580025e7b7": "GitHub is unavailable",
-                  "01c85b5770": "GitHub's API is temporarily unavailable. This panel reloads automatically once it recovers.",
-                  "d1a9f2b165": "Can't reach GitHub",
-                  "7d01d42a3a": "GitHub is unreachable right now. Check your connection, then try again shortly.",
-                  "e9d681894a": "GitHub rate limit reached",
-                  "8c77434d6f": "GitHub is rate-limiting requests. This panel refreshes once the limit resets.",
-                  "79aa06bb2c": "Couldn't refresh. GitHub's API is temporarily unavailable. Showing the last known status.",
-                  "6ec12cee0c": "Couldn't refresh. GitHub is unreachable right now. Showing the last known status.",
-                  "de088015e8": "Couldn't refresh. GitHub is rate-limiting requests. Showing the last known status.",
-                  "d9dd7c6687": "Couldn't refresh from GitHub. Showing the last known status."
-                }
+                "copy": {}
               }
             },
             "pr": {
               "stack": {
-                "confirmation": {
-                  "84f6f5b9eb": "Included: {{numbers}}. ",
-                  "541984b2eb": "Queue through #{{pr}}?",
-                  "4809f55cdb": "{{included}}GitHub will add {{count}} pull request to the merge queue together. The queue chooses the merge method and may merge them in separate groups.",
-                  "be8f2621be": "{{included}}GitHub will add {{count}} pull requests to the merge queue together. The queue chooses the merge method and may merge them in separate groups.",
-                  "92ca033e72": "Queue {{count}} PR",
-                  "478a527b15": "Queue {{count}} PRs",
-                  "1feef35ca4": "Merge through #{{pr}}?",
-                  "c3e036c99f": "{{included}}GitHub will merge {{count}} pull request atomically using {{method}}. If it cannot merge, nothing will be merged.",
-                  "369aba4b32": "{{included}}GitHub will merge {{count}} pull requests atomically using {{method}}. If any cannot merge, none will.",
-                  "493c78f521": "Merge {{count}} PR",
-                  "eb7051d268": "Merge {{count}} PRs"
-                },
-                "merge": {
-                  "55ae29b907": "Merge through #{{pr}} · {{count}} PR",
-                  "b8446f6ec2": "Merge through #{{pr}} · {{count}} PRs",
-                  "189d0ec614": "#{{pr}} is still a draft.",
-                  "640fb50d9c": "#{{pr}} is closed.",
-                  "46ffcbda75": "#{{pr}} has merge conflicts.",
-                  "6dabefd63e": "#{{pr}} has requested changes.",
-                  "2bb21fc326": "#{{pr}} still needs review approval.",
-                  "c23faf74df": "#{{pr}} must be updated.",
-                  "f561e80968": "#{{pr}} is blocked."
-                }
+                "confirmation": {},
+                "merge": {}
               }
             }
           },
@@ -11558,9 +11241,6 @@
               "fix": {
                 "with": {
                   "ai": {
-                    "1a8c4e2b90": "Select a workspace before launching an AI action.",
-                    "4f2d9a8c17": "Select a repository before launching an AI action.",
-                    "7c3e1b5d42": "Open a PR or MR before launching an AI fix.",
                     "9b2f6d4a81": "This check is not failing.",
                     "2ef90c9819": "Started an AI agent for this check."
                   }
@@ -11746,28 +11426,8 @@
           "BrowserFind": {},
           "BrowserImportHintButton": {},
           "BrowserMobileDriverOverlay": {},
-          "BrowserPane": {
-            "a3508d7e6e": "{{value0}} annotation{{value1}} ready. Select another element or copy all feedback.",
-            "1c78adc73d": "Open Externally",
-            "da68d35f7b": "Open failed page in default browser",
-            "93be92f8d1": "Copy Address",
-            "3c085f638d": "Copy failed page URL",
-            "c6be71329e": "Refresh",
-            "8b6fab9ffa": "Save",
-            "e7ca5a098c": "success",
-            "b2856516e2": "Can't load this page",
-            "db325a7eeb": "Can't reach {{value0}}",
-            "e72dfa268a": "annotate",
-            "a5dcd0fd1d": "confirming",
-            "26615e116b": "error",
-            "8aec5bc044": "idle",
-            "c8bc7f1f9e": "requested",
-            "31375046b7": "Download from {{value0}}",
-            "5f66313863": "annotation"
-          },
-          "BrowserToolbarMenu": {
-            "6aa42813e4": "Imported {{value0}} cookies from {{value1}}{{value2}}."
-          },
+          "BrowserPane": {},
+          "BrowserToolbarMenu": {},
           "GrabConfirmationSheet": {},
           "browser": {
             "address": {
@@ -11819,74 +11479,25 @@
         }
       },
       "automations": {
-        "AutomationCustomCronPanel": {
-          "cadb7b0bc9": "invalid"
-        },
+        "AutomationCustomCronPanel": {},
         "AutomationPromptDisclosure": {},
-        "AutomationDetail": {
-          "007c8ad874": "Prompt",
-          "de0fedac06": "new_per_run",
-          "51a470b966": "ssh"
-        },
-        "AutomationEditorDialog": {
-          "ff5db28639": "existing"
-        },
-        "AutomationEditorDialogHeader": {
-          "4c8e1a72b9": "A recurring agent task"
-        },
+        "AutomationDetail": {},
+        "AutomationEditorDialog": {},
+        "AutomationEditorDialogHeader": {},
         "AutomationMissedRunGraceField": {},
         "AutomationEditorPromptSection": {},
         "AutomationPrecheckFields": {},
-        "AutomationRunHistory": {
-          "fdb3caa8fb": "known"
-        },
+        "AutomationRunHistory": {},
         "AutomationRunPageFrame": {},
         "AutomationSchedulePicker": {},
         "AutomationTimeField": {},
         "AutomationSessionField": {},
-        "AutomationsPage": {
-          "2695883141": "delete",
-          "97ff587ee3": "Connect this source to check for Hermes automations in the remote profile.",
-          "aaa007846f": "source unavailable",
-          "82eb6cb933": "source",
-          "587a4b205c": "Next",
-          "761a35834d": "Automation",
-          "8d1afa8269": "Add automation",
-          "0329f9bef1": "Close · Esc",
-          "67c7ff795b": "Close automations",
-          "3e42a5cc1b": "SSH connection failed.",
-          "9f2855677c": "SSH connected.",
-          "7934ee0d81": "Connect SSH",
-          "f93ed7a6f8": "Connecting...",
-          "8705757e27": "job",
-          "0ae52dd760": "hermes",
-          "e059042585": "Read-only",
-          "aecdc3681f": "Manageable",
-          "dd0bc7a1ba": "new_per_run",
-          "7b2e285552": "SSH connections are unavailable in this client.",
-          "d441032f7e": "pause",
-          "5918020edc": "run",
-          "a21f6c33ad": "Automation source refreshed.",
-          "53f06f0ad5": "Retry source",
-          "noSearchMatches": "No automations match your search.",
-          "runCount": "{{count}} runs",
-          "runCount_one": "{{count}} run",
-          "runCount_other": "{{count}} runs",
-          "projectDefaultBaseRef": "project default",
-          "createFromBaseRef": "Create from {{baseRef}}",
-          "noListMatches": "No automations match.",
-          "destinationProjectUnavailable": "Choose a project owned by the selected automation destination."
-        },
+        "AutomationsPage": {},
         "AutomationsPageSkeleton": {},
         "CreateFromPicker": {},
-        "ExternalAutomationManagers": {
-          "bf5f67b590": "hermes",
-          "330b3c32e8": "available"
-        },
+        "ExternalAutomationManagers": {},
         "ExternalAutomationRunTable": {},
-        "HermesCronOutputView": {
-          "88d48157fc": "default"
-        },
+        "HermesCronOutputView": {},
         "WorkspaceCombobox": {},
         "automation": {
           "templates": {
@@ -11930,17 +11541,12 @@
           "action": {}
         },
         "ownerAction": {},
-        "externalScope": {
-          "unknownManager": "This external automation is no longer listed for any host in view."
-        },
+        "externalScope": {},
         "enablement": {},
         "runHistory": {},
         "createDestination": {},
         "AutomationListToolbar": {},
-        "AutomationRunsDashboard": {
-          "local": "Local",
-          "remote": "Remote"
-        },
+        "AutomationRunsDashboard": {},
         "AutomationsPageBreadcrumb": {}
       },
       "agent": {
@@ -11988,10 +11594,7 @@
           "emptyTitle": "No attached worktrees yet",
           "emptyCopy": "PR checks will appear here after worktrees are attached to this folder workspace.",
           "openChecksTab": "Open {{value0}} Checks tab",
-          "openReviewExternally": "Open {{value0}} externally",
           "summary": "{{value0}} attached · {{value1}} with PR/MR · {{value2}} attention · {{value3}} pending · {{value4}} passing · {{value5}} no PR · {{value6}} unknown",
-          "showDetails": "Show {{value0}} PR check details",
-          "hideDetails": "Hide {{value0}} PR check details",
           "reviewChecks": "Review checks",
           "allChecksPassing": "all checks passing",
           "oneWorktree": "1 worktree",
@@ -12072,10 +11675,7 @@
             "task": {
               "page": {
                 "gitlab": {
-                  "filters": {
-                    "e157d7ce4d": "MRs",
-                    "2328f6a40c": "My Todos"
-                  }
+                  "filters": {}
                 }
               }
             }
@@ -12084,17 +11684,12 @@
             "new": {
               "github": {
                 "issue": {
-                  "dialog": {
-                    "e02508846c": "this repository"
-                  }
+                  "dialog": {}
                 }
               },
               "linear": {
                 "issue": {
-                  "dialog": {
-                    "dialogTitle": "New Linear issue",
-                    "dialogDescription": "Create a Linear issue for the selected team."
-                  }
+                  "dialog": {}
                 }
               }
             },
@@ -12111,25 +11706,16 @@
           "github": {
             "github": {
               "detail": {
-                "host": {
-                  "8d5cde4770": "Pull requests",
-                  "312ca15778": "GitHub list"
-                }
+                "host": {}
               },
               "issue": {
                 "label": {
-                  "selector": {
-                    "2a1862c470": "Loading labels…"
-                  }
+                  "selector": {}
                 }
               },
               "work": {
                 "item": {
-                  "row": {
-                    "draftPullRequest": "Draft pull request",
-                    "pullRequest": "Pull request",
-                    "issue": "Issue"
-                  }
+                  "row": {}
                 }
               }
             }
@@ -12145,10 +11731,7 @@
                   },
                   "linear": {
                     "active": {
-                      "collection": {
-                        "d8b3cd9488": "Project: {{value0}}",
-                        "68462f8b29": "View: {{value0}}"
-                      }
+                      "collection": {}
                     }
                   },
                   "session": {
@@ -12166,9 +11749,7 @@
           "linear": {
             "linear": {
               "connect": {
-                "empty": {
-                  "3e00e8ebd4": "Loading Linear"
-                }
+                "empty": {}
               }
             }
           }
@@ -12248,17 +11829,12 @@
       },
       "BrowserPane": {},
       "artifacts": {
-        "ArtifactsPage": {
-          "openArtifact": "Open artifact",
-          "openAccountSettings": "Open account settings"
-        },
+        "ArtifactsPage": {},
         "ArtifactActions": {},
         "ArtifactCollection": {},
         "ArtifactDetailHeader": {},
         "ArtifactPublishButton": {},
-        "artifact-publish-flow": {
-          "5cb4f5ec36": "Copy link"
-        },
+        "artifact-publish-flow": {},
         "ArtifactPublishedLinkPanel": {},
         "ArtifactDetailDrawer": {},
         "ArtifactListSearchField": {},
@@ -12678,11 +12254,7 @@
     "moreMatchesAvailable": "More matches may be available. Refine your search to narrow the results."
   },
   "checksPanel": {
-    "unlinked": {
-      "title": "Pull request unlinked",
-      "description": "PR #{{number}} is hidden for this workspace. Link it again to restore checks and review details.",
-      "relink": "Link PR #{{number}}"
-    }
+    "unlinked": {}
   },
   "sourceControl": {
     "unlinkedPr": {
