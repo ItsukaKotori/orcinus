@@ -35,8 +35,8 @@ describe('settings navigation metadata', () => {
       'agents',
       'orchestration',
       'general',
-      'integrations',
-      'git'
+      'git',
+      'terminal'
     ])
   })
 
@@ -61,8 +61,8 @@ describe('settings navigation metadata', () => {
       'agents',
       'orchestration',
       'general',
-      'integrations',
-      'git'
+      'git',
+      'terminal'
     ])
   })
 

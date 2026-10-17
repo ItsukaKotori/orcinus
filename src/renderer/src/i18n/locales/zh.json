@@ -654,8 +654,6 @@
         "85f4fd7710": "任务来源",
         "ab4b21b58e": "分支命名、基础引用和 Git AI Author。",
         "09607cb0fe": "Git 和源代码控制",
-        "33a5e1d597": "通过保存的 API 令牌或环境变量连接 Bitbucket、Azure DevOps 和 Gitea。",
-        "2b043783ef": "集成",
         "2cd4ea75da": "工作区默认值、应用程序设置和维护。",
         "13241992bd": "通用",
         "cd50cec5d7": "通过 Orcinus 协调多个编码智能体。",
@@ -4637,9 +4635,7 @@
           "15cf990798": "未经过验证",
           "f7eb5f0b24": "未安装",
           "3ba07f933b": "连接 Orcinus 可用于浏览任务并启动带链接上下文工作区的议题追踪器。",
-          "70e885705b": "任务提供商",
-          "1683acbac4": "连接 Orcinus 可用于 pull request、merge request、检查和评审状态的源代码主机。",
-          "298c65ecac": "评审提供商"
+          "70e885705b": "任务提供商"
         },
         "KagiSessionLinkForm": {},
         "KeybindingsFileActions": {
@@ -5288,8 +5284,6 @@
           "11faa2f7dd": "任务来源",
           "cfa34f4465": "分支命名、基础引用和 Git AI Author。",
           "70100f94c7": "Git 和源代码控制",
-          "b07041697f": "通过保存的 API 令牌或环境变量连接 Bitbucket、Azure DevOps 和 Gitea。",
-          "c9ca101a3b": "集成",
           "f9b77539fd": "工作区默认值、应用程序设置和维护。",
           "7807c11c4d": "通用",
           "475980f53d": "通过 Orcinus 协调多个编码智能体。",
@@ -6555,26 +6549,7 @@
           }
         },
         "integrations": {
-          "search": {
-            "a626990bd2": "断开",
-            "3c3d3d8ffa": "连接",
-            "c450244ad7": "集成",
-            "20540996ef": "凭据",
-            "2ec2bd328c": "API token",
-            "8c568d761c": "PR",
-            "33180e8c10": "自托管",
-            "129fc59aa8": "Gitea",
-            "d0d019dc29": "通过 API token环境变量进行 Gitea 身份验证。",
-            "aab86d64e5": "Gitea 集成",
-            "03a7b275be": "ADO",
-            "ed63380247": "天蓝色 repos",
-            "b38b5d27f1": "天蓝色 devops",
-            "7b1f3984bb": "通过token环境变量进行 Azure DevOps Repos 身份验证。",
-            "af6611fa6e": "Azure DevOps 集成",
-            "50d20817f7": "Bitbucket",
-            "c97d58a0f3": "通过 API token环境变量进行 Bitbucket Cloud 身份验证。",
-            "67a2a0e868": "Bitbucket 集成"
-          }
+          "search": {}
         },
         "jira": {
           "integration": {
@@ -7286,40 +7261,7 @@
           "source": {
             "control": {
               "integration": {
-                "cards": {
-                  "793a06e899": "重新检查",
-                  "1a9475dace": "了解更多",
-                  "19fb419c12": "Gitea 凭据已配置但无法通过身份验证。请检查 token、API 基础 URL 和仓库权限；如果环境变量已更改，请重启 Orcinus。",
-                  "60708f23da": "仅当 Orcinus 无法从 remote 推导出 API URL 时。",
-                  "709057ad91": "ORCA_GITEA_API_BASE_URL",
-                  "6da9dfa5de": "用于私有仓库，并设置",
-                  "6d5c2a3005": "ORCA_GITEA_TOKEN",
-                  "fcbe0469fd": "公开仓库会从其 git remote 检测。设置",
-                  "0613928cb3": "此运行时暂不支持 Gitea 状态。",
-                  "05863d2599": "通过 Gitea REST API 获取 pull request 和 commit 状态。",
-                  "52f75876be": "已检测仓库的 pull request 和 commit 状态",
-                  "0b5242f8a2": "{{value0}} · 拉取请求和提交状态",
-                  "40f678df73": "Azure DevOps 凭据已配置但无法通过身份验证。请检查 token、API 基础 URL 和仓库权限；如果环境变量已更改，请重启 Orcinus。",
-                  "7bd345e3f6": "仅当 Orcinus 无法从 git remote 推导出 API 基础 URL 时。",
-                  "186a6689df": "ORCA_AZURE_DEVOPS_API_BASE_URL",
-                  "b8a10b07c1": "。设置",
-                  "fbfd237f5e": "ORCA_AZURE_DEVOPS_ACCESS_TOKEN",
-                  "087feb92f1": "，或设置",
-                  "48842720d2": "ORCA_AZURE_DEVOPS_TOKEN",
-                  "7bbc9c64f0": "设置",
-                  "f3f47dc7de": "此运行时暂不支持 Azure DevOps 状态。",
-                  "0eb50d5593": "通过 Azure DevOps REST API token 获取 pull request 和构建状态。",
-                  "54636c65d4": "已检测 Azure Repos 的 pull request 和构建状态",
-                  "ea204f5e03": "{{value0}} · 拉取请求和构建状态",
-                  "6154b02093": "Bitbucket 凭据已配置但无法通过身份验证。请检查 token 和仓库权限；如果环境变量已更改，请重启 Orcinus。",
-                  "e63fe8f627": "ORCA_BITBUCKET_ACCESS_TOKEN",
-                  "19416c874c": "ORCA_BITBUCKET_API_TOKEN",
-                  "fc71a0e7aa": "和",
-                  "63a7f47392": "ORCA_BITBUCKET_EMAIL",
-                  "24ac1c69dc": "此运行时暂不支持 Bitbucket 状态。",
-                  "a924e8dcd1": "通过 Bitbucket Cloud API token 获取 pull request 和构建状态。",
-                  "0fa5629dad": "pull request 和构建状态"
-                }
+                "cards": {}
               }
             }
           }
