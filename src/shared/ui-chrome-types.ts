@@ -81,7 +81,6 @@ export type StaticTopLevelView =
   | 'terminal'
   | 'settings'
   | 'space'
-  | 'artifacts'
   | 'plugin-center'
 
 /** The active top-level section shown in the main content area; plugin-hosted views are keyed `plugin:<pluginKey>`. */

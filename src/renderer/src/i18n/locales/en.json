@@ -791,7 +791,6 @@
         "1cd25673df": "Mobile",
         "31e57d1c70": "Use existing machines over SSH for files, terminals, Git, and workspaces.",
         "94a5afe910": "SSH Hosts",
-        "40d80bad8a": "Beta",
         "de0c2907a1": "Remote Orcinus Servers",
         "b351014180": "Orcinus stats plus Claude, Codex, OpenCode token analytics and Grok subscription usage.",
         "d72a58b5b9": "Stats & Usage",
@@ -842,8 +841,6 @@
         "pluginsTitle": "Plugins",
         "pluginsDescription": "Install and manage experimental Orcinus plugins.",
         "tasksDescription": "Connect providers, install the Linear skill, and choose what appears in Tasks.",
-        "artifactsTitle": "Artifacts",
-        "artifactsDescription": "Share HTML and Markdown files with your team and manage their public links.",
         "shareSkillsTitle": "Share Skills",
         "shareSkillsDescription": "Share your skills with an unlisted link. Anyone who has it can install them.",
         "floatingWorkspaceWebDescription": "Global terminal and markdown tabs."
@@ -3849,8 +3846,6 @@
           "196c1b5362": "Open GitLab tasks",
           "0ccba862b8": "Open GitHub tasks",
           "fee535205b": "Tasks",
-          "d599269755": "Hide from sidebar",
-          "artifacts": "Artifacts",
           "skills": "Skills"
         },
         "SidebarRepositoryFilterSection": {
@@ -5430,9 +5425,6 @@
           "0e9fc0eadc": "Workspace Directory",
           "e2955d9ccb": "Configure where new workspaces are created.",
           "7511097c5d": "Workspace",
-          "31e300af1c": "Ask Before Deleting Artifacts",
-          "fb29a73a17": "Show a confirmation dialog before deleting a shared artifact and breaking its public link.",
-          "bf46474e33": "Show a confirmation before deleting a shared artifact. Anyone holding its public link loses access.",
           "externalWorktrees": "External worktrees",
           "externalWorktreesDescription": "Choose whether worktrees created outside Orcinus appear by default.",
           "show": "Show",
@@ -9188,40 +9180,7 @@
           "account": "Orcinus account",
           "connected": "Connected",
           "signInRequired": "Sign in is required to upload and manage artifacts.",
-          "signingIn": "Signing in…",
-          "signIn": "Sign in to Orcinus",
-          "title": "Artifacts",
-          "description": "Share HTML and Markdown files with your team and manage their public links.",
-          "howToTitle": "How to use Artifacts",
-          "howToDescription": "Publish HTML or Markdown files as public links, then share them with your team.",
-          "shareStepTitle": "Choose a file to share",
-          "shareStepDescription": "Open an HTML or Markdown file and select Share as artifact, or ask an agent to share it.",
-          "linkStepTitle": "Copy the public link",
-          "linkStepDescription": "After publishing, copy the link and send it to your team.",
-          "manageStepTitle": "Manage it in Orcinus",
-          "manageStepDescription": "Open Artifacts from the sidebar to preview or remove links.",
-          "openArtifacts": "Open Artifacts",
-          "openArtifactsDescription": "View and delete links shared through your account.",
-          "showButton": "Show Artifacts Button",
-          "showButtonDescription": "Show the Artifacts shortcut in the sidebar.",
-          "openArtifactsDescriptionV2": "Preview, copy, and manage links shared through your account.",
-          "signInTitle": "Sign in to share artifacts",
-          "signInDescription": "Use your Orcinus account to upload artifacts and manage their public links.",
-          "signInAgain": "Sign in again",
-          "enableStepTitle": "Enable artifact sharing",
-          "enableStepDescription": "Turn on “Allow publishing public artifact links” above.",
-          "allowPublishing": "Allow publishing public artifact links",
-          "allowPublishingDescription": "Publish HTML and Markdown files as links anyone with the URL can open. Existing links remain until you delete them from Artifacts.",
-          "howToDescriptionDisabled": "Enable artifact sharing above to publish HTML or Markdown files as public links.",
-          "allowPublishingSearchDescription": "Allow Orcinus to publish HTML and Markdown files as public links.",
-          "keywordArtifacts": "artifacts",
-          "keywordShare": "share",
-          "keywordPublish": "publish",
-          "keywordPublic": "public",
-          "keywordPermission": "permission",
-          "keywordHtml": "HTML",
-          "keywordMarkdown": "Markdown",
-          "keywordUpload": "upload"
+          "openArtifactsDescription": "View and delete links shared through your account."
         },
         "orcaAccount": {
           "connected": "Connected",
@@ -12005,12 +11964,7 @@
           "92bac3217e": "Don't ask again"
         },
         "skip": {
-          "saved": "We'll skip this confirmation next time.",
-          "savedDescription": "You can change this in Settings.",
-          "openSettings": "Open Settings",
-          "preference": {
-            "0b0cb6e3f9": "Could not save the confirmation preference."
-          }
+          "preference": {}
         }
       },
       "jira": {
@@ -12295,116 +12249,21 @@
       "BrowserPane": {},
       "artifacts": {
         "ArtifactsPage": {
-          "signInAgain": "Sign in to Orcinus again to load artifacts.",
-          "loadFailed": "Could not load artifacts.",
-          "deleteTitle": "Delete artifact?",
-          "deleteDescription": "“{{name}}” will no longer be available at its public link.",
-          "delete": "Delete",
-          "deleteFailed": "Could not delete the artifact.",
-          "title": "Artifacts",
-          "refresh": "Refresh",
-          "signInHeading": "Sign in to Orcinus",
-          "signInCopy": "Sign in to view and manage artifacts shared through your account.",
-          "signingIn": "Signing in…",
-          "signIn": "Sign in to Orcinus",
-          "empty": "No shared artifacts",
-          "emptyCopy": "Open an HTML or Markdown file and select Share as artifact, or ask your agent to share it.",
           "openArtifact": "Open artifact",
-          "deleteArtifact": "Delete artifact",
-          "moreAvailable": "More artifacts are available",
-          "moreAvailableCopy": "Load the next page to continue.",
-          "loadMoreFailed": "Could not load more artifacts.",
-          "publishingOff": "Publishing is turned off",
-          "publishingOffCopy": "Nothing on this device can create a public artifact link yet. Allow publishing in Settings → Artifacts, then share from an open HTML or Markdown file or ask your agent.",
-          "openArtifactsSettings": "Open Settings → Artifacts",
-          "retry": "Retry",
-          "reconnectHeading": "Sign in to Orcinus again",
-          "reconnectCopy": "Sign in again to view and manage the artifacts shared through your account.",
-          "signInAgainAction": "Sign in again",
-          "unconfiguredCopy": "Orcinus account sign-in is not configured on this machine yet.",
           "openAccountSettings": "Open account settings"
         },
-        "copySuccess": "Artifact link copied",
-        "copyFailed": "Could not copy artifact link",
-        "copyLink": "Copy link",
-        "openInBrowser": "Open in browser",
-        "actions": "Artifact actions",
-        "ArtifactActions": {
-          "more": "More artifact actions"
-        },
-        "ArtifactCollection": {
-          "loadMore": "Load more",
-          "noMatches": "No matches"
-        },
-        "ArtifactDetailHeader": {
-          "publicLink": "Anyone with this link can view it",
-          "close": "Close"
-        },
-        "updatedAt": "Updated {{when}}",
-        "updatedRecently": "recently",
-        "expiryUnknown": "Expiry unknown",
-        "expired": "Link expired",
-        "expires": "Link expires {{when}}",
-        "ArtifactPublishButton": {
-          "a4a49da6af": "Share as artifact",
-          "confirmTitle": "Share as artifact",
-          "confirmDescription": "This publishes the current file at a link anyone with the URL can view.",
-          "accountTitle": "Orcinus account",
-          "accountDescription": "Sign in to create and manage this link.",
-          "signingIn": "Signing in…",
-          "signInAgain": "Sign in again",
-          "signIn": "Sign in",
-          "publishingOffTitle": "Artifact sharing is off",
-          "publishingOffDescription": "Learn about public links and enable sharing in Settings.",
-          "openSettings": "Open Artifacts settings",
-          "sharing": "Sharing…",
-          "sharePublicLink": "Generate link",
-          "publishedDescription": "Anyone with this link can view the shared file.",
-          "checkingLink": "Checking for an existing link…",
-          "checkFailed": "Could not check for an existing link.",
-          "tryAgain": "Try again"
-        },
+        "ArtifactActions": {},
+        "ArtifactCollection": {},
+        "ArtifactDetailHeader": {},
+        "ArtifactPublishButton": {},
         "artifact-publish-flow": {
-          "9a078a0c65": "Artifact sharing is unavailable",
-          "bba20daa6d": "Sign in to Orcinus and try again.",
-          "54b1805328": "Could not share artifact",
-          "430019efd0": "Artifact shared",
-          "2fc727c831": "Artifact updated",
-          "5cb4f5ec36": "Copy link",
-          "fbb5018602": "This file is empty.",
-          "6112db5a1c": "This artifact is too large to share.",
-          "e2ed5acd8c": "Orcinus couldn't read this file. Open it from a workspace and try again.",
-          "6d475e9b25": "Only local HTML and Markdown files can be shared as artifacts.",
-          "29a406be09": "Artifacts must contain text."
+          "5cb4f5ec36": "Copy link"
         },
-        "ArtifactPublishedLinkPanel": {
-          "copyLink": "Copy link",
-          "openLink": "Open link",
-          "updating": "Updating…",
-          "update": "Update shared content"
-        },
-        "ArtifactDetailDrawer": {
-          "description": "Preview and manage this shared artifact."
-        },
-        "ArtifactListSearchField": {
-          "label": "Search artifacts",
-          "placeholder": "Search...",
-          "clear": "Clear search"
-        },
-        "ArtifactListTableHeader": {
-          "name": "Name",
-          "type": "Type",
-          "size": "Size",
-          "updated": "Updated",
-          "expires": "Expires",
-          "actions": "Actions"
-        },
-        "ArtifactsPageSkeleton": {
-          "loading": "Loading artifacts"
-        },
-        "expiredCompact": "Expired",
-        "typeMarkdown": "Markdown",
-        "typeHtml": "HTML"
+        "ArtifactPublishedLinkPanel": {},
+        "ArtifactDetailDrawer": {},
+        "ArtifactListSearchField": {},
+        "ArtifactListTableHeader": {},
+        "ArtifactsPageSkeleton": {}
       },
       "BrowserCookieImportMachineNotice": {},
       "ComposerParentWorktreePicker": {

@@ -39,7 +39,7 @@ describe('getEditorCmdSaveFileId', () => {
   it('claims nothing on a non-workspace view so the shortcut is not swallowed', () => {
     const getActiveTab = vi.fn(() => null)
 
-    for (const activeView of ['settings', 'space', 'artifacts'] as const) {
+    for (const activeView of ['settings', 'space'] as const) {
       expect(
         getEditorCmdSaveFileId(
           { activeFileId: 'main-file', activeTabType: 'editor', activeView, getActiveTab },
@@ -72,7 +72,7 @@ describe('getEditorCmdSaveFileId', () => {
 
     expect(
       getEditorCmdSaveFileId(
-        { activeFileId: 'main-file', activeTabType: 'editor', activeView: 'artifacts', getActiveTab },
+        { activeFileId: 'main-file', activeTabType: 'editor', activeView: 'settings', getActiveTab },
         true
       )
     ).toBe('floating-file')

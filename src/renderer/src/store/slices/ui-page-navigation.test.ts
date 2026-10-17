@@ -1,6 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { getDefaultSettings } from '../../../../shared/constants'
-import type { Worktree } from '../../../../shared/worktree/types'
 import type { FeatureInteractionState } from '../../../../shared/feature-interactions'
 import { createUIStore, makePersistedUI } from './ui-slice-test-harness'
 
@@ -45,10 +43,6 @@ beforeEach(() => {
   mocks.toastSuccess.mockReset()
   mocks.toastError.mockReset()
 })
-
-function makeWorktree(id: string): Worktree {
-  return { id } as unknown as Worktree
-}
 
 describe('createUISlice settings navigation', () => {
   it('accepts a host-qualified settings target', () => {
@@ -144,42 +138,4 @@ describe('createUISlice space navigation', () => {
     expect(store.getState().activeView).toBe('plugin-center')
   })
 
-  it('returns to the originating view after closing Artifacts', () => {
-    const store = createUIStore()
-
-    store.getState().setActiveView('plugin-center')
-    store.getState().openArtifactsPage()
-
-    expect(store.getState().activeView).toBe('artifacts')
-    expect(store.getState().previousViewBeforeArtifacts).toBe('plugin-center')
-
-    store.getState().closeArtifactsPage()
-
-    expect(store.getState().activeView).toBe('plugin-center')
-  })
-
-  it('records and rewinds Artifacts visits on close', () => {
-    const store = createUIStore()
-    store.setState({ worktreesByRepo: { 'repo-1': [makeWorktree('a')] } })
-
-    store.getState().recordWorktreeVisit('a')
-    store.getState().openArtifactsPage()
-    expect(store.getState().worktreeNavHistory).toEqual(['a', 'artifacts'])
-    expect(store.getState().worktreeNavHistoryIndex).toBe(1)
-
-    store.getState().closeArtifactsPage()
-    expect(store.getState().activeView).toBe('terminal')
-    expect(store.getState().worktreeNavHistoryIndex).toBe(0)
-  })
-
-  it('opens and restores Artifacts when its sidebar shortcut is hidden', () => {
-    const store = createUIStore()
-    store.setState({ settings: { ...getDefaultSettings('/tmp'), showArtifactsButton: false } })
-
-    store.getState().openArtifactsPage()
-    expect(store.getState().activeView).toBe('artifacts')
-
-    store.getState().hydratePersistedUI(makePersistedUI({ activeView: 'artifacts' }), 'startup')
-    expect(store.getState().activeView).toBe('artifacts')
-  })
 })

@@ -6,11 +6,7 @@ import { parseWorkspaceKey } from '../../../../shared/workspace-scope'
 // Why: bound per-session history growth; 50 keeps goBack/goForward's linear scans cheap yet is never hit in normal use.
 const MAX_HISTORY = 50
 
-// Why: entries may be page sentinels, not just worktree IDs; names keep the "worktree" prefix for call-site stability.
-export type WorktreeNavHistorySimpleViewEntry = 'artifacts'
-const SIMPLE_VIEW_ENTRIES: readonly WorktreeNavHistorySimpleViewEntry[] = ['artifacts']
-export type WorktreeNavHistoryViewEntry = WorktreeNavHistorySimpleViewEntry
-export type WorktreeNavHistoryEntry = (string & {}) | WorktreeNavHistoryViewEntry
+export type WorktreeNavHistoryEntry = string
 
 export type WorktreeNavHistorySlice = {
   // Linear history, oldest -> newest.
@@ -21,49 +17,20 @@ export type WorktreeNavHistorySlice = {
   isNavigatingHistory: boolean
 
   recordWorktreeVisit: (worktreeId: string) => void
-  recordViewVisit: (entry: WorktreeNavHistoryViewEntry) => void
   goBackWorktree: () => void
   goForwardWorktree: () => void
 }
 
 type ActivateFn = (worktreeId: string) => unknown
-type ViewActivateFn = (entry: WorktreeNavHistoryViewEntry) => void
 
 // Why: injected via setWorktreeNavActivator to avoid an import cycle (activation imports the store).
 let activator: ActivateFn | null = null
-let viewActivator: ViewActivateFn | null = null
 
 export function setWorktreeNavActivator(fn: ActivateFn | null): void {
   activator = fn
 }
 
-// Why: injected to avoid an import cycle — the UI slice already depends on this module.
-export function setWorktreeNavViewActivator(fn: ViewActivateFn | null): void {
-  viewActivator = fn
-}
-
-function isSimpleViewEntry(
-  entry: WorktreeNavHistoryEntry
-): entry is WorktreeNavHistorySimpleViewEntry {
-  return (
-    typeof entry === 'string' &&
-    SIMPLE_VIEW_ENTRIES.includes(entry as WorktreeNavHistorySimpleViewEntry)
-  )
-}
-
-// Why: view entries count as live unconditionally — findWorktreeById can't resolve page sentinels.
-function isViewEntry(entry: WorktreeNavHistoryEntry): entry is WorktreeNavHistoryViewEntry {
-  return isSimpleViewEntry(entry) || typeof entry === 'object'
-}
-
-function getHistoryEntryKey(entry: WorktreeNavHistoryEntry): string {
-  return isSimpleViewEntry(entry) ? `view:${entry}` : `worktree:${entry}`
-}
-
 function isLiveEntry(entry: WorktreeNavHistoryEntry, state: AppState): boolean {
-  if (isViewEntry(entry)) {
-    return true
-  }
   const workspaceScope = parseWorkspaceKey(entry)
   if (workspaceScope?.type === 'folder') {
     return state.folderWorkspaces.some(
@@ -79,7 +46,7 @@ function appendHistoryEntry(
 ): { worktreeNavHistory: WorktreeNavHistoryEntry[]; worktreeNavHistoryIndex: number } {
   // Why: de-dup only against the current entry so A -> B -> A stays a valid stack.
   const current = s.worktreeNavHistory[s.worktreeNavHistoryIndex]
-  if (current !== undefined && getHistoryEntryKey(current) === getHistoryEntryKey(entry)) {
+  if (current !== undefined && current === entry) {
     return s
   }
 
@@ -119,17 +86,6 @@ export function findNextLiveWorktreeHistoryIndex(state: AppState): number | null
   return null
 }
 
-/** Index to park on after closing `view`'s page: the nearest live prior entry, or the current index when there is none. */
-export function rewindHistoryIndexPastView(
-  state: AppState,
-  view: WorktreeNavHistorySimpleViewEntry
-): number {
-  if (state.worktreeNavHistory[state.worktreeNavHistoryIndex] !== view) {
-    return state.worktreeNavHistoryIndex
-  }
-  return findPrevLiveWorktreeHistoryIndex(state) ?? state.worktreeNavHistoryIndex
-}
-
 export function canGoBackWorktreeHistory(state: AppState): boolean {
   return findPrevLiveWorktreeHistoryIndex(state) !== null
 }
@@ -150,10 +106,6 @@ export const createWorktreeNavHistorySlice: StateCreator<
 
   recordWorktreeVisit: (worktreeId) => {
     set((s) => appendHistoryEntry(s, worktreeId))
-  },
-
-  recordViewVisit: (entry) => {
-    set((s) => appendHistoryEntry(s, entry))
   },
 
   goBackWorktree: () => {
@@ -193,30 +145,17 @@ function navigateToIndex(
   const prevNavigating = get().isNavigatingHistory
   set({ isNavigatingHistory: true } as Partial<AppState>)
   try {
-    if (isViewEntry(targetEntry)) {
-      if (!viewActivator) {
-        // Why: warn (not a silent no-op) so a page-entry chord isn't a broken-looking no-op.
-        console.warn(
-          `go${direction === 'back' ? 'Back' : 'Forward'}Worktree: view activator not registered`
-        )
-        return
-      }
-      // Why: use setActiveView (not open*Page) so replay doesn't mutate previousViewBefore* or fire page-open side effects.
-      viewActivator(targetEntry)
+    if (!activator) {
+      // Why: warn (not a silent no-op) so a missing activator is diagnosable.
+      console.warn(
+        `go${direction === 'back' ? 'Back' : 'Forward'}Worktree called before worktree activator was registered`
+      )
+      return
+    }
+    // Why: `false` is the activator's only failure signal — advance the index only on success.
+    const result = activator(targetEntry)
+    if (result !== false) {
       set({ worktreeNavHistoryIndex: targetIndex } as Partial<AppState>)
-    } else {
-      if (!activator) {
-        // Why: warn (not a silent no-op) so a missing activator is diagnosable.
-        console.warn(
-          `go${direction === 'back' ? 'Back' : 'Forward'}Worktree called before worktree activator was registered`
-        )
-        return
-      }
-      // Why: `false` is the activator's only failure signal — advance the index only on success.
-      const result = activator(targetEntry)
-      if (result !== false) {
-        set({ worktreeNavHistoryIndex: targetIndex } as Partial<AppState>)
-      }
     }
   } finally {
     set({ isNavigatingHistory: prevNavigating } as Partial<AppState>)

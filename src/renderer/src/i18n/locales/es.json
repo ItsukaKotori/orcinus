@@ -637,7 +637,6 @@
         "1cd25673df": "Móvil",
         "31e57d1c70": "Usa máquinas existentes por SSH para archivos, terminales, Git y espacios de trabajo.",
         "94a5afe910": "Hosts SSH",
-        "40d80bad8a": "Beta",
         "de0c2907a1": "Servidores remotos de Orcinus",
         "b351014180": "Estadísticas de Orcinus más análisis de tokens de Claude, Codex y OpenCode y uso de suscripción de Grok.",
         "d72a58b5b9": "Estadísticas y uso",
@@ -3148,8 +3147,7 @@
           "c39ab10000": "Abrir tareas de Linear",
           "196c1b5362": "Abrir tareas de GitLab",
           "0ccba862b8": "Abrir tareas de GitHub",
-          "fee535205b": "Tareas",
-          "d599269755": "Ocultar de la barra lateral"
+          "fee535205b": "Tareas"
         },
         "SidebarRepositoryFilterSection": {
           "d3a9c4cea1": "Limpiar",
@@ -10652,11 +10650,7 @@
         "unresolvedChip": "{{value0}} sin resolver"
       },
       "artifacts": {
-        "ArtifactsPage": {
-          "deleteTitle": "¿Eliminar el artefacto?",
-          "deleteDescription": "“{{name}}” ya no estará disponible en su enlace público.",
-          "delete": "Eliminar"
-        }
+        "ArtifactsPage": {}
       },
       "ComposerParentWorktreePicker": {
         "label": "Worktree padre",

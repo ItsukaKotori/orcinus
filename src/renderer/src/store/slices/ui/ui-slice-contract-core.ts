@@ -115,13 +115,10 @@ export type UISliceCore = {
   activeView: TopLevelView
   previousViewBeforeSettings: Exclude<UiViewHistory, 'settings'>
   previousViewBeforeSpace: Exclude<UiViewHistory, 'space'>
-  previousViewBeforeArtifacts: Exclude<UiViewHistory, 'artifacts'>
   setActiveView: (view: UISliceCore['activeView']) => void
   newWorkspaceDraft: NewWorkspaceDraft | null
   openSpacePage: () => void
   closeSpacePage: () => void
-  openArtifactsPage: () => void
-  closeArtifactsPage: () => void
   setNewWorkspaceDraft: (draft: NonNullable<UISliceCore['newWorkspaceDraft']>) => void
   clearNewWorkspaceDraft: () => void
   pendingRevealWorktree: PendingSidebarWorktreeReveal | null

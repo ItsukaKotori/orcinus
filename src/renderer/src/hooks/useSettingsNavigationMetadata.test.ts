@@ -31,12 +31,11 @@ function ids(
 
 describe('settings navigation metadata', () => {
   it('puts AI capability panes at the top on desktop', () => {
-    expect(ids().slice(0, 6)).toEqual([
+    expect(ids().slice(0, 5)).toEqual([
       'agents',
       'orchestration',
       'general',
       'integrations',
-      'artifacts',
       'git'
     ])
   })
@@ -57,33 +56,13 @@ describe('settings navigation metadata', () => {
     )
   })
 
-  it('places Artifacts first under Workflows', () => {
-    const sections = buildSettingsNavigationMetadata({
-      isMac: false,
-      isWindows: false,
-      isWebClient: false,
-      repos: [repo]
-    })
-    const artifacts = sections.find((section) => section.id === 'artifacts')
-    const workflowIds = sections
-      .filter((section) => section.group === 'workflows')
-      .map((section) => section.id)
-
-    expect(artifacts?.group).toBe('workflows')
-    expect(artifacts?.badge).toBe('Beta')
-    expect(artifacts?.description).toBe(
-      'Share HTML and Markdown files with your team and manage their public links.'
-    )
-    expect(workflowIds[0]).toBe('artifacts')
-  })
-
   it('puts web-safe AI capability panes at the top while hiding desktop-only panes', () => {
     expect(ids({ isWebClient: true }).slice(0, 5)).toEqual([
       'agents',
       'orchestration',
       'general',
       'integrations',
-      'artifacts'
+      'git'
     ])
   })
 

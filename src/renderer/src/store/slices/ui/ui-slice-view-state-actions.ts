@@ -5,7 +5,6 @@ export function createUiViewStateActions(set: UISliceSet): Partial<UISlice> {
     activeView: 'terminal',
     previousViewBeforeSettings: 'terminal',
     previousViewBeforeSpace: 'terminal',
-    previousViewBeforeArtifacts: 'terminal',
     setActiveView: (view) => set({ activeView: view }),
     newWorkspaceDraft: null
   }

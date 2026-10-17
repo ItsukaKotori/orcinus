@@ -9,7 +9,6 @@ import {
   renderOrchestrationSettingsSection
 } from './settings-capability-section-renderers'
 import {
-  renderArtifactsSettingsSection,
   renderGeneralSettingsSection,
   renderIntegrationsSettingsSection,
 } from './settings-setup-workflow-section-renderers'
@@ -101,7 +100,6 @@ export function renderSettingsPage(context: SettingsRenderContext): React.JSX.El
                 {renderOrchestrationSettingsSection(context)}
                 {renderGeneralSettingsSection(context)}
                 {renderIntegrationsSettingsSection(context)}
-                {renderArtifactsSettingsSection(context)}
                 {renderGitSettingsSection(context)}
                 {renderTerminalSettingsSection(context)}
                 {renderQuickCommandsSettingsSection(context)}

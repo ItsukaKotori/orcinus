@@ -19,7 +19,6 @@ const WorktreeCreationPanel = lazy(
   () => import('../components/worktree-creation/WorktreeCreationPanel')
 )
 const Settings = lazy(() => import('../components/settings/Settings'))
-const ArtifactsPage = lazy(() => import('../components/artifacts/ArtifactsPage'))
 const WorkspaceSpacePage = lazy(() => import('../components/workspace-space/WorkspaceSpacePage'))
 const PluginCenterPage = lazy(() =>
   import('../components/plugin-center/PluginCenterPage').then((module) => ({
@@ -70,7 +69,6 @@ function ActivePage({ layout }: { layout: AppChromeLayout }): React.JSX.Element 
   return (
     <>
       {activeView === 'settings' ? <Settings /> : null}
-      {activeView === 'artifacts' ? <ArtifactsPage /> : null}
       {activeView === 'space' ? <WorkspaceSpacePage /> : null}
       {activeView === 'plugin-center' ? <PluginCenterPage /> : null}
       {activeView.startsWith('plugin:') ? (
@@ -155,8 +153,7 @@ export function AppWorkspaceShell(props: {
               )
             ) : null}
             <div className="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden">
-              {/* Why: artifacts owns its page header; the stacked titlebar would be an empty 36px stripe. */}
-              {layout.stackedSidebarOpen && layout.activeView !== 'artifacts' ? (
+              {layout.stackedSidebarOpen ? (
                 <div className="titlebar">{titlebarMainStrip}</div>
               ) : null}
               <div className="relative flex flex-1 min-w-0 min-h-0 overflow-hidden">

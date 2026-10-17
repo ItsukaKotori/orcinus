@@ -190,9 +190,7 @@
       },
       "artifacts": {
         "ArtifactsPage": {
-          "openArtifact": "Open artifact",
-          "signInCopy": "Sign in to view and manage artifacts shared through your account.",
-          "signInHeading": "Sign in to Orcinus"
+          "openArtifact": "Open artifact"
         },
         "artifact-publish-flow": {
           "5cb4f5ec36": "Copy link"

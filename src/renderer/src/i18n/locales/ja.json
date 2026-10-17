@@ -637,7 +637,6 @@
         "1cd25673df": "モバイル",
         "31e57d1c70": "ファイル、ターミナル、Git、ワークスペースに既存のマシンを SSH 経由で使用します。",
         "94a5afe910": "SSH ホスト",
-        "40d80bad8a": "ベータ",
         "de0c2907a1": "リモート Orcinus サーバー",
         "b351014180": "Orcinus の統計に加え、Claude、Codex、OpenCode のトークン分析と Grok サブスクリプション使用状況。",
         "d72a58b5b9": "統計と使用状況",
@@ -3129,8 +3128,7 @@
           "c39ab10000": "Linear タスクを開く",
           "196c1b5362": "GitLab タスクを開く",
           "0ccba862b8": "GitHub タスクを開く",
-          "fee535205b": "タスク",
-          "d599269755": "サイドバーから非表示"
+          "fee535205b": "タスク"
         },
         "SidebarRepositoryFilterSection": {
           "d3a9c4cea1": "クリア",
@@ -10652,11 +10650,7 @@
         "unresolvedChip": "{{value0}} 件未解決"
       },
       "artifacts": {
-        "ArtifactsPage": {
-          "deleteTitle": "成果物を削除しますか？",
-          "deleteDescription": "「{{name}}」は公開リンクで利用できなくなります。",
-          "delete": "削除"
-        }
+        "ArtifactsPage": {}
       },
       "ComposerParentWorktreePicker": {
         "label": "親ワークツリー",

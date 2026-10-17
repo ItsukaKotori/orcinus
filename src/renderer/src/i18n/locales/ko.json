@@ -640,7 +640,6 @@
         "1cd25673df": "모바일",
         "31e57d1c70": "SSH를 통해 기존 머신의 파일, terminals, Git, 워크스페이스를 사용합니다.",
         "94a5afe910": "SSH 호스트",
-        "40d80bad8a": "베타",
         "de0c2907a1": "원격 Orcinus 서버",
         "b351014180": "Orcinus 통계와 Claude, Codex, OpenCode 토큰 분석 및 Grok 구독 사용량.",
         "d72a58b5b9": "통계 및 사용량",
@@ -3132,8 +3131,7 @@
           "c39ab10000": "Linear 작업 열기",
           "196c1b5362": "GitLab 작업 열기",
           "0ccba862b8": "GitHub 작업 열기",
-          "fee535205b": "작업",
-          "d599269755": "사이드바에서 숨기기"
+          "fee535205b": "작업"
         },
         "SidebarRepositoryFilterSection": {
           "d3a9c4cea1": "지우기",
@@ -10678,11 +10676,7 @@
         "unresolvedChip": "{{value0}}개 미해결"
       },
       "artifacts": {
-        "ArtifactsPage": {
-          "deleteTitle": "아티팩트를 삭제할까요?",
-          "deleteDescription": "“{{name}}”은(는) 공개 링크에서 더 이상 사용할 수 없습니다.",
-          "delete": "삭제"
-        }
+        "ArtifactsPage": {}
       },
       "ComposerParentWorktreePicker": {
         "label": "상위 워크트리",

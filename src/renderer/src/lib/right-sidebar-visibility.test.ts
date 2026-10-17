@@ -30,7 +30,7 @@ function makeState(
 
 describe('right sidebar visibility helpers', () => {
   it('suppresses right sidebar controls on full-page views', () => {
-    for (const view of ['settings', 'space', 'artifacts', 'plugin-center']) {
+    for (const view of ['settings', 'space', 'plugin-center']) {
       expect(canShowRightSidebarForView(view as AppState['activeView'])).toBe(false)
     }
   })

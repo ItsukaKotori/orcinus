@@ -640,7 +640,6 @@
         "1cd25673df": "移动端",
         "31e57d1c70": "通过 SSH 使用已有机器处理文件、终端、Git 和工作区。",
         "94a5afe910": "SSH 主机",
-        "40d80bad8a": "测试版",
         "de0c2907a1": "远程 Orcinus 服务器",
         "b351014180": "Orcinus 统计，以及 Claude、Codex、OpenCode Token 分析和 Grok 订阅使用量。",
         "d72a58b5b9": "统计和使用情况",
@@ -3177,8 +3176,7 @@
           "c39ab10000": "打开 Linear 任务",
           "196c1b5362": "打开 GitLab 任务",
           "0ccba862b8": "打开 GitHub 任务",
-          "fee535205b": "任务",
-          "d599269755": "从侧边栏隐藏"
+          "fee535205b": "任务"
         },
         "SidebarRepositoryFilterSection": {
           "d3a9c4cea1": "清除",
@@ -10722,11 +10720,7 @@
         "unresolvedChip": "{{value0}} 个未解决"
       },
       "artifacts": {
-        "ArtifactsPage": {
-          "deleteTitle": "删除工件？",
-          "deleteDescription": "“{{name}}” 将无法再通过其公共链接访问。",
-          "delete": "删除"
-        }
+        "ArtifactsPage": {}
       },
       "ComposerParentWorktreePicker": {
         "label": "父工作树",
