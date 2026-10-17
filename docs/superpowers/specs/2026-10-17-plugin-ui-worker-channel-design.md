@@ -31,8 +31,8 @@
 | 会话推送 | `ade-plugins`（`service.rs`/`sessions.rs` 复用） | 按 token 定位来源会话、校验、预算、事件发射（§3.3/§3.4） |
 | worker 宿主 | `src-tauri/resources/plugins/host-entry.mjs` | `invokeCommand` 帧可选 `session` 字段；SDK `ctx.session`（§3.2） |
 | bridge | `ade-bridge`（`events.rs`/`plugins_service.rs`） | 新事件 `plugins:panel-push`（发射装配仿 `plugins:open-tab`） |
-| TS 契约 | `src/shared/plugins/*`、`src/shared/preload-api/api/plugin-host-api.ts` | capability 联合、panel action 集合、guest 消息 `orca-panel-push`、订阅 `onPanelPush`（契约 24→25）；mock/fixtures 同步 |
-| 渲染层 | `PluginPanel.tsx`、`PluginTabContent.tsx`、`GlobalPluginHostView.tsx` | token→iframe 的推送路由 hook；web 端维持无插件面 |
+| TS 契约 | `src/shared/plugins/*`、`src/shared/preload-api/api/plugin-host-api.ts` | capability 联合、panel action 集合、guest 消息 `orca-panel-push`、订阅 `onPanelPush`（契约 25→26：23 命令 + 3 订阅）；mock/fixtures 同步 |
+| 渲染层 | `PluginPanel.tsx`、`PluginTabContent.tsx`、`GlobalPluginHostView.tsx`（推送路由落于共用 hook `use-plugin-panel-entry.ts`） | token→iframe 的推送转发；web 端维持无插件面 |
 | updater 插件 | `plugins/updater/`（新） | manifest（panel + tab + 命令）、worker（管理器适配器注册表→`dist/main.mjs`）、UI（React 19 + Tailwind v4→单文件 `dist/tab.html` + `dist/panel.html`）、构建脚本、测试（§3.5–3.8） |
 | 工程接线 | 根 `package.json`、`vitest.config.ts`、`.gitignore` | `build:updater` 脚本；vitest include `plugins/**/*.test.ts`；dist 不入库（§3.8） |
 
@@ -78,7 +78,7 @@
 ### 3.3 通道：会话归属与推送路由
 
 - 会话注册表（`sessions.rs`）既有 `SessionBinding{plugin_key, kind, panel_id, tab_id, instance_id, scope, repo_id, worktree_id, manifest_revision, owner}` 直接复用；`session.post` 校验后按 token 定位。
-- 推送路由：`service.session_post` → 注入式发射器 emit `plugins:panel-push`（载荷 `{sessionToken, topic?, payload}`；装配模式同 `open_tab_requested`/`plugins:open-tab`）→ 渲染层 real 域订阅 `onPanelPush`（契约 24→25）→ 三个宿主组件（`PluginPanel` / `PluginTabContent` / `GlobalPluginHostView`）各自以 token 匹配 → `contentWindow.postMessage({type:'orca-panel-push', topic?, payload}, '*')`（目标源策略与 `orca-panel-init` 相同）。
+- 推送路由：`service.session_post` → 注入式发射器 emit `plugins:panel-push`（载荷 `{sessionToken, topic?, payload}`；装配模式同 `open_tab_requested`/`plugins:open-tab`）→ 渲染层 real 域订阅 `onPanelPush`（契约 25→26：23 命令 + 3 订阅）→ 三个宿主组件（`PluginPanel` / `PluginTabContent` / `GlobalPluginHostView`）各自以 token 匹配 → `contentWindow.postMessage({type:'orca-panel-push', topic?, payload}, '*')`（目标源策略与 `orca-panel-init` 相同）。
 - guest 侧协议（`src/shared/plugins/plugin-panel-bridge.ts`）：新增 `orca-panel-push` 消息类型 + parse 函数（供插件 HTML 复用/示例）；插件 HTML 自行监听。
 - 失效时序：插件禁用/卸载、项目关闭、宿主窗口关闭、dev 重载（revision 变更）→ 既有会话失效路径 → 后续 `session.post` 得 `unavailable`；渲染层 tab 重挂载取新 token，UI 载入时重新 invoke 即重新获得推送目标。
 
@@ -249,8 +249,8 @@
 - `plugin-host-api`：capability 联合、panel action 集合（含 `worker.invokeCommand`）、错误码不变、命令条目 `visibility` 类型
 - 命令面板/`plugin-quick-actions`：internal 命令不出现（含 keybinding 面不消费）
 - `plugin-panel-bridge`：`orca-panel-push` schema/parse 测试
-- 桥 host：token→iframe 推送路由测试（沿用 `plugin-panel-bridge-host` 模式）；订阅 `onPanelPush` real 域 parity（24→25）
-- web 端维持无插件面（composition 测试不变）
+- 桥 host：token→iframe 推送路由测试（沿用 `plugin-panel-bridge-host` 模式）；订阅 `onPanelPush` real 域 parity（25→26）
+- web 端维持无插件面（沿现状：web composition 测试已于 Phase 3B 随远程客户端移除；唯一现存在锁为 `useSettingsNavigationMetadata` 的 web 隐藏项，保持不动）
 
 **插件（vitest，跑 TS 源）**：
 - `parse`：npm（正常/空 `{}/exit1/畸形）、brew（formulae/casks/空/畸形）夹具
