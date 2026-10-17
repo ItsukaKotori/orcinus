@@ -1,5 +1,5 @@
 // Phase 0 mock; replaced by Tauri IPC per view.
-import type { PlatformApi } from '../../preload/api/app-api'
+import type { PlatformApi } from '../../shared/preload-api/api/app-api'
 
 export function detectBrowserPlatform(): NodeJS.Platform {
   if (navigator.userAgent.includes('Windows')) {

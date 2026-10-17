@@ -23,14 +23,6 @@ import { terminalSurfaceTombstoneSchema } from './terminal-surface-tombstone-sch
 import { parseExecutionHostId, type ExecutionHostId } from './execution-host'
 import { isTuiAgent } from './tui-agent-config'
 import { isWorkspaceKey } from './workspace-scope'
-import {
-  browserHistoryEntriesSchema,
-  workspaceDocHistoryEntriesSchema,
-  browserPageSchema,
-  browserWorkspaceSchema
-} from './workspace-session-browser-schema'
-import { clientHostedBrowserCloseIntentSchema } from './client-hosted-browser-close-intent'
-import { persistedClientHostedBrowserPageSchema } from './client-hosted-browser-page-record'
 import { persistedOpenFileSchema } from './workspace-session-editor-schema'
 import { sleepingAgentSessionsByPaneKeySchema } from './workspace-session-sleeping-agents'
 import {
@@ -112,7 +104,7 @@ const terminalTabSchema = z.object({
   // Why: persist the launched agent so a restored idle agent tab keeps its
   // provider icon before any hook fires. `.catch(undefined)` keeps a stale or
   // unknown agent id from failing the whole-session parse (which would reset
-  // every terminal/editor/browser to defaults).
+  // every terminal/editor to defaults).
   launchAgent: z
     .custom<TuiAgent>((v) => isTuiAgent(v))
     .optional()
@@ -229,32 +221,10 @@ export const workspaceSessionStateSchema: z.ZodType<WorkspaceSessionState> = z.o
     'markdownFrontmatterVisible',
     salvagingRecord(z.string(), z.boolean())
   ),
-  browserTabsByWorktree: salvagedOptional(
-    'browserTabsByWorktree',
-    salvagingRecord(worktreeIdSchema, salvagingArray(browserWorkspaceSchema))
-  ),
-  browserPagesByWorkspace: salvagedOptional(
-    'browserPagesByWorkspace',
-    salvagingRecord(z.string(), salvagingArray(browserPageSchema))
-  ),
-  activeBrowserTabIdByWorktree: salvagedOptional(
-    'activeBrowserTabIdByWorktree',
-    salvagingRecord(worktreeIdSchema, z.string().nullable())
-  ),
-  clientHostedBrowserPagesByWorktree: salvagedOptional(
-    'clientHostedBrowserPagesByWorktree',
-    salvagingRecord(worktreeIdSchema, salvagingArray(persistedClientHostedBrowserPageSchema))
-  ),
-  clientHostedBrowserCloseIntentsByEnvironment: salvagedOptional(
-    'clientHostedBrowserCloseIntentsByEnvironment',
-    salvagingRecord(z.string().min(1), salvagingArray(clientHostedBrowserCloseIntentSchema))
-  ),
   activeTabTypeByWorktree: salvagedOptional(
     'activeTabTypeByWorktree',
     salvagingRecord(worktreeIdSchema, workspaceVisibleTabTypeSchema)
   ),
-  browserUrlHistory: salvagedOptional('browserUrlHistory', browserHistoryEntriesSchema),
-  workspaceDocHistory: salvagedOptional('workspaceDocHistory', workspaceDocHistoryEntriesSchema),
   activeTabIdByWorktree: salvagedOptional(
     'activeTabIdByWorktree',
     salvagingRecord(worktreeIdSchema, z.string().nullable())

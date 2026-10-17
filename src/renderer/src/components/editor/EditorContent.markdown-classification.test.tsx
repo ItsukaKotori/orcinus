@@ -118,7 +118,6 @@ function renderEditPath({
     markdownViewMode: { [activeFile.id]: viewMode },
     markdownRichModeSizeOverridden: false,
     isChangesMode: false,
-    canOpenWorkspaceFileBrowser: true
   })
   const view = render(
     <EditorContent
@@ -172,7 +171,6 @@ function getGuardedRenderModel({
     markdownViewMode: { [activeFile.id]: 'rich' },
     markdownRichModeSizeOverridden: false,
     isChangesMode,
-    canOpenWorkspaceFileBrowser: true
   })
 }
 

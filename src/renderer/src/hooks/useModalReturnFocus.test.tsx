@@ -6,7 +6,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { useAppStore } from '../store'
 import { focusTerminalTabSurface } from '../lib/focus-terminal-tab-surface'
-import { ORCA_BROWSER_FOCUS_REQUEST_EVENT } from '../components/browser-pane/host-guest/browser-focus'
 import { useModalReturnFocus } from './useModalReturnFocus'
 
 vi.mock('../lib/focus-terminal-tab-surface', () => ({
@@ -81,8 +80,6 @@ afterEach(async () => {
     activeTabType: 'terminal',
     activeTabId: null,
     activeTabIdByWorktree: {},
-    activeBrowserTabId: null,
-    browserTabsByWorktree: {},
     terminalLayoutsByTabId: {}
   })
   vi.unstubAllGlobals()
@@ -133,51 +130,6 @@ describe('useModalReturnFocus', () => {
     flushAnimationFrames()
 
     expect(document.activeElement).toBe(secondEditor)
-  })
-
-  it('captures browser address-bar focus before dialog autofocus moves focus', async () => {
-    installAnimationFrameStubs()
-    useAppStore.setState({
-      activeWorktreeId: 'wt-1',
-      activeTabType: 'browser',
-      activeBrowserTabId: 'browser-1',
-      browserTabsByWorktree: {
-        'wt-1': [
-          {
-            id: 'browser-1',
-            worktreeId: 'wt-1',
-            activePageId: 'page-1',
-            pageIds: ['page-1'],
-            url: 'https://example.com',
-            title: 'Example',
-            loading: false,
-            faviconUrl: null,
-            canGoBack: false,
-            canGoForward: false,
-            loadError: null,
-            createdAt: 1
-          }
-        ]
-      }
-    })
-    const addressBar = document.createElement('input')
-    addressBar.dataset.orcaBrowserAddressBar = 'true'
-    document.body.append(addressBar)
-    const dialogInput = document.createElement('input')
-    document.body.append(dialogInput)
-    const focusRequests: unknown[] = []
-    window.addEventListener(ORCA_BROWSER_FOCUS_REQUEST_EVENT, (event) => {
-      focusRequests.push((event as CustomEvent).detail)
-    })
-
-    await renderProbe(false)
-    addressBar.focus()
-    latestCaptureReturnFocus?.()
-    await renderProbe(true)
-    dialogInput.focus()
-    await renderProbe(false)
-
-    expect(focusRequests).toEqual([{ pageId: 'page-1', target: 'address-bar' }])
   })
 
   it('uses the scoped terminal focus helper for terminal surfaces', async () => {

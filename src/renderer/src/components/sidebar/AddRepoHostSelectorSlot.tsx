@@ -13,7 +13,6 @@ export function AddRepoHostSelectorSlot({
       open={hostSelection.hostSelectorOpen}
       onOpenChange={hostSelection.setHostSelectorOpen}
       onSelectHost={(hostId) => void hostSelection.handleSelectAddProjectHost(hostId)}
-      onConnectHost={(hostId) => void hostSelection.handleConnectAddProjectHost(hostId)}
     />
   )
 }

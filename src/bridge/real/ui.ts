@@ -6,7 +6,7 @@ const noopUnsubscribe = (): void => {}
 const noopSubscription = (): (() => void) => noopUnsubscribe
 
 /**
- * Events the A host never emits (tray/menu shortcuts, browser chrome, mobile
+ * Events the A host never emits (tray/menu shortcuts, mobile
  * transport). The renderer probes or subscribes to them unconditionally, so
  * each must still hand back a working unsubscribe handle (spec §5.4).
  */
@@ -14,7 +14,6 @@ export const UI_NOOP_SUBSCRIPTION_METHODS = [
   'onActivateWorktree',
   'onAppMenuPaste',
   'onAppMenuSelectionAction',
-  'onBrowserHistoryNavigate',
   'onCloseActiveTab',
   'onCloseFloatingItem',
   'onCloseSessionTab',
@@ -25,18 +24,14 @@ export const UI_NOOP_SUBSCRIPTION_METHODS = [
   'onDeleteCurrentWorkspace',
   'onEditableContextPaste',
   'onFileDrop',
-  'onFindInBrowserPage',
-  'onFocusBrowserAddressBar',
   'onFocusEditorTab',
   'onFocusTerminal',
   'onFullscreenChanged',
-  'onHardReloadBrowserPage',
   'onJumpToTabIndex',
   'onJumpToWorktreeIndex',
   'onMaximizeChanged',
   'onMobileMarkdownRequest',
   'onMoveSessionTab',
-  'onNewBrowserTab',
   'onNewMarkdownTab',
   'onNewTerminalTab',
   'onOpenDiffFromMobile',
@@ -45,17 +40,13 @@ export const UI_NOOP_SUBSCRIPTION_METHODS = [
   'onOpenNewWorkspace',
   'onOpenQuickOpen',
   'onOpenSettings',
-  'onOpenTasks',
-  'onReloadBrowserPage',
   'onRenameTerminal',
   'onRequestTabClose',
   'onRequestTabCreate',
-  'onRequestTabSetProfile',
   'onRequestTerminalCreate',
   'onRequestTerminalTabMount',
   'onResumeSleepingAgents',
   'onRichMarkdownContextCommand',
-  'onScrollBrowserPage',
   'onSelectFloatingIndex',
   'onSessionTabCloseRequest',
   'onSleepWorktree',
@@ -75,8 +66,7 @@ export const UI_NOOP_SUBSCRIPTION_METHODS = [
   'onToggleStatusBar',
   'onToggleWorktreePalette',
   'onWindowCloseRequested',
-  'onWorktreeHistoryNavigate',
-  'onZoomBrowserPage'
+  'onWorktreeHistoryNavigate'
 ] as const satisfies readonly (keyof PreloadApi['ui'])[]
 
 type UiNoopSubscriptionMethod = (typeof UI_NOOP_SUBSCRIPTION_METHODS)[number]

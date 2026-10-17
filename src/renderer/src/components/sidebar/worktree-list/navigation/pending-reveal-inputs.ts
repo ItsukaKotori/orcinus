@@ -40,7 +40,6 @@ export type PendingSidebarRevealArgs = {
   groupBy: WorktreeGroupBy
   pinnedDisplayPolicy: PinnedWorktreeDisplayPolicy
   defaultHostId: ExecutionHostId
-  prCache: AppState['prCache'] | null
   workspaceStatuses: readonly WorkspaceStatusDefinition[]
   settings: AppState['settings']
   projectGroups: readonly ProjectGroup[]
@@ -131,9 +130,7 @@ export function expandGroupsForWorktreeReveal(
           args.groupBy,
           targetWorktree,
           args.repoMap,
-          args.prCache,
           args.workspaceStatuses,
-          args.settings,
           args.projectGroups,
           args.projectGrouping
         )

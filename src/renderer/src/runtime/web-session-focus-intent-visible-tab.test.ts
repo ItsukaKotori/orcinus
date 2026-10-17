@@ -224,18 +224,6 @@ describe('resolveWebSessionVisibleTabId — no-group compatibility path', () => 
     expect(resolveWebSessionVisibleTabId(state, WT)).toBe('term-1')
   })
 
-  it('does not match a browser tab against an editor coarse address', () => {
-    const browser = tab({ id: 'tab-1', entityId: 'ws-1', contentType: 'browser' })
-    const state = makeState({
-      unifiedTabsByWorktree: { [WT]: [browser] },
-      groupsByWorktree: {},
-      activeTabType: 'editor',
-      activeTabTypeByWorktree: { [WT]: 'editor' },
-      activeFileIdByWorktree: { [WT]: 'ws-1' }
-    })
-
-    expect(resolveWebSessionVisibleTabId(state, WT)).toBeNull()
-  })
 })
 
 describe('resolveWebSessionSiblingVisibleTabId', () => {
@@ -272,7 +260,6 @@ describe('toVisibleTabType', () => {
     expect(toVisibleTabType('conflict-review')).toBe('editor')
     expect(toVisibleTabType('check-details')).toBe('editor')
     expect(toVisibleTabType('terminal')).toBe('terminal')
-    expect(toVisibleTabType('browser')).toBe('browser')
     expect(toVisibleTabType('agent-session')).toBe('agent-session')
   })
 })

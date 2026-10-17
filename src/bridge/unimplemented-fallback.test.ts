@@ -6,7 +6,6 @@ import {
 } from './unimplemented-fallback'
 import { createCacheApi } from './mock/cache-api'
 import { createCliApi } from './mock/cli-api'
-import { createOnboardingApi } from './mock/onboarding-api'
 import { createReposApi } from './mock/repos-api'
 import { createRuntimeEnvironmentsApi } from './mock/runtime-environments-api'
 import { createRemoteWorkspaceApi } from './mock/workspace-session-api'
@@ -109,12 +108,7 @@ describe('pty mock subscriptions keep effect cleanup safe', () => {
 describe('mock namespaces reject missing methods through the method-level fallback', () => {
   it('tags each rejection with the namespace path instead of a sync TypeError', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    // onboarding implements its whole type, so the missing-method probe is not on the declared type.
-    const onboarding = createOnboardingApi() as unknown as {
-      forceComplete: () => Promise<unknown>
-    }
     const cases: Array<{ path: string; call: () => Promise<unknown> }> = [
-      { path: 'onboarding.forceComplete', call: () => onboarding.forceComplete() },
       { path: 'cli.install', call: () => createCliApi().install() },
       { path: 'repos.add', call: () => createReposApi().add({ path: '/tmp/repo' }) },
       {

@@ -1,10 +1,10 @@
 import { useCallback, useRef, type RefObject } from 'react'
-import { acquireWebviewsDragPassthrough } from '../browser-pane/host-guest/webview-registry'
 import { installTabDragMissedEndListeners } from './tab-drag-missed-end-listeners'
 
-/** Global side effects a tab drag holds while in flight: webview pointer
- *  passthrough plus the window-level fallback for a missed drag end. Both refs
- *  are injected so this stays independent of the drag state machine. */
+/** Global side effects a tab drag holds while in flight: the window-level
+ *  fallback for a missed drag end (plus a no-op webview passthrough slot kept
+ *  for the drag-state machine's contract). Both refs are injected so this stays
+ *  independent of the drag state machine. */
 export function useTabDragGestureLifecycle({
   clearDragStateRef,
   tabDragActiveRef
@@ -41,20 +41,16 @@ export function useTabDragGestureLifecycle({
   }, [clearDragStateRef, releaseMissedEndFallback, tabDragActiveRef])
 
   const acquireWebviewDragPassthrough = useCallback(() => {
-    // Why: dnd-kit tab drags are pointer-driven, so the native drag listeners
-    // in webview-registry never fire. Put webviews in passthrough explicitly.
-    releaseWebviewDragPassthrough()
-    releaseWebviewDragPassthroughRef.current = acquireWebviewsDragPassthrough()
-  }, [releaseWebviewDragPassthrough])
+    // Why no-op: this existed to put browser <webview> guests in pointer passthrough
+    // during drags; with the embedded browser gone there is nothing to passthrough.
+  }, [])
 
   const setDragRootNode = useCallback(
     (node: HTMLDivElement | null): void => {
       if (node) {
         return
       }
-      // Why: this root owns the dnd-kit gesture that temporarily puts browser
-      // webviews in pointer passthrough and installs global fallback listeners,
-      // so root teardown must release both.
+      // Why: this root owns the dnd-kit gesture that installs global fallback listeners.
       releaseWebviewDragPassthrough()
       releaseMissedEndFallback()
     },

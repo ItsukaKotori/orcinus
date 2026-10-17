@@ -7,7 +7,6 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/comp
 import { ContextMenu, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { getTopActivityBarLayout } from './activity-bar-overflow'
 import { ActivityBarButton } from './activity-bar-buttons'
-import { getActiveChecksStatus } from './active-checks-status'
 import { useShortcutLabel } from '@/hooks/useShortcutLabel'
 import {
   RIGHT_SIDEBAR_MIN_WIDTH,
@@ -40,7 +39,6 @@ function RightSidebarInner(): React.JSX.Element {
   const rightSidebarWidth = useAppStore((s) => s.rightSidebarWidth)
   const setRightSidebarWidth = useAppStore((s) => s.setRightSidebarWidth)
   const toggleRightSidebar = useAppStore((s) => s.toggleRightSidebar)
-  const checksStatus = useAppStore((s) => (s.rightSidebarOpen ? getActiveChecksStatus(s) : null))
   const activityBarPosition = useAppStore((s) => s.activityBarPosition)
   const setActivityBarPosition = useAppStore((s) => s.setActivityBarPosition)
   const [topActivityStripWidth, setTopActivityStripWidth] = useState<number | null>(null)
@@ -91,7 +89,7 @@ function RightSidebarInner(): React.JSX.Element {
           property) rather than in a bottom-docked dashboard panel that
           competed with file Explorer/Search for vertical space. The right
           sidebar is back to tab-only content. */}
-      <RightSidebarPanelContent effectiveTab={effectiveTab} rightSidebarOpen={rightSidebarOpen} />
+      <RightSidebarPanelContent effectiveTab={effectiveTab} />
     </div>
   ) : null
 
@@ -107,7 +105,6 @@ function RightSidebarInner(): React.JSX.Element {
       active={effectiveTab === item.id}
       onClick={() => selectActivityTab(item.id)}
       layout="side"
-      statusIndicator={item.id === 'checks' ? checksStatus : null}
     />
   ))
 
@@ -163,7 +160,6 @@ function RightSidebarInner(): React.JSX.Element {
             topActivityLayout={topActivityLayout}
             effectiveTab={effectiveTab}
             onSelectTab={selectActivityTab}
-            checksStatus={checksStatus}
             closeButton={closeButton}
             activityBarPosition={activityBarPosition}
             onChangeActivityBarPosition={setActivityBarPosition}

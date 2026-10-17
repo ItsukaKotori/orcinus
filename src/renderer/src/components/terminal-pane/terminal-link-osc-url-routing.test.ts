@@ -1,14 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   getTerminalFileOpenHint,
-  getTerminalHtmlFileOpenHint,
   getTerminalUrlOpenHint,
   isTerminalLinkActivation
 } from './terminal-link-handlers'
 import { handleOscLink } from './terminal-osc-link-routing'
 import { createTerminalLinkTestDoubles } from './terminal-link-handlers-test-fixtures'
 import {
-  flushAsyncWork,
   installTerminalLinkTestEnvironment,
   setPlatform
 } from './terminal-link-handlers-test-harness'
@@ -79,10 +77,8 @@ describe('handleOscLink', () => {
       handleOscLink('https://example.com', { metaKey: true, ctrlKey: false, preventDefault }, deps)
     ).toBe(true)
 
-    expect(openUrlMock).not.toHaveBeenCalled()
-    expect(createBrowserTabMock).toHaveBeenCalledWith('wt-1', 'https://example.com/', {
-      activate: true
-    })
+    expect(openUrlMock).toHaveBeenCalledWith('https://example.com/')
+    expect(createBrowserTabMock).not.toHaveBeenCalled()
     expect(preventDefault).toHaveBeenCalled()
   })
 
@@ -171,32 +167,6 @@ describe('handleOscLink', () => {
     expect(setActiveWorktreeMock).not.toHaveBeenCalled()
   })
 
-  it('waits for the first-use preference before routing terminal http links', async () => {
-    setPlatform('Macintosh')
-    storeState.settings = { openLinksInApp: false, openLinksInAppPreferencePrompted: false }
-    const requestOpenLinksInAppPreference = vi.fn(async () => {
-      storeState.settings = { openLinksInApp: true, openLinksInAppPreferencePrompted: true }
-      return true
-    })
-
-    handleOscLink(
-      'https://example.com',
-      { metaKey: true, ctrlKey: false, shiftKey: false },
-      { ...deps, requestOpenLinksInAppPreference }
-    )
-
-    expect(requestOpenLinksInAppPreference).toHaveBeenCalledWith('https://example.com/')
-    expect(openUrlMock).not.toHaveBeenCalled()
-    expect(createBrowserTabMock).not.toHaveBeenCalled()
-
-    await flushAsyncWork()
-
-    expect(createBrowserTabMock).toHaveBeenCalledWith('wt-1', 'https://example.com/', {
-      activate: true
-    })
-    expect(openUrlMock).not.toHaveBeenCalled()
-  })
-
   it('uses the system browser for shift+cmd/ctrl+click even when Orca browser tabs are enabled', () => {
     setPlatform('Windows')
     storeState.settings = { openLinksInApp: true }
@@ -226,9 +196,6 @@ describe('handleOscLink', () => {
     expect(getTerminalFileOpenHint()).toBe(
       'Click for actions, ⌘+click to open, or ⇧⌘+click for default app'
     )
-    expect(getTerminalHtmlFileOpenHint()).toBe(
-      'Click for actions, ⌘+click to open, or ⇧⌘+click for default browser'
-    )
     expect(getTerminalUrlOpenHint()).toBe(
       'Click for actions, ⌘+click to open, or ⇧⌘+click for system browser'
     )
@@ -236,9 +203,6 @@ describe('handleOscLink', () => {
     setPlatform('Windows')
     expect(getTerminalFileOpenHint()).toBe(
       'Click for actions, Ctrl+click to open, or Shift+Ctrl+click for default app'
-    )
-    expect(getTerminalHtmlFileOpenHint()).toBe(
-      'Click for actions, Ctrl+click to open, or Shift+Ctrl+click for default browser'
     )
     expect(getTerminalUrlOpenHint()).toBe(
       'Click for actions, Ctrl+click to open, or Shift+Ctrl+click for system browser'
@@ -248,9 +212,6 @@ describe('handleOscLink', () => {
   it('omits plain-click actions from hover hints when the popover is disabled', () => {
     setPlatform('Macintosh')
     expect(getTerminalFileOpenHint(false)).toBe('⌘+click to open, or ⇧⌘+click for default app')
-    expect(getTerminalHtmlFileOpenHint(false)).toBe(
-      '⌘+click to open, or ⇧⌘+click for default browser'
-    )
     expect(getTerminalUrlOpenHint({ showActions: false })).toBe(
       '⌘+click to open, or ⇧⌘+click for system browser'
     )

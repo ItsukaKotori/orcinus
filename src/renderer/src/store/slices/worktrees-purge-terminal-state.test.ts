@@ -98,7 +98,7 @@ describe('purgeWorktreeTerminalState direct (design §4.4)', () => {
       },
       rightSidebarTabByWorktree: {
         'repoA::/a/wt1': 'search' as never,
-        'repoA::/a/wt2': 'checks'
+        'repoA::/a/wt2': 'source-control'
       },
       activeWorktreeId: 'repoA::/a/wt1',
       worktreeLineageById: {
@@ -142,7 +142,7 @@ describe('purgeWorktreeTerminalState direct (design §4.4)', () => {
       'repoA::/a/wt2': 'head-2'
     })
     expect(s.gitIgnoredPathsByWorktree).toEqual({ 'repoA::/a/wt2': ['coverage/'] })
-    expect(s.rightSidebarTabByWorktree).toEqual({ 'repoA::/a/wt2': 'checks' })
+    expect(s.rightSidebarTabByWorktree).toEqual({ 'repoA::/a/wt2': 'source-control' })
     expect(s.activeWorktreeId).toBeNull()
     expect(s.activeFileId).toBeNull()
     expect(s.activeTabId).toBeNull()
@@ -181,9 +181,6 @@ describe('purgeWorktreeTerminalState direct (design §4.4)', () => {
         [FLOATING_TERMINAL_WORKTREE_ID]: [
           { id: 'floating-terminal-tab', worktreeId: FLOATING_TERMINAL_WORKTREE_ID }
         ]
-      },
-      browserTabsByWorktree: {
-        [FLOATING_TERMINAL_WORKTREE_ID]: [{ id: 'floating-browser', url: 'https://orca.test' }]
       },
       openFiles: [
         floatingFile,
@@ -236,9 +233,6 @@ describe('purgeWorktreeTerminalState direct (design §4.4)', () => {
         { id: 'floating-terminal-tab', worktreeId: FLOATING_TERMINAL_WORKTREE_ID }
       ]
     })
-    expect(store.getState().browserTabsByWorktree[FLOATING_TERMINAL_WORKTREE_ID]).toEqual([
-      { id: 'floating-browser', url: 'https://orca.test' }
-    ])
     expect(store.getState().openFiles).toEqual([floatingFile])
     expect(store.getState().activeFileIdByWorktree).toEqual({
       [FLOATING_TERMINAL_WORKTREE_ID]: 'floating-file'
@@ -254,9 +248,6 @@ describe('purgeWorktreeTerminalState direct (design §4.4)', () => {
   it('is a no-op when only the floating workspace sentinel is passed', () => {
     const store = createTestStore()
     const tabsByWorktree = {}
-    const browserTabsByWorktree = {
-      [FLOATING_TERMINAL_WORKTREE_ID]: [{ id: 'floating-browser', url: 'https://orca.test' }]
-    }
     const openFiles = [
       {
         id: 'floating-file',
@@ -294,7 +285,6 @@ describe('purgeWorktreeTerminalState direct (design §4.4)', () => {
 
     store.setState({
       tabsByWorktree,
-      browserTabsByWorktree,
       openFiles,
       activeFileIdByWorktree: { [FLOATING_TERMINAL_WORKTREE_ID]: 'floating-file' },
       unifiedTabsByWorktree,
@@ -305,7 +295,6 @@ describe('purgeWorktreeTerminalState direct (design §4.4)', () => {
     store.getState().purgeWorktreeTerminalState([FLOATING_TERMINAL_WORKTREE_ID])
 
     expect(store.getState().tabsByWorktree).toBe(tabsByWorktree)
-    expect(store.getState().browserTabsByWorktree).toBe(browserTabsByWorktree)
     expect(store.getState().openFiles).toBe(openFiles)
     expect(store.getState().unifiedTabsByWorktree).toBe(unifiedTabsByWorktree)
     expect(store.getState().groupsByWorktree).toBe(groupsByWorktree)

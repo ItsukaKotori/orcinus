@@ -6,7 +6,6 @@ const EMPTY_PTY_IDS_BY_TAB_ID: AppState['ptyIdsByTabId'] = {}
 const EMPTY_TERMINAL_LAYOUTS_BY_TAB_ID: AppState['terminalLayoutsByTabId'] = {}
 const EMPTY_DEFERRED_SSH_SESSION_IDS_BY_TAB_ID: AppState['deferredSshSessionIdsByTabId'] = {}
 const EMPTY_RUNTIME_PANE_TITLES_BY_TAB_ID: AppState['runtimePaneTitlesByTabId'] = {}
-const EMPTY_BROWSER_TABS_BY_WORKTREE: AppState['browserTabsByWorktree'] = {}
 const EMPTY_REPOS: AppState['repos'] = []
 const EMPTY_FOLDER_WORKSPACES: AppState['folderWorkspaces'] = []
 const EMPTY_PROJECT_GROUPS: AppState['projectGroups'] = []
@@ -45,13 +44,6 @@ export function getResourceUsageRuntimePaneTitlesByTabId(
   open: boolean
 ): AppState['runtimePaneTitlesByTabId'] {
   return open ? state.runtimePaneTitlesByTabId : EMPTY_RUNTIME_PANE_TITLES_BY_TAB_ID
-}
-
-export function getResourceUsageBrowserTabsByWorktree(
-  state: Pick<AppState, 'browserTabsByWorktree'>,
-  open: boolean
-): AppState['browserTabsByWorktree'] {
-  return open ? state.browserTabsByWorktree : EMPTY_BROWSER_TABS_BY_WORKTREE
 }
 
 export function getResourceUsageRepos(

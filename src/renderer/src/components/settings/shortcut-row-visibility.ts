@@ -22,7 +22,6 @@ export function buildShortcutRowVisibility(options: {
   conflictByAction: Map<KeybindingActionId, string[]>
   terminalShortcutPolicy: TerminalShortcutPolicy
   platform: NodeJS.Platform
-  managedBrowserCreationEnabled: boolean
   settingsSearchQuery: string
   shortcutQuery: string
   shortcutFilter: ShortcutFilter
@@ -34,11 +33,7 @@ export function buildShortcutRowVisibility(options: {
 } {
   const shortcutGroups = options.groups.map((group) => ({
     title: group.title,
-    rows: group.items
-      .filter(
-        (item) => options.managedBrowserCreationEnabled || item.id !== 'tab.newBrowser'
-      )
-      .map((item) => {
+    rows: group.items.map((item) => {
         const effective = getEffectiveKeybindingsForDefinition(
           item,
           options.platform,

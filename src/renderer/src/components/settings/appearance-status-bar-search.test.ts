@@ -19,7 +19,7 @@ import { getStatusBarToggles } from './appearance-status-bar-search'
 
 describe('getStatusBarToggles', () => {
   it('keeps the surviving status bar toggles only', () => {
-    expect(getStatusBarToggles().map((entry) => entry.id)).toEqual(['resource-usage', 'ports'])
+    expect(getStatusBarToggles().map((entry) => entry.id)).toEqual(['resource-usage'])
   })
 
   it('drops the removed provider and ssh toggles', () => {

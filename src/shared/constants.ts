@@ -14,7 +14,6 @@ import { DEFAULT_USAGE_PERCENTAGE_DISPLAY } from './usage-percentage-display'
 import { DEFAULT_STATUS_BAR_USAGE_MODE } from './status-bar-usage-mode'
 import { buildDefaultSettings } from './default-global-settings'
 import { DEFAULT_SETUP_AGENT_STARTUP_POLICY } from './setup-agent-startup-policy'
-import { DEFAULT_BROWSER_PAGE_ZOOM_LEVEL } from './browser-page-zoom'
 
 export { DEFAULT_STATUS_BAR_ITEMS } from './status-bar-defaults'
 export {
@@ -41,10 +40,6 @@ export function normalizeAgentActivityDisplayMode(value: unknown): AgentActivity
 // Why: onboarding wizard's last step index, centralized so backfill, clamps, and UI agree on the bound.
 export const ONBOARDING_FINAL_STEP = 5
 export const ONBOARDING_FLOW_VERSION = 4
-
-export const ORCA_BROWSER_PARTITION = 'persist:orca-browser'
-// Why: inert blank-tab URL shared by main/renderer so the attach policy can allow just this one data URL and reject others.
-export const ORCA_BROWSER_BLANK_URL = 'data:text/html,'
 
 // Why: Electron's invoke error path preserves only message text, so signal reconnect via this stable token.
 export const SSH_TERMINATE_RECONNECT_REQUIRED = 'SSH_TERMINATE_RECONNECT_REQUIRED'
@@ -274,15 +269,13 @@ export function getDefaultUIState(): PersistedUIState {
     acknowledgedAgentsByPaneKey: {},
     activityClearedAtByPaneKey: {},
     manuallyUnreadTurnsByPaneKey: {},
-    browserImportHintHidden: false,
     trayMinimizeNoticeShown: false,
     // Why: fresh profiles start on the new default, so nothing was overridden to report.
     osc52ClipboardDefaultOnNoticePending: false,
     // Why: only upgraded profiles saw the old ordering, so only they get the one-time notice.
     projectOrderManualDefaultNoticeDismissed: true,
     workspaceCleanup: { dismissals: {} },
-    featureInteractions: {},
-    browserDefaultZoomLevel: DEFAULT_BROWSER_PAGE_ZOOM_LEVEL
+    featureInteractions: {}
   }
 }
 
@@ -295,12 +288,8 @@ export function getDefaultWorkspaceSession(): WorkspaceSessionState {
     terminalLayoutsByTabId: {},
     openFilesByWorktree: {},
     markdownFrontmatterVisible: {},
-    browserTabsByWorktree: {},
-    browserPagesByWorkspace: {},
-    activeBrowserTabIdByWorktree: {},
     activeFileIdByWorktree: {},
     activeTabTypeByWorktree: {},
-    browserUrlHistory: [],
     defaultTerminalTabsAppliedByWorktreeId: {}
   }
 }

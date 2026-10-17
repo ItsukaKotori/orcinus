@@ -7,10 +7,8 @@ type ComposerAsyncStateInput = Pick<
   | 'decisions'
   | 'draftLinkedWorkItemSeed'
   | 'enableIssueAutomation'
-  | 'initialGitHubWorkItem'
   | 'initialLinkedWorkItemSeed'
   | 'initialName'
-  | 'initialRepoId'
   | 'name'
   | 'newWorkspaceDraft'
   | 'note'
@@ -27,8 +25,6 @@ import { useState, useRef, useEffect } from 'react'
 import type { OrcaHooks, SetupAgentStartupPolicy } from '../../../../shared/orca-yaml-hook-types'
 import type { IssueCommandReadResult } from '@/runtime/runtime-hooks-client'
 import type { WorkspaceCreateErrorDisplay } from '@/lib/workspace-create-error-format'
-import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
-import type { GitHubRepositoryIdentity } from '../../../../shared/github/pull-request-types'
 import { getRepoSetupAgentStartupPolicy } from './setup-policy-decisions'
 import type { SmartGitHubPrStartPointSelection } from './source-selection-decisions'
 
@@ -39,10 +35,8 @@ export function useComposerAsyncState(input: ComposerAsyncStateInput) {
     decisions,
     draftLinkedWorkItemSeed,
     enableIssueAutomation,
-    initialGitHubWorkItem,
     initialLinkedWorkItemSeed,
     initialName,
-    initialRepoId,
     name,
     newWorkspaceDraft,
     note,
@@ -53,7 +47,7 @@ export function useComposerAsyncState(input: ComposerAsyncStateInput) {
     selectedRepoIsGit,
     selectedRepoSettings
   } = input
-  const { getInitialAutoManagedWorkspaceName, getInitialGitHubPrStartPointSelection } = decisions
+  const { getInitialAutoManagedWorkspaceName } = decisions
 
   const [yamlHooks, setYamlHooks] = useState<OrcaHooks | null>(null)
 
@@ -112,20 +106,6 @@ export function useComposerAsyncState(input: ComposerAsyncStateInput) {
 
   const [sparseSelectedPresetId, setSparseSelectedPresetId] = useState<string | null>(null)
 
-  const [linkPopoverOpen, setLinkPopoverOpen] = useState(false)
-
-  const [linkQuery, setLinkQuery] = useState('')
-
-  const [linkDebouncedQuery, setLinkDebouncedQuery] = useState('')
-
-  const [linkItems, setLinkItems] = useState<GitHubWorkItem[]>([])
-
-  const [linkItemsLoading, setLinkItemsLoading] = useState(false)
-
-  const [linkDirectItem, setLinkDirectItem] = useState<GitHubWorkItem | null>(null)
-
-  const [linkDirectLoading, setLinkDirectLoading] = useState(false)
-
   const lastAutoNameRef = useRef<string>(undefined!)
   lastAutoNameRef.current ??= getInitialAutoManagedWorkspaceName({
     draftName: persistDraft ? newWorkspaceDraft?.name : null,
@@ -149,20 +129,7 @@ export function useComposerAsyncState(input: ComposerAsyncStateInput) {
     noteRef.current = note
   }, [name, note])
 
-  // Why: PR checkout refs resolve async, so submit can still see the linked PR as a checkout source if Create fires before the resolver settles.
-  // Why useState and not `useRef(expr)`: the seed legitimately resolves to null, so a nullish
-  // guard would keep re-running it; useState's initializer runs once without writing in render.
-  const [initialSmartGitHubPrStartPointSelection] =
-    useState<SmartGitHubPrStartPointSelection | null>(() =>
-      getInitialGitHubPrStartPointSelection({
-        item: initialGitHubWorkItem,
-        linkedWorkItem: initialLinkedWorkItemSeed,
-        repoId: selectedRepo?.id ?? initialRepoId
-      })
-    )
-  const smartGitHubPrStartPointSelectionRef = useRef<SmartGitHubPrStartPointSelection | null>(
-    initialSmartGitHubPrStartPointSelection
-  )
+  const smartGitHubPrStartPointSelectionRef = useRef<SmartGitHubPrStartPointSelection | null>(null)
 
   const composerRef = useRef<HTMLDivElement | null>(null)
 
@@ -178,9 +145,6 @@ export function useComposerAsyncState(input: ComposerAsyncStateInput) {
   const connectionIdRef = useRef(connectionId)
 
   const selectedRepoConnectionIdRef = useRef(selectedRepoConnectionId)
-
-  // Why: compare the full host-aware identity before linking a pasted PR URL to this repo.
-  const [selectedRepoSlug, setSelectedRepoSlug] = useState<GitHubRepositoryIdentity | null>(null)
 
   const selectedRepoPath = selectedRepo?.path
 
@@ -227,20 +191,6 @@ export function useComposerAsyncState(input: ComposerAsyncStateInput) {
     setSparseDirectories,
     sparseSelectedPresetId,
     setSparseSelectedPresetId,
-    linkPopoverOpen,
-    setLinkPopoverOpen,
-    linkQuery,
-    setLinkQuery,
-    linkDebouncedQuery,
-    setLinkDebouncedQuery,
-    linkItems,
-    setLinkItems,
-    linkItemsLoading,
-    setLinkItemsLoading,
-    linkDirectItem,
-    setLinkDirectItem,
-    linkDirectLoading,
-    setLinkDirectLoading,
     lastAutoNameRef,
     nameRef,
     branchAutoNameRef,
@@ -254,8 +204,6 @@ export function useComposerAsyncState(input: ComposerAsyncStateInput) {
     agentPromptRef,
     connectionIdRef,
     selectedRepoConnectionIdRef,
-    selectedRepoSlug,
-    setSelectedRepoSlug,
     selectedRepoPath,
     selectedRepoPathRef,
     selectedRepoSettingsRef

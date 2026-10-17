@@ -135,7 +135,6 @@ describe('createUISlice hydratePersistedUI', () => {
     expect(store.getState().statusBarItems).toEqual([
       'claude',
       'resource-usage',
-      'ports',
       'kimi',
       'minimax',
       'antigravity',
@@ -145,13 +144,11 @@ describe('createUISlice hydratePersistedUI', () => {
       statusBarItems: [
         'claude',
         'resource-usage',
-        'ports',
         'kimi',
         'minimax',
         'antigravity',
         'grok'
       ],
-      _portsStatusBarDefaultAdded: true,
       _kimiStatusBarDefaultAdded: true,
       _minimaxStatusBarDefaultAdded: true,
       _antigravityStatusBarDefaultAdded: true,
@@ -167,8 +164,7 @@ describe('createUISlice hydratePersistedUI', () => {
     store.getState().hydratePersistedUI(
       makePersistedUI({
         statusBarItems: ['claude', 'resource-usage'],
-        _portsStatusBarDefaultAdded: true,
-        _kimiStatusBarDefaultAdded: true,
+          _kimiStatusBarDefaultAdded: true,
         _minimaxStatusBarDefaultAdded: true,
         _antigravityStatusBarDefaultAdded: true,
         _grokStatusBarDefaultAdded: true
@@ -224,95 +220,6 @@ describe('createUISlice hydratePersistedUI', () => {
     )
 
     expect(store.getState().statusBarUsageMode).toBe('verbose')
-  })
-
-  it('hydrates a valid Kagi session link', () => {
-    const store = createUIStore()
-
-    store.getState().hydratePersistedUI(
-      makePersistedUI({
-        browserKagiSessionLink: 'https://kagi.com/search?token=secret&q=%s'
-      })
-    )
-
-    expect(store.getState().browserKagiSessionLink).toBe('https://kagi.com/search?token=secret')
-  })
-
-  it('hydrates and normalizes the default browser zoom level', () => {
-    const store = createUIStore()
-
-    store.getState().hydratePersistedUI(
-      makePersistedUI({
-        browserDefaultZoomLevel: 1.26
-      })
-    )
-
-    expect(store.getState().browserDefaultZoomLevel).toBe(1.5)
-  })
-
-  it('persists normalized default browser zoom changes', () => {
-    const setUI = vi.fn().mockResolvedValue(undefined)
-    vi.stubGlobal('window', { api: { ui: { set: setUI } } })
-    const store = createUIStore()
-
-    store.getState().setBrowserDefaultZoomLevel(10)
-
-    expect(store.getState().browserDefaultZoomLevel).toBe(5)
-    expect(setUI).toHaveBeenCalledWith({ browserDefaultZoomLevel: 5 })
-  })
-
-  it('drops an invalid Kagi session link during hydration', () => {
-    const store = createUIStore()
-
-    store.getState().hydratePersistedUI(
-      makePersistedUI({
-        browserKagiSessionLink: 'https://example.com/search?token=secret'
-      })
-    )
-
-    expect(store.getState().browserKagiSessionLink).toBeNull()
-  })
-
-  it('sanitizes task resume state field-by-field during hydration', () => {
-    const store = createUIStore()
-
-    store.getState().hydratePersistedUI(
-      makePersistedUI({
-        taskResumeState: {
-          githubMode: 'project',
-          githubItemsPreset: 'invalid',
-          githubItemsQuery: 42,
-          linearPreset: 'completed',
-          linearQuery: 'label:bug',
-          jiraPreset: 'reported',
-          jiraQuery: 99
-        } as unknown as PersistedUIState['taskResumeState']
-      })
-    )
-
-    expect(store.getState().taskResumeState).toEqual({
-      githubMode: 'project',
-      linearPreset: 'completed',
-      linearQuery: 'label:bug',
-      jiraPreset: 'reported'
-    })
-  })
-
-  // Why: the Linear issue view is device-local now. A host that still holds one from
-  // an older build must not reintroduce the key the strict ui.set schema rejects.
-  it('ignores a stale host-persisted Linear issue view during hydration', () => {
-    const store = createUIStore()
-
-    store.getState().hydratePersistedUI(
-      makePersistedUI({
-        taskResumeState: {
-          linearQuery: 'label:bug',
-          linearIssueView: { viewMode: 'board', groupBy: 'assignee' }
-        } as unknown as PersistedUIState['taskResumeState']
-      })
-    )
-
-    expect(store.getState().taskResumeState).toEqual({ linearQuery: 'label:bug' })
   })
 
   it('restores acknowledgedAgentsByPaneKey from persisted UI state', () => {
@@ -489,19 +396,6 @@ describe('createUISlice hydratePersistedUI', () => {
     } finally {
       vi.useRealTimers()
     }
-  })
-
-  it('merges and persists partial task resume updates', () => {
-    const setUI = vi.fn().mockResolvedValue(undefined)
-    vi.stubGlobal('window', { api: { ui: { set: setUI } } })
-    const store = createUIStore()
-
-    store.setState({ taskResumeState: { githubMode: 'project', linearPreset: 'all' } })
-    store.getState().setTaskResumeState({ githubItemsPreset: 'my-prs' })
-
-    const expected = { githubMode: 'project', linearPreset: 'all', githubItemsPreset: 'my-prs' }
-    expect(store.getState().taskResumeState).toEqual(expected)
-    expect(setUI).toHaveBeenCalledWith({ taskResumeState: expected })
   })
 
   it('sets Default worktree card mode with matching settings and UI writes', () => {

@@ -36,8 +36,6 @@ const LEAF_C = '33333333-3333-4333-8333-333333333333'
 
 function makeState(overrides: Partial<WebSessionTabsSyncState> = {}): WebSessionTabsSyncState {
   return {
-    activeBrowserTabId: null,
-    activeBrowserTabIdByWorktree: {},
     activeFileId: null,
     activeFileIdByWorktree: {},
     activeGroupIdByWorktree: {},
@@ -48,14 +46,10 @@ function makeState(overrides: Partial<WebSessionTabsSyncState> = {}): WebSession
     activeWorktreeId: WT,
     agentStatusByPaneKey: {},
     agentStatusEpoch: 0,
-    browserCertificateFailuresByPageId: {},
-    browserPagesByWorkspace: {},
-    browserTabsByWorktree: {},
     groupsByWorktree: {},
     layoutByWorktree: {},
     openFiles: [],
     ptyIdsByTabId: {},
-    remoteBrowserPageHandlesByPageId: {},
     tabBarOrderByWorktree: {},
     tabsByWorktree: {},
     terminalLayoutsByTabId: {},
@@ -296,130 +290,6 @@ describe('parity §2: snapshot freshness (no split-brain from stale updates)', (
     // Re-applying an older version of the same epoch must be a no-op (returns state).
     const second = applyFreshWebSessionTabsSnapshot(afterNewer, older, ENV, NOW + 20)
     expect(second).toBe(afterNewer)
-  })
-})
-
-// ──────────────────────────────────────────────────────────────────────────
-// Plan §11 — Browser tab create focuses the new browser (intent), like local.
-// ──────────────────────────────────────────────────────────────────────────
-describe('parity §11: remote browser create focuses the new browser tab', () => {
-  it('honors focus intent for a newly created browser session tab', () => {
-    const pageId = 'browser-page-1'
-    const prior = stateWithLocalTerminals([localTerminal('host-tab-1', 0, true)])
-    recordWebSessionFocusIntent(
-      { environmentId: ENV },
-      WT,
-      pageId,
-      undefined,
-      toWebTerminalSurfaceTabId('host-tab-1')
-    )
-    const patch = applyWebSessionTabsSnapshot(
-      prior,
-      makeSnapshot([{ parentTab: 'host-tab-1', leaf: LEAF_A, active: false }], {
-        activeTabId: pageId,
-        activeTabType: 'browser',
-        tabGroups: [
-          {
-            id: 'host-group-1',
-            activeTabId: pageId,
-            tabOrder: ['host-tab-1', pageId]
-          }
-        ],
-        tabs: [
-          terminalSnapshotTab({ parentTab: 'host-tab-1', leaf: LEAF_A, active: false }),
-          {
-            type: 'browser',
-            id: pageId,
-            title: 'example.com',
-            browserWorkspaceId: pageId,
-            browserPageId: pageId,
-            url: 'https://example.com',
-            loading: false,
-            canGoBack: false,
-            canGoForward: false,
-            isActive: true
-          }
-        ]
-      }),
-      ENV,
-      NOW + 10
-    ) as Partial<WebSessionTabsSyncState>
-    // Visible type flips to browser and the active browser workspace is the new page.
-    expect(patch.activeTabTypeByWorktree?.[WT]).toBe('browser')
-    expect(patch.activeBrowserTabIdByWorktree?.[WT]).toBe(pageId)
-  })
-
-  it('a browser status echo without intent does not steal focus from a terminal', () => {
-    const pageId = 'browser-page-1'
-    const prior = makeState({
-      activeTabId: toWebTerminalSurfaceTabId('host-tab-1'),
-      activeTabIdByWorktree: { [WT]: toWebTerminalSurfaceTabId('host-tab-1') },
-      activeTabType: 'terminal',
-      activeTabTypeByWorktree: { [WT]: 'terminal' },
-      tabsByWorktree: { [WT]: [localTerminal('host-tab-1', 0, true).storeTab] },
-      unifiedTabsByWorktree: { [WT]: [localTerminal('host-tab-1', 0, true).unified] },
-      tabBarOrderByWorktree: { [WT]: [toWebTerminalSurfaceTabId('host-tab-1')] },
-      groupsByWorktree: {
-        [WT]: [
-          {
-            id: 'host-group-1',
-            worktreeId: WT,
-            activeTabId: toWebTerminalSurfaceTabId('host-tab-1'),
-            tabOrder: [toWebTerminalSurfaceTabId('host-tab-1')],
-            recentTabIds: [toWebTerminalSurfaceTabId('host-tab-1')]
-          }
-        ]
-      },
-      browserTabsByWorktree: {
-        [WT]: [
-          {
-            id: pageId,
-            worktreeId: WT,
-            activePageId: pageId,
-            pageIds: [pageId],
-            url: 'https://example.com',
-            title: 'example.com',
-            loading: false,
-            faviconUrl: null,
-            canGoBack: false,
-            canGoForward: false,
-            loadError: null,
-            createdAt: NOW
-          }
-        ]
-      }
-    })
-    // No intent — server snapshot marks the (pre-existing) browser active.
-    const patch = applyWebSessionTabsSnapshot(
-      prior,
-      makeSnapshot([{ parentTab: 'host-tab-1', leaf: LEAF_A, active: false }], {
-        activeTabId: pageId,
-        activeTabType: 'browser',
-        tabGroups: [{ id: 'host-group-1', activeTabId: pageId, tabOrder: ['host-tab-1', pageId] }],
-        tabs: [
-          terminalSnapshotTab({ parentTab: 'host-tab-1', leaf: LEAF_A, active: false }),
-          {
-            type: 'browser',
-            id: pageId,
-            title: 'example.com',
-            browserWorkspaceId: pageId,
-            browserPageId: pageId,
-            url: 'https://example.com',
-            loading: false,
-            canGoBack: false,
-            canGoForward: false,
-            isActive: true
-          }
-        ]
-      }),
-      ENV,
-      NOW + 10
-    ) as Partial<WebSessionTabsSyncState>
-    // No focus theft: the visible type must NOT flip to browser. The reconcile
-    // emits no change for an unchanged field, so it's either absent (unchanged)
-    // or still 'terminal' — never 'browser'.
-    const nextType = patch.activeTabTypeByWorktree?.[WT] ?? 'terminal'
-    expect(nextType).toBe('terminal')
   })
 })
 

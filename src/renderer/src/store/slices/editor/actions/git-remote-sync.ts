@@ -24,8 +24,7 @@ export function createGitRemoteSync(
       get().beginRemoteOperation('sync')
       // Why: the inner push stage toasts as Sync and marks the error so the outer catch skips toasting, avoiding a double-toast.
       let pushStageToastShown = false
-      let pushed = false
-      const runtimeSettings = options?.runtimeTargetSettings ?? get().settings
+          const runtimeSettings = options?.runtimeTargetSettings ?? get().settings
       try {
         const context = { settings: runtimeSettings, worktreeId, worktreePath, connectionId }
         await fetchRuntimeGit(context, pushTarget)
@@ -33,7 +32,6 @@ export function createGitRemoteSync(
         if (shouldForcePushWithLeaseForUpstream(upstreamStatusBeforePull)) {
           try {
             await pushRuntimeGit(context, { pushTarget, forceWithLease: true })
-            pushed = true
           } catch (error) {
             toast.error(
               resolveRemoteOperationErrorMessage(error, {
@@ -51,7 +49,6 @@ export function createGitRemoteSync(
           if (upstreamStatus.ahead > 0) {
             try {
               await pushRuntimeGit(context, { pushTarget })
-              pushed = true
             } catch (error) {
               // Why: frame as Sync, not the inner push — the user clicked Sync and didn't directly invoke this push.
               toast.error(
@@ -77,12 +74,6 @@ export function createGitRemoteSync(
       void get().fetchUpstreamStatus(worktreeId, worktreePath, connectionId, pushTarget, {
         runtimeTargetSettings: runtimeSettings
       })
-      if (pushed) {
-        const refreshGitHubForWorktree = get().refreshGitHubForWorktree
-        if (typeof refreshGitHubForWorktree === 'function') {
-          refreshGitHubForWorktree(worktreeId)
-        }
-      }
     },
     rebaseFromBase: async (
       worktreeId,
@@ -108,10 +99,6 @@ export function createGitRemoteSync(
       void get().fetchUpstreamStatus(worktreeId, worktreePath, connectionId, pushTarget, {
         runtimeTargetSettings: runtimeSettings
       })
-      const refreshGitHubForWorktree = get().refreshGitHubForWorktree
-      if (typeof refreshGitHubForWorktree === 'function') {
-        refreshGitHubForWorktree(worktreeId)
-      }
     },
     fetchBranch: async (worktreeId, worktreePath, connectionId, pushTarget, options) => {
       // Why: like pushBranch — fire-and-forget the upstream refresh after the busy flag clears so new ahead/behind counts surface.

@@ -37,7 +37,6 @@ describe('#9040 worktree dot attributes spinner titles to the launched agent', (
   it('spins for a Claude spinner title when the tab was launched as claude', () => {
     const status = getWorktreeStatus(
       [{ id: 'tab-1', title: '⠋ implementing the feature', launchAgent: 'claude' }],
-      [],
       livePtyMap('tab-1')
     )
 
@@ -47,7 +46,6 @@ describe('#9040 worktree dot attributes spinner titles to the launched agent', (
   it('spins for a spinner-only pane title when the tab was launched as claude', () => {
     const status = getWorktreeStatus(
       [{ id: 'tab-1', title: 'bash', launchAgent: 'claude' }],
-      [],
       livePtyMap('tab-1'),
       { 'tab-1': { 0: '⠙ refactoring the parser' } }
     )
@@ -60,7 +58,6 @@ describe('#9040 worktree dot attributes spinner titles to the launched agent', (
   it('stays active for a spinner title with no launch identity', () => {
     const status = getWorktreeStatus(
       [{ id: 'tab-1', title: '⠐ Review branch for regressions' }],
-      [],
       livePtyMap('tab-1')
     )
 
@@ -70,7 +67,6 @@ describe('#9040 worktree dot attributes spinner titles to the launched agent', (
   it('does not manufacture activity from a non-spinner title with a launch identity', () => {
     const status = getWorktreeStatus(
       [{ id: 'tab-1', title: 'bash', launchAgent: 'claude' }],
-      [],
       livePtyMap('tab-1')
     )
 
@@ -92,13 +88,13 @@ describe('#9040 spinner attribution trade-off is bounded', () => {
       launchAgent: 'claude'
     } satisfies Partial<TerminalTab>
 
-    expect(getWorktreeStatus([tab], [], livePtyMap('tab-1'))).toBe('working')
+    expect(getWorktreeStatus([tab], livePtyMap('tab-1'))).toBe('working')
     // Bound 1: the same title cannot spin a tab with no launch identity.
-    expect(getWorktreeStatus([{ id: 'tab-1', title: tab.title }], [], livePtyMap('tab-1'))).toBe(
+    expect(getWorktreeStatus([{ id: 'tab-1', title: tab.title }], livePtyMap('tab-1'))).toBe(
       'active'
     )
     // Bound 2: a dead PTY drops out regardless of launch identity.
-    expect(getWorktreeStatus([tab], [], {})).toBe('inactive')
+    expect(getWorktreeStatus([tab], {})).toBe('inactive')
   })
 })
 
@@ -114,10 +110,10 @@ describe('#9040 spinner attribution matches named-provider dot/row agreement', (
     } satisfies Partial<TerminalTab>
     const namedTab = { id: 'tab-1', title: 'claude [working]' }
 
-    expect(getWorktreeStatus([spinnerTab], [], livePtyMap('tab-1'))).toBe('working')
+    expect(getWorktreeStatus([spinnerTab], livePtyMap('tab-1'))).toBe('working')
     expect(rowCount(spinnerTab)).toBe(1)
     // Control: the pre-existing named-provider path resolves to the same pair.
-    expect(getWorktreeStatus([namedTab], [], livePtyMap('tab-1'))).toBe('working')
+    expect(getWorktreeStatus([namedTab], livePtyMap('tab-1'))).toBe('working')
     expect(rowCount(namedTab)).toBe(1)
   })
 
@@ -127,7 +123,7 @@ describe('#9040 spinner attribution matches named-provider dot/row agreement', (
     const layouts = { 'tab-1': singleLeafLayout() }
 
     expect(
-      getWorktreeStatus([tab], [], livePtyMap('tab-1'), paneTitles, {
+      getWorktreeStatus([tab], livePtyMap('tab-1'), paneTitles, {
         terminalLayoutsByTabId: layouts
       })
     ).toBe('working')

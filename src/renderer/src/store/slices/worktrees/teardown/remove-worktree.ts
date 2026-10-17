@@ -28,7 +28,6 @@ import {
 } from '../../../../../../shared/worktree/removal'
 import { preservedBranchCleanupKey } from '../../../../../../shared/preserved-branch-cleanup'
 import { composeWorktreeHostIdentity } from '../../../../../../shared/worktree/host-qualified-identity'
-import { pruneHostedReviewLinkMutationGenerations } from '../metadata/hosted-review-link-mutation'
 import { rememberAuthoritativelyRemovedWorktrees } from '../listing/authoritative-worktree-removal-memory'
 import { preservedBranchRuntimeTargetByCleanupKey } from './preserved-branch-cleanup-target'
 import {
@@ -230,19 +229,6 @@ export function createRemoveWorktree(
         rememberAuthoritativelyRemovedWorktrees(hostId, [worktreeId])
       }
 
-      const worktreeDisplayName = worktreeBeforeRemoval?.displayName?.trim()
-      if (worktreeDisplayName) {
-        try {
-          await window.api.automations?.snapshotWorkspaceName?.({
-            workspaceId: worktreeId,
-            displayName: worktreeDisplayName
-          })
-        } catch (error) {
-          // Why: snapshotting automation labels is best-effort; a stale preload/test harness must not block removal.
-          console.warn('Failed to snapshot automation workspace name:', error)
-        }
-      }
-
       await tearDownRemovedWorktreeRendererState({
         set,
         get,
@@ -281,7 +267,6 @@ export function createRemoveWorktree(
           })
         })
       }
-      pruneHostedReviewLinkMutationGenerations([worktreeId])
       return preservedBranch && cleanup
         ? {
             ok: true as const,

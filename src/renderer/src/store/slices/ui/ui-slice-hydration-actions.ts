@@ -23,8 +23,6 @@ import { clampCombinedDiffFileTreeWidth } from '../../../../../shared/combined-d
 import { parsePersistedAutomationHostFilter } from '../../../../../shared/automation-host-filter'
 import { normalizeUsagePercentageDisplay } from '../../../../../shared/usage-percentage-display'
 import { normalizeStatusBarUsageMode } from '../../../../../shared/status-bar-usage-mode'
-import { normalizeBrowserPageZoomLevel } from '../../../../../shared/browser-page-zoom'
-import { normalizeKagiSessionLink } from '../../../../../shared/browser-url'
 import { isReleaseChannel } from '../../../../../shared/release-channel'
 import type { StatusBarItem } from '../../../../../shared/ui-chrome-types'
 import {
@@ -49,11 +47,17 @@ import {
   hydratedUIPartialMatchesState,
   migrateStatusBarItems
 } from './ui-slice-hydration-sanitizers'
-import { hydrateAgentReadState, sanitizeTaskResumeState } from './ui-slice-hydration-values'
+import { hydrateAgentReadState } from './ui-slice-hydration-values'
+
+// Why: persisted profiles may carry retired Group by values (`parent`, `pr-status`);
+// they must degrade to the default project grouping instead of leaking into the union.
+function normalizeHydratedWorktreeGroupBy(value: unknown): UISlice['groupBy'] {
+  return value === 'none' || value === 'workspace-status' || value === 'repo' ? value : 'repo'
+}
+
 
 const MAX_LEFT_SIDEBAR_WIDTH = 500
 const MAX_RIGHT_SIDEBAR_WIDTH = 4000
-const DEFAULT_ON_PORTS_STATUS_BAR_ITEM: StatusBarItem = 'ports'
 const DEFAULT_ON_KIMI_STATUS_BAR_ITEM: StatusBarItem = 'kimi'
 const DEFAULT_ON_MINIMAX_STATUS_BAR_ITEM: StatusBarItem = 'minimax'
 const DEFAULT_ON_ANTIGRAVITY_STATUS_BAR_ITEM: StatusBarItem = 'antigravity'
@@ -62,7 +66,6 @@ const DEFAULT_ON_GROK_STATUS_BAR_ITEM: StatusBarItem = 'grok'
 function hydrateStatusBarItems(ui: PersistedUIState): StatusBarItem[] {
   let items = migrateStatusBarItems(ui.statusBarItems)
   const defaults = [
-    ['_portsStatusBarDefaultAdded', DEFAULT_ON_PORTS_STATUS_BAR_ITEM],
     ['_kimiStatusBarDefaultAdded', DEFAULT_ON_KIMI_STATUS_BAR_ITEM],
     ['_minimaxStatusBarDefaultAdded', DEFAULT_ON_MINIMAX_STATUS_BAR_ITEM],
     ['_antigravityStatusBarDefaultAdded', DEFAULT_ON_ANTIGRAVITY_STATUS_BAR_ITEM],
@@ -122,7 +125,7 @@ export function createUiHydrationActions(set: UISliceSet, _get: UISliceGet): Par
           rightSidebarOpen: typeof ui.rightSidebarOpen === 'boolean' ? ui.rightSidebarOpen : true,
           rightSidebarTab: rightSidebarRoute.rightSidebarTab,
           rightSidebarExplorerView: rightSidebarRoute.rightSidebarExplorerView,
-          groupBy: (ui.groupBy as UISlice['groupBy'] | 'parent') === 'parent' ? 'repo' : ui.groupBy,
+          groupBy: normalizeHydratedWorktreeGroupBy(ui.groupBy),
           sortBy,
           // Why: main-process getUI() already normalized this (defaulting to 'manual'); read it through without migrating.
           projectOrderBy: ui.projectOrderBy,
@@ -173,11 +176,6 @@ export function createUiHydrationActions(set: UISliceSet, _get: UISliceGet): Par
             : null,
           updateReassuranceSeen: ui.updateReassuranceSeen ?? false,
           osc52ClipboardDefaultOnNoticePending: ui.osc52ClipboardDefaultOnNoticePending === true,
-          browserDefaultUrl: ui.browserDefaultUrl ?? null,
-          browserDefaultSearchEngine: ui.browserDefaultSearchEngine ?? null,
-          browserDefaultZoomLevel: normalizeBrowserPageZoomLevel(ui.browserDefaultZoomLevel),
-          browserKagiSessionLink: normalizeKagiSessionLink(ui.browserKagiSessionLink ?? ''),
-          taskResumeState: sanitizeTaskResumeState(ui.taskResumeState),
           featureInteractions: normalizeFeatureInteractions(ui.featureInteractions),
           trustedOrcaHooks: hydrateTrustedOrcaHooks(ui.trustedOrcaHooks, validRepoIds),
           setupScriptPromptDismissedRepoIds:
@@ -187,7 +185,6 @@ export function createUiHydrationActions(set: UISliceSet, _get: UISliceGet): Par
                   ui.setupScriptPromptDismissedRepoIds,
                   validRepoHostIdentities
                 ),
-          browserImportHintHidden: ui.browserImportHintHidden === true,
           projectOrderManualDefaultNoticeDismissed:
             ui.projectOrderManualDefaultNoticeDismissed === true,
           // Why: default false so existing users still see the CTA; only explicit dismissal persists true.

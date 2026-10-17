@@ -145,8 +145,6 @@ export function buildWorktreeVirtualRowContext(args: BuildArgs): WorktreeVirtual
       worktreeMap: props.worktreeMap,
       worktreeLineageById: props.worktreeLineageById,
       workspaceLineageByChildKey: props.workspaceLineageByChildKey,
-      prCache: props.prCache,
-      hostedReviewCache: props.hostedReviewCache,
       getCachedFolderWorkspacePathStatus: args.getCachedFolderWorkspacePathStatus,
       onSelectionGesture: props.onSelectionGesture,
       onContextMenuSelect: props.onContextMenuSelect,

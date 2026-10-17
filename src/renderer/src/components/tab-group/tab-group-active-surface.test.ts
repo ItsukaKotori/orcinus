@@ -22,23 +22,15 @@ describe('resolveTabGroupActiveSurface', () => {
     expect(resolveTabGroupActiveSurface(tab('plugin'))).toEqual({
       activeTabId: 'unified-plugin',
       activeFileId: null,
-      activeBrowserTabId: null,
       activeTabType: 'plugin'
     })
   })
 
-  it('keeps terminal/browser rows keyed by entity id', () => {
+  it('keeps terminal rows keyed by entity id', () => {
     expect(resolveTabGroupActiveSurface(tab('terminal'))).toEqual({
       activeTabId: 'entity-terminal',
       activeFileId: null,
-      activeBrowserTabId: null,
       activeTabType: 'terminal'
-    })
-    expect(resolveTabGroupActiveSurface(tab('browser'))).toEqual({
-      activeTabId: null,
-      activeFileId: null,
-      activeBrowserTabId: 'entity-browser',
-      activeTabType: 'browser'
     })
   })
 
@@ -55,7 +47,6 @@ describe('resolveTabGroupActiveSurface', () => {
     expect(resolveTabGroupActiveSurface(null)).toEqual({
       activeTabId: null,
       activeFileId: null,
-      activeBrowserTabId: null,
       activeTabType: 'editor'
     })
   })

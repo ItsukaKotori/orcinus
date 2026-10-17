@@ -111,16 +111,9 @@ export function projectWorktreeTabModelReconciliation(
     : new Set(
         state.openFiles.filter((file) => file.worktreeId === worktreeId).map((file) => file.id)
       )
-  const liveBrowserIds = new Set(
-    (state.browserTabsByWorktree[worktreeId] ?? []).map((browserTab) => browserTab.id)
-  )
-
   const isRenderableTab = (tab: Tab): boolean => {
     if (tab.contentType === 'terminal') {
       return liveTerminalIds.has(tab.entityId)
-    }
-    if (tab.contentType === 'browser') {
-      return liveBrowserIds.has(tab.entityId)
     }
     if (tab.contentType === 'agent-session') {
       return true

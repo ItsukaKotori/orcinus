@@ -40,8 +40,6 @@ function resetModuleState(): void {
 
 function baseState(overrides: Partial<WebSessionTabsSyncState>): WebSessionTabsSyncState {
   return {
-    activeBrowserTabId: null,
-    activeBrowserTabIdByWorktree: {},
     activeFileId: null,
     activeFileIdByWorktree: {},
     activeGroupIdByWorktree: {},
@@ -52,14 +50,10 @@ function baseState(overrides: Partial<WebSessionTabsSyncState>): WebSessionTabsS
     activeWorktreeId: WORKTREES[0]!,
     agentStatusByPaneKey: {},
     agentStatusEpoch: 0,
-    browserCertificateFailuresByPageId: {},
-    browserPagesByWorkspace: {},
-    browserTabsByWorktree: {},
     groupsByWorktree: {},
     layoutByWorktree: {},
     openFiles: [],
     ptyIdsByTabId: {},
-    remoteBrowserPageHandlesByPageId: {},
     tabBarOrderByWorktree: {},
     tabsByWorktree: {},
     terminalLayoutsByTabId: {},

@@ -62,11 +62,8 @@ describe('workspace lineage menu actions', () => {
         ptyIdsByTabId: {
           'parent-tab': [],
           'child-tab': ['child-pty'],
-          'grandchild-tab': []
+          'grandchild-tab': ['grandchild-pty']
         },
-        browserTabsByWorktree: {
-          [grandchild.id]: [{ id: 'grandchild-browser' }]
-        }
       }
     })
 
@@ -91,7 +88,6 @@ describe('workspace lineage menu actions', () => {
       activity: {
         tabsByWorktree: { [child.id]: [{ id: 'child-tab' }] },
         ptyIdsByTabId: { 'child-tab': ['child-pty'] },
-        browserTabsByWorktree: {}
       }
     })
 
@@ -106,24 +102,15 @@ describe('hasSleepableWorkspaceActivity', () => {
       hasSleepableWorkspaceActivity('wt-1', {
         tabsByWorktree: { 'wt-1': [{ id: 'tab-1' }] },
         ptyIdsByTabId: { 'tab-1': [] },
-        browserTabsByWorktree: {}
       })
     ).toBe(false)
   })
 
-  it('detects live terminal and browser activity', () => {
+  it('detects live terminal activity', () => {
     expect(
       hasSleepableWorkspaceActivity('wt-1', {
         tabsByWorktree: { 'wt-1': [{ id: 'tab-1' }] },
         ptyIdsByTabId: { 'tab-1': ['pty-1'] },
-        browserTabsByWorktree: {}
-      })
-    ).toBe(true)
-    expect(
-      hasSleepableWorkspaceActivity('wt-1', {
-        tabsByWorktree: {},
-        ptyIdsByTabId: {},
-        browserTabsByWorktree: { 'wt-1': [{ id: 'browser-1' }] }
       })
     ).toBe(true)
   })

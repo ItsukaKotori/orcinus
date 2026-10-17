@@ -193,7 +193,8 @@ export const createRecentlyClosedTabsSlice: StateCreator<
         kind === 'terminal'
           ? get().reopenClosedTerminalTab(worktreeId)
           : kind === 'browser'
-            ? get().reopenClosedBrowserTab(worktreeId) !== null
+            ? // Why: browser tabs are gone; a stale persisted kind entry is drained, not misrouted to the editor stack.
+              false
             : kind === 'plugin'
               ? // Why: plugin tabs are owned by the plugin bridge, not by a
                 // renderer snapshot — reopening happens through the tab menu or

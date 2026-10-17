@@ -9,14 +9,11 @@ type ComposerNavigationActionsInput = Pick<
   | 'openSettingsPage'
   | 'openSettingsTarget'
   | 'selectedProjectGroup'
-  | 'setActiveRuntimeEnvironmentPreference'
-  | 'smartNameJiraSourceContext'
   | 'sourceIntentBlocksCreate'
   | 'updateWorktreeMeta'
 >
 
 import { useCallback } from 'react'
-import { getTaskSourceRuntimeSettings } from '../../../../shared/task-source-context'
 import type { WorktreeMeta } from '../../../../shared/worktree/meta-types'
 
 export function useComposerNavigationActions(input: ComposerNavigationActionsInput) {
@@ -28,8 +25,6 @@ export function useComposerNavigationActions(input: ComposerNavigationActionsInp
     openSettingsPage,
     openSettingsTarget,
     selectedProjectGroup,
-    setActiveRuntimeEnvironmentPreference,
-    smartNameJiraSourceContext,
     sourceIntentBlocksCreate,
     updateWorktreeMeta
   } = input
@@ -39,27 +34,6 @@ export function useComposerNavigationActions(input: ComposerNavigationActionsInp
     openSettingsPage()
     closeModal()
   }, [closeModal, openSettingsPage, openSettingsTarget])
-
-  const handleOpenJiraSettings = useCallback((): void => {
-    const runtimeEnvironmentId = getTaskSourceRuntimeSettings(
-      smartNameJiraSourceContext
-    ).activeRuntimeEnvironmentId
-    const targetRuntimeEnvironmentId = runtimeEnvironmentId ?? null
-    void setActiveRuntimeEnvironmentPreference(targetRuntimeEnvironmentId).then((selected) => {
-      if (!selected) {
-        return
-      }
-      openSettingsTarget({ pane: 'integrations', repoId: null })
-      openSettingsPage()
-      closeModal()
-    })
-  }, [
-    closeModal,
-    openSettingsPage,
-    openSettingsTarget,
-    setActiveRuntimeEnvironmentPreference,
-    smartNameJiraSourceContext
-  ])
 
   const applyWorktreeMeta = useCallback(
     async (worktreeId: string, meta: Partial<WorktreeMeta>): Promise<void> => {
@@ -84,7 +58,6 @@ export function useComposerNavigationActions(input: ComposerNavigationActionsInp
 
   return {
     handleOpenAgentSettings,
-    handleOpenJiraSettings,
     applyWorktreeMeta,
     folderCreateDisabled
   }

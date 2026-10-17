@@ -88,95 +88,10 @@ describe('SourceControl compare summary', () => {
     expect(
       resolveSourceControlBaseRef({
         worktreeBaseRef: 'refs/remotes/origin/main',
-        reviewBaseRefName: 'main',
         repoBaseRef: 'main',
         defaultBaseRef: 'origin/main'
       })
     ).toBe('refs/remotes/origin/main')
-  })
-
-  it('repairs stale PR head SHA compare bases from linked review metadata', () => {
-    expect(
-      resolveSourceControlBaseRef({
-        worktreeBaseRef: '06103ea1889e259fd771b93d206e14c9a4c66391',
-        reviewBaseRefName: 'main',
-        repoBaseRef: null,
-        defaultBaseRef: 'origin/main'
-      })
-    ).toBe('origin/main')
-  })
-
-  it('keeps non-SHA worktree base refs ahead of review metadata', () => {
-    expect(
-      resolveSourceControlBaseRef({
-        worktreeBaseRef: 'refs/remotes/upstream/release',
-        reviewBaseRefName: 'main',
-        repoBaseRef: null,
-        defaultBaseRef: 'origin/main'
-      })
-    ).toBe('refs/remotes/upstream/release')
-  })
-
-  it('rewrites stale SHA compare bases using the configured remote style', () => {
-    expect(
-      resolveSourceControlBaseRef({
-        worktreeBaseRef: '06103ea1889e259fd771b93d206e14c9a4c66391',
-        reviewBaseRefName: 'release/next',
-        repoBaseRef: null,
-        defaultBaseRef: 'refs/remotes/upstream/main'
-      })
-    ).toBe('refs/remotes/upstream/release/next')
-
-    expect(
-      resolveSourceControlBaseRef({
-        worktreeBaseRef: '06103ea1889e259fd771b93d206e14c9a4c66391',
-        reviewBaseRefName: 'release',
-        repoBaseRef: null,
-        defaultBaseRef: 'upstream/main'
-      })
-    ).toBe('upstream/release')
-  })
-
-  it('does not treat nested branch suffix matches as the review target', () => {
-    expect(
-      resolveSourceControlBaseRef({
-        worktreeBaseRef: '06103ea1889e259fd771b93d206e14c9a4c66391',
-        reviewBaseRefName: 'main',
-        repoBaseRef: null,
-        defaultBaseRef: 'origin/release/main'
-      })
-    ).toBe('origin/main')
-
-    expect(
-      resolveSourceControlBaseRef({
-        worktreeBaseRef: '06103ea1889e259fd771b93d206e14c9a4c66391',
-        reviewBaseRefName: 'main',
-        repoBaseRef: null,
-        defaultBaseRef: 'refs/remotes/upstream/release/main'
-      })
-    ).toBe('refs/remotes/upstream/main')
-  })
-
-  it('keeps exact slash-containing target branch matches', () => {
-    expect(
-      resolveSourceControlBaseRef({
-        worktreeBaseRef: '06103ea1889e259fd771b93d206e14c9a4c66391',
-        reviewBaseRefName: 'release/main',
-        repoBaseRef: null,
-        defaultBaseRef: 'origin/release/main'
-      })
-    ).toBe('origin/release/main')
-  })
-
-  it('waits for a remote candidate before repairing stale SHA compare bases', () => {
-    expect(
-      resolveSourceControlBaseRef({
-        worktreeBaseRef: '06103ea1889e259fd771b93d206e14c9a4c66391',
-        reviewBaseRefName: 'release',
-        repoBaseRef: null,
-        defaultBaseRef: null
-      })
-    ).toBeNull()
   })
 
   it('shows the repaired pinned base ref in the base picker', () => {

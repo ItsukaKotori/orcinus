@@ -108,25 +108,12 @@ describe('applyWebSessionTabsSnapshot', () => {
         }
       ]),
       makeSnapshot(
-        [
-          {
-            type: 'browser',
-            id: 'host-browser-unified',
-            title: 'Example Domain',
-            browserWorkspaceId: 'host-browser-workspace',
-            browserPageId: 'host-browser-page',
-            url: 'https://example.com/',
-            loading: false,
-            canGoBack: false,
-            canGoForward: false,
-            isActive: true
-          }
-        ],
+        [],
         {
           worktree: secondWorktree,
           activeGroupId: 'host-group-2',
-          activeTabId: 'host-browser-unified',
-          activeTabType: 'browser'
+          activeTabId: null,
+          activeTabType: null
         }
       ),
       makeSnapshot([], {

@@ -21,18 +21,16 @@ describe('TabGroupPanel context menu id resolution', () => {
   const groupTabs = [
     tab('unified-terminal-1', 'terminal-entity-1', 'terminal', 0),
     tab('unified-editor-1', 'editor-entity-1', 'editor', 1),
-    tab('unified-browser-1', 'browser-entity-1', 'browser', 2)
+    tab('unified-agent-1', 'unified-agent-1', 'agent-session', 2)
   ]
 
-  it('resolves terminal and browser entity ids to their unified tab ids', () => {
-    // Why: terminal/browser context menu callbacks emit backing entity ids, but
+  it('resolves terminal entity ids to their unified tab ids', () => {
+    // Why: terminal context menu callbacks emit backing entity ids, but
     // closeOthers/closeToRight must receive the unified tab id.
     expect(resolveGroupTabFromVisibleId(groupTabs, 'terminal-entity-1')?.id).toBe(
       'unified-terminal-1'
     )
-    expect(resolveGroupTabFromVisibleId(groupTabs, 'browser-entity-1')?.id).toBe(
-      'unified-browser-1'
-    )
+    expect(resolveGroupTabFromVisibleId(groupTabs, 'unified-agent-1')?.id).toBe('unified-agent-1')
   })
 
   it('resolves editor unified tab ids without falling back to the file entity id only', () => {

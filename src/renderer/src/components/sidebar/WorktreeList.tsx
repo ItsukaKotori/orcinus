@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo } from 'react'
 import { useAppStore } from '@/store'
-import { useShallow } from 'zustand/react/shallow'
 import {
   useAllWorktrees,
   useProjectHostSetupProjection,
@@ -15,7 +14,6 @@ import {
 } from '../../../../shared/execution-host'
 import { getActiveSidebarWorkspaceId } from '../../../../shared/workspace-scope'
 import { getPinnedWorktreeDisplayPolicy } from './worktree-list/grouping/row-types'
-import { selectWorktreeListReviewCacheInputs } from './worktree-list/listing/review-cache-inputs'
 import type { VirtualizedScrollAnchor } from '@/hooks/useVirtualizedScrollAnchor'
 import { SidebarWorktreeListDialogs } from './worktree-list/rows/ProjectGroupDialogs'
 import { SidebarWorktreeListEmptyState } from './worktree-list/listing/EmptyState'
@@ -68,7 +66,6 @@ const WorktreeList = React.memo(function WorktreeList({
   const openModal = useAppStore((s) => s.openModal)
   const openSettingsPage = useAppStore((s) => s.openSettingsPage)
   const openSettingsTarget = useAppStore((s) => s.openSettingsTarget)
-  const activeView = useAppStore((s) => s.activeView)
   const activeModal = useAppStore((s) => s.activeModal)
   const pendingRevealWorktree = useAppStore((s) => s.pendingRevealWorktree)
   const pendingRevealSidebarRow = useAppStore((s) => s.pendingRevealSidebarRow)
@@ -79,10 +76,6 @@ const WorktreeList = React.memo(function WorktreeList({
   const projectGroups = useAppStore((s) => s.projectGroups ?? EMPTY_PROJECT_GROUPS)
   const folderWorkspaces = useAppStore((s) => s.folderWorkspaces)
   const settings = useAppStore((s) => s.settings)
-  const cardProps = useAppStore((s) => s.worktreeCardProperties)
-  const { prCache, hostedReviewCache } = useAppStore(
-    useShallow((s) => selectWorktreeListReviewCacheInputs(s, groupBy, cardProps))
-  )
   const pinnedDisplayPolicy = getPinnedWorktreeDisplayPolicy(settings)
   const defaultHostId = getSettingsFocusedExecutionHostId(settings)
   const projectHostSetupProjection = useProjectHostSetupProjection()
@@ -119,7 +112,6 @@ const WorktreeList = React.memo(function WorktreeList({
     repoMap,
     worktreeMap,
     worktreeLineageById,
-    prCache,
     workspaceStatuses,
     settings,
     projectGroups,
@@ -151,7 +143,6 @@ const WorktreeList = React.memo(function WorktreeList({
     repoMap,
     worktreeMap,
     worktreeLineageById,
-    prCache,
     settings,
     workspaceStatuses,
     effectiveCollapsedGroups,
@@ -274,7 +265,7 @@ const WorktreeList = React.memo(function WorktreeList({
         key={`group:${groupBy}:host:${filterState.visibleWorkspaceHostIds?.join(',') ?? 'all'}:lineage`}
         rows={rowModel.sectionRows}
         // Why: full-page nav views aren't scoped to a worktree, so no sidebar card should look selected.
-        activeWorktreeId={activeView === 'tasks' ? null : currentSidebarWorktreeId}
+        activeWorktreeId={currentSidebarWorktreeId}
         activeWorkspaceExecutionHostId={activeWorkspaceExecutionHostId}
         currentWorktreeId={currentSidebarWorktreeId}
         groupBy={groupBy}
@@ -322,8 +313,6 @@ const WorktreeList = React.memo(function WorktreeList({
         allRepoIds={rowModel.allRepoIds}
         onReorderHostSections={rowModel.handleReorderHostSections}
         onHostDragActiveChange={rowModel.setHostDragActive}
-        prCache={prCache}
-        hostedReviewCache={hostedReviewCache}
         workspaceStatuses={workspaceStatuses}
         projectGrouping={projectGrouping}
         projectGroups={projectGroups}

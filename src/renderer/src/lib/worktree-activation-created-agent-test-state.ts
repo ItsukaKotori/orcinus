@@ -50,9 +50,7 @@ function baseSeedState(worktree: Worktree, worktrees: Worktree[]): Partial<Store
     layoutByWorktree: {},
     activeGroupIdByWorktree: {},
     openFiles: [],
-    browserTabsByWorktree: {},
     activeFileIdByWorktree: {},
-    activeBrowserTabIdByWorktree: {},
     activeTabTypeByWorktree: {},
     activeTabIdByWorktree: {},
     tabBarOrderByWorktree: {},
@@ -61,7 +59,6 @@ function baseSeedState(worktree: Worktree, worktrees: Worktree[]): Partial<Store
       agentCmdOverrides: {},
       setupScriptLaunchMode: 'new-tab'
     } as unknown as StoreState['settings'],
-    refreshGitHubForWorktreeIfStale: vi.fn()
   }
 }
 

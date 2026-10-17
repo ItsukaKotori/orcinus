@@ -1,15 +1,9 @@
 import type { RuntimeMobileSessionTabGroup } from '../../../../shared/runtime-types'
 import type { TabGroup } from '../../../../shared/tab-types'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
-import type {
-  MirroredAgentTab,
-  MirroredBrowserTab,
-  MirroredEditorTab,
-  TerminalSurface
-} from './state'
+import type { MirroredAgentTab, MirroredEditorTab, TerminalSurface } from './state'
 import { toWebTerminalSurfaceTabId } from '../web-runtime-session'
 import { clearHostSessionTabIdMappings, setHostSessionTabIdMapping } from './tracking-mappings'
-import { isWebSessionBrowserPlacementGroupReserved } from '../web-session-browser-placement'
 import { resolveWebSessionReorderedOrder } from '../web-session-reorder-intent'
 import { mapHostRecentTabIds } from './tab-group-layout-tree'
 import { pushRecentTabId, sanitizeRecentTabIds } from './state-equality-core'
@@ -17,13 +11,11 @@ import { pushRecentTabId, sanitizeRecentTabIds } from './state-equality-core'
 export function buildHostToLocalTabIdMap({
   terminalSurfaces,
   terminalTabs,
-  browserTabs,
   editorTabs,
   agentTabs
 }: {
   terminalSurfaces: readonly TerminalSurface[]
   terminalTabs: readonly TerminalTab[]
-  browserTabs: readonly MirroredBrowserTab[]
   editorTabs: readonly MirroredEditorTab[]
   agentTabs: readonly MirroredAgentTab[]
 }): Map<string, string> {
@@ -35,10 +27,6 @@ export function buildHostToLocalTabIdMap({
       hostToLocal.set(surface.parentTabId, localId)
       hostToLocal.set(surface.id, localId)
     }
-  }
-  for (const entry of browserTabs) {
-    hostToLocal.set(entry.hostTabId, entry.unifiedTab.id)
-    hostToLocal.set(entry.unifiedTab.id, entry.unifiedTab.id)
   }
   for (const entry of editorTabs) {
     hostToLocal.set(entry.hostTabId, entry.unifiedTab.id)
@@ -54,7 +42,6 @@ export function updateHostSessionTabIdMappings(args: {
   worktreeId: string
   terminalSurfaces: readonly TerminalSurface[]
   terminalTabs: readonly TerminalTab[]
-  browserTabs: readonly MirroredBrowserTab[]
   editorTabs: readonly MirroredEditorTab[]
   agentTabs: readonly MirroredAgentTab[]
 }): void {
@@ -66,9 +53,6 @@ export function updateHostSessionTabIdMappings(args: {
     if (mirroredTerminalIds.has(localId)) {
       setHostSessionTabIdMapping({ ...args, tabId: localId }, surface.parentTabId)
     }
-  }
-  for (const entry of args.browserTabs) {
-    setHostSessionTabIdMapping({ ...args, tabId: entry.unifiedTab.id }, entry.hostTabId)
   }
   for (const entry of args.editorTabs) {
     setHostSessionTabIdMapping({ ...args, tabId: entry.unifiedTab.id }, entry.hostTabId)
@@ -82,25 +66,13 @@ export function retainClientPlacedMirroredTabs(args: {
   groups: readonly TabGroup[]
   mirroredUnifiedIds: ReadonlySet<string>
   validUnifiedTabIds: ReadonlySet<string>
-  clientGroupIdByLocalTabId: ReadonlyMap<string, string>
   nextActiveUnifiedTabId: string | null
 }): TabGroup[] {
   return args.groups.map((group) => {
     const retainedTabOrder = group.tabOrder.filter(
-      (tabId) =>
-        args.validUnifiedTabIds.has(tabId) &&
-        (!args.mirroredUnifiedIds.has(tabId) ||
-          args.clientGroupIdByLocalTabId.get(tabId) === group.id)
+      (tabId) => args.validUnifiedTabIds.has(tabId) && !args.mirroredUnifiedIds.has(tabId)
     )
-    const placedTabIds = [...args.clientGroupIdByLocalTabId]
-      .filter(
-        ([tabId, groupId]) =>
-          groupId === group.id &&
-          args.validUnifiedTabIds.has(tabId) &&
-          !retainedTabOrder.includes(tabId)
-      )
-      .map(([tabId]) => tabId)
-    const tabOrder = [...retainedTabOrder, ...placedTabIds]
+    const tabOrder = retainedTabOrder
     const activeTabId =
       args.nextActiveUnifiedTabId && tabOrder.includes(args.nextActiveUnifiedTabId)
         ? args.nextActiveUnifiedTabId
@@ -127,8 +99,7 @@ export function buildMirroredHostGroups({
   now,
   validUnifiedTabIds,
   environmentId,
-  worktreeId,
-  clientGroupIdByLocalTabId
+  worktreeId
 }: {
   currentGroups: readonly TabGroup[]
   hostGroups: readonly RuntimeMobileSessionTabGroup[]
@@ -139,13 +110,11 @@ export function buildMirroredHostGroups({
   validUnifiedTabIds: ReadonlySet<string>
   environmentId: string
   worktreeId: string
-  clientGroupIdByLocalTabId: ReadonlyMap<string, string>
 }): TabGroup[] | null {
   const strippedGroups = retainClientPlacedMirroredTabs({
     groups: currentGroups,
     mirroredUnifiedIds,
     validUnifiedTabIds,
-    clientGroupIdByLocalTabId,
     nextActiveUnifiedTabId
   })
   const groupsById = new Map(strippedGroups.map((group) => [group.id, group]))
@@ -157,10 +126,7 @@ export function buildMirroredHostGroups({
     const localHostOrder = hostGroup.tabOrder
       .map((tabId) => hostToLocalTabId.get(tabId))
       .filter(
-        (tabId): tabId is string =>
-          tabId !== undefined &&
-          validUnifiedTabIds.has(tabId) &&
-          !clientGroupIdByLocalTabId.has(tabId)
+        (tabId): tabId is string => tabId !== undefined && validUnifiedTabIds.has(tabId)
       )
     const localHostOrderIds = new Set(localHostOrder)
     const hostTabOrder = [
@@ -204,11 +170,7 @@ export function buildMirroredHostGroups({
   }
 
   for (const group of strippedGroups) {
-    if (
-      !seen.has(group.id) &&
-      (group.tabOrder.length > 0 ||
-        isWebSessionBrowserPlacementGroupReserved({ worktreeId, groupId: group.id }))
-    ) {
+    if (!seen.has(group.id) && group.tabOrder.length > 0) {
       orderedGroups.push(group)
     }
   }

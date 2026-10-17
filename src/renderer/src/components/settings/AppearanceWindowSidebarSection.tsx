@@ -35,8 +35,6 @@ function recordStatusBarToggleInteraction(
 ): void {
   if (id === 'resource-usage') {
     recordFeatureInteraction('resource-manager')
-  } else if (id === 'ports') {
-    recordFeatureInteraction('ports')
   }
 }
 
@@ -176,50 +174,6 @@ export function AppearanceWindowSidebarSection({
                             }
                           ]}
                         />
-                      }
-                    />
-                  </SearchableSetting>
-
-                  <SearchableSetting
-                    title={translate(
-                      'auto.components.settings.AppearancePane.cf81907069',
-                      'Show Tasks Button'
-                    )}
-                    description={sidebarEntries[0]?.description}
-                    keywords={sidebarEntries[0]?.keywords ?? ['tasks', 'sidebar', 'button']}
-                  >
-                    <SettingsSwitchRow
-                      label={translate(
-                        'auto.components.settings.AppearancePane.cf81907069',
-                        'Show Tasks Button'
-                      )}
-                      checked={settings.showTasksButton !== false}
-                      onChange={() =>
-                        updateSettings({ showTasksButton: !(settings.showTasksButton !== false) })
-                      }
-                    />
-                  </SearchableSetting>
-
-                  <SearchableSetting
-                    title={translate(
-                      'auto.components.settings.AppearancePane.511f270ebb',
-                      'Show Automations Button'
-                    )}
-                    description={sidebarEntries[1]?.description}
-                    keywords={
-                      sidebarEntries[1]?.keywords ?? ['automations', 'automation', 'schedule']
-                    }
-                  >
-                    <SettingsSwitchRow
-                      label={translate(
-                        'auto.components.settings.AppearancePane.511f270ebb',
-                        'Show Automations Button'
-                      )}
-                      checked={settings.showAutomationsButton !== false}
-                      onChange={() =>
-                        updateSettings({
-                          showAutomationsButton: !(settings.showAutomationsButton !== false)
-                        })
                       }
                     />
                   </SearchableSetting>

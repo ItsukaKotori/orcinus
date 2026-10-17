@@ -135,68 +135,6 @@ export function GeneralWorkspaceSettingsSection({
         </SearchableSetting>
       </div>
 
-      <div id="general-skip-delete-automation-confirm" className="scroll-mt-6">
-        <SearchableSetting
-          title={translate(
-            'auto.components.settings.GeneralWorkspaceSettingsSection.ea98373cd8',
-            'Ask Before Deleting Automations'
-          )}
-          description={translate(
-            'auto.components.settings.GeneralWorkspaceSettingsSection.d2dd2ca2e3',
-            'Show a confirmation dialog before deleting an automation and its run history.'
-          )}
-          keywords={['delete', 'automation', 'confirm', 'dialog', 'skip', 'prompt']}
-        >
-          <SettingsSwitchRow
-            label={translate(
-              'auto.components.settings.GeneralWorkspaceSettingsSection.ea98373cd8',
-              'Ask Before Deleting Automations'
-            )}
-            description={translate(
-              'auto.components.settings.GeneralWorkspaceSettingsSection.824b98a0d9',
-              'Show a confirmation before deleting automations and their run history.'
-            )}
-            checked={!settings.skipDeleteAutomationConfirm}
-            onChange={() =>
-              updateSettings({
-                skipDeleteAutomationConfirm: !settings.skipDeleteAutomationConfirm
-              })
-            }
-          />
-        </SearchableSetting>
-      </div>
-
-      <div id="general-skip-delete-artifact-confirm" className="scroll-mt-6">
-        <SearchableSetting
-          title={translate(
-            'auto.components.settings.GeneralWorkspaceSettingsSection.31e300af1c',
-            'Ask Before Deleting Artifacts'
-          )}
-          description={translate(
-            'auto.components.settings.GeneralWorkspaceSettingsSection.fb29a73a17',
-            'Show a confirmation dialog before deleting a shared artifact and breaking its public link.'
-          )}
-          keywords={['delete', 'artifact', 'share', 'link', 'confirm', 'dialog', 'skip', 'prompt']}
-        >
-          <SettingsSwitchRow
-            label={translate(
-              'auto.components.settings.GeneralWorkspaceSettingsSection.31e300af1c',
-              'Ask Before Deleting Artifacts'
-            )}
-            description={translate(
-              'auto.components.settings.GeneralWorkspaceSettingsSection.bf46474e33',
-              'Show a confirmation before deleting a shared artifact. Anyone holding its public link loses access.'
-            )}
-            checked={!settings.skipDeleteArtifactConfirm}
-            onChange={() =>
-              updateSettings({
-                skipDeleteArtifactConfirm: !settings.skipDeleteArtifactConfirm
-              })
-            }
-          />
-        </SearchableSetting>
-      </div>
-
       <div
         id="general-open-in-apps"
         data-settings-section="general-open-in-apps"

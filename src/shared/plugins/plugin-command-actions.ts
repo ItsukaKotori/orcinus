@@ -10,13 +10,10 @@ export const PLUGIN_COMMAND_ALIAS_ACTION_IDS = [
   'floatingWorkspace.maximize',
   'tab.rename',
   'workspace.rename',
-  'view.tasks',
   'sidebar.right.toggle',
   'sidebar.explorer.toggle',
   'sidebar.search.toggle',
-  'sidebar.sourceControl.toggle',
-  'sidebar.checks.toggle',
-  'sidebar.ports.toggle'
+  'sidebar.sourceControl.toggle'
 ] as const satisfies readonly KeybindingActionId[]
 
 export type PluginCommandAliasActionId = (typeof PLUGIN_COMMAND_ALIAS_ACTION_IDS)[number]

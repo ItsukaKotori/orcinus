@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { posix as pathPosix } from 'node:path'
-import type { BrowserPage, BrowserWorkspace } from '../../../shared/browser-workspace-types'
 import type { Tab } from '../../../shared/tab-types'
 import type { OpenFile } from '../store/slices/editor'
 import { applyWebSessionTabsSnapshot, type WebSessionTabsSyncState } from './web-session-tabs-sync'
@@ -98,34 +97,7 @@ describe('applyWebSessionTabsSnapshot', () => {
     expect(patch.activeTabTypeByWorktree?.[WT]).toBe('editor')
   })
 
-  it('applies host-cleared browser and editor tab props over existing mirrored state', () => {
-    const workspace: BrowserWorkspace = {
-      id: 'local-browser-workspace',
-      worktreeId: WT,
-      activePageId: 'local-browser-page',
-      pageIds: ['local-browser-page'],
-      url: 'https://example.com/',
-      title: 'Example Domain',
-      loading: false,
-      faviconUrl: null,
-      canGoBack: false,
-      canGoForward: false,
-      loadError: null,
-      createdAt: NOW - 10
-    }
-    const page: BrowserPage = {
-      id: 'local-browser-page',
-      workspaceId: workspace.id,
-      worktreeId: WT,
-      url: 'https://example.com/',
-      title: 'Example Domain',
-      loading: false,
-      faviconUrl: null,
-      canGoBack: false,
-      canGoForward: false,
-      loadError: null,
-      createdAt: NOW - 10
-    }
+  it('applies host-cleared editor tab props over existing mirrored state', () => {
     const readmePath = pathPosix.join('/repo', 'README.md')
     const file: OpenFile = {
       id: readmePath,
@@ -138,20 +110,6 @@ describe('applyWebSessionTabsSnapshot', () => {
       mode: 'edit'
     }
     const existingTabs: Tab[] = [
-      {
-        id: 'local-browser-unified',
-        entityId: workspace.id,
-        groupId: 'host-group-1',
-        worktreeId: WT,
-        contentType: 'browser',
-        label: 'Example Domain',
-        customLabel: null,
-        color: '#3b82f6',
-        sortOrder: 0,
-        createdAt: NOW - 10,
-        isPreview: false,
-        isPinned: true
-      },
       {
         id: 'host-readme-unified',
         entityId: file.id,
@@ -170,42 +128,11 @@ describe('applyWebSessionTabsSnapshot', () => {
 
     const patch = applyWebSessionTabsSnapshot(
       makeState({
-        browserTabsByWorktree: { [WT]: [workspace] },
-        browserPagesByWorkspace: { [workspace.id]: [page] },
-        remoteBrowserPageHandlesByPageId: {
-          [page.id]: { environmentId: ENV, remotePageId: 'host-browser-page' }
-        },
-        browserCertificateFailuresByPageId: {
-          [page.id]: {
-            challengeId: 'stale-challenge',
-            browserPageId: 'host-browser-page',
-            errorCode: -202,
-            error: 'ERR_CERT_AUTHORITY_INVALID',
-            origin: 'https://localhost:3443',
-            displayHost: 'localhost:3443',
-            canProceed: true,
-            observedAt: 100
-          }
-        },
         openFiles: [file],
         unifiedTabsByWorktree: { [WT]: existingTabs }
       }),
       makeSnapshot(
         [
-          {
-            type: 'browser',
-            id: 'host-browser-unified',
-            title: 'Example Domain',
-            browserWorkspaceId: 'host-browser-workspace',
-            browserPageId: 'host-browser-page',
-            url: 'https://example.com/',
-            loading: false,
-            canGoBack: false,
-            canGoForward: false,
-            color: null,
-            isPinned: false,
-            isActive: false
-          },
           {
             type: 'markdown',
             id: 'host-readme-unified',
@@ -233,20 +160,12 @@ describe('applyWebSessionTabsSnapshot', () => {
     expect(patch.unifiedTabsByWorktree?.[WT]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          id: 'local-browser-unified',
-          color: null,
-          isPinned: false
-        }),
-        expect.objectContaining({
           id: 'host-readme-unified',
           color: null,
           isPinned: false
         })
       ])
     )
-    // Why: older runtimes omit this transient field. Omission must clear an
-    // earlier challenge instead of leaving an unsafe action wired to stale RPC input.
-    expect(patch.browserCertificateFailuresByPageId).toEqual({})
   })
 
   it('uses local markdown preview file ids while preserving the host unified tab id', () => {

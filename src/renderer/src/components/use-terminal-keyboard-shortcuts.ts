@@ -7,7 +7,6 @@ export function useTerminalKeyboardShortcuts(controller: TerminalActivationContr
     activeWorktreeId,
     handleCloseAllFiles,
     handleNewAgentTab,
-    handleNewBrowserTab,
     handleNewFile,
     handleNewTab,
     keybindings,
@@ -31,7 +30,6 @@ export function useTerminalKeyboardShortcuts(controller: TerminalActivationContr
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- preserve the original listener refresh contract across extraction.
   }, [
     activeWorktreeId,
-    handleNewBrowserTab,
     handleNewFile,
     handleNewTab,
     handleNewAgentTab,

@@ -10,11 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/store'
-import {
-  resolveDismissedOnboardingFolderAgentLaunch,
-  revealOnboardingFolderWithAgentLaunch
-} from '@/lib/onboarding-folder-agent-launch'
-import { markOnboardingProjectAdded } from '@/lib/onboarding-project-checklist'
+import { activateAndRevealWorktree } from '@/lib/worktree-activation'
 import { translate } from '@/i18n/i18n'
 import { upsertAddedRepoWithProjectHostSetup } from './add-repo-store-upsert'
 import { worktreeRefreshOptions } from './add-repo-runtime-owner'
@@ -56,7 +52,6 @@ const NonGitFolderDialog = React.memo(function NonGitFolderDialog() {
     if (connectionId && folderPath) {
       void (async () => {
         try {
-          const stateBeforeAdd = useAppStore.getState()
           const result = await window.api.repos.addRemote({
             connectionId,
             remotePath: folderPath,
@@ -70,8 +65,6 @@ const NonGitFolderDialog = React.memo(function NonGitFolderDialog() {
             sshConnectionId: connectionId
           })
           const state = useAppStore.getState()
-          const hadProjectBeforeAdd = stateBeforeAdd.repos.length > 0
-          await markOnboardingProjectAdded('addedFolder')
           const ownerOptions = worktreeRefreshOptions(undefined, connectionId)
           await state.fetchWorktrees(repo.id, ownerOptions)
           // Why: mirror the local non-git folder flow — without this the
@@ -84,19 +77,11 @@ const NonGitFolderDialog = React.memo(function NonGitFolderDialog() {
               (worktree) => worktree.hostId === ownerOptions.executionHostId
             )
           if (folderWorktree) {
-            const onboarding = await window.api.onboarding.get().catch(() => null)
-            // Why: SSH users can hit this dialog from Add Project after
-            // dismissing onboarding, bypassing the local addNonGitFolder path.
-            const launch = resolveDismissedOnboardingFolderAgentLaunch({
-              store: useAppStore.getState(),
-              onboarding,
-              hasExistingProject: hadProjectBeforeAdd,
-              executionHostId: ownerOptions.executionHostId ?? connectionId
-            })
-            await revealOnboardingFolderWithAgentLaunch({
-              worktreeId: folderWorktree.id,
-              executionHostId: ownerOptions.executionHostId,
-              launch
+            activateAndRevealWorktree(folderWorktree.id, {
+              sidebarRevealBehavior: 'auto',
+              ...(ownerOptions.executionHostId
+                ? { executionHostId: ownerOptions.executionHostId }
+                : {})
             })
           }
         } catch (err) {

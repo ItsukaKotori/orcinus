@@ -41,7 +41,6 @@ export function buildWindowApi(args: {
         onOpenQuickOpen: () => () => {},
         onToggleQuickCommandsMenu: () => () => {},
         onOpenNewWorkspace: () => () => {},
-        onOpenTasks: () => () => {},
         onJumpToWorktreeIndex: () => () => {},
         onJumpToTabIndex: () => () => {},
         onWorktreeHistoryNavigate: () => () => {},

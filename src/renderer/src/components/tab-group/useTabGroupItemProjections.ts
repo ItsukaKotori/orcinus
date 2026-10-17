@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import type { OpenFile } from '@/store/slices/editor'
-import type { BrowserTab as BrowserTabState } from '../../../../shared/browser-workspace-types'
 import type { Tab, TabGroup } from '../../../../shared/tab-types'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
 import { resolveUnifiedTabLabel } from '../../../../shared/tab-title-resolution'
@@ -13,14 +12,12 @@ export type TabGroupWorktreeSnapshot = {
   unifiedTabs: readonly Tab[]
   terminalTabs: readonly TerminalTab[]
   openFiles: TabGroupAppState['openFiles']
-  browserTabs: readonly BrowserTabState[]
   expandedPaneByTabId: TabGroupAppState['expandedPaneByTabId']
   terminalLayoutsByTabId: NonNullable<TabGroupAppState['terminalLayoutsByTabId']>
   generatedTabTitlesEnabled: boolean
 }
 
 export type GroupEditorItem = OpenFile & { tabId: string }
-export type GroupBrowserItem = BrowserTabState & { tabId: string }
 export type GroupAgentSessionItem = Tab & { contentType: 'agent-session' }
 export type GroupPluginItem = Tab & { contentType: 'plugin' }
 
@@ -56,10 +53,6 @@ export function useTabGroupItemProjections({
   const openFileById = useMemo(
     () => new Map(worktreeState.openFiles.map((item) => [item.id, item])),
     [worktreeState.openFiles]
-  )
-  const browserTabById = useMemo(
-    () => new Map(worktreeState.browserTabs.map((item) => [item.id, item])),
-    [worktreeState.browserTabs]
   )
   const groupTabById = useMemo(() => new Map(groupTabs.map((item) => [item.id, item])), [groupTabs])
 
@@ -119,18 +112,6 @@ export function useTabGroupItemProjections({
     [groupTabs, openFileById]
   )
 
-  const browserItems = useMemo<GroupBrowserItem[]>(
-    () =>
-      groupTabs
-        .filter((item) => item.contentType === 'browser')
-        .map((item) => {
-          const bt = browserTabById.get(item.entityId)
-          return bt ? { ...bt, tabId: item.id } : null
-        })
-        .filter((item): item is GroupBrowserItem => item !== null),
-    [browserTabById, groupTabs]
-  )
-
   const agentSessionItems = useMemo<GroupAgentSessionItem[]>(
     () =>
       groupTabs.filter(
@@ -151,9 +132,7 @@ export function useTabGroupItemProjections({
         if (!item) {
           return itemId
         }
-        return item.contentType === 'terminal' || item.contentType === 'browser'
-          ? item.entityId
-          : item.id
+        return item.contentType === 'terminal' ? item.entityId : item.id
       }),
     [group, groupTabById]
   )
@@ -164,7 +143,6 @@ export function useTabGroupItemProjections({
     activeTab,
     terminalTabs,
     editorItems,
-    browserItems,
     agentSessionItems,
     pluginItems,
     tabBarOrder

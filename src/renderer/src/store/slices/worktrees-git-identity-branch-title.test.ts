@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AppState } from '../types'
-import { resetHostedReviewLinkMutationGenerationForTests } from './worktrees'
 import { makeWorktree } from './worktrees-slice-test-fixtures'
 import {
   createTestStore,
@@ -31,7 +30,6 @@ describe('updateWorktreeGitIdentity', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetRemoteRuntimeMocks()
-    resetHostedReviewLinkMutationGenerationForTests()
   })
 
   it('updates branch identity from git status without fetching worktrees', () => {
@@ -87,38 +85,6 @@ describe('updateWorktreeGitIdentity', () => {
     unsubscribe()
     expect(notifications).toBe(0)
     expect(store.getState().sortEpoch).toBe(3)
-  })
-
-  it('clears branch-scoped linked reviews when git status observes a branch switch', () => {
-    const store = createTestStore()
-    const existing = makeWorktree({
-      id: 'repo1::/path/wt1',
-      repoId: 'repo1',
-      path: '/path/wt1',
-      branch: 'refs/heads/stack/one',
-      linkedPR: 101,
-      linkedGitLabMR: 102,
-      linkedBitbucketPR: 103,
-      linkedAzureDevOpsPR: 104,
-      linkedGiteaPR: 105,
-      pushTarget: { remoteName: 'fork', branchName: 'old/review-head' }
-    })
-
-    store.setState({ worktreesByRepo: { repo1: [existing] } } as Partial<AppState>)
-
-    store.getState().updateWorktreeGitIdentity('repo1::/path/wt1', {
-      branch: 'refs/heads/stack/two'
-    })
-
-    expect(store.getState().worktreesByRepo.repo1[0]).toMatchObject({
-      branch: 'refs/heads/stack/two',
-      linkedPR: null,
-      linkedGitLabMR: null,
-      linkedBitbucketPR: null,
-      linkedAzureDevOpsPR: null,
-      linkedGiteaPR: null,
-      pushTarget: undefined
-    })
   })
 
   it('preserves linked reviews when branch identity only changes ref formatting', () => {

@@ -1,4 +1,4 @@
-import { Activity, Plug } from 'lucide-react'
+import { Activity } from 'lucide-react'
 import React from 'react'
 import {
   DropdownMenu,
@@ -43,16 +43,6 @@ export function StatusBarVisibilityMenu({
         >
           <Activity className="size-3.5" />
           {translate('auto.components.status.bar.StatusBar.d1e1a7a6bf', 'Resource Manager')}
-        </DropdownMenuCheckboxItem>
-        <DropdownMenuCheckboxItem
-          checked={statusBarItems.includes('ports')}
-          onCheckedChange={() => {
-            recordFeatureInteraction('ports')
-            toggleStatusBarItem('ports')
-          }}
-        >
-          <Plug className="size-3.5" />
-          {translate('auto.components.status.bar.StatusBar.9659e38343', 'Ports')}
         </DropdownMenuCheckboxItem>
       </DropdownMenuContent>
     </DropdownMenu>

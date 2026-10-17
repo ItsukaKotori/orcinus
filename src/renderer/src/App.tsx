@@ -2,9 +2,6 @@ import { useCallback, useEffect } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ConfirmationDialogProvider } from './components/confirmation-dialog'
-import { BrowserWebAuthnAccountDialog } from './components/browser-webauthn-account-dialog'
-import { DocPreviewExternalLinkConfirmation } from './components/browser-pane/workspace-doc/doc-preview-external-link-confirmation'
-import { LinkRoutingPreferenceDialogProvider } from './components/link-routing-preference-dialog'
 import PinnedTabCloseDialog from './components/terminal-pane/PinnedTabCloseDialog'
 import RunningTerminalCloseDialog from './components/terminal-pane/RunningTerminalCloseDialog'
 import WorktreeBaseFallbackDialog from './components/WorktreeBaseFallbackDialog'
@@ -26,7 +23,6 @@ import { useAppStartupHydration } from './app-shell/use-app-startup-hydration'
 import { useDocumentAppearance } from './app-shell/use-document-appearance'
 import { useFloatingWorkspacePanel } from './app-shell/use-floating-workspace-panel'
 import { useGlobalKeybindings } from './app-shell/use-global-keybindings'
-import { useOnboarding } from './app-shell/use-onboarding'
 import { usePersistedUIWriter } from './app-shell/use-persisted-ui-writer'
 import { useRuntimeGraphSync } from './app-shell/use-runtime-graph-sync'
 import { useWindowVisibilityEffects } from './app-shell/use-window-visibility-effects'
@@ -34,7 +30,6 @@ import { useWindowVisibilityEffects } from './app-shell/use-window-visibility-ef
 function App(): React.JSX.Element {
   const layout = useAppChromeLayout()
   const floatingWorkspace = useFloatingWorkspacePanel()
-  const onboardingGate = useOnboarding()
   const clearUnreadDockBadge = useUnreadDockBadge()
 
   // Why enabled && open: the overlay only renders while the feature is on, and its panel is
@@ -42,7 +37,7 @@ function App(): React.JSX.Element {
   useAppShellServices({
     floatingPanelVisible: floatingWorkspace.enabled && floatingWorkspace.open
   })
-  useAppStartupHydration(onboardingGate.applyStartupOnboardingState)
+  useAppStartupHydration()
   useAppSessionPersistence()
   useRuntimeGraphSync()
   usePersistedUIWriter()
@@ -90,16 +85,9 @@ function App(): React.JSX.Element {
     >
       <TooltipProvider delayDuration={400}>
         <ConfirmationDialogProvider>
-          <DocPreviewExternalLinkConfirmation />
-          <LinkRoutingPreferenceDialogProvider>
-            <AppBackgroundServices />
-            <AppWorkspaceShell layout={layout} floatingWorkspace={floatingWorkspace} />
-            <AppRootSurfaces
-              floatingWorkspace={floatingWorkspace}
-              onboardingGate={onboardingGate}
-            />
-            <BrowserWebAuthnAccountDialog />
-          </LinkRoutingPreferenceDialogProvider>
+          <AppBackgroundServices />
+          <AppWorkspaceShell layout={layout} floatingWorkspace={floatingWorkspace} />
+          <AppRootSurfaces floatingWorkspace={floatingWorkspace} />
         </ConfirmationDialogProvider>
       </TooltipProvider>
       <Toaster closeButton toastOptions={{ className: 'font-sans text-sm' }} />

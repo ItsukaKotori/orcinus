@@ -120,14 +120,6 @@ export const KEYBINDING_DEFINITION_CORE_1: readonly KeybindingDefinition[] = [
     defaultBindings: platformBindings(['Mod+1'])
   },
   {
-    id: 'view.tasks',
-    title: 'Open Tasks',
-    group: 'Global',
-    scope: 'global',
-    searchKeywords: ['shortcut', 'tasks', 'github issues', 'linear'],
-    defaultBindings: platformBindings([])
-  },
-  {
     id: 'sidebar.left.toggle',
     title: 'Toggle Sidebar',
     group: 'Global',
@@ -166,26 +158,6 @@ export const KEYBINDING_DEFINITION_CORE_1: readonly KeybindingDefinition[] = [
     scope: 'global',
     searchKeywords: ['shortcut', 'sidebar', 'source control', 'git'],
     defaultBindings: platformBindings(['Mod+Shift+G'])
-  },
-  {
-    id: 'sidebar.checks.toggle',
-    title: 'Show Checks',
-    group: 'Global',
-    scope: 'global',
-    searchKeywords: ['shortcut', 'sidebar', 'checks', 'ci'],
-    defaultBindings: platformBindings([])
-  },
-  {
-    id: 'sidebar.ports.toggle',
-    title: 'Show Ports',
-    group: 'Global',
-    scope: 'global',
-    searchKeywords: ['shortcut', 'sidebar', 'ports'],
-    defaultBindings: {
-      darwin: ['Mod+Shift+I'],
-      linux: [],
-      win32: []
-    }
   },
   {
     id: 'sidebar.sleepingWorkspaces.toggle',

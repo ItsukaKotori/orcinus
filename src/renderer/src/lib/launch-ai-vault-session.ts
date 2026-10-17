@@ -88,13 +88,7 @@ export function launchAiVaultSessionInNewTab(args: {
   const fresh = useAppStore.getState()
   const termIds = (fresh.tabsByWorktree[args.worktreeId] ?? []).map((t) => t.id)
   const editorIds = fresh.openFiles.filter((f) => f.worktreeId === args.worktreeId).map((f) => f.id)
-  const browserIds = (fresh.browserTabsByWorktree?.[args.worktreeId] ?? []).map((t) => t.id)
-  const base = reconcileTabOrder(
-    fresh.tabBarOrderByWorktree[args.worktreeId],
-    termIds,
-    editorIds,
-    browserIds
-  )
+  const base = reconcileTabOrder(fresh.tabBarOrderByWorktree[args.worktreeId], termIds, editorIds)
   const order = base.filter((id) => id !== tab.id)
   order.push(tab.id)
   fresh.setTabBarOrder(args.worktreeId, order)

@@ -9,8 +9,7 @@ describe('routeAddRepoBrowse', () => {
 
     routeAddRepoBrowse(parseExecutionHostId('runtime:paired-host'), {
       browseLocal: pickFolders,
-      browseRuntime,
-      browseSsh: vi.fn()
+      browseRuntime
     })
 
     expect(browseRuntime).toHaveBeenCalledOnce()
@@ -22,22 +21,9 @@ describe('routeAddRepoBrowse', () => {
 
     routeAddRepoBrowse(parseExecutionHostId('local'), {
       browseLocal: pickFolders,
-      browseRuntime: vi.fn(),
-      browseSsh: vi.fn()
+      browseRuntime: vi.fn()
     })
 
     expect(pickFolders).toHaveBeenCalledOnce()
-  })
-
-  it('preserves SSH host browsing', () => {
-    const browseSsh = vi.fn()
-
-    routeAddRepoBrowse(parseExecutionHostId('ssh:builder'), {
-      browseLocal: vi.fn(),
-      browseRuntime: vi.fn(),
-      browseSsh
-    })
-
-    expect(browseSsh).toHaveBeenCalledWith('builder')
   })
 })

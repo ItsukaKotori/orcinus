@@ -118,12 +118,9 @@ export function createRecentlyClosedEditorTabs(
         const newActiveFileIdByWorktree = { ...s.activeFileIdByWorktree }
         delete newActiveFileIdByWorktree[activeWorktreeId]
         const newActiveTabTypeByWorktree = { ...s.activeTabTypeByWorktree }
-        const browserTabsForWorktree = s.browserTabsByWorktree[activeWorktreeId] ?? []
         const terminalTabsForWorktree = s.tabsByWorktree[activeWorktreeId] ?? []
-        newActiveTabTypeByWorktree[activeWorktreeId] =
-          browserTabsForWorktree.length > 0 ? 'browser' : 'terminal'
-        const shouldDeactivateWorktree =
-          browserTabsForWorktree.length === 0 && terminalTabsForWorktree.length === 0
+        newActiveTabTypeByWorktree[activeWorktreeId] = 'terminal'
+        const shouldDeactivateWorktree = terminalTabsForWorktree.length === 0
 
         // Why: mirrored tabs use host tab ids in tab order while local entries use file ids; remove both shapes.
         const closedFileIds = new Set(
@@ -172,14 +169,7 @@ export function createRecentlyClosedEditorTabs(
           activeFileId: null,
           // Why: closing every editor can leave no renderable surface; clear the active worktree so the renderer shows the landing page, not a blank workspace.
           activeWorktreeId: shouldDeactivateWorktree ? null : s.activeWorktreeId,
-          activeBrowserTabId: shouldDeactivateWorktree
-            ? null
-            : browserTabsForWorktree.length > 0
-              ? (s.activeBrowserTabIdByWorktree[activeWorktreeId] ??
-                browserTabsForWorktree[0]?.id ??
-                null)
-              : s.activeBrowserTabId,
-          activeTabType: browserTabsForWorktree.length > 0 ? 'browser' : 'terminal',
+          activeTabType: 'terminal',
           markdownViewMode: newMarkdownViewMode,
           markdownRichModeSizeOverride: newMarkdownRichModeSizeOverride,
           editorViewMode: newEditorViewMode,

@@ -273,7 +273,6 @@ describe('connectPanePty', () => {
     expect(
       resolveWorktreeStatus({
         tabs: [{ id: 'tab-1', title: 'Codex working' }],
-        browserTabs: [],
         ptyIdsByTabId: { 'tab-1': ['tab-pty'] },
         runtimePaneTitlesByTabId: mockStoreState.runtimePaneTitlesByTabId,
         hasPermission: false,

@@ -69,7 +69,6 @@ function resetPreflightMocks(): void {
 function makeStatus(glabInstalled: boolean): PreflightStatus {
   return {
     git: { installed: true },
-    gh: { installed: true, authenticated: true },
     glab: { installed: glabInstalled, authenticated: glabInstalled }
   }
 }

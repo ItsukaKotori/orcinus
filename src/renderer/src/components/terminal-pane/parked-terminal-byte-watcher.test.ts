@@ -34,7 +34,6 @@ type MockStoreState = {
   markTerminalTabUnread: ReturnType<typeof vi.fn>
   markTerminalPaneUnread: ReturnType<typeof vi.fn>
   setCacheTimerStartedAt: ReturnType<typeof vi.fn>
-  observeTerminalGitHubPullRequestLink: ReturnType<typeof vi.fn>
   agentStatusByPaneKey: Record<string, { state: string; prompt: string; agentType?: string }>
 }
 
@@ -88,7 +87,6 @@ function createMockStoreState(): MockStoreState {
     markTerminalTabUnread: vi.fn(),
     markTerminalPaneUnread: vi.fn(),
     setCacheTimerStartedAt: vi.fn(),
-    observeTerminalGitHubPullRequestLink: vi.fn(),
     agentStatusByPaneKey: {}
   }
 }
@@ -373,25 +371,6 @@ describe('startParkedTerminalByteWatcher', () => {
     emit('\x1b[?2031l')
 
     expect(ptyWrite).not.toHaveBeenCalled()
-    dispose()
-  })
-
-  it('observes GitHub PR links across chunk boundaries', async () => {
-    const { dispose } = await startWatcher()
-
-    emit('PR: https://github.com/orca-dev/orca/pull/42')
-    expect(mockStoreState.observeTerminalGitHubPullRequestLink).not.toHaveBeenCalled()
-
-    emit('1\r\ndone')
-    expect(mockStoreState.observeTerminalGitHubPullRequestLink).toHaveBeenCalledTimes(1)
-    expect(mockStoreState.observeTerminalGitHubPullRequestLink).toHaveBeenCalledWith(
-      WORKTREE_ID,
-      expect.objectContaining({
-        url: 'https://github.com/orca-dev/orca/pull/421',
-        number: 421,
-        slug: { owner: 'orca-dev', repo: 'orca', host: 'github.com' }
-      })
-    )
     dispose()
   })
 
@@ -862,10 +841,6 @@ describe('startParkedTerminalByteWatcher', () => {
       await dispatchFacts([{ kind: '2031-subscribe' }])
       expect(ptyWrite).not.toHaveBeenCalled()
 
-      // Why: pr-link facts arrive on the channel; byte-scanning here too
-      // would observe every link twice.
-      emit('PR: https://github.com/orca-dev/orca/pull/42\r\n')
-      expect(mockStoreState.observeTerminalGitHubPullRequestLink).not.toHaveBeenCalled()
       dispose()
     })
 
@@ -904,25 +879,6 @@ describe('startParkedTerminalByteWatcher', () => {
 
       expect(ptyWrite).not.toHaveBeenCalled()
       expect(setHiddenRendererPty).not.toHaveBeenCalled()
-      dispose()
-    })
-
-    it('observes PR links from pr-link facts with worktree attribution', async () => {
-      enableMainAuthority()
-      const { dispose } = await startWatcher()
-
-      const link = {
-        url: 'https://github.com/orca-dev/orca/pull/421',
-        slug: { owner: 'orca-dev', repo: 'orca' },
-        number: 421
-      }
-      await dispatchFacts([{ kind: 'pr-link', link }])
-
-      expect(mockStoreState.observeTerminalGitHubPullRequestLink).toHaveBeenCalledTimes(1)
-      expect(mockStoreState.observeTerminalGitHubPullRequestLink).toHaveBeenCalledWith(
-        WORKTREE_ID,
-        link
-      )
       dispose()
     })
 

@@ -17,7 +17,6 @@ type MinimalState = Pick<
   | 'worktreeNavHistoryIndex'
   | 'isNavigatingHistory'
   | 'recordWorktreeVisit'
-  | 'recordViewVisit'
   | 'goBackWorktree'
   | 'goForwardWorktree'
   | 'worktreesByRepo'

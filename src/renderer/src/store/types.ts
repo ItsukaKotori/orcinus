@@ -6,11 +6,7 @@ import type { TabsSlice } from './slices/tabs'
 import type { UISlice } from './slices/ui'
 import type { SettingsSlice } from './slices/settings'
 import type { KeybindingsSlice } from './slices/keybindings'
-import type { GitHubSlice } from './slices/github'
-import type { HostedReviewSlice } from './slices/hosted-review'
-import type { LinearSlice } from './slices/linear'
 import type { PreflightSlice } from './slices/preflight'
-import type { JiraSlice } from './slices/jira'
 import type { EditorSlice } from './slices/editor'
 import type { StatsSlice } from './slices/stats'
 import type { MemorySlice } from './slices/memory'
@@ -20,7 +16,6 @@ import type {
   CodexUsageSlice,
   OpenCodeUsageSlice
 } from './slices/usage-provider-slices'
-import type { BrowserSlice } from './slices/browser'
 import type { RateLimitSlice } from './slices/rate-limits'
 import type { SshSlice } from './slices/ssh'
 import type { RuntimeEnvironmentSshSlice } from './slices/runtime-environment-ssh'
@@ -33,13 +28,10 @@ import type { WorktreeNavHistorySlice } from './slices/worktree-nav-history'
 import type { WorkspaceCleanupSlice } from './slices/workspace-cleanup'
 import type { WorkspaceCleanupBrowseSlice } from './slices/workspace-cleanup-browse'
 import type { RuntimeStatusSlice } from './slices/runtime-status'
-import type { PullRequestGenerationSlice } from './slices/pull-request-generation'
 import type { CommitMessageGenerationSlice } from './slices/commit-message-generation'
 import type { PinnedTabCloseConfirmSlice } from './slices/pinned-tab-close-confirm'
 import type { RecentlyClosedTabsSlice } from './slices/recently-closed-tabs'
 import type { OrcaProfilesSlice } from './slices/orca-profiles'
-import type { NewIssueDraftSlice } from './slices/new-issue-draft'
-import type { TaskCreationDraftsSlice } from './slices/task-creation-drafts'
 import type { TerminalQuickCommandHostsSlice } from './slices/terminal-quick-command-hosts'
 import type { PluginCenterSlice } from './slices/plugin-center/plugin-center-slice'
 
@@ -51,11 +43,7 @@ export type AppState = RepoSlice &
   UISlice &
   SettingsSlice &
   KeybindingsSlice &
-  GitHubSlice &
-  HostedReviewSlice &
-  LinearSlice &
   PreflightSlice &
-  JiraSlice &
   EditorSlice &
   StatsSlice &
   MemorySlice &
@@ -63,7 +51,6 @@ export type AppState = RepoSlice &
   ClaudeUsageSlice &
   CodexUsageSlice &
   OpenCodeUsageSlice &
-  BrowserSlice &
   RateLimitSlice &
   SshSlice &
   RuntimeEnvironmentSshSlice &
@@ -76,12 +63,9 @@ export type AppState = RepoSlice &
   WorkspaceCleanupSlice &
   WorkspaceCleanupBrowseSlice &
   RuntimeStatusSlice &
-  PullRequestGenerationSlice &
   CommitMessageGenerationSlice &
   PinnedTabCloseConfirmSlice &
   RecentlyClosedTabsSlice &
   OrcaProfilesSlice &
-  NewIssueDraftSlice &
-  TaskCreationDraftsSlice &
   TerminalQuickCommandHostsSlice &
   PluginCenterSlice

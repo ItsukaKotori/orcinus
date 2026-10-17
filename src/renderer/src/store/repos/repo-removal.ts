@@ -97,12 +97,6 @@ export function createRepoRemovalActions(
         }
 
         get().clearOrcaHookTrustForRepo(projectId)
-        const repoPath = get().repos.find((repo) =>
-          repoMatchesHostIdentity(repo, projectId, ownerHostId)
-        )?.path
-        get().evictGitHubRepoCaches(projectId, repoPath)
-        const { clearRepoSlugCacheEntry } = await import('../../lib/repo-slug-index')
-        clearRepoSlugCacheEntry(projectId)
 
         // Kill PTYs for all worktrees belonging to this repo
         const worktreeIds = getKnownRepoWorktreeIds(get(), projectId, ownerHostId)

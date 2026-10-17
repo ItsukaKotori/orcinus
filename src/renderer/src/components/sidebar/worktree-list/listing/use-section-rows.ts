@@ -31,7 +31,6 @@ type SectionRowsArgs = {
   repoMap: Map<string, Repo>
   worktreeMap: Map<string, Worktree>
   worktreeLineageById: Record<string, WorktreeLineage>
-  prCache: AppState['prCache'] | null
   settings: AppState['settings']
   workspaceStatuses: readonly WorkspaceStatusDefinition[]
   effectiveCollapsedGroups: Set<string>
@@ -39,8 +38,8 @@ type SectionRowsArgs = {
   visibleReposForRows: readonly Repo[]
   visibleProjectGroupsForRows: readonly ProjectGroup[]
   visibleFolderWorkspacesForRows: readonly FolderWorkspace[]
-  importedWorktreesByRepo: Parameters<typeof buildRows>[14]
-  newExternalWorktreesInboxByRepo: Parameters<typeof buildRows>[15]
+  importedWorktreesByRepo: Parameters<typeof buildRows>[13]
+  newExternalWorktreesInboxByRepo: Parameters<typeof buildRows>[14]
   filterRepoIds: readonly string[]
   visibleWorkspaceHostIds: readonly ExecutionHostId[] | null
   workspaceHostScope: AppState['workspaceHostScope']
@@ -147,7 +146,6 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
         args.groupBy,
         worktrees,
         repoMap,
-        args.prCache,
         effectiveCollapsedGroups,
         repoOrder,
         args.workspaceStatuses,
@@ -171,7 +169,6 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
       args.groupBy,
       worktrees,
       repoMap,
-      args.prCache,
       effectiveCollapsedGroups,
       defaultHostId,
       repoOrder,

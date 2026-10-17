@@ -28,18 +28,13 @@ export type FloatingTerminalPanelMocks = {
   activateWebRuntimeSessionTab: Mock<
     (args: { worktreeId: string; tabId: string }) => Promise<boolean>
   >
-  closeBrowserTab: Mock<FloatingPanelStoreState['closeBrowserTab']>
   closeWebRuntimeSessionTab: Mock<(args: { worktreeId: string; tabId: string }) => Promise<boolean>>
   closeFile: Mock<FloatingPanelStoreState['closeFile']>
   closeTab: Mock<(tabId: string, options?: { reason?: string }) => void>
   closeTerminalTab: Mock<(tabId: string, options?: { onClosed?: () => void }) => void>
   closeUnifiedTab: Mock<FloatingPanelStoreState['closeUnifiedTab']>
   guardPinnedTabClose: Mock<(options: { isPinned: boolean; onClose: () => void }) => void>
-  // Floating creates pass options the store fixture type does not model, so keep vitest's
-  // default loose signature rather than narrowing call assertions.
-  createBrowserTab: Mock
   createTab: Mock<FloatingPanelStoreState['createTab']>
-  createWebRuntimeSessionBrowserTab: Mock<(args: { worktreeId: string }) => Promise<boolean>>
   createWebRuntimeSessionTerminal: Mock<(args: { worktreeId: string }) => Promise<boolean>>
   // Called both as focus(tabId) and focus(tabId, leafId, options); the default signature keeps
   // every arity assertable.
@@ -67,7 +62,6 @@ export type FloatingTerminalPanelMocks = {
 export const mocks: FloatingTerminalPanelMocks = {
   activateTab: vi.fn(),
   activateWebRuntimeSessionTab: vi.fn(),
-  closeBrowserTab: vi.fn(),
   closeWebRuntimeSessionTab: vi.fn(),
   closeFile: vi.fn(),
   closeTab: vi.fn(),
@@ -86,9 +80,7 @@ export const mocks: FloatingTerminalPanelMocks = {
       options.onClose()
     }
   }),
-  createBrowserTab: vi.fn(),
   createTab: vi.fn(),
-  createWebRuntimeSessionBrowserTab: vi.fn(),
   createWebRuntimeSessionTerminal: vi.fn(),
   focusTerminalTabSurface: vi.fn(),
   getFloatingMarkdownDirectory: vi.fn(),
@@ -120,8 +112,6 @@ export const parkingBox = {
 function resetStore(tabs: TerminalTab[] = []): void {
   storeBox.state = {
     tabsByWorktree: { [FLOATING_TERMINAL_WORKTREE_ID]: tabs },
-    browserTabsByWorktree: {},
-    browserPagesByWorkspace: {},
     groupsByWorktree: {},
     unifiedTabsByWorktree: {},
     openFiles: [],
@@ -129,11 +119,9 @@ function resetStore(tabs: TerminalTab[] = []): void {
     activeTabIdByWorktree: { [FLOATING_TERMINAL_WORKTREE_ID]: tabs[0]?.id ?? null },
     expandedPaneByTabId: {},
     activateTab: mocks.activateTab,
-    closeBrowserTab: mocks.closeBrowserTab,
     closeFile: mocks.closeFile,
     closeUnifiedTab: mocks.closeUnifiedTab,
     createTab: mocks.createTab,
-    createBrowserTab: mocks.createBrowserTab,
     closeTab: mocks.closeTab,
     markFileDirty: mocks.markFileDirty,
     makePreviewFilePermanent: mocks.makePreviewFilePermanent,
@@ -143,7 +131,6 @@ function resetStore(tabs: TerminalTab[] = []): void {
     setTabCustomTitle: mocks.setTabCustomTitle,
     setTabColor: mocks.setTabColor,
     setTabPaneExpanded: mocks.setTabPaneExpanded,
-    browserDefaultUrl: 'about:blank',
     keybindings: {},
     tabBarOrderByWorktree: { [FLOATING_TERMINAL_WORKTREE_ID]: tabs.map((tab) => tab.id) },
     settings: { floatingTerminalCwd: '' }
@@ -172,7 +159,6 @@ export async function setupFloatingTerminalPanelTest(): Promise<void> {
   const { clearReportedFloatingFocusCache } = await import('./FloatingTerminalPanel')
   clearReportedFloatingFocusCache()
   mocks.createTab.mockReturnValue(makeTab({ id: 'created-tab' }))
-  mocks.createWebRuntimeSessionBrowserTab.mockResolvedValue(false)
   mocks.createWebRuntimeSessionTerminal.mockResolvedValue(false)
   mocks.getFloatingMarkdownDirectory.mockResolvedValue('/tmp/orca/floating-notes')
   mocks.getFloatingTerminalCwd.mockResolvedValue('/tmp/orca')
@@ -196,7 +182,6 @@ export async function setupFloatingTerminalPanelTest(): Promise<void> {
         getFloatingTerminalCwd: mocks.getFloatingTerminalCwd,
         pickFloatingMarkdownDocument: mocks.pickFloatingMarkdownDocument
       },
-      browser: { notifyActiveTabChanged: vi.fn() },
       cli: { getInstallStatus: mocks.getInstallStatus },
       ui: { setFloatingFocus: mocks.setFloatingFocus }
     },

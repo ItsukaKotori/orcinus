@@ -25,9 +25,8 @@ export function retainOpenTabResultsForQuery({
     return NO_RESULTS
   }
   // Why re-run the engines instead of re-reading the row text: only they know
-  // every matchable field — type aliases, absolute paths, agent snippets,
-  // browser workspace labels — and Enter must never submit a row the query on
-  // screen does not match.
+  // every matchable field — type aliases, absolute paths, agent snippets — and
+  // Enter must never submit a row the query on screen does not match.
   const liveResultIds = new Set(
     searchOpenTabs({ ...entriesBehindResults(entries, results), query }).map((result) => result.id)
   )
@@ -43,16 +42,12 @@ function entriesBehindResults(
   results: readonly OpenTabSearchResult[]
 ): OpenTabSearchEntries {
   const workspaceTabIds = new Set<string>()
-  const browserPageIds = new Set<string>()
   for (const result of results) {
     if (result.source === 'workspace') {
       workspaceTabIds.add(result.tabId)
-    } else {
-      browserPageIds.add(result.pageId)
     }
   }
   return {
-    workspaceTabs: entries.workspaceTabs.filter((entry) => workspaceTabIds.has(entry.tab.id)),
-    browserPages: entries.browserPages.filter((entry) => browserPageIds.has(entry.page.id))
+    workspaceTabs: entries.workspaceTabs.filter((entry) => workspaceTabIds.has(entry.tab.id))
   }
 }

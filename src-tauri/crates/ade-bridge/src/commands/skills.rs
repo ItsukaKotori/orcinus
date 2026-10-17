@@ -11,7 +11,7 @@
 //!
 //! Field decisions (documented for the reviewer):
 //! - `scannedAt` crosses the bridge as an ISO-8601 UTC string (matching the
-//!   aiVault/computer surfaces); `real/skills.ts` parses it to epoch millis for
+//!   aiVault surface); `real/skills.ts` parses it to epoch millis for
 //!   the shared `SkillDiscoveryResult` contract.
 //! - `description` and `updatedAt` are minimal legal values (`null`): the hook
 //!   read surface (`useInstalledAgentSkills`) matches on name / directory path /
@@ -526,7 +526,7 @@ fn process_home() -> Result<PathBuf, BridgeError> {
 }
 
 /// UTC ISO-8601 with millisecond precision, matching the other bridge
-/// timestamps (`ade-computer`/`ade-ai-vault`) without a time crate.
+/// timestamps (`ade-ai-vault`) without a time crate.
 fn iso8601_utc(time: SystemTime) -> String {
     let duration = time.duration_since(UNIX_EPOCH).unwrap_or_default();
     let seconds = duration.as_secs() as i64;

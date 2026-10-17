@@ -26,11 +26,8 @@ const {
   resetRuntimeMobileSyncProjectionCachesForTests,
   runtimeMobileSessionSyncKeysEqual
 } = await import('./sync-runtime-graph')
-const {
-  buildRuntimeMobileBrowserProjection,
-  buildRuntimeMobileEditorDraftsProjection,
-  buildRuntimeMobileOpenFilesProjection
-} = await import('./sync-runtime-graph/sync-projections')
+const { buildRuntimeMobileEditorDraftsProjection, buildRuntimeMobileOpenFilesProjection } =
+  await import('./sync-runtime-graph/sync-projections')
 const { AGENT_STATUS_SYNC_UPDATED_AT_BUCKET_MS } = await import('./sync-runtime-graph/graph-state')
 
 // ── Reference implementations: the pre-change bodies, kept verbatim ────────────────────
@@ -59,38 +56,6 @@ function referenceOpenFilesProjection(openFiles: AppState['openFiles']): string 
       markdownPreviewSourceFileId: file.markdownPreviewSourceFileId
     }))
   )
-}
-
-function referenceBrowserProjection(state: AppState): string {
-  return JSON.stringify({
-    workspacesByWorktree: Object.fromEntries(
-      Object.entries(state.browserTabsByWorktree ?? {}).map(([worktreeId, workspaces]) => [
-        worktreeId,
-        workspaces.map((workspace) => ({
-          id: workspace.id,
-          activePageId: workspace.activePageId,
-          title: workspace.title,
-          url: workspace.url,
-          loading: workspace.loading,
-          canGoBack: workspace.canGoBack,
-          canGoForward: workspace.canGoForward
-        }))
-      ])
-    ),
-    pagesByWorkspace: Object.fromEntries(
-      Object.entries(state.browserPagesByWorkspace ?? {}).map(([workspaceId, pages]) => [
-        workspaceId,
-        pages.map((page) => ({
-          id: page.id,
-          title: page.title,
-          url: page.url,
-          loading: page.loading,
-          canGoBack: page.canGoBack,
-          canGoForward: page.canGoForward
-        }))
-      ])
-    )
-  })
 }
 
 /** The pre-change agent-status serialization, including its `localeCompare` sort. */
@@ -156,31 +121,6 @@ function makeOpenFile(index: number, overrides: Record<string, unknown> = {}): n
     mode: 'edit',
     isDirty: false,
     isUntitled: false,
-    ...overrides
-  } as never
-}
-
-function makeBrowserWorkspace(index: number, overrides: Record<string, unknown> = {}): never {
-  return {
-    id: `ws-${index}`,
-    activePageId: `page-${index}`,
-    title: `tab ${index}`,
-    url: `https://example.test/${index}`,
-    loading: false,
-    canGoBack: false,
-    canGoForward: false,
-    ...overrides
-  } as never
-}
-
-function makeBrowserPage(index: number, overrides: Record<string, unknown> = {}): never {
-  return {
-    id: `page-${index}`,
-    title: `page ${index}`,
-    url: `https://example.test/${index}`,
-    loading: false,
-    canGoBack: false,
-    canGoForward: false,
     ...overrides
   } as never
 }
@@ -336,7 +276,7 @@ describe('agent-status projection sort', () => {
   })
 })
 
-describe('open-files and browser projections', () => {
+describe('open-files projections', () => {
   it('re-serializes only the changed entry per store write', () => {
     const files = Array.from({ length: 20 }, (_value, index) => makeOpenFile(index))
     const writes = 50
@@ -362,45 +302,6 @@ describe('open-files and browser projections', () => {
     expect(before / after).toBeGreaterThan(14)
   })
 
-  it('re-serializes only the changed browser bucket per store write', () => {
-    const workspaces = Array.from({ length: 8 }, (_value, index) => makeBrowserWorkspace(index))
-    const pagesByWorkspace: Record<string, never[]> = {}
-    for (let index = 0; index < 8; index += 1) {
-      pagesByWorkspace[`ws-${index}`] = [makeBrowserPage(index)] as never[]
-    }
-    const initial = makeState({
-      browserTabsByWorktree: { 'wt-1': workspaces, 'wt-2': workspaces } as never,
-      browserPagesByWorkspace: pagesByWorkspace as never
-    })
-    const writes = 50
-    const driveWrites = (project: (state: AppState) => string): void => {
-      let state = initial
-      project(state)
-      for (let write = 0; write < writes; write += 1) {
-        const nextWorkspaces = [...(state.browserTabsByWorktree['wt-1'] ?? [])]
-        nextWorkspaces[0] = makeBrowserWorkspace(0, { title: `tab 0 (${write})` })
-        state = makeState({
-          ...state,
-          browserTabsByWorktree: {
-            ...state.browserTabsByWorktree,
-            'wt-1': nextWorkspaces
-          } as never
-        })
-        project(state)
-      }
-    }
-
-    const before = countSerializedChars(() => {
-      driveWrites(referenceBrowserProjection)
-    })
-    resetRuntimeMobileSyncProjectionCachesForTests()
-    const after = countSerializedChars(() => {
-      driveWrites(buildRuntimeMobileBrowserProjection)
-    })
-    // Only the 'wt-1' bucket re-serializes; 'wt-2' and every page bucket are reused.
-    expect(before / after).toBeGreaterThan(2.5)
-  })
-
   it('matches the uncached projections byte for byte across shapes', () => {
     const openFileShapes: AppState['openFiles'][] = [
       [] as unknown as AppState['openFiles'],
@@ -419,30 +320,6 @@ describe('open-files and browser projections', () => {
       })
     }
 
-    const browserShapes: AppState[] = [
-      makeState({}),
-      makeState({ browserTabsByWorktree: { 'wt-1': [makeBrowserWorkspace(0)] } as never }),
-      makeState({
-        browserTabsByWorktree: {
-          'wt-1': [makeBrowserWorkspace(0, { title: undefined, loading: true })],
-          '3': [makeBrowserWorkspace(1)]
-        } as never,
-        browserPagesByWorkspace: {
-          'ws-0': [makeBrowserPage(0), makeBrowserPage(1, { canGoBack: true })],
-          'ws-1': []
-        } as never
-      }),
-      makeState({
-        browserTabsByWorktree: {} as never,
-        browserPagesByWorkspace: { 'ws-9': [makeBrowserPage(9, { url: 'a"b\\c' })] } as never
-      })
-    ]
-    for (const [index, shape] of browserShapes.entries()) {
-      expect({ index, projection: buildRuntimeMobileBrowserProjection(shape) }).toEqual({
-        index,
-        projection: referenceBrowserProjection(shape)
-      })
-    }
   })
 })
 
@@ -450,7 +327,6 @@ describe('sync key transitions', () => {
   it('fires on exactly the transitions the uncached projections would have fired on', () => {
     const drafts = { 'file-0': 'aaa', 'file-1': 'bbb' }
     const files = [makeOpenFile(0), makeOpenFile(1)] as unknown as AppState['openFiles']
-    const workspaces = [makeBrowserWorkspace(0)] as never
     const status = {
       'tab-0:leaf-0': makeAgentStatusEntry({ paneKey: 'tab-0:leaf-0' })
     } as AppState['agentStatusByPaneKey']
@@ -458,8 +334,6 @@ describe('sync key transitions', () => {
     const base = makeState({
       editorDrafts: drafts,
       openFiles: files,
-      browserTabsByWorktree: { 'wt-1': workspaces } as never,
-      browserPagesByWorkspace: { 'ws-0': [makeBrowserPage(0)] } as never,
       agentStatusByPaneKey: status
     })
 
@@ -491,26 +365,6 @@ describe('sync key transitions', () => {
       {
         name: 'open-files re-spread with identical content',
         next: (from) => makeState({ ...from, openFiles: [...from.openFiles] as never })
-      },
-      {
-        name: 'browser title tick',
-        next: (from) =>
-          makeState({
-            ...from,
-            browserTabsByWorktree: {
-              'wt-1': [makeBrowserWorkspace(0, { title: 'new title' })]
-            } as never
-          })
-      },
-      {
-        name: 'browser page loading flip',
-        next: (from) =>
-          makeState({
-            ...from,
-            browserPagesByWorkspace: {
-              'ws-0': [makeBrowserPage(0, { loading: true })]
-            } as never
-          })
       },
       {
         name: 'agent-status ping with an unchanged payload',
@@ -548,7 +402,6 @@ describe('sync key transitions', () => {
     const referenceTuple = (state: AppState): string[] => [
       referenceEditorDraftsProjection(state.editorDrafts),
       referenceOpenFilesProjection(state.openFiles),
-      referenceBrowserProjection(state),
       referenceAgentStatusProjection(state.agentStatusByPaneKey ?? {})
     ]
 

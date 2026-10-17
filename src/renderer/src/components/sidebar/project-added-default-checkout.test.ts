@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { getDefaultOnboardingState } from '../../../../shared/constants'
 import type { Repo } from '../../../../shared/repo-types'
 import type {
   DetectedWorktree,
@@ -28,9 +27,7 @@ const mocks = vi.hoisted(() => ({
     updateRepo: vi.fn(),
     fetchWorktrees: vi.fn()
   },
-  activateAndRevealWorktree: vi.fn(),
-  onboardingGet: vi.fn(),
-  onboardingUpdate: vi.fn(),
+  activateAndRevealWorktree: vi.fn()
 }))
 
 vi.mock('@/store', () => ({
@@ -128,16 +125,6 @@ describe('finishProjectAddWithDefaultCheckout', () => {
     mocks.state.detectedWorktreesByRepo = {}
     mocks.state.updateRepo.mockResolvedValue(true)
     mocks.state.fetchWorktrees.mockResolvedValue(true)
-    mocks.onboardingGet.mockResolvedValue(getDefaultOnboardingState())
-    mocks.onboardingUpdate.mockResolvedValue(getDefaultOnboardingState())
-    vi.stubGlobal('window', {
-      api: {
-        onboarding: {
-          get: mocks.onboardingGet,
-          update: mocks.onboardingUpdate
-        }
-      }
-    })
   })
 
   it('closes the modal and activates the default checkout', async () => {
@@ -155,9 +142,6 @@ describe('finishProjectAddWithDefaultCheckout', () => {
     })
 
     expect(closeModal).toHaveBeenCalledTimes(1)
-    expect(mocks.onboardingUpdate).toHaveBeenCalledWith({
-      checklist: { addedRepo: true }
-    })
     expect(setHideDefaultBranchWorkspace).toHaveBeenCalledWith(false)
     expect(mocks.activateAndRevealWorktree).toHaveBeenCalledWith('repo-1::/repo')
   })

@@ -103,7 +103,6 @@ function noticeRows(args: {
     'repo',
     args.worktrees ?? [worktree],
     args.repoMap ?? TWIN_REPO_MAP,
-    null,
     new Set(),
     undefined,
     undefined,

@@ -9,14 +9,9 @@ import type { WorkspaceCreateErrorDisplay } from '@/lib/workspace-create-error-f
 import type { SmartNameMode } from '@/components/new-workspace/smart-workspace-source-results'
 import type SmartWorkspaceNameField from '@/components/new-workspace/SmartWorkspaceNameField'
 import type { SmartWorkspaceNameSelection } from '@/components/new-workspace/SmartWorkspaceNameField'
-import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
-import type { GitLabWorkItem } from '../../../../shared/gitlab-types'
-import type { JiraIssue } from '../../../../shared/jira-types'
-import type { LinearIssue } from '../../../../shared/linear/issue-types'
 import type { OrcaHooks, SetupAgentStartupPolicy } from '../../../../shared/orca-yaml-hook-types'
 import type { SparsePreset } from '../../../../shared/worktree/create-types'
 import type { SshConnectionStatus } from '../../../../shared/ssh-types'
-import type { TaskSourceContext } from '../../../../shared/task-source-context'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import type { ExecutionHostId } from '../../../../shared/execution-host'
 
@@ -48,10 +43,6 @@ export type NewWorkspaceComposerCardProps = {
   selectedEphemeralVmRecipeId?: string | null
   onEphemeralVmRecipeChange?: (recipeId: string | null) => void
   ephemeralVmRecipeError?: string | null
-  repoBackedSearchRepos?: readonly RepoOption[]
-  repoBackedSourcesDisabled?: boolean
-  allowSmartNameAddProject?: boolean
-  smartNameRepoSwitchTarget?: 'project' | 'task-source'
   primaryActionLabel: string
   projectLabel?: string
   projectPlaceholder?: string
@@ -66,13 +57,8 @@ export type NewWorkspaceComposerCardProps = {
   selectedRepoExecutionHostId?: ExecutionHostId | null
   selectedRepoProjectId?: string | null
   activeFolderWorkspaceId?: string | null
-  onSmartGitHubItemSelect: (item: GitHubWorkItem) => void
-  onSmartGitLabItemSelect: (item: GitLabWorkItem) => void
   onSmartBranchSelect: (refName: string, localBranchName: string) => void
   onSmartNameModeChange?: (mode: SmartNameMode) => void
-  onSmartLinearIssueSelect: (issue: LinearIssue) => void
-  onSmartJiraIssueSelect?: (issue: JiraIssue, sourceContext: TaskSourceContext) => void
-  onOpenJiraSettings?: () => void
   smartNameSelection: SmartWorkspaceNameSelection | null
   onClearSmartNameSelection: () => void
   canReuseSelectedBranch: boolean
@@ -81,8 +67,6 @@ export type NewWorkspaceComposerCardProps = {
   showCreateMultiple?: boolean
   createMultiple?: boolean
   onCreateMultipleChange?: (next: boolean) => void
-  smartNameGitHubSourceContext?: TaskSourceContext | null
-  smartNameJiraSourceContext?: TaskSourceContext | null
   forkPushWarning: string | null
   detectedAgentIds: Set<TuiAgent> | null
   onOpenAgentSettings: () => void

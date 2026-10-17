@@ -6,15 +6,10 @@ import { RecoverableRenderErrorBoundary } from '../components/error-boundaries/R
 import NewWorkspaceComposerModal from '../components/NewWorkspaceComposerModal'
 import { MarkdownTemplatePicker } from '../components/editor/MarkdownTemplatePicker'
 import RecentTabSwitcher from '../components/tab-bar/RecentTabSwitcher'
-import { StarNagCard } from '../components/StarNagCard'
-import { StarNagAgentValueMomentObserver } from '../components/star-nag/StarNagAgentValueMomentObserver'
-import { StarNagToastHost } from '../components/star-nag/StarNagToastHost'
 import { ZoomOverlay } from '../components/ZoomOverlay'
 import { useAppStore } from '../store'
-import type { UpdateStatus } from '../../../shared/update-status-types'
 import { useLazyModalMounts } from './use-lazy-modal-mounts'
 import type { FloatingWorkspacePanelState } from './use-floating-workspace-panel'
-import type { OnboardingGate } from './use-onboarding'
 
 const QuickOpen = lazy(() => import('../components/QuickOpen'))
 const WorktreeJumpPalette = lazy(() => import('../components/WorktreeJumpPalette'))
@@ -34,9 +29,6 @@ const DeleteWorktreeDialog = lazy(() => import('../components/sidebar/DeleteWork
 const PreservedBranchBatchReviewModal = lazy(
   () => import('../components/sidebar/PreservedBranchBatchReviewModal')
 )
-const UpdateCard = lazy(() =>
-  import('../components/UpdateCard').then((module) => ({ default: module.UpdateCard }))
-)
 const UnexpectedSignoutCard = lazy(() =>
   import('../components/UnexpectedSignoutCard').then((module) => ({
     default: module.UnexpectedSignoutCard
@@ -47,8 +39,6 @@ const FloatingTerminalPanel = lazy(() =>
     default: module.FloatingTerminalPanel
   }))
 )
-// Why: lazy so onboarding's step modules + assets aren't fetched for users past first-launch.
-const OnboardingFlow = lazy(() => import('../components/onboarding/OnboardingFlow'))
 
 type BoundaryProps = {
   boundaryId: string
@@ -74,32 +64,18 @@ function OverlayBoundary({ children, ...props }: BoundaryProps): React.JSX.Eleme
   )
 }
 
-function shouldMountUpdateCardForStatus(status: UpdateStatus): boolean {
-  if (status.state === 'idle') {
-    return false
-  }
-  if (status.state === 'checking' || status.state === 'not-available') {
-    return status.userInitiated === true
-  }
-  return true
-}
-
 /**
  * Every overlay and modal hosted at the App root, in a fixed sibling order so stacking stays
  * stable. Each is gated so its chunk is only fetched once the surface can actually appear.
  */
 export function AppRootSurfaces(props: {
   floatingWorkspace: FloatingWorkspacePanelState
-  onboardingGate: OnboardingGate
 }): React.JSX.Element {
-  const { floatingWorkspace, onboardingGate } = props
+  const { floatingWorkspace } = props
   const { mountedLazyModalIds, shouldMountAddRepoDialog } = useLazyModalMounts()
   const activeView = useAppStore((s) => s.activeView)
   const activeModal = useAppStore((s) => s.activeModal)
   const statusBarVisible = useAppStore((s) => s.statusBarVisible)
-  const updateStatus = useAppStore((s) => s.updateStatus)
-
-  const shouldMountUpdateCard = shouldMountUpdateCardForStatus(updateStatus)
 
   return (
     <>
@@ -196,26 +172,12 @@ export function AppRootSurfaces(props: {
         ) : null}
       </Suspense>
       <NotificationCardStack>
-        {shouldMountUpdateCard ? (
-          <Suspense fallback={null}>
-            <OverlayBoundary boundaryId="overlay.update-card" resetKey={activeView}>
-              <UpdateCard />
-            </OverlayBoundary>
-          </Suspense>
-        ) : null}
         <Suspense fallback={null}>
           <OverlayBoundary boundaryId="overlay.unexpected-signout" resetKey={activeView}>
             <UnexpectedSignoutCard />
           </OverlayBoundary>
         </Suspense>
-        <OverlayBoundary boundaryId="overlay.star-nag" resetKey={activeView}>
-          <StarNagCard />
-        </OverlayBoundary>
       </NotificationCardStack>
-      <OverlayBoundary boundaryId="overlay.star-nag-toast" resetKey={activeView}>
-        <StarNagToastHost />
-      </OverlayBoundary>
-      <StarNagAgentValueMomentObserver />
       <OverlayBoundary boundaryId="overlay.zoom" resetKey={activeView}>
         <ZoomOverlay />
       </OverlayBoundary>
@@ -234,23 +196,6 @@ export function AppRootSurfaces(props: {
       <ModalBoundary boundaryId="modal.markdown-template-picker" resetKey={activeModal}>
         <MarkdownTemplatePicker />
       </ModalBoundary>
-      {onboardingGate.onboarding && onboardingGate.shouldRender ? (
-        <Suspense fallback={null}>
-          <RecoverableRenderErrorBoundary
-            boundaryId="modal.onboarding"
-            title={translate('auto.App.f02d37278a', 'Onboarding hit an error.')}
-            description={translate(
-              'auto.App.221a95ba38',
-              'Retry onboarding or close it and continue in the app.'
-            )}
-          >
-            <OnboardingFlow
-              onboarding={onboardingGate.onboarding}
-              onOnboardingChange={onboardingGate.setOnboarding}
-            />
-          </RecoverableRenderErrorBoundary>
-        </Suspense>
-      ) : null}
       <OverlayBoundary boundaryId="overlay.recent-tab-switcher" resetKey={activeView}>
         <RecentTabSwitcher />
       </OverlayBoundary>

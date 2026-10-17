@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { useAppStore } from '@/store'
-import { markOnboardingProjectAdded } from '@/lib/onboarding-project-checklist'
 
 /** Contract a host surface (e.g. the workspace composer modal) passes to
  *  AddRepoDialog to nest it as a layered dialog instead of the store modal. */
@@ -38,7 +37,6 @@ export function useAddRepoHostedController(hosted: AddRepoDialogHostedController
     () =>
       hostedOnOpenChange && hostedOnProjectAdded
         ? async (repoId: string): Promise<void> => {
-            await markOnboardingProjectAdded('addedRepo')
             hostedOnOpenChange(false)
             await hostedOnProjectAdded(repoId)
           }

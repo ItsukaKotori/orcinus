@@ -19,10 +19,6 @@ import {
   INITIAL_MODE_2031_REPLY_SCAN_STATE,
   scanMode2031ReplyDecision
 } from './terminal-color-scheme-protocol'
-import {
-  createTerminalGitHubPRLinkDetector,
-  type TerminalGitHubPRLink
-} from './terminal-github-pr-link-detector'
 import { createOsc133CommandFinishedScanner } from './terminal-osc133-command-finished'
 
 /** Ms of title-less output after a working title before it is cleared. */
@@ -63,8 +59,6 @@ export type TerminalTitleTrackerCallbacks = {
    * mirrors renderer command-lifecycle semantics so the fact path drops stale agent rows like byte mode.
    */
   onCommandFinished?: (bestEffortExitCode: number | null) => void
-  /** Fired once per newly observed GitHub PR URL (chunk-boundary-safe, deduplicated per tracker). */
-  onPrLink?: (link: TerminalGitHubPRLink) => void
   /**
    * Fired per chunk containing a DECSET 2031 subscribe (chunk-boundary-safe): lets
    * hidden-delivery-gated renderer views track the subscription without byte access.
@@ -119,7 +113,6 @@ export function createTerminalTitleTracker(
     onAgentExited,
     onBell,
     onCommandFinished,
-    onPrLink,
     onMode2031Subscribe,
     onMode2031Unsubscribe
   } = callbacks
@@ -128,7 +121,6 @@ export function createTerminalTitleTracker(
   const commandFinishedScanner = onCommandFinished
     ? createOsc133CommandFinishedScanner(onCommandFinished)
     : null
-  let prLinkDetector = onPrLink ? createTerminalGitHubPRLinkDetector() : null
   let transientSideEffectScanningEnabled = true
   let transientFactScanningSuppressed = false
   let mode2031ReplyScanState = INITIAL_MODE_2031_REPLY_SCAN_STATE
@@ -220,14 +212,9 @@ export function createTerminalTitleTracker(
         }
       }, STALE_WORKING_TITLE_TIMEOUT_MS)
     }
-    // Fact order (matches renderer drain): titles → command-finished → pr-link → 2031-subscribe → bell; bell last.
+    // Fact order (matches renderer drain): titles → command-finished → 2031-subscribe → bell; bell last.
     if (!transientFactScanningSuppressed) {
       commandFinishedScanner?.scan(data)
-      if (prLinkDetector) {
-        for (const link of prLinkDetector(data)) {
-          onPrLink?.(link)
-        }
-      }
       if (transientSideEffectScanningEnabled && (onMode2031Subscribe || onMode2031Unsubscribe)) {
         const previousMode2031ReplyScanState = options.mode2031PendingSubscribe
           ? { ...mode2031ReplyScanState, pendingSubscribe: true }
@@ -294,9 +281,6 @@ export function createTerminalTitleTracker(
         bellDetector?.reset()
         commandFinishedScanner?.reset()
         mode2031ReplyScanState = INITIAL_MODE_2031_REPLY_SCAN_STATE
-        if (prLinkDetector) {
-          prLinkDetector = createTerminalGitHubPRLinkDetector()
-        }
       }
     },
     setTransientSideEffectScanningEnabled(enabled: boolean): void {
@@ -306,7 +290,6 @@ export function createTerminalTitleTracker(
       transientSideEffectScanningEnabled = enabled
       bellDetector?.reset()
       bellDetector = enabled && onBell ? createBellDetector() : null
-      prLinkDetector = enabled && onPrLink ? createTerminalGitHubPRLinkDetector() : null
       mode2031ReplyScanState = INITIAL_MODE_2031_REPLY_SCAN_STATE
     },
     dispose(): void {

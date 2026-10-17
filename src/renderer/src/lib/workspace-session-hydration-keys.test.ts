@@ -184,7 +184,7 @@ describe('collectWorktreeHydrationRepoIdsFromSession', () => {
     expect(collectWorktreeHydrationRepoIdsFromSession(session)).toEqual(['repo-active-only'])
   })
 
-  it('includes repositories referenced only by active, editor, browser, or sleeping-agent state', () => {
+  it('includes repositories referenced only by active, editor, or sleeping-agent state', () => {
     const session = {
       activeRepoId: null,
       activeWorktreeId: 'repo-active::/active',
@@ -192,7 +192,6 @@ describe('collectWorktreeHydrationRepoIdsFromSession', () => {
       tabsByWorktree: {},
       terminalLayoutsByTabId: {},
       openFilesByWorktree: { 'repo-editor::/editor': [{ filePath: '/editor/file.ts' }] },
-      browserTabsByWorktree: { 'repo-browser::/browser': [{ id: 'browser-a' }] },
       sleepingAgentSessionsByPaneKey: {
         'tab:leaf': { worktreeId: 'repo-agent::/agent' }
       }
@@ -201,7 +200,6 @@ describe('collectWorktreeHydrationRepoIdsFromSession', () => {
     expect(collectWorktreeHydrationRepoIdsFromSession(session)).toEqual([
       'repo-active',
       'repo-agent',
-      'repo-browser',
       'repo-editor'
     ])
   })

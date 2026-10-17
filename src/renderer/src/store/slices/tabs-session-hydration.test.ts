@@ -137,12 +137,12 @@ describe('TabsSlice', () => {
         unifiedTabs: {
           [FLOATING_TERMINAL_WORKTREE_ID]: [
             {
-              id: 'floating-browser-1',
-              entityId: 'floating-browser-1',
+              id: 'floating-terminal-1',
+              entityId: 'floating-terminal-1',
               groupId: 'floating-group-1',
               worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
-              contentType: 'browser',
-              label: 'Browser',
+              contentType: 'terminal',
+              label: 'Terminal',
               customLabel: null,
               color: null,
               sortOrder: 0,
@@ -155,8 +155,8 @@ describe('TabsSlice', () => {
             {
               id: 'floating-group-1',
               worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
-              activeTabId: 'floating-browser-1',
-              tabOrder: ['floating-browser-1']
+              activeTabId: 'floating-terminal-1',
+              tabOrder: ['floating-terminal-1']
             }
           ]
         }

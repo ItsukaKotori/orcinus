@@ -12,7 +12,7 @@ import { shouldShowWorktreeCreationSurface } from '@/lib/worktree-creation-surfa
 // still escapes (e.g. pre-create preparation) becomes a visible error state
 // plus toast instead of a panel silently stuck at "creating".
 
-type TestActiveView = 'terminal' | 'tasks'
+type TestActiveView = 'terminal' | 'space'
 
 const store = {
   settings: {
@@ -252,7 +252,7 @@ describe('a throw after createWorktree succeeds no longer strands the creation s
 
   it('background branch: a throw in after-wake seeding is contained after tabs are seeded', async () => {
     // User left the terminal view mid-create, so the non-activating branch runs.
-    store.activeView = 'tasks'
+    store.activeView = 'space'
     const request = makeRequest()
     seedPendingCreation(request)
     vi.mocked(ensureWorktreeHasInitialTerminal).mockReturnValue('tab-1')
@@ -322,7 +322,7 @@ describe('a throw after createWorktree succeeds no longer strands the creation s
   })
 
   it('control: with no throw the same flow completes and tears the surface down', async () => {
-    store.activeView = 'tasks'
+    store.activeView = 'space'
     const request = makeRequest()
     seedPendingCreation(request)
     vi.mocked(ensureWorktreeHasInitialTerminal).mockReturnValue('tab-1')
@@ -359,13 +359,13 @@ describe('a throw after createWorktree succeeds no longer strands the creation s
   })
 
   it('backstop: a rejection after leaving the panel is announced with a toast', async () => {
-    store.activeView = 'tasks'
+    store.activeView = 'space'
     vi.mocked(prepareRequestForCreate).mockRejectedValue(new Error('prepare exploded'))
 
     const creationId = runBackgroundWorktreeCreation(makeRequest())
     // The pending surface is revealed synchronously; move away before the
     // rejected preparation reaches the fire-and-forget backstop.
-    store.activeView = 'tasks'
+    store.activeView = 'space'
 
     await vi.waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith('prepare exploded')

@@ -3,6 +3,7 @@ import type { ComposerTargetState } from './composer-target-state-contract'
 import type { ComposerExternalSyncState } from './composer-external-sync-contract'
 import type { ComposerSourceState } from './composer-source-state-contract'
 import type { ComposerSubmitState } from './composer-submit-state-contract'
+import { resolvePendingSmartGitHubSubmit } from './pending-smart-submit-resolution'
 
 export function assembleComposerModel(
   target: ComposerTargetState,
@@ -21,15 +22,12 @@ export function assembleComposerModel(
     ...target.derivedComposerState,
     ...external.hostRuntimeEffects,
     ...external.linkedItemLookupEffects,
-    ...external.githubSourceApplication,
-    ...external.githubSubmitResolution,
+    resolvePendingSmartGitHubSubmit,
     ...source.sourceIdentityActions,
     ...source.attachmentDropState,
     ...source.targetChangeActions,
     ...source.projectTargetActions,
     ...source.branchStartPointActions,
-    ...source.githubProviderSelection,
-    ...source.gitlabProviderSelection,
     ...source.workItemSourceActions,
     ...source.issueSourceActions,
     ...source.composerNavigationActions,

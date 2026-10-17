@@ -1,5 +1,5 @@
 // Phase 0 mock; replaced by Tauri IPC per view.
-import type { StarNagApi } from '../../preload/api/onboarding-api'
+import type { StarNagApi } from '../../shared/preload-api/api/star-nag-api'
 
 export function createStarNagApi(): StarNagApi {
   // StarNagToastHost is always mounted and subscribes at boot; all user-triggered methods
@@ -15,7 +15,6 @@ export function createStarNagApi(): StarNagApi {
     starOrca: async () => false,
     forceShow: async () => {},
     agentValueMoment: async () => ({ status: 'skipped' }),
-    showAgentValueMoment: async () => {},
-    onboardingCompleted: async () => {}
+    showAgentValueMoment: async () => {}
   }
 }

@@ -25,10 +25,6 @@ import { normalizeUiLanguage } from '../../../../shared/ui-language'
 import { normalizeDesktopTerminalScrollbackRows } from '../../../../shared/terminal-scrollback-policy'
 import { translate } from '@/i18n/i18n'
 import {
-  normalizeMobilePairingCustomAddress,
-  normalizeMobilePairingCustomAddresses
-} from '../../../../shared/mobile-pairing-custom-address'
-import {
   hydrateOwnerWorktreeVisibilityDefaults,
   type WorktreeVisibilityDefaultsByHost
 } from './worktree-visibility-owner-settings'
@@ -117,16 +113,6 @@ function normalizeSettingsUpdates(
   if ('terminalScrollbackRows' in updates) {
     sanitizedUpdates.terminalScrollbackRows = normalizeDesktopTerminalScrollbackRows(
       updates.terminalScrollbackRows
-    )
-  }
-  if ('mobilePairingCustomAddress' in updates) {
-    sanitizedUpdates.mobilePairingCustomAddress = normalizeMobilePairingCustomAddress(
-      updates.mobilePairingCustomAddress
-    )
-  }
-  if ('mobilePairingCustomAddresses' in updates) {
-    sanitizedUpdates.mobilePairingCustomAddresses = normalizeMobilePairingCustomAddresses(
-      updates.mobilePairingCustomAddresses
     )
   }
   return sanitizedUpdates
@@ -291,7 +277,6 @@ export const createSettingsSlice: StateCreator<AppState, [], [], SettingsSlice> 
       await get().fetchRepos()
       await get().fetchAllWorktrees()
       await get().fetchWorktreeLineage()
-      await get().fetchBrowserSessionProfiles()
       return true
     } catch (err) {
       console.error('Failed to switch runtime environment:', err)

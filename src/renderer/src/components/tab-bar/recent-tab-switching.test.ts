@@ -32,12 +32,10 @@ function stateWithTabs(
   hydratingTabIds: string[] = []
 ): Pick<
   AppState,
-  | 'activeBrowserTabId'
   | 'activeFileId'
   | 'activeGroupIdByWorktree'
   | 'activeTabId'
   | 'activeTabType'
-  | 'browserTabsByWorktree'
   | 'groupsByWorktree'
   | 'openFiles'
   | 'tabBarOrderByWorktree'
@@ -52,12 +50,10 @@ function stateWithTabs(
     tab('tab-c', 'file-c', 'C')
   ].filter((entry) => tabOrder.includes(entry.id) || hydratingTabIds.includes(entry.id))
   return {
-    activeBrowserTabId: null,
     activeFileId: tabs.find((entry) => entry.id === activeTabId)?.entityId ?? null,
     activeGroupIdByWorktree: { [WT]: GROUP },
     activeTabId: null,
     activeTabType: 'editor',
-    browserTabsByWorktree: {},
     groupsByWorktree: {
       [WT]: [{ id: GROUP, worktreeId: WT, activeTabId, tabOrder, recentTabIds }]
     },

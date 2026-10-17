@@ -5,7 +5,6 @@
 import { isClaudeAgent } from '../../../../shared/agent-detection'
 import { makePaneKey } from '../../../../shared/stable-pane-id'
 import { useAppStore } from '@/store'
-import { createTerminalGitHubPRLinkDetector } from '../../../../shared/terminal-github-pr-link-detector'
 import {
   AGENT_TASK_COMPLETE_NOTIFICATION_GRACE_MS,
   isAgentTaskCompleteOsNotificationEnabledFromState,
@@ -214,10 +213,6 @@ export function startParkedTerminalByteWatcher(
         ...(options.initialTitle !== undefined ? { initialAgentTitle: options.initialTitle } : {}),
         ...sideEffectCallbacks
       })
-  // Why (byte-parser mode only): under main authority, byte-scanning PR links too would observe every link twice (facts already carry them).
-  const observeTerminalGitHubPRLink = factSideEffectAuthority
-    ? null
-    : createTerminalGitHubPRLinkDetector()
   // Why (byte-parser mode only): mode parity — main's tracker emits these as facts; the byte
   // path scans the same shared parsers the mounted kill-switch-off pane uses.
   const commandFinishedScanner = factSideEffectAuthority
@@ -241,9 +236,7 @@ export function startParkedTerminalByteWatcher(
           ...sideEffectCallbacks,
           onCommandFinished: commandStatusPolicy.onCommandFinished,
           onCommandCodeWorking: commandStatusPolicy.onCommandCodeWorking,
-          onCommandCodeDone: commandStatusPolicy.onCommandCodeDone,
-          onPrLink: (link) =>
-            useAppStore.getState().observeTerminalGitHubPullRequestLink(worktreeId, link)
+          onCommandCodeDone: commandStatusPolicy.onCommandCodeDone
         },
         // Why: activation-deferred tabs can start a watcher before any pane restored the title; ordinary parked tabs avoid this IPC.
         restoreTitleOnRegister: options.restoreTitleOnRegister === true
@@ -262,11 +255,6 @@ export function startParkedTerminalByteWatcher(
     processor.processData(data, {})
     commandFinishedScanner?.scan(data)
     commandCodeOutputStatusDetector?.observe(data)
-    if (observeTerminalGitHubPRLink) {
-      for (const link of observeTerminalGitHubPRLink(data)) {
-        useAppStore.getState().observeTerminalGitHubPullRequestLink(worktreeId, link)
-      }
-    }
   }
   // Why: paired hosts forward derived facts over the one environment event
   // stream; parked PTYs never consume terminal multiplex slots or raw bytes.

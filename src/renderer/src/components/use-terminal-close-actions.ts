@@ -3,20 +3,12 @@ import { useAppStore } from '../store'
 import { isProvenProcessExit } from '../../../shared/terminal-exit-cause'
 import { closeTerminalTab } from './terminal/terminal-tab-actions'
 import { shouldDeferParkedPtyExitTabClose } from './terminal-pane/terminal-parked-tab-watchers'
-import { dispatchWorkspaceTabCommand } from '@/lib/workspace-tab-commands'
 import type { TerminalCreateController } from './use-terminal-create-actions'
 
 export function useTerminalCloseActions(controller: TerminalCreateController) {
   const { consumeSuppressedPtyExit } = controller
   const handleCloseTab = useCallback((tabId: string) => {
     closeTerminalTab(tabId)
-  }, [])
-
-  const handleCloseBrowserTab = useCallback((tabId: string) => {
-    dispatchWorkspaceTabCommand({
-      type: 'close',
-      target: { kind: 'browser-source', sourceId: tabId }
-    })
   }, [])
 
   const handlePtyExit = useCallback(
@@ -39,7 +31,7 @@ export function useTerminalCloseActions(controller: TerminalCreateController) {
     [consumeSuppressedPtyExit]
   )
 
-  return { handleCloseTab, handleCloseBrowserTab, handlePtyExit }
+  return { handleCloseTab, handlePtyExit }
 }
 
 export type TerminalCloseController = TerminalCreateController &

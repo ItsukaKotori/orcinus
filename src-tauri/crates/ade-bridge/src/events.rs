@@ -1,5 +1,4 @@
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde::Serialize;
 use tauri::{AppHandle, Emitter, Runtime};
 
 use crate::json::Json;
@@ -27,11 +26,6 @@ pub const PTY_EXIT: &str = "pty:exit";
 pub const SESSION_FLUSH_REQUESTED: &str = "session:flush-requested";
 /// hook server 原始事件（归一化在 renderer，规格 §3.2）。
 pub const AGENT_HOOK_RAW: &str = "agent-hook:raw";
-/// 每次 automations store 写入后广播（payload `{reason}`，规格 §3.1）。
-pub const AUTOMATIONS_CHANGED: &str = "automations:changed";
-/// 一次派发请求（payload `AutomationDispatchRequest`：
-/// `{automation, run, dispatchToken}`，规格 §3.2）。
-pub const AUTOMATIONS_DISPATCH_REQUESTED: &str = "automations:dispatch-requested";
 /// 插件/内容包集合可能已变（payload `PluginsChangedPayload`，规格 §3.9）。
 pub const PLUGINS_CHANGED: &str = "plugins:changed";
 /// 插件请求打开一个主区 tab（payload `PluginOpenTabPayload`，规格 §3.6/§3.9）。
@@ -55,24 +49,6 @@ pub struct ScanNestedProgressPayload {
     pub scanned: u64,
     pub found: u64,
     pub scan: ade_core::models::project_group::NestedRepoScanResult,
-}
-
-/// Payload for [`AUTOMATIONS_CHANGED`]: why the store changed (`"definition"`
-/// for CRUD, `"run"`/`"usage"` for run writes).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct AutomationsChangedPayload {
-    pub reason: String,
-}
-
-/// Payload for [`AUTOMATIONS_DISPATCH_REQUESTED`]（`AutomationDispatchRequest`
-/// 的 bridge 侧同形——内核只产生该形状）。
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct AutomationDispatchRequestPayload {
-    pub automation: Json,
-    pub run: Json,
-    pub dispatch_token: String,
 }
 
 /// Emit a JSON event without letting a delivery failure abort the command that
@@ -176,30 +152,6 @@ pub fn emit_worktrees_changed<R: Runtime>(app: &AppHandle<R>, repo_id: &str) {
     );
 }
 
-/// Broadcast `automations:changed {reason}` after a store write (spec §3.1).
-pub fn emit_automations_changed<R: Runtime>(app: &AppHandle<R>, reason: &str) {
-    emit_json(
-        app,
-        AUTOMATIONS_CHANGED,
-        AutomationsChangedPayload {
-            reason: reason.to_string(),
-        },
-    );
-}
-
-/// Publish one dispatch request to the renderer. The only producer is
-/// `AutomationService`'s dispatch path, so the raw payload always matches
-/// [`AutomationDispatchRequestPayload`]; a malformed one is logged and dropped
-/// (same policy as a failed emit).
-pub fn emit_automation_dispatch_requested<R: Runtime>(app: &AppHandle<R>, payload: Value) {
-    match serde_json::from_value::<AutomationDispatchRequestPayload>(payload) {
-        Ok(request) => emit_json(app, AUTOMATIONS_DISPATCH_REQUESTED, request),
-        Err(error) => {
-            eprintln!("[ade-bridge] dropped malformed automations dispatch request: {error}");
-        }
-    }
-}
-
 /// Payload for [`AGENT_HOOK_RAW`]（`CachedHookEvent` 的 bridge 侧同形；
 /// `restored` false 时省略——实时事件不需要回放标记，规格 §3.2）。
 #[derive(Debug, Clone, PartialEq, Serialize, specta::Type)]
@@ -298,35 +250,6 @@ mod tests {
             })
         );
         assert_eq!(AGENT_HOOK_RAW, "agent-hook:raw");
-    }
-
-    #[test]
-    fn automation_event_names_and_payload_shapes_are_locked() {
-        assert_eq!(AUTOMATIONS_CHANGED, "automations:changed");
-        assert_eq!(
-            AUTOMATIONS_DISPATCH_REQUESTED,
-            "automations:dispatch-requested"
-        );
-        assert_eq!(
-            serde_json::to_value(AutomationsChangedPayload {
-                reason: "definition".to_string(),
-            })
-            .unwrap(),
-            json!({ "reason": "definition" })
-        );
-        assert_eq!(
-            serde_json::to_value(AutomationDispatchRequestPayload {
-                automation: Json::new(json!({ "id": "a1" })),
-                run: Json::new(json!({ "id": "r1", "automationId": "a1" })),
-                dispatch_token: "tok-1".to_string(),
-            })
-            .unwrap(),
-            json!({
-                "automation": { "id": "a1" },
-                "run": { "id": "r1", "automationId": "a1" },
-                "dispatchToken": "tok-1"
-            })
-        );
     }
 
     #[test]

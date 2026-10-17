@@ -298,9 +298,11 @@ describe('Cmd+J palette middle-band ranking', () => {
       }).map((result) => result.id)
 
     expect(rank('linear triage')).toEqual([])
-    expect(rank('linear')).toEqual(['settings:linear', 'settings:integrations'])
+    // Why: the Integrations pane no longer carries provider aliases, so a removed
+    // provider word cannot surface it on its own.
+    expect(rank('linear')).toEqual(['settings:linear'])
     // Why: a majority still counts, so one stray word cannot blank an otherwise good match.
-    expect(rank('linear integrations triage')).toEqual(['settings:integrations'])
+    expect(rank('integrations settings triage')).toEqual(['settings:integrations'])
   })
 
   it('drops verb-prefixed settings queries whose middle words match nothing', () => {

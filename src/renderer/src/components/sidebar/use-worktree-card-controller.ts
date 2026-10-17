@@ -3,19 +3,17 @@ import { useWorktreeCardDetailsHoverControl } from './worktree-card-details-hove
 import type { ResolvedWorktreeCardProps } from './worktree-card-model'
 import { useWorktreeCardActivationActions } from './use-worktree-card-activation-actions'
 import { useWorktreeCardFoundation } from './use-worktree-card-foundation'
-import { useWorktreeCardLifecycleEffects } from './use-worktree-card-lifecycle-effects'
+import { useWorktreeCardIdentityDetails } from './use-worktree-card-identity-details'
 import { useWorktreeCardLinkedDetails } from './use-worktree-card-linked-details'
-import { useWorktreeCardReviewDetails } from './use-worktree-card-review-details'
 import { useWorktreeCardSecondaryDetails } from './use-worktree-card-secondary-details'
 import { useWorktreeCardWorkspaceActions } from './use-worktree-card-workspace-actions'
 
 export function useWorktreeCardController(props: ResolvedWorktreeCardProps) {
   const { worktree, repo } = props
   const foundation = useWorktreeCardFoundation({ worktree, repo })
-  const review = useWorktreeCardReviewDetails({
+  const identity = useWorktreeCardIdentityDetails({
     worktree,
     repo,
-    settings: foundation.settings,
     projectGroups: foundation.projectGroups,
     cardProps: foundation.cardProps,
     newCardStyle: foundation.newCardStyle
@@ -24,47 +22,14 @@ export function useWorktreeCardController(props: ResolvedWorktreeCardProps) {
     worktree,
     newCardStyle: foundation.newCardStyle,
     deleteState: foundation.deleteState,
-    branch: review.branch,
-    issueEntry: review.issueEntry,
-    linearIssueEntry: review.linearIssueEntry,
-    linearIssueFallbackEntry: review.linearIssueFallbackEntry,
-    prDisplay: review.prDisplay
+    branch: identity.branch
   })
 
   const showStatus = foundation.cardProps.includes('status')
-  const showIssue = foundation.cardProps.includes('issue')
-  const showLinearIssue = foundation.cardProps.includes('linear-issue')
-  const showJiraIssue = foundation.cardProps.includes('jira-issue')
-  const showPR = foundation.cardProps.includes('pr')
   const showAutomation = foundation.cardProps.includes('automation')
   const showCli = foundation.cardProps.includes('cli')
   const showComment = foundation.cardProps.includes('comment')
-  const showPorts = foundation.cardProps.includes('ports')
-  const shouldRefreshHostedReview = foundation.newCardStyle ? showStatus : showPR
   const detailsHoverControl = useWorktreeCardDetailsHoverControl()
-  const hoverDetailsOpen = detailsHoverControl.hoverOpen
-
-  useWorktreeCardLifecycleEffects({
-    worktree,
-    repo,
-    isFolder: review.isFolder,
-    hostedReviewCacheKey: review.hostedReviewCacheKey,
-    cachedBranchFallbackGitHubPRNumber: review.cachedBranchFallbackGitHubPRNumber,
-    linkedGitLabMR: review.linkedGitLabMR,
-    linkedBitbucketPR: review.linkedBitbucketPR,
-    linkedAzureDevOpsPR: review.linkedAzureDevOpsPR,
-    linkedGiteaPR: review.linkedGiteaPR,
-    branch: review.branch,
-    fetchHostedReviewForBranch: foundation.fetchHostedReviewForBranch,
-    shouldRefreshHostedReview,
-    newCardStyle: foundation.newCardStyle,
-    hoverDetailsOpen,
-    showIssue,
-    issueCacheKey: review.issueCacheKey,
-    fetchIssue: foundation.fetchIssue,
-    showLinearIssue,
-    fetchLinearIssue: foundation.fetchLinearIssue
-  })
 
   const activation = useWorktreeCardActivationActions({
     worktree,
@@ -99,7 +64,7 @@ export function useWorktreeCardController(props: ResolvedWorktreeCardProps) {
     onCardDragStart: props.onCardDragStart,
     onCardDragEnd: props.onCardDragEnd,
     onContextMenuSelect: props.onContextMenuSelect,
-    folderWorkspaceId: review.folderWorkspaceId,
+    folderWorkspaceId: identity.folderWorkspaceId,
     deleteFolderWorkspace: foundation.deleteFolderWorkspace,
     setActiveWorktree: foundation.setActiveWorktree,
     setShowRenameErrorDialog: foundation.setShowRenameErrorDialog,
@@ -109,52 +74,27 @@ export function useWorktreeCardController(props: ResolvedWorktreeCardProps) {
 
   const secondary = useWorktreeCardSecondaryDetails({
     worktree,
-    repo,
-    statusPrDisplay: props.statusPrDisplay,
     showStatus,
-    showIssue,
-    showLinearIssue,
-    showJiraIssue,
-    showPR,
     showAutomation,
     showCli,
     showComment,
-    showPorts,
-    issueDisplay: linked.issueDisplay,
-    linearIssue: linked.linearIssue,
-    linearIssueDisplay: linked.linearIssueDisplay,
-    jiraIssueDisplay: linked.jiraIssueDisplay,
-    prDisplay: review.prDisplay,
-    linkedGitLabMR: review.linkedGitLabMR,
-    linkedBitbucketPR: review.linkedBitbucketPR,
-    linkedAzureDevOpsPR: review.linkedAzureDevOpsPR,
-    linkedGiteaPR: review.linkedGiteaPR,
     cardProps: foundation.cardProps,
     newCardStyle: foundation.newCardStyle,
     compactCards: foundation.compactCards,
     agentActivityDisplayMode: foundation.agentActivityDisplayMode,
-    workspacePorts: foundation.workspacePorts,
-    openTaskPage: foundation.openTaskPage,
-    updateWorktreeMeta: foundation.updateWorktreeMeta,
     settings: foundation.settings
   })
 
   return {
     ...props,
     ...foundation,
-    ...review,
+    ...identity,
     ...linked,
     detailsHoverControl,
     showStatus,
-    showIssue,
-    showLinearIssue,
-    showJiraIssue,
-    showPR,
     showAutomation,
     showCli,
     showComment,
-    showPorts,
-    shouldRefreshHostedReview,
     ...activation,
     showDeleteQuickAction,
     ...workspaceActions,

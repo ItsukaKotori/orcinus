@@ -37,9 +37,7 @@ function toListCommandArgs(args?: AiVaultListArgs): AiVaultListCommandArgs | und
  * Real `aiVault` adapter (spec §3.3): the five host-backed methods route to the
  * `ai_vault_*` commands, and `onWindowFocused` bridges the Tauri window focus
  * event. `resolveSessionTitles` passes through untouched because the command
- * declares (and ignores) its `executionHostScope`; search, subagent listing,
- * and first-prompt lookup have no host surface and stay on the rejecting
- * `withMethodFallback` for the renderer to feature-detect.
+ * declares (and ignores) its `executionHostScope`.
  */
 export function createAiVaultRealApi(): PreloadApi['aiVault'] {
   return withMethodFallback<PreloadApi['aiVault']>('aiVault', {

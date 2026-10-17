@@ -25,7 +25,6 @@ describe('buildRows with pinned worktrees', () => {
         [repo.id, repo],
         [remoteRepo.id, remoteRepo]
       ]),
-      null,
       new Set(),
       undefined,
       undefined,
@@ -79,7 +78,6 @@ describe('buildRows with pinned worktrees', () => {
           [remoteRepo.id, remoteRepo],
           ...extraRepos.map((entry): [string, Repo] => [entry.id, entry])
         ]),
-        null,
         new Set(),
         undefined,
         undefined,
@@ -170,7 +168,6 @@ describe('buildRows with pinned worktrees', () => {
         [sshRepo.id, sshRepo],
         [runtimeRepo.id, runtimeRepo]
       ]),
-      null,
       new Set(),
       undefined,
       undefined,
@@ -256,7 +253,6 @@ describe('buildRows with pinned worktrees', () => {
         [localRepo.id, localRepo],
         [sshRepo.id, sshRepo]
       ]),
-      null,
       new Set(),
       undefined,
       undefined,
@@ -338,7 +334,6 @@ describe('buildRows with pinned worktrees', () => {
         [remoteRepo.id, remoteRepo],
         [analyticsRepo.id, analyticsRepo]
       ]),
-      null,
       new Set(),
       repoOrder,
       undefined,
@@ -396,7 +391,6 @@ describe('buildRows with pinned worktrees', () => {
         [repo.id, repo],
         [repoB.id, repoB]
       ]),
-      null,
       new Set(),
       undefined,
       undefined,
@@ -464,7 +458,6 @@ describe('buildRows with pinned worktrees', () => {
         [localRepoB.id, localRepoB],
         [remoteRepo.id, remoteRepo]
       ]),
-      null,
       new Set(),
       undefined,
       undefined,
@@ -542,8 +535,6 @@ describe('buildRows with pinned worktrees', () => {
         'repo',
         remoteWorktree,
         new Map([[remoteRepo.id, remoteRepo]]),
-        null,
-        undefined,
         undefined,
         grouping
       ),
@@ -551,8 +542,6 @@ describe('buildRows with pinned worktrees', () => {
         'repo',
         runtimeWorktree,
         new Map([[runtimeRepo.id, runtimeRepo]]),
-        null,
-        undefined,
         undefined,
         grouping
       )
@@ -620,8 +609,6 @@ describe('buildRows with pinned worktrees', () => {
         'repo',
         { ...worktree, id: `wt-${entry.id}`, repoId: entry.id, path: entry.path },
         new Map([[entry.id, entry]]),
-        null,
-        undefined,
         undefined,
         grouping
       )
@@ -661,7 +648,6 @@ describe('buildRows with pinned worktrees', () => {
         [repo.id, repo],
         [runtimeRepoB.id, runtimeRepoB]
       ]),
-      null,
       new Set(),
       undefined,
       undefined,
@@ -747,7 +733,6 @@ describe('buildRows with pinned worktrees', () => {
         [localRepoB.id, localRepoB],
         [runtimeRepoB.id, runtimeRepoB]
       ]),
-      null,
       new Set(),
       undefined,
       undefined,

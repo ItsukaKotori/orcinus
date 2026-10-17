@@ -1,4 +1,4 @@
-import { FileText, Globe, Minus, TerminalSquare } from 'lucide-react'
+import { FileText, Minus, TerminalSquare } from 'lucide-react'
 import { ShortcutKeyCombo } from '@/components/ShortcutKeyCombo'
 import { Button } from '@/components/ui/button'
 import type { ShortcutKeyComboDetails } from '@/hooks/useShortcutLabel'
@@ -8,12 +8,9 @@ type FloatingTerminalEmptyStateProps = {
   onNewTerminal: () => void
   onNewMarkdown: () => void
   onOpenMarkdown: () => void
-  onNewBrowser: () => void
-  showNewBrowser: boolean
   onClose: () => void
   onFocusPanel: () => void
   newTerminalShortcut: ShortcutKeyComboDetails
-  newBrowserShortcut: ShortcutKeyComboDetails
   newMarkdownShortcut: ShortcutKeyComboDetails
   openMarkdownShortcut: ShortcutKeyComboDetails
   closeShortcut: ShortcutKeyComboDetails
@@ -23,12 +20,9 @@ export function FloatingTerminalEmptyState({
   onNewTerminal,
   onNewMarkdown,
   onOpenMarkdown,
-  onNewBrowser,
-  showNewBrowser,
   onClose,
   onFocusPanel,
   newTerminalShortcut,
-  newBrowserShortcut,
   newMarkdownShortcut,
   openMarkdownShortcut,
   closeShortcut
@@ -86,23 +80,6 @@ export function FloatingTerminalEmptyState({
           </span>
           <FloatingEmptyStateShortcut shortcut={openMarkdownShortcut} />
         </Button>
-        {showNewBrowser ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className="grid h-8 w-full grid-cols-[1rem_minmax(0,1fr)_auto] items-center gap-2.5 rounded-md px-3 py-0 text-sm font-normal text-foreground hover:bg-muted/40 hover:text-foreground"
-            onClick={onNewBrowser}
-          >
-            <Globe className="size-3.5 opacity-90" />
-            <span className="truncate text-left leading-none">
-              {translate(
-                'auto.components.floating.terminal.FloatingTerminalPanel.8b07759314',
-                'New Browser'
-              )}
-            </span>
-            <FloatingEmptyStateShortcut shortcut={newBrowserShortcut} />
-          </Button>
-        ) : null}
         <Button
           type="button"
           variant="ghost"

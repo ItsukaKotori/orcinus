@@ -1,5 +1,5 @@
 import React from 'react'
-import { FilePlus, FileText, Globe, TerminalSquare } from 'lucide-react'
+import { FilePlus, FileText, TerminalSquare } from 'lucide-react'
 import { translate } from '@/i18n/i18n'
 import { DropdownMenuItem, DropdownMenuShortcut } from '@/components/ui/dropdown-menu'
 import { ShellIcon } from './shell-icons'
@@ -10,27 +10,23 @@ import { resolveWindowsShellLaunchTarget } from './windows-shell-launch'
 
 export function TabBarStaticCreateMenu({
   terminalOnly,
-  managedBrowserCreationEnabled,
   props,
   windowsShellEntries,
   defaultWindowsPowerShellImplementation,
   pwshAvailable,
   newTerminalShortcut,
-  newBrowserShortcut,
   newFileShortcut,
   openMarkdownShortcut,
   queueNewActiveTerminalFocusAfterNewTabMenuClose
 }: {
   props: TabBarProps
   terminalOnly: boolean
-  managedBrowserCreationEnabled: boolean
   windowsShellEntries: WindowsShellMenuEntry[] | undefined
   defaultWindowsPowerShellImplementation: ReturnType<
     typeof resolveWindowsPowerShellImplementationSetting
   >
   pwshAvailable: boolean
   newTerminalShortcut: string
-  newBrowserShortcut: string
   newFileShortcut: string
   openMarkdownShortcut: string | null
   queueNewActiveTerminalFocusAfterNewTabMenuClose: () => void
@@ -39,7 +35,6 @@ export function TabBarStaticCreateMenu({
     newTabMenuOrder = 'default',
     onNewTerminalTab,
     onNewTerminalWithShell,
-    onNewBrowserTab,
     onNewFileTab,
     onOpenFileTab
   } = props
@@ -85,17 +80,6 @@ export function TabBarStaticCreateMenu({
         <DropdownMenuShortcut>{newTerminalShortcut}</DropdownMenuShortcut>
       </DropdownMenuItem>
     )
-  const newBrowserMenuItem =
-    !terminalOnly && managedBrowserCreationEnabled ? (
-      <DropdownMenuItem
-        onSelect={onNewBrowserTab}
-        className="gap-2 rounded-[7px] px-2 py-1.5 text-[12px] leading-5 font-medium"
-      >
-        <Globe className="size-4 text-muted-foreground" />
-        {translate('auto.components.tab.bar.TabBar.4833fb2cbe', 'New Browser Tab')}
-        <DropdownMenuShortcut>{newBrowserShortcut}</DropdownMenuShortcut>
-      </DropdownMenuItem>
-    ) : null
   const newMarkdownMenuItem =
     !terminalOnly && onNewFileTab ? (
       <DropdownMenuItem
@@ -125,12 +109,10 @@ export function TabBarStaticCreateMenu({
       {newMarkdownMenuItem}
       {openMarkdownMenuItem}
       {defaultTerminalMenuItems}
-      {newBrowserMenuItem}
     </>
   ) : (
     <>
       {defaultTerminalMenuItems}
-      {newBrowserMenuItem}
       {newMarkdownMenuItem}
       {openMarkdownMenuItem}
     </>

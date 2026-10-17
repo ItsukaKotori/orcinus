@@ -1,13 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import {
-  splitWorkspaceSessionByHost,
   mergeWorkspaceSessionsFromHosts,
+  splitWorkspaceSessionByHost,
   type HostIdByWorktreeId
 } from './workspace-session-host-split'
 import { getDefaultWorkspaceSession } from '../../../shared/constants'
 import { LOCAL_EXECUTION_HOST_ID, type ExecutionHostId } from '../../../shared/execution-host'
-import { HOST_PARTITION_REDUNDANT_GLOBAL_FIELDS } from '../../../shared/workspace-session-host-field-ownership'
-import type { BrowserPage } from '../../../shared/browser-workspace-types'
 import type { Tab } from '../../../shared/tab-types'
 import type { TerminalLayoutSnapshot, TerminalTab } from '../../../shared/terminal-tab-types'
 import type { WorkspaceSessionState } from '../../../shared/workspace-session-state-types'
@@ -47,22 +45,6 @@ function makeLayout(): TerminalLayoutSnapshot {
   return { root: { type: 'leaf', leafId: 'leaf-1' }, activeLeafId: 'leaf-1', expandedLeafId: null }
 }
 
-function makeBrowserPage(id: string, workspaceId: string, worktreeId: string): BrowserPage {
-  return {
-    id,
-    workspaceId,
-    worktreeId,
-    url: 'https://example.com',
-    title: 'Example',
-    loading: false,
-    faviconUrl: null,
-    canGoBack: false,
-    canGoForward: false,
-    loadError: null,
-    createdAt: 1
-  }
-}
-
 /** worktree id convention in these tests: `<host>-wt-...`, except local ones. */
 function ownerByPrefix(): HostIdByWorktreeId {
   return (worktreeId: string) => {
@@ -83,9 +65,6 @@ describe('splitWorkspaceSessionByHost', () => {
       activeRepoId: 'repo-1',
       activeWorktreeId: 'local-wt',
       activeTabId: 'tab-1',
-      browserUrlHistory: [
-        { url: 'u', normalizedUrl: 'u', title: 't', lastVisitedAt: 1, visitCount: 1 }
-      ],
       activeConnectionIdsAtShutdown: ['ssh-target']
     }
 
@@ -95,46 +74,6 @@ describe('splitWorkspaceSessionByHost', () => {
     expect(slices[LOCAL_EXECUTION_HOST_ID]?.activeConnectionIdsAtShutdown).toEqual(['ssh-target'])
     // No runtime slice is created when nothing is worktree-owned by it.
     expect(slices[RUNTIME_A]).toBeUndefined()
-  })
-
-  it('never replicates a local-owned global onto a non-local slice', () => {
-    // The regression this pins: one template handed to every host put a byte-identical copy of
-    // local's browserUrlHistory in each runtime partition, undoing #18161's load-time drop on the
-    // very next full snapshot write. 66 KB per host at 200 entries, growing with host count.
-    const state: WorkspaceSessionState = {
-      ...getDefaultWorkspaceSession(),
-      browserUrlHistory: [
-        { url: 'u', normalizedUrl: 'u', title: 't', lastVisitedAt: 1, visitCount: 1 }
-      ],
-      workspaceDocHistory: [
-        {
-          docLocation: { kind: 'workspace-doc', worktreeId: 'local-wt', filePath: 'a.md' },
-          title: 'a.md',
-          lastVisitedAt: 2,
-          visitCount: 1
-        }
-      ],
-      tabsByWorktree: {
-        'local-wt': [makeTab('t-local', 'local-wt')],
-        'a-wt': [makeTab('t-a', 'a-wt')],
-        'b-wt': [makeTab('t-b', 'b-wt')]
-      }
-    }
-
-    const slices = splitWorkspaceSessionByHost(state, ownerByPrefix())
-
-    expect(Object.keys(slices).sort()).toEqual([LOCAL_EXECUTION_HOST_ID, RUNTIME_A, RUNTIME_B])
-    for (const field of HOST_PARTITION_REDUNDANT_GLOBAL_FIELDS) {
-      expect(slices[LOCAL_EXECUTION_HOST_ID]?.[field]).toEqual(state[field])
-      expect(Object.hasOwn(slices[RUNTIME_A] ?? {}, field)).toBe(false)
-      expect(Object.hasOwn(slices[RUNTIME_B] ?? {}, field)).toBe(false)
-    }
-    // The read path is unaffected: local always carries them, so the merge never reaches its
-    // fallback to another slice.
-    const merged = mergeWorkspaceSessionsFromHosts(slices)
-    for (const field of HOST_PARTITION_REDUNDANT_GLOBAL_FIELDS) {
-      expect(merged[field]).toEqual(state[field])
-    }
   })
 
   it('routes worktree-keyed maps to their owner host', () => {
@@ -207,21 +146,6 @@ describe('splitWorkspaceSessionByHost', () => {
 
     expect(slices[LOCAL_EXECUTION_HOST_ID]?.terminalLayoutsByTabId).toHaveProperty('orphan')
     expect(slices[RUNTIME_A]).toBeUndefined()
-  })
-
-  it('routes browser pages via their record worktreeId', () => {
-    const state: WorkspaceSessionState = {
-      ...getDefaultWorkspaceSession(),
-      browserPagesByWorkspace: {
-        'ws-a': [makeBrowserPage('p-a', 'ws-a', 'a-wt')],
-        'ws-local': [makeBrowserPage('p-local', 'ws-local', 'local-wt')]
-      }
-    }
-
-    const slices = splitWorkspaceSessionByHost(state, ownerByPrefix())
-
-    expect(slices[RUNTIME_A]?.browserPagesByWorkspace).toHaveProperty('ws-a')
-    expect(slices[LOCAL_EXECUTION_HOST_ID]?.browserPagesByWorkspace).toHaveProperty('ws-local')
   })
 
   it('routes markdown frontmatter visibility via the open file worktree', () => {
@@ -397,12 +321,7 @@ describe('split → merge round trip', () => {
       activeTabIdByWorktree: { 'local-wt': 't-local', 'a-wt': 't-a' },
       activeWorktreeIdsOnShutdown: ['a-wt', 'b-wt'],
       lastVisitedAtByWorktreeId: { 'a-wt': 10, 'local-wt': 5 },
-      defaultTerminalTabsAppliedByWorktreeId: { 'a-wt': true },
-      browserTabsByWorktree: {},
-      browserPagesByWorkspace: {},
-      browserUrlHistory: [
-        { url: 'u', normalizedUrl: 'u', title: 't', lastVisitedAt: 1, visitCount: 1 }
-      ]
+      defaultTerminalTabsAppliedByWorktreeId: { 'a-wt': true }
     }
 
     expect(roundTrip(state)).toEqual(state)
@@ -431,48 +350,5 @@ describe('split → merge round trip', () => {
       terminalLayoutsByTabId: { 't-a': makeLayout() }
     }
     expect(roundTrip(state)).toEqual(state)
-  })
-})
-
-/**
- * The main-process load path drops a global field from a non-local partition when the local slice
- * already has it, on the strength of exactly these two rules. If either moves, that prune starts
- * discarding a value the renderer would otherwise have read.
- */
-describe('mergeWorkspaceSessionsFromHosts global-field precedence', () => {
-  const localEntry = {
-    url: 'local',
-    normalizedUrl: 'local',
-    title: 'l',
-    lastVisitedAt: 2,
-    visitCount: 1
-  }
-  const hostEntry = {
-    url: 'host',
-    normalizedUrl: 'host',
-    title: 'h',
-    lastVisitedAt: 1,
-    visitCount: 1
-  }
-
-  it("takes a global field from 'local' whenever local has one, ignoring every other slice", () => {
-    const merged = mergeWorkspaceSessionsFromHosts({
-      [LOCAL_EXECUTION_HOST_ID]: {
-        ...getDefaultWorkspaceSession(),
-        browserUrlHistory: [localEntry]
-      },
-      [RUNTIME_A]: { ...getDefaultWorkspaceSession(), browserUrlHistory: [hostEntry] }
-    })
-    expect(merged.browserUrlHistory).toEqual([localEntry])
-  })
-
-  it('falls back to another slice only when local does not have the field', () => {
-    const local = getDefaultWorkspaceSession()
-    delete local.browserUrlHistory
-    const merged = mergeWorkspaceSessionsFromHosts({
-      [LOCAL_EXECUTION_HOST_ID]: local,
-      [RUNTIME_A]: { ...getDefaultWorkspaceSession(), browserUrlHistory: [hostEntry] }
-    })
-    expect(merged.browserUrlHistory).toEqual([hostEntry])
   })
 })

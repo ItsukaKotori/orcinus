@@ -53,16 +53,12 @@ export function SourceControlDialogLayer({
   onOpenSourceControlAiSettings,
   commitGenerationDialogOpen,
   onCommitGenerationDialogOpenChange,
-  pullRequestGenerationDialogOpen,
-  onPullRequestGenerationDialogOpenChange,
   settings,
   repo,
   discoveryHostKey,
   linkedIssue,
   onGenerateCommitMessage,
   onSaveCommitMessageDefaults,
-  onGeneratePullRequestFields,
-  onSavePullRequestDefaults
 }: {
   clearNotesOpen: boolean
   clearNotesDescription: string
@@ -95,16 +91,12 @@ export function SourceControlDialogLayer({
   onOpenSourceControlAiSettings: AgentDialogProps['onOpenSettings']
   commitGenerationDialogOpen: boolean
   onCommitGenerationDialogOpenChange: TextGenerationDialogProps['onOpenChange']
-  pullRequestGenerationDialogOpen: boolean
-  onPullRequestGenerationDialogOpenChange: TextGenerationDialogProps['onOpenChange']
   settings: TextGenerationDialogProps['settings']
   repo: TextGenerationDialogProps['repo']
   discoveryHostKey: string
   linkedIssue: TextGenerationDialogProps['linkedIssue']
   onGenerateCommitMessage: TextGenerationDialogProps['onGenerate']
   onSaveCommitMessageDefaults: TextGenerationDialogProps['onSaveDefaults']
-  onGeneratePullRequestFields: TextGenerationDialogProps['onGenerate']
-  onSavePullRequestDefaults: TextGenerationDialogProps['onSaveDefaults']
 }): React.JSX.Element {
   return (
     <>
@@ -231,26 +223,6 @@ export function SourceControlDialogLayer({
         linkedIssue={linkedIssue}
         onGenerate={onGenerateCommitMessage}
         onSaveDefaults={onSaveCommitMessageDefaults}
-      />
-      <SourceControlTextGenerationDialog
-        open={sourceControlAiActionsVisible && pullRequestGenerationDialogOpen}
-        onOpenChange={onPullRequestGenerationDialogOpenChange}
-        actionId="pullRequest"
-        title={translate(
-          'auto.components.right.sidebar.SourceControl.1a6a6e0bc5',
-          'Generate Hosted Review Details'
-        )}
-        description={translate(
-          'auto.components.right.sidebar.SourceControl.f4c766f1ca',
-          'Choose the agent and command template for this run.'
-        )}
-        generateLabel="Generate"
-        settings={settings}
-        repo={repo}
-        discoveryHostKey={discoveryHostKey}
-        linkedIssue={linkedIssue}
-        onGenerate={onGeneratePullRequestFields}
-        onSaveDefaults={onSavePullRequestDefaults}
       />
     </>
   )

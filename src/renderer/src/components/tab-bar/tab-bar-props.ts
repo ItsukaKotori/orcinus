@@ -1,5 +1,3 @@
-import type { BrowserTab as BrowserTabState } from '../../../../shared/browser-workspace-types'
-import type { ClientHostedBrowserRow } from '../../../../shared/client-hosted-browser-rows'
 import type { Tab, WorkspaceVisibleTabType } from '../../../../shared/tab-types'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
 import type { OpenFile } from '../../store/slices/editor'
@@ -20,7 +18,6 @@ export type TabBarProps = {
   onNewTerminalTab: () => void
   /** On Windows, opens a new terminal with a specific shell instead of the default. */
   onNewTerminalWithShell?: (shell: string) => void
-  onNewBrowserTab: () => void
   onOpenEntry?: (args: TabCreateEntryArgs) => Promise<void>
   terminalOnly?: boolean
   showAgentLaunchItems?: boolean
@@ -31,24 +28,17 @@ export type TabBarProps = {
   onSetTabColor: (tabId: string, color: string | null) => void
   onTogglePaneExpand: (tabId: string) => void
   editorFiles?: (OpenFile & { tabId?: string })[]
-  browserTabs?: (BrowserTabState & { tabId?: string })[]
-  /** Pages rendering on a paired client. Appended after the real tabs; never part of tab order. */
-  clientHostedBrowserRows?: readonly ClientHostedBrowserRow[]
   /** The group's own active tab at render time; a client-hosted selection dies when it moves. */
   groupActiveTabId?: string | null
   agentSessionTabs?: (Tab & { contentType: 'agent-session' })[]
   /** Main-area plugin tabs; self-backed, so the visible id is the unified tab id. */
   pluginTabs?: (Tab & { contentType: 'plugin' })[]
   activeFileId?: string | null
-  activeBrowserTabId?: string | null
   activeTabType?: WorkspaceVisibleTabType
   onActivateFile?: (fileId: string) => void
   onCloseFile?: (fileId: string) => void
-  onActivateBrowserTab?: (tabId: string) => void
   onActivateAgentSession?: (tabId: string) => void
   onActivatePlugin?: (tabId: string) => void
-  onCloseBrowserTab?: (tabId: string) => void
-  onDuplicateBrowserTab?: (tabId: string) => void
   onCloseAllFiles?: () => void
   onMakePreviewFilePermanent?: (fileId: string, tabId?: string) => void
   onPinFile?: (fileId: string, tabId?: string) => void

@@ -19,7 +19,6 @@ import { resolvePaneKeyboardProtocolAgent } from './terminal-keyboard-protocol-p
 import { getConnectionId } from '@/lib/connection-context'
 import { getExecutionHostIdForWorktree } from '@/lib/worktree-runtime-owner'
 import { scheduleRuntimeGraphSync } from '@/runtime/sync-runtime-graph'
-import { acquireWebviewsDragPassthrough } from '../browser-pane/host-guest/webview-registry'
 import { handleTerminalWebLinkClick } from './terminal-web-link-click'
 import { createTerminalPaneCreatedHandler } from './terminal-pane-pane-created'
 import { createTerminalPaneClosedHandler } from './terminal-pane-pane-closed'
@@ -43,7 +42,6 @@ export function createTerminalPaneManagerOptions(
     paneTransportsRef,
     panePtyBindingsRef,
     isVisibleRef,
-    requestOpenLinksInAppPreference,
     resolveExternalPaneDropTarget,
     onExternalPaneDrop
   } = deps
@@ -93,12 +91,9 @@ export function createTerminalPaneManagerOptions(
         context.deps.persistLayoutSnapshot()
       }
     },
-    onPaneDragActiveChange: (active) => {
-      if (active) {
-        context.releaseWebviewDragPassthrough.current?.()
-        context.releaseWebviewDragPassthrough.current = acquireWebviewsDragPassthrough()
-        return
-      }
+    onPaneDragActiveChange: () => {
+      // Why no-op: the drag-passthrough existed to let drags cross browser <webview> guests;
+      // with the embedded browser gone there is nothing to release.
       context.releaseWebviewDragPassthrough.current?.()
       context.releaseWebviewDragPassthrough.current = null
     },
@@ -168,9 +163,7 @@ export function createTerminalPaneManagerOptions(
           ? (context.linkDeps.getRuntimeEnvironmentIdForPane?.(paneId) ?? null)
           : null,
         sourceOwner: activePane ? context.getHttpLinkSourceOwnerForPane(paneId) : { kind: 'local' },
-        requestOpenLinksInAppPreference,
-        linkActionContext: context.getLinkActionContext(paneId),
-        actionDestinations: context.getHttpLinkActionDestinations(paneId)
+        linkActionContext: context.getLinkActionContext(paneId)
       })
     },
     linkOpenHint: context.getUrlOpenLinkHint,

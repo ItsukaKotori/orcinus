@@ -67,7 +67,6 @@ type VisibleWorktreeOptions = {
   showSleepingWorkspaces: boolean
   tabsByWorktree: Record<string, Pick<TerminalTab, 'id'>[]> | null
   ptyIdsByTabId: Record<string, string[]> | null
-  browserTabsByWorktree?: Record<string, { id: string }[]> | null
   worktreeIdsWithLiveAgent: ReadonlySet<string>
   hideDefaultBranchWorkspace: boolean
   hideAutomationGeneratedWorkspaces: boolean
@@ -152,7 +151,6 @@ export function computeVisibleWorktrees(
           w.id,
           opts.tabsByWorktree,
           opts.ptyIdsByTabId,
-          opts.browserTabsByWorktree,
           opts.worktreeIdsWithLiveAgent
         )
     )
@@ -275,7 +273,6 @@ export function buildVisibleWorktreeOptionsFromState(
     showSleepingWorkspaces: state.showSleepingWorkspaces,
     tabsByWorktree: state.tabsByWorktree,
     ptyIdsByTabId: state.ptyIdsByTabId,
-    browserTabsByWorktree: state.browserTabsByWorktree,
     worktreeIdsWithLiveAgent: getWorktreeIdsWithLiveAgent(
       state.agentStatusByPaneKey,
       state.tabsByWorktree,

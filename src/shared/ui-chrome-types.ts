@@ -1,6 +1,3 @@
-import type { LinearConcreteWorkspaceId } from './linear/workspace-types'
-import type { LinearCustomViewModel } from './linear/project-types'
-
 export type TaskViewPresetId = 'all' | 'issues' | 'review' | 'my-issues' | 'my-prs' | 'prs'
 
 export type OpenInApplication = {
@@ -38,7 +35,6 @@ export type WorktreeCardProperty =
   // Badge marking workspaces created through `orca worktree create`.
   | 'cli'
   | 'comment'
-  | 'ports'
   // Inline agent-activity list rendered in each workspace card; on by default (see DEFAULT_WORKTREE_CARD_PROPERTIES in shared/constants.ts).
   | 'inline-agents'
 
@@ -57,36 +53,14 @@ export type StatusBarItem =
   | 'grok'
   | 'ssh'
   | 'resource-usage'
-  | 'ports'
 export type FloatingTerminalTriggerLocation = 'floating-button' | 'status-bar'
-
-export type TaskResumeState = {
-  githubMode?: 'items' | 'project'
-  githubItemsPreset?: TaskViewPresetId | null
-  githubItemsQuery?: string
-  githubProjectHiddenFieldIdsByView?: Record<string, string[]>
-  linearMode?: 'issues' | 'projects' | 'views' | 'in-orca'
-  linearPreset?: 'assigned' | 'created' | 'all' | 'completed'
-  linearQuery?: string
-  linearContext?: {
-    kind: 'project' | 'view'
-    id: string
-    workspaceId: LinearConcreteWorkspaceId
-    model?: LinearCustomViewModel
-  }
-  jiraPreset?: 'assigned' | 'reported' | 'all' | 'done'
-  jiraQuery?: string
-}
 
 export type RightSidebarTab =
   | 'explorer'
   | 'search'
   | 'vault'
   | 'workspaces'
-  | 'pr-checks'
   | 'source-control'
-  | 'checks'
-  | 'ports'
   // Plugin-contributed panels are keyed `plugin:<pluginId>/<panelId>` so the
   // static union stays closed while plugin tabs remain type-representable.
   | `plugin:${string}`
@@ -106,10 +80,7 @@ export type ManualRepoOrderEntry = {
 export type StaticTopLevelView =
   | 'terminal'
   | 'settings'
-  | 'tasks'
-  | 'automations'
   | 'space'
-  | 'artifacts'
   | 'plugin-center'
 
 /** The active top-level section shown in the main content area; plugin-hosted views are keyed `plugin:<pluginKey>`. */

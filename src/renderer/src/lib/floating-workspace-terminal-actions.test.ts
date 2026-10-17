@@ -3,7 +3,6 @@ import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../shared/constants'
 import type { Tab } from '../../../shared/tab-types'
 import type { TerminalTab } from '../../../shared/terminal-tab-types'
 import {
-  createFloatingWorkspaceBrowserTab,
   createFloatingWorkspaceMarkdownTab,
   createFloatingWorkspaceTerminalTab,
   handleEmptyFloatingWorkspacePanelCloseShortcut,
@@ -228,8 +227,6 @@ describe('isFloatingWorkspacePanelShortcut', () => {
     ['Ctrl+T', false, { key: 't', ctrlKey: true }],
     ['Cmd+W', true, { key: 'w', metaKey: true }],
     ['Ctrl+W', false, { key: 'w', ctrlKey: true }],
-    ['Cmd+Shift+B', true, { key: 'b', metaKey: true, shiftKey: true }],
-    ['Ctrl+Shift+B', false, { key: 'b', ctrlKey: true, shiftKey: true }],
     ['Cmd+Shift+M', true, { key: 'm', metaKey: true, shiftKey: true }],
     ['Ctrl+Shift+M', false, { key: 'm', ctrlKey: true, shiftKey: true }],
     ['Cmd+Shift+O', true, { key: 'o', metaKey: true, shiftKey: true }],
@@ -489,37 +486,6 @@ describe('createFloatingWorkspaceTerminalTab', () => {
   })
 })
 
-describe('createFloatingWorkspaceBrowserTab', () => {
-  beforeEach(() => {
-    createWebRuntimeSessionBrowserTabMock.mockReset()
-  })
-
-  it('creates floating browser tabs in the active floating group', async () => {
-    const browserTab = { id: 'browser-1' }
-    const store = {
-      activeGroupIdByWorktree: { [FLOATING_TERMINAL_WORKTREE_ID]: 'floating-group' },
-      browserDefaultUrl: 'about:blank',
-      settings: { activeRuntimeEnvironmentId: null },
-      createBrowserTab: vi.fn().mockReturnValue(browserTab)
-    }
-    createWebRuntimeSessionBrowserTabMock.mockResolvedValue(false)
-
-    await expect(createFloatingWorkspaceBrowserTab(store as never)).resolves.toBe(browserTab)
-
-    expect(createWebRuntimeSessionBrowserTabMock).not.toHaveBeenCalled()
-    expect(store.createBrowserTab).toHaveBeenCalledWith(
-      FLOATING_TERMINAL_WORKTREE_ID,
-      'about:blank',
-      {
-        title: 'New Browser Tab',
-        focusAddressBar: true,
-        targetGroupId: 'floating-group',
-        browserRuntimeEnvironmentId: null
-      }
-    )
-  })
-})
-
 describe('createFloatingWorkspaceMarkdownTab', () => {
   beforeEach(() => {
     createUntitledMarkdownFileWithTemplateSelectionMock.mockReset()
@@ -620,69 +586,6 @@ describe('switchFloatingWorkspaceTab', () => {
     expect(activateWebRuntimeSessionTabMock).not.toHaveBeenCalled()
   })
 
-  it('cycles browser tabs locally while a web runtime is active', () => {
-    const notifyActiveTabChanged = vi.fn()
-    vi.stubGlobal('window', { api: { browser: { notifyActiveTabChanged } } })
-    isWebRuntimeSessionActiveMock.mockReturnValue(true)
-    const browserTab = {
-      id: 'browser-2',
-      worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
-      url: 'https://example.com',
-      title: 'Browser',
-      loading: false,
-      faviconUrl: null,
-      canGoBack: false,
-      canGoForward: false,
-      loadError: null,
-      createdAt: 0,
-      activePageId: 'page-2'
-    }
-    const store = {
-      activeGroupIdByWorktree: { [FLOATING_TERMINAL_WORKTREE_ID]: 'floating-group' },
-      activateTab: vi.fn(),
-      browserPagesByWorkspace: {},
-      browserTabsByWorktree: { [FLOATING_TERMINAL_WORKTREE_ID]: [browserTab] },
-      groupsByWorktree: {
-        [FLOATING_TERMINAL_WORKTREE_ID]: [
-          {
-            id: 'floating-group',
-            worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
-            activeTabId: 'tab-1',
-            tabOrder: ['tab-1', 'tab-browser-2'],
-            recentTabIds: ['tab-1']
-          }
-        ]
-      },
-      openFiles: [],
-      setActiveTab: vi.fn(),
-      tabsByWorktree: {
-        [FLOATING_TERMINAL_WORKTREE_ID]: [makeTab('tab-1')]
-      },
-      unifiedTabsByWorktree: {
-        [FLOATING_TERMINAL_WORKTREE_ID]: [
-          makeUnifiedTerminalTab('tab-1'),
-          {
-            id: 'tab-browser-2',
-            entityId: 'browser-2',
-            groupId: 'floating-group',
-            worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
-            contentType: 'browser',
-            label: 'Browser',
-            customLabel: null,
-            color: null,
-            sortOrder: 1,
-            createdAt: 1
-          } satisfies Tab
-        ]
-      }
-    }
-
-    expect(switchFloatingWorkspaceTab(store as never, 1, 'all-types')).toBe(true)
-
-    expect(store.activateTab).toHaveBeenCalledWith('tab-browser-2')
-    expect(activateWebRuntimeSessionTabMock).not.toHaveBeenCalled()
-    expect(notifyActiveTabChanged).toHaveBeenCalledWith({ browserPageId: 'page-2' })
-  })
 })
 
 describe('shouldMinimizeFloatingWorkspacePanelOnCloseShortcut', () => {

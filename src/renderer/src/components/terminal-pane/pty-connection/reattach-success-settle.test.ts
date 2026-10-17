@@ -108,25 +108,6 @@ describe('handleReattachResult recovery settle', () => {
     expect(settlePaneAttachAttempt).toHaveBeenCalledWith(undefined, 'success')
   })
 
-  it('does not report success for a reattach that returned no PTY id', async () => {
-    // The storm's own path. Settling this as success would clear the ledger the
-    // failure is about to be written to, and the chain would restart.
-    const { session, settlePaneAttachAttempt } = buildSession({
-      connectionId: 'ssh-1',
-      transport: {
-        getPtyId: () => null,
-        disconnect: vi.fn(),
-        serializeBuffer: vi.fn()
-      }
-    })
-    setPaneTransports(session, new Map([['pane-1', session.transport]]))
-
-    await driveReattach(session, undefined, null)
-
-    expect(settlePaneAttachAttempt).not.toHaveBeenCalledWith(undefined, 'success')
-    expect(settlePaneAttachAttempt).toHaveBeenCalledWith(undefined, 'failed')
-  })
-
   it('does not report success for an expired session', async () => {
     const { session, settlePaneAttachAttempt } = buildSession()
 

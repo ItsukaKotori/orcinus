@@ -18,8 +18,7 @@ const mocks = vi.hoisted(() => ({
   callRuntimeRpc: vi.fn(),
   fetchWorktrees: vi.fn(),
   onGitRepoReady: vi.fn(),
-  activateAndRevealWorktree: vi.fn(),
-  markOnboardingProjectAdded: vi.fn()
+  activateAndRevealWorktree: vi.fn()
 }))
 
 vi.mock('react', async (importOriginal) => {
@@ -49,10 +48,6 @@ vi.mock('@/hooks/useMountedRef', () => ({
 
 vi.mock('@/lib/worktree-activation', () => ({
   activateAndRevealWorktree: mocks.activateAndRevealWorktree
-}))
-
-vi.mock('@/lib/onboarding-project-checklist', () => ({
-  markOnboardingProjectAdded: mocks.markOnboardingProjectAdded
 }))
 
 vi.mock('@/store', () => {
@@ -216,38 +211,8 @@ describe('useCreateRepo default-checkout handoff', () => {
     expect(mocks.activateAndRevealWorktree).toHaveBeenCalledWith(worktree.id, {
       sidebarRevealBehavior: 'auto'
     })
-    expect(mocks.markOnboardingProjectAdded).toHaveBeenCalledWith('addedFolder')
     expect(closeModal).toHaveBeenCalled()
     expect(mocks.onGitRepoReady).not.toHaveBeenCalled()
-  })
-
-  it('creates projects through the SSH host when an SSH target is selected', async () => {
-    const repo = makeRepo({ connectionId: 'ssh-1', path: '/srv/created' })
-    mocks.createRemoteRepo.mockResolvedValue({ repo })
-    mocks.fetchWorktrees.mockResolvedValue(true)
-    const { useCreateRepo } = await import('./useCreateRepo')
-
-    const result = useCreateRepo(mocks.fetchWorktrees, vi.fn(), mocks.onGitRepoReady, {
-      sshTargetId: 'ssh-1'
-    })
-    await result.handleCreate()
-
-    expect(mocks.createRemoteRepo).toHaveBeenCalledWith({
-      connectionId: 'ssh-1',
-      parentPath: '/projects',
-      name: 'created',
-      kind: 'git'
-    })
-    expect(mocks.createRepo).not.toHaveBeenCalled()
-    expect(mocks.fetchWorktrees).toHaveBeenCalledWith(repo.id, {
-      requireAuthoritative: true,
-      executionHostId: 'ssh:ssh-1'
-    })
-    expect(mocks.storeState.repos).toContainEqual({
-      ...repo,
-      executionHostId: 'ssh:ssh-1'
-    })
-    expect(mocks.onGitRepoReady).toHaveBeenCalledWith(repo.id, 'ssh:ssh-1')
   })
 
   it('creates projects through the selected runtime environment', async () => {

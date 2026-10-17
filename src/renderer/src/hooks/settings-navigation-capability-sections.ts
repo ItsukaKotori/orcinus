@@ -1,21 +1,16 @@
-import { LinearIcon } from '@/components/icons/LinearIcon'
 import { getAgentsPaneSearchEntries } from '@/components/settings/agents-search'
-import { getComputerUsePaneSearchEntries } from '@/components/settings/computer-use-search'
 import { getGeneralPaneSearchEntries } from '@/components/settings/general-search'
 import { getIntegrationsPaneSearchEntries } from '@/components/settings/integrations-search'
-import { getLinearAgentSkillPaneSearchEntries } from '@/components/settings/linear-agent-skill-search'
 import { getOrchestrationPaneSearchEntries } from '@/components/settings/orchestration-search'
 import { translate } from '@/i18n/i18n'
 import type { SettingsNavSection } from '@/lib/settings-navigation-types'
-import { Blocks, Bot, MousePointerClick, Network, SlidersHorizontal } from 'lucide-react'
+import { Blocks, Bot, Network, SlidersHorizontal } from 'lucide-react'
 import type { SettingsNavigationBuildOptions } from './settings-navigation-build-options'
 
 export function buildCapabilitySettingsSections({
   isLocalWindowsHost,
-  isWebClient,
-  isLinearConnected
+  isWebClient
 }: SettingsNavigationBuildOptions): SettingsNavSection[] {
-  const showDesktopOnlySettings = !isWebClient
   return [
     {
       id: 'agents',
@@ -43,39 +38,7 @@ export function buildCapabilitySettingsSections({
         includeNestedWorkerDepth: !isWebClient
       }),
       group: 'capabilities'
-    },
-    // Why: only surfaced once Linear is connected — a capability that needs a
-    // linked provider before the agent skill has anything to act on.
-    ...(isLinearConnected
-      ? [
-          {
-            id: 'linear',
-            title: translate('auto.hooks.useSettingsNavigationMetadata.linearTitle', 'Linear'),
-            description: translate(
-              'auto.hooks.useSettingsNavigationMetadata.linearDescription',
-              'How Linear works in Orca, setup checklist, agent skill, and example prompts.'
-            ),
-            icon: LinearIcon,
-            searchEntries: getLinearAgentSkillPaneSearchEntries(),
-            group: 'capabilities'
-          }
-        ]
-      : []),
-    ...(showDesktopOnlySettings
-      ? [
-          {
-            id: 'computer-use',
-            title: translate('auto.hooks.useSettingsNavigationMetadata.b35e92364b', 'Computer Use'),
-            description: translate(
-              'auto.hooks.useSettingsNavigationMetadata.0059bd17f3',
-              'Enable agents to control any app on your computer.'
-            ),
-            icon: MousePointerClick,
-            searchEntries: getComputerUsePaneSearchEntries(),
-            group: 'capabilities'
-          }
-        ]
-      : [])
+    }
   ]
 }
 
@@ -99,7 +62,7 @@ export function buildSetupSettingsSections({
       title: translate('auto.hooks.useSettingsNavigationMetadata.2b043783ef', 'Integrations'),
       description: translate(
         'auto.hooks.useSettingsNavigationMetadata.33a5e1d597',
-        'Connect GitHub, GitLab, Linear, and source-hosting services.'
+        'Connect Bitbucket, Azure DevOps, and Gitea with saved API tokens or environment variables.'
       ),
       icon: Blocks,
       searchEntries: getIntegrationsPaneSearchEntries(),

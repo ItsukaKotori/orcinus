@@ -7,7 +7,6 @@ type StatusState = Parameters<typeof selectWorktreeActivityStatuses>[0]
 function makeStatusState(): StatusState {
   return {
     tabsByWorktree: {},
-    browserTabsByWorktree: {},
     runtimePaneTitlesByTabId: {},
     ptyIdsByTabId: {},
     terminalLayoutsByTabId: {},
@@ -25,9 +24,6 @@ describe('selectWorktreeActivityStatuses', () => {
     const unrelatedUpdate: StatusState = {
       ...state,
       agentStatusEpoch: 1,
-      browserTabsByWorktree: {
-        other: []
-      },
       runtimePaneTitlesByTabId: {
         'other-tab': { 0: 'codex [working]' }
       },

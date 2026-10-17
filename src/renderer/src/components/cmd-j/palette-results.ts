@@ -68,18 +68,13 @@ export function bestCmdJPaletteSectionQualityClass(
 }
 
 const SETTINGS_ALIASES: Record<string, string[]> = {
-  browser: ['browser settings'],
   terminal: ['terminal settings'],
-  ssh: ['ssh'],
   shortcuts: ['keyboard shortcuts'],
   appearance: ['theme', 'themes'],
   agents: ['ai agents'],
   'quick-commands': ['quick commands', 'quick command'],
   repo: ['repository settings', 'project settings'],
-  integrations: ['gitlab', 'github', 'linear'],
   notifications: ['notification settings'],
-  mobile: ['phone'],
-  'computer-use': ['computer use'],
   stats: ['usage']
 }
 

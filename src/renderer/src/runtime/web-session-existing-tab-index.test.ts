@@ -4,7 +4,7 @@ import { buildWebSessionExistingTabIndex } from './web-session-existing-tab-inde
 
 const WT = 'repo::/worktree'
 
-function makeTab(id: string, entityId: string, contentType: 'editor' | 'browser'): Tab {
+function makeTab(id: string, entityId: string, contentType: 'editor'): Tab {
   return {
     id,
     entityId,
@@ -30,14 +30,6 @@ describe('buildWebSessionExistingTabIndex', () => {
 
     expect(index.getEditorUnifiedTab(firstFileId, laterByHostId.id)).toBe(firstByFileId)
     expect(index.getEditorUnifiedTab(laterByHostId.entityId, firstByFileId.id)).toBe(firstByFileId)
-  })
-
-  it('ignores browser tabs and returns null when neither key matches', () => {
-    const index = buildWebSessionExistingTabIndex({
-      unifiedTabs: [makeTab('browser-tab', 'workspace-1', 'browser')]
-    })
-
-    expect(index.getEditorUnifiedTab('/repo/missing.ts', 'absent-host-id')).toBeNull()
   })
 
   it('resolves by host tab id and by file id independently', () => {

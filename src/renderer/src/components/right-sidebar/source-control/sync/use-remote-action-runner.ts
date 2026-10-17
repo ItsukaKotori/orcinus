@@ -55,7 +55,6 @@ export function useSourceControlRemoteActionRunner({
   refreshGitHistoryRef,
   remoteActionErrorSequenceByWorktreeRef,
   remoteStatus,
-  remoteStatusForActions,
   setRemoteActionErrors,
   syncBranch,
   worktreePath
@@ -77,7 +76,6 @@ export function useSourceControlRemoteActionRunner({
   refreshGitHistoryRef: React.RefObject<() => Promise<void>>
   remoteActionErrorSequenceByWorktreeRef: SourceControlWorktreeOperationState['remoteActionErrorSequenceByWorktreeRef']
   remoteStatus: SourceControlWorktreeContext['remoteStatus']
-  remoteStatusForActions: SourceControlWorktreeContext['remoteStatus']
   setRemoteActionErrors: SourceControlWorktreeOperationState['setRemoteActionErrors']
   syncBranch: SourceControlStoreActions['syncBranch']
   worktreePath: string | null
@@ -277,14 +275,14 @@ export function useSourceControlRemoteActionRunner({
       // Why: "Commit & Force Push" maps to remoteKind 'push', so route to force_push when the upstream shape requires lease force (kind 'push' no longer auto-upgrades).
       if (
         remoteKind === 'push' &&
-        shouldForcePushWithLeaseForUpstream(remoteStatusForActions ?? remoteStatus)
+        shouldForcePushWithLeaseForUpstream(remoteStatus)
       ) {
         await runRemoteAction('force_push')
         return
       }
       await runRemoteAction(remoteKind)
     },
-    [handleCommit, remoteStatus, remoteStatusForActions, runRemoteAction]
+    [handleCommit, remoteStatus, runRemoteAction]
   )
 
   return { runCompoundCommitAction, runRemoteAction }

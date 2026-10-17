@@ -4,7 +4,6 @@ import { lazyWithRetry } from '@/lib/lazy-with-retry'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { translate } from '@/i18n/i18n'
 import { shouldOpenStatusBarContextMenu } from './status-bar-context-menu-policy'
-import { UpdateStatusSegment } from './UpdateStatusSegment'
 import { CaffeinateStatusSegment } from './CaffeinateStatusSegment'
 import { TOGGLE_FLOATING_TERMINAL_EVENT } from '@/lib/floating-terminal'
 import { FloatingTerminalIconContextMenu } from '@/components/floating-terminal/FloatingTerminalIconContextMenu'
@@ -17,9 +16,6 @@ const ResourceUsageStatusSegment = lazyWithRetry(() =>
   import('./ResourceUsageStatusSegment').then((module) => ({
     default: module.ResourceUsageStatusSegment
   }))
-)
-const PortsStatusSegment = lazyWithRetry(() =>
-  import('./PortsStatusSegment').then((module) => ({ default: module.PortsStatusSegment }))
 )
 
 export type StatusBarProps = {
@@ -43,7 +39,6 @@ export function StatusBarSurface({
     setMenuPoint,
     showFloatingTerminalToggle,
     showFloatingWorkspaceAttentionDot,
-    showPorts,
     showResourceUsage
   } = controller
 
@@ -67,12 +62,10 @@ export function StatusBarSurface({
 
       <div className="flex items-center gap-3">
         {!isPairedWebClientWindow() ? <CaffeinateStatusSegment iconOnly={iconOnly} /> : null}
-        <UpdateStatusSegment compact={compact} iconOnly={iconOnly} />
         <React.Suspense fallback={null}>
           {showResourceUsage ? (
             <ResourceUsageStatusSegment compact={compact} iconOnly={iconOnly} />
           ) : null}
-          {showPorts ? <PortsStatusSegment compact={compact} iconOnly={iconOnly} /> : null}
         </React.Suspense>
         {showFloatingTerminalToggle && (
           <FloatingTerminalIconContextMenu currentLocation="status-bar" className="relative">

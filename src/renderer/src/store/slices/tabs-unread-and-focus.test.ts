@@ -316,8 +316,6 @@ describe('TabsSlice', () => {
         activeGroupIdByWorktree: { [WT]: groupId },
         activeFileId: editorFileId,
         activeFileIdByWorktree: { [WT]: editorFileId },
-        activeBrowserTabId: null,
-        activeBrowserTabIdByWorktree: { [WT]: null },
         activeTabId: null,
         activeTabIdByWorktree: { [WT]: null },
         activeTabType: 'editor',

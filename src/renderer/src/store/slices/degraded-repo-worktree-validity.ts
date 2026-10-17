@@ -25,9 +25,6 @@ export function collectPersistedWorktreeIdsForSessionHydration(
   for (const worktreeId of Object.keys(session.openFilesByWorktree ?? {})) {
     persistedWorktreeIds.add(worktreeId)
   }
-  for (const worktreeId of Object.keys(session.browserTabsByWorktree ?? {})) {
-    persistedWorktreeIds.add(worktreeId)
-  }
   return persistedWorktreeIds
 }
 

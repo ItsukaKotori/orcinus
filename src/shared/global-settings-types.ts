@@ -1,6 +1,5 @@
 import type { ExecutionHostId } from './execution-host'
 import type { GitHubProjectSettings } from './github/project-types'
-import type { GitLabProjectSettings } from './gitlab-types'
 import type { TaskProvider } from './task-providers'
 import type { KeybindingOverrides, TerminalShortcutPolicy } from './keybindings'
 import type { AppIconId } from './app-icon'
@@ -195,14 +194,6 @@ export type GlobalSettings = {
   httpProxyBypassRules?: string
   /** Why: corporate TLS-intercepting proxies can break HTTP/2 downloads; opt-in Chromium process-wide HTTP/1.1 switch. */
   electronHttp1CompatibilityMode?: boolean
-  /** Opt-in in-app browsing (isolated guest surface); default keeps links opening in the system browser. */
-  openLinksInApp: boolean
-  /** Worktree-scoped localhost hostnames to distinguish tabs; opt-in since a non-localhost host can break apps binding cookies/sessions to localhost. */
-  localhostWorktreeLabelsEnabled?: boolean
-  /** Tracks the one-time first-use prompt for terminal link routing (avoid silently changing where links open). */
-  openLinksInAppPreferencePrompted: boolean
-  /** Opt-in: Shift+modifier click inverts openLinksInApp instead of always forcing the system browser. Off keeps the historical one-way escape hatch. */
-  openLinksInAppModifierInverts?: boolean
   /** Show link actions on plain click in the terminal and chat; off restores modifier-click-only terminal links. */
   terminalLinkActionPopoverEnabled?: boolean
   /** Extra launcher rows for the worktree "Open in" submenu. VS Code is always shown first. */
@@ -218,22 +209,12 @@ export type GlobalSettings = {
   sourceControlCompareAgainstUpstream: boolean
   /** Whether to show the Orca app name in the titlebar. */
   showTitlebarAppName: boolean
-  /** Hides the Tasks sidebar button (also removes it from keyboard navigation). */
-  showTasksButton: boolean
-  /** Only toggles the sidebar shortcut; Automations stay reachable from Settings/View menu. */
-  showAutomationsButton?: boolean
-  /** Deprecated: Artifacts are always available. Use showArtifactsButton for sidebar visibility. */
-  artifactsEnabled?: boolean
-  /** Capability gate for agent-driven publishing; off until granted, enforced in main, not just the UI. */
-  artifactSharingEnabled?: boolean
   /** Capability gate for agent/CLI skill publishing; manual reviewed publishing remains available. */
   agentSkillSharingEnabled?: boolean
   /** How deep dispatched workers may nest. 1 = workers cannot dispatch sub-workers.
    *  Renderer-writable only: omitted from the SettingsUpdate RPC schema so a worker
    *  cannot raise its own cap via `orca settings update`. */
   nestedWorkerMaxDepth?: number
-  /** Only toggles the sidebar shortcut; Artifacts stay reachable from Settings. */
-  showArtifactsButton?: boolean
   /** Only toggles the sidebar shortcut; Skills stay reachable from Settings. */
   showSkillsButton?: boolean
   /** Pinned workspaces show in one sidebar location by default; opt in to also show them in their natural groups. */
@@ -244,14 +225,6 @@ export type GlobalSettings = {
   terminalShortcutPolicy?: TerminalShortcutPolicy
   /** Floating Workspace: global surface for terminal/browser/markdown tabs outside repo/worktree context. */
   floatingTerminalEnabled: boolean
-  /** Main-side new-page kill switch for paired Electron client-hosted browser placement. */
-  browserClientHostedRemoteEnabled?: boolean
-  /** Routes SSH-workspace browser pages through the workspace's SSH host; off = plain local browsing. */
-  browserSshWorkspaceRoutingEnabled?: boolean
-  /** Per-target opt-outs recorded from the routing error card's "Browse from this device instead". */
-  browserSshWorkspaceRoutingDisabledTargetIds?: string[]
-  /** Targets whose forwarding preflight the user overrode via "Try anyway" (e.g. PermitOpen allows their sites); skips the probe, never changes egress. */
-  browserSshWorkspaceRoutingProbeSkippedTargetIds?: string[]
   /** One-shot migration flag for the floating-workspace default-on rollout; after migration an explicit off sticks. */
   floatingTerminalDefaultedForAllUsers?: boolean
   /** Start dir for new floating-workspace terminal tabs; empty or '~' = home dir. */
@@ -292,8 +265,6 @@ export type GlobalSettings = {
   terminalSshViewParking?: boolean
   /** Kill switch for the hidden-worktree retention budget (C1): force-parks the least-recently-hidden un-parkable worktrees beyond a count budget or TTL. */
   terminalHiddenWorktreeRetentionBudget?: boolean
-  /** Kill switch for the browser-guest worktree retention budget: destroys the least-recently-activated hidden worktrees' webview guests beyond an LRU count budget. */
-  browserGuestWorktreeRetentionBudget?: boolean
   /** Kill switch for main-process PTY side-effect authority; on (default) = title/bell/agent facts via pty:sideEffect channel, not renderer byte parsing. */
   terminalMainSideEffectAuthority?: boolean
   /** Kill switch for main's hidden-delivery gate (Phase 4): drops PTY bytes to hidden views after model ingestion; requires terminalMainSideEffectAuthority. */
@@ -326,10 +297,6 @@ export type GlobalSettings = {
   skipDeleteWorktreeConfirm: boolean
   /** Why: closing a terminal with child processes kills foreground work; keep this skip separate from other confirmations. */
   skipCloseTerminalWithRunningProcessConfirm: boolean
-  /** Why: deleting an automation also deletes its run history; keep this skip separate from worktree deletion. */
-  skipDeleteAutomationConfirm: boolean
-  /** Why: deleting an artifact breaks a public link others may already hold; keep this skip separate from local deletions. */
-  skipDeleteArtifactConfirm: boolean
   /** Why: a Codex rate-limit reset spends a scarce credit on the live account; keep this skip separate from local confirmations. */
   skipCodexRateLimitResetConfirm: boolean
   /** Default preset in the new-workspace GitHub task view. */
@@ -406,10 +373,6 @@ export type GlobalSettings = {
   /** Preferred mobile pairing path for new QR codes. Missing/'automatic' = Anywhere (Relay + local);
    *  explicit 'local-only' = same-network only. */
   mobilePairingConnectionMode?: 'automatic' | 'local-only'
-  /** Explicit custom address restored when generating future mobile pairing codes. */
-  mobilePairingCustomAddress?: string | null
-  /** Saved custom addresses available in both mobile pairing pickers. */
-  mobilePairingCustomAddresses?: string[]
   /** Experimental: persistent terminal-pane attention ring for bell + agent-completion events. Opt-in while tuning signal/noise. */
   experimentalTerminalAttention: boolean
   /** Experimental: automatically sleep completed, resumable background agent terminals. */
@@ -433,8 +396,6 @@ export type GlobalSettings = {
   commitMessageAi?: CommitMessageAiSettings
   /** Source-control AI generation settings for commit messages and hosted-review drafts. */
   sourceControlAi?: SourceControlAiSettings
-  /** GitLab project preferences (pinned + recent paths). Optional for pre-GitLab profiles; persistence merge fills the default. */
-  gitlabProjects?: GitLabProjectSettings
   /** One-shot cohort marker for the tab-switch keybinding swap. 'pending' =
    *  pre-existing install (seed pins old chords, then flips to 'done'); 'done' = fresh install. */
   tabSwitchKeybindingSeed?: 'pending' | 'done'

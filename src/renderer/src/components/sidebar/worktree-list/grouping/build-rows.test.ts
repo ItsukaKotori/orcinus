@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { buildRows } from './build-rows'
-import { ALL_GROUP_META, getPRGroupKey, PINNED_GROUP_KEY } from './group-keys'
+import { ALL_GROUP_META, PINNED_GROUP_KEY } from './group-keys'
 import { getGroupKeyForWorktree } from './worktree-group-keys'
 import {
   REPO_HEADER_ACTION_BUTTON_CLASS,
@@ -20,101 +20,13 @@ function readSectionHeaderRowSource(): string {
   return readFileSync(fileURLToPath(new URL('../rows/SectionHeader.tsx', import.meta.url)), 'utf8')
 }
 
-describe('getPRGroupKey', () => {
-  it('puts merged PRs in the done group', () => {
-    const prCache = {
-      'repo-1::feature/super-critical': {
-        data: { state: 'merged' }
-      }
-    }
-
-    expect(getPRGroupKey(worktree, repoMap, prCache)).toBe('done')
-  })
-
-  it('treats a matching suppressed PR as in progress', () => {
-    const prCache = {
-      'repo-1::feature/super-critical': {
-        data: { number: 42, state: 'merged' }
-      }
-    }
-
-    expect(
-      getPRGroupKey({ ...worktree, linkedPR: null, suppressedGitHubPR: 42 }, repoMap, prCache)
-    ).toBe('in-progress')
-  })
-
-  it('keeps a different PR in its review-status group', () => {
-    const prCache = {
-      'repo-1::feature/super-critical': {
-        data: { number: 43, state: 'merged' }
-      }
-    }
-
-    expect(
-      getPRGroupKey({ ...worktree, linkedPR: null, suppressedGitHubPR: 42 }, repoMap, prCache)
-    ).toBe('done')
-  })
-
-  it('prefers repo-scoped PR status over stale legacy path-scoped status', () => {
-    const prCache = {
-      '/tmp/orca::feature/super-critical': {
-        data: { state: 'closed' }
-      },
-      'repo-1::feature/super-critical': {
-        data: { state: 'merged' }
-      }
-    }
-
-    expect(getPRGroupKey(worktree, repoMap, prCache)).toBe('done')
-  })
-
-  it('falls back to legacy path-scoped PR status when no repo-scoped entry exists', () => {
-    const prCache = {
-      '/tmp/orca::feature/super-critical': {
-        data: { state: 'closed' }
-      }
-    }
-
-    expect(getPRGroupKey(worktree, repoMap, prCache)).toBe('closed')
-  })
-
-  it('uses local PR cache for a known local repo while a runtime is focused', () => {
-    const prCache = {
-      'repo-1::feature/super-critical': {
-        data: { state: 'merged' }
-      }
-    }
-
-    expect(
-      getPRGroupKey(worktree, repoMap, prCache, {
-        activeRuntimeEnvironmentId: 'env-1'
-      } as never)
-    ).toBe('done')
-  })
-
-  it('uses SSH-scoped PR cache entries instead of local entries for SSH repos', () => {
-    const sshRepo = { ...repo, connectionId: 'ssh-1' }
-    const sshRepoMap = new Map([[sshRepo.id, sshRepo]])
-    const prCache = {
-      'repo-1::feature/super-critical': {
-        data: { state: 'merged' }
-      },
-      'ssh:ssh-1::repo-1::feature/super-critical': {
-        data: { state: 'closed' }
-      }
-    }
-
-    expect(getPRGroupKey(worktree, sshRepoMap, prCache)).toBe('closed')
-  })
-})
-
 describe('getGroupKeyForWorktree', () => {
   it('returns the all group key for the ungrouped mode', () => {
-    expect(getGroupKeyForWorktree('none', worktree, repoMap, null)).toBe('all')
+    expect(getGroupKeyForWorktree('none', worktree, repoMap)).toBe('all')
   })
 
   it('returns a workspace-status key only in status grouping mode', () => {
-    expect(getGroupKeyForWorktree('workspace-status', worktree, repoMap, null)).toBe(
+    expect(getGroupKeyForWorktree('workspace-status', worktree, repoMap)).toBe(
       'workspace-status:in-progress'
     )
   })
@@ -126,7 +38,7 @@ describe('buildRows with pinned worktrees', () => {
   const unpinned2 = { ...worktree, id: 'wt-2', displayName: 'beta' }
 
   it('emits Pinned and All headers in groupBy none', () => {
-    const rows = buildRows('none', [unpinned1, pinned, unpinned2], repoMap, null, new Set())
+    const rows = buildRows('none', [unpinned1, pinned, unpinned2], repoMap, new Set())
     expect(rows[0]).toMatchObject({ type: 'header', key: 'pinned', label: 'Pinned' })
     expect(rows[1]).toMatchObject({ type: 'item', worktree: { id: 'wt-pinned' } })
     expect(rows[2]).toMatchObject({ type: 'header', key: 'all', label: 'All', count: 2 })
@@ -143,7 +55,6 @@ describe('buildRows with pinned worktrees', () => {
       'none',
       [runtimePinned, unpinned1],
       repoMap,
-      null,
       new Set(),
       undefined,
       undefined,
@@ -163,7 +74,7 @@ describe('buildRows with pinned worktrees', () => {
   })
 
   it('groups all worktrees under All in groupBy none', () => {
-    const rows = buildRows('none', [unpinned1, unpinned2], repoMap, null, new Set())
+    const rows = buildRows('none', [unpinned1, unpinned2], repoMap, new Set())
 
     expect(rows).toMatchObject([
       { type: 'header', key: 'all', label: 'All' },
@@ -173,7 +84,7 @@ describe('buildRows with pinned worktrees', () => {
   })
 
   it('moves pinned worktrees out of the All group', () => {
-    const rows = buildRows('none', [unpinned1, pinned, unpinned2], repoMap, null, new Set())
+    const rows = buildRows('none', [unpinned1, pinned, unpinned2], repoMap, new Set())
 
     expect(rows).toMatchObject([
       { type: 'header', key: 'pinned' },
@@ -189,7 +100,6 @@ describe('buildRows with pinned worktrees', () => {
       'none',
       [unpinned1, pinned, unpinned2],
       repoMap,
-      null,
       new Set(),
       undefined,
       undefined,
@@ -211,7 +121,7 @@ describe('buildRows with pinned worktrees', () => {
   })
 
   it('collapses the All group in groupBy none', () => {
-    const rows = buildRows('none', [unpinned1, pinned, unpinned2], repoMap, null, new Set(['all']))
+    const rows = buildRows('none', [unpinned1, pinned, unpinned2], repoMap, new Set(['all']))
 
     expect(rows).toMatchObject([
       { type: 'header', key: 'pinned' },
@@ -225,7 +135,6 @@ describe('buildRows with pinned worktrees', () => {
       'workspace-status',
       [unpinned1, pinned, unpinned2],
       repoMap,
-      null,
       new Set()
     )
     expect(rows[2]).toMatchObject({
@@ -243,7 +152,6 @@ describe('buildRows with pinned worktrees', () => {
       'workspace-status',
       [unpinned1, pinned],
       repoMap,
-      null,
       new Set(),
       undefined,
       undefined,
@@ -263,20 +171,8 @@ describe('buildRows with pinned worktrees', () => {
     ])
   })
 
-  it('moves pinned items out of regular groups in pr-status mode', () => {
-    const rows = buildRows('pr-status', [unpinned1, pinned], repoMap, null, new Set())
-    const pinnedHeader = rows.find((r) => r.type === 'header' && r.key === 'pinned')
-    expect(pinnedHeader).toBeDefined()
-    const prGroup = rows.filter((r) => r.type === 'header' && r.key.startsWith('pr:'))
-    for (const header of prGroup) {
-      if (header.type === 'header') {
-        expect(header.count).toBe(1)
-      }
-    }
-  })
-
   it('omits empty pinned sections in groupBy workspace-status', () => {
-    const rows = buildRows('workspace-status', [unpinned1, unpinned2], repoMap, null, new Set())
+    const rows = buildRows('workspace-status', [unpinned1, unpinned2], repoMap, new Set())
     expect(rows[0]).toMatchObject({
       type: 'header',
       key: 'workspace-status:in-progress',
@@ -291,7 +187,6 @@ describe('buildRows with pinned worktrees', () => {
       'workspace-status',
       [pinned, unpinned1],
       repoMap,
-      null,
       new Set(['pinned'])
     )
     expect(rows[0]).toMatchObject({ type: 'header', key: 'pinned' })
@@ -301,14 +196,14 @@ describe('buildRows with pinned worktrees', () => {
 
   it('omits status sections when all matching worktrees are pinned', () => {
     const allPinned = { ...unpinned1, isPinned: true }
-    const rows = buildRows('workspace-status', [pinned, allPinned], repoMap, null, new Set())
+    const rows = buildRows('workspace-status', [pinned, allPinned], repoMap, new Set())
     expect(rows.filter((r) => r.type === 'header')).toHaveLength(1)
     expect(rows[0]).toMatchObject({ type: 'header', key: 'pinned', count: 2 })
   })
 
   it('preserves repo display casing in group labels', () => {
     const lowercaseRepo = { ...repo, displayName: 'c15t' }
-    const rows = buildRows('repo', [worktree], new Map([[repo.id, lowercaseRepo]]), null, new Set())
+    const rows = buildRows('repo', [worktree], new Map([[repo.id, lowercaseRepo]]), new Set())
 
     expect(rows[0]).toMatchObject({ type: 'header', label: 'c15t' })
   })
@@ -334,7 +229,6 @@ describe('buildRows with pinned worktrees', () => {
       'repo',
       [folderWorktree],
       new Map([[folderRepo.id, folderRepo]]),
-      null,
       new Set()
     )
 
@@ -349,7 +243,7 @@ describe('buildRows with pinned worktrees', () => {
 
   it('emits assigned workspace statuses as sections in groupBy workspace-status', () => {
     const review = { ...worktree, id: 'wt-review', workspaceStatus: 'in-review' as const }
-    const rows = buildRows('workspace-status', [review], repoMap, null, new Set())
+    const rows = buildRows('workspace-status', [review], repoMap, new Set())
 
     expect(
       rows.filter((r) => r.type === 'header').map((r) => ({ key: r.key, label: r.label }))
@@ -368,7 +262,6 @@ describe('buildRows with pinned worktrees', () => {
       'workspace-status',
       [doing, blocked],
       repoMap,
-      null,
       new Set(),
       undefined,
       customStatuses

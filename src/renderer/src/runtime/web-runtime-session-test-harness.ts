@@ -2,7 +2,6 @@ import { vi } from 'vitest'
 import type { RuntimeMobileSessionTabsResult } from '../../../shared/runtime-types'
 import { toRuntimeExecutionHostId } from '../../../shared/execution-host'
 import { clearRuntimeCompatibilityCacheForTests } from './runtime-rpc-client'
-import { resetWebSessionBrowserPlacementsForTests } from './web-session-browser-placement'
 import { resetWebSessionFocusIntentForTests } from './web-session-focus-intent'
 
 export const ENVIRONMENT_ID = 'web-env-1'
@@ -192,7 +191,6 @@ export function resetBrowserTabCreateEnvironment(): void {
   stagedWorkspaceCounter = 0
   vi.unstubAllGlobals()
   clearRuntimeCompatibilityCacheForTests()
-  resetWebSessionBrowserPlacementsForTests()
   resetWebSessionFocusIntentForTests()
   vi.clearAllMocks()
 }

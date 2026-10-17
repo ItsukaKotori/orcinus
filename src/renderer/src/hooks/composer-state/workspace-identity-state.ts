@@ -3,11 +3,8 @@ import type { ComposerModel } from './composer-model'
 type WorkspaceIdentityStateInput = Pick<
   ComposerModel,
   | 'initialBaseBranch'
-  | 'initialLinearBranchName'
   | 'initialLinkedWorkItem'
-  | 'linkedWorkItem'
   | 'linkedWorkItemSeedIdentity'
-  | 'name'
   | 'newWorkspaceDraft'
   | 'persistDraft'
   | 'selectedRepoConnectionId'
@@ -17,10 +14,7 @@ type WorkspaceIdentityStateInput = Pick<
 
 import { useState, useMemo } from 'react'
 import { getLinkedWorkItemProvider, isGitLabIssueUrl } from '@/lib/new-workspace'
-import {
-  type SmartNameMode,
-  isBlockingJiraUrlIntent
-} from '@/components/new-workspace/smart-workspace-source-results'
+import type { SmartNameMode } from '@/components/new-workspace/smart-workspace-source-results'
 import type { GitPushTarget } from '../../../../shared/worktree/types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import { filterEnabledTuiAgents, isTuiAgentEnabled } from '../../../../shared/tui-agent-selection'
@@ -30,11 +24,8 @@ import { useAppStore } from '@/store'
 export function useWorkspaceIdentityState(input: WorkspaceIdentityStateInput) {
   const {
     initialBaseBranch,
-    initialLinearBranchName,
     initialLinkedWorkItem,
-    linkedWorkItem,
     linkedWorkItemSeedIdentity,
-    name,
     newWorkspaceDraft,
     persistDraft,
     selectedRepoConnectionId,
@@ -96,20 +87,17 @@ export function useWorkspaceIdentityState(input: WorkspaceIdentityStateInput) {
     persistDraft ? newWorkspaceDraft?.compareBaseRef : undefined
   )
 
-  const [branchNameOverride, setBranchNameOverride] = useState<string | undefined>(
-    initialLinearBranchName
-  )
+  const [branchNameOverride, setBranchNameOverride] = useState<string | undefined>(undefined)
 
   const [parentWorktreeId, setParentWorktreeId] = useState<string | null>(null)
 
-  const [branchNameOverridePreservesNameEdits, setBranchNameOverridePreservesNameEdits] = useState(
-    Boolean(initialLinearBranchName)
-  )
+  const [branchNameOverridePreservesNameEdits, setBranchNameOverridePreservesNameEdits] =
+    useState(false)
 
   const [smartNameMode, setSmartNameMode] = useState<SmartNameMode>('smart')
 
-  // Why: a pasted Jira URL is not a workspace name yet — block create until it resolves to an issue.
-  const sourceIntentBlocksCreate = !linkedWorkItem && isBlockingJiraUrlIntent(smartNameMode, name)
+  // Why: provider URL intents that used to block create are gone with their providers.
+  const sourceIntentBlocksCreate = false
 
   // Why (#5181): reuseEligibleBranch = local branch name eligible for checkout-reuse (null if none); reuseSelectedBranch = the checkbox that enacts it.
   const [reuseEligibleBranch, setReuseEligibleBranch] = useState<string | null>(null)

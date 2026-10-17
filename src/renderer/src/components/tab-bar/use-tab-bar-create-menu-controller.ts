@@ -44,7 +44,6 @@ export function useTabBarCreateMenuController({
   worktreeId,
   resolvedGroupId,
   terminalOnly,
-  managedBrowserCreationEnabled,
   showWindowsShellMenu,
   projectRuntimeShellMenuMode,
   defaultWindowsShell,
@@ -53,14 +52,12 @@ export function useTabBarCreateMenuController({
   agentLaunchOptions,
   onNewTerminalTab,
   onNewTerminalWithShell,
-  onNewBrowserTab,
   onNewFileTab,
   onOpenFileTab
 }: {
   worktreeId: string
   resolvedGroupId: string
   terminalOnly: boolean
-  managedBrowserCreationEnabled: boolean
   showWindowsShellMenu: boolean
   projectRuntimeShellMenuMode: ReturnType<typeof getProjectRuntimeShellMenuMode>
   defaultWindowsShell: string
@@ -71,7 +68,6 @@ export function useTabBarCreateMenuController({
   agentLaunchOptions: TabAgentLaunchOption[]
   onNewTerminalTab: () => void
   onNewTerminalWithShell?: (shell: string) => void
-  onNewBrowserTab: () => void
   onNewFileTab?: () => void
   onOpenFileTab?: () => void
 }): TabBarCreateMenuController {
@@ -154,13 +150,11 @@ export function useTabBarCreateMenuController({
       buildTabCreateMenuOptions({
         terminalOnly,
         windowsShellEntries,
-        hasNewBrowser: !terminalOnly && managedBrowserCreationEnabled,
         hasNewMarkdown: !terminalOnly && Boolean(onNewFileTab),
         hasOpenMarkdown: !terminalOnly && Boolean(onOpenFileTab)
       }),
     [
-      managedBrowserCreationEnabled,
-      onNewFileTab,
+          onNewFileTab,
       onOpenFileTab,
       terminalOnly,
       windowsShellEntries
@@ -184,9 +178,6 @@ export function useTabBarCreateMenuController({
             windowsTerminalCapabilities.pwshAvailable
           )
         )
-        break
-      case 'new-browser':
-        onNewBrowserTab()
         break
       case 'new-markdown':
         onNewFileTab?.()

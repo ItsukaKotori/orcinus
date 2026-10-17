@@ -4,7 +4,6 @@ type TargetChangeActionsInput = Pick<
   ComposerModel,
   | 'baseBranch'
   | 'branchAutoNameRef'
-  | 'decisions'
   | 'folderSourceRepos'
   | 'hostOptions'
   | 'linkedWorkItem'
@@ -16,8 +15,6 @@ type TargetChangeActionsInput = Pick<
   | 'setBranchNameOverridePreservesNameEdits'
   | 'setCompareBaseRef'
   | 'setForkPushWarning'
-  | 'setLinkedGitLabIssue'
-  | 'setLinkedGitLabMR'
   | 'setLinkedIssue'
   | 'setLinkedPR'
   | 'setLinkedTaskSourceContext'
@@ -32,14 +29,9 @@ type TargetChangeActionsInput = Pick<
   | 'setSparseEnabled'
   | 'setSparseSelectedPresetId'
   | 'setStartFromResetHint'
-  | 'smartGitHubPrStartPointSelectionRef'
 >
 
 import { useCallback } from 'react'
-import {
-  isLinearLinkedWorkItem,
-  getLinearLinkedWorkItemBranchName
-} from '@/lib/linear-linked-work-item'
 import { shouldPreserveWorkspaceSourceOnRepoChange } from '../../../../shared/new-workspace/workspace-source'
 import {
   buildProjectHostSetupOptions,
@@ -52,7 +44,6 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
   const {
     baseBranch,
     branchAutoNameRef,
-    decisions,
     folderSourceRepos,
     hostOptions,
     linkedWorkItem,
@@ -64,8 +55,6 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
     setBranchNameOverridePreservesNameEdits,
     setCompareBaseRef,
     setForkPushWarning,
-    setLinkedGitLabIssue,
-    setLinkedGitLabMR,
     setLinkedIssue,
     setLinkedPR,
     setLinkedTaskSourceContext,
@@ -80,9 +69,7 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
     setSparseEnabled,
     setSparseSelectedPresetId,
     setStartFromResetHint,
-    smartGitHubPrStartPointSelectionRef
   } = input
-  const { retargetGitHubPrStartPointSelection } = decisions
 
   const handleRepoChange = useCallback(
     (
@@ -102,26 +89,15 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
       if (!options.preserveStartFrom) {
         if (linkedWorkItem?.type === 'pr' && baseBranch) {
           hint = `was PR #${linkedWorkItem.number}`
-        } else if (linkedWorkItem?.type === 'mr' && baseBranch) {
-          // Why: GitLab MR convention is `!N`, not `#N` — match the upstream UI so the hint is recognizable.
-          hint = `was MR !${linkedWorkItem.number}`
         } else if (baseBranch) {
           hint = `was ${baseBranch}`
         }
       }
-      const preserveLinearLinkedWorkItem = isLinearLinkedWorkItem(linkedWorkItem)
-      const preservedLinearBranchName = preserveLinearLinkedWorkItem
-        ? getLinearLinkedWorkItemBranchName(linkedWorkItem)
-        : undefined
       setRepoId(value)
       if (!options.preserveStartFrom) {
         setSelectedProjectHostSetupOverrideId(null)
       }
-      if (options.preserveStartFrom && smartGitHubPrStartPointSelectionRef.current) {
-        smartGitHubPrStartPointSelectionRef.current = retargetGitHubPrStartPointSelection(
-          smartGitHubPrStartPointSelectionRef.current,
-          value
-        )
+      if (options.preserveStartFrom) {
         setBaseBranch(undefined)
         setCompareBaseRef(undefined)
         setPushTarget(undefined)
@@ -131,14 +107,10 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
         setForkPushWarning(null)
       }
       if (!options.preserveStartFrom) {
-        smartGitHubPrStartPointSelectionRef.current = null
         setLinkedIssue('')
         setLinkedPR(null)
-        setLinkedGitLabIssue(null)
-        setLinkedGitLabMR(null)
-        // Why: a repo change invalidates repo-scoped sources, but Linear and
-        // Jira issues are workspace-scoped and must survive choosing the
-        // implementation project — not just Linear.
+        // Why: a repo change invalidates repo-scoped sources; workspace-scoped
+        // sources must survive choosing the implementation project.
         if (linkedWorkItem && !shouldPreserveWorkspaceSourceOnRepoChange(linkedWorkItem)) {
           setLinkedWorkItem(null)
           setLinkedTaskSourceContext(null)
@@ -153,11 +125,10 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
         setBaseBranch(undefined)
         setCompareBaseRef(undefined)
         setPushTarget(undefined)
-        // Why: Linear sources are workspace-scoped, so their canonical branch survives choosing a different implementation repo.
-        setBranchNameOverride(preservedLinearBranchName)
-        setBranchNameOverridePreservesNameEdits(Boolean(preservedLinearBranchName))
-        branchAutoNameRef.current = preservedLinearBranchName ?? ''
-        // Why (#5181): reuse state is branch-scoped, so a repo switch clears it even when a workspace-scoped Linear override is restored.
+        setBranchNameOverride(undefined)
+        setBranchNameOverridePreservesNameEdits(false)
+        branchAutoNameRef.current = ''
+        // Why (#5181): reuse state is branch-scoped, so a repo switch clears it.
         setReuseEligibleBranch(null)
         setReuseSelectedBranch(false)
         setForkPushWarning(null)
@@ -168,7 +139,6 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
       baseBranch,
       linkedWorkItem,
       repoId,
-      retargetGitHubPrStartPointSelection,
       setRepoId,
       branchAutoNameRef,
       setBaseBranch,
@@ -176,8 +146,6 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
       setBranchNameOverridePreservesNameEdits,
       setCompareBaseRef,
       setForkPushWarning,
-      setLinkedGitLabIssue,
-      setLinkedGitLabMR,
       setLinkedIssue,
       setLinkedPR,
       setLinkedTaskSourceContext,
@@ -190,8 +158,7 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
       setSparseDirectories,
       setSparseEnabled,
       setSparseSelectedPresetId,
-      setStartFromResetHint,
-      smartGitHubPrStartPointSelectionRef
+      setStartFromResetHint
     ]
   )
 
@@ -201,7 +168,6 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
         return
       }
       setRepoId(value)
-      smartGitHubPrStartPointSelectionRef.current = null
       setLinkedWorkItem((current) =>
         current && !shouldPreserveWorkspaceSourceOnRepoChange(current) ? null : current
       )
@@ -210,20 +176,15 @@ export function useTargetChangeActions(input: TargetChangeActionsInput) {
       }
       setLinkedIssue('')
       setLinkedPR(null)
-      setLinkedGitLabIssue(null)
-      setLinkedGitLabMR(null)
     },
     [
       folderSourceRepos,
       linkedWorkItem,
       setRepoId,
-      setLinkedGitLabIssue,
-      setLinkedGitLabMR,
       setLinkedIssue,
       setLinkedPR,
       setLinkedTaskSourceContext,
-      setLinkedWorkItem,
-      smartGitHubPrStartPointSelectionRef
+      setLinkedWorkItem
     ]
   )
 

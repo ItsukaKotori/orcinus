@@ -71,7 +71,7 @@ describe('subscribeRuntimeClientEvents', () => {
     expect(unsubscribe).toHaveBeenCalledTimes(1)
   })
 
-  it('forwards automationsChanged and still drops event types it does not know', async () => {
+  it('forwards known event types and still drops event types it does not know', async () => {
     let capturedOnResponse: ((response: unknown) => void) | undefined
     const subscribe = vi.fn(async (_args, nextCallbacks) => {
       capturedOnResponse = (nextCallbacks as { onResponse: (response: unknown) => void }).onResponse
@@ -86,12 +86,12 @@ describe('subscribeRuntimeClientEvents', () => {
       throw new Error('Expected subscription callbacks')
     }
 
-    capturedOnResponse({ ok: true, result: { type: 'automationsChanged', reason: 'run' } })
+    capturedOnResponse({ ok: true, result: { type: 'reposChanged' } })
     // Why: the same allowlist is what makes this event additive for old clients.
-    capturedOnResponse({ ok: true, result: { type: 'automationsFromTheFuture' } })
+    capturedOnResponse({ ok: true, result: { type: 'eventsFromTheFuture' } })
 
     expect(onEvent).toHaveBeenCalledTimes(1)
-    expect(onEvent).toHaveBeenCalledWith({ type: 'automationsChanged', reason: 'run' })
+    expect(onEvent).toHaveBeenCalledWith({ type: 'reposChanged' })
     expect(onError).not.toHaveBeenCalled()
   })
 

@@ -27,10 +27,8 @@ const WORKSPACE_SESSION_KEYED_FIELDS = [
   'tabsByWorktree',
   'openFilesByWorktree',
   'activeFileIdByWorktree',
-  'activeBrowserTabIdByWorktree',
   'activeTabTypeByWorktree',
   'activeTabIdByWorktree',
-  'browserTabsByWorktree',
   'unifiedTabs',
   'tabGroups',
   'tabGroupLayouts',
@@ -61,14 +59,6 @@ function collectWorkspaceSessionKeysFromHostSession(session: WorkspaceSessionSta
   }
   for (const id of session.activeWorktreeIdsOnShutdown ?? []) {
     addWorkspaceSessionKeyForOwnerMap(ids, id)
-  }
-  for (const pages of Object.values(session.browserPagesByWorkspace ?? {})) {
-    if (!Array.isArray(pages)) {
-      continue
-    }
-    for (const page of pages) {
-      addWorkspaceSessionKeyForOwnerMap(ids, page.worktreeId)
-    }
   }
   for (const record of Object.values(session.sleepingAgentSessionsByPaneKey ?? {})) {
     // Why: a hibernated agent can be the only restored session evidence for a

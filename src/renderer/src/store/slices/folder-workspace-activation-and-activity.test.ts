@@ -47,29 +47,6 @@ function makeFolderWorkspace(overrides: Partial<FolderWorkspace> = {}): FolderWo
   }
 }
 
-function rememberedBrowserSurface(workspaceKey: string): Partial<AppState> {
-  return {
-    browserTabsByWorktree: {
-      [workspaceKey]: [
-        {
-          id: 'remembered',
-          worktreeId: workspaceKey,
-          url: 'about:blank',
-          title: 'Browser',
-          loading: false,
-          faviconUrl: null,
-          canGoBack: false,
-          canGoForward: false,
-          loadError: null,
-          createdAt: 1
-        }
-      ]
-    },
-    activeBrowserTabIdByWorktree: { [workspaceKey]: 'remembered' },
-    activeTabTypeByWorktree: { [workspaceKey]: 'browser' }
-  }
-}
-
 type FolderWorkspaceUpdateArgs = {
   folderWorkspaceId: string
   updates: Partial<FolderWorkspace>
@@ -100,7 +77,6 @@ function seedLocalFolderStore(folderWorkspace: FolderWorkspace) {
   store.setState({
     projectGroups: [{ ...projectGroup, executionHostId: 'local' }],
     folderWorkspaces: [folderWorkspace],
-    refreshGitHubForWorktreeIfStale: vi.fn()
   } as Partial<AppState>)
   return store
 }
@@ -165,47 +141,6 @@ describe('folder workspace generic activation and activity', () => {
     }
   )
 
-  it('does not let remembered browser state select content in an empty folder group', () => {
-    const folder = makeFolderWorkspace()
-    const workspaceKey = folderWorkspaceKey(folder.id)
-    const store = seedLocalFolderStore(folder)
-    store.setState({
-      ...rememberedBrowserSurface(workspaceKey),
-      groupsByWorktree: {
-        [workspaceKey]: [
-          {
-            id: 'empty',
-            worktreeId: workspaceKey,
-            activeTabId: null,
-            tabOrder: []
-          }
-        ]
-      },
-      activeGroupIdByWorktree: { [workspaceKey]: 'empty' }
-    } as Partial<AppState>)
-
-    store.getState().setActiveFolderWorkspace(folder.id)
-
-    expect(store.getState().activeTabType).toBe('terminal')
-    expect(store.getState().activeBrowserTabId).toBe('remembered')
-  })
-
-  it('keeps layout-only folder ownership above remembered browser state', () => {
-    const folder = makeFolderWorkspace()
-    const workspaceKey = folderWorkspaceKey(folder.id)
-    const store = seedLocalFolderStore(folder)
-    store.setState({
-      ...rememberedBrowserSurface(workspaceKey),
-      groupsByWorktree: {},
-      layoutByWorktree: { [workspaceKey]: { type: 'leaf', groupId: 'pending' } }
-    } as Partial<AppState>)
-
-    store.getState().setActiveFolderWorkspace(folder.id)
-
-    expect(store.getState().activeTabType).toBe('terminal')
-    expect(store.getState().activeBrowserTabId).toBe('remembered')
-  })
-
   it('falls back to an open file when nothing else owns the folder surface', () => {
     const folder = makeFolderWorkspace()
     const workspaceKey = folderWorkspaceKey(folder.id)
@@ -213,10 +148,8 @@ describe('folder workspace generic activation and activity', () => {
     store.setState({
       groupsByWorktree: {},
       layoutByWorktree: {},
-      // Why: the remembered browser tab is gone, so only the open file is left to show.
-      activeBrowserTabIdByWorktree: { [workspaceKey]: 'closed' },
-      browserTabsByWorktree: { [workspaceKey]: [] },
-      activeTabTypeByWorktree: { [workspaceKey]: 'browser' },
+      // Why: no terminal surface is remembered, so only the open file is left to show.
+      activeTabTypeByWorktree: { [workspaceKey]: 'editor' },
       openFiles: [
         {
           id: 'fallback-file',

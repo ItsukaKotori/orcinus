@@ -38,7 +38,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::State;
 
-use crate::commands::automations::now_millis;
+use crate::commands::now_millis;
 use crate::commands::run_blocking;
 use crate::errors::BridgeError;
 use crate::json::Json;

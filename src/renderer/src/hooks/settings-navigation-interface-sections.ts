@@ -10,8 +10,7 @@ import type { SettingsNavigationBuildOptions } from './settings-navigation-build
 export function buildInterfaceSettingsSections({
   isMac,
   isWindows,
-  isWebClient,
-  managedBrowserCreationEnabled
+  isWebClient
 }: SettingsNavigationBuildOptions): SettingsNavSection[] {
   const showDesktopOnlySettings = !isWebClient
   return [
@@ -67,9 +66,7 @@ export function buildInterfaceSettingsSections({
         'Keyboard shortcuts for common actions.'
       ),
       icon: Keyboard,
-      searchEntries: getShortcutsPaneSearchEntries({
-        includeManagedBrowser: managedBrowserCreationEnabled
-      }),
+      searchEntries: getShortcutsPaneSearchEntries(),
       group: 'interface'
     }
   ]

@@ -1,6 +1,4 @@
 import { shouldForcePushWithLeaseForUpstream } from './git-upstream-status'
-import { supportsHostedReviewCreation } from './hosted-review-creation-providers'
-import { resolveCreateReviewIntentEligibility } from './source-control-create-review-intent'
 import { resolveSourceControlPrimaryActionDuringRemoteOp } from './source-control-primary-action-in-flight'
 import type {
   SourceControlCommitAreaPrimaryActionDecision,
@@ -29,24 +27,9 @@ export function resolveSourceControlPrimaryActionDecision(
     isCommitting,
     isRemoteOperationActive,
     upstreamStatus,
-    prState,
-    isPRStateLoading,
-    hostedReviewCreation,
     branchCommitsAhead,
-    hasCurrentBranch = true,
-    canPushLinkedReviewWithoutUpstream = false,
-    isPrIntentInFlight = false,
-    isHostedReviewCreationLoading = false
+    hasCurrentBranch = true
   } = inputs
-
-  if (isPrIntentInFlight) {
-    return {
-      kind: 'create_pr_intent',
-      labelIntent: 'create_pr',
-      titleIntent: 'prepare_review',
-      disabled: true
-    }
-  }
 
   if (isCommitting) {
     return {
@@ -73,26 +56,7 @@ export function resolveSourceControlPrimaryActionDecision(
     }
   }
 
-  if (
-    isHostedReviewCreationLoading &&
-    hostedReviewCreation &&
-    shouldOfferCreateReviewLoadingAction(hostedReviewCreation)
-  ) {
-    return {
-      kind: 'create_pr',
-      labelIntent: 'create_pr',
-      titleIntent: 'checking_review_creation',
-      disabled: true
-    }
-  }
-
-  const createPrIntent = resolveCreatePrIntentDecision(inputs)
-  if (createPrIntent) {
-    return createPrIntent
-  }
-
   const hasStaged = stagedCount > 0
-  const hasOpenHostedReview = prState === 'open' || prState === 'draft'
 
   if (hasStaged && hasMessage) {
     return {
@@ -131,23 +95,7 @@ export function resolveSourceControlPrimaryActionDecision(
   }
 
   if (!upstreamStatus.hasUpstream) {
-    const unpublishedAction = resolveUnpublishedSourceControlPrimaryAction({
-      hasCurrentBranch,
-      isPRStateLoading,
-      prState
-    })
-
-    if (unpublishedAction.kind === 'publish') {
-      const linkedReviewAction = resolveLinkedReviewSourceControlPrimaryAction({
-        hasOpenHostedReview,
-        canPushLinkedReviewWithoutUpstream
-      })
-      if (linkedReviewAction) {
-        return linkedReviewAction
-      }
-    }
-
-    return unpublishedAction
+    return resolveUnpublishedSourceControlPrimaryAction({ hasCurrentBranch })
   }
 
   if (upstreamStatus.ahead > 0 && upstreamStatus.behind > 0) {
@@ -192,15 +140,6 @@ export function resolveSourceControlPrimaryActionDecision(
     }
   }
 
-  if (hostedReviewCreation?.canCreate) {
-    return {
-      kind: 'create_pr',
-      labelIntent: 'create_pr',
-      titleIntent: 'create_review',
-      disabled: false
-    }
-  }
-
   return {
     kind: 'commit',
     labelIntent: 'commit',
@@ -209,73 +148,8 @@ export function resolveSourceControlPrimaryActionDecision(
   }
 }
 
-function shouldOfferCreateReviewLoadingAction(
-  hostedReviewCreation: SourceControlPrimaryActionDecisionInputs['hostedReviewCreation']
-): boolean {
-  if (!supportsHostedReviewCreation(hostedReviewCreation?.provider)) {
-    return false
-  }
-  return (
-    hostedReviewCreation.blockedReason !== 'existing_review' &&
-    hostedReviewCreation.blockedReason !== 'unsupported_provider'
-  )
-}
-
 export function resolveSourceControlCommitAreaPrimaryActionDecision(
   inputs: SourceControlPrimaryActionDecisionInputs
 ): SourceControlCommitAreaPrimaryActionDecision {
-  // Why: review creation is additive chrome. Commit/mobile bottom areas keep
-  // the local/remote action they would have without review eligibility.
-  return resolveSourceControlPrimaryActionDecision({
-    ...inputs,
-    hostedReviewCreation: null,
-    isPrIntentInFlight: false
-  }) as SourceControlCommitAreaPrimaryActionDecision
-}
-
-function resolveCreatePrIntentDecision(
-  inputs: SourceControlPrimaryActionDecisionInputs
-): SourceControlPrimaryActionDecision | null {
-  const createPrIntent = resolveCreateReviewIntentEligibility({
-    stagedCount: inputs.stagedCount,
-    hasStageableChanges: inputs.hasStageableChanges,
-    hasMessage: inputs.hasMessage,
-    hasUnresolvedConflicts: inputs.hasUnresolvedConflicts,
-    upstreamStatus: inputs.upstreamStatus,
-    hostedReviewCreation: inputs.hostedReviewCreation,
-    branchCommitsAhead: inputs.branchCommitsAhead,
-    hasCurrentBranch: inputs.hasCurrentBranch
-  })
-  if (!createPrIntent.eligible) {
-    return null
-  }
-  return {
-    kind: 'create_pr_intent',
-    labelIntent: 'create_pr',
-    titleIntent: 'prepare_review',
-    disabled: false
-  }
-}
-
-function resolveLinkedReviewSourceControlPrimaryAction(args: {
-  hasOpenHostedReview: boolean
-  canPushLinkedReviewWithoutUpstream: boolean
-}): SourceControlPrimaryActionDecision | null {
-  if (!args.hasOpenHostedReview) {
-    return null
-  }
-  if (args.canPushLinkedReviewWithoutUpstream) {
-    return {
-      kind: 'push',
-      labelIntent: 'push',
-      titleIntent: 'push_linked_review',
-      disabled: false
-    }
-  }
-  return {
-    kind: 'commit',
-    labelIntent: 'commit',
-    titleIntent: 'linked_review_target_unavailable',
-    disabled: true
-  }
+  return resolveSourceControlPrimaryActionDecision(inputs)
 }

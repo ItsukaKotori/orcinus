@@ -1,5 +1,3 @@
-import { ArtifactsSettingsPane } from './ArtifactsSettingsPane'
-import { AutomationsSettingsPane } from './AutomationsSettingsPane'
 import { GeneralPane } from './GeneralPane'
 import { IntegrationsPane } from './IntegrationsPane'
 import { SettingsSection } from './SettingsSection'
@@ -45,53 +43,12 @@ export function renderIntegrationsSettingsSection(
       title={translate('auto.components.settings.Settings.c9ca101a3b', 'Integrations')}
       description={translate(
         'auto.components.settings.Settings.b07041697f',
-        'Connect GitHub, GitLab, Linear, and source-hosting services.'
+        'Connect Bitbucket, Azure DevOps, and Gitea with saved API tokens or environment variables.'
       )}
       searchEntries={navigation.getSectionSearchEntries('integrations')}
       bodyClassName="rounded-none border-0 bg-transparent p-0 shadow-none"
     >
       {view.isSectionMounted('integrations') ? <IntegrationsPane /> : null}
-    </SettingsSection>
-  )
-}
-
-export function renderAutomationsSettingsSection(
-  context: SettingsRenderContext
-): React.JSX.Element {
-  const { model, navigation, view } = context
-  return (
-    <SettingsSection
-      id="automations"
-      title={translate('auto.components.settings.automations.title', 'Automations')}
-      description={translate(
-        'auto.components.settings.automations.description',
-        'Schedule agent work and choose whether Automations appears in the sidebar.'
-      )}
-      searchEntries={navigation.getSectionSearchEntries('automations')}
-    >
-      {view.isSectionMounted('automations') ? (
-        <AutomationsSettingsPane settings={model.settings} updateSettings={model.updateSettings} />
-      ) : null}
-    </SettingsSection>
-  )
-}
-
-export function renderArtifactsSettingsSection(context: SettingsRenderContext): React.JSX.Element {
-  const { model, navigation, view } = context
-  return (
-    <SettingsSection
-      id="artifacts"
-      title={translate('auto.components.settings.artifacts.title', 'Artifacts')}
-      badge="Beta"
-      description={translate(
-        'auto.components.settings.artifacts.description',
-        'Share HTML and Markdown files with your team and manage their public links.'
-      )}
-      searchEntries={navigation.getSectionSearchEntries('artifacts')}
-    >
-      {view.isSectionMounted('artifacts') ? (
-        <ArtifactsSettingsPane settings={model.settings} updateSettings={model.updateSettings} />
-      ) : null}
     </SettingsSection>
   )
 }

@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { BrowserPage, BrowserWorkspace } from '../../../shared/browser-workspace-types'
 import type { Tab } from '../../../shared/tab-types'
 import type { TerminalTab } from '../../../shared/terminal-tab-types'
 import type { Worktree } from '../../../shared/worktree/types'
-import { buildSearchableBrowserPages } from './browser-palette-page-entries'
-import { searchBrowserPages } from './browser-palette-search'
 import { buildSearchableWorkspaceTabs, searchWorkspaceTabs } from './workspace-tab-palette-search'
 import { buildOpenTabSearchEntries } from '../components/tab-bar/open-tab-search-entries'
 
@@ -50,38 +47,6 @@ function makeTab(overrides: Partial<Tab>): Tab {
   }
 }
 
-function makeBrowserWorkspace(id: string): BrowserWorkspace {
-  return {
-    id,
-    worktreeId: SHARED_WORKTREE_ID,
-    activePageId: `${id}-page`,
-    pageIds: [`${id}-page`],
-    url: `https://${id}.example.test`,
-    title: `${id} docs`,
-    loading: false,
-    faviconUrl: null,
-    canGoBack: false,
-    canGoForward: false,
-    loadError: null,
-    createdAt: 1
-  }
-}
-
-function makeBrowserPage(workspace: BrowserWorkspace): BrowserPage {
-  return {
-    id: `${workspace.id}-page`,
-    workspaceId: workspace.id,
-    worktreeId: SHARED_WORKTREE_ID,
-    url: workspace.url,
-    title: workspace.title,
-    loading: false,
-    faviconUrl: null,
-    canGoBack: false,
-    canGoForward: false,
-    loadError: null,
-    createdAt: 1
-  }
-}
 
 function pairedWorktrees(): Worktree[] {
   return [
@@ -95,59 +60,6 @@ function pairedWorktrees(): Worktree[] {
 }
 
 describe('Cmd-J host-qualified candidate ownership', () => {
-  it('keeps browser rows owned by a paired runtime over SSH', () => {
-    const [local, remote] = pairedWorktrees()
-    const localWorkspace = makeBrowserWorkspace('local-browser')
-    const remoteWorkspace = makeBrowserWorkspace('remote-browser')
-    const entries = buildSearchableBrowserPages({
-      worktrees: [local, remote],
-      repoMap: new Map(),
-      worktreeOrder: new Map(),
-      browserTabsByWorktree: {
-        [SHARED_WORKTREE_ID]: [localWorkspace, remoteWorkspace]
-      },
-      browserPagesByWorkspace: {
-        [localWorkspace.id]: [makeBrowserPage(localWorkspace)],
-        [remoteWorkspace.id]: [makeBrowserPage(remoteWorkspace)]
-      },
-      unifiedTabsByWorktree: {
-        [SHARED_WORKTREE_ID]: [
-          makeTab({
-            id: 'local-browser-tab',
-            entityId: localWorkspace.id,
-            contentType: 'browser',
-            executionHostId: 'local'
-          }),
-          makeTab({
-            id: 'remote-browser-tab',
-            entityId: remoteWorkspace.id,
-            contentType: 'browser',
-            executionHostId: RUNTIME_HOST_ID
-          })
-        ]
-      },
-      activeBrowserTabId: remoteWorkspace.id,
-      activeWorktreeId: SHARED_WORKTREE_ID,
-      activeWorkspaceExecutionHostId: RUNTIME_HOST_ID,
-      activeTabType: 'browser'
-    })
-
-    expect(
-      searchBrowserPages(entries, 'docs')
-        .map((result) => [result.workspaceId, result.executionHostId])
-        .sort(([left], [right]) => String(left).localeCompare(String(right)))
-    ).toEqual([
-      [localWorkspace.id, 'local'],
-      [remoteWorkspace.id, RUNTIME_HOST_ID]
-    ])
-    expect(
-      entries.map((entry) => [entry.workspace.id, entry.isCurrentWorktree, entry.isCurrentPage])
-    ).toEqual([
-      [localWorkspace.id, false, false],
-      [remoteWorkspace.id, true, true]
-    ])
-  })
-
   it('keeps generic workspace rows isolated by execution host', () => {
     const terminalTabs: TerminalTab[] = [
       {
@@ -282,21 +194,13 @@ describe('Cmd-J host-qualified candidate ownership', () => {
 
   it('keeps hidden same-id hosts in the legacy ownership ambiguity set', () => {
     const ownershipWorktrees = pairedWorktrees()
-    const browserWorkspace = makeBrowserWorkspace('legacy-browser')
     const unifiedTabsByWorktree = {
       [SHARED_WORKTREE_ID]: [
-        makeTab({
-          id: 'legacy-browser-tab',
-          entityId: browserWorkspace.id,
-          contentType: 'browser',
-          executionHostId: undefined
-        }),
         makeTab({ id: 'legacy-terminal', entityId: 'legacy-terminal', executionHostId: undefined })
       ]
     }
     const entries = buildOpenTabSearchEntries(
       {
-        activeBrowserTabId: null,
         activeFileId: null,
         activeFileIdByWorktree: {},
         activeGroupIdByWorktree: {},
@@ -305,10 +209,6 @@ describe('Cmd-J host-qualified candidate ownership', () => {
         activeTabType: 'terminal',
         activeTabTypeByWorktree: {},
         activeWorktreeId: null,
-        browserPagesByWorkspace: {
-          [browserWorkspace.id]: [makeBrowserPage(browserWorkspace)]
-        },
-        browserTabsByWorktree: { [SHARED_WORKTREE_ID]: [browserWorkspace] },
         executionHostId: 'local',
         generatedTitlesEnabled: true,
         groupsByWorktree: {},
@@ -342,9 +242,6 @@ describe('Cmd-J host-qualified candidate ownership', () => {
       }
     )
 
-    expect(entries).toEqual({
-      browserPages: [],
-      workspaceTabs: []
-    })
+    expect(entries).toEqual({ workspaceTabs: [] })
   })
 })

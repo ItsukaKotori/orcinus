@@ -83,38 +83,22 @@ export function createCloseFileAction(
           }
         }
 
-        // Why: editors share a mixed tab strip with browser tabs; closing the last editor should reveal a browser tab before falling back to a terminal.
+        // Why: closing the last editor should fall back to a terminal surface in the same strip.
         const activeWorktreeId = s.activeWorktreeId
         const remainingForWorktree = activeWorktreeId
           ? newFiles.filter((f) => f.worktreeId === activeWorktreeId)
           : newFiles
-        const browserTabsForWorktree = activeWorktreeId
-          ? (s.browserTabsByWorktree[activeWorktreeId] ?? [])
-          : []
         const terminalTabsForWorktree = activeWorktreeId
           ? (s.tabsByWorktree[activeWorktreeId] ?? [])
           : []
-        const fallbackBrowserTabId =
-          activeWorktreeId && browserTabsForWorktree.length > 0
-            ? (s.activeBrowserTabIdByWorktree[activeWorktreeId] ??
-              browserTabsForWorktree[0]?.id ??
-              null)
-            : s.activeBrowserTabId
-        const newActiveTabType =
-          remainingForWorktree.length > 0
-            ? s.activeTabType
-            : browserTabsForWorktree.length > 0
-              ? 'browser'
-              : 'terminal'
+        const newActiveTabType = remainingForWorktree.length > 0 ? s.activeTabType : 'terminal'
         const newActiveTabTypeByWorktree = { ...s.activeTabTypeByWorktree }
         if (activeWorktreeId && remainingForWorktree.length === 0) {
-          newActiveTabTypeByWorktree[activeWorktreeId] =
-            browserTabsForWorktree.length > 0 ? 'browser' : 'terminal'
+          newActiveTabTypeByWorktree[activeWorktreeId] = 'terminal'
         }
         const shouldDeactivateWorktree =
           activeWorktreeId !== null &&
           remainingForWorktree.length === 0 &&
-          browserTabsForWorktree.length === 0 &&
           terminalTabsForWorktree.length === 0
 
         // Why: prune the closed id from tabBarOrderByWorktree so stale ids don't shift positions on the next reconcile.
@@ -170,13 +154,8 @@ export function createCloseFileAction(
           editorDrafts: newEditorDrafts,
           editorCursorLine: newEditorCursorLine,
           activeFileId: newActiveId,
-          // Why: if the last editor closes with no browser/terminal surface left, return to the landing state like the terminal/browser close handlers do.
+          // Why: if the last editor closes with no terminal surface left, return to the landing state like the terminal close handler does.
           activeWorktreeId: shouldDeactivateWorktree ? null : s.activeWorktreeId,
-          activeBrowserTabId: shouldDeactivateWorktree
-            ? null
-            : activeWorktreeId && remainingForWorktree.length === 0
-              ? fallbackBrowserTabId
-              : s.activeBrowserTabId,
           activeTabType: newActiveTabType,
           activeFileIdByWorktree: newActiveFileIdByWorktree,
           activeTabTypeByWorktree: newActiveTabTypeByWorktree,

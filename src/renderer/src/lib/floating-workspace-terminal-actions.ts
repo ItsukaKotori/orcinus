@@ -1,5 +1,4 @@
 import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../shared/constants'
-import type { BrowserTab } from '../../../shared/browser-workspace-types'
 import type { TabGroup } from '../../../shared/tab-types'
 import { getGroupVisibleTabOrder } from '@/components/tab-bar/group-tab-order'
 import {
@@ -9,12 +8,10 @@ import {
   type TypeCyclableTab
 } from '@/components/terminal/tab-type-cycle'
 import type { AppState } from '@/store/types'
-import { resolveBrowserWorkspaceOwner } from './browser-workspace-source-resolution'
 import { TOGGLE_FLOATING_TERMINAL_EVENT } from './floating-terminal'
 import { focusTerminalTabSurface } from './focus-terminal-tab-surface'
 import { keybindingMatchesAction, type KeybindingOverrides } from '../../../shared/keybindings'
 export {
-  createFloatingWorkspaceBrowserTab,
   createFloatingWorkspaceMarkdownTab,
   createFloatingWorkspaceTerminalTab
 } from './floating-workspace-tab-creation'
@@ -31,7 +28,6 @@ type FloatingWorkspaceTabSwitchStore = Pick<
   AppState,
   | 'activeGroupIdByWorktree'
   | 'activateTab'
-  | 'browserTabsByWorktree'
   | 'groupsByWorktree'
   | 'openFiles'
   | 'setActiveTab'
@@ -85,9 +81,8 @@ function getFloatingWorkspaceVisibleTabs(
         .filter((file) => file.worktreeId === FLOATING_TERMINAL_WORKTREE_ID)
         .map((file) => file.id)
     ),
-    new Set((store.browserTabsByWorktree[FLOATING_TERMINAL_WORKTREE_ID] ?? []).map((tab) => tab.id))
-  )
-}
+    )
+  }
 
 // Live count of visible floating tabs from store state — lets close handlers re-derive "did this
 // actually empty the panel?" at the moment the close resolves, instead of trusting a frozen
@@ -111,43 +106,15 @@ function getFloatingWorkspaceActiveEntry(
 }
 
 function getActiveIdsForFloatingEntry(entry: TypeCyclableTab): {
-  activeBrowserTabId: string | null
   activeFileId: string | null
   activeTabId: string | null
   activeTabType: TabCycleType
 } {
   return {
-    activeBrowserTabId: entry.type === 'browser' ? entry.id : null,
     activeFileId: entry.type === 'editor' ? entry.id : null,
     activeTabId: entry.type === 'terminal' ? entry.id : null,
     activeTabType: entry.type
   }
-}
-
-function getFloatingWorkspaceBrowserTab(
-  store: FloatingWorkspaceTabSwitchStore,
-  browserTabId: string
-): BrowserTab | null {
-  return (
-    (store.browserTabsByWorktree[FLOATING_TERMINAL_WORKTREE_ID] ?? []).find(
-      (tab) => tab.id === browserTabId
-    ) ?? null
-  )
-}
-
-// The guest IPC receiver maps a forwarded close's source id back to the live floating browser
-// workspace that owns it, so a stale/reordered/closed id is an idempotent no-op. Main forwards the
-// guest's *page* id (BrowserManager keys guests by browserPageId), while the panel closes by
-// workspace id, so resolve pages → workspace here; a workspace id is accepted too for callers that
-// already speak that id space.
-export function resolveFloatingWorkspaceBrowserWorkspaceId(
-  store: Pick<AppState, 'browserTabsByWorktree' | 'browserPagesByWorkspace'>,
-  sourceId: string
-): string | null {
-  return (
-    resolveBrowserWorkspaceOwner(store, sourceId, FLOATING_TERMINAL_WORKTREE_ID)?.workspaceId ??
-    null
-  )
 }
 
 function activateFloatingWorkspaceCyclableTab(
@@ -161,14 +128,6 @@ function activateFloatingWorkspaceCyclableTab(
   if (next.type === 'terminal') {
     store.setActiveTab(next.id)
     focusTerminalTabSurface(next.id)
-    return
-  }
-
-  if (next.type === 'browser') {
-    const workspace = getFloatingWorkspaceBrowserTab(store, next.id)
-    if (workspace?.activePageId && typeof window !== 'undefined' && window.api?.browser) {
-      void window.api.browser.notifyActiveTabChanged({ browserPageId: workspace.activePageId })
-    }
   }
 }
 

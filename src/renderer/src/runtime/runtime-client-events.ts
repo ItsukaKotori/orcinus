@@ -88,7 +88,6 @@ function isRuntimeClientEvent(
     message.type === 'worktreesChanged' ||
     message.type === 'terminalSideEffects' ||
     message.type === 'sshStateChanged' ||
-    message.type === 'automationsChanged' ||
     message.type === 'linearLinkedIssueUpdated' ||
     message.type === 'activateWorktree' ||
     message.type === 'worktreeTerminalSleepState'

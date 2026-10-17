@@ -8,17 +8,7 @@ import {
 } from '@/runtime/runtime-file-client'
 import { useAppStore } from '@/store'
 import type { OpenFile } from '@/store/slices/editor'
-import {
-  buildSearchUrl,
-  DEFAULT_SEARCH_ENGINE,
-  type SearchEngine,
-  type SearchUrlOptions
-} from '../../../../shared/browser-url'
 import type { RuntimeFileListState } from '../quick-open-file-list'
-import {
-  openWorkspaceBrowserTab,
-  type OpenWorkspaceBrowserTabRequest
-} from '@/lib/workspace-browser-tab-open'
 import {
   classifyTabEntryQuery,
   TAB_ENTRY_ABSOLUTE_PATH_REMOTE_BLOCKED_MESSAGE,
@@ -60,7 +50,6 @@ export type TabCreateEntryArgs = {
 
 export type TabEntryOperations = {
   createRuntimePath: typeof createRuntimePath
-  openWorkspaceBrowserTab: typeof openWorkspaceBrowserTab
   openFile: (
     file: Omit<OpenFile, 'id' | 'isDirty'>,
     options?: { preview?: boolean; targetGroupId?: string }
@@ -79,8 +68,6 @@ type OpenTabEntryWithOperationsArgs = {
   runtimeContext: RuntimeFileOperationArgs
   allowAbsolutePaths: boolean
   localPlatform: TabEntryLocalPlatform
-  searchEngine: SearchEngine
-  searchUrlOptions?: SearchUrlOptions
   classification?: TabEntryActionClassification
   operations: TabEntryOperations
 }
@@ -147,37 +134,6 @@ async function openExistingFile(args: {
   )
 }
 
-type NetworkTabEntryClassification = Extract<
-  TabEntryActionClassification,
-  { kind: 'explicit-url' | 'host-url' | 'search' }
->
-
-function isNetworkTabEntry(
-  classification: TabEntryActionClassification
-): classification is NetworkTabEntryClassification {
-  return (
-    classification.kind === 'explicit-url' ||
-    classification.kind === 'host-url' ||
-    classification.kind === 'search'
-  )
-}
-
-function getNetworkTabRequest(
-  classification: NetworkTabEntryClassification,
-  { worktreeId, groupId }: Pick<TabCreateEntryArgs, 'worktreeId' | 'groupId'>,
-  searchUrlOptions?: SearchUrlOptions
-): OpenWorkspaceBrowserTabRequest {
-  const target = { workspaceId: worktreeId, targetGroupId: groupId }
-  if (classification.kind === 'search') {
-    return {
-      ...target,
-      url: buildSearchUrl(classification.query, classification.engine, searchUrlOptions),
-      intent: { kind: 'search', engine: classification.engine }
-    }
-  }
-  return { ...target, url: classification.url, intent: { kind: 'url' } }
-}
-
 export async function openTabEntryWithOperations({
   allowAbsolutePaths,
   classification: selectedClassification,
@@ -187,23 +143,14 @@ export async function openTabEntryWithOperations({
   operations,
   query,
   runtimeContext,
-  searchEngine,
-  searchUrlOptions,
   worktreeId,
   worktreePath
 }: OpenTabEntryWithOperationsArgs): Promise<void> {
-  const entryContext: TabEntryOptionsContext = { allowAbsolutePaths, localPlatform, searchEngine }
+  const entryContext: TabEntryOptionsContext = { allowAbsolutePaths, localPlatform }
   const classification =
     selectedClassification ?? classifyTabEntryQuery(query, fileList, entryContext)
   if (classification.kind === 'empty' || classification.kind === 'blocked') {
     throw new Error(classification.message)
-  }
-
-  if (isNetworkTabEntry(classification)) {
-    await operations.openWorkspaceBrowserTab(
-      getNetworkTabRequest(classification, { worktreeId, groupId }, searchUrlOptions)
-    )
-    return
   }
 
   if (classification.kind === 'absolute-file') {
@@ -260,12 +207,6 @@ export async function openTabEntryWithOperations({
 
 export async function openTabBarEntry(args: TabCreateEntryArgs): Promise<void> {
   const state = useAppStore.getState()
-  const searchUrlOptions = { kagiSessionLink: state.browserKagiSessionLink }
-  if (args.classification && isNetworkTabEntry(args.classification)) {
-    await openWorkspaceBrowserTab(getNetworkTabRequest(args.classification, args, searchUrlOptions))
-    return
-  }
-  const searchEngine = state.browserDefaultSearchEngine ?? DEFAULT_SEARCH_ENGINE
   const worktree = state.getKnownWorktreeById(args.worktreeId)
   if (!worktree) {
     throw new Error('No active worktree.')
@@ -282,12 +223,9 @@ export async function openTabBarEntry(args: TabCreateEntryArgs): Promise<void> {
     runtimeContext,
     allowAbsolutePaths,
     localPlatform,
-    searchEngine,
-    searchUrlOptions,
     classification: args.classification,
     operations: {
       createRuntimePath,
-      openWorkspaceBrowserTab,
       openFile: state.openFile,
       statRuntimePath,
       authorizeExternalPath: window.api.fs.authorizeExternalPath,

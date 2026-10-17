@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, vi } from 'vitest'
-import { registerHttpLinkStoreAccessor } from '@/lib/http-link-routing'
 import { getConnectionId } from '@/lib/connection-context'
 import {
   createCompatibleRuntimeStatusResponseIfNeeded,
@@ -60,7 +59,6 @@ export function installTerminalLinkTestEnvironment(doubles: TerminalLinkTestDoub
     storeState.activeFileIdByWorktree = {}
     storeState.openFiles = []
     storeState.worktreesByRepo = {}
-    registerHttpLinkStoreAccessor(() => storeState)
     vi.stubGlobal('window', {
       dispatchEvent: vi.fn(),
       api: {

@@ -1,4 +1,3 @@
-import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import type { TaskSourceContext } from '../../../../shared/task-source-context'
 import type { ExecutionHostId } from '../../../../shared/execution-host'
 import type { LinkedWorkItemSummary } from '@/lib/new-workspace'
@@ -12,11 +11,6 @@ export type ComposerDecisions = {
     initialName: string
     initialLinkedWorkItem?: LinkedWorkItemSummary | null
   }) => string
-  getInitialGitHubPrStartPointSelection: (input: {
-    item: GitHubWorkItem | null | undefined
-    linkedWorkItem: LinkedWorkItemSummary | null | undefined
-    repoId: string | null | undefined
-  }) => SmartGitHubPrStartPointSelection | null
   getMatchingLinkedTaskSourceContext: (
     item: LinkedWorkItemSummary | null | undefined,
     context: TaskSourceContext | null | undefined

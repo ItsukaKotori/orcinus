@@ -332,24 +332,7 @@ describe('handleSwitchTab', () => {
     expect(store.setActiveTabType).toHaveBeenCalledWith('editor')
   })
 
-  it('cycles browser tabs without jumping to other tab types', () => {
-    const store = makeStore('browser')
-    store.activeBrowserTabId = 'browser-1'
-    getStateMock.mockReturnValue(store)
-    getActiveTabNavOrderMock.mockReturnValue([
-      { type: 'terminal', id: 'term-1' },
-      { type: 'editor', id: 'editor-1', tabId: 'tab-editor-1' },
-      { type: 'browser', id: 'browser-1', tabId: 'tab-browser-1' },
-      { type: 'browser', id: 'browser-2', tabId: 'tab-browser-2' },
-      { type: 'terminal', id: 'term-2' }
-    ])
 
-    expect(handleSwitchTab(1)).toBe(true)
-    expect(store.setActiveBrowserTab).toHaveBeenCalledWith('browser-2')
-    expect(store.setActiveTab).not.toHaveBeenCalled()
-    expect(store.setActiveFile).not.toHaveBeenCalled()
-    expect(store.setActiveTabType).toHaveBeenCalledWith('browser')
-  })
 
   it('returns false when the active type has only one tab', () => {
     const store = makeStore('editor')
@@ -454,14 +437,14 @@ describe('handleSwitchRecentTab', () => {
     getStateMock.mockReturnValue(store)
     getActiveTabNavOrderMock.mockReturnValue([
       { type: 'editor', id: 'file-a', tabId: 'tab-a' },
-      { type: 'browser', id: 'browser-b', tabId: 'tab-b' },
+      { type: 'terminal', id: 'term-b', tabId: 'tab-b' },
       { type: 'editor', id: 'file-c', tabId: 'tab-c' }
     ])
 
     expect(handleSwitchRecentTab()).toBe(true)
-    expect(store.setActiveBrowserTab).toHaveBeenCalledWith('browser-b')
+    expect(store.setActiveTab).toHaveBeenCalledWith('term-b')
     expect(store.activateTab).toHaveBeenCalledWith('tab-b')
-    expect(store.setActiveTabType).toHaveBeenCalledWith('browser')
+    expect(store.setActiveTabType).toHaveBeenCalledWith('terminal')
   })
 
   it('returns false when the MRU stack has no previous visible tab', () => {

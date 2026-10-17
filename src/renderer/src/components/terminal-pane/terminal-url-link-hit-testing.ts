@@ -12,13 +12,8 @@ import { getTerminalBufferPositionForMouseEvent } from './terminal-mouse-buffer-
 import { extractTerminalHttpLinks } from './terminal-http-url-extraction'
 import { buildWrappedLogicalLine, rangeForParsedFileLink } from './wrapped-terminal-link-ranges'
 import { isTerminalLinkifierHoverActive } from '@/lib/pane-manager/terminal-linkifier-hover-reset'
-import {
-  buildHttpLinkActions,
-  openRoutedHttpLink,
-  type HttpLinkActionDestinations,
-  type HttpLinkDestination,
-  type HttpLinkRoutingPreferenceRequester
-} from '@/lib/http-link-destinations'
+import { openRoutedHttpLink } from '@/lib/http-link-destinations'
+import { translate } from '@/i18n/i18n'
 import { isTerminalOwnedLinkGesture } from './terminal-link-activation'
 import {
   requestTerminalLinkAction,
@@ -29,34 +24,20 @@ export { extractTerminalHttpLinks } from './terminal-http-url-extraction'
 export { TERMINAL_HTTP_URL_MAX_LENGTH } from './terminal-http-link-limits'
 
 type UrlLinkHitTestDeps = {
-  worktreeId: string
   sourceOwner?: HttpLinkSourceOwner
-  modifierHeld?: boolean
-  requestOpenLinksInAppPreference?: TerminalLinkRoutingPreferenceRequester
   linkActionContext?: TerminalLinkActionContext | null
-  actionDestinations?: TerminalHttpLinkActionDestinations
   actionDestination?: string
-  forceDestination?: TerminalHttpLinkDestination
 }
 
 type UrlLinkClickFallbackDeps = {
-  worktreeId: string
   /** Resolved per click: the pane's PTY (and its runtime binding) may not exist at install time. */
   getSourceOwner?: () => HttpLinkSourceOwner
-  requestOpenLinksInAppPreference?: TerminalLinkRoutingPreferenceRequester
   getLinkActionContext?: () => TerminalLinkActionContext | null
-  getActionDestinations?: () => TerminalHttpLinkActionDestinations
 }
 
 export type HttpLinkClickFallbackBinding = IDisposable & {
   ptyMouseSuppression: TerminalLinkPtyMouseSuppression
 }
-
-export type TerminalHttpLinkDestination = HttpLinkDestination
-
-export type TerminalHttpLinkActionDestinations = HttpLinkActionDestinations
-
-export type TerminalLinkRoutingPreferenceRequester = HttpLinkRoutingPreferenceRequester
 
 function isDesktopHttpLinkFallbackActivation(event: MouseEvent): boolean {
   if (event.defaultPrevented || event.button !== 0) {
@@ -72,23 +53,21 @@ export function handleTerminalHttpLink(
   deps: UrlLinkHitTestDeps
 ): boolean {
   if (isTerminalHttpLinkActivation(event)) {
-    const forceDestination = event?.shiftKey
-      ? (deps.actionDestinations?.alternate ?? deps.actionDestinations?.primary)
-      : deps.actionDestinations?.primary
-    openRoutedHttpLink(url, {
-      ...deps,
-      modifierHeld: forceDestination ? false : Boolean(event?.shiftKey),
-      forceDestination
-    })
+    openRoutedHttpLink(url, { sourceOwner: deps.sourceOwner })
     return true
   }
 
   return requestTerminalLinkAction(event, deps.linkActionContext, {
     destination: deps.actionDestination ?? url,
     kind: 'url',
-    ...buildHttpLinkActions(deps.actionDestinations, (destination) =>
-      openRoutedHttpLink(url, { ...deps, modifierHeld: false, forceDestination: destination })
-    )
+    primary: {
+      external: true,
+      label: translate(
+        'auto.components.terminal.pane.TerminalLinkActionPopover.systemBrowser',
+        'System Browser'
+      ),
+      run: () => openRoutedHttpLink(url, { sourceOwner: deps.sourceOwner })
+    }
   })
 }
 
@@ -152,11 +131,8 @@ export function installHttpLinkClickFallback(
     const handled = Boolean(
       url &&
       handleTerminalHttpLink(url, event, {
-        worktreeId: deps.worktreeId,
         sourceOwner: deps.getSourceOwner?.() ?? { kind: 'local' },
-        requestOpenLinksInAppPreference: deps.requestOpenLinksInAppPreference,
-        linkActionContext: deps.getLinkActionContext?.(),
-        actionDestinations: deps.getActionDestinations?.()
+        linkActionContext: deps.getLinkActionContext?.()
       })
     )
     if (handled) {
@@ -186,7 +162,7 @@ export function openHttpLinkAtBufferPosition(
   if (!url) {
     return false
   }
-  openRoutedHttpLink(url, deps)
+  openRoutedHttpLink(url, { sourceOwner: deps.sourceOwner })
   return true
 }
 

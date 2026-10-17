@@ -1,7 +1,7 @@
 import { assertGitPushTargetShape } from '../../shared/git-push-target-validation'
 import { resolveConfiguredGitPushTarget } from '../../shared/git-push-target-resolution'
 import type { PreloadApi } from '../../shared/preload-api/api-types'
-import { createRunGit, defaultGitReadExecutor } from '../../renderer/src/lib/github/git-read-client'
+import { createRunGit, defaultGitReadExecutor } from '../../renderer/src/lib/git-read-client'
 import { withMethodFallback } from '../unimplemented-fallback'
 import { invokeCommand } from './invoke'
 

@@ -8,7 +8,6 @@ import {
 
 const connectedPreflight: PreflightStatus = {
   git: { installed: true },
-  gh: { installed: true, authenticated: true },
   glab: { installed: true, authenticated: true },
   bitbucket: { configured: true, authenticated: true, account: 'bb-user' },
   azureDevOps: {
@@ -70,12 +69,11 @@ describe('giteaStatusFromPreflight', () => {
 
 describe('getPreflightIntegrationStatuses', () => {
   it('shows checking before preflight status arrives', () => {
-    expect(getPreflightIntegrationStatuses(null, new Set()).ghStatus).toBe('checking')
+    expect(getPreflightIntegrationStatuses(null, new Set()).glabStatus).toBe('checking')
   })
 
   it('derives connected status labels and account details from preflight state', () => {
     expect(getPreflightIntegrationStatuses(connectedPreflight, new Set())).toMatchObject({
-      ghStatus: 'connected',
       glabStatus: 'connected',
       bitbucketStatus: 'connected',
       bitbucketAccount: 'bb-user',
@@ -90,7 +88,6 @@ describe('getPreflightIntegrationStatuses', () => {
     expect(
       getPreflightIntegrationStatuses(connectedPreflight, new Set(['glab', 'gitea']))
     ).toMatchObject({
-      ghStatus: 'connected',
       glabStatus: 'checking',
       bitbucketStatus: 'connected',
       giteaStatus: 'checking'

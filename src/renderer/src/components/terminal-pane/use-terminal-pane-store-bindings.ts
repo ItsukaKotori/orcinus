@@ -1,6 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
 import { useAppStore } from '../../store'
-import { useLinkRoutingPreferenceDialog } from '@/components/link-routing-preference-dialog'
 import { isWindowsUserAgent } from './pane-helpers'
 import type { SessionRestoredBannerReason } from './session-restored-banner-pane-state'
 import { useTerminalPaneStoreActions } from './use-terminal-pane-store-actions'
@@ -71,7 +70,6 @@ export function useTerminalPaneStoreBindings(controller: TerminalPaneTitleContro
     expectedLayoutLeafIds.length > 0 ? expectedLayoutLeafIds.join(' ') : undefined
   const initialLayoutRef = useRef(restoredLayout)
   const settings = useAppStore((store) => store.settings)
-  const requestLinkRoutingPreference = useLinkRoutingPreferenceDialog()
   const keybindings = useAppStore((store) => store.keybindings)
   const rightClickToPaste = settings?.terminalRightClickToPaste ?? isWindowsUserAgent()
   const forceBracketedMultilineTextPaste = isWindowsUserAgent()
@@ -119,7 +117,6 @@ export function useTerminalPaneStoreBindings(controller: TerminalPaneTitleContro
     refreshWorkspaceSpace,
     settings,
     updateSettings,
-    requestLinkRoutingPreference,
     keybindings,
     rightClickToPaste,
     forceBracketedMultilineTextPaste,

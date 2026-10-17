@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react'
-import { Check, Copy, ExternalLink, Globe, Settings } from 'lucide-react'
+import { Check, Copy, ExternalLink, Globe } from 'lucide-react'
 import { toast } from 'sonner'
 import { ShortcutKeyCombo } from '@/components/ShortcutKeyCombo'
 import { Button } from '@/components/ui/button'
@@ -7,8 +7,6 @@ import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useClipboardTextCopyFeedback } from '@/hooks/use-clipboard-text-copy-feedback'
 import { translate } from '@/i18n/i18n'
-import { BROWSER_TERMINAL_LINK_ACTIONS_SETTINGS_TARGET_ID } from '@/lib/settings-navigation-types'
-import { useAppStore } from '@/store'
 import type { LinkAction, LinkActionRequest } from './link-action-request'
 
 type LinkActionPopoverProps<TRequest extends LinkActionRequest> = {
@@ -51,8 +49,6 @@ export function LinkActionPopover<TRequest extends LinkActionRequest>({
   request,
   onClose
 }: LinkActionPopoverProps<TRequest>): React.JSX.Element {
-  const openSettingsPage = useAppStore((state) => state.openSettingsPage)
-  const openSettingsTarget = useAppStore((state) => state.openSettingsTarget)
   const copyableDestination = request?.kind === 'url' ? request.destination : ''
   const { copyText, status: copyStatus } = useClipboardTextCopyFeedback(copyableDestination)
   const copyInFlightRef = useRef(false)
@@ -71,10 +67,6 @@ export function LinkActionPopover<TRequest extends LinkActionRequest>({
     void action.run()
   }
 
-  const settingsLabel = translate(
-    'auto.components.terminal.pane.TerminalLinkActionPopover.terminalLinkSettings',
-    'Terminal link settings'
-  )
   const copyLabel =
     copyStatus === 'copied'
       ? translate('auto.components.terminal.pane.TerminalLinkActionPopover.copied', 'Copied')
@@ -104,16 +96,6 @@ export function LinkActionPopover<TRequest extends LinkActionRequest>({
     } finally {
       copyInFlightRef.current = false
     }
-  }
-
-  const openTerminalLinkSettings = (): void => {
-    onClose()
-    openSettingsTarget({
-      pane: 'browser',
-      repoId: null,
-      sectionId: BROWSER_TERMINAL_LINK_ACTIONS_SETTINGS_TARGET_ID
-    })
-    openSettingsPage()
   }
 
   return (
@@ -161,22 +143,6 @@ export function LinkActionPopover<TRequest extends LinkActionRequest>({
                 </TooltipContent>
               </Tooltip>
             ) : null}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  aria-label={settingsLabel}
-                  className="text-muted-foreground"
-                  size="icon-xs"
-                  variant="ghost"
-                  onClick={openTerminalLinkSettings}
-                >
-                  <Settings />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top" sideOffset={4}>
-                {settingsLabel}
-              </TooltipContent>
-            </Tooltip>
           </div>
           <ActionRow
             action={request.primary}

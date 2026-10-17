@@ -7,11 +7,9 @@ import {
 import { resolveAgentStatusWorktreeId } from './agent-status-worktree-attribution'
 
 type TerminalLikeTab = Pick<TerminalTab, 'id'>
-type BrowserLikeTab = { id: string }
 
 type TabsByWorktree = Record<string, readonly TerminalLikeTab[]>
 type PtyIdsByTabId = Record<string, string[]>
-type BrowserTabsByWorktree = Record<string, readonly BrowserLikeTab[]>
 export type LiveAgentWorktreeStatus = 'working' | 'monitoring' | 'permission'
 
 /**
@@ -73,31 +71,27 @@ export function hasActiveWorkspaceActivity(
   worktreeId: string,
   tabsByWorktree: TabsByWorktree | null | undefined,
   ptyIdsByTabId: PtyIdsByTabId | null | undefined,
-  browserTabsByWorktree: BrowserTabsByWorktree | null | undefined,
   worktreeIdsWithLiveAgent: ReadonlySet<string>
 ): boolean {
   const tabs = tabsByWorktree?.[worktreeId] ?? []
   const hasLiveTerminal =
     ptyIdsByTabId != null && tabs.some((tab) => tabHasLivePty(ptyIdsByTabId, tab.id))
-  const hasBrowser = (browserTabsByWorktree?.[worktreeId] ?? []).length > 0
   // Why: a running agent keeps the workspace visible through brief PTY gaps
   // such as an SSH reconnect or an unmounted remote pane. #7197
   const hasLiveAgent = worktreeIdsWithLiveAgent.has(worktreeId)
-  return hasLiveTerminal || hasBrowser || hasLiveAgent
+  return hasLiveTerminal || hasLiveAgent
 }
 
 export function isInactiveWorkspace(
   worktreeId: string,
   tabsByWorktree: TabsByWorktree | null | undefined,
   ptyIdsByTabId: PtyIdsByTabId | null | undefined,
-  browserTabsByWorktree: BrowserTabsByWorktree | null | undefined,
   worktreeIdsWithLiveAgent: ReadonlySet<string>
 ): boolean {
   return !hasActiveWorkspaceActivity(
     worktreeId,
     tabsByWorktree,
     ptyIdsByTabId,
-    browserTabsByWorktree,
     worktreeIdsWithLiveAgent
   )
 }

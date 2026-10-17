@@ -562,57 +562,6 @@ describe('handleTerminalFileDrop', () => {
     expect(mocks.recordTerminalUserInputForLeaf).not.toHaveBeenCalled()
   })
 
-  it('uses SSH remote platform metadata for Windows remote path drops', async () => {
-    mocks.storeState.settings = { activeRuntimeEnvironmentId: null }
-    mocks.storeState.repos = [
-      {
-        id: 'repo1',
-        connectionId: 'ssh-win',
-        path: 'C:\\Remote Repo',
-        executionHostId: 'ssh:ssh-win'
-      }
-    ]
-    mocks.storeState.worktreesByRepo = {
-      repo1: [{ id: 'wt-1', repoId: 'repo1', path: 'C:\\Remote Repo' }]
-    }
-    mocks.storeState.sshConnectionStates = new Map([
-      ['ssh-win', { remotePlatform: 'win32', connectionGeneration: 4 }]
-    ])
-    mocks.resolveDroppedPathsForAgent.mockResolvedValue({
-      failed: [],
-      resolvedPaths: ['C:\\Remote Repo\\A&B.txt'],
-      skipped: []
-    })
-    const sendInput = vi.fn(() => true)
-    const focus = vi.fn()
-    const pane = { id: 1, leafId: 'leaf-1', terminal: { focus } }
-    const manager = {
-      getActivePane: () => pane,
-      getPanes: () => [pane]
-    }
-
-    await handleTerminalFileDrop({
-      manager: manager as never,
-      paneTransports: new Map([[1, createTerminalTransport(sendInput)]]) as never,
-      worktreeId: 'wt-1',
-      tabId: 'tab-1',
-      cwd: undefined,
-      data: { paths: ['C:\\Users\\Name\\A&B.txt'], target: 'terminal' }
-    })
-
-    expect(mocks.resolveDroppedPathsForAgent).toHaveBeenCalledWith({
-      paths: ['C:\\Users\\Name\\A&B.txt'],
-      worktreePath: 'C:\\Remote Repo',
-      connectionId: 'ssh-win',
-      expectedExecutionHostId: 'ssh:ssh-win',
-      expectedSshTargetId: 'ssh-win',
-      expectedSshConnectionGeneration: 4
-    })
-    expect(sendInput).toHaveBeenCalledWith('"C:\\Remote Repo\\A&B.txt" ')
-    expect(focus).toHaveBeenCalled()
-    expect(mocks.recordTerminalUserInputForLeaf).toHaveBeenCalledWith('tab-1', 'leaf-1')
-  })
-
   it('surfaces stale SSH owner capture failures without rejecting the native drop', async () => {
     mocks.storeState.settings = { activeRuntimeEnvironmentId: null }
     mocks.storeState.repos = [

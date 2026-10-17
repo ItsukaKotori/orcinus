@@ -8,7 +8,6 @@ import {
   isWebRuntimeSessionActive
 } from '../../runtime/web-runtime-session'
 import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
-import { browserWorkspaceHasRemoteOwner } from '@/runtime/remote-browser-tab-ownership'
 import type { TabGroupWorktreeSnapshot } from './useTabGroupItemProjections'
 
 export function useTabGroupActivationCommands({
@@ -27,7 +26,6 @@ export function useTabGroupActivationCommands({
   const setActiveTab = useAppStore((state) => state.setActiveTab)
   const setActiveTabType = useAppStore((state) => state.setActiveTabType)
   const setActiveFile = useAppStore((state) => state.setActiveFile)
-  const setActiveBrowserTab = useAppStore((state) => state.setActiveBrowserTab)
 
   const activateTerminal = useCallback(
     (terminalId: string) => {
@@ -103,36 +101,6 @@ export function useTabGroupActivationCommands({
     [activateTab, focusGroup, groupId, groupTabs, setActiveFile, setActiveTabType, worktreeId]
   )
 
-  const activateBrowser = useCallback(
-    (browserTabId: string) => {
-      const item = groupTabs.find(
-        (candidate) => candidate.entityId === browserTabId && candidate.contentType === 'browser'
-      )
-      if (!item) {
-        return
-      }
-      focusGroup(worktreeId, groupId)
-      activateTab(item.id)
-      const runtimeEnvironmentId = getRuntimeEnvironmentIdForWorktree(
-        useAppStore.getState(),
-        worktreeId
-      )
-      if (
-        isWebRuntimeSessionActive(runtimeEnvironmentId) &&
-        browserWorkspaceHasRemoteOwner(useAppStore.getState(), browserTabId, runtimeEnvironmentId)
-      ) {
-        void activateWebRuntimeSessionTab({
-          worktreeId,
-          tabId: item.id,
-          environmentId: runtimeEnvironmentId
-        })
-      }
-      setActiveBrowserTab(browserTabId)
-      setActiveTabType('browser')
-    },
-    [activateTab, focusGroup, groupId, groupTabs, setActiveBrowserTab, setActiveTabType, worktreeId]
-  )
-
   const activateAgentSession = useCallback(
     (tabId: string) => {
       // Why: agent-session rows are otherwise host-owned; local activation still has to
@@ -172,7 +140,6 @@ export function useTabGroupActivationCommands({
     activateTerminal,
     toggleTerminalPaneExpand,
     activateEditor,
-    activateBrowser,
     activateAgentSession,
     activatePlugin
   }

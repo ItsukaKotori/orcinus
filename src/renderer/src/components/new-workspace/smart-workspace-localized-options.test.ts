@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { i18n } from '@/i18n/i18n'
-import { getMrStateFilters, getSmartWorkspaceNameModes } from './smart-workspace-localized-options'
+import { getSmartWorkspaceNameModes } from './smart-workspace-localized-options'
 
 describe('smart-workspace-localized-options', () => {
   beforeEach(async () => {
@@ -11,10 +11,6 @@ describe('smart-workspace-localized-options', () => {
   it('refreshes create-workspace source tabs when the UI language changes', async () => {
     expect(getSmartWorkspaceNameModes().map((mode) => mode.label)).toEqual([
       'Smart',
-      'GitHub',
-      'Linear',
-      'Jira',
-      'GitLab',
       'Branch',
       'Name'
     ])
@@ -23,10 +19,6 @@ describe('smart-workspace-localized-options', () => {
 
     expect(getSmartWorkspaceNameModes().map((mode) => mode.label)).toEqual([
       '智能',
-      'GitHub',
-      'Linear',
-      'Jira',
-      'GitLab',
       '分支',
       '名称'
     ])
@@ -35,30 +27,8 @@ describe('smart-workspace-localized-options', () => {
 
     expect(getSmartWorkspaceNameModes().map((mode) => mode.label)).toEqual([
       'Smart',
-      'GitHub',
-      'Linear',
-      'Jira',
-      'GitLab',
       'Branch',
       'Name'
-    ])
-  })
-
-  it('refreshes GitLab state filters when the UI language changes', async () => {
-    expect(getMrStateFilters().map((filter) => filter.label)).toEqual([
-      'Open',
-      'Merged',
-      'Closed',
-      'All'
-    ])
-
-    await i18n.changeLanguage('zh')
-
-    expect(getMrStateFilters().map((filter) => filter.label)).toEqual([
-      '开放',
-      '合并',
-      '已关闭',
-      '全部'
     ])
   })
 })

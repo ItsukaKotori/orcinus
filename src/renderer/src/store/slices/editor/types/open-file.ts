@@ -1,6 +1,5 @@
 import type { RecentlyClosedTabPosition } from '../../recently-closed-tabs'
 import type { EditorFileOperationProvenance } from '@/lib/editor-file-operation-owner'
-import type { OpenCheckRunDetailsState } from '@/components/editor/check-run-details-tab'
 import type {
   GitBranchChangeEntry,
   GitBranchCompareSummary,
@@ -136,15 +135,13 @@ export type OpenFile = {
   diffContentReloadNonce?: number
   /** Why: bumping refetches clean tabs — the user's manual recovery when a remote watcher misses an external write. */
   fileContentReloadNonce?: number
-  /** Why: CI check-details tabs are virtual editor tabs backed by fetched PR check-run metadata, not a file on disk. */
-  checkRunDetails?: OpenCheckRunDetailsState
   /** Why: web-client tab mirrored from the host snapshot; only mirrored tabs may be culled when they vanish, locally-opened tabs must survive. */
   mirroredFromRuntimeSession?: boolean
   /** Why: orthogonal to `mode` — an edit-mode tab that must never accept edits/autosave/rename (AI Vault View Log). Persisted only when true. */
   readOnly?: boolean
   /** Why: explicit live tail, only meaningful for a read-only local log. */
   liveTail?: boolean
-  mode: 'edit' | 'diff' | 'conflict-review' | 'markdown-preview' | 'check-details'
+  mode: 'edit' | 'diff' | 'conflict-review' | 'markdown-preview'
 }
 
 export type ActivityBarPosition = 'top' | 'side'

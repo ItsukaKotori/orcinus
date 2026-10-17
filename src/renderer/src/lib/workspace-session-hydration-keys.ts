@@ -11,11 +11,10 @@ export type WorkspaceSessionHydrationOptions = {
 }
 
 // Worktree-keyed fields carrying restorable chrome — a repo appears here only if it has live
-// session state (open tabs, editors, browser) to restore.
+// session state (open tabs, editors) to restore.
 const WORKSPACE_CHROME_SESSION_FIELDS = [
   'tabsByWorktree',
   'openFilesByWorktree',
-  'browserTabsByWorktree',
   'unifiedTabs',
   'tabGroups',
   'tabGroupLayouts'
@@ -33,7 +32,6 @@ const WORKSPACE_HISTORY_SESSION_FIELDS = [
 // Why: selection markers can outlive their content and cannot restore anything by themselves.
 const WORKSPACE_SELECTION_SESSION_FIELDS = [
   'activeFileIdByWorktree',
-  'activeBrowserTabIdByWorktree',
   'activeTabIdByWorktree',
   'activeGroupIdByWorktree',
   'activeTabTypeByWorktree'
@@ -86,14 +84,6 @@ function collectWorkspaceSessionKeys(
   }
   for (const worktreeId of session.activeWorktreeIdsOnShutdown ?? []) {
     addKey(worktreeId)
-  }
-  for (const pages of Object.values(session.browserPagesByWorkspace ?? {})) {
-    if (!Array.isArray(pages)) {
-      continue
-    }
-    for (const page of pages) {
-      addKey(page.worktreeId)
-    }
   }
   for (const record of Object.values(session.sleepingAgentSessionsByPaneKey ?? {})) {
     addKey(record.worktreeId)

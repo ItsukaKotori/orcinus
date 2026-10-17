@@ -6,7 +6,6 @@ export type WorkspaceSessionFieldOwnership =
   | 'worktreeKeyed'
   | 'worktreeArray'
   | 'tabKeyed'
-  | 'browserWorkspaceKeyed'
   | 'fileKeyed'
   | 'sleepingAgentKeyed'
   | 'paneKeyed'
@@ -17,23 +16,13 @@ export const WORKSPACE_SESSION_FIELD_OWNERSHIP = {
   activeWorktreeId: 'global',
   activeWorkspaceExecutionHostId: 'global',
   activeTabId: 'global',
-  browserUrlHistory: 'global',
-  workspaceDocHistory: 'global',
   // Why: SSH remains local-owned, so its connection identifiers stay in the local slice.
   activeConnectionIdsAtShutdown: 'global',
-  // Why global: keyed by runtime environment rather than by worktree, and it is this client's
-  // record of what it owes those environments — the same reason SSH connection state stays local.
-  clientHostedBrowserCloseIntentsByEnvironment: 'global',
   tabsByWorktree: 'worktreeKeyed',
   openFilesByWorktree: 'worktreeKeyed',
   activeFileIdByWorktree: 'worktreeKeyed',
-  activeBrowserTabIdByWorktree: 'worktreeKeyed',
   activeTabTypeByWorktree: 'worktreeKeyed',
   activeTabIdByWorktree: 'worktreeKeyed',
-  browserTabsByWorktree: 'worktreeKeyed',
-  // Runtime-authored, never written by this renderer; classified so a merged read still routes each
-  // worktree's rows back to the host that owns them instead of dropping them.
-  clientHostedBrowserPagesByWorktree: 'worktreeKeyed',
   unifiedTabs: 'worktreeKeyed',
   tabGroups: 'worktreeKeyed',
   tabGroupLayouts: 'worktreeKeyed',
@@ -44,7 +33,6 @@ export const WORKSPACE_SESSION_FIELD_OWNERSHIP = {
   activeWorktreeIdsOnShutdown: 'worktreeArray',
   terminalLayoutsByTabId: 'tabKeyed',
   remoteSessionIdsByTabId: 'tabKeyed',
-  browserPagesByWorkspace: 'browserWorkspaceKeyed',
   markdownFrontmatterVisible: 'fileKeyed',
   sleepingAgentSessionsByPaneKey: 'sleepingAgentKeyed',
   terminalPtyIncarnationsByPaneKey: 'paneKeyed',
@@ -71,9 +59,8 @@ export const GLOBAL_WORKSPACE_SESSION_FIELDS = (
 /**
  * Global session fields that belong to the 'local' slice alone: `splitWorkspaceSessionByHost`
  * writes them only there and `mergeWorkspaceSessionsFromHosts` reads them only from there. A copy
- * inside a non-local partition is residue no read can reach — stale `browserUrlHistory` replicas
- * alone were 589 KB, 12.7% of a 4.65 MB store, rewritten on every save and reparsed on every
- * launch.
+ * inside a non-local partition is residue no read can reach — stale browser history replicas alone
+ * were 589 KB, 12.7% of a 4.65 MB store, rewritten on every save and reparsed on every launch.
  *
  * Deliberately NOT every field in `GLOBAL_WORKSPACE_SESSION_FIELDS`. Two separate gates disqualify
  * the rest, and both are load-bearing:
@@ -87,10 +74,7 @@ export const GLOBAL_WORKSPACE_SESSION_FIELDS = (
  *
  * `workspace-session-partitions.test.ts` re-checks both gates for every field listed here.
  */
-export const HOST_PARTITION_REDUNDANT_GLOBAL_FIELDS = [
-  'browserUrlHistory',
-  'workspaceDocHistory'
-] as const satisfies readonly (keyof WorkspaceSessionState)[]
+export const HOST_PARTITION_REDUNDANT_GLOBAL_FIELDS = [] as const satisfies readonly (keyof WorkspaceSessionState)[]
 
 /** Serialize-side sweep over every non-local partition. The load path re-seeds these fields at
  *  their default from the session defaults spread, so a partition that holds only that default

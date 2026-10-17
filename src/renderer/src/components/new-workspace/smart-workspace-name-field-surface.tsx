@@ -1,57 +1,12 @@
 import React from 'react'
-import { Button } from '@/components/ui/button'
 import { Command } from '@/components/ui/command'
 import { Popover, PopoverAnchor } from '@/components/ui/popover'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { cn } from '@/lib/utils'
 import { translate } from '@/i18n/i18n'
 import { WorkspaceEmojiSuggestionPopover } from '@/components/workspace-emoji/WorkspaceEmojiSuggestionPopover'
-import { renderSmartWorkspaceCrossRepoDialog } from './smart-workspace-cross-repo-dialog'
 import { renderSmartWorkspaceNameInput } from './smart-workspace-name-input-surface'
 import { renderSmartWorkspaceSourceResults } from './smart-workspace-source-results-surface'
-import type { JiraUrlSourceState } from './use-jira-url-source'
 import type { SmartWorkspaceNameFieldController } from './use-smart-workspace-name-field-controller'
-
-function getJiraSourceStatusMessage(jiraSource: JiraUrlSourceState): string {
-  if (jiraSource.loading) {
-    return translate(
-      'auto.components.new.workspace.SmartWorkspaceNameField.loadingJira',
-      'Loading Jira issue…'
-    )
-  }
-  switch (jiraSource.errorKind) {
-    case 'disconnected':
-      return translate(
-        'auto.components.new.workspace.SmartWorkspaceNameField.jiraDisconnected',
-        'Connect Jira in Settings to link this issue'
-      )
-    case 'site-not-connected':
-      return translate(
-        'auto.components.new.workspace.SmartWorkspaceNameField.jiraSiteNotConnected',
-        'This Jira site is not connected'
-      )
-    case 'update-runtime':
-      return translate(
-        'auto.components.new.workspace.SmartWorkspaceNameField.jiraRuntimeUpdate',
-        'Update the remote runtime to link Jira'
-      )
-    case 'read-failed':
-      return translate(
-        'auto.components.new.workspace.SmartWorkspaceNameField.jiraReadFailed',
-        'Couldn’t load this Jira issue'
-      )
-    case null:
-      return jiraSource.accountChoices.length > 0
-        ? translate(
-            'auto.components.new.workspace.SmartWorkspaceNameField.chooseJiraAccount',
-            'Choose a Jira account'
-          )
-        : translate(
-            'auto.components.new.workspace.SmartWorkspaceNameField.jiraLoaded',
-            'Jira issue loaded'
-          )
-  }
-}
 
 export function renderSmartWorkspaceNameField(
   controller: SmartWorkspaceNameFieldController
@@ -75,11 +30,6 @@ export function renderSmartWorkspaceNameField(
     resolvedCommandValue,
     isQueryStale,
     setCommandValue,
-    jiraSource,
-    jiraStatusId,
-    linearStatusId,
-    unresolvedLinearUrlIntent,
-    onOpenJiraSettings,
     emojiMenuOpen,
     resolvedEmojiCommandValue,
     emojiSuggestions,
@@ -169,45 +119,6 @@ export function renderSmartWorkspaceNameField(
           {renderSmartWorkspaceSourceResults(controller)}
         </Command>
       </Popover>
-      {jiraSource.intent ? (
-        <div
-          id={jiraStatusId}
-          role="status"
-          aria-live="polite"
-          className={cn(
-            'flex items-center justify-between gap-2 px-1 text-xs text-muted-foreground',
-            !jiraSource.loading &&
-              !jiraSource.errorKind &&
-              jiraSource.accountChoices.length === 0 &&
-              'sr-only'
-          )}
-        >
-          <span>{getJiraSourceStatusMessage(jiraSource)}</span>
-          {jiraSource.errorKind === 'disconnected' && onOpenJiraSettings ? (
-            <Button type="button" variant="link" size="xs" onClick={onOpenJiraSettings}>
-              {translate(
-                'auto.components.new.workspace.SmartWorkspaceNameField.openSettings',
-                'Settings'
-              )}
-            </Button>
-          ) : jiraSource.errorKind === 'read-failed' ? (
-            <Button type="button" variant="link" size="xs" onClick={jiraSource.retry}>
-              {translate(
-                'auto.components.new.workspace.SmartWorkspaceNameField.retryJira',
-                'Retry'
-              )}
-            </Button>
-          ) : null}
-        </div>
-      ) : null}
-      {unresolvedLinearUrlIntent ? (
-        <div id={linearStatusId} role="status" aria-live="polite" className="sr-only">
-          {translate(
-            'auto.components.new.workspace.SmartWorkspaceNameField.loadingLinearIssue',
-            'Loading Linear issue…'
-          )}
-        </div>
-      ) : null}
       <WorkspaceEmojiSuggestionPopover
         anchorRef={localInputRef}
         open={emojiMenuOpen}
@@ -222,7 +133,6 @@ export function renderSmartWorkspaceNameField(
           }
         }}
       />
-      {renderSmartWorkspaceCrossRepoDialog(controller)}
     </div>
   )
 }

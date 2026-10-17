@@ -48,13 +48,7 @@ function appendTabToWorktreeOrder(worktreeId: string, tabId: string): void {
   const editorIds = state.openFiles
     .filter((file) => file.worktreeId === worktreeId)
     .map((f) => f.id)
-  const browserIds = (state.browserTabsByWorktree?.[worktreeId] ?? []).map((tab) => tab.id)
-  const base = reconcileTabOrder(
-    state.tabBarOrderByWorktree[worktreeId],
-    termIds,
-    editorIds,
-    browserIds
-  )
+  const base = reconcileTabOrder(state.tabBarOrderByWorktree[worktreeId], termIds, editorIds)
   const order = base.filter((id) => id !== tabId)
   order.push(tabId)
   state.setTabBarOrder(worktreeId, order)

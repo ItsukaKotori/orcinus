@@ -71,7 +71,7 @@ describe('TabsSlice', () => {
     it('stamps active local tabs when the local host field is null', () => {
       store.setState({ activeWorktreeId: WT, activeWorkspaceExecutionHostId: null })
 
-      expect(store.getState().createUnifiedTab(WT, 'browser').executionHostId).toBe('local')
+      expect(store.getState().createUnifiedTab(WT, 'agent-session').executionHostId).toBe('local')
     })
 
     it('activates the newly created tab', () => {
@@ -85,7 +85,7 @@ describe('TabsSlice', () => {
 
     it('can create a tab without activating it', () => {
       const tab1 = store.getState().createUnifiedTab(WT, 'terminal')
-      const tab2 = store.getState().createUnifiedTab(WT, 'browser', { activate: false })
+      const tab2 = store.getState().createUnifiedTab(WT, 'agent-session', { activate: false })
 
       const group = store.getState().groupsByWorktree[WT][0]
       expect(group.activeTabId).toBe(tab1.id)
@@ -349,10 +349,10 @@ describe('TabsSlice', () => {
 
     it('activates the previously-active tab across content types', () => {
       const t1 = store.getState().createUnifiedTab(WT, 'terminal')
-      const t2 = store.getState().createUnifiedTab(WT, 'browser')
+      const t2 = store.getState().createUnifiedTab(WT, 'agent-session')
       const t3 = store.getState().createUnifiedTab(WT, 'editor')
 
-      // Visit order ...→t3→t1→t3; closing t3 should jump to t1, not browser neighbor t2.
+      // Visit order ...→t3→t1→t3; closing t3 should jump to t1, not the neighbor t2.
       store.getState().activateTab(t1.id)
       store.getState().activateTab(t3.id)
       store.getState().closeUnifiedTab(t3.id)

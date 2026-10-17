@@ -2,7 +2,6 @@
 
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { BrowserPage, BrowserWorkspace } from '../../../../shared/browser-workspace-types'
 import type { Repo } from '../../../../shared/repo-types'
 import type { Tab, TabContentType, TabGroup } from '../../../../shared/tab-types'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
@@ -102,34 +101,6 @@ function makeGroup(id: string, activeTabId: string | null, tabOrder: string[]): 
   return { id, worktreeId: 'wt-1', activeTabId, tabOrder }
 }
 
-const browserWorkspace: BrowserWorkspace = {
-  id: 'ws-1',
-  worktreeId: 'wt-1',
-  activePageId: 'page-1',
-  pageIds: ['page-1'],
-  url: 'https://example.com',
-  title: 'zebra page',
-  loading: false,
-  faviconUrl: null,
-  canGoBack: false,
-  canGoForward: false,
-  loadError: null,
-  createdAt: 0
-}
-
-const browserPage: BrowserPage = {
-  id: 'page-1',
-  workspaceId: 'ws-1',
-  worktreeId: 'wt-1',
-  url: 'https://example.com/page',
-  title: 'zebra page',
-  loading: false,
-  faviconUrl: null,
-  canGoBack: false,
-  canGoForward: false,
-  loadError: null,
-  createdAt: 0
-}
 
 // wt-1 spans two columns: group-1 shows tab-a, group-2 shows tab-c.
 function seedStore(
@@ -147,14 +118,7 @@ function seedStore(
         'wt-1': [
           makeUnifiedTab({ id: 'tab-a', entityId: 'term-a', groupId: 'group-1' }),
           makeUnifiedTab({ id: 'tab-b', entityId: 'term-b', groupId: 'group-1' }),
-          makeUnifiedTab({ id: 'tab-c', entityId: 'term-c', groupId: 'group-2' }),
-          makeUnifiedTab({
-            id: 'tab-browser',
-            entityId: 'ws-1',
-            groupId: 'group-2',
-            contentType: 'browser',
-            label: 'zebra page'
-          })
+          makeUnifiedTab({ id: 'tab-c', entityId: 'term-c', groupId: 'group-2' })
         ].map((tab) => (executionHostId ? { ...tab, executionHostId } : tab)),
         'wt-2': [
           makeUnifiedTab({
@@ -176,12 +140,10 @@ function seedStore(
       groupsByWorktree: {
         'wt-1': [
           makeGroup('group-1', 'tab-a', ['tab-a', 'tab-b']),
-          makeGroup('group-2', 'tab-c', ['tab-c', 'tab-browser'])
+          makeGroup('group-2', 'tab-c', ['tab-c'])
         ],
         'wt-2': [{ id: 'group-3', worktreeId: 'wt-2', activeTabId: 'tab-d', tabOrder: ['tab-d'] }]
       },
-      browserTabsByWorktree: { 'wt-1': [browserWorkspace] },
-      browserPagesByWorkspace: { 'ws-1': [browserPage] },
       activeGroupIdByWorktree: { 'wt-1': 'group-1', 'wt-2': 'group-3' },
       activeWorktreeId: 'wt-1',
       // Focus really sits on tab-a, so the engines mark it isCurrentTab.
@@ -343,8 +305,7 @@ describe('useOpenTabSearch', () => {
     expect(result.current.results.map((entry) => entry.title)).toEqual([
       'zebra alpha',
       'zebra beta',
-      'zebra gamma',
-      'zebra page'
+      'zebra gamma'
     ])
   })
 
@@ -373,7 +334,7 @@ describe('useOpenTabSearch', () => {
           ...state.groupsByWorktree,
           'wt-1': [
             makeGroup('group-1', 'tab-a', ['tab-a', 'tab-b', 'tab-e']),
-            makeGroup('group-2', 'tab-c', ['tab-c', 'tab-browser'])
+            makeGroup('group-2', 'tab-c', ['tab-c'])
           ]
         }
       })

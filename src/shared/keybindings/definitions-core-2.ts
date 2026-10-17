@@ -89,14 +89,6 @@ export const KEYBINDING_DEFINITION_CORE_2: readonly KeybindingDefinition[] = [
     }
   },
   {
-    id: 'tab.newBrowser',
-    title: 'New browser tab',
-    group: 'Tabs',
-    scope: 'tabs',
-    searchKeywords: ['shortcut', 'tab', 'browser', 'new'],
-    defaultBindings: platformBindings(['Mod+Shift+B'])
-  },
-  {
     id: 'tab.newMarkdown',
     title: 'New markdown tab',
     group: 'Tabs',

@@ -18,7 +18,6 @@ import type { ConnectPanePtySession } from './connect-pane-pty-session'
 import type { ReattachPayloadContext } from './reattach-payload-context'
 import { createReattachPayloadHandlers } from './apply-reattach-payload'
 import type { ReattachPayloadSession } from './reattach-payload-session'
-import { recoverUnverifiableDirectSshReattach } from './direct-ssh-reattach-recovery'
 
 type ReattachResultSession = ReattachPayloadSession &
   Pick<
@@ -114,10 +113,6 @@ export function bindHandleReattachResult(sessionBag: ConnectPanePtySession): voi
         paneId: session.pane.id,
         ptyId: staleSessionId ?? null
       })
-      if (session.connectionId) {
-        recoverUnverifiableDirectSshReattach(sessionBag, staleSessionId)
-        return false
-      }
       // Why: a stale restored session can fail reattach after mount; don't leave xterm alive without a backing PTY.
       if (staleSessionId) {
         session.clearExitedPanePtyLayoutBinding(staleSessionId)

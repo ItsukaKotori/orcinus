@@ -30,21 +30,22 @@ Orca 是 Electron 43 + React 19 + Tailwind 4 + shadcn/Radix + Zustand 的 AI 编
 
 ## 2. 范围
 
-### 2.1 保留
+### 2.1 保留（2026-10-17 Phase 3B 收尾后修订）
 
 - **A 终端与进程**：多标签/分屏 PTY、WebGL 渲染、scrollback 持久化与重启恢复、agent TUI 状态识别、hook server
 - **B 工作区**：仓库目录、项目分组、git worktree 创建/切换/删除、文件夹工作区、磁盘占用清理
-- **C Agent 编排**：Claude Code/Codex/OpenCode 等 CLI 启动与 resume、agent 状态/通知/未读、automations、AI Vault
-- **D Git 与评审**：source control 面板、GitHub/GitLab/Bitbucket/Gitea/Azure DevOps/Linear/Jira、diff 注释、PR 创建
+- **C Agent 编排**：Claude Code/Codex/OpenCode 等 CLI 启动与 resume、agent 状态/通知/未读、AI Vault（扫描/列表/删除/resume/续聊/tab 标题）
+- **D Git 与评审**：source control 面板、本地 git 基础（commit/diff/status/sparse）、diff 注释、Bitbucket/Gitea/Azure DevOps token 集成卡
 - **E 编辑器与预览**：Monaco、文件树、Markdown/图片/PDF 预览、文件拖入 prompt
-- **F 内嵌浏览器**：Chromium 浏览器标签、Design Mode、cookie 导入、网络隧道
-- **H 桌面壳**：多窗口、托盘、自动更新、全局快捷键、computer-use、通知
+- **F 插件系统**：全局 + 项目级双作用域（Phase 3A 落地）
+- **H 桌面壳**：多窗口、托盘、自动更新、全局快捷键、通知
 
 ### 2.2 删除
 
-- **G 远程与多端**：SSH 执行、远程 runtime/relay、移动端配对、Web 客户端模式（暂不做）
+- **G 远程与多端（Phase 3B 已实际删除）**：SSH 执行、远程 runtime/relay、移动端配对、Web 客户端模式
 - **I**：Orca CLI、skills 共享、ephemeral VM、多账号切换与用量统计
 - **J Phase 1 功能删减（10 域）**：Pet、Contextual Tours、Feature Tips、Feature Wall、Setup Guide、Dictation、Emulator Pane、Activity/Dashboard（含 Kanban/Agent Map/Popout）、Native Chat、Telemetry（含崩溃上报与 Feedback）——含生产代码、测试、mock bridge 域、preload 契约、store 注册、设置项与 i18n 键；明细与证据见 `docs/phase1-feature-trim-record.md`
+- **K Phase 3B 功能删减（第二轮瘦身：聚焦本地编码）**：无后端死面（browser/Linear/Jira/GitLab/SSH/远程主机死树/Electron 遗留 `src/main`、`src/preload`）、Web 远程客户端（含 pairing/relay 配角与 `qrcode`/`tweetnacl`/`ws` 依赖）、GitHub 集成全链（含只读 checks 与 gh 后端）、Automations（含 `ade-automations` crate）、Computer-use（含 `ade-computer` crate 与 Swift 包）、Onboarding、Artifacts、AI Vault 死子面（搜索/子代理/首条提示）；含 Rust 命令/bindings/parity、设置与导航条目、i18n 键；明细与证据见 `docs/phase3b-feature-trim-record.md`
 
 ### 2.3 改造 / 新增
 

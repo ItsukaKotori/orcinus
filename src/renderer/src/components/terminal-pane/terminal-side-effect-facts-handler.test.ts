@@ -184,34 +184,24 @@ describe('registerTerminalSideEffectFactConsumer', () => {
     ])
   })
 
-  it('routes command-finished and pr-link facts to the registered consumer', () => {
+  it('routes command-finished facts to the registered consumer', () => {
     const events: unknown[][] = []
     registerTerminalSideEffectFactConsumer({
       ptyId: PTY_ID,
       callbacks: {
-        onCommandFinished: (exitCode) => events.push(['finished', exitCode]),
-        onPrLink: (link) => events.push(['pr', link.url, link.number])
+        onCommandFinished: (exitCode) => events.push(['finished', exitCode])
       }
     })
 
     _dispatchTerminalSideEffectBatchForTest(
       batch([
         { kind: 'command-finished', exitCode: 130 },
-        {
-          kind: 'pr-link',
-          link: {
-            url: 'https://github.com/acme/orca/pull/42',
-            slug: { owner: 'acme', repo: 'orca' },
-            number: 42
-          }
-        },
         { kind: 'command-finished', exitCode: null }
       ])
     )
 
     expect(events).toEqual([
       ['finished', 130],
-      ['pr', 'https://github.com/acme/orca/pull/42', 42],
       ['finished', null]
     ])
   })
@@ -294,16 +284,15 @@ describe('registerTerminalSideEffectFactConsumer', () => {
     expect(events).toEqual([['2031-subscribe'], ['title', 'restored']])
   })
 
-  it('never replays command-finished or pr-link facts', () => {
-    // Why: like bells and agent transitions, command/PR facts are attention
+  it('never replays command-finished facts', () => {
+    // Why: like bells and agent transitions, command facts are attention
     // signals — replay snapshots restore title state only.
     const events: unknown[][] = []
     registerTerminalSideEffectFactConsumer({
       ptyId: PTY_ID,
       callbacks: {
         onTitleChange: (normalizedTitle) => events.push(['title', normalizedTitle]),
-        onCommandFinished: (exitCode) => events.push(['finished', exitCode]),
-        onPrLink: (link) => events.push(['pr', link.url])
+        onCommandFinished: (exitCode) => events.push(['finished', exitCode])
       }
     })
 
@@ -311,15 +300,7 @@ describe('registerTerminalSideEffectFactConsumer', () => {
       batch(
         [
           { kind: 'title', normalizedTitle: 'restored', rawTitle: 'restored' },
-          { kind: 'command-finished', exitCode: 0 },
-          {
-            kind: 'pr-link',
-            link: {
-              url: 'https://github.com/acme/orca/pull/42',
-              slug: { owner: 'acme', repo: 'orca' },
-              number: 42
-            }
-          }
+          { kind: 'command-finished', exitCode: 0 }
         ],
         { replay: true, seq: 5 }
       )

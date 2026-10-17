@@ -246,19 +246,6 @@ describe('SourceControlBranchContextRow', () => {
     expect(markup).toContain('aria-label="3 commits ahead of origin/FRONT-192-ZisVoucherStrip"')
   })
 
-  it('renders a compact external review link when a manual URL is available', () => {
-    const markup = renderToStaticMarkup(
-      <SourceControlBranchContextRow
-        summary={readySummary}
-        compareBaseRef={null}
-        manualReviewUrl="https://github.com/stablyai/orca/compare/main...feature?expand=1"
-        onChangeBaseRef={vi.fn()}
-        onRetry={vi.fn()}
-      />
-    )
-
-    expect(markup).toContain('aria-label="Open review page in browser"')
-  })
 })
 
 function renderWithLineTotal(
@@ -270,7 +257,6 @@ function renderWithLineTotal(
       summary={summary}
       compareBaseRef={null}
       headDisplay={{ kind: 'branch', branchName: 'feature/line-total' }}
-      manualReviewUrl="https://example.test/review"
       branchLineTotal={branchLineTotal}
       onChangeBaseRef={vi.fn()}
       onRetry={vi.fn()}

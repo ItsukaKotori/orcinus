@@ -30,7 +30,6 @@ import {
   reseedGatedEmptyWorkspace
 } from '@/lib/worktree-initial-terminal-seeding'
 import { ensureWebRuntimeWorktreeTerminalAfterWake } from '@/lib/web-runtime-worktree-terminal-after-wake'
-import { applyWorktreeNavViewEntry } from '@/lib/worktree-nav-view-history-replay'
 import {
   activationProvidesInitialSurface,
   type WorktreeActivationOptions,
@@ -345,4 +344,4 @@ export function activateAndRevealWorkspace(
 }
 
 // Why: break the import cycle — nav-history slice (under @/store) can't import activation directly, so register the activator here.
-registerWorktreeActivation(activateAndRevealWorkspace, applyWorktreeNavViewEntry)
+registerWorktreeActivation(activateAndRevealWorkspace)

@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
 import { cleanup, renderHook } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import type { BrowserWorkspace } from '../../../../shared/browser-workspace-types'
 import type { MemorySnapshot, WorktreeMemory } from '../../../../shared/process-stats-types'
 import type { Worktree } from '../../../../shared/worktree/types'
 import type { ProjectGroup } from '../../../../shared/project-group-types'
@@ -30,8 +29,7 @@ function derive(
   worktrees: Worktree[],
   sessions: DaemonSession[] = [],
   row = sampled,
-  projectGroups = [group],
-  browserTabsByWorktree: Record<string, BrowserWorkspace[]> = {}
+  projectGroups = [group]
 ) {
   const snapshot = {
     worktrees: [row],
@@ -54,7 +52,6 @@ function derive(
       repos: [],
       allWorktrees: worktrees,
       projectGroups,
-      browserTabsByWorktree,
       workspaceSessionReady: true,
       sessionCount: sessions.length,
       sessionsError: false,
@@ -134,20 +131,6 @@ describe('Resource Manager folder ownership', () => {
         isRemote: false,
         memory: 2048,
         history: sampled.history
-      })
-    }
-  )
-
-  it.each(['repo::/notes', 'folder:shared'])(
-    'keeps browser-only rows when %s exists on two hosts',
-    (worktreeId) => {
-      const here = { ...local, id: worktreeId, repoId: 'repo', displayName: 'Notes' } as Worktree
-      const there = { ...here, hostId: 'ssh:box' } as Worktree
-      const browser = { id: 'browser-1', worktreeId, title: 'Docs' } as BrowserWorkspace
-      const groups = derive([here, there], [], sampled, [group], { [worktreeId]: [browser] })
-
-      expect(groups.find((project) => project.repoId === 'repo')).toMatchObject({
-        worktrees: [{ worktreeId, isRemote: false, browsers: [browser] }]
       })
     }
   )

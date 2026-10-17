@@ -1,15 +1,11 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useShallow } from 'zustand/react/shallow'
 // Why: this registry mirrors the Settings sidebar in one neutral module so
 // Cmd+J and Settings visibility cannot drift. Keep it free of Settings pane UI
 // imports; the boundary is enforced by a focused architecture test.
 import { getTerminalPaneSearchEntries } from '@/components/settings/terminal-search'
 import { isMacUserAgent, isWindowsUserAgent } from '@/components/terminal-pane/pane-helpers'
-import { useLinearProviderConnected } from '@/hooks/useLinearProviderConnected'
-import { getClientCreationActionPolicy } from '@/lib/client-creation-action-policy'
 import type { SettingsNavSection } from '@/lib/settings-navigation-types'
-import { isWebClientLocation } from '@/lib/web-client-location'
 import {
   isWindowsTerminalCapabilityHost,
   useWindowsTerminalCapabilities
@@ -27,17 +23,13 @@ import { buildRemoteSettingsSections } from './settings-navigation-remote-sectio
 import { buildWorkflowSettingsSections } from './settings-navigation-workflow-sections'
 import { useWindowsTerminalCapabilityOwnerKey } from './useWindowsTerminalCapabilityOwnerKey'
 
-export { isWebClientLocation } from '@/lib/web-client-location'
-
 export function buildSettingsNavigationMetadata({
   isMac,
   isWindows,
   isLocalWindowsHost = isWindows,
   isWindowsTerminalHost = isWindows,
   isWebClient,
-  managedBrowserCreationEnabled = !isWebClient,
   isDev = import.meta.env.DEV,
-  isLinearConnected = false,
   repos
 }: {
   isMac: boolean
@@ -45,9 +37,7 @@ export function buildSettingsNavigationMetadata({
   isLocalWindowsHost?: boolean
   isWindowsTerminalHost?: boolean
   isWebClient: boolean
-  managedBrowserCreationEnabled?: boolean
   isDev?: boolean
-  isLinearConnected?: boolean
   repos: readonly Repo[]
 }): SettingsNavSection[] {
   const terminalPaneSearchEntries = getTerminalPaneSearchEntries({
@@ -67,9 +57,7 @@ export function buildSettingsNavigationMetadata({
     isLocalWindowsHost,
     isWindowsTerminalHost,
     isWebClient,
-    managedBrowserCreationEnabled,
     isDev,
-    isLinearConnected,
     repos
   }
 
@@ -94,39 +82,29 @@ export function useSettingsNavigationMetadata(): SettingsNavSection[] {
   const activeLocale = i18n.language
   const repos = useAppStore((state) => state.repos)
   const settings = useAppStore((state) => state.settings)
-  const [managedBrowserCreationEnabled] = useAppStore(
-    useShallow((state) => {
-      const policy = getClientCreationActionPolicy(state, state.activeWorktreeId)
-      return [policy['managed-browser'].state === 'enabled'] as const
-    })
-  )
   const isMac = isMacUserAgent()
   const isWindows = isWindowsUserAgent()
-  const isWebClient = isWebClientLocation()
-  const isLinearConnected = useLinearProviderConnected()
   const windowsTerminalCapabilityOwnerKey = useWindowsTerminalCapabilityOwnerKey(
     settings?.activeRuntimeEnvironmentId
   )
   const runtimeTarget = getActiveRuntimeTarget(settings)
-  const capabilityLoadTarget = isWebClient ? { kind: 'local' as const } : runtimeTarget
+  const capabilityLoadTarget = runtimeTarget
   const windowsTerminalCapabilities = useWindowsTerminalCapabilities(
-    isWindows || isWebClient || runtimeTarget.kind === 'environment',
+    isWindows || runtimeTarget.kind === 'environment',
     false,
     windowsTerminalCapabilityOwnerKey,
     capabilityLoadTarget
   )
   const isLocalWindowsHost = isWindowsTerminalCapabilityHost({
     isWindowsRenderer: isWindows,
-    isWebClient,
+    isWebClient: false,
     target: { kind: 'local' },
     hostPlatform:
-      isWebClient || runtimeTarget.kind === 'local'
-        ? windowsTerminalCapabilities.hostPlatform
-        : null
+      runtimeTarget.kind === 'local' ? windowsTerminalCapabilities.hostPlatform : null
   })
   const isWindowsTerminalHost = isWindowsTerminalCapabilityHost({
     isWindowsRenderer: isWindows,
-    isWebClient,
+    isWebClient: false,
     target: runtimeTarget,
     hostPlatform: windowsTerminalCapabilities.hostPlatform
   })
@@ -141,10 +119,8 @@ export function useSettingsNavigationMetadata(): SettingsNavSection[] {
         isWindows,
         isLocalWindowsHost,
         isWindowsTerminalHost,
-        isWebClient,
-        managedBrowserCreationEnabled,
+        isWebClient: false,
         isDev: import.meta.env.DEV,
-        isLinearConnected,
         repos
       }),
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- activeLocale is read implicitly by the translate() calls inside buildSettingsNavigationMetadata; without it the memo keeps the previous language's sections.
@@ -153,9 +129,6 @@ export function useSettingsNavigationMetadata(): SettingsNavSection[] {
       isWindows,
       isLocalWindowsHost,
       isWindowsTerminalHost,
-      isWebClient,
-      managedBrowserCreationEnabled,
-      isLinearConnected,
       repos,
       activeLocale
     ]

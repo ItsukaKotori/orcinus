@@ -3,7 +3,6 @@ import { parsePaneKey } from '../../../../shared/stable-pane-id'
 import { getIndexedWorktreesById } from '@/store/worktree-repo-index'
 import {
   EMPTY_NARROWED_BY_KEY,
-  EMPTY_WORKTREE_BROWSER_WORKSPACES,
   EMPTY_WORKTREE_OPEN_FILE_IDS,
   EMPTY_WORKTREE_TAB_GROUPS,
   EMPTY_WORKTREE_TERMINAL_TABS,
@@ -106,18 +105,6 @@ export function buildMobileSessionWorktreeInputs(
     state.terminalLayoutsByTabId,
     worktreeId
   )
-  const browserWorkspaces =
-    publication.browserTabsByWorktree[worktreeId] ?? EMPTY_WORKTREE_BROWSER_WORKSPACES
-  const pagesByBrowserWorkspaceId = narrowRecordByKeys(
-    state.browserPagesByWorkspace,
-    browserWorkspaces.map((workspace) => workspace.id)
-  )
-  const browserPageIds: string[] = []
-  for (const pages of pagesByBrowserWorkspaceId.values()) {
-    for (const page of pages) {
-      browserPageIds.push(page.id)
-    }
-  }
   const openFilesById = publication.openFileIndexes.byWorktreeAndId.get(worktreeId)
   const openFileIds =
     publication.openFileIndexes.idsByWorktree.get(worktreeId) ?? EMPTY_WORKTREE_OPEN_FILE_IDS
@@ -129,7 +116,6 @@ export function buildMobileSessionWorktreeInputs(
     worktreeId,
     worktreeInstanceId: resolveWorktreeInstanceId(state, worktreeId),
     terminalTabs,
-    browserWorkspaces,
     unifiedTabs: state.unifiedTabsByWorktree[worktreeId] ?? EMPTY_WORKTREE_UNIFIED_TABS,
     groups: state.groupsByWorktree[worktreeId] ?? EMPTY_WORKTREE_TAB_GROUPS,
     tabBarOrder: state.tabBarOrderByWorktree[worktreeId],
@@ -145,18 +131,12 @@ export function buildMobileSessionWorktreeInputs(
       publication.editorDraftVersionByFileId,
       openFileIds
     ),
-    pagesByBrowserWorkspaceId,
-    certificateFailureByBrowserPageId: narrowRecordByKeys(
-      state.browserCertificateFailuresByPageId,
-      browserPageIds
-    ),
     activeEditorFileId,
     activeEditorTabType: activeEditorFileId
       ? (state.activeTabTypeByWorktree?.[worktreeId] ?? state.activeTabType)
       : null,
     activeTerminalTabId:
       activeTabId !== null && terminalTabIds.includes(activeTabId) ? activeTabId : null,
-    activeBrowserWorkspaceId: state.activeBrowserTabIdByWorktree?.[worktreeId] ?? null,
     generatedTitlesEnabled: publication.generatedTitlesEnabled,
     terminalTheme: publication.terminalTheme,
     mountedSurfaceCaptureByTabId

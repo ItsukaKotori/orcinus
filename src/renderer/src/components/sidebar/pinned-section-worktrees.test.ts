@@ -153,7 +153,6 @@ describe('getPinnedSectionWorktrees', () => {
       'none',
       worktrees,
       repoMap,
-      null,
       new Set(),
       undefined,
       undefined,

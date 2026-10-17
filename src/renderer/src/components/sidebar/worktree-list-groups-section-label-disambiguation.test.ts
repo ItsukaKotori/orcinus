@@ -38,7 +38,6 @@ function buildHeaders(repos: Repo[], projects: Project[], setups: ProjectHostSet
     'repo',
     worktrees,
     new Map(repos.map((entry) => [entry.id, entry])),
-    null,
     new Set(),
     undefined,
     undefined,

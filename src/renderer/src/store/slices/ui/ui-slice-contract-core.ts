@@ -1,15 +1,10 @@
 import type { StateCreator } from 'zustand'
 import type { AppState } from '../../types'
-import type { GitHubWorkItem } from '../../../../../shared/github/work-item-types'
-import type { GitLabWorkItem } from '../../../../../shared/gitlab-types'
-import type { JiraIssue } from '../../../../../shared/jira-types'
-import type { LinearIssue } from '../../../../../shared/linear/issue-types'
-import type { TaskProvider } from '../../../../../shared/task-providers'
 import type { TuiAgent } from '../../../../../shared/tui-agent'
 import type { LaunchSource } from '../../../../../shared/launch-context'
 import type { TaskSourceContext } from '../../../../../shared/task-source-context'
 import type { ExecutionHostId } from '../../../../../shared/execution-host'
-import type { TaskResumeState, TopLevelView } from '../../../../../shared/ui-chrome-types'
+import type { TopLevelView } from '../../../../../shared/ui-chrome-types'
 
 export type PendingSidebarWorktreeReveal = {
   worktreeId: string
@@ -29,7 +24,7 @@ export type AgentSendPopoverTargetMode = {
   id: string
   instanceId: string
   worktreeId: string
-  source: 'diff-notes' | 'browser-annotations'
+  source: 'diff-notes'
   prompt: string
   label: string
   launchSource: LaunchSource
@@ -49,21 +44,6 @@ export type OpenAgentSendPopoverTargetModeArgs = {
   label: string
   launchSource: LaunchSource
   onPromptDelivered?: () => void
-}
-
-export type TaskPageData = {
-  preselectedRepoId?: string
-  prefilledName?: string
-  taskSource?: TaskProvider
-  openGitHubWorkItem?: GitHubWorkItem
-  openGitHubSourceContext?: TaskSourceContext | null
-  openGitHubInitialTab?: 'conversation' | 'checks' | 'files'
-  openGitLabWorkItem?: GitLabWorkItem
-  openGitLabSourceContext?: TaskSourceContext | null
-  openLinearIssue?: LinearIssue
-  openLinearSourceContext?: TaskSourceContext | null
-  openJiraIssue?: JiraIssue
-  openJiraSourceContext?: TaskSourceContext | null
 }
 
 export type NewWorkspaceDraft = {
@@ -133,41 +113,12 @@ export type UISliceCore = {
   manuallyUnreadTurnsByPaneKey: Record<string, number>
   clearManuallyUnreadTurns: (paneKeys: string[]) => void
   activeView: TopLevelView
-  previousViewBeforeTasks: Exclude<UiViewHistory, 'tasks'>
   previousViewBeforeSettings: Exclude<UiViewHistory, 'settings'>
-  previousViewBeforeAutomations: Exclude<UiViewHistory, 'automations'>
   previousViewBeforeSpace: Exclude<UiViewHistory, 'space'>
-  previousViewBeforeArtifacts: Exclude<UiViewHistory, 'artifacts'>
   setActiveView: (view: UISliceCore['activeView']) => void
-  taskPageData: TaskPageData
-  taskResumeState: TaskResumeState | undefined
-  setTaskResumeState: (updates: Partial<TaskResumeState>) => void
-  taskListPosition: { contextKey: string; page: number; scrollTop: number } | null
-  setTaskListPosition: (position: UISliceCore['taskListPosition']) => void
-  githubTaskDrawerWorkItem: GitHubWorkItem | null
-  setGithubTaskDrawerWorkItem: (item: GitHubWorkItem | null) => void
   newWorkspaceDraft: NewWorkspaceDraft | null
-  openTaskPage: (
-    data?: UISliceCore['taskPageData'],
-    options?: { recordTasksInteraction?: boolean }
-  ) => void
-  closeTaskPage: () => void
-  selectedAutomationId: string | null
-  setSelectedAutomationId: (id: string | null) => void
-  pendingAutomationRunNavigation: {
-    automationId: string
-    runId: string | null
-    hostId?: ExecutionHostId
-  } | null
-  setPendingAutomationRunNavigation: (
-    navigation: { automationId: string; runId: string | null; hostId?: ExecutionHostId } | null
-  ) => void
-  openAutomationsPage: () => void
-  closeAutomationsPage: () => void
   openSpacePage: () => void
   closeSpacePage: () => void
-  openArtifactsPage: () => void
-  closeArtifactsPage: () => void
   setNewWorkspaceDraft: (draft: NonNullable<UISliceCore['newWorkspaceDraft']>) => void
   clearNewWorkspaceDraft: () => void
   pendingRevealWorktree: PendingSidebarWorktreeReveal | null

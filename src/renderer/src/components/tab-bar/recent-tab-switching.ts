@@ -19,12 +19,10 @@ export type RecentTabSwitcherModel = {
 
 type RecentTabSwitchingState = Pick<
   AppState,
-  | 'activeBrowserTabId'
   | 'activeFileId'
   | 'activeGroupIdByWorktree'
   | 'activeTabId'
   | 'activeTabType'
-  | 'browserTabsByWorktree'
   | 'groupsByWorktree'
   | 'openFiles'
   | 'tabBarOrderByWorktree'
@@ -55,7 +53,6 @@ function findActiveGroup(
 function getActiveVisibleTabKey(
   state: Pick<
     AppState,
-    | 'activeBrowserTabId'
     | 'activeFileId'
     | 'activeGroupIdByWorktree'
     | 'activeTabId'
@@ -73,8 +70,7 @@ function getActiveVisibleTabKey(
   const activeEntityId = getActiveEntityIdForTabType(
     state.activeTabType,
     state.activeTabId,
-    state.activeFileId,
-    state.activeBrowserTabId
+    state.activeFileId
   )
   const activeEntry =
     activeEntityId == null

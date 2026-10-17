@@ -226,50 +226,6 @@ describe('connectPanePty', () => {
     )
   })
 
-  it('seeds a working status from Command Code thinking output without a startup prompt', async () => {
-    const { connectPanePty } = await import('./pty-connection')
-    const capturedDataCallback: { current: ((data: string) => void) | null } = { current: null }
-    const sshPtyId = toAppSshPtyId('ssh-a', 'pty-command-code')
-    const transport = createMockTransport(sshPtyId)
-    transport.getConnectionId.mockReturnValue('ssh-a')
-    transport.connect.mockImplementation(async ({ callbacks }: { callbacks: ConnectCallbacks }) => {
-      capturedDataCallback.current = callbacks.onData ?? null
-      return sshPtyId
-    })
-    transportFactoryQueue.push(transport)
-    mockStoreState.repos = [{ id: 'repo1', connectionId: 'ssh-a' }]
-    mockStoreState.sshConnectionStates = new Map([['ssh-a', { status: 'connected' }]])
-
-    const pane = createPane(1)
-    const manager = createManager(1)
-    const deps = createDeps({
-      startup: {
-        command: 'command-code --trust'
-      }
-    })
-
-    connectPanePty(pane as never, manager as never, deps as never)
-    await flushAsyncTicks()
-    expect(capturedDataCallback.current).not.toBeNull()
-
-    capturedDataCallback.current?.('# Command Code v0.27.2\r\n')
-    capturedDataCallback.current?.('❯ Fix the spinner\r\n\x1b[35m✻ Thinking...\x1b[0m')
-
-    expect(mockStoreState.setAgentStatus).toHaveBeenCalledWith(
-      makePaneKey('tab-1', LEAF_1),
-      {
-        state: 'working',
-        prompt: 'Fix the spinner',
-        agentType: 'command-code',
-        // Why: read off the pane's own output, not a provider hook (STA-4293).
-        observation: expect.objectContaining({ origin: 'process', kind: 'transition' })
-      },
-      undefined,
-      undefined,
-      { connectionId: 'ssh-a' }
-    )
-  })
-
   it('ignores delayed Command Code output after the leaf rebinds to another SSH host', async () => {
     const { connectPanePty } = await import('./pty-connection')
     const capturedDataCallback: { current: ((data: string) => void) | null } = { current: null }
@@ -476,60 +432,6 @@ describe('connectPanePty', () => {
       undefined,
       { connectionId: null }
     )
-  })
-
-  it('keeps SSH terminal-paste startup commands renderer-owned', async () => {
-    const pendingTimeouts: (() => void)[] = []
-    const originalSetTimeout = globalThis.setTimeout
-    globalThis.setTimeout = vi.fn((fn: () => void) => {
-      pendingTimeouts.push(fn)
-      return 999 as unknown as ReturnType<typeof setTimeout>
-    }) as unknown as typeof setTimeout
-
-    try {
-      const { connectPanePty } = await import('./pty-connection')
-
-      const capturedDataCallback: { current: ((data: string) => void) | null } = { current: null }
-      const transport = createMockTransport('pty-id')
-      transport.connect.mockImplementation(
-        async ({ callbacks }: { callbacks: ConnectCallbacks }) => {
-          capturedDataCallback.current = callbacks.onData ?? null
-          return 'pty-ssh-paste'
-        }
-      )
-      transportFactoryQueue.push(transport)
-
-      mockStoreState = {
-        ...mockStoreState,
-        tabsByWorktree: { 'wt-1': [{ id: 'tab-1', ptyId: null }] },
-        repos: [{ id: 'repo1', connectionId: 'ssh-conn-1' }],
-        sshConnectionStates: new Map([['ssh-conn-1', { status: 'connected' }]])
-      }
-
-      const pane = createPane(1)
-      pane.terminal.modes.bracketedPasteMode = true
-      pane.terminal.write.mockImplementation((_data: string, callback?: () => void) => {
-        callback?.()
-      })
-      const manager = createManager(1)
-      const command = 'cd packages\nbun run build\ncd ..'
-      const deps = createDeps({ startup: { command, delivery: 'terminal-paste' } })
-
-      connectPanePty(pane as never, manager as never, deps as never)
-      expect(createdTransportOptions[0]?.command).toBeUndefined()
-      expect(createdTransportOptions[0]?.commandDelivery).toBeUndefined()
-      expect(capturedDataCallback.current).not.toBeNull()
-
-      capturedDataCallback.current?.('user@host $ ')
-      await drainPendingTimeouts(pendingTimeouts)
-      await flushAsyncTicks()
-
-      expect(pane.terminal.paste).toHaveBeenCalledWith(command)
-      expect(transport.sendInput).toHaveBeenCalledWith('\r')
-      expect(transport.sendInput).not.toHaveBeenCalledWith(`${command}\r`)
-    } finally {
-      globalThis.setTimeout = originalSetTimeout
-    }
   })
 
   it('chunks large terminal-paste startup commands through the PTY before submitting', async () => {

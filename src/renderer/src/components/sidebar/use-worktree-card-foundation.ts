@@ -7,7 +7,6 @@ import {
   toRuntimeExecutionHostId
 } from '../../../../shared/execution-host'
 import { getHostDisplayLabelOverrides } from '../../../../shared/host-setting-overrides'
-import { getWorkspacePortsByWorktreeId } from '@/lib/workspace-port-groups'
 import { getExplicitRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
 import { hydrateRuntimeEnvironmentSshState } from '@/runtime/runtime-environment-ssh-state'
 import {
@@ -20,7 +19,7 @@ import {
   selectRuntimeAwareSshTargetLabel,
   selectRuntimeAwareSshTargetRemoved
 } from '@/store/slices/runtime-environment-ssh'
-import { EMPTY_WORKSPACE_PORTS, type WorktreeCardProps } from './worktree-card-model'
+import type { WorktreeCardProps } from './worktree-card-model'
 import { getDeleteStateForWorktreeHost } from './worktree-delete-state-host-match'
 
 export function useWorktreeCardFoundation({
@@ -28,25 +27,19 @@ export function useWorktreeCardFoundation({
   repo
 }: Pick<WorktreeCardProps, 'worktree' | 'repo'>) {
   const openModal = useAppStore((s) => s.openModal)
-  const openTaskPage = useAppStore((s) => s.openTaskPage)
-  const openAutomationsPage = useAppStore((s) => s.openAutomationsPage)
-  const setPendingAutomationRunNavigation = useAppStore((s) => s.setPendingAutomationRunNavigation)
   const updateWorktreeMeta = useAppStore((s) => s.updateWorktreeMeta)
   const deleteFolderWorkspace = useAppStore((s) => s.deleteFolderWorkspace)
   const setActiveWorktree = useAppStore((s) => s.setActiveWorktree)
   const renamingWorktreeId = useAppStore((s) => s.renamingWorktreeId)
   const setRenamingWorktreeId = useAppStore((s) => s.setRenamingWorktreeId)
-  const fetchHostedReviewForBranch = useAppStore((s) => s.fetchHostedReviewForBranch)
   const settings = useAppStore((s) => s.settings)
-  const fetchIssue = useAppStore((s) => s.fetchIssue)
-  const fetchLinearIssue = useAppStore((s) => s.fetchLinearIssue)
   const cardProps = useAppStore((s) => s.worktreeCardProperties)
   const agentActivityDisplayMode =
     useAppStore((s) => s.agentActivityDisplayMode) ?? DEFAULT_AGENT_ACTIVITY_DISPLAY_MODE
   const projectGroups = useAppStore((s) => s.projectGroups)
   const newCardStyle = settings?.experimentalNewWorktreeCardStyle === true
   const compactCards = !newCardStyle && settings?.compactWorktreeCards === true
-  const handleEditIssue = useCallback(
+  const handleEditComment = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation()
       openModal('edit-meta', {
@@ -56,25 +49,6 @@ export function useWorktreeCardFoundation({
         repoId: worktree.repoId,
         executionHostId: worktree.hostId,
         currentDisplayName: worktree.displayName,
-        currentIssue: worktree.linkedIssue,
-        currentPR: worktree.linkedPR,
-        currentComment: worktree.comment,
-        focus: 'issue'
-      })
-    },
-    [worktree, openModal]
-  )
-
-  const handleEditComment = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation()
-      openModal('edit-meta', {
-        worktreeId: worktree.id,
-        repoId: worktree.repoId,
-        executionHostId: worktree.hostId,
-        currentDisplayName: worktree.displayName,
-        currentIssue: worktree.linkedIssue,
-        currentPR: worktree.linkedPR,
         currentComment: worktree.comment,
         focus: 'comment'
       })
@@ -82,63 +56,11 @@ export function useWorktreeCardFoundation({
     [worktree, openModal]
   )
 
-  const handleOpenAutomation = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation()
-      const automationId = worktree.automationProvenance?.automationId
-      if (!automationId) {
-        return
-      }
-      const hostId = worktree.automationProvenance?.hostId ?? worktree.hostId
-      setPendingAutomationRunNavigation({
-        automationId,
-        runId: null,
-        ...(hostId ? { hostId } : {})
-      })
-      openAutomationsPage()
-    },
-    [
-      openAutomationsPage,
-      setPendingAutomationRunNavigation,
-      worktree.automationProvenance?.automationId,
-      worktree.automationProvenance?.hostId,
-      worktree.hostId
-    ]
-  )
-
-  const handleOpenAutomationRun = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation()
-      const provenance = worktree.automationProvenance
-      if (!provenance) {
-        return
-      }
-      const hostId = provenance.hostId ?? worktree.hostId
-      setPendingAutomationRunNavigation({
-        automationId: provenance.automationId,
-        runId: provenance.automationRunId,
-        ...(hostId ? { hostId } : {})
-      })
-      openAutomationsPage()
-    },
-    [
-      openAutomationsPage,
-      setPendingAutomationRunNavigation,
-      worktree.automationProvenance,
-      worktree.hostId
-    ]
-  )
-
   const deleteState = useAppStore((s) => {
     return getDeleteStateForWorktreeHost(worktree, s.deleteStateByWorktreeId)
   })
   const conflictOperation = useAppStore((s) => s.gitConflictOperationByWorktree[worktree.id])
   const remoteBranchConflict = useAppStore((s) => s.remoteBranchConflictByWorktreeId[worktree.id])
-  const workspacePorts = useAppStore(
-    (s) =>
-      getWorkspacePortsByWorktreeId(s.workspacePortScan?.result).get(worktree.id) ??
-      EMPTY_WORKSPACE_PORTS
-  )
 
   const sshOwnerEnvironmentId = useAppStore((s) =>
     repo?.connectionId ? getExplicitRuntimeEnvironmentIdForWorktree(s, worktree.id) : null
@@ -204,29 +126,21 @@ export function useWorktreeCardFoundation({
 
   return {
     openModal,
-    openTaskPage,
     updateWorktreeMeta,
     deleteFolderWorkspace,
     setActiveWorktree,
     renamingWorktreeId,
     setRenamingWorktreeId,
-    fetchHostedReviewForBranch,
     settings,
-    fetchIssue,
-    fetchLinearIssue,
     cardProps,
     agentActivityDisplayMode,
     projectGroups,
     newCardStyle,
     compactCards,
-    handleEditIssue,
     handleEditComment,
-    handleOpenAutomation,
-    handleOpenAutomationRun,
     deleteState,
     conflictOperation,
     remoteBranchConflict,
-    workspacePorts,
     sshOwnerEnvironmentId,
     sshStatus,
     isSshDisconnected,

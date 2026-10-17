@@ -123,7 +123,6 @@ describe('WorkspaceCleanupDialog mount gating', () => {
       await act(async () => {
         useAppStore.setState({
           workspaceCleanupScan: emptyScan(index + 10),
-          hostedReviewCache: { [`review-${index}`]: { data: null, fetchedAt: index } },
           deleteStateByWorktreeId: {}
         })
       })

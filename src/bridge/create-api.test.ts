@@ -31,15 +31,6 @@ describe('createAdeApi mock mode', () => {
     expect(info.displayServer).toBeNull()
   })
 
-  it('browser WebAuthn subscriptions hand back unsubscribe functions', () => {
-    const api = createAdeApi({ mode: 'mock' })
-    const stopRequests = api.browser.onWebAuthnAccountRequest(() => {})
-    expect(typeof stopRequests).toBe('function')
-    stopRequests()
-    const stopClosed = api.browser.onWebAuthnAccountRequestClosed(() => {})
-    expect(typeof stopClosed).toBe('function')
-    stopClosed()
-  })
 })
 
 describe('createAdeApi mode resolution', () => {
@@ -136,62 +127,6 @@ describe('createAdeApi real assembly', () => {
     expect(invokeMock).not.toHaveBeenCalled()
   })
 
-  it('routes the hostedReview domain through the real worktree identity lookup', async () => {
-    const api = createAdeApi()
-    invokeMock.mockResolvedValue([])
-    await expect(
-      api.hostedReview.forBranch({ repoPath: '/repo', branch: 'main' })
-    ).resolves.toBeNull()
-    expect(invokeMock).toHaveBeenCalledWith('git_remote_urls', {
-      args: { worktreePath: '/repo' }
-    })
-  })
-
-  it('routes hostedReview creation eligibility through the real probes', async () => {
-    const api = createAdeApi()
-    invokeMock.mockImplementation(async (command: string) => {
-      if (command === 'git_remote_urls') return []
-      if (command === 'git_read') return { stdout: '', stderr: '', code: 1 }
-      throw new Error(`unexpected ${command}`)
-    })
-    await expect(
-      api.hostedReview.getCreationEligibility({ repoPath: '/repo', branch: 'main' })
-    ).resolves.toMatchObject({
-      provider: 'unsupported',
-      canCreate: false,
-      blockedReason: 'unsupported_provider'
-    })
-    expect(invokeMock).toHaveBeenCalledWith('git_remote_urls', {
-      args: { worktreePath: '/repo' }
-    })
-  })
-
-  it('routes the gh domain through its commands', async () => {
-    const api = createAdeApi()
-    invokeMock.mockImplementation(async (command: string) => {
-      if (command === 'gh_exec') {
-        return {
-          stdout: [
-            'github.com',
-            '  ✓ Logged in to github.com account alice (keyring)',
-            '  - Active account: true',
-            "  - Token scopes: 'project', 'read:org', 'repo'",
-            ''
-          ].join('\n'),
-          stderr: '',
-          code: 0
-        }
-      }
-      if (command === 'gh_env_probe') return { token: null }
-      throw new Error(`unexpected ${command}`)
-    })
-    await api.gh.diagnoseAuth()
-    expect(invokeMock.mock.calls.map(([command]) => command)).toEqual([
-      'gh_exec',
-      'gh_env_probe'
-    ])
-  })
-
   it('routes the git domain through its commands', async () => {
     const api = createAdeApi()
     invokeMock.mockResolvedValue({})
@@ -253,44 +188,6 @@ describe('createAdeApi real assembly', () => {
       name: 'UnimplementedBridgeError'
     })
     warn.mockRestore()
-  })
-
-  it('routes the automations domain through the real dispatch plumbing', async () => {
-    const api = createAdeApi()
-    invokeMock.mockResolvedValueOnce({ result: null })
-    await expect(
-      api.automations.runPrecheck({ automationId: 'auto-1', runId: 'run-1' })
-    ).resolves.toBeNull()
-    expect(invokeMock).toHaveBeenCalledWith('automations_run_precheck', {
-      args: { automationId: 'auto-1', runId: 'run-1' }
-    })
-
-    invokeMock.mockResolvedValueOnce(null)
-    await api.automations.rendererReady()
-    expect(invokeMock).toHaveBeenCalledWith('automations_renderer_ready')
-
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    await expect(api.automations.retainExternalScopes({ owners: [] })).rejects.toMatchObject({
-      name: 'UnimplementedBridgeError'
-    })
-    warn.mockRestore()
-  })
-
-  it('routes the computerUsePermissions domain through its commands', async () => {
-    const api = createAdeApi()
-    invokeMock.mockResolvedValue({})
-
-    await api.computerUsePermissions.getStatus()
-    await api.computerUsePermissions.openSetup({ id: 'accessibility' })
-    await api.computerUsePermissions.openSetup()
-    await api.computerUsePermissions.reset()
-
-    expect(invokeMock.mock.calls).toEqual([
-      ['computer_use_permissions_get_status'],
-      ['computer_use_permissions_open_setup', { args: { id: 'accessibility' } }],
-      ['computer_use_permissions_open_setup', { args: undefined }],
-      ['computer_use_permissions_reset']
-    ])
   })
 
   it('routes the cli domain through its commands', async () => {

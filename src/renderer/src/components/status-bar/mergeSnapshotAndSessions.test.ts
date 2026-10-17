@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { BrowserWorkspace } from '../../../../shared/browser-workspace-types'
 import type { MemorySnapshot, WorktreeMemory } from '../../../../shared/process-stats-types'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
-import type { Worktree } from '../../../../shared/worktree/types'
 import { mergeSnapshotAndSessions, UNATTRIBUTED_REPO_ID } from './mergeSnapshotAndSessions'
 import { requiresKillConfirmation } from './resource-session-kill-confirmation'
 import type { DaemonSession, MergeContext } from './resource-usage-merge-types'
@@ -64,48 +62,6 @@ const baseCtx = (overrides: Partial<MergeContext> = {}): MergeContext => ({
 describe('mergeSnapshotAndSessions', () => {
   it('returns empty list when both inputs are empty', () => {
     expect(mergeSnapshotAndSessions(null, [], baseCtx())).toEqual([])
-  })
-
-  it('includes browser-only workspaces in their repo', () => {
-    const worktree = {
-      id: 'orca::/Users/me/browser-only',
-      repoId: 'orca',
-      displayName: 'browser-only'
-    } as Worktree
-    const browser = {
-      id: 'browser-1',
-      worktreeId: worktree.id,
-      title: 'Orca docs',
-      url: 'https://docs.orca.dev',
-      loading: false,
-      faviconUrl: null,
-      canGoBack: false,
-      canGoForward: false,
-      loadError: null,
-      createdAt: 1
-    } as BrowserWorkspace
-    const out = mergeSnapshotAndSessions(
-      null,
-      [],
-      baseCtx({
-        repoDisplayNameById: new Map([['orca', 'ORCA']]),
-        worktreeById: new Map([[worktree.id, worktree]]),
-        browserTabsByWorktree: { [worktree.id]: [browser] }
-      })
-    )
-
-    expect(out[0]).toMatchObject({
-      repoId: 'orca',
-      repoName: 'ORCA',
-      worktrees: [
-        {
-          worktreeId: worktree.id,
-          worktreeName: 'browser-only',
-          sessions: [],
-          browsers: [browser]
-        }
-      ]
-    })
   })
 
   it('passes through snapshot worktrees with numeric metrics and hasLocalSamples', () => {

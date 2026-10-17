@@ -31,14 +31,12 @@ import {
 } from './worktrees/teardown/worktree-delete-state'
 import { createForceDeletePreservedBranch } from './worktrees/teardown/force-delete-preserved-branch'
 import { createUpdateWorktreeMeta } from './worktrees/metadata/update-worktree-meta'
-import { createEnsureHostedReviewPushTarget } from './worktrees/metadata/hosted-review-push-target-ensure'
 import { createUpdateWorktreesMeta } from './worktrees/metadata/update-worktrees-meta'
 import { createSetWorktreesPinnedAndReveal } from './worktrees/session/worktree-pin-reveal'
 import {
   createBumpWorktreeActivity,
   createClearWorktreeUnread,
-  createMarkWorktreeUnread,
-  createObserveTerminalGitHubPullRequestLink
+  createMarkWorktreeUnread
 } from './worktrees/session/worktree-unread-activity'
 import {
   createMarkWorktreeVisited,
@@ -61,11 +59,6 @@ import { createMigrateWorktreeIdentity } from './worktrees/session/migrate-workt
 export type { WorktreeSlice, WorktreeDeleteState } from './worktree-helpers'
 export { WORKTREE_REFRESH_CONCURRENCY } from './worktrees/listing/worktree-slice-constants'
 export { acquireDetectedWorktreeRefreshLeaseForRepo } from './worktrees/listing/detected-worktree-refresh'
-export {
-  getHostedReviewLinkMutationGenerationForTests,
-  getHostedReviewLinkWorktreeAliasCountForTests,
-  resetHostedReviewLinkMutationGenerationForTests
-} from './worktrees/metadata/hosted-review-link-mutation'
 export {
   getDetachedHeadAutoDerivedDisplayNameForTests,
   setDetachedHeadAutoDerivedDisplayNameForTests
@@ -97,11 +90,9 @@ export const createWorktreeSlice: StateCreator<AppState, [], [], WorktreeSlice> 
   forceDeletePreservedBranch: createForceDeletePreservedBranch(set, get),
   clearWorktreeDeleteState: createClearWorktreeDeleteState(set, get),
   updateWorktreeMeta: createUpdateWorktreeMeta(set, get),
-  ensureHostedReviewPushTarget: createEnsureHostedReviewPushTarget(set, get),
   updateWorktreesMeta: createUpdateWorktreesMeta(set, get),
   setWorktreesPinnedAndReveal: createSetWorktreesPinnedAndReveal(set, get),
   markWorktreeUnread: createMarkWorktreeUnread(set, get),
-  observeTerminalGitHubPullRequestLink: createObserveTerminalGitHubPullRequestLink(set, get),
   clearWorktreeUnread: createClearWorktreeUnread(set, get),
   bumpWorktreeActivity: createBumpWorktreeActivity(set, get),
   markWorktreeVisited: createMarkWorktreeVisited(set, get),

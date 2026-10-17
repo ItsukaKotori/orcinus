@@ -5,7 +5,7 @@ import {
   getWorkspaceStatus,
   getWorkspaceStatusGroupKey
 } from '../../../../../../shared/workspace-statuses'
-import { ALL_GROUP_KEY, getPRLaneKey } from './group-keys'
+import { ALL_GROUP_KEY } from './group-keys'
 import type { WorktreeGroupBy } from './row-types'
 
 /** A folder workspace paired with the project group that owns it. The pair is
@@ -55,11 +55,6 @@ export function getFolderWorkspaceLaneKey(
   switch (groupBy) {
     case 'workspace-status':
       return getWorkspaceStatusGroupKey(getWorkspaceStatus(pair.folderWorkspace, workspaceStatuses))
-    case 'pr-status':
-      // Why in-progress: a folder workspace has no branch or repo, so it can
-      // never resolve a PR. getPRGroupKey returns this same lane for any
-      // worktree without one, so the two stay consistent.
-      return getPRLaneKey('in-progress')
     case 'none':
       return ALL_GROUP_KEY
   }

@@ -28,7 +28,6 @@ const mocks = vi.hoisted(() => ({
     settings: {}
   },
   addRemote: vi.fn(),
-  onboardingGet: vi.fn(),
   activateAndRevealWorktree: vi.fn()
 }))
 
@@ -128,11 +127,9 @@ describe('NonGitFolderDialog', () => {
     mocks.state.projectHostSetups = []
     mocks.state.worktreesByRepo = {}
     mocks.state.fetchWorktrees.mockResolvedValue(true)
-    mocks.onboardingGet.mockResolvedValue(null)
     vi.stubGlobal('window', {
       api: {
-        repos: { addRemote: mocks.addRemote },
-        onboarding: { get: mocks.onboardingGet }
+        repos: { addRemote: mocks.addRemote }
       }
     })
   })

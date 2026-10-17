@@ -15,7 +15,6 @@ const mocks = vi.hoisted(() => ({
   showNestedRepoReview: vi.fn(),
   onGitRepoReady: vi.fn(),
   setAddProjectBusyLabel: vi.fn(),
-  markOnboardingProjectAdded: vi.fn(),
   track: vi.fn()
 }))
 
@@ -39,10 +38,6 @@ vi.mock('react', async (importOriginal) => {
     }
   }
 })
-
-vi.mock('@/lib/onboarding-project-checklist', () => ({
-  markOnboardingProjectAdded: mocks.markOnboardingProjectAdded
-}))
 
 vi.mock('@/lib/telemetry', () => ({
   track: mocks.track
@@ -68,7 +63,7 @@ describe('useAddRepoServerPathFlow', () => {
     mocks.stateValues = ['/server/docs', false]
   })
 
-  it('marks onboarding folder progress before closing server folder adds', async () => {
+  it('closes server folder adds without starting the Git handoff', async () => {
     const repo = makeRepo()
     mocks.addRepoPath.mockResolvedValue(repo)
     const { useAddRepoServerPathFlow } = await import('./useAddRepoServerPathFlow')
@@ -93,7 +88,6 @@ describe('useAddRepoServerPathFlow', () => {
     expect(mocks.scanNestedRepos).not.toHaveBeenCalled()
     expect(mocks.fetchWorktrees).not.toHaveBeenCalled()
     expect(mocks.onGitRepoReady).not.toHaveBeenCalled()
-    expect(mocks.markOnboardingProjectAdded).toHaveBeenCalledWith('addedFolder')
     expect(mocks.closeModal).toHaveBeenCalled()
   })
 

@@ -4,15 +4,10 @@ import type { TuiAgent } from '../../../shared/tui-agent'
 import { useAppStore } from '../store'
 import { focusTerminalTabSurface } from '@/lib/focus-terminal-tab-surface'
 import {
-  createWebRuntimeSessionBrowserTab,
   createWebRuntimeSessionTerminal,
   isWebRuntimeSessionActive
 } from '@/runtime/web-runtime-session'
 import { launchAgentInNewTab } from '@/lib/launch-agent-in-new-tab'
-import { buildDuplicatedBrowserTabOptions } from '@/lib/duplicate-browser-tab-options'
-import { browserWorkspaceHasRemoteOwner } from '@/runtime/remote-browser-tab-ownership'
-import { getClientCreationActionPolicy } from '@/lib/client-creation-action-policy'
-import { showClientCreationActionError } from '@/lib/client-creation-action-error'
 import { openTabBarEntry, type TabCreateEntryArgs } from './tab-bar/tab-create-entry-action'
 import { translate } from '@/i18n/i18n'
 import { getActiveWorktreeRuntimeEnvironmentId } from './terminal-workspace-model'
@@ -21,9 +16,7 @@ import type { TerminalColdActivationController } from './terminal-cold-activatio
 export function useTerminalCreateActions(controller: TerminalColdActivationController) {
   const {
     activeWorktreeId,
-    createBrowserTab,
     createTab,
-    openNewBrowserTabInActiveWorkspace,
     openNewMarkdownInActiveWorkspace,
     openNewTerminalTabInActiveWorkspace,
     setActiveTabType,
@@ -57,15 +50,13 @@ export function useTerminalCreateActions(controller: TerminalColdActivationContr
       const state = useAppStore.getState()
       const currentTerminals = state.tabsByWorktree[activeWorktreeId] ?? []
       const currentEditors = state.openFiles.filter((file) => file.worktreeId === activeWorktreeId)
-      const currentBrowsers = state.browserTabsByWorktree[activeWorktreeId] ?? []
       const stored = state.tabBarOrderByWorktree[activeWorktreeId]
       const termIds = currentTerminals.map((tab) => tab.id)
       const editorIds = currentEditors.map((file) => file.id)
-      const browserIds = currentBrowsers.map((tab) => tab.id)
-      const validIds = new Set([...termIds, ...editorIds, ...browserIds])
+      const validIds = new Set([...termIds, ...editorIds])
       const base = (stored ?? []).filter((id) => validIds.has(id))
       const inBase = new Set(base)
-      for (const id of [...termIds, ...editorIds, ...browserIds]) {
+      for (const id of [...termIds, ...editorIds]) {
         if (!inBase.has(id)) {
           base.push(id)
           inBase.add(id)
@@ -113,89 +104,9 @@ export function useTerminalCreateActions(controller: TerminalColdActivationContr
     [activeWorktreeId]
   )
 
-  const handleNewBrowserTab = useCallback(() => {
-    if (!activeWorktreeId) {
-      return
-    }
-    const targetGroupId =
-      useAppStore.getState().activeGroupIdByWorktree[activeWorktreeId] ??
-      useAppStore.getState().groupsByWorktree[activeWorktreeId]?.[0]?.id
-    if (targetGroupId) {
-      void openNewBrowserTabInActiveWorkspace(targetGroupId).catch(showClientCreationActionError)
-      return
-    }
-    const state = useAppStore.getState()
-    const browserAvailability = getClientCreationActionPolicy(state, activeWorktreeId)[
-      'managed-browser'
-    ]
-    if (browserAvailability.state !== 'enabled') {
-      toast.error(browserAvailability.reason)
-      return
-    }
-    const defaultUrl = state.browserDefaultUrl ?? 'about:blank'
-    const runtimeEnvironmentId = getActiveWorktreeRuntimeEnvironmentId(activeWorktreeId)
-    if (browserAvailability.provider === 'paired-runtime' && runtimeEnvironmentId) {
-      void createWebRuntimeSessionBrowserTab({
-        worktreeId: activeWorktreeId,
-        environmentId: runtimeEnvironmentId,
-        url: defaultUrl
-      }).catch(showClientCreationActionError)
-      return
-    }
-    createBrowserTab(activeWorktreeId, defaultUrl, {
-      title: translate('auto.components.Terminal.37da0d736f', 'New Browser Tab'),
-      focusAddressBar: true,
-      ...(runtimeEnvironmentId ? { browserRuntimeEnvironmentId: null } : {})
-    })
-  }, [activeWorktreeId, createBrowserTab, openNewBrowserTabInActiveWorkspace])
-
   const handleOpenEntry = useCallback(async (args: TabCreateEntryArgs) => {
     await openTabBarEntry(args)
   }, [])
-
-  const handleDuplicateBrowserTab = useCallback(
-    (browserTabId: string) => {
-      if (!activeWorktreeId) {
-        return
-      }
-      const state = useAppStore.getState()
-      const tabs = state.browserTabsByWorktree[activeWorktreeId] ?? []
-      const source = tabs.find((tab) => tab.id === browserTabId)
-      if (!source) {
-        return
-      }
-      const runtimeEnvironmentId = getActiveWorktreeRuntimeEnvironmentId(activeWorktreeId)
-      const browserAvailability = getClientCreationActionPolicy(state, activeWorktreeId)[
-        'managed-browser'
-      ]
-      if (browserAvailability.state !== 'enabled') {
-        toast.error(browserAvailability.reason)
-        return
-      }
-      if (
-        browserAvailability.provider === 'paired-runtime' &&
-        runtimeEnvironmentId &&
-        browserWorkspaceHasRemoteOwner(state, source.id, runtimeEnvironmentId)
-      ) {
-        void createWebRuntimeSessionBrowserTab({
-          worktreeId: activeWorktreeId,
-          environmentId: runtimeEnvironmentId,
-          url: source.url,
-          profileId: source.sessionProfileId
-        }).catch(showClientCreationActionError)
-        return
-      }
-      try {
-        createBrowserTab(activeWorktreeId, source.url, {
-          ...buildDuplicatedBrowserTabOptions(source),
-          ...(runtimeEnvironmentId ? { browserRuntimeEnvironmentId: null } : {})
-        })
-      } catch (error) {
-        showClientCreationActionError(error)
-      }
-    },
-    [activeWorktreeId, createBrowserTab]
-  )
 
   const handleNewFile = useCallback(async () => {
     if (!activeWorktreeId) {
@@ -213,9 +124,7 @@ export function useTerminalCreateActions(controller: TerminalColdActivationContr
   return {
     handleNewTab,
     handleNewAgentTab,
-    handleNewBrowserTab,
     handleOpenEntry,
-    handleDuplicateBrowserTab,
     handleNewFile
   }
 }

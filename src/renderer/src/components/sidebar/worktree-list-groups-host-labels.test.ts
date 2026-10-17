@@ -64,7 +64,6 @@ describe('buildRows with pinned worktrees', () => {
         [windowsRepo.id, windowsRepo],
         [wslRepo.id, wslRepo]
       ]),
-      null,
       new Set(),
       undefined,
       undefined,
@@ -123,7 +122,6 @@ describe('buildRows with pinned worktrees', () => {
         [repo.id, repo],
         [runtimeRepo.id, runtimeRepo]
       ]),
-      null,
       new Set(),
       undefined,
       undefined,
@@ -174,7 +172,6 @@ describe('buildRows with pinned worktrees', () => {
         [repo.id, repo],
         [sshRepo.id, sshRepo]
       ]),
-      null,
       new Set(),
       undefined,
       undefined,
@@ -230,7 +227,6 @@ describe('buildRows with pinned worktrees', () => {
         [firstRepo.id, firstRepo],
         [secondRepo.id, secondRepo]
       ]),
-      null,
       new Set(),
       undefined,
       undefined,
@@ -271,7 +267,6 @@ describe('buildRows with pinned worktrees', () => {
       'repo',
       [worktree, secondLocalWorktree],
       new Map([[repo.id, repo]]),
-      null,
       new Set(),
       undefined,
       undefined,
@@ -314,7 +309,6 @@ describe('buildRows with pinned worktrees', () => {
         [repo.id, { ...repo, displayName: 'orca' }],
         [remoteRepo.id, { ...remoteRepo, displayName: 'orca' }]
       ]),
-      null,
       new Set()
     )
 
@@ -330,8 +324,6 @@ describe('buildRows with pinned worktrees', () => {
         'repo',
         remoteWorktree,
         new Map([[remoteRepo.id, remoteRepo]]),
-        null,
-        undefined,
         undefined,
         {
           projects: [project],

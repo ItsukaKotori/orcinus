@@ -162,16 +162,8 @@ vi.mock('./FolderWorkspaceWorktreesPanel', () => ({
   default: () => <div data-folder-workspace-worktrees-panel />
 }))
 
-vi.mock('./FolderWorkspacePrChecksPanel', () => ({
-  default: () => <div data-folder-workspace-pr-checks-panel />
-}))
-
 vi.mock('./SourceControl', () => ({
   default: () => <div data-source-control />
-}))
-
-vi.mock('./ChecksPanel', () => ({
-  default: () => <div data-checks-panel />
 }))
 
 vi.mock('./PortsPanel', () => ({
@@ -249,7 +241,6 @@ describe('rendered right sidebar titlebar drag regions', () => {
 
     expectNoDrag(buttonOpeningTag(markup, 'Explorer'))
     expectNoDrag(buttonOpeningTag(markup, 'Source Control'))
-    expectNoDrag(buttonOpeningTag(markup, 'Checks'))
     expect(buttonOpeningTag(markup, 'Toggle right sidebar')).toContain('sidebar-toggle')
     expect(markup).toContain(RIGHT_SIDEBAR_HEADER_NO_DRAG_CLASS_NAME)
   })
@@ -282,9 +273,9 @@ describe('rendered right sidebar titlebar drag regions', () => {
       <TopActivityOverflowMenu
         items={[
           {
-            id: 'checks',
-            icon: () => <span data-checks-icon />,
-            title: 'Checks',
+            id: 'vault',
+            icon: () => <span data-vault-icon />,
+            title: 'Agents',
             shortcut: 'shortcut'
           }
         ]}
@@ -310,7 +301,6 @@ describe('rendered right sidebar titlebar drag regions', () => {
 
     expectNoDrag(buttonOpeningTag(markup, 'Explorer'))
     expectNoDrag(buttonOpeningTag(markup, 'Source Control'))
-    expectNoDrag(buttonOpeningTag(markup, 'Checks'))
     expect(buttonOpeningTag(markup, 'Toggle right sidebar')).toContain('sidebar-toggle')
   })
 
@@ -324,9 +314,7 @@ describe('rendered right sidebar titlebar drag regions', () => {
     expect(markup).toContain('aria-label="Agents')
     expect(markup).not.toContain('aria-label="Search')
     expect(markup).toContain('aria-label="Attached worktrees')
-    expect(markup).toContain('aria-label="PR Checks')
     expect(markup).not.toContain('aria-label="Source Control')
-    expect(markup).not.toContain('aria-label="Checks')
   })
 
   it('renders a visible fallback without overwriting a hidden folder-only tab', () => {
@@ -341,19 +329,7 @@ describe('rendered right sidebar titlebar drag regions', () => {
     expect(mockAppState.setRightSidebarTab).not.toHaveBeenCalled()
   })
 
-  it('renders a visible fallback without overwriting a hidden PR Checks tab', () => {
-    mockAppState.rightSidebarTab = 'pr-checks'
-    mockAppState.activeWorktreeId = 'worktree-1'
-    mockAppState.activeRepo = { id: 'repo-1', kind: 'git', connectionId: null }
-
-    const markup = renderToStaticMarkup(<RightSidebar />)
-
-    expect(markup).toContain('data-file-explorer')
-    expect(markup).not.toContain('data-folder-workspace-pr-checks-panel')
-    expect(mockAppState.setRightSidebarTab).not.toHaveBeenCalled()
-  })
-
-  it('keeps remembered folder PR Checks visible when the global route falls back to Explorer', async () => {
+  it('keeps remembered folder Attached worktrees visible when the global route falls back to Explorer', async () => {
     mockAppState.activeWorktreeId = 'folder:folder-1'
     mockAppState.activeRepo = null
     const container = document.createElement('div')
@@ -365,18 +341,18 @@ describe('rendered right sidebar titlebar drag regions', () => {
 
     await act(async () => {
       container
-        .querySelector<HTMLButtonElement>('[aria-label^="PR Checks"]')
+        .querySelector<HTMLButtonElement>('[aria-label^="Attached worktrees"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
 
-    expect(container.innerHTML).toContain('data-folder-workspace-pr-checks-panel')
+    expect(container.innerHTML).toContain('data-folder-workspace-worktrees-panel')
 
     await act(async () => {
       mockAppState.rightSidebarTab = 'explorer'
       notifyAppStore()
     })
 
-    expect(container.innerHTML).toContain('data-folder-workspace-pr-checks-panel')
+    expect(container.innerHTML).toContain('data-folder-workspace-worktrees-panel')
     expect(container.innerHTML).not.toContain('data-file-explorer')
 
     await act(async () => {
@@ -388,12 +364,12 @@ describe('rendered right sidebar titlebar drag regions', () => {
     expect(container.innerHTML).toContain('data-file-explorer')
 
     await act(async () => {
-      mockAppState.rightSidebarTab = 'pr-checks'
+      mockAppState.rightSidebarTab = 'source-control'
       notifyAppStore()
     })
 
     expect(container.innerHTML).toContain('data-file-explorer')
-    expect(container.innerHTML).not.toContain('data-folder-workspace-pr-checks-panel')
+    expect(container.innerHTML).not.toContain('data-folder-workspace-worktrees-panel')
 
     await act(async () => {
       root.unmount()
@@ -407,7 +383,6 @@ describe('rendered right sidebar titlebar drag regions', () => {
 
     expect(markup).not.toContain('data-file-explorer')
     expect(markup).not.toContain('data-source-control')
-    expect(markup).not.toContain('data-checks-panel')
     expect(markup).not.toContain('data-ports-panel')
   })
 })

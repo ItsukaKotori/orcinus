@@ -56,7 +56,6 @@ export function EditorPanelHeaderPath({
   const skipMenuFocusRestoreRef = useRef(false)
   const headerCopyState = getEditorHeaderCopyState(activeFile)
   const canCopyHeaderPath = headerCopyState.copyText !== null
-  const isVirtualEditorTab = activeFile.mode === 'check-details'
   const markdownPreviewShortcutLabel = useShortcutLabel('editor.markdownPreview')
   const {
     canRename,
@@ -166,30 +165,28 @@ export function EditorPanelHeaderPath({
             {translate('auto.components.editor.EditorPanelHeader.84cdc0794b', 'Rename')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          {!isVirtualEditorTab && (
-            <>
-              <DropdownMenuItem
-                onSelect={() => {
-                  void window.api.ui.writeClipboardText(activeFile.filePath)
-                }}
-              >
-                <Copy className="w-3.5 h-3.5 mr-1.5" />
-                {translate('auto.components.editor.EditorPanelHeader.7c08a1f990', 'Copy Path')}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => {
-                  void window.api.ui.writeClipboardText(activeFile.relativePath)
-                }}
-              >
-                <Copy className="w-3.5 h-3.5 mr-1.5" />
-                {translate(
-                  'auto.components.editor.EditorPanelHeader.269ce4842b',
-                  'Copy Relative Path'
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-            </>
-          )}
+          <>
+            <DropdownMenuItem
+              onSelect={() => {
+                void window.api.ui.writeClipboardText(activeFile.filePath)
+              }}
+            >
+              <Copy className="w-3.5 h-3.5 mr-1.5" />
+              {translate('auto.components.editor.EditorPanelHeader.7c08a1f990', 'Copy Path')}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => {
+                void window.api.ui.writeClipboardText(activeFile.relativePath)
+              }}
+            >
+              <Copy className="w-3.5 h-3.5 mr-1.5" />
+              {translate(
+                'auto.components.editor.EditorPanelHeader.269ce4842b',
+                'Copy Relative Path'
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
           {canShowMarkdownPreview && (
             <DropdownMenuItem onSelect={onOpenMarkdownPreview}>
               <Eye className="w-3.5 h-3.5 mr-1.5" />
@@ -201,12 +198,10 @@ export function EditorPanelHeaderPath({
             </DropdownMenuItem>
           )}
           {canShowMarkdownPreview && <DropdownMenuSeparator />}
-          {!isVirtualEditorTab && (
-            <DropdownMenuItem onSelect={onOpenContainingFolder}>
-              <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
-              {getRevealLabel()}
-            </DropdownMenuItem>
-          )}
+          <DropdownMenuItem onSelect={onOpenContainingFolder}>
+            <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+            {getRevealLabel()}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

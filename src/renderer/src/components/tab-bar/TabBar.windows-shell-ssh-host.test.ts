@@ -102,7 +102,6 @@ describe('TabBar PowerShell launch wiring', () => {
       onCloseToLeft: () => {},
       onNewTerminalTab: () => {},
       onNewTerminalWithShell,
-      onNewBrowserTab: () => {},
       onSetCustomTitle: () => {},
       onSetTabColor: () => {},
       onTogglePaneExpand: () => {}
@@ -172,7 +171,6 @@ describe('TabBar PowerShell launch wiring', () => {
       onCloseToLeft: () => {},
       onNewTerminalTab: () => {},
       onNewTerminalWithShell: vi.fn(),
-      onNewBrowserTab: () => {},
       onSetCustomTitle: () => {},
       onSetTabColor: () => {},
       onTogglePaneExpand: () => {}

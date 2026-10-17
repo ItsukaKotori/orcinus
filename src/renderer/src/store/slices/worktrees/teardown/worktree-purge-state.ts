@@ -2,7 +2,6 @@ import type { AppState } from '../../../types'
 import type { WorktreePurgeTarget, WorktreePurgeTargets } from '../../worktree-helpers'
 import { forgetHugeRepoWarningDismissalsForWorktrees } from '@/lib/source-control-huge-repo-warning-dismissals'
 import { parseWorkspaceKey } from '../../../../../../shared/workspace-scope'
-import { pruneHostedReviewLinkMutationGenerations } from '../metadata/hosted-review-link-mutation'
 import { collectWorktreePurgeDoomedIds } from './worktree-purge-doomed-ids'
 import { createWorktreePurgeOmitters } from './worktree-purge-omitters'
 import { removeDeleteStatesForWorktreeIds } from './worktree-delete-state'
@@ -18,7 +17,6 @@ export function buildWorktreePurgeState(
     typeof target === 'string' ? { id: target } : target
   )
   const worktreeIdSet = new Set(normalizedTargets.map((target) => target.id))
-  pruneHostedReviewLinkMutationGenerations(worktreeIdSet)
   // Why: ids are repo::path, so a worktree recreated at the same path must not inherit a stale sleep.
   for (const id of worktreeIdSet) {
     forgetWorktreeSleepIntent(id)
@@ -36,8 +34,6 @@ export function buildWorktreePurgeState(
     omitRetiredDirectSshLedgerByTabId,
     omitByPtyId,
     omitByPaneKeyTabPrefix,
-    omitByBrowserWorkspaceId,
-    omitByPageId,
     omitByFileId
   } = createWorktreePurgeOmitters(s, worktreeIdSet, doomed)
 
@@ -126,22 +122,6 @@ export function buildWorktreePurgeState(
     remoteBranchConflictByWorktreeId: omitByWorktree(s.remoteBranchConflictByWorktreeId),
     // File search
     fileSearchStateByWorktree: omitByWorktree(s.fileSearchStateByWorktree),
-    // Browser state
-    browserTabsByWorktree: omitByWorktree(s.browserTabsByWorktree),
-    browserPagesByWorkspace: omitByBrowserWorkspaceId(s.browserPagesByWorkspace),
-    recentlyClosedBrowserTabsByWorktree: omitByWorktree(s.recentlyClosedBrowserTabsByWorktree),
-    activeBrowserTabIdByWorktree: omitByWorktree(s.activeBrowserTabIdByWorktree),
-    // Why: keyed by page/workspace id, only cleaned by closeBrowserTab on the single-removal path; the bulk reconcile missed them, orphaning an entry per page of externally-removed worktrees.
-    browserAnnotationsByPageId: omitByPageId(s.browserAnnotationsByPageId),
-    remoteBrowserPageHandlesByPageId: omitByPageId(s.remoteBrowserPageHandlesByPageId),
-    pendingAddressBarFocusByPageId: omitByPageId(s.pendingAddressBarFocusByPageId),
-    // createBrowserTab writes both the workspace id and the page id into this map.
-    pendingAddressBarFocusByTabId: omitByPageId(
-      omitByBrowserWorkspaceId(s.pendingAddressBarFocusByTabId)
-    ),
-    recentlyClosedBrowserPagesByWorkspace: omitByBrowserWorkspaceId(
-      s.recentlyClosedBrowserPagesByWorkspace
-    ),
     // Editor state
     activeFileIdByWorktree: omitByWorktree(s.activeFileIdByWorktree),
     activeTabTypeByWorktree: omitByWorktree(s.activeTabTypeByWorktree),
@@ -209,7 +189,6 @@ export function buildWorktreePurgeState(
         : s.activeWorkspaceKey
     })(),
     activeFileId: activeFileCleared ? null : s.activeFileId,
-    activeBrowserTabId: removedActive ? null : s.activeBrowserTabId,
     activeTabId: activeTabCleared ? null : s.activeTabId,
     activeTabType: removedActive || activeFileCleared ? 'terminal' : s.activeTabType
   }

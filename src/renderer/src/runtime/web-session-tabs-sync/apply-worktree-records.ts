@@ -1,9 +1,9 @@
-import type { applyBrowserRecordUpdates } from './apply-browser-records'
+import type { applyTerminalRecordUpdates } from './apply-terminal-records'
 import { withWorktreeEntry } from './state-equality-core'
 import { sameGroups, sameUnifiedTabs } from './state-equality-files'
-import { sameBrowserTabs as sameBrowserWorkspaces, sameTerminalTabs } from './state-equality-tabs'
+import { sameTerminalTabs } from './state-equality-tabs'
 
-type WorktreeRecordContext = ReturnType<typeof applyBrowserRecordUpdates>
+type WorktreeRecordContext = ReturnType<typeof applyTerminalRecordUpdates>
 
 /** Commit worktree-scoped tab collections and retain client-owned placement metadata. */
 export function applyWorktreeRecordUpdates(context: WorktreeRecordContext) {
@@ -12,7 +12,6 @@ export function applyWorktreeRecordUpdates(context: WorktreeRecordContext) {
     batchContext,
     worktreeId,
     nextTerminalTabs,
-    nextBrowserTabs,
     nextUnifiedTabs,
     nextGroups,
     clientOwnedPlacement,
@@ -28,14 +27,6 @@ export function applyWorktreeRecordUpdates(context: WorktreeRecordContext) {
     worktreeId,
     nextTerminalTabs,
     sameTerminalTabs,
-    batchContext
-  )
-  const nextBrowserTabsByWorktree = withWorktreeEntry(
-    state,
-    'browserTabsByWorktree',
-    worktreeId,
-    nextBrowserTabs,
-    sameBrowserWorkspaces,
     batchContext
   )
 
@@ -80,7 +71,6 @@ export function applyWorktreeRecordUpdates(context: WorktreeRecordContext) {
   return {
     ...context,
     nextTabsByWorktree,
-    nextBrowserTabsByWorktree,
     placedUnifiedTabs,
     nextUnifiedTabsByWorktree,
     nextGroupsByWorktree,

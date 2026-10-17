@@ -19,7 +19,6 @@ export type RuntimeMobileSessionSyncKey = {
   activeTabType: AppState['activeTabType']
   activeTabTypeByWorktree: AppState['activeTabTypeByWorktree']
   activeTabId: AppState['activeTabId']
-  activeBrowserTabIdByWorktree: AppState['activeBrowserTabIdByWorktree']
   agentStatusEpoch: number
   agentStatusProjection: string
   generatedTabTitlesEnabled: boolean
@@ -27,7 +26,6 @@ export type RuntimeMobileSessionSyncKey = {
   terminalThemeProjection: string
   tabsProjection: string
   openFilesProjection: string
-  browserProjection: string
   editorDraftsProjection: string
 }
 
@@ -69,26 +67,6 @@ export type OpenFilesProjectionCache = {
   entries: Map<string, OpenFilesProjectionCacheEntry>
   projection: string
 }
-export type BrowserWorkspacesProjectionCacheEntry = {
-  workspaces: NonNullable<AppState['browserTabsByWorktree'][string]>
-  keyJson: string
-  projection: string
-}
-export type BrowserWorkspacesProjectionCache = {
-  source: AppState['browserTabsByWorktree']
-  entries: Map<string, BrowserWorkspacesProjectionCacheEntry>
-  projection: string
-}
-export type BrowserPagesProjectionCacheEntry = {
-  pages: NonNullable<AppState['browserPagesByWorkspace'][string]>
-  keyJson: string
-  projection: string
-}
-export type BrowserPagesProjectionCache = {
-  source: AppState['browserPagesByWorkspace']
-  entries: Map<string, BrowserPagesProjectionCacheEntry>
-  projection: string
-}
 /** One dirty file's FNV draft stamp plus its pre-serialized projection fragment. */
 export type EditorDraftHashCacheEntry = {
   content: string
@@ -117,7 +95,6 @@ export type MobileSessionAgentStatusByWorktree = ReadonlyMap<
 >
 /** Slices shared by every worktree in one publication; derived from `AppState` exactly once. */
 export type MobileSessionPublicationInputs = {
-  browserTabsByWorktree: AppState['browserTabsByWorktree']
   openFileIndexes: OpenFileIndexes
   editorDraftVersionByFileId: ReadonlyMap<string, string>
   agentStatusByWorktreeId: MobileSessionAgentStatusByWorktree
@@ -151,7 +128,6 @@ export type MobileSessionWorktreeInputs = {
   worktreeId: string
   worktreeInstanceId: string | undefined
   terminalTabs: AppState['tabsByWorktree'][string]
-  browserWorkspaces: AppState['browserTabsByWorktree'][string]
   unifiedTabs: AppState['unifiedTabsByWorktree'][string]
   groups: AppState['groupsByWorktree'][string]
   tabBarOrder: AppState['tabBarOrderByWorktree'][string] | undefined
@@ -163,18 +139,9 @@ export type MobileSessionWorktreeInputs = {
   paneTitlesByTabId: ReadonlyMap<string, AppState['runtimePaneTitlesByTabId'][string]>
   agentStatusByPaneKey: ReadonlyMap<string, AppState['agentStatusByPaneKey'][string]>
   editorDraftVersionByFileId: ReadonlyMap<string, string>
-  pagesByBrowserWorkspaceId: ReadonlyMap<
-    string,
-    NonNullable<AppState['browserPagesByWorkspace']>[string]
-  >
-  certificateFailureByBrowserPageId: ReadonlyMap<
-    string,
-    NonNullable<AppState['browserCertificateFailuresByPageId']>[string]
-  >
   activeEditorFileId: string | null
   activeEditorTabType: AppState['activeTabType'] | null
   activeTerminalTabId: string | null
-  activeBrowserWorkspaceId: string | null
   generatedTitlesEnabled: boolean
   terminalTheme: RuntimeMobileTerminalTheme | undefined
   mountedSurfaceCaptureByTabId: ReadonlyMap<string, MountedTerminalSurfaceCapture>

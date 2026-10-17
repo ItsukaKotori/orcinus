@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { ArrowDown, ArrowUp, Columns2, Eye, FileText, ListTree, Rows2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Columns2, FileText, ListTree, Rows2 } from 'lucide-react'
 import { useAppStore } from '@/store'
 import { selectWorktreeDiffCommentsOrEmpty } from '@/store/worktree-diff-comments-selector'
 import type { OpenFile } from '@/store/slices/editor'
@@ -17,9 +17,6 @@ import { EditorPanelHeaderPath } from './EditorPanelHeaderPath'
 import { useDiffNavigation } from './diff-navigation-context'
 import { useShortcutKeyDetails } from '@/hooks/useShortcutLabel'
 import { ShortcutKeyCombo } from '@/components/ShortcutKeyCombo'
-import type { ArtifactWriteRequest } from '../../../../shared/artifacts'
-import { ArtifactPublishButton } from '@/components/artifacts/ArtifactPublishButton'
-import { markdownArtifactSourceKey } from './markdown-artifact-upload'
 
 type EditorPanelHeaderProps = {
   activeFile: OpenFile
@@ -32,7 +29,6 @@ type EditorPanelHeaderProps = {
   hasEditorToggle: boolean
   availableEditorToggleModes: readonly EditorToggleValue[]
   effectiveToggleValue: EditorToggleValue
-  canOpenPreviewToSide: boolean
   canShowMarkdownPreview: boolean
   canShowMarkdownTableOfContents: boolean
   isMarkdownTableOfContentsDisabled: boolean
@@ -45,7 +41,6 @@ type EditorPanelHeaderProps = {
   openFileState: EditorHeaderOpenFileState
   onCopyPath: () => void
   onOpenDiffTargetFile: (preferredMarkdownViewMode?: 'rich') => void
-  onOpenPreviewToSide: () => void
   onOpenMarkdownPreview: () => void
   onOpenContainingFolder: () => void
   onToggleSideBySide: () => void
@@ -53,7 +48,6 @@ type EditorPanelHeaderProps = {
   onToggleMarkdownTableOfContents: () => void
   onToggleMarkdownFrontmatter: () => void
   onExportMarkdownToPdf: () => void
-  createMarkdownArtifactRequest?: () => Promise<ArtifactWriteRequest>
 }
 
 export function EditorPanelHeader({
@@ -67,7 +61,6 @@ export function EditorPanelHeader({
   hasEditorToggle,
   availableEditorToggleModes,
   effectiveToggleValue,
-  canOpenPreviewToSide,
   canShowMarkdownPreview,
   canShowMarkdownTableOfContents,
   isMarkdownTableOfContentsDisabled,
@@ -80,15 +73,13 @@ export function EditorPanelHeader({
   openFileState,
   onCopyPath,
   onOpenDiffTargetFile,
-  onOpenPreviewToSide,
   onOpenMarkdownPreview,
   onOpenContainingFolder,
   onToggleSideBySide,
   onEditorToggleChange,
   onToggleMarkdownTableOfContents,
   onToggleMarkdownFrontmatter,
-  onExportMarkdownToPdf,
-  createMarkdownArtifactRequest
+  onExportMarkdownToPdf
 }: EditorPanelHeaderProps): React.JSX.Element {
   const diffComments = useAppStore((s) =>
     selectWorktreeDiffCommentsOrEmpty(s, activeFile.worktreeId)
@@ -117,31 +108,6 @@ export function EditorPanelHeader({
         onOpenMarkdownPreview={onOpenMarkdownPreview}
         onOpenContainingFolder={onOpenContainingFolder}
       />
-      {canOpenPreviewToSide && (
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                onClick={onOpenPreviewToSide}
-                aria-label={translate(
-                  'auto.components.editor.EditorPanelHeader.fb8331694e',
-                  'Open Preview to the Side'
-                )}
-              >
-                <Eye size={14} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" sideOffset={4}>
-              {translate(
-                'auto.components.editor.EditorPanelHeader.fb8331694e',
-                'Open Preview to the Side'
-              )}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
       {isSingleDiff && (
         <TooltipProvider delayDuration={300}>
           <Tooltip>
@@ -317,13 +283,6 @@ export function EditorPanelHeader({
           </Tooltip>
         </TooltipProvider>
       )}
-      {isMarkdown && !isDiffSurface && createMarkdownArtifactRequest ? (
-        <ArtifactPublishButton
-          sourceKey={markdownArtifactSourceKey(activeFile)}
-          className="size-6 [&_svg]:size-3.5!"
-          createRequest={createMarkdownArtifactRequest}
-        />
-      ) : null}
       <EditorPanelMarkdownActionsMenu
         isMarkdown={isMarkdown}
         isDiffSurface={isDiffSurface}

@@ -8,7 +8,11 @@ import {
 } from './tab-create-entry-action'
 import { findMatchingTabAgentLaunchOptions } from './tab-agent-launch-options'
 import { findMatchingTabCreateMenuOptions } from './tab-create-menu-options'
-import { getActiveOptionId, type ActiveOption } from './tab-create-entry-active-option'
+import {
+  getActiveOptionId,
+  isActiveEntryOption,
+  type ActiveOption
+} from './tab-create-entry-active-option'
 import {
   EntryActionRow,
   EntryStatusRow,
@@ -16,16 +20,12 @@ import {
   resultOptionDomId
 } from './TabBarCreateEntryRow'
 import { dropFileEntriesCoveredByTabResults } from './open-tab-entry-dedupe'
-import { insertHistoryRowsBelowFileMatches } from './tab-create-entry-history-placement'
-import { useOmniboxBrowserHistory } from './use-omnibox-browser-history'
 import { useTabEntryMenuReturnFocus } from './use-tab-entry-menu-return-focus'
 import { activateOpenTabSearchResult } from './open-tab-selection-routing'
 import { useTabCreateEntrySearchResults } from './use-tab-create-entry-search-results'
-import { DEFAULT_SEARCH_ENGINE } from '../../../../shared/browser-url'
 import { getRendererAppPlatform } from '@/lib/renderer-app-platform'
 import { useAppStore } from '@/store'
 import { isQuickOpenQueryTooLarge } from '../quick-open-search'
-import { parseForcedSearchQuery } from './tab-create-entry-forced-search'
 import { useNetworkSafeTabEntrySelection } from './tab-create-entry-network-selection'
 import { focusTabEntryMenuItemAtEdge } from './tab-create-entry-keyboard-focus'
 import {
@@ -70,9 +70,7 @@ function TabBarCreateEntrySession({
     []
   )
   const fileList = useRuntimeFileListForWorktree({ enabled: menuOpen, worktreeId })
-  const rawQueryOversized = isQuickOpenQueryTooLarge(query)
-  const forcedSearch = parseForcedSearchQuery(query)
-  const terminalQueryMode = rawQueryOversized || forcedSearch.forced
+  const terminalQueryMode = isQuickOpenQueryTooLarge(query)
   const tabResults = useTabCreateEntrySearchResults({
     enabled: menuOpen && !terminalQueryMode,
     query,
@@ -95,9 +93,6 @@ function TabBarCreateEntrySession({
     menuOpen ? (state.getKnownWorktreeById(worktreeId)?.path ?? null) : null
   )
   const localPlatform = getRendererAppPlatform() === 'win32' ? 'windows' : 'posix'
-  const searchEngine = useAppStore(
-    (state) => state.browserDefaultSearchEngine ?? DEFAULT_SEARCH_ENGINE
-  )
 
   useTabEntryMenuReturnFocus(inputRef, menuOpen)
 
@@ -118,8 +113,7 @@ function TabBarCreateEntrySession({
     const entryOptions = dropFileEntriesCoveredByTabResults(
       getTabEntryOptions(query, fileList, 4, {
         allowAbsolutePaths,
-        localPlatform,
-        searchEngine
+        localPlatform
       }),
       tabResults,
       worktreePath
@@ -135,15 +129,9 @@ function TabBarCreateEntrySession({
     localPlatform,
     matchingMenuOptions.length,
     query,
-    searchEngine,
     tabResults,
     worktreePath
   ])
-  const historyRows = useOmniboxBrowserHistory({
-    enabled: menuOpen && !terminalQueryMode,
-    query,
-    tabResults
-  })
   const matchingAgentOptions = useMemo(
     () =>
       terminalQueryMode
@@ -167,13 +155,12 @@ function TabBarCreateEntrySession({
       kind: 'agent' as const,
       option
     })),
-    ...insertHistoryRowsBelowFileMatches(options, historyRows)
+    ...options
+      .filter(isActiveEntryOption)
+      .map((option) => ({ kind: 'entry' as const, option }))
   ]
   const { activeSelectedIndex, selectedActiveOption } = useNetworkSafeTabEntrySelection({
     activeOptions,
-    fileIndexFailed: Boolean(fileList.loadError),
-    fileIndexReady: !fileList.loading && !fileList.loadError,
-    forcedSearch: forcedSearch.forced,
     menuOpen,
     pinnedOptionId,
     query
@@ -231,12 +218,7 @@ function TabBarCreateEntrySession({
       onDidOpenEntry?.()
       return
     }
-    // A history row is a navigation, so it rides the entry-open path the typed-URL
-    // row already uses — routing, worktree targeting and SSH resolution included.
-    const classification: TabEntryActionClassification =
-      selectedOption.kind === 'history'
-        ? { kind: 'explicit-url', url: selectedOption.option.entry.url }
-        : selectedOption.option.classification
+    const classification: TabEntryActionClassification = selectedOption.option.classification
     setPending(true)
     setError(null)
     const submissionId = ++submissionIdRef.current

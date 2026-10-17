@@ -40,8 +40,7 @@ function selectionState(tab: Tab | null): SelectionState {
     layoutByWorktree: {},
     activeTabIdByWorktree: { [workspace]: 'remembered-terminal' },
     activeFileIdByWorktree: { [workspace]: 'remembered-file' },
-    activeBrowserTabIdByWorktree: { [workspace]: 'remembered-browser' },
-    activeTabTypeByWorktree: { [workspace]: 'browser' },
+    activeTabTypeByWorktree: { [workspace]: 'editor' },
     tabsByWorktree: {
       [workspace]: [
         {
@@ -52,22 +51,6 @@ function selectionState(tab: Tab | null): SelectionState {
           customTitle: null,
           color: null,
           sortOrder: 0,
-          createdAt: 1
-        }
-      ]
-    },
-    browserTabsByWorktree: {
-      [workspace]: [
-        {
-          id: 'remembered-browser',
-          worktreeId: workspace,
-          url: 'about:blank',
-          title: 'Browser',
-          loading: false,
-          faviconUrl: null,
-          canGoBack: false,
-          canGoForward: false,
-          loadError: null,
           createdAt: 1
         }
       ]
@@ -103,7 +86,6 @@ describe('tab selection and hydration ownership', () => {
     ['diff', 'editor'],
     ['conflict-review', 'editor'],
     ['check-details', 'editor'],
-    ['browser', 'browser'],
     ['agent-session', 'agent-session']
   ] as const)(
     'projects %s selection while retaining other remembered surfaces',
@@ -112,15 +94,14 @@ describe('tab selection and hydration ownership', () => {
       const expected = {
         activeTabType: visible,
         activeTabId: kind === 'terminal' ? 'selected-entity' : 'remembered-terminal',
-        activeFileId: visible === 'editor' ? 'selected-entity' : 'remembered-file',
-        activeBrowserTabId: kind === 'browser' ? 'selected-entity' : 'remembered-browser'
+        activeFileId: visible === 'editor' ? 'selected-entity' : 'remembered-file'
       }
       expect(deriveActiveSurfaceForWorktree(state, workspace)).toEqual(expected)
       expect(activate(state)).toEqual(expected)
     }
   )
 
-  it('keeps empty groups authoritative over remembered browser/editor surfaces', () => {
+  it('keeps empty groups authoritative over remembered editor surfaces', () => {
     const state = selectionState(null)
     expect(activate(state).activeTabType).toBe('terminal')
     expect(deriveActiveSurfaceForWorktree(state, workspace).activeTabType).toBe('terminal')
@@ -139,11 +120,11 @@ describe('tab selection and hydration ownership', () => {
     state.groupsByWorktree = {}
     state.activeTabTypeByWorktree[workspace] = 'terminal'
     expect(activate(state).activeTabType).toBe('terminal')
-    expect(deriveActiveSurfaceForWorktree(state, workspace).activeTabType).toBe('browser')
+    expect(deriveActiveSurfaceForWorktree(state, workspace).activeTabType).toBe('editor')
   })
 
   it('does not select a preferred tab owned by another group', () => {
-    const state = selectionState(selectedTab('browser'))
+    const state = selectionState(selectedTab('terminal'))
     state.unifiedTabsByWorktree[workspace].push({
       ...selectedTab('editor'),
       id: 'foreign',
@@ -171,7 +152,7 @@ describe('tab selection and hydration ownership', () => {
   })
 
   it('honors a preferred tab in the selected group without mutating selection', () => {
-    const state = selectionState(selectedTab('browser'))
+    const state = selectionState(selectedTab('terminal'))
     const preferred = { ...selectedTab('agent-session'), id: 'preferred' }
     state.unifiedTabsByWorktree[workspace].push(preferred)
     state.groupsByWorktree[workspace][0].tabOrder.push(preferred.id)
@@ -184,10 +165,9 @@ describe('tab selection and hydration ownership', () => {
   it.each([
     ['terminal', 'terminal', 'remembered-file'],
     ['editor', 'editor', 'remembered-file'],
-    ['browser', 'browser', 'remembered-file'],
-    // Why: nothing renders a remembered agent-session once its tab is gone, so the browser
+    // Why: nothing renders a remembered agent-session once its tab is gone, so the open-file
     // surface takes over and must not leave the remembered file selected underneath it.
-    ['agent-session', 'browser', null]
+    ['agent-session', 'editor', 'remembered-file']
   ] as const)(
     'projects legacy %s memory as %s when unified groups are absent',
     (activeTabType, visible, activeFileId) => {
@@ -197,8 +177,7 @@ describe('tab selection and hydration ownership', () => {
       expect(activate(state)).toEqual({
         activeTabType: visible,
         activeTabId: 'remembered-terminal',
-        activeFileId,
-        activeBrowserTabId: 'remembered-browser'
+        activeFileId
       })
     }
   )
@@ -215,7 +194,7 @@ describe('tab selection and hydration ownership', () => {
       unifiedTabs: state.unifiedTabsByWorktree,
       tabGroups: state.groupsByWorktree,
       activeGroupIdByWorktree: state.activeGroupIdByWorktree,
-      activeTabTypeByWorktree: { [workspace]: 'browser' as const },
+      activeTabTypeByWorktree: { [workspace]: 'editor' as const },
       activeTabIdByWorktree: state.activeTabIdByWorktree
     }
     const before = structuredClone(session)

@@ -8,7 +8,6 @@ import type { SortOption } from './resource-usage-resource-tree'
 import { folderWorkspaceToWorktree } from '../../../../shared/folder-workspace-worktree'
 import {
   getResourceUsageAllWorktrees,
-  getResourceUsageBrowserTabsByWorktree,
   getResourceUsageDeferredSshSessionIdsByTabId,
   getResourceUsageFolderWorkspaces,
   getResourceUsageProjectGroups,
@@ -78,7 +77,6 @@ export function useResourceUsageStatusController() {
     [gitWorktrees, folders]
   )
   const tabsByWorktree = useAppStore((s) => getResourceUsageTabsByWorktree(s, open))
-  const browserTabsByWorktree = useAppStore((s) => getResourceUsageBrowserTabsByWorktree(s, open))
   // Why: full binding maps stay behind open sentinels so unchanged counts don't rerender the closed segment.
   const ptyIdsByTabId = useAppStore((s) => getResourceUsagePtyIdsByTabId(s, open))
   const terminalLayoutsByTabId = useAppStore((s) => getResourceUsageTerminalLayoutsByTabId(s, open))
@@ -196,7 +194,6 @@ export function useResourceUsageStatusController() {
     repos,
     allWorktrees,
     projectGroups,
-    browserTabsByWorktree,
     workspaceSessionReady,
     sessionCount: sessionInventory.count,
     sessionsError,

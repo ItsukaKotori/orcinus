@@ -1,4 +1,3 @@
-import type { BrowserPaletteSearchResult } from '@/lib/browser-palette-search'
 import type { PaletteSearchResult } from '@/lib/worktree-palette-search'
 import type { WorkspaceTabPaletteSearchResult } from '@/lib/workspace-tab-palette-search'
 import type {
@@ -20,12 +19,6 @@ export type WorktreePaletteItem = {
   type: 'worktree'
   match: PaletteSearchResult
   worktree: Worktree
-}
-
-export type BrowserPaletteItem = {
-  id: string
-  type: 'browser-page'
-  result: BrowserPaletteSearchResult
 }
 
 export type WorkspaceTabPaletteItem = {
@@ -69,11 +62,10 @@ export type PaletteItem =
   | ProjectTargetPaletteItem
   | SettingsPaletteItem
   | QuickActionPaletteItem
-  | BrowserPaletteItem
   | WorkspaceTabPaletteItem
 
 export type PaletteListEntry = PaletteItem | CreateWorktreePaletteItem | SectionHeader | HintRow
-export type OpenTabPaletteItem = BrowserPaletteItem | WorkspaceTabPaletteItem
+export type OpenTabPaletteItem = WorkspaceTabPaletteItem
 
 export type OpenTabRecentRow = {
   item: OpenTabPaletteItem

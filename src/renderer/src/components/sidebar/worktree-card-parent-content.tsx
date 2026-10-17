@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils'
 import { WorktreeCardHeader } from './worktree-card-header'
 import { WorktreeCardMetaRow } from './worktree-card-meta-row'
 import { WorktreeCardDetailsHover } from './WorktreeCardMeta'
-import { WorktreeCardPortsDetails } from './WorktreeCardPorts'
 import type { WorktreeCardPresentation } from './worktree-card-presentation'
 import { WorktreeCardSecondaryRows } from './worktree-card-secondary-rows'
 import { WorktreeCardStatusSlot } from './WorktreeCardStatusSlot'
@@ -26,33 +25,15 @@ export function WorktreeCardParentContent({
     unreadTooltip,
     stopQuickActionPointerPropagation,
     handleToggleUnreadQuick,
-    statusLaneReview,
     branchIdentityDisplay,
     showInlineAgentList,
     titleRenaming,
     isDeleting,
-    hoverIssue,
-    hoverLinearIssue,
-    hoverJiraIssue,
-    hoverReview,
     hoverComment,
-    metaAutomationProvenance,
     metaCliProvenance,
-    workspacePorts,
     detailsHoverControl,
     handleRenameTitle,
-    handleEditIssue,
-    handleEditComment,
-    handleOpenGitHubIssueInOrca,
-    handleOpenIssueInBrowser,
-    linearIssue,
-    handleOpenLinearIssueInOrca,
-    handleOpenReviewInOrca,
-    handleOpenReviewInBrowser,
-    handleOpenAutomation,
-    handleOpenAutomationRun,
-    canUnlinkReview,
-    handleUnlinkReview
+    handleEditComment
   } = card
   const {
     titleOnlyCard,
@@ -77,40 +58,15 @@ export function WorktreeCardParentContent({
   const identityContentWithHover =
     hasHoverDetails && !titleRenaming ? (
       <WorktreeCardDetailsHover
-        issue={hoverIssue}
-        linearIssue={hoverLinearIssue}
-        jiraIssue={hoverJiraIssue}
-        review={hoverReview}
         comment={hoverComment}
-        automationProvenance={metaAutomationProvenance}
         cliProvenance={metaCliProvenance}
         branchName={hoverBranchName}
         workspaceTitle={hoverWorkspaceTitle}
         workspaceTitleRenameDisabled={isDeleting || affiliateListMode}
-        detailsAfter={
-          workspacePorts.length > 0 ? <WorktreeCardPortsDetails ports={workspacePorts} /> : null
-        }
         openDelay={100}
         hoverControl={detailsHoverControl}
         onRenameWorkspaceTitle={affiliateListMode ? undefined : handleRenameTitle}
-        onEditIssue={affiliateListMode ? undefined : handleEditIssue}
         onEditComment={affiliateListMode ? undefined : handleEditComment}
-        onOpenGitHubIssueInOrca={
-          hoverIssue && 'url' in hoverIssue && hoverIssue.url
-            ? handleOpenGitHubIssueInOrca
-            : undefined
-        }
-        onOpenIssueInBrowser={
-          hoverIssue && 'url' in hoverIssue && hoverIssue.url ? handleOpenIssueInBrowser : undefined
-        }
-        onOpenLinearIssueInOrca={linearIssue?.url ? handleOpenLinearIssueInOrca : undefined}
-        onOpenReviewInOrca={
-          hoverReview?.url && hoverReview.provider === 'github' ? handleOpenReviewInOrca : undefined
-        }
-        onOpenReviewInBrowser={hoverReview?.url ? handleOpenReviewInBrowser : undefined}
-        onOpenAutomation={affiliateListMode ? undefined : handleOpenAutomation}
-        onOpenAutomationRun={affiliateListMode ? undefined : handleOpenAutomationRun}
-        onUnlinkReview={!affiliateListMode && canUnlinkReview ? handleUnlinkReview : undefined}
       >
         {identityContent}
       </WorktreeCardDetailsHover>
@@ -146,7 +102,6 @@ export function WorktreeCardParentContent({
             unreadTooltip={unreadTooltip}
             onPointerDown={stopQuickActionPointerPropagation}
             onToggleUnread={handleToggleUnreadQuick}
-            prDisplay={statusLaneReview}
             newCardStyle={newCardStyle}
             hasBranchIdentity={Boolean(branchIdentityDisplay)}
           />

@@ -192,7 +192,6 @@ describe('FloatingTerminalPanel close behavior', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false)
     expect(mocks.closeTab).not.toHaveBeenCalled()
     expect(mocks.closeFile).not.toHaveBeenCalled()
-    expect(mocks.closeBrowserTab).not.toHaveBeenCalled()
   })
 
   it('shows the empty state when only stale unified tabs remain', async () => {

@@ -1,4 +1,4 @@
-import { Check, ChevronsUpDown, Loader2 } from 'lucide-react'
+import { Check, ChevronsUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Command, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -8,7 +8,7 @@ import { getSidebarHostHealthLabel, shouldShowHostScopeControls } from './sideba
 import type { ExecutionHostId } from '../../../../shared/execution-host'
 import { describeRuntimeCompatBlock } from '../../../../shared/protocol-compat'
 import { translate } from '@/i18n/i18n'
-import { canConnectAddRepoHost, canSelectAddRepoHost } from './add-repo-host-availability'
+import { canSelectAddRepoHost } from './add-repo-host-availability'
 
 type AddRepoHostSelectorProps = {
   hosts: SidebarHostOption[]
@@ -16,7 +16,6 @@ type AddRepoHostSelectorProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSelectHost: (hostId: ExecutionHostId) => void
-  onConnectHost?: (hostId: ExecutionHostId) => void
 }
 
 function getHostStatusDetail(host: SidebarHostOption): string {
@@ -31,8 +30,7 @@ export function AddRepoHostSelector({
   selectedHostId,
   open,
   onOpenChange,
-  onSelectHost,
-  onConnectHost
+  onSelectHost
 }: AddRepoHostSelectorProps): React.JSX.Element | null {
   if (!shouldShowHostScopeControls(hosts)) {
     return null
@@ -77,13 +75,11 @@ export function AddRepoHostSelector({
               {hosts.map((host) => {
                 const selected = host.id === selectedHostId
                 const disabled = !canSelectAddRepoHost(host)
-                const canConnect = canConnectAddRepoHost(host)
-                const isConnecting = host.health === 'connecting'
                 return (
                   <CommandItem
                     key={host.id}
                     value={`${host.label} ${host.detail}`}
-                    disabled={disabled && !canConnect}
+                    disabled={disabled}
                     aria-disabled={disabled}
                     onSelect={() => {
                       if (disabled) {
@@ -94,7 +90,7 @@ export function AddRepoHostSelector({
                     }}
                     className={cn(
                       'items-start gap-2 px-3 py-2 text-xs',
-                      disabled && !canConnect && 'cursor-not-allowed opacity-55'
+                      disabled && 'cursor-not-allowed opacity-55'
                     )}
                   >
                     <Check
@@ -111,31 +107,6 @@ export function AddRepoHostSelector({
                         <span className="min-w-0 flex-1 truncate">{getHostStatusDetail(host)}</span>
                       </span>
                     </span>
-                    {canConnect ? (
-                      <Button
-                        type="button"
-                        variant="link"
-                        size="xs"
-                        className="ml-2 h-auto w-[5.75rem] shrink-0 justify-end gap-1 self-center px-0 py-0 text-[11px] font-normal text-muted-foreground hover:text-foreground hover:no-underline"
-                        disabled={isConnecting}
-                        onClick={(event) => {
-                          event.preventDefault()
-                          event.stopPropagation()
-                          onConnectHost?.(host.id)
-                        }}
-                      >
-                        {isConnecting ? <Loader2 className="size-3 animate-spin" /> : null}
-                        {isConnecting
-                          ? translate(
-                              'auto.components.sidebar.AddRepoHostSelector.connecting',
-                              'Connecting'
-                            )
-                          : translate(
-                              'auto.components.sidebar.AddRepoHostSelector.connect',
-                              'Connect'
-                            )}
-                      </Button>
-                    ) : null}
                   </CommandItem>
                 )
               })}

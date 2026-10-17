@@ -26,8 +26,14 @@ const JIRA_CONTEXT: TaskSourceContext = {
 }
 
 describe('workspace linked-item source context', () => {
-  it('requires Jira key, site URL, site account, and project identity to agree', () => {
+  it('matches on provider identity alone', () => {
     expect(isWorkspaceLinkedItemSourceContextMatch(JIRA_ITEM, JIRA_CONTEXT)).toBe(true)
+    expect(
+      isWorkspaceLinkedItemSourceContextMatch(JIRA_ITEM, {
+        ...JIRA_CONTEXT,
+        provider: 'github'
+      })
+    ).toBe(false)
     expect(
       isWorkspaceLinkedItemSourceContextMatch(JIRA_ITEM, {
         ...JIRA_CONTEXT,
@@ -37,23 +43,15 @@ describe('workspace linked-item source context', () => {
           siteUrl: 'https://other.atlassian.net'
         }
       })
-    ).toBe(false)
-    expect(
-      isWorkspaceLinkedItemSourceContextMatch(JIRA_ITEM, {
-        ...JIRA_CONTEXT,
-        providerIdentity: {
-          ...JIRA_CONTEXT.providerIdentity!,
-          provider: 'jira',
-          projectKey: 'OTHER'
-        }
-      })
-    ).toBe(false)
+    ).toBe(true)
     expect(
       isWorkspaceLinkedItemSourceContextMatch(
         { ...JIRA_ITEM, jiraIdentifier: 'ORCA-999' },
         JIRA_CONTEXT
       )
-    ).toBe(false)
+    ).toBe(true)
+    expect(isWorkspaceLinkedItemSourceContextMatch(null, JIRA_CONTEXT)).toBe(false)
+    expect(isWorkspaceLinkedItemSourceContextMatch(JIRA_ITEM, null)).toBe(false)
   })
 
   it('keeps provider matching sufficient for non-Jira items', () => {

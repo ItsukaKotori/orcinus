@@ -40,17 +40,6 @@ function previewActiveSurfacePatch(
       activeTabTypeByWorktree: nextActiveTabTypeByWorktree('terminal')
     }
   }
-  if (unifiedTab.contentType === 'browser') {
-    return {
-      activeBrowserTabId: unifiedTab.entityId,
-      activeTabType: 'browser',
-      activeBrowserTabIdByWorktree: {
-        ...state.activeBrowserTabIdByWorktree,
-        [worktreeId]: unifiedTab.entityId
-      },
-      activeTabTypeByWorktree: nextActiveTabTypeByWorktree('browser')
-    }
-  }
   if (unifiedTab.contentType === 'plugin') {
     // Self-backed plugin tabs have no legacy active id slot; the group's
     // activeTabId (patched by the caller) drives the rendered surface.

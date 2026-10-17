@@ -2,7 +2,6 @@ import { createStore, type StoreApi } from 'zustand/vanilla'
 import { describe, expect, it } from 'vitest'
 import { createEditorSlice } from './editor'
 import type { AppState } from '../types'
-import type { BrowserTab } from '../../../../shared/browser-workspace-types'
 import type { Tab, TabContentType, TabGroup } from '../../../../shared/tab-types'
 
 function createEditorStore(overrides?: Partial<AppState>): StoreApi<AppState> {
@@ -10,28 +9,10 @@ function createEditorStore(overrides?: Partial<AppState>): StoreApi<AppState> {
   return createStore<any>()((...args: any[]) => ({
     activeWorktreeId: 'wt-1',
     tabsByWorktree: {},
-    browserTabsByWorktree: {},
-    activeBrowserTabId: null,
-    activeBrowserTabIdByWorktree: {},
     tabBarOrderByWorktree: {},
     ...overrides,
     ...createEditorSlice(...(args as Parameters<typeof createEditorSlice>))
   })) as unknown as StoreApi<AppState>
-}
-
-function makeBrowserTab(id: string): BrowserTab {
-  return {
-    id,
-    worktreeId: 'wt-1',
-    url: 'about:blank',
-    title: 'Browser',
-    loading: false,
-    faviconUrl: null,
-    canGoBack: false,
-    canGoForward: false,
-    loadError: null,
-    createdAt: 0
-  }
 }
 
 describe('New Markdown — isUntitled flag', () => {
@@ -157,7 +138,7 @@ describe('New Markdown — tab bar ordering with openFile', () => {
     expect(order.at(-1)).toBe('/repo/untitled.md')
   })
 
-  it('appends after browser tabs (not before them)', () => {
+  it('appends after existing tabs (not before them)', () => {
     const store = createEditorStore({
       tabsByWorktree: {
         'wt-1': [
@@ -170,13 +151,20 @@ describe('New Markdown — tab bar ordering with openFile', () => {
             color: null,
             sortOrder: 0,
             createdAt: 0
+          },
+          {
+            id: 't2',
+            ptyId: null,
+            worktreeId: 'wt-1',
+            title: 'Term 2',
+            customTitle: null,
+            color: null,
+            sortOrder: 1,
+            createdAt: 1
           }
         ]
       },
-      browserTabsByWorktree: {
-        'wt-1': [makeBrowserTab('b1')]
-      },
-      tabBarOrderByWorktree: { 'wt-1': ['t1', 'b1'] }
+      tabBarOrderByWorktree: { 'wt-1': ['t1', 't2'] }
     })
 
     store.getState().openFile({
@@ -189,7 +177,7 @@ describe('New Markdown — tab bar ordering with openFile', () => {
     })
 
     const order = store.getState().tabBarOrderByWorktree['wt-1']
-    expect(order).toEqual(['t1', 'b1', '/repo/untitled.md'])
+    expect(order).toEqual(['t1', 't2', '/repo/untitled.md'])
   })
 
   it('creating multiple files appends each at the end', () => {
@@ -205,13 +193,20 @@ describe('New Markdown — tab bar ordering with openFile', () => {
             color: null,
             sortOrder: 0,
             createdAt: 0
+          },
+          {
+            id: 't2',
+            ptyId: null,
+            worktreeId: 'wt-1',
+            title: 'Term 2',
+            customTitle: null,
+            color: null,
+            sortOrder: 1,
+            createdAt: 1
           }
         ]
       },
-      browserTabsByWorktree: {
-        'wt-1': [makeBrowserTab('b1')]
-      },
-      tabBarOrderByWorktree: { 'wt-1': ['t1', 'b1'] }
+      tabBarOrderByWorktree: { 'wt-1': ['t1', 't2'] }
     })
 
     store.getState().openFile({
@@ -232,7 +227,7 @@ describe('New Markdown — tab bar ordering with openFile', () => {
     })
 
     const order = store.getState().tabBarOrderByWorktree['wt-1']
-    expect(order).toEqual(['t1', 'b1', '/repo/untitled.md', '/repo/untitled-2.md'])
+    expect(order).toEqual(['t1', 't2', '/repo/untitled.md', '/repo/untitled-2.md'])
   })
 
   it('does not create duplicate entries in tab order', () => {
@@ -289,10 +284,7 @@ describe('New Markdown — tab bar ordering with openFile', () => {
           }
         ]
       },
-      browserTabsByWorktree: {
-        'wt-1': [makeBrowserTab('b1'), makeBrowserTab('b2')]
-      },
-      tabBarOrderByWorktree: { 'wt-1': ['t1', 'b1', 't2', 'b2'] }
+      tabBarOrderByWorktree: { 'wt-1': ['t1', 't2'] }
     })
 
     store.getState().openFile({
@@ -305,10 +297,8 @@ describe('New Markdown — tab bar ordering with openFile', () => {
     })
 
     const order = store.getState().tabBarOrderByWorktree['wt-1']
-    // Existing tabs should keep their original interleaved order
-    expect(order.indexOf('t1')).toBeLessThan(order.indexOf('b1'))
-    expect(order.indexOf('b1')).toBeLessThan(order.indexOf('t2'))
-    expect(order.indexOf('t2')).toBeLessThan(order.indexOf('b2'))
+    // Existing tabs should keep their original order
+    expect(order.indexOf('t1')).toBeLessThan(order.indexOf('t2'))
     // New file at the end
     expect(order.at(-1)).toBe('/repo/untitled.md')
   })
@@ -598,10 +588,7 @@ describe('Tab close — tabBarOrderByWorktree cleanup', () => {
           }
         ]
       },
-      browserTabsByWorktree: {
-        'wt-1': [makeBrowserTab('b1')]
-      },
-      tabBarOrderByWorktree: { 'wt-1': ['t1', 'b1', 't2'] }
+      tabBarOrderByWorktree: { 'wt-1': ['t1', 't2'] }
     })
 
     store.getState().openFile({
@@ -611,7 +598,7 @@ describe('Tab close — tabBarOrderByWorktree cleanup', () => {
       language: 'markdown',
       mode: 'edit'
     })
-    // Order: t1, b1, t2, /repo/file.md
+    // Order: t1, t2, /repo/file.md
     store.getState().openFile({
       filePath: '/repo/file2.md',
       relativePath: 'file2.md',
@@ -619,11 +606,11 @@ describe('Tab close — tabBarOrderByWorktree cleanup', () => {
       language: 'markdown',
       mode: 'edit'
     })
-    // Order: t1, b1, t2, /repo/file.md, /repo/file2.md
+    // Order: t1, t2, /repo/file.md, /repo/file2.md
 
     store.getState().closeFile('/repo/file.md')
     const order = store.getState().tabBarOrderByWorktree['wt-1']
-    expect(order).toEqual(['t1', 'b1', 't2', '/repo/file2.md'])
+    expect(order).toEqual(['t1', 't2', '/repo/file2.md'])
   })
 
   it('closing multiple files preserves remaining tab order', () => {
@@ -639,13 +626,20 @@ describe('Tab close — tabBarOrderByWorktree cleanup', () => {
             color: null,
             sortOrder: 0,
             createdAt: 0
+          },
+          {
+            id: 't2',
+            ptyId: null,
+            worktreeId: 'wt-1',
+            title: 'Term 2',
+            customTitle: null,
+            color: null,
+            sortOrder: 1,
+            createdAt: 1
           }
         ]
       },
-      browserTabsByWorktree: {
-        'wt-1': [makeBrowserTab('b1')]
-      },
-      tabBarOrderByWorktree: { 'wt-1': ['t1', 'b1'] }
+      tabBarOrderByWorktree: { 'wt-1': ['t1', 't2'] }
     })
 
     store.getState().openFile({
@@ -674,14 +668,14 @@ describe('Tab close — tabBarOrderByWorktree cleanup', () => {
     store.getState().closeFile('/repo/b.md')
     expect(store.getState().tabBarOrderByWorktree['wt-1']).toEqual([
       't1',
-      'b1',
+      't2',
       '/repo/a.md',
       '/repo/c.md'
     ])
 
     // Close first file
     store.getState().closeFile('/repo/a.md')
-    expect(store.getState().tabBarOrderByWorktree['wt-1']).toEqual(['t1', 'b1', '/repo/c.md'])
+    expect(store.getState().tabBarOrderByWorktree['wt-1']).toEqual(['t1', 't2', '/repo/c.md'])
   })
 
   it('closeAllFiles removes all editor file IDs from tabBarOrderByWorktree', () => {
@@ -697,13 +691,20 @@ describe('Tab close — tabBarOrderByWorktree cleanup', () => {
             color: null,
             sortOrder: 0,
             createdAt: 0
+          },
+          {
+            id: 't2',
+            ptyId: null,
+            worktreeId: 'wt-1',
+            title: 'Term 2',
+            customTitle: null,
+            color: null,
+            sortOrder: 1,
+            createdAt: 1
           }
         ]
       },
-      browserTabsByWorktree: {
-        'wt-1': [makeBrowserTab('b1')]
-      },
-      tabBarOrderByWorktree: { 'wt-1': ['t1', 'b1'] }
+      tabBarOrderByWorktree: { 'wt-1': ['t1', 't2'] }
     })
 
     store.getState().openFile({
@@ -723,7 +724,7 @@ describe('Tab close — tabBarOrderByWorktree cleanup', () => {
 
     store.getState().closeAllFiles()
     const order = store.getState().tabBarOrderByWorktree['wt-1']
-    expect(order).toEqual(['t1', 'b1'])
+    expect(order).toEqual(['t1', 't2'])
   })
 
   it('reopening a file after close places it at the end', () => {
@@ -739,13 +740,20 @@ describe('Tab close — tabBarOrderByWorktree cleanup', () => {
             color: null,
             sortOrder: 0,
             createdAt: 0
+          },
+          {
+            id: 't2',
+            ptyId: null,
+            worktreeId: 'wt-1',
+            title: 'Term 2',
+            customTitle: null,
+            color: null,
+            sortOrder: 1,
+            createdAt: 1
           }
         ]
       },
-      browserTabsByWorktree: {
-        'wt-1': [makeBrowserTab('b1')]
-      },
-      tabBarOrderByWorktree: { 'wt-1': ['t1', 'b1'] }
+      tabBarOrderByWorktree: { 'wt-1': ['t1', 't2'] }
     })
 
     store.getState().openFile({
@@ -774,6 +782,6 @@ describe('Tab close — tabBarOrderByWorktree cleanup', () => {
     })
 
     const order = store.getState().tabBarOrderByWorktree['wt-1']
-    expect(order).toEqual(['t1', 'b1', '/repo/b.md', '/repo/a.md'])
+    expect(order).toEqual(['t1', 't2', '/repo/b.md', '/repo/a.md'])
   })
 })

@@ -18,7 +18,6 @@ function ids(
     isWindows?: boolean
     isWebClient?: boolean
     isDev?: boolean
-    isLinearConnected?: boolean
   } = {}
 ): string[] {
   return buildSettingsNavigationMetadata({
@@ -26,20 +25,18 @@ function ids(
     isWindows: args.isWindows ?? false,
     isWebClient: args.isWebClient ?? false,
     isDev: args.isDev ?? false,
-    isLinearConnected: args.isLinearConnected ?? false,
     repos: [repo]
   }).map((section) => section.id)
 }
 
 describe('settings navigation metadata', () => {
   it('puts AI capability panes at the top on desktop', () => {
-    expect(ids().slice(0, 6)).toEqual([
+    expect(ids().slice(0, 5)).toEqual([
       'agents',
       'orchestration',
-      'computer-use',
       'general',
       'integrations',
-      'automations'
+      'git'
     ])
   })
 
@@ -59,57 +56,13 @@ describe('settings navigation metadata', () => {
     )
   })
 
-  it('adds the Linear capability section right after Orchestration only when connected', () => {
-    expect(ids()).not.toContain('linear')
-
-    const connectedIds = ids({ isLinearConnected: true })
-    expect(connectedIds).toContain('linear')
-    expect(connectedIds.indexOf('linear')).toBe(connectedIds.indexOf('orchestration') + 1)
-
-    const linearSection = buildSettingsNavigationMetadata({
-      isMac: false,
-      isWindows: false,
-      isWebClient: false,
-      isLinearConnected: true,
-      repos: [repo]
-    }).find((section) => section.id === 'linear')
-    expect(linearSection?.group).toBe('capabilities')
-  })
-
-  it('keeps the Linear capability section available on web clients when connected', () => {
-    expect(ids({ isWebClient: true, isLinearConnected: true })).toContain('linear')
-  })
-
-  it('places Automations and Artifacts first under Workflows', () => {
-    const sections = buildSettingsNavigationMetadata({
-      isMac: false,
-      isWindows: false,
-      isWebClient: false,
-      repos: [repo]
-    })
-    const automations = sections.find((section) => section.id === 'automations')
-    const artifacts = sections.find((section) => section.id === 'artifacts')
-    const workflowIds = sections
-      .filter((section) => section.group === 'workflows')
-      .map((section) => section.id)
-
-    expect(automations?.group).toBe('workflows')
-    expect(automations?.searchEntries[0]?.title).toBe('Show Automations Button')
-    expect(artifacts?.group).toBe('workflows')
-    expect(artifacts?.badge).toBe('Beta')
-    expect(artifacts?.description).toBe(
-      'Share HTML and Markdown files with your team and manage their public links.'
-    )
-    expect(workflowIds.slice(0, 2)).toEqual(['automations', 'artifacts'])
-  })
-
   it('puts web-safe AI capability panes at the top while hiding desktop-only panes', () => {
     expect(ids({ isWebClient: true }).slice(0, 5)).toEqual([
       'agents',
       'orchestration',
       'general',
       'integrations',
-      'automations'
+      'git'
     ])
   })
 
@@ -125,7 +78,6 @@ describe('settings navigation metadata', () => {
     expect(webIds).not.toContain('browser')
     expect(webIds).not.toContain('ssh')
     expect(webIds).not.toContain('mobile')
-    expect(webIds).not.toContain('computer-use')
     expect(webIds).not.toContain('advanced')
     expect(webIds).not.toContain('servers')
     expect(webIds).toContain('repo-repo-1')
@@ -144,21 +96,6 @@ describe('settings navigation metadata', () => {
     )
   })
 
-  it('keeps the Browser shortcut searchable for a capable web runtime', () => {
-    const sections = buildSettingsNavigationMetadata({
-      isMac: false,
-      isWindows: false,
-      isWebClient: true,
-      managedBrowserCreationEnabled: true,
-      repos: [repo]
-    })
-    const shortcutTitles = sections
-      .find((section) => section.id === 'shortcuts')
-      ?.searchEntries.map((entry) => entry.title)
-
-    expect(shortcutTitles).toContain('New browser tab')
-  })
-
   it('does not mark installable AI capabilities as beta in the sidebar metadata', () => {
     const sections = buildSettingsNavigationMetadata({
       isMac: true,
@@ -167,7 +104,7 @@ describe('settings navigation metadata', () => {
       repos: [repo]
     })
 
-    expect(sections.find((section) => section.id === 'computer-use')?.badge).toBeUndefined()
+    expect(sections.find((section) => section.id === 'orchestration')?.badge).toBeUndefined()
   })
 
   it('places Plugins under Experimental on desktop and omits it on the web', () => {

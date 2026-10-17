@@ -88,8 +88,6 @@ export const BROWSER_TAB_CREATE_KNOWN_ID_RUNTIME_CAPABILITY =
 export const BROWSER_CLIENT_HOST_RUNTIME_CAPABILITY = 'browser.clientHost.v1' as const
 export const BROWSER_CLIENT_PAGE_METADATA_RUNTIME_CAPABILITY =
   'browser.clientHost.pageMetadata.v1' as const
-export const BROWSER_CLIENT_AUTOMATION_RUNTIME_CAPABILITY =
-  'browser.clientHost.automation.v1' as const
 // Why: without it a client-placed browser.upload would resolve remote paths on the desktop filesystem, so uploads fail closed instead.
 export const BROWSER_CLIENT_FILE_CHANNEL_RUNTIME_CAPABILITY =
   'browser.clientHost.fileChannel.v1' as const
@@ -201,17 +199,6 @@ export const WORKTREE_VISIBILITY_DEFAULTS_RUNTIME_CAPABILITY =
   'worktree.visibility-defaults.v1' as const
 export const WORKTREE_VISIBILITY_SOURCE_DEFAULTS_RUNTIME_CAPABILITY =
   'worktree.visibility-source-defaults.v1' as const
-// Why: older hosts drop automation.list's selector and answer with the whole authority, so a scoped client must not read that as one host's rows.
-export const AUTOMATION_LIST_HOST_SCOPE_RUNTIME_CAPABILITY =
-  'automation.list-host-scope.v1' as const
-export const AUTOMATION_LIST_HOST_SCOPE_UPDATE_REQUIRED_MESSAGE =
-  'Filtering automations by host requires a newer Orca server. Update the HUB and try again.'
-// Why: without server-side owner preconditions a mutation could run against a host the user never saw, so unfenced rows stay view-only.
-export const AUTOMATION_OWNER_FENCING_RUNTIME_CAPABILITY = 'automation.owner-fencing.v1' as const
-export const AUTOMATION_OWNER_FENCING_UPDATE_REQUIRED_MESSAGE =
-  'Editing automations on this host requires a newer Orca server. Update the HUB and try again.'
-export const AUTOMATION_CREATE_IDEMPOTENCY_RUNTIME_CAPABILITY =
-  'automation.create-idempotency.v1' as const
 // Hosts without this capability have no notifications.registerPush RPC.
 export const NOTIFICATIONS_REMOTE_PUSH_RUNTIME_CAPABILITY = 'notifications.remote-push.v1' as const
 
@@ -222,9 +209,7 @@ export const NATIVE_REMOTE_RUNTIME_CLIENT_CAPABILITIES = [
   AGENT_SESSION_BOUNDARY_RUNTIME_CAPABILITY,
   WORKTREE_VISIBILITY_DEFAULTS_RUNTIME_CAPABILITY,
   WORKTREE_VISIBILITY_SOURCE_DEFAULTS_RUNTIME_CAPABILITY,
-  WORKTREE_GITHUB_PR_SUPPRESSION_RUNTIME_CAPABILITY,
-  AUTOMATION_OWNER_FENCING_RUNTIME_CAPABILITY,
-  AUTOMATION_CREATE_IDEMPOTENCY_RUNTIME_CAPABILITY
+  WORKTREE_GITHUB_PR_SUPPRESSION_RUNTIME_CAPABILITY
 ] as const
 
 // Electron clients can decode client-hosted page placement; becoming a page
@@ -256,7 +241,6 @@ export const RUNTIME_CAPABILITIES = [
   BROWSER_TAB_CREATE_KNOWN_ID_RUNTIME_CAPABILITY,
   BROWSER_CLIENT_HOST_RUNTIME_CAPABILITY,
   BROWSER_CLIENT_PAGE_METADATA_RUNTIME_CAPABILITY,
-  BROWSER_CLIENT_AUTOMATION_RUNTIME_CAPABILITY,
   BROWSER_CLIENT_FILE_CHANNEL_RUNTIME_CAPABILITY,
   BROWSER_NETWORK_TUNNEL_RUNTIME_CAPABILITY,
   BROWSER_NETWORK_EXECUTION_HOSTS_RUNTIME_CAPABILITY,
@@ -313,9 +297,6 @@ export const RUNTIME_CAPABILITIES = [
   SKILL_MANAGEMENT_CAPABILITY,
   SKILL_INSTALL_PROVIDERS_CAPABILITY,
   SKILL_DELETE_CAPABILITY,
-  AUTOMATION_LIST_HOST_SCOPE_RUNTIME_CAPABILITY,
-  AUTOMATION_OWNER_FENCING_RUNTIME_CAPABILITY,
-  AUTOMATION_CREATE_IDEMPOTENCY_RUNTIME_CAPABILITY,
   NOTIFICATIONS_REMOTE_PUSH_RUNTIME_CAPABILITY
 ] as const
 

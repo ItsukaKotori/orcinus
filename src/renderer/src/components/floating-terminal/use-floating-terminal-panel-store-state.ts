@@ -1,15 +1,12 @@
-import { getClientCreationActionPolicy } from '@/lib/client-creation-action-policy'
 import { useAppStore } from '@/store'
-import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../../shared/constants'
 import { selectFloatingTerminalPanelInputs } from './floating-terminal-panel-inputs'
 
 export function useFloatingTerminalPanelStoreState() {
-  const { tabs, browserTabs, groups, unifiedTabs, floatingFiles, expandedPaneByTabId } =
-    useAppStore(selectFloatingTerminalPanelInputs)
+  const { tabs, groups, unifiedTabs, floatingFiles, expandedPaneByTabId } = useAppStore(
+    selectFloatingTerminalPanelInputs
+  )
   const createTab = useAppStore((state) => state.createTab)
-  const createBrowserTab = useAppStore((state) => state.createBrowserTab)
   const closeTab = useAppStore((state) => state.closeTab)
-  const closeBrowserTab = useAppStore((state) => state.closeBrowserTab)
   const closeFile = useAppStore((state) => state.closeFile)
   const closeUnifiedTab = useAppStore((state) => state.closeUnifiedTab)
   const markFileDirty = useAppStore((state) => state.markFileDirty)
@@ -21,28 +18,19 @@ export function useFloatingTerminalPanelStoreState() {
   const makePreviewFilePermanent = useAppStore((state) => state.makePreviewFilePermanent)
   const pinFile = useAppStore((state) => state.pinFile)
   const openFile = useAppStore((state) => state.openFile)
-  const browserDefaultUrl = useAppStore((state) => state.browserDefaultUrl)
   const floatingTerminalCwd = useAppStore((state) => state.settings?.floatingTerminalCwd ?? '')
   const generatedTabTitlesEnabled = useAppStore(
     (state) => state.settings?.tabAutoGenerateTitle === true
   )
-  const managedBrowserCreationEnabled = useAppStore(
-    (state) =>
-      getClientCreationActionPolicy(state, FLOATING_TERMINAL_WORKTREE_ID)['managed-browser']
-        .state === 'enabled'
-  )
 
   return {
     tabs,
-    browserTabs,
     groups,
     unifiedTabs,
     floatingFiles,
     expandedPaneByTabId,
     createTab,
-    createBrowserTab,
     closeTab,
-    closeBrowserTab,
     closeFile,
     closeUnifiedTab,
     markFileDirty,
@@ -54,10 +42,8 @@ export function useFloatingTerminalPanelStoreState() {
     makePreviewFilePermanent,
     pinFile,
     openFile,
-    browserDefaultUrl,
     floatingTerminalCwd,
-    generatedTabTitlesEnabled,
-    managedBrowserCreationEnabled
+    generatedTabTitlesEnabled
   }
 }
 

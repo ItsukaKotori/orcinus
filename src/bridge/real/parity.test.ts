@@ -10,14 +10,9 @@ import { UnimplementedBridgeError } from '../unimplemented-fallback'
 import { createAgentStatusRealApi } from './agent-status'
 import { createAiVaultRealApi } from './ai-vault'
 import { createAppRealApi } from './app'
-import { createAutomationsRealApi } from './automations'
 import { createCliRealApi } from './cli'
-import { createComputerUsePermissionsRealApi } from './computer-use-permissions'
 import { createFsRealApi } from './fs'
-import { createGhRealApi } from './gh'
-import { createHostedReviewRealApi } from './hosted-review'
 import { createNotificationsRealApi } from './notifications'
-import { createOnboardingRealApi } from './onboarding'
 import { createPlatformRealApi } from './platform'
 import { createPluginsRealApi } from './plugins'
 import { createPreflightRealApi } from './preflight'
@@ -121,7 +116,6 @@ const uiNoopSubscriptions = [
   'onActivateWorktree',
   'onAppMenuPaste',
   'onAppMenuSelectionAction',
-  'onBrowserHistoryNavigate',
   'onCloseActiveTab',
   'onCloseFloatingItem',
   'onCloseSessionTab',
@@ -132,18 +126,14 @@ const uiNoopSubscriptions = [
   'onDeleteCurrentWorkspace',
   'onEditableContextPaste',
   'onFileDrop',
-  'onFindInBrowserPage',
-  'onFocusBrowserAddressBar',
   'onFocusEditorTab',
   'onFocusTerminal',
   'onFullscreenChanged',
-  'onHardReloadBrowserPage',
   'onJumpToTabIndex',
   'onJumpToWorktreeIndex',
   'onMaximizeChanged',
   'onMobileMarkdownRequest',
   'onMoveSessionTab',
-  'onNewBrowserTab',
   'onNewMarkdownTab',
   'onNewTerminalTab',
   'onOpenDiffFromMobile',
@@ -152,17 +142,13 @@ const uiNoopSubscriptions = [
   'onOpenNewWorkspace',
   'onOpenQuickOpen',
   'onOpenSettings',
-  'onOpenTasks',
-  'onReloadBrowserPage',
   'onRenameTerminal',
   'onRequestTabClose',
   'onRequestTabCreate',
-  'onRequestTabSetProfile',
   'onRequestTerminalCreate',
   'onRequestTerminalTabMount',
   'onResumeSleepingAgents',
   'onRichMarkdownContextCommand',
-  'onScrollBrowserPage',
   'onSelectFloatingIndex',
   'onSessionTabCloseRequest',
   'onSleepWorktree',
@@ -183,7 +169,6 @@ const uiNoopSubscriptions = [
   'onToggleWorktreePalette',
   'onWindowCloseRequested',
   'onWorktreeHistoryNavigate',
-  'onZoomBrowserPage'
 ]
 
 /**
@@ -261,110 +246,6 @@ const ptyManagementSurface = Object.keys({
 
 const ptySurfaceMethods = (disposition: PtyMethodDisposition): string[] =>
   Object.entries(ptySurfaceDispositions)
-    .filter(([, value]) => value === disposition)
-    .map(([method]) => method)
-
-/**
- * gh 扁平契约方法的处置全集（Task 8）。`satisfies Record<keyof …>` 把契约键集
- * 锁死：`GithubPullRequestApi`/`GithubWorkItemApi` 新增方法而不在此处置时
- * `pnpm typecheck` 直接失败。2D.1 只接线只读方法，其余（创建/变更/项目查询）
- * 保持 rejecting fallback。
- */
-type GhMethodDisposition = 'explicit' | 'missing'
-
-const ghSurfaceDispositions = {
-  diagnoseAuth: 'explicit',
-  rateLimit: 'explicit',
-  repoSlug: 'explicit',
-  repoUpstream: 'explicit',
-  prForBranch: 'explicit',
-  refreshPRNow: 'explicit',
-  prChecks: 'explicit',
-  prCheckDetails: 'explicit',
-  onPRRefreshEvent: 'explicit',
-  viewer: 'missing',
-  enqueuePRRefresh: 'missing',
-  reportVisiblePRRefreshCandidates: 'missing',
-  prFileContents: 'missing',
-  rerunPRChecks: 'missing',
-  prComments: 'missing',
-  setPRCommentReaction: 'missing',
-  resolveReviewThread: 'missing',
-  setPRFileViewed: 'missing',
-  updatePRTitle: 'missing',
-  mergePR: 'missing',
-  setPRAutoMerge: 'missing',
-  updatePRState: 'missing',
-  markPRReadyForReview: 'missing',
-  requestPRReviewers: 'missing',
-  removePRReviewers: 'missing',
-  addPRReviewCommentReply: 'missing',
-  addPRReviewComment: 'missing',
-  checkOrcaStarred: 'missing',
-  starOrca: 'missing',
-  issue: 'missing',
-  workItem: 'missing',
-  workItemByOwnerRepo: 'missing',
-  workItemDetails: 'missing',
-  notifyWorkItemMutated: 'missing',
-  listIssues: 'missing',
-  createIssue: 'missing',
-  countWorkItems: 'missing',
-  listWorkItems: 'missing',
-  updateIssue: 'missing',
-  addIssueComment: 'missing',
-  listLabels: 'missing',
-  listAssignableUsers: 'missing',
-  onWorkItemMutated: 'missing',
-  listAccessibleProjects: 'missing',
-  resolveProjectRef: 'missing',
-  listProjectViews: 'missing',
-  getProjectViewTable: 'missing',
-  projectWorkItemDetailsBySlug: 'missing',
-  updateProjectItemField: 'missing',
-  clearProjectItemField: 'missing',
-  updateIssueBySlug: 'missing',
-  updatePullRequestBySlug: 'missing',
-  addIssueCommentBySlug: 'missing',
-  updateIssueCommentBySlug: 'missing',
-  deleteIssueCommentBySlug: 'missing',
-  listLabelsBySlug: 'missing',
-  listAssignableUsersBySlug: 'missing',
-  listIssueTypesBySlug: 'missing',
-  updateIssueTypeBySlug: 'missing'
-} satisfies Record<keyof PreloadApi['gh'], GhMethodDisposition>
-
-const ghSurfaceMethods = (disposition: GhMethodDisposition): string[] =>
-  Object.entries(ghSurfaceDispositions)
-    .filter(([, value]) => value === disposition)
-    .map(([method]) => method)
-
-/**
- * automations 契约方法的处置全集（Task 7）。计划文本的「explicit 9 / missing 5」
- * 与现行契约不符：`AutomationsApi` 共 12 方法，宿主支撑 6（precheck /
- * markDispatchResult / snapshotWorkspaceName / rendererReady / 两订阅），external
- * 五方法 + `retainExternalScopes` 共 6 保持 rejecting fallback。`satisfies
- * Record<keyof …>` 把契约键集锁死：契约新增而此处未处置时 `pnpm typecheck` 失败。
- */
-type AutomationsMethodDisposition = 'explicit' | 'missing'
-
-const automationsSurfaceDispositions = {
-  runPrecheck: 'explicit',
-  markDispatchResult: 'explicit',
-  snapshotWorkspaceName: 'explicit',
-  rendererReady: 'explicit',
-  onDispatchRequested: 'explicit',
-  onChanged: 'explicit',
-  listExternalManagerForOwner: 'missing',
-  listExternalRunsForOwner: 'missing',
-  createExternalForOwner: 'missing',
-  updateExternalForOwner: 'missing',
-  runExternalActionForOwner: 'missing',
-  retainExternalScopes: 'missing'
-} satisfies Record<keyof PreloadApi['automations'], AutomationsMethodDisposition>
-
-const automationsSurfaceMethods = (disposition: AutomationsMethodDisposition): string[] =>
-  Object.entries(automationsSurfaceDispositions)
     .filter(([, value]) => value === disposition)
     .map(([method]) => method)
 
@@ -666,7 +547,6 @@ const surfaceCases: SurfaceCase[] = [
     explicit: ptySurfaceMethods('explicit'),
     missing: ptySurfaceMethods('missing')
   },
-  { domain: 'onboarding', explicit: ['get', 'update'], missing: [] },
   { domain: 'platform', explicit: ['get'], missing: [] },
   {
     domain: 'agentStatus',
@@ -702,18 +582,8 @@ const surfaceCases: SurfaceCase[] = [
     missing: []
   },
   {
-    domain: 'gh',
-    explicit: ghSurfaceMethods('explicit'),
-    missing: ghSurfaceMethods('missing')
-  },
-  {
-    domain: 'automations',
-    explicit: automationsSurfaceMethods('explicit'),
-    missing: automationsSurfaceMethods('missing')
-  },
-  {
-    // Task 7（2F）：宿主五命令 + 焦点事件接线；搜索/子代理/首条提示无宿主面，
-    // 保持 rejecting fallback（renderer 以 `typeof` 特征探测）。
+    // Task 7（2F）：宿主五命令 + 焦点事件接线；Task 8（3B 收尾）随死子面删除
+    // 搜索/子代理/首条提示的契约，方法面已同步，无缺失。
     domain: 'aiVault',
     explicit: [
       'listSessions',
@@ -723,18 +593,6 @@ const surfaceCases: SurfaceCase[] = [
       'deleteSession',
       'onWindowFocused'
     ],
-    missing: ['searchSessions', 'searchStatus', 'listSubagentSessions', 'getFirstUserPrompt']
-  },
-  {
-    domain: 'hostedReview',
-    explicit: ['forBranch', 'getCreationEligibility', 'create'],
-    missing: ['createStacked']
-  },
-  {
-    // Task 7（2G）：宿主三命令全接真；该域没有离线 mock，缺失面为空
-    // （mock 端整体落在 namespace fallback，故显式键只有 real 侧）。
-    domain: 'computerUsePermissions',
-    explicit: ['getStatus', 'openSetup', 'reset'],
     missing: []
   },
   {
@@ -1076,8 +934,6 @@ function realApiFor(domain: keyof PreloadApi): unknown {
       return createSessionRealApi()
     case 'fs':
       return createFsRealApi()
-    case 'onboarding':
-      return createOnboardingRealApi()
     case 'projects':
       return createProjectsRealApi()
     case 'worktrees':
@@ -1098,14 +954,6 @@ function realApiFor(domain: keyof PreloadApi): unknown {
       return createPluginsRealApi()
     case 'notifications':
       return createNotificationsRealApi()
-    case 'gh':
-      return createGhRealApi()
-    case 'hostedReview':
-      return createHostedReviewRealApi()
-    case 'automations':
-      return createAutomationsRealApi()
-    case 'computerUsePermissions':
-      return createComputerUsePermissionsRealApi()
     case 'cli':
       return createCliRealApi()
     case 'skills':

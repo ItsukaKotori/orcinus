@@ -6,8 +6,7 @@ import {
   getWorkspaceStatusFromGroupKey,
   getWorkspaceStatusVisualMeta
 } from '../../workspace-status'
-import { PROJECT_GROUP_META, PR_GROUP_META } from './group-keys'
-import type { PRGroupKey } from './group-keys'
+import { PROJECT_GROUP_META } from './group-keys'
 import type { NoticeHostContext } from './host-labels'
 import {
   getLaneHostWorktreeCounts,
@@ -91,61 +90,35 @@ export function appendOrderedGroups(
             repo,
             projectGroupDepth
           }
-        : groupBy === 'workspace-status'
-          ? (() => {
-              const workspaceStatus =
-                getWorkspaceStatusFromGroupKey(key, workspaceStatuses) ??
-                workspaceStatuses[0]?.id ??
-                'in-progress'
-              const definition = workspaceStatuses.find((status) => status.id === workspaceStatus)
-              const meta = getWorkspaceStatusVisualMeta(definition ?? workspaceStatus)
-              return {
-                type: 'header' as const,
-                key,
-                label: definition?.label ?? workspaceStatus,
-                count: group.items.length + folderPairs.length,
-                tone: meta.tone,
-                icon: meta.icon,
-                hostWorktreeCounts: getLaneHostWorktreeCounts(
-                  group.items,
-                  folderPairs,
-                  repoMap,
-                  defaultHostId
-                ),
-                hostWorktreeIds: getLaneHostWorktreeIds(
-                  group.items,
-                  folderPairs,
-                  repoMap,
-                  defaultHostId
-                ),
-                worktreeIds: group.items.map((worktree) => worktree.id)
-              }
-            })()
-          : (() => {
-              const prGroup = key.replace(/^pr:/, '') as PRGroupKey
-              const meta = PR_GROUP_META[prGroup]
-              return {
-                type: 'header' as const,
-                key,
-                label: meta.label,
-                count: group.items.length + folderPairs.length,
-                tone: meta.tone,
-                icon: meta.icon,
-                hostWorktreeCounts: getLaneHostWorktreeCounts(
-                  group.items,
-                  folderPairs,
-                  repoMap,
-                  defaultHostId
-                ),
-                hostWorktreeIds: getLaneHostWorktreeIds(
-                  group.items,
-                  folderPairs,
-                  repoMap,
-                  defaultHostId
-                ),
-                worktreeIds: group.items.map((worktree) => worktree.id)
-              }
-            })()
+        : (() => {
+            const workspaceStatus =
+              getWorkspaceStatusFromGroupKey(key, workspaceStatuses) ??
+              workspaceStatuses[0]?.id ??
+              'in-progress'
+            const definition = workspaceStatuses.find((status) => status.id === workspaceStatus)
+            const meta = getWorkspaceStatusVisualMeta(definition ?? workspaceStatus)
+            return {
+              type: 'header' as const,
+              key,
+              label: definition?.label ?? workspaceStatus,
+              count: group.items.length + folderPairs.length,
+              tone: meta.tone,
+              icon: meta.icon,
+              hostWorktreeCounts: getLaneHostWorktreeCounts(
+                group.items,
+                folderPairs,
+                repoMap,
+                defaultHostId
+              ),
+              hostWorktreeIds: getLaneHostWorktreeIds(
+                group.items,
+                folderPairs,
+                repoMap,
+                defaultHostId
+              ),
+              worktreeIds: group.items.map((worktree) => worktree.id)
+            }
+          })()
 
     result.push(header)
     if (!isCollapsed) {

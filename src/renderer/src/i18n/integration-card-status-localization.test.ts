@@ -19,12 +19,6 @@ function lookup(key: string): string | undefined {
 }
 
 const REQUIRED_KEYS: Record<string, string> = {
-  // Linear and other task trackers
-  'auto.components.settings.task.tracker.integration.cards.statusConnected': 'Connected',
-  'auto.components.settings.task.tracker.integration.cards.statusNotConnected': 'Not connected',
-  // Jira
-  'auto.components.settings.jira.integration.card.statusConnected': 'Connected',
-  'auto.components.settings.jira.integration.card.statusNotConnected': 'Not connected',
   // Bitbucket, Azure DevOps, Gitea
   'auto.components.settings.token.source.control.integration.cards.statusConnected': 'Connected',
   'auto.components.settings.token.source.control.integration.cards.statusConfigured': 'Configured',

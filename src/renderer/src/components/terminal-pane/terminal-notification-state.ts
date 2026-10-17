@@ -149,10 +149,6 @@ function hasActiveWorktreeState(state: StoreSnapshot, worktreeId: string): boole
     return true
   }
 
-  if ((state.browserTabsByWorktree?.[worktreeId] ?? []).length > 0) {
-    return true
-  }
-
   const worktree = getWorktreeMapFromState(state).get(worktreeId)
   if (worktree?.workspaceStatus === 'in-progress') {
     return true

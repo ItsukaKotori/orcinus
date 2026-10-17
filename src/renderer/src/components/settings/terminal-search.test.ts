@@ -187,20 +187,6 @@ describe('getTerminalPaneSearchEntries', () => {
     expect(matchesSettingsSearch('status item', macEntries)).toBe(true)
   })
 
-  it('keeps sidebar shortcut restore settings in the Appearance search index', () => {
-    const automationsEntry = getSidebarEntries().find(
-      (entry) => entry.title === 'Show Automations Button'
-    )
-
-    expect(automationsEntry).toBeDefined()
-    expect(automationsEntry?.keywords).toEqual(
-      expect.arrayContaining(['automations', 'sidebar', 'hide', 'show'])
-    )
-    expect(
-      getAppearancePaneSearchEntries().some((entry) => entry.title === 'Show Automations Button')
-    ).toBe(true)
-  })
-
   it('includes workspace card layout guidance in the sidebar and Appearance catalogs', () => {
     const entry = getWorkspaceCardLayoutEntry()
 

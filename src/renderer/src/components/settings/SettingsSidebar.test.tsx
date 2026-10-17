@@ -45,8 +45,8 @@ function renderSidebar(
                 installStatus: 'installed'
               },
               {
-                id: 'computer-use',
-                title: 'Computer Use',
+                id: 'voice-up-to-date',
+                title: 'Voice Up To Date',
                 icon: Bot,
                 installStatus: 'up-to-date'
               },

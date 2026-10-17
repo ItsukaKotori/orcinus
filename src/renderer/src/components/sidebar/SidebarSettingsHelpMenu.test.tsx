@@ -35,10 +35,6 @@ vi.mock('@/hooks/useMountedRef', () => ({
   useMountedRef: () => ({ current: true })
 }))
 
-vi.mock('../onboarding/show-onboarding-event', () => ({
-  showOnboardingFromRenderer: vi.fn()
-}))
-
 vi.mock('@/components/ui/dropdown-menu', () => ({
   DropdownMenu: ({
     children,
@@ -184,11 +180,6 @@ describe('SidebarSettingsHelpMenu', () => {
   it('renders Keyboard Shortcuts menu item', () => {
     const html = renderToStaticMarkup(<SidebarSettingsHelpMenu />)
     expect(html).toContain('Keyboard Shortcuts')
-  })
-
-  it('renders the Onboarding menu item by default', () => {
-    const html = renderToStaticMarkup(<SidebarSettingsHelpMenu />)
-    expect(html).toContain('Onboarding')
   })
 
   it('renders Restart Orca by default', () => {

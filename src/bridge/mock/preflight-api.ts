@@ -1,14 +1,13 @@
 // Phase 0 mock; replaced by Tauri IPC per view.
 import type { PreloadApi } from '../../preload/api-types'
-import type { PreflightStatus, RefreshAgentsResult } from '../../preload/api/preflight-api'
+import type { PreflightStatus, RefreshAgentsResult } from '../../shared/preload-api/api/preflight-api'
 import { withMethodFallback } from '../unimplemented-fallback'
 import { cloneMockValue } from './clone-mock-value'
 
 // Why all-negative: the Phase 0 shell has not probed the machine, and "not installed" is the
 // status the UI already handles by advertising setup steps instead of claiming tooling exists.
 const NOT_PROBED: PreflightStatus = {
-  git: { installed: false },
-  gh: { installed: false, authenticated: false }
+  git: { installed: false }
 }
 
 const NO_AGENTS: RefreshAgentsResult = {

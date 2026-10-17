@@ -29,10 +29,6 @@ export function getEditorDisplayLabel(
     return 'Conflict Review'
   }
 
-  if (file.mode === 'check-details') {
-    return file.checkRunDetails?.check.name ?? getBaseLabel(file, variant)
-  }
-
   if (file.mode === 'markdown-preview') {
     return `${getBaseLabel(file, variant)} (preview)`
   }

@@ -21,7 +21,7 @@ import { describe, expect, it } from 'vitest'
  */
 const RENDERER_SRC = import.meta.dirname
 const REPO_SRC = path.resolve(RENDERER_SRC, '../..')
-const ENTRIES = ['main.tsx', 'web/main.tsx']
+const ENTRIES = ['main.tsx']
 const EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx']
 
 const ALIASED_NODE_BUILTINS = new Set([

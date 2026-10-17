@@ -3,10 +3,6 @@ import type { SleepingAgentSessionRecord } from './agent-session-resume'
 import type { WorkspaceKey } from './folder-workspace-types'
 import type { Tab, TabGroup, TabGroupLayoutNode, WorkspaceVisibleTabType } from './tab-types'
 import type { TerminalLayoutSnapshot, TerminalTab } from './terminal-tab-types'
-import type { BrowserHistoryEntry, BrowserPage, BrowserWorkspace } from './browser-workspace-types'
-import type { WorkspaceDocHistoryEntry } from './workspace-doc-history'
-import type { ClientHostedBrowserCloseIntent } from './client-hosted-browser-close-intent'
-import type { PersistedClientHostedBrowserPage } from './client-hosted-browser-page-record'
 import type { ClosedTerminalTabTombstonesByTabId } from './closed-terminal-tab-tombstones'
 
 /** Minimal subset of OpenFile persisted across restarts.
@@ -55,30 +51,8 @@ export type WorkspaceSessionState = {
   activeFileIdByWorktree?: Record<string, string | null>
   /** Per-file markdown preview front-matter visibility. Absent entry means hidden. */
   markdownFrontmatterVisible?: Record<string, boolean>
-  /** Persisted browser workspaces, keyed by worktree ID. */
-  browserTabsByWorktree?: Record<string, BrowserWorkspace[]>
-  /** Persisted browser pages, keyed by workspace ID. */
-  browserPagesByWorkspace?: Record<string, BrowserPage[]>
-  /** Per-worktree active browser workspace ID at shutdown. */
-  activeBrowserTabIdByWorktree?: Record<string, string | null>
-  /**
-   * Runtime-authored: the client-hosted logical pages this runtime owns, keyed by worktree ID.
-   * Written and read only by the runtime that is the pages' authority — the desktop's own
-   * `browserPagesByWorkspace` rows are the client-side half of the same tabs.
-   */
-  clientHostedBrowserPagesByWorktree?: Record<string, PersistedClientHostedBrowserPage[]>
-  /**
-   * Client-authored: closes of client-hosted pages that could not reach their owning runtime,
-   * keyed by runtime environment ID. Replayed on reconnect so persistence cannot resurrect a tab
-   * the user deliberately closed while the host was down.
-   */
-  clientHostedBrowserCloseIntentsByEnvironment?: Record<string, ClientHostedBrowserCloseIntent[]>
-  /** Per-worktree active tab type (terminal vs editor vs browser) at shutdown. */
+  /** Per-worktree active tab type at shutdown. */
   activeTabTypeByWorktree?: Record<string, WorkspaceVisibleTabType>
-  /** Global browser URL history for address bar autocomplete. */
-  browserUrlHistory?: BrowserHistoryEntry[]
-  /** Previewed workspace documents for the same dropdown — document identities, never URLs. */
-  workspaceDocHistory?: WorkspaceDocHistoryEntry[]
   /** Per-worktree last-active terminal tab ID at shutdown. */
   activeTabIdByWorktree?: Record<string, string | null>
   /** Unified tab model — present when saved by a build that includes TabsSlice.

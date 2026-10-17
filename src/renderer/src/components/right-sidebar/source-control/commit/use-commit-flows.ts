@@ -1,5 +1,4 @@
 import type { SourceControlPanelFoundation } from '../panel/use-panel-foundation'
-import { useSourceControlCreatePrIntentCommitMessage } from '../review/use-create-pr-intent-commit-message'
 import { useSourceControlConflictAbort } from '../sync/use-conflict-abort'
 import { useSourceControlRemoteActionRunner } from '../sync/use-remote-action-runner'
 import { useSourceControlCommitAction } from './use-commit-action'
@@ -29,7 +28,6 @@ export function useSourceControlCommitFlows(foundation: SourceControlPanelFounda
     generateErrors,
     generateInFlightByWorktree,
     generateInFlightRef,
-    getCreatePrIntentOperationTarget,
     grouped,
     isAbortingOperation,
     openCommitGenerationDialog,
@@ -41,7 +39,6 @@ export function useSourceControlCommitFlows(foundation: SourceControlPanelFounda
     refreshGitHistoryRef,
     remoteActionErrorSequenceByWorktreeRef,
     remoteStatus,
-    remoteStatusForActions,
     resolvedCommitMessageAi,
     setAbortOperationInFlightByWorktree,
     setCommitErrorForWorktree,
@@ -97,15 +94,6 @@ export function useSourceControlCommitFlows(foundation: SourceControlPanelFounda
     updateCommitMessageGenerationRecord,
     worktreePath
   })
-  const createPrIntentCommitMessage = useSourceControlCreatePrIntentCommitMessage({
-    activeRepo,
-    generateInFlightRef,
-    getCreatePrIntentOperationTarget,
-    resolvedCommitMessageAi,
-    setGenerateErrors,
-    setGenerateInFlightByWorktree,
-    settings
-  })
   const remoteActionRunner = useSourceControlRemoteActionRunner({
     activeRepoSettings,
     activeWorktree,
@@ -124,7 +112,6 @@ export function useSourceControlCommitFlows(foundation: SourceControlPanelFounda
     refreshGitHistoryRef,
     remoteActionErrorSequenceByWorktreeRef,
     remoteStatus,
-    remoteStatusForActions,
     setRemoteActionErrors,
     syncBranch,
     worktreePath
@@ -145,7 +132,6 @@ export function useSourceControlCommitFlows(foundation: SourceControlPanelFounda
   return {
     ...commitAction,
     ...commitMessageGeneration,
-    ...createPrIntentCommitMessage,
     ...remoteActionRunner,
     ...conflictAbort
   }

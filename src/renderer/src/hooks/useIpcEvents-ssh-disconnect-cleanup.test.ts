@@ -140,7 +140,6 @@ describe('useIpcEvents updater integration', () => {
           onOpenQuickOpen: () => () => {},
           onToggleQuickCommandsMenu: () => () => {},
           onOpenNewWorkspace: () => () => {},
-          onOpenTasks: () => () => {},
           onJumpToWorktreeIndex: () => () => {},
           onJumpToTabIndex: () => () => {},
           onWorktreeHistoryNavigate: () => () => {},

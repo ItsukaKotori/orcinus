@@ -9,8 +9,8 @@ describe('buildActiveViewUnloadPatch', () => {
   })
 
   it('checkpoints the latest view after startup hydration completes', () => {
-    expect(buildActiveViewUnloadPatch({ activeView: 'tasks', persistedUIReady: true })).toEqual({
-      activeView: 'tasks'
+    expect(buildActiveViewUnloadPatch({ activeView: 'space', persistedUIReady: true })).toEqual({
+      activeView: 'space'
     })
   })
 })

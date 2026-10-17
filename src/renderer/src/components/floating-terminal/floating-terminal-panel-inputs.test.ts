@@ -7,17 +7,12 @@ const OTHER_WORKTREE_ID = 'worktree-other'
 
 type State = Parameters<ReturnType<typeof createFloatingTerminalPanelInputsSelector>>[0]
 type TerminalTab = NonNullable<AppState['tabsByWorktree'][string]>[number]
-type BrowserTab = NonNullable<AppState['browserTabsByWorktree'][string]>[number]
 type TabGroup = NonNullable<AppState['groupsByWorktree'][string]>[number]
 type UnifiedTab = NonNullable<AppState['unifiedTabsByWorktree'][string]>[number]
 type OpenFile = AppState['openFiles'][number]
 
 function terminalTab(id: string, worktreeId: string = FLOATING_TERMINAL_WORKTREE_ID): TerminalTab {
   return { id, worktreeId } as TerminalTab
-}
-
-function browserTab(id: string, worktreeId: string = FLOATING_TERMINAL_WORKTREE_ID): BrowserTab {
-  return { id, worktreeId } as BrowserTab
 }
 
 function group(id: string, worktreeId: string = FLOATING_TERMINAL_WORKTREE_ID): TabGroup {
@@ -34,7 +29,6 @@ function openFile(id: string, worktreeId: string): OpenFile {
 
 function state(overrides: Partial<State> = {}): State {
   return {
-    browserTabsByWorktree: {},
     expandedPaneByTabId: {},
     groupsByWorktree: {},
     openFiles: [],
@@ -53,15 +47,10 @@ describe('createFloatingTerminalPanelInputsSelector', () => {
       onOpenFileVisited
     })
     const floatingTab = terminalTab('floating-terminal')
-    const floatingBrowser = browserTab('floating-browser')
     const floatingGroup = group('floating-group')
     const floatingUnifiedTab = unifiedTab('floating-unified')
     const floatingFile = openFile('floating-file', FLOATING_TERMINAL_WORKTREE_ID)
     const initial = state({
-      browserTabsByWorktree: {
-        [FLOATING_TERMINAL_WORKTREE_ID]: [floatingBrowser],
-        [OTHER_WORKTREE_ID]: [browserTab('other-browser', OTHER_WORKTREE_ID)]
-      },
       expandedPaneByTabId: { 'floating-terminal': true, 'other-terminal': true },
       groupsByWorktree: {
         [FLOATING_TERMINAL_WORKTREE_ID]: [floatingGroup],
@@ -79,10 +68,6 @@ describe('createFloatingTerminalPanelInputsSelector', () => {
     })
     const first = select(initial)
     const afterUnrelatedWrites = state({
-      browserTabsByWorktree: {
-        ...initial.browserTabsByWorktree,
-        [OTHER_WORKTREE_ID]: [browserTab('other-browser-next', OTHER_WORKTREE_ID)]
-      },
       expandedPaneByTabId: { ...initial.expandedPaneByTabId, 'other-terminal': false },
       groupsByWorktree: {
         ...initial.groupsByWorktree,
@@ -117,17 +102,6 @@ describe('createFloatingTerminalPanelInputsSelector', () => {
     let selected = select(currentState)
     expect(selected).not.toBe(previous)
     expect(selected.tabs.map((tab) => tab.id)).toEqual(['terminal'])
-    previous = selected
-
-    currentState = {
-      ...currentState,
-      browserTabsByWorktree: {
-        [FLOATING_TERMINAL_WORKTREE_ID]: [browserTab('browser')]
-      }
-    }
-    selected = select(currentState)
-    expect(selected).not.toBe(previous)
-    expect(selected.browserTabs.map((tab) => tab.id)).toEqual(['browser'])
     previous = selected
 
     currentState = {

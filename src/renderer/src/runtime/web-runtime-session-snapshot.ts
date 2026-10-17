@@ -10,7 +10,6 @@ import { getRuntimeEnvironmentRevision } from './runtime-environment-revision'
 import { unwrapRuntimeRpcResult } from './runtime-rpc-client'
 import { toRuntimeWorktreeSelector } from './runtime-worktree-selector'
 import { captureRuntimeEnvironmentCall } from './web-runtime-session-environment'
-import { throwIfE2eWebRuntimeBrowserReconciliationFails } from './web-runtime-browser-creation-e2e-fault'
 import { getSessionTabsRuntimeIdFromResponse } from './web-session-tabs-sync/publisher-identity-fences'
 import { recoverWebSessionTerminalOrphansBeforeApply } from './web-session-terminal-orphan-recovery'
 
@@ -49,9 +48,6 @@ export async function refreshWebRuntimeSessionTabsSnapshot(
       options.afterCurrentInFlight
         ? listRemoteRuntimeSessionTabsAfterCurrentInFlight
         : listRemoteRuntimeSessionTabsDeduped
-    if (options.afterCurrentInFlight) {
-      throwIfE2eWebRuntimeBrowserReconciliationFails()
-    }
     // Why: a joined in-flight list leaves this undefined, and recovery then fences on the adoption response instead.
     let runtimeId: string | undefined
     const snapshot = await listSessionTabs({

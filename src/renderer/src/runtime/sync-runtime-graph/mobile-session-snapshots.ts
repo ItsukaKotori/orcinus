@@ -19,7 +19,6 @@ import {
 import { getEditorDraftVersionByFileId } from './sync-projections'
 import { getMobileTerminalTheme } from './mobile-terminal-theme'
 import {
-  isMobilePublishableBrowserWorkspace,
   isMobilePublishableOpenFile,
   isWebOnlyMirroredTerminalTab
 } from './mobile-session-surfaces'
@@ -30,7 +29,6 @@ import {
 } from './mobile-session-group-projection'
 import { buildMobileTerminalSurfaceTabs } from './mobile-session-terminal-tabs'
 import { buildMobileMarkdownTab, buildMobileFileTab } from './mobile-session-editor-tabs'
-import { buildMobileBrowserTab } from './mobile-session-browser-tabs'
 import type { MobileSessionPublicationInputs } from './types'
 import { canReuseMobileSessionSnapshot } from './mobile-session-capture'
 
@@ -42,9 +40,7 @@ export function buildMobileSessionTabSnapshots(
   )
 ): RuntimeMobileSessionTabsSnapshot[] {
   const openFileIndexes = getOpenFileIndexes(state.openFiles)
-  const browserTabsByWorktree = state.browserTabsByWorktree ?? {}
   const publicationInputs: MobileSessionPublicationInputs = {
-    browserTabsByWorktree,
     openFileIndexes,
     editorDraftVersionByFileId: getEditorDraftVersionByFileId(state.editorDrafts),
     agentStatusByWorktreeId: buildMobileSessionAgentStatusByWorktree(
@@ -61,7 +57,6 @@ export function buildMobileSessionTabSnapshots(
     ...Object.keys(state.tabsByWorktree),
     ...Object.keys(state.groupsByWorktree),
     ...Object.keys(state.unifiedTabsByWorktree),
-    ...Object.keys(browserTabsByWorktree),
     ...state.openFiles.map((file) => file.worktreeId)
   ])
   const snapshots: RuntimeMobileSessionTabsSnapshot[] = []
@@ -87,9 +82,6 @@ export function buildMobileSessionTabSnapshots(
       continue
     }
     const terminalTabById = new Map(inputs.terminalTabs.map((tab) => [tab.id, tab]))
-    const browserWorkspaceById = new Map(
-      inputs.browserWorkspaces.map((workspace) => [workspace.id, workspace])
-    )
     const unifiedTabById = new Map(inputs.unifiedTabs.map((tab) => [tab.id, tab]))
     const openFilesForWorktree = inputs.openFilesById
     const editorIds = inputs.openFileIds.filter((fileId) => {
@@ -104,10 +96,7 @@ export function buildMobileSessionTabSnapshots(
       .map((terminal) => terminal.id)
     const groupProjection = buildMobileSessionGroupProjection(inputs, {
       terminalIds,
-      editorIds,
-      browserIds: [...browserWorkspaceById.values()]
-        .filter(isMobilePublishableBrowserWorkspace)
-        .map((workspace) => workspace.id)
+      editorIds
     })
     const tabs: RuntimeMobileSessionSnapshotTab[] = []
     const emittedEditorFileIds = new Set<string>()
@@ -135,18 +124,6 @@ export function buildMobileSessionTabSnapshots(
         )
         emittedEditorFileIds.add(file.id)
         emittedEditorTabIds.add(item.tabId ?? item.id)
-      } else if (item.type === 'browser') {
-        const workspace = browserWorkspaceById.get(item.id)
-        if (!workspace || !isMobilePublishableBrowserWorkspace(workspace)) {
-          continue
-        }
-        tabs.push(
-          buildMobileBrowserTab(
-            inputs,
-            workspace,
-            item.tabId ? unifiedTabById.get(item.tabId) : undefined
-          )
-        )
       }
     }
 

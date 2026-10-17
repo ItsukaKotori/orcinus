@@ -20,7 +20,7 @@ const mocks = vi.hoisted(() => ({
       title: string
       toggleDescription: string
     }[],
-    settingsSearchQuery: 'automations',
+    settingsSearchQuery: 'workspace card layout',
     statusBarItems: [],
     toggleStatusBarItem: vi.fn(),
     recordFeatureInteraction: vi.fn(),
@@ -216,7 +216,7 @@ describe('AppearancePane', () => {
     resetRendererAppPlatformCacheForTests()
     mocks.state.availableStatusBarToggles = []
     mocks.state.appPlatform = 'linux'
-    mocks.state.settingsSearchQuery = 'automations'
+    mocks.state.settingsSearchQuery = 'workspace card layout'
     // UIZoomControl reads window.api.ui on mount; the inline-expansion pane can
     // render the full Interface section, so provide a minimal renderer bridge
     // without clobbering happy-dom's window.location.
@@ -346,28 +346,6 @@ describe('AppearancePane', () => {
     })
   })
 
-  it('restores the Automations sidebar button from the sidebar settings switch', async () => {
-    const updateSettings = vi.fn()
-    const settings = {
-      ...getDefaultSettings('/tmp'),
-      showAutomationsButton: false
-    }
-
-    const container = await renderAppearancePane(settings, updateSettings)
-    const switchControl = container.querySelector<HTMLButtonElement>(
-      'button[role="switch"][aria-label="Show Automations Button"]'
-    )
-
-    expect(switchControl).not.toBeNull()
-    expect(switchControl?.getAttribute('aria-checked')).toBe('false')
-
-    await act(async () => {
-      switchControl?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    })
-
-    expect(updateSettings).toHaveBeenCalledWith({ showAutomationsButton: true })
-  })
-
   it('changes workspace card layout from the Appearance sidebar controls', async () => {
     mocks.state.settingsSearchQuery = 'workspace card layout'
     const settings = {
@@ -438,23 +416,6 @@ describe('AppearancePane', () => {
     ).toBeTruthy()
   })
 
-  it('reveals an advanced sidebar control when its search matches, even though it is hidden by default', async () => {
-    // The Show Tasks Button toggle lives behind the Window & Sidebar Advanced
-    // disclosure; with no search it stays collapsed, but a matching query must
-    // force the disclosure open so the control is reachable.
-    mocks.state.settingsSearchQuery = ''
-    const collapsedContainer = await renderAppearancePane(getDefaultSettings('/tmp'))
-    expect(
-      collapsedContainer.querySelector('button[role="switch"][aria-label="Show Tasks Button"]')
-    ).toBeNull()
-
-    mocks.state.settingsSearchQuery = 'tasks'
-    const searchedContainer = await renderAppearancePane(getDefaultSettings('/tmp'))
-    expect(
-      searchedContainer.querySelector('button[role="switch"][aria-label="Show Tasks Button"]')
-    ).not.toBeNull()
-  })
-
   it('shows and updates the menu bar icon preference only on desktop macOS', async () => {
     mocks.state.appPlatform = 'darwin'
     mocks.state.settingsSearchQuery = 'menu bar'
@@ -492,17 +453,17 @@ describe('AppearancePane', () => {
   it('expands status bar controls for a section-label search', async () => {
     mocks.state.availableStatusBarToggles = [
       {
-        id: 'ports',
-        title: 'Ports',
-        description: 'Show live workspace ports in the status bar.',
-        toggleDescription: 'Show Ports in the status bar.',
-        keywords: ['status bar', 'ports']
+        id: 'ssh',
+        title: 'SSH',
+        description: 'Show the SSH connection status in the status bar.',
+        toggleDescription: 'Show SSH in the status bar.',
+        keywords: ['status bar', 'ssh']
       }
     ]
     mocks.state.settingsSearchQuery = 'status bar'
     const container = await renderAppearancePane(getDefaultSettings('/tmp'))
 
-    expect(container.querySelector('button[role="switch"][aria-label="Ports"]')).not.toBeNull()
+    expect(container.querySelector('button[role="switch"][aria-label="SSH"]')).not.toBeNull()
   })
 
   it('records Resource Manager status bar toggles as resource-manager interactions', async () => {

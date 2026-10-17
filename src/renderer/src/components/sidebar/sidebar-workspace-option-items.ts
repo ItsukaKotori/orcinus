@@ -19,12 +19,6 @@ export const GROUP_BY_OPTIONS = [
     }
   },
   {
-    id: 'pr-status',
-    get label() {
-      return translate('auto.components.sidebar.SidebarWorkspaceOptionsMenu.0f9b959b31', 'PR')
-    }
-  },
-  {
     id: 'repo',
     get label() {
       return translate('auto.components.sidebar.SidebarWorkspaceOptionsMenu.2170d553cf', 'Project')
@@ -104,13 +98,6 @@ const BASE_WORKTREE_CARD_PROPERTY_OPTIONS: WorktreeCardPropertyOption[] = [
     properties: ['cli'],
     get label() {
       return translate('auto.components.sidebar.SidebarWorkspaceOptionsMenu.cli', 'Orca CLI')
-    }
-  },
-  {
-    id: 'ports',
-    properties: ['ports'],
-    get label() {
-      return translate('auto.components.sidebar.SidebarWorkspaceOptionsMenu.2d74665a56', 'Ports')
     }
   },
   {

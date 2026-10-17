@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { RuntimeMobileSessionTabsResult } from '../../../shared/runtime-types'
 import { toWebTerminalSurfaceTabId } from '../../../shared/terminal-surface-id'
-import type { BrowserPage, BrowserWorkspace } from '../../../shared/browser-workspace-types'
-import type { Tab } from '../../../shared/tab-types'
 import {
   _getWebSessionTabsTrackingCountsForTest,
   applyFreshWebSessionTabsSnapshot,
@@ -32,84 +30,22 @@ describe('applyWebSessionTabsSnapshot', () => {
   beforeEach(resetWebSessionTabsSyncTestState)
 
   it('clears web session tracking maps when the host removes a worktree snapshot', () => {
-    const workspace: BrowserWorkspace = {
-      id: 'local-browser-workspace',
-      worktreeId: WT,
-      activePageId: 'local-browser-page',
-      pageIds: ['local-browser-page'],
-      url: 'https://example.com/',
-      title: 'Example Domain',
-      loading: false,
-      faviconUrl: null,
-      canGoBack: false,
-      canGoForward: false,
-      loadError: null,
-      createdAt: NOW - 10
-    }
-    const page: BrowserPage = {
-      id: 'local-browser-page',
-      workspaceId: workspace.id,
-      worktreeId: WT,
-      url: 'https://example.com/',
-      title: 'Example Domain',
-      loading: false,
-      faviconUrl: null,
-      canGoBack: false,
-      canGoForward: false,
-      loadError: null,
-      createdAt: NOW - 10
-    }
-    const unifiedTab: Tab = {
-      id: 'local-browser-unified',
-      entityId: workspace.id,
-      groupId: 'host-group-1',
-      worktreeId: WT,
-      contentType: 'browser',
-      label: 'New Tab',
-      customLabel: null,
-      color: null,
-      sortOrder: 0,
-      createdAt: NOW - 10,
-      isPreview: false,
-      isPinned: false
-    }
-
     const patch = applyFreshWebSessionTabsSnapshot(
-      makeState({
-        browserTabsByWorktree: { [WT]: [workspace] },
-        browserPagesByWorkspace: { [workspace.id]: [page] },
-        remoteBrowserPageHandlesByPageId: {
-          [page.id]: { environmentId: ENV, remotePageId: 'host-browser-page' }
-        },
-        unifiedTabsByWorktree: { [WT]: [unifiedTab] },
-        groupsByWorktree: {
-          [WT]: [
-            {
-              id: 'host-group-1',
-              worktreeId: WT,
-              activeTabId: unifiedTab.id,
-              tabOrder: [unifiedTab.id],
-              recentTabIds: [unifiedTab.id]
-            }
-          ]
-        }
-      }),
+      makeState(),
       makeSnapshot(
         [
           {
-            type: 'browser',
-            id: 'host-browser-unified',
-            title: 'Example Domain',
-            browserWorkspaceId: 'host-browser-workspace',
-            browserPageId: 'host-browser-page',
-            url: 'https://example.com/',
-            loading: false,
-            canGoBack: false,
-            canGoForward: false,
-            isActive: true
+            type: 'terminal',
+            id: HOST_SURFACE_ID,
+            title: 'host shell',
+            parentTabId: 'host-tab-1',
+            leafId: LEAF_ID,
+            isActive: true,
+            status: 'ready',
+            terminal: 'terminal-1'
           }
         ],
-        { activeTabId: 'host-browser-unified', activeTabType: 'browser' }
+        { activeTabId: HOST_SURFACE_ID, activeTabType: 'terminal' }
       ),
       ENV,
       NOW
@@ -228,19 +164,17 @@ describe('applyWebSessionTabsSnapshot', () => {
       makeSnapshot(
         [
           {
-            type: 'browser',
-            id: 'host-browser-unified',
-            title: 'Example Domain',
-            browserWorkspaceId: 'host-browser-workspace',
-            browserPageId: 'host-browser-page',
-            url: 'https://example.com/',
-            loading: false,
-            canGoBack: false,
-            canGoForward: false,
-            isActive: true
+            type: 'terminal',
+            id: HOST_SURFACE_ID,
+            title: 'host shell',
+            parentTabId: 'host-tab-1',
+            leafId: LEAF_ID,
+            isActive: true,
+            status: 'ready',
+            terminal: 'terminal-1'
           }
         ],
-        { activeTabId: 'host-browser-unified', activeTabType: 'browser' }
+        { activeTabId: HOST_SURFACE_ID, activeTabType: 'terminal' }
       ),
       ENV,
       NOW
@@ -250,22 +184,20 @@ describe('applyWebSessionTabsSnapshot', () => {
       makeSnapshot(
         [
           {
-            type: 'browser',
-            id: 'other-host-browser-unified',
-            title: 'Example Domain',
-            browserWorkspaceId: 'other-host-browser-workspace',
-            browserPageId: 'other-host-browser-page',
-            url: 'https://example.com/',
-            loading: false,
-            canGoBack: false,
-            canGoForward: false,
-            isActive: true
+            type: 'terminal',
+            id: `host-tab-2::${SECOND_LEAF_ID}`,
+            title: 'second shell',
+            parentTabId: 'host-tab-2',
+            leafId: SECOND_LEAF_ID,
+            isActive: true,
+            status: 'ready',
+            terminal: 'terminal-2'
           }
         ],
         {
           worktree: 'repo::/other-worktree',
-          activeTabId: 'other-host-browser-unified',
-          activeTabType: 'browser'
+          activeTabId: `host-tab-2::${SECOND_LEAF_ID}`,
+          activeTabType: 'terminal'
         }
       ),
       'web-env-2',

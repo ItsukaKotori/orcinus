@@ -62,23 +62,10 @@ vi.mock('@/components/sparse/SparseCheckoutPresetSelect', () => ({
 }))
 
 vi.mock('@/components/new-workspace/SmartWorkspaceNameField', () => ({
-  default: ({
-    branchesEnabled,
-    repoBackedSourcesDisabled,
-    repoBackedSearchRepos = []
-  }: {
-    branchesEnabled?: boolean
-    repoBackedSourcesDisabled?: boolean
-    repoBackedSearchRepos?: { displayName: string }[]
-  }) => (
+  default: ({ branchesEnabled }: { branchesEnabled?: boolean }) => (
     <input
       aria-label="workspace name"
       data-branches-enabled={branchesEnabled ? 'true' : 'false'}
-      data-repo-backed-search-count={repoBackedSearchRepos.length}
-      data-repo-backed-search-names={repoBackedSearchRepos
-        .map((repo) => repo.displayName)
-        .join(',')}
-      data-repo-backed-sources-disabled={repoBackedSourcesDisabled ? 'true' : 'false'}
     />
   )
 }))
@@ -113,21 +100,6 @@ const projectOptions: NewWorkspaceProjectOption[] = [
     detail: '/workspace/platform',
     parentPath: '/workspace/platform',
     connectionId: null
-  }
-]
-
-const sourceRepos = [
-  {
-    id: 'repo-a',
-    displayName: 'Repo A',
-    path: '/repo-a',
-    badgeColor: '#111111'
-  },
-  {
-    id: 'repo-b',
-    displayName: 'Repo B',
-    path: '/repo-b',
-    badgeColor: '#222222'
   }
 ]
 
@@ -170,7 +142,6 @@ function makeDisconnectedHostOption(targetId: string, label: string): ProjectHos
 }
 
 const disconnectedDevboxNeedsSetupHostOption = makeDisconnectedHostOption('devbox', 'Devbox')
-const disconnectedBastionNeedsSetupHostOption = makeDisconnectedHostOption('bastion', 'Bastion')
 
 const pnpmInstallSetupConfig = {
   source: 'yaml' as const,
@@ -220,10 +191,7 @@ function renderCard(
         primaryActionLabel="Create workspace"
         name=""
         onNameValueChange={() => {}}
-        onSmartGitHubItemSelect={() => {}}
-        onSmartGitLabItemSelect={() => {}}
         onSmartBranchSelect={() => {}}
-        onSmartLinearIssueSelect={() => {}}
         smartNameSelection={null}
         onClearSmartNameSelection={() => {}}
         canReuseSelectedBranch={false}
@@ -369,22 +337,6 @@ describe('NewWorkspaceComposerCard folder task source mode', () => {
     )
 
     expect(advancedPanel?.hasAttribute('inert')).toBe(true)
-  })
-
-  it('passes folder child repos into the create-from field without a source trigger', () => {
-    current = renderCard({
-      repoBackedSearchRepos: sourceRepos as never
-    })
-
-    const projectSection = current.container.querySelector('[data-testid="project-combobox"]')
-      ?.parentElement
-    expect(projectSection?.textContent).not.toContain('Task Source')
-    expect(current.container.textContent).toContain("Name or 'Create From'")
-    const nameInput = current.container.querySelector('[aria-label="workspace name"]')
-    expect(nameInput?.getAttribute('data-repo-backed-search-count')).toBe('2')
-    expect(nameInput?.getAttribute('data-repo-backed-search-names')).toBe('Repo A,Repo B')
-    expect(current.container.querySelector('[data-testid="repo-backed-source-trigger"]')).toBeNull()
-    expect(current.container.querySelectorAll('[data-testid="project-combobox"]')).toHaveLength(1)
   })
 
   it('keeps the reuse-branch row collapsed until a local branch is reusable', () => {
@@ -533,21 +485,6 @@ describe('NewWorkspaceComposerCard folder task source mode', () => {
     expect(findInputByLabel(current.container, 'Branch name')).toBeNull()
   })
 
-  it('omits the branch name field when a tracked work item is the source', () => {
-    // Why: a PR/issue/MR/Linear source derives the branch itself (and a linked
-    // GitHub PR re-resolves it at submit), so a manual override would be a
-    // silently ignored control — the field is only for typed-name/base-branch.
-    current = renderCard({
-      advancedOpen: true,
-      branchesEnabled: true,
-      branchNameOverride: 'feature/manual',
-      smartNameSelection: { kind: 'github-pr', label: '#42 Fix', url: 'https://example.com/pr/42' },
-      onBranchNameOverrideChange: vi.fn()
-    })
-
-    expect(findInputByLabel(current.container, 'Branch name')).toBeNull()
-  })
-
   it('keeps the branch name field when creating from a base branch', () => {
     // Why: choosing a base branch still lets the user name their new branch.
     current = renderCard({
@@ -572,27 +509,6 @@ describe('NewWorkspaceComposerCard folder task source mode', () => {
     )?.nextElementSibling
     expect(nextField?.textContent).toMatch(/Parent worktree(?!.*Note)/)
     expect(nextField?.nextElementSibling?.textContent).toContain('Note')
-  })
-
-  it('does not disable folder workspace creation when only source lookup needs SSH', () => {
-    current = renderCard({
-      eligibleRepos: [
-        { id: 'repo-a', displayName: 'Repo A', path: '/repo-a', connectionId: 'ssh-a' } as never
-      ],
-      repoBackedSearchRepos: sourceRepos as never,
-      repoBackedSourcesDisabled: false
-    })
-
-    const createButton = [...current.container.querySelectorAll('button')].find((button) =>
-      button.textContent?.includes('Create workspace')
-    )
-    expect(createButton).toBeTruthy()
-    expect(createButton?.hasAttribute('disabled')).toBe(false)
-    expect(
-      current.container
-        .querySelector('[aria-label="workspace name"]')
-        ?.getAttribute('data-repo-backed-sources-disabled')
-    ).toBe('false')
   })
 
   it('shows setup-needed hosts in the run target picker when one setup is ready', () => {
@@ -641,65 +557,9 @@ describe('NewWorkspaceComposerCard folder task source mode', () => {
     expect(hostChanges).toEqual([])
   })
 
-  it('connects disconnected setup-needed SSH hosts without selecting them', async () => {
-    const hostChanges: string[] = []
-    current = renderCard({
-      projectHostSetupOptions: [localReadyHostOption, disconnectedDevboxNeedsSetupHostOption],
-      selectedProjectHostSetupId: 'setup-local',
-      onProjectHostSetupChange: (setupId) => hostChanges.push(setupId)
-    })
 
-    openRunTargetPicker(current.container)
-    const devboxItem = findRunTargetItem('Devbox')
-    expect(devboxItem).toBeTruthy()
-    const connectButton = [...(devboxItem?.querySelectorAll('button') ?? [])].find((button) =>
-      button.textContent?.includes('Connect')
-    )
-    expect(connectButton).toBeTruthy()
 
-    await act(async () => {
-      connectButton?.click()
-    })
 
-    expect(apiMocks.sshConnect).toHaveBeenCalledWith({ targetId: 'devbox' })
-    expect(hostChanges).toEqual([])
-    // The picker stays open so the connecting state is visible; the row is not auto-selected.
-    expect(findRunTargetItem('Devbox')).toBeTruthy()
-  })
-
-  it('keeps other hosts connectable while one connect is still in flight', async () => {
-    // First host's connect never resolves — a stalled connect must not disable the others.
-    apiMocks.sshConnect.mockImplementation(({ targetId }: { targetId: string }) =>
-      targetId === 'devbox' ? new Promise(() => {}) : Promise.resolve(undefined)
-    )
-    current = renderCard({
-      projectHostSetupOptions: [
-        localReadyHostOption,
-        disconnectedDevboxNeedsSetupHostOption,
-        disconnectedBastionNeedsSetupHostOption
-      ],
-      selectedProjectHostSetupId: 'setup-local'
-    })
-
-    openRunTargetPicker(current.container)
-    await act(async () => {
-      findConnectButton('Devbox')?.click()
-    })
-
-    // The picker stays open through the connect, so the state is inspectable in place.
-    // Devbox is mid-connect: disabled, showing the connecting indicator; Bastion stays clickable.
-    const devboxButton = findConnectButton('Devbox')
-    expect(devboxButton?.disabled).toBe(true)
-    expect(devboxButton?.textContent).toContain('Connecting')
-    const bastionButton = findConnectButton('Bastion')
-    expect(bastionButton?.disabled).toBe(false)
-    expect(bastionButton?.textContent).toContain('Connect')
-
-    await act(async () => {
-      bastionButton?.click()
-    })
-    expect(apiMocks.sshConnect).toHaveBeenCalledWith({ targetId: 'bastion' })
-  })
 
   it('stops the connecting indicator when the connect fails', async () => {
     // A failed connect must clear the spinner and restore the Connect button so the user

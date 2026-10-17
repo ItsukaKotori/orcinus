@@ -6,7 +6,6 @@ use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 use ade_ai_vault::VaultConfig;
-use ade_automations::{AutomationService, AutomationStore};
 use ade_core::defaults::{onboarding_defaults, settings_defaults, ui_state_defaults};
 use ade_fs::{FsService, FsWatcher};
 use ade_git::runner::CancelToken;
@@ -28,7 +27,6 @@ use tauri::{AppHandle, Manager};
 use crate::commands::ai_vault::AiVaultService;
 use crate::commands::platform::{platform_info, PlatformInfo};
 use crate::commands::preflight::PathHydrationCache;
-use crate::computer_service::{ComputerService, StoreFeatureRecorder, USER_DATA_PATH_ENV};
 use crate::errors::BridgeError;
 use crate::events;
 use crate::json::Json;
@@ -36,6 +34,10 @@ use crate::plugins_service::{
     build_plugin_service, keychain_secrets, notification_id, EventEmitter, HostPtyTerminals,
     NotificationDispatcher, PluginServiceDeps, PluginTicker,
 };
+
+/// Env override for the app data directory, honored so both the app and the
+/// `orcinus` CLI agree on where session state lives.
+pub const USER_DATA_PATH_ENV: &str = "ORCINUS_USER_DATA_PATH";
 
 /// Debounce window for settings/ui-state disk writes (spec §4.1).
 pub const WRITE_DEBOUNCE: Duration = Duration::from_millis(1000);
@@ -415,80 +417,6 @@ impl Default for GitCancelRegistry {
     }
 }
 
-/// gh 子进程并发闸（全局 4，FIFO 近似——Condvar 唤醒不保证顺序，可接受）。
-pub struct GhConcurrencyGate {
-    permits: Mutex<usize>,
-    available: Condvar,
-}
-
-impl GhConcurrencyGate {
-    pub fn new(max: usize) -> Self {
-        Self {
-            permits: Mutex::new(max),
-            available: Condvar::new(),
-        }
-    }
-
-    pub fn acquire(&self) -> GhGateGuard<'_> {
-        let mut permits = lock(&self.permits);
-        while *permits == 0 {
-            permits = self
-                .available
-                .wait(permits)
-                .unwrap_or_else(|poisoned| poisoned.into_inner());
-        }
-        *permits -= 1;
-        GhGateGuard { gate: self }
-    }
-}
-
-pub struct GhGateGuard<'a> {
-    gate: &'a GhConcurrencyGate,
-}
-
-impl Drop for GhGateGuard<'_> {
-    fn drop(&mut self) {
-        let mut permits = lock(&self.gate.permits);
-        *permits += 1;
-        self.gate.available.notify_one();
-    }
-}
-
-/// gh 可执行文件解析结果的进程内缓存（成功才写；失败每次重试）。
-#[derive(Clone, Default)]
-pub struct GhPathCache(Arc<Mutex<Option<std::path::PathBuf>>>);
-
-impl GhPathCache {
-    pub fn get(&self) -> Option<std::path::PathBuf> {
-        lock(&self.0).clone()
-    }
-    pub fn set(&self, value: std::path::PathBuf) {
-        *lock(&self.0) = Some(value);
-    }
-}
-
-/// `ade_automations::EventSink` 的生产实现：把内核的写入/派发转成 Tauri 事件
-/// （`automations:changed` 与 `automations:dispatch-requested`，规格 §3.2）。
-pub struct ServiceEventSink {
-    app: AppHandle,
-}
-
-impl ServiceEventSink {
-    pub fn new(app: AppHandle) -> Self {
-        Self { app }
-    }
-}
-
-impl ade_automations::EventSink for ServiceEventSink {
-    fn automations_changed(&self, reason: &str) {
-        events::emit_automations_changed(&self.app, reason);
-    }
-
-    fn dispatch_requested(&self, payload: Value) {
-        events::emit_automation_dispatch_requested(&self.app, payload);
-    }
-}
-
 /// 插件服务事件出口：经 `emit_json` 投影到 `plugins:changed` /
 /// `plugins:open-tab`（注入为闭包以便 bridge 单测无需 Tauri runtime）。
 fn plugin_event_emitter(app: AppHandle) -> EventEmitter {
@@ -554,11 +482,6 @@ pub struct AppState {
     pub session: Arc<Store>,
     /// hook server（规格 §3.1；Task 6）：HTTP 接收 + endpoint 发布 + 状态缓存。
     pub hooks: Arc<AgentHookServer>,
-    /// automations 定义与运行历史（`automations.json`；规格 §3.1）。
-    pub automations: Arc<AutomationStore>,
-    /// 60s tick 服务：写入广播 + 到期派发（armed 由
-    /// `automations_renderer_ready` 置位；规格 §3.1/§4）。
-    pub automation_service: Arc<AutomationService>,
     /// `session:flush-requested` 握手槽（spec §3.4；None = 无等待中的退出编排）。
     pub(crate) session_flush_slot: Mutex<Option<SessionFlushSignal>>,
     /// CloseRequested 重入门闩（spec §3.4）：仅首次（用户发起）close 编排
@@ -569,17 +492,10 @@ pub struct AppState {
     pub home: String,
     /// 登录 shell PATH 水合的进程内缓存（Task 11）：进程生命周期内最多水合一次。
     pub path_hydration_cache: PathHydrationCache,
-    /// gh 执行器并发闸（规格 §3.1；全局 4）。
-    pub gh_gate: Arc<GhConcurrencyGate>,
-    /// gh 可执行文件解析缓存（成功才写）。
-    pub gh_path_cache: GhPathCache,
     pub git_cancels: GitCancelRegistry,
     /// AI vault 会话历史（Phase 2F 规格 §3.2）：roots 配置 + 60s 列表缓存
     /// + 扫描取消注册表；无后台任务。
     pub ai_vault: Arc<AiVaultService>,
-    /// computer-use（Phase 2G 规格 §3.4/§3.5）：provider + TCC 权限面 +
-    /// runtime RPC server（`runtime.json`/`runtime.sock`，Exit 时 shutdown）。
-    pub computer: Arc<ComputerService>,
     /// 插件内核（Phase 3A 规格 §3.3/§3.9，T12a）：装配好的 PluginService
     /// 本体；T12b 在其上加命令面。Ticker 每 10s `pump()`（闲置回收）。
     pub plugins: Arc<PluginService>,
@@ -591,8 +507,7 @@ pub struct AppState {
 
 impl AppState {
     pub fn initialize(app: &AppHandle, pty_host: Arc<PtyHost>) -> Result<Self, BridgeError> {
-        // `orcinus` CLI reads `runtime.json` from the same directory; tests can
-        // redirect every store with one env var (spec §3.5).
+        // Tests can redirect every store with one env var (spec §3.5).
         let data_dir = match std::env::var(USER_DATA_PATH_ENV) {
             Ok(value) if !value.is_empty() => std::path::PathBuf::from(value),
             _ => app.path().app_data_dir().map_err(|error| {
@@ -645,16 +560,6 @@ impl AppState {
         // 环境（XDG/OPENCODE_DB 覆盖）解析；无后台任务。
         let ai_vault = Arc::new(AiVaultService::new(VaultConfig::from_env(home.clone())));
 
-        // automations（规格 §3.1/§4）：定义/历史先加载，服务先起（60s tick
-        // 空转）；`armed` 等渲染层 `automations_renderer_ready` 再武装并追赶。
-        let automations = Arc::new(AutomationStore::load(data_dir.join("automations.json")));
-        let automation_service = AutomationService::new(
-            Arc::clone(&automations),
-            Arc::new(ServiceEventSink::new(app.clone())),
-            crate::commands::automations::now_millis,
-        );
-        automation_service.start();
-
         let settings_writer = WriteScheduler::new(WRITE_DEBOUNCE, WRITE_MAX_WAIT, {
             let store = Arc::clone(&settings);
             move || lock(&store).persist()
@@ -663,20 +568,6 @@ impl AppState {
             let store = Arc::clone(&ui);
             move || lock(&store).persist()
         }));
-
-        // computer-use（规格 §3.4/§3.5）：helper 解析 → provider/RPC server →
-        // TCC 权限面。RPC feature 记录经 `StoreFeatureRecorder` 落 UI store
-        // （内存记录 + 复用 UI 去抖写盘）；helper 缺失也照常装配。
-        let recorder = Arc::new(StoreFeatureRecorder::new(
-            Arc::clone(&ui),
-            Arc::clone(&ui_writer),
-        ));
-        let resource_dir = app.path().resource_dir().ok();
-        let computer = Arc::new(ComputerService::initialize(
-            &data_dir,
-            resource_dir.as_deref(),
-            recorder,
-        )?);
 
         let watchers = FsWatcher::new();
         {
@@ -708,6 +599,7 @@ impl AppState {
         let worktree_meta = Arc::new(persisted.worktree_meta);
         let fs = Arc::new(persisted.fs);
         let projects = Arc::new(Mutex::new(persisted.projects));
+        let resource_dir = app.path().resource_dir().ok();
         let plugins_deps = PluginServiceDeps {
             app_data_dir: data_dir.clone(),
             resource_dir,
@@ -759,17 +651,12 @@ impl AppState {
             pty_worktree_ids,
             session,
             hooks,
-            automations,
-            automation_service,
             session_flush_slot: Mutex::new(None),
             close_flush_latch: CloseFlushLatch::default(),
             home,
             path_hydration_cache: PathHydrationCache::default(),
-            gh_gate: Arc::new(GhConcurrencyGate::new(4)),
-            gh_path_cache: GhPathCache::default(),
             git_cancels: GitCancelRegistry::new(),
             ai_vault,
-            computer,
             plugins,
             plugins_ticker: Mutex::new(Some(plugins_ticker)),
             settings_writer,

@@ -72,9 +72,7 @@ function seedState(worktree: ReturnType<typeof makeCreatedAgentWorktree>): void 
     activeGroupIdByWorktree: { [worktree.id]: 'group-1' },
     layoutByWorktree: {},
     openFiles: [],
-    browserTabsByWorktree: {},
     activeFileIdByWorktree: {},
-    activeBrowserTabIdByWorktree: {},
     activeTabTypeByWorktree: {},
     activeTabIdByWorktree: {},
     tabBarOrderByWorktree: {},
@@ -96,7 +94,6 @@ function seedState(worktree: ReturnType<typeof makeCreatedAgentWorktree>): void 
     } as unknown as AppState['settings'],
     markWorktreeVisited: vi.fn(),
     recordWorktreeVisit: vi.fn(),
-    refreshGitHubForWorktreeIfStale: vi.fn(),
     revealWorktreeInSidebar: vi.fn()
   }
   useAppStore.setState(state)

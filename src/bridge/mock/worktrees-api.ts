@@ -1,5 +1,5 @@
 // Phase 0 mock; replaced by Tauri IPC per view.
-import type { WorktreeApi } from '../../preload/api/worktree-api'
+import type { WorktreeApi } from '../../shared/preload-api/api/worktree-api'
 import type { DetectedWorktreeListResult, Worktree } from '../../shared/worktree/types'
 import { EMPTY_RETIRED_NAME_REGISTRY } from '../../shared/worktree/retired-name-registry'
 import { UnimplementedBridgeError } from '../unimplemented-fallback'

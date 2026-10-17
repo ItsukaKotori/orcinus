@@ -77,7 +77,6 @@ function visibleOptions(overrides: Partial<VisibleOptions> = {}): VisibleOptions
     showSleepingWorkspaces: true,
     tabsByWorktree: {},
     ptyIdsByTabId: {},
-    browserTabsByWorktree: {},
     worktreeIdsWithLiveAgent: new Set(),
     hideDefaultBranchWorkspace: false,
     hideAutomationGeneratedWorkspaces: false,
@@ -154,21 +153,6 @@ describe('computeVisibleWorktreeIds', () => {
     )
 
     expect(result).toEqual([other.id])
-  })
-
-  it('keeps browser-tab worktrees visible when sleeping workspaces are hidden', () => {
-    const wt = makeWorktree('wt-browser')
-
-    const result = computeVisibleWorktreeIds(
-      { repo1: [wt] },
-      [wt.id],
-      visibleOptions({
-        showSleepingWorkspaces: false,
-        browserTabsByWorktree: { [wt.id]: [{ id: 'browser-1' }] }
-      })
-    )
-
-    expect(result).toEqual([wt.id])
   })
 
   it('hides sleeping worktrees when show sleeping is off', () => {

@@ -45,7 +45,6 @@ export function useWorktreeJumpPaletteQuickActions({
   openSettingsPage,
   openSettingsTarget,
   activeGroupSnapshotRef,
-  openNewBrowserTabInActiveWorkspace,
   openNewMarkdownInActiveWorkspace,
   openNewTerminalTabInActiveWorkspace,
   actionResults,
@@ -102,7 +101,6 @@ export function useWorktreeJumpPaletteQuickActions({
       buildCmdJQuickActionContext({
         state: useAppStore.getState(),
         activeGroupSnapshot: activeGroupSnapshotRef.current,
-        openNewBrowserTab: openNewBrowserTabInActiveWorkspace,
         openNewMarkdownFile: openNewMarkdownInActiveWorkspace,
         openNewTerminalTab: openNewTerminalTabInActiveWorkspace,
         openCreateWorkspace: openCreateWorkspaceAction,
@@ -114,7 +112,6 @@ export function useWorktreeJumpPaletteQuickActions({
       deleteActiveWorkspaceAction,
       openAddQuickCommandAction,
       openCreateWorkspaceAction,
-      openNewBrowserTabInActiveWorkspace,
       openNewMarkdownInActiveWorkspace,
       openNewTerminalTabInActiveWorkspace
     ]

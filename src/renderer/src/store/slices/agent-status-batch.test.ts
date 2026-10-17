@@ -48,7 +48,6 @@ function seedBatchStore() {
     tabsByWorktree: { 'wt-1': [tab] },
     retainedAgentsByPaneKey: { [FIRST_PANE]: retained },
     retentionSuppressedPaneKeys: { [FIRST_PANE]: true },
-    refreshGitHubForWorktreeIfStale: vi.fn().mockResolvedValue(undefined)
   } as Partial<AppState>)
   return store
 }
@@ -196,8 +195,6 @@ describe('setAgentStatuses', () => {
     expect(batchTitleGeneration).toHaveBeenCalledTimes(5)
     expect(batchTitleGenerationBulk).toHaveBeenCalledOnce()
     await flushMicrotasks()
-    expect(batchStore.getState().refreshGitHubForWorktreeIfStale).toHaveBeenCalledTimes(1)
-    expect(sequentialStore.getState().refreshGitHubForWorktreeIfStale).toHaveBeenCalledTimes(1)
 
     vi.advanceTimersByTime(AGENT_STATUS_STALE_AFTER_MS + 1)
     expect(selectBatchState(batchStore.getState())).toEqual(

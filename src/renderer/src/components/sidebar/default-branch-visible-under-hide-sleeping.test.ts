@@ -50,7 +50,6 @@ function visibleOptions(overrides: Partial<VisibleOptions> = {}): VisibleOptions
     showSleepingWorkspaces: true,
     tabsByWorktree: {},
     ptyIdsByTabId: {},
-    browserTabsByWorktree: {},
     worktreeIdsWithLiveAgent: new Set(),
     hideDefaultBranchWorkspace: false,
     hideAutomationGeneratedWorkspaces: false,

@@ -131,10 +131,6 @@ export function installTerminalKeydownFit(session: ConnectPanePtySession): void 
         onAgentBecameWorking: session.onAgentBecameWorking,
         onAgentExited: session.onAgentExited,
         onCommandFinished: session.handleCommandFinished,
-        onPrLink: (link) =>
-          useAppStore
-            .getState()
-            .observeTerminalGitHubPullRequestLink(session.deps.worktreeId, link),
         // Why: the Command Code settle policy stays here — the done settle
         // timer must consult the live store row (which hook events and
         // renderer seeds also write), so main only emits scrape facts.

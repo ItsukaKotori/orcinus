@@ -4,7 +4,6 @@ import type { AppState } from '../../../types'
 import type { WorktreeMeta } from '../../../../../../shared/worktree/meta-types'
 import { applyWorktreeUpdates } from '../../worktree-helpers'
 import { projectWorktreeTabModelReconciliation } from '../../tabs'
-import { moveFocusToRendererBeforeFocusedWebviewHidden } from '../../browser-webview-cleanup'
 import { tabHasLivePty } from '@/lib/tab-has-live-pty'
 import { markInputQuietSchedulerInput, scheduleAfterInputQuiet } from '@/lib/input-quiet-scheduler'
 import {
@@ -47,9 +46,6 @@ export function createSetActiveWorktree(
       markInputQuietSchedulerInput()
     }
 
-    if (get().activeWorktreeId !== worktreeId) {
-      moveFocusToRendererBeforeFocusedWebviewHidden()
-    }
     let shouldClearUnread = false
     let shouldPrepareTerminalTabs = false
     let shouldTagTerminalTabs = false
@@ -81,18 +77,13 @@ export function createSetActiveWorktree(
 
       const worktree = findKnownWorktreeById(s, worktreeId, executionHostId)
       shouldClearUnread = Boolean(worktree?.isUnread)
-      const {
-        restoredRightSidebarExplorerView,
-        activeFileId,
-        activeBrowserTabId,
-        activeTabType,
-        activeTabId
-      } = resolveActivatedWorktreeSurface(
-        s,
-        worktreeId,
-        stateTransition?.preferredActiveUnifiedTabId,
-        reconciledActiveTabId
-      )
+      const { restoredRightSidebarExplorerView, activeFileId, activeTabType, activeTabId } =
+        resolveActivatedWorktreeSurface(
+          s,
+          worktreeId,
+          stateTransition?.preferredActiveUnifiedTabId,
+          reconciledActiveTabId
+        )
 
       // Why: focus isn't smart-sort activity — writing lastActivityAt here caused the "jump after focus" bug; only clear unread.
       const metaUpdates: Partial<WorktreeMeta> = shouldClearUnread ? { isUnread: false } : {}
@@ -162,7 +153,6 @@ export function createSetActiveWorktree(
         // Why: a pending-creation panel can show over the prior worktree; a non-null activePendingCreationId counts as a change.
         s.activePendingCreationId !== null ||
         s.activeFileId !== activeFileId ||
-        s.activeBrowserTabId !== activeBrowserTabId ||
         s.activeTabType !== activeTabType ||
         s.rightSidebarExplorerView !== restoredRightSidebarExplorerView ||
         s.activeTabId !== activeTabId ||
@@ -190,7 +180,6 @@ export function createSetActiveWorktree(
         activeWorkspaceExecutionHostId: executionHostId ?? null,
         activePendingCreationId: null,
         activeFileId,
-        activeBrowserTabId,
         activeTabType,
         activeTabTypeByWorktree: nextActiveTabTypeByWorktree,
         rightSidebarExplorerView: restoredRightSidebarExplorerView,
@@ -263,7 +252,6 @@ export function createSetActiveWorktree(
 
     // Why: activation is explicit enough to revalidate PR state now; the coordinator still coalesces and rate-guards.
     if (worktreeId) {
-      get().refreshGitHubForWorktreeIfStale(worktreeId)
     }
 
     if (!worktreeId || !get().getKnownWorktreeById(worktreeId, executionHostId)) {

@@ -1,11 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import { sanitizeWorktreeName } from '../../../../main/ipc/worktree-logic'
 import { MARINE_CREATURES } from '@/constants/marine-creatures'
 import {
   getSuggestedCreatureName,
   normalizeSuggestedName,
   shouldApplySuggestedName
 } from './worktree-name-suggestions'
+
+// Test mirror of the host's worktree-name sanitizer (src-tauri/crates/ade-git/src/branch.rs
+// `sanitize_worktree_name`): keep Unicode letters/numbers and `._-`, collapse runs of
+// other characters and repeated `.`/`-` to one, then trim edge `.`/`-`. Creature names
+// are plain words, so the emoji-shortcode step cannot change them.
+const sanitizeWorktreeName = (input: string) =>
+  input
+    .trim()
+    .replace(/[^\p{L}\p{N}._-]+/gu, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/\.{2,}/g, '.')
+    .replace(/^[.-]+|[.-]+$/g, '')
 
 // Always selects the first element of the unused pool, so assertions are exact.
 const pickFirst = () => 0

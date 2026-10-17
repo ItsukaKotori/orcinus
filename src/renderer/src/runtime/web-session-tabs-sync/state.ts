@@ -1,7 +1,6 @@
 import type { AppState } from '../../store'
 import type {
   RuntimeMobileSessionAgentTab,
-  RuntimeMobileSessionBrowserTab,
   RuntimeMobileSessionFileTab,
   RuntimeMobileSessionMarkdownTab,
   RuntimeMobileSessionTabGroup,
@@ -9,15 +8,9 @@ import type {
   RuntimeMobileSessionTabsResult,
   RuntimeMobileSessionTerminalClientTab
 } from '../../../../shared/runtime-types'
-import type {
-  BrowserCertificateFailure,
-  BrowserPage,
-  BrowserWorkspace
-} from '../../../../shared/browser-workspace-types'
 import type { Tab } from '../../../../shared/tab-types'
 import type { TerminalLayoutSnapshot, TerminalTab } from '../../../../shared/terminal-tab-types'
 import type { OpenFile } from '../../store/slices/editor'
-import type { RuntimeBrowserPlacement } from '../../../../shared/runtime-browser-placement'
 
 export const WEB_SESSION_GROUP_PREFIX = 'web-session-tabs:'
 export const WEB_SESSION_TABS_VISIBILITY_RESUME_STAGGER_MS = 100
@@ -143,7 +136,6 @@ export function resetReceivedSessionTabsFrameSequence(): void {
 
 export type TerminalSurface = RuntimeMobileSessionTerminalClientTab
 export type ReadyTerminalSurface = RuntimeMobileSessionTerminalClientTab & { status: 'ready' }
-export type ReadyBrowserSurface = RuntimeMobileSessionBrowserTab & { browserPageId: string }
 export type ReadyEditorSurface = RuntimeMobileSessionMarkdownTab | RuntimeMobileSessionFileTab
 
 export type MirroredAgentTab = { hostTabId: string; unifiedTab: Tab }
@@ -154,22 +146,10 @@ export type MirroredTerminalTab = {
   layout: TerminalLayoutSnapshot
   retainedSurfaceByPrunedLeafId?: ReadonlyMap<string, TerminalSurface>
 }
-export type MirroredBrowserTab = {
-  workspace: BrowserWorkspace
-  page: BrowserPage
-  certificateFailure: BrowserCertificateFailure | null
-  remotePageId: string
-  placement?: RuntimeBrowserPlacement
-  unifiedTab: Tab
-  hostTabId: string
-  clientGroupId?: string
-}
 export type MirroredEditorTab = { file: OpenFile; unifiedTab: Tab; hostTabId: string }
 
 export type WebSessionTabsSyncState = Pick<
   AppState,
-  | 'activeBrowserTabId'
-  | 'activeBrowserTabIdByWorktree'
   | 'activeGroupIdByWorktree'
   | 'activeFileId'
   | 'activeFileIdByWorktree'
@@ -180,14 +160,10 @@ export type WebSessionTabsSyncState = Pick<
   | 'activeWorktreeId'
   | 'agentStatusByPaneKey'
   | 'agentStatusEpoch'
-  | 'browserPagesByWorkspace'
-  | 'browserCertificateFailuresByPageId'
-  | 'browserTabsByWorktree'
   | 'groupsByWorktree'
   | 'layoutByWorktree'
   | 'openFiles'
   | 'ptyIdsByTabId'
-  | 'remoteBrowserPageHandlesByPageId'
   | 'tabBarOrderByWorktree'
   | 'tabsByWorktree'
   | 'terminalLayoutsByTabId'
@@ -214,21 +190,16 @@ export type WebSessionTabsSyncState = Pick<
   >
 
 export type WebSessionTabsBatchRecordKey =
-  | 'activeBrowserTabIdByWorktree'
   | 'activeFileIdByWorktree'
   | 'activeGroupIdByWorktree'
   | 'activeTabIdByWorktree'
   | 'activeTabTypeByWorktree'
   | 'agentStatusByPaneKey'
   | 'automaticAgentResumeClaimsByTabId'
-  | 'browserCertificateFailuresByPageId'
-  | 'browserPagesByWorkspace'
-  | 'browserTabsByWorktree'
   | 'groupsByWorktree'
   | 'layoutByWorktree'
   | 'pendingStartupByTabId'
   | 'ptyIdsByTabId'
-  | 'remoteBrowserPageHandlesByPageId'
   | 'tabBarOrderByWorktree'
   | 'tabsByWorktree'
   | 'terminalLayoutsByTabId'

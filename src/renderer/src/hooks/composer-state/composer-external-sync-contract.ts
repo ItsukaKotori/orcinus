@@ -5,6 +5,4 @@ export type ComposerExternalSyncState = {
     ComposerModel,
     'canPrefetchSelectedRepoWorkItems' | 'prefetchSshConnectedGeneration'
   >
-  githubSourceApplication: Pick<ComposerModel, 'applyLinkedWorkItem'>
-  githubSubmitResolution: Pick<ComposerModel, 'resolvePendingSmartGitHubSubmit'>
 }

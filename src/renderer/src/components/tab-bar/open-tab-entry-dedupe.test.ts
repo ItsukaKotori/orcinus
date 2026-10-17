@@ -54,7 +54,7 @@ describe('dropFileEntriesCoveredByTabResults', () => {
     ).toEqual([])
   })
 
-  it('keeps new-file, URL and absolute-path rows even when the path matches', () => {
+  it('keeps new-file and absolute-path rows even when the path matches', () => {
     const options: TabEntryOption[] = [
       {
         id: 'new-file:src/zebra.ts',
@@ -63,36 +63,19 @@ describe('dropFileEntriesCoveredByTabResults', () => {
       {
         id: 'absolute-file:/tmp/wt-1/src/zebra.ts',
         classification: { kind: 'absolute-file', filePath: '/tmp/wt-1/src/zebra.ts' }
-      },
-      {
-        id: 'host-url:https://zebra.dev',
-        classification: { kind: 'host-url', url: 'https://zebra.dev' }
       }
     ]
 
     expect(
       dropFileEntriesCoveredByTabResults(options, [editorTab('src/zebra.ts')], POSIX_ROOT)
-    ).toHaveLength(3)
+    ).toHaveLength(2)
   })
 
-  it('never lets a terminal or browser result suppress a file entry', () => {
+  it('never lets a terminal result suppress a file entry', () => {
     const results: OpenTabSearchResult[] = [
       // Non-null path on purpose: the fold must turn on contentType, not on a
       // path the engine happens to leave empty for non-editor tabs.
-      { ...editorTab('src/zebra.ts'), contentType: 'terminal' },
-      {
-        executionHostId: 'local',
-        source: 'browser',
-        id: 'open-tab:browser:page-1',
-        title: 'zebra',
-        matchedText: null,
-        worktreeId: 'wt-1',
-        contentType: 'browser',
-        pageId: 'page-1',
-        url: 'https://example.com/zebra',
-        workspaceId: 'ws-1',
-        faviconUrl: null
-      }
+      { ...editorTab('src/zebra.ts'), contentType: 'terminal' }
     ]
 
     expect(

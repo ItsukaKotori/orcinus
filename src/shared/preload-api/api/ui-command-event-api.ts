@@ -8,7 +8,6 @@ import type {
 } from '../../worktree/launch-types'
 import type { FeatureInteractionId } from '../../feature-interactions'
 import type { KeybindingActionId } from '../../keybindings'
-import type { BrowserFindSource } from '../../browser-find-source'
 import type {
   AgentProviderSessionMetadata,
   SleepingAgentLaunchConfig
@@ -63,51 +62,26 @@ export type UiCommandEventApi = {
   onToggleQuickCommandsMenu: (callback: () => void) => () => void
   onOpenNewWorkspace: (callback: () => void) => () => void
   onDeleteCurrentWorkspace: (callback: () => void) => () => void
-  onOpenTasks: (callback: () => void) => () => void
   onJumpToWorktreeIndex: (callback: (index: number) => void) => () => void
   onJumpToTabIndex: (callback: (index: number) => void) => () => void
   onWorktreeHistoryNavigate: (callback: (direction: 'back' | 'forward') => void) => () => void
-  onNewBrowserTab: (callback: () => void) => () => void
   onNewMarkdownTab: (callback: () => void) => () => void
   onRequestTabCreate: (
     callback: (data: {
       requestId: string
       url: string
       worktreeId?: string
-      browserPageId?: string
       sessionProfileId?: string | null
       sessionPartition?: string
       activate?: boolean
     }) => void
   ) => () => void
-  replyTabCreate: (reply: { requestId: string; browserPageId?: string; error?: string }) => void
-  onRequestTabSetProfile: (
-    callback: (data: {
-      requestId: string
-      browserPageId: string
-      profileId: string
-      sessionPartition?: string
-    }) => void
-  ) => () => void
-  replyTabSetProfile: (reply: { requestId: string; error?: string }) => void
+  replyTabCreate: (reply: { requestId: string; error?: string }) => void
   onRequestTabClose: (
     callback: (data: { requestId: string; tabId: string | null; worktreeId?: string }) => void
   ) => () => void
-  replyTabClose: (reply: {
-    requestId: string
-    error?: string
-    code?: 'browser_tab_not_found'
-  }) => void
+  replyTabClose: (reply: { requestId: string; error?: string }) => void
   onNewTerminalTab: (callback: () => void) => () => void
-  onFocusBrowserAddressBar: (callback: () => void) => () => void
-  onFindInBrowserPage: (source: BrowserFindSource, callback: () => void) => () => void
-  onReloadBrowserPage: (callback: () => void) => () => void
-  onBrowserHistoryNavigate: (callback: (direction: 'back' | 'forward') => void) => () => void
-  onZoomBrowserPage: (callback: (direction: 'in' | 'out' | 'reset') => void) => () => void
-  onScrollBrowserPage?: (
-    callback: (event: { browserPageId: string; deltaX: number; deltaY: number }) => void
-  ) => () => void
-  onHardReloadBrowserPage: (callback: () => void) => () => void
   onCloseActiveTab: (callback: (payload?: CloseActiveTabPayload) => void) => () => void
   onCloseFloatingItem: (callback: (payload: { sourceId: string }) => void) => () => void
   onSelectFloatingIndex: (callback: (payload: { index: number }) => void) => () => void

@@ -45,7 +45,6 @@ function buildCollidingRows(
     'repo',
     worktrees,
     new Map([[localRepo.id, localRepo]]),
-    null,
     new Set(),
     undefined,
     undefined,

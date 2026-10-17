@@ -11,7 +11,6 @@ describe('openTabEntryWithOperations', () => {
   function makeOperations(overrides: Partial<TabEntryOperations> = {}): TabEntryOperations {
     return {
       createRuntimePath: vi.fn().mockResolvedValue(undefined),
-      openWorkspaceBrowserTab: vi.fn().mockResolvedValue(undefined),
       openFile: vi.fn(),
       statRuntimePath: vi.fn().mockResolvedValue({ size: 1, isDirectory: false, mtime: 1 }),
       authorizeExternalPath: vi.fn().mockResolvedValue(undefined),
@@ -31,8 +30,7 @@ describe('openTabEntryWithOperations', () => {
       worktreePath: '/repo'
     },
     allowAbsolutePaths: true,
-    localPlatform: 'posix' as const,
-    searchEngine: 'google' as const
+    localPlatform: 'posix' as const
   }
 
   it('stats existing files before opening and rejects directories', async () => {
@@ -178,80 +176,6 @@ describe('openTabEntryWithOperations', () => {
       '/repo/docs/race.md'
     )
     expect(operations.openFile).toHaveBeenCalled()
-  })
-
-  it('routes URL classifications through the workspace browser opener', async () => {
-    const operations = makeOperations()
-
-    await openTabEntryWithOperations({
-      ...baseArgs,
-      query: 'https://example.com',
-      operations
-    })
-
-    expect(operations.openWorkspaceBrowserTab).toHaveBeenCalledWith({
-      workspaceId: 'wt-1',
-      url: 'https://example.com/',
-      targetGroupId: 'group-1',
-      intent: { kind: 'url' }
-    })
-  })
-
-  it('builds a search URL from the selected immutable classification', async () => {
-    const operations = makeOperations()
-
-    await openTabEntryWithOperations({
-      ...baseArgs,
-      query: 'different query',
-      classification: { kind: 'search', engine: 'duckduckgo', query: 'react hooks' },
-      operations
-    })
-
-    expect(operations.openWorkspaceBrowserTab).toHaveBeenCalledWith({
-      workspaceId: 'wt-1',
-      url: 'https://duckduckgo.com/?q=react%20hooks',
-      targetGroupId: 'group-1',
-      intent: { kind: 'search', engine: 'duckduckgo' }
-    })
-  })
-
-  it('uses plain Kagi search URLs and the fallback classifier engine', async () => {
-    const operations = makeOperations()
-
-    await openTabEntryWithOperations({
-      ...baseArgs,
-      query: 'private project',
-      searchEngine: 'kagi',
-      operations
-    })
-
-    expect(operations.openWorkspaceBrowserTab).toHaveBeenCalledWith({
-      workspaceId: 'wt-1',
-      url: 'https://kagi.com/search?q=private%20project',
-      targetGroupId: 'group-1',
-      intent: { kind: 'search', engine: 'kagi' }
-    })
-  })
-
-  it('uses a configured Kagi private-session link', async () => {
-    const operations = makeOperations()
-
-    await openTabEntryWithOperations({
-      ...baseArgs,
-      query: 'private project',
-      searchEngine: 'kagi',
-      searchUrlOptions: {
-        kagiSessionLink: 'https://kagi.com/search?token=secret'
-      },
-      operations
-    })
-
-    expect(operations.openWorkspaceBrowserTab).toHaveBeenCalledWith({
-      workspaceId: 'wt-1',
-      url: 'https://kagi.com/search?token=secret&q=private+project',
-      targetGroupId: 'group-1',
-      intent: { kind: 'search', engine: 'kagi' }
-    })
   })
 
   it('authorizes and opens absolute local files in the target group', async () => {

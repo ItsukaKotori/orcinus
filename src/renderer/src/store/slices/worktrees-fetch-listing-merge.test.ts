@@ -188,46 +188,6 @@ describe('fetchWorktrees', () => {
     expect(store.getState().sortEpoch).toBe(8)
   })
 
-  it('clears branch-scoped linked reviews when the listing observes a branch switch', async () => {
-    const store = createTestStore()
-    const existing = makeWorktree({
-      id: 'repo1::/path/wt1',
-      repoId: 'repo1',
-      path: '/path/wt1',
-      branch: 'refs/heads/feature-one',
-      linkedPR: 101,
-      pushTarget: { remoteName: 'origin', branchName: 'feature-one' }
-    })
-    // Persisted metadata still carries the stale link when the listing refresh first observes the terminal branch switch.
-    const refreshed = makeWorktree({
-      id: 'repo1::/path/wt1',
-      repoId: 'repo1',
-      path: '/path/wt1',
-      branch: 'refs/heads/feature-two',
-      head: 'def456',
-      linkedPR: 101,
-      pushTarget: { remoteName: 'origin', branchName: 'feature-one' }
-    })
-
-    mockApi.worktrees.list.mockResolvedValue([refreshed])
-    store.setState({ worktreesByRepo: { repo1: [existing] } } as Partial<AppState>)
-
-    await store.getState().fetchWorktrees('repo1')
-    await Promise.resolve()
-    await Promise.resolve()
-
-    expect(store.getState().worktreesByRepo.repo1[0]).toMatchObject({
-      branch: 'refs/heads/feature-two',
-      head: 'def456',
-      linkedPR: null,
-      pushTarget: undefined
-    })
-    expect(mockApi.worktrees.updateMeta).toHaveBeenCalledWith({
-      worktreeId: 'repo1::/path/wt1',
-      updates: expect.objectContaining({ linkedPR: null, pushTarget: undefined })
-    })
-  })
-
   it('does not merge a stale listing row over a newer branch and review link', async () => {
     const store = createTestStore()
     const worktreeId = 'repo1::/path/wt1'

@@ -3,7 +3,7 @@
 //
 // Topology under test:
 //   desktop renderer  = real usePersistedUIWriter + real UI slice (createUIStore)
-//   authority (main)  = real updatePersistedUI/getPersistedUI merge
+//   authority (host)  = in-test patch-only merge over the durable UI document
 //   broadcast         = controlled queue modeling the async ui:stateChanged IPC send
 //   mobile client     = local model of the mobile host screen's view-settings client,
 //                       pushing through the patch-only buildWorkspaceViewSettingsUpdate
@@ -17,14 +17,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { StoreApi } from 'zustand/vanilla'
 import { getDefaultUIState } from '../../../shared/constants'
-import { omitPairingLocalUiFields } from '../../../shared/pairing-local-ui-fields'
 import type { PersistedUIState } from '../../../shared/persisted-ui-state-types'
-import type { PersistedState } from '../../../shared/persisted-state-types'
-import { getPersistedUI } from '../../../main/persistence/applying-settings/ui-state-read'
-import {
-  updatePersistedUI,
-  type UIUpdateOperations
-} from '../../../main/persistence/applying-settings/ui-state-update'
 import type { AppState } from '../store/types'
 import { createUIStore } from '../store/slices/ui-slice-test-harness'
 import {
@@ -46,33 +39,23 @@ vi.mock('../store', async () => {
   return { useAppStore }
 })
 
-/** The main-process authority: the real ui.set merge over a real PersistedState. */
+/** The host authority: a patch-only merge over the durable UI document; a
+ *  changed document echoes the merged snapshot to every subscriber. */
 function createAuthority() {
-  const state = { ui: { ...getDefaultUIState() } } as PersistedState
-  let activeView: PersistedState['ui']['activeView'] = 'terminal'
+  let ui: PersistedUIState = { ...getDefaultUIState() }
   const listeners = new Set<(ui: PersistedUIState) => void>()
-  const operations: UIUpdateOperations = {
-    state,
-    removeRetainedBlob: () => {},
-    setActiveView: (next) => {
-      if (next === undefined || next === activeView) {
-        return false
-      }
-      activeView = next
-      return true
-    },
-    getUI: () => getPersistedUI(state, activeView),
-    scheduleSave: () => {},
-    notifyUIChanged: () => {
-      const ui = getPersistedUI(state, activeView)
-      for (const listener of listeners) {
-        listener(ui)
-      }
-    }
-  }
   return {
-    set: (updates: Partial<PersistedUIState>) => updatePersistedUI(operations, updates),
-    get: () => getPersistedUI(state, activeView),
+    set: (updates: Partial<PersistedUIState>) => {
+      const next = { ...ui, ...updates }
+      if (JSON.stringify(next) === JSON.stringify(ui)) {
+        return
+      }
+      ui = next
+      for (const listener of listeners) {
+        listener({ ...ui })
+      }
+    },
+    get: () => ({ ...ui }),
     onChanged: (listener: (ui: PersistedUIState) => void) => listeners.add(listener)
   }
 }
@@ -136,7 +119,7 @@ function createMobileClient(authority: Authority) {
     /** ui.get on connect/focus: merge the shared state onto the local mirror
      *  (mirrors applyDesktopViewSettings' ??-per-field semantics). */
     sync() {
-      const ui = omitPairingLocalUiFields(authority.get())
+      const ui = authority.get()
       view = {
         ...view,
         hideSleeping: ui.hideSleepingWorkspaces ?? view.hideSleeping,
@@ -150,9 +133,7 @@ function createMobileClient(authority: Authority) {
     /** A user tap: apply locally, then push through the patch-only payload shape. */
     tap(patch: Partial<MobileViewState>) {
       view = { ...view, ...patch }
-      authority.set(
-        omitPairingLocalUiFields(patchOnlyUpdate(patch, view)) as Partial<PersistedUIState>
-      )
+      authority.set(patchOnlyUpdate(patch, view))
     }
   }
 }

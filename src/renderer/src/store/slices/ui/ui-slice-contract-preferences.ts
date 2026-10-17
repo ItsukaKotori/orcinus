@@ -13,7 +13,6 @@ import type {
 import type { UsagePercentageDisplay } from '../../../../../shared/usage-percentage-display'
 import type { AutomationHostFilter } from '../../../../../shared/automation-host-filter'
 import type { WorkspaceStatusDefinition } from '../../../../../shared/worktree/types'
-import type { WorkspacePortScanResult } from '../../../../../shared/workspace-ports'
 import type { ReleaseChannel } from '../../../../../shared/release-channel'
 import type { ChangelogData, UpdateStatus } from '../../../../../shared/update-status-types'
 import type { StatusBarUsageMode } from '../../../../../shared/status-bar-usage-mode'
@@ -21,7 +20,7 @@ import type { PersistedUIWriteBaseline } from '../persisted-ui-write-baseline'
 import type { UISliceCore } from './ui-slice-contract-core'
 
 export type UISlicePreferences = {
-  groupBy: 'none' | 'workspace-status' | 'repo' | 'pr-status'
+  groupBy: 'none' | 'workspace-status' | 'repo'
   setGroupBy: (g: UISlicePreferences['groupBy']) => void
   sortBy: 'name' | 'smart' | 'recent' | 'repo' | 'manual'
   setSortBy: (s: UISlicePreferences['sortBy']) => void
@@ -78,19 +77,6 @@ export type UISlicePreferences = {
 }
 
 export type UISliceSurfaces = {
-  workspacePortScan: { key: string; result: WorkspacePortScanResult } | null
-  workspacePortScansByKey: Record<string, WorkspacePortScanResult>
-  workspacePortScanRefreshing: boolean
-  setWorkspacePortScan: (scan: { key: string; result: WorkspacePortScanResult } | null) => void
-  setWorkspacePortScanProjection: (
-    scan: { key: string; result: WorkspacePortScanResult } | null
-  ) => void
-  replaceWorkspacePortScans: (
-    scansByKey: Record<string, WorkspacePortScanResult>,
-    projection: { key: string; result: WorkspacePortScanResult } | null
-  ) => void
-  setWorkspacePortScanForKey: (key: string, result: WorkspacePortScanResult | null) => void
-  setWorkspacePortScanRefreshing: (refreshing: boolean) => void
   pendingRevealWorktree: UISliceCore['pendingRevealWorktree']
   pendingRevealSidebarRow: UISliceCore['pendingRevealSidebarRow']
   revealWorktreeInSidebar: UISliceCore['revealWorktreeInSidebar']
@@ -148,13 +134,4 @@ export type UISlicePersistence = {
   clearOsc52ClipboardDefaultOnNotice: () => void
   isFullScreen: boolean
   setIsFullScreen: (v: boolean) => void
-  /** URL opened when a new browser tab is created. Null = blank tab (default). */
-  browserDefaultUrl: string | null
-  setBrowserDefaultUrl: (url: string | null) => void
-  browserDefaultSearchEngine: 'google' | 'duckduckgo' | 'bing' | 'kagi' | null
-  setBrowserDefaultSearchEngine: (engine: 'google' | 'duckduckgo' | 'bing' | 'kagi' | null) => void
-  browserDefaultZoomLevel: number
-  setBrowserDefaultZoomLevel: (level: number) => void
-  browserKagiSessionLink: string | null
-  setBrowserKagiSessionLink: (link: string | null) => void
 }

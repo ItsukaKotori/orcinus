@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { ArrowDownUp, ArrowUp, Check, CloudUpload, GitPullRequestArrow, Plus } from 'lucide-react'
+import { ArrowDownUp, ArrowUp, Check, CloudUpload, Plus } from 'lucide-react'
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -31,9 +31,7 @@ const PRIMARY_ICONS: Partial<
   stage: Plus,
   push: ArrowUp,
   sync: ArrowDownUp,
-  publish: CloudUpload,
-  create_pr_intent: GitPullRequestArrow,
-  create_pr: GitPullRequestArrow
+  publish: CloudUpload
 }
 
 export function CommitArea({
@@ -47,12 +45,9 @@ export function CommitArea({
   commitFailureRecoveryPrompt,
   pushRecovery,
   remoteActionError,
-  createPrIntentNotice,
   isCommitting,
   isFixingCommitFailureWithAI,
   isFixingPushFailureWithAI,
-  isCreatingPr = false,
-  isCreatePrIntentInFlight = false,
   showComposer = true,
   sourceControlAiActionsVisible,
   aiAgentConfigured,
@@ -84,14 +79,11 @@ export function CommitArea({
     primaryAction.kind === inFlightRemoteOpKind ||
     (primaryAction.kind === 'push' && inFlightRemoteOpKind === 'force_push')
   const showSpinner =
-    primaryAction.kind === 'create_pr' || primaryAction.kind === 'create_pr_intent'
-      ? isCreatingPr
-      : primaryAction.kind === 'commit'
-        ? isCommitting
-        : isRemoteOperationActive && primaryHostsRemoteOperation
+    primaryAction.kind === 'commit'
+      ? isCommitting
+      : isRemoteOperationActive && primaryHostsRemoteOperation
   // Why: spin the chevron when the primary doesn't host the in-flight op (e.g. Fetch), since the click is otherwise silent — no toast until failure, no count change on a no-op fetch.
-  const showChevronSpinner =
-    (isCommitting || isCreatingPr || isRemoteOperationActive) && !showSpinner
+  const showChevronSpinner = (isCommitting || isRemoteOperationActive) && !showSpinner
   const commitFailureSummary = useMemo(
     () => (commitError ? summarizeCommitFailure(commitError) : null),
     [commitError]
@@ -117,21 +109,19 @@ export function CommitArea({
     hasUnresolvedConflicts,
     isCommitting,
     isRemoteOperationActive,
-    isPullRequestOperationActive: isCreatingPr
+    isPullRequestOperationActive: false
   })
   const describedBy = [
     commitError ? 'commit-area-error' : null,
     pushRecovery ? 'commit-area-push-error' : null,
     remoteActionError ? 'commit-area-remote-error' : null,
-    createPrIntentNotice ? 'commit-area-create-pr-intent' : null,
     generateError ? 'commit-area-generate-error' : null
   ]
     .filter(Boolean)
     .join(' ')
 
   // Why: config errors are surfaced by the generation dialog, so entry-point visibility only follows the feature toggle.
-  // Why: Create PR intent owns generation, so a second composer spinner would stack on the primary spinner.
-  const showGenerate = showComposer && sourceControlAiActionsVisible && !isCreatePrIntentInFlight
+  const showGenerate = showComposer && sourceControlAiActionsVisible
   let generateTooltip: string | undefined
   if (isGenerating) {
     generateTooltip = translate(
@@ -252,7 +242,6 @@ export function CommitArea({
         commitFailureRecoveryPrompt={commitFailureRecoveryPrompt}
         pushRecovery={pushRecovery}
         remoteActionError={remoteActionError}
-        createPrIntentNotice={createPrIntentNotice}
         generateError={generateError}
         sourceControlAiActionsVisible={sourceControlAiActionsVisible}
         isFixingCommitFailureWithAI={isFixingCommitFailureWithAI}

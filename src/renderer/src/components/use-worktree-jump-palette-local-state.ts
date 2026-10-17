@@ -6,10 +6,8 @@ import {
   type PaletteFilterState
 } from '@/components/cmd-j/palette-filter'
 import { useAppStore } from '@/store'
-import { parseCmdJTaskSourceUrl } from '@/lib/worktree-palette-task-url-match'
 import { getWorktreePaletteCreateActionState } from '@/lib/worktree-palette-create-action'
 import type { CmdJActiveGroupSnapshot } from '@/components/cmd-j/quick-action-context'
-import type { WorkspaceVisibleTabType } from '../../../shared/tab-types'
 import type { PaletteItem } from './worktree-jump-palette-model'
 
 export function useWorktreeJumpPaletteLocalState({
@@ -32,18 +30,17 @@ export function useWorktreeJumpPaletteLocalState({
   // Keyboard handlers must see the current query before effects flush.
   // react-doctor-disable-next-line react-doctor/no-ref-current-in-render
   liveQueryRef.current = query
-  const taskSourceUrl = useMemo(() => parseCmdJTaskSourceUrl(query), [query])
-  const paletteSearchQuery = taskSourceUrl ? query.trim() : deferredQuery.trim()
+  const paletteSearchQuery = deferredQuery.trim()
   const deferredCreateAction = useMemo(
     () => getWorktreePaletteCreateActionState({ query: deferredQuery }),
     [deferredQuery]
   )
-  const createWorktreeName = taskSourceUrl ? query.trim() : deferredCreateAction.createWorktreeName
-  const showCreateAction = deferredCreateAction.showCreateAction || taskSourceUrl !== null
+  const createWorktreeName = deferredCreateAction.createWorktreeName
+  const showCreateAction = deferredCreateAction.showCreateAction
   const [selectedItemId, setSelectedItemId] = useState('')
   const latestQueryRef = useRef('')
   const autoSelectedItemIdRef = useRef<string | null>(null)
-  // Create is armed by an explicit keyboard/pointer move, except for task URLs.
+  // Create is armed by an explicit keyboard/pointer move.
   const selectionMovedByUserRef = useRef(false)
   const digitShortcutItemsRef = useRef<readonly PaletteItem[]>([])
   const [filter, setFilter] = useState<PaletteFilterState>(() =>
@@ -51,9 +48,6 @@ export function useWorktreeJumpPaletteLocalState({
   )
   const [dialogElement, setDialogElement] = useState<HTMLElement | null>(null)
   const previousWorktreeIdRef = useRef<string | null>(null)
-  const previousActiveTabTypeRef = useRef<WorkspaceVisibleTabType>('terminal')
-  const previousBrowserPageIdRef = useRef<string | null>(null)
-  const previousBrowserFocusTargetRef = useRef<'webview' | 'address-bar'>('webview')
   const previousFocusElementRef = useRef<HTMLElement | null>(null)
   const activeGroupSnapshotRef = useRef<CmdJActiveGroupSnapshot | null>(null)
   const wasVisibleRef = useRef(false)
@@ -82,7 +76,6 @@ export function useWorktreeJumpPaletteLocalState({
     setQuery,
     deferredQuery,
     liveQueryRef,
-    taskSourceUrl,
     paletteSearchQuery,
     createWorktreeName,
     showCreateAction,
@@ -97,9 +90,6 @@ export function useWorktreeJumpPaletteLocalState({
     dialogElement,
     setDialogElement,
     previousWorktreeIdRef,
-    previousActiveTabTypeRef,
-    previousBrowserPageIdRef,
-    previousBrowserFocusTargetRef,
     previousFocusElementRef,
     activeGroupSnapshotRef,
     wasVisibleRef,

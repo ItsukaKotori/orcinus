@@ -25,7 +25,6 @@ describe('web-session tabs sync visible-type projection', () => {
 
   it('keeps the existing kind mappings intact', () => {
     expect(toVisibleTabType(tab({ contentType: 'terminal' }))).toBe('terminal')
-    expect(toVisibleTabType(tab({ contentType: 'browser' }))).toBe('browser')
     expect(toVisibleTabType(tab({ contentType: 'agent-session' }))).toBe('agent-session')
     expect(toVisibleTabType(tab({ contentType: 'editor' }))).toBe('editor')
     expect(toVisibleTabType(tab({ contentType: 'diff' }))).toBe('editor')

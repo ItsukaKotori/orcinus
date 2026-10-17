@@ -4,27 +4,24 @@ import type { ShortcutGroup } from './shortcut-groups'
 import { buildShortcutRowVisibility } from './shortcut-row-visibility'
 
 function creationGroup(): ShortcutGroup {
-  const items = (['tab.newTerminal', 'tab.newBrowser', 'tab.newMarkdown'] as const).map(
-    (actionId) => {
-      const definition = getKeybindingDefinition(actionId)
-      if (!definition) {
-        throw new Error(`Missing keybinding definition: ${actionId}`)
-      }
-      return definition
+  const items = (['tab.newTerminal', 'tab.newMarkdown'] as const).map((actionId) => {
+    const definition = getKeybindingDefinition(actionId)
+    if (!definition) {
+      throw new Error(`Missing keybinding definition: ${actionId}`)
     }
-  )
+    return definition
+  })
   return { title: 'Tabs', items }
 }
 
 describe('buildShortcutRowVisibility', () => {
-  it('hides client-impossible creation shortcuts without hiding terminal or markdown', () => {
+  it('keeps terminal and markdown creation shortcuts visible', () => {
     const result = buildShortcutRowVisibility({
       groups: [creationGroup()],
       keybindings: {},
       conflictByAction: new Map(),
       terminalShortcutPolicy: 'orca-first',
       platform: 'darwin',
-      managedBrowserCreationEnabled: false,
       settingsSearchQuery: '',
       shortcutQuery: '',
       shortcutFilter: 'all'

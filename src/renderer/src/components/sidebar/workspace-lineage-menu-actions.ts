@@ -7,7 +7,6 @@ import { getWorkspaceDeleteLineage } from './workspace-delete-lineage'
 type WorkspaceActivityMaps = {
   tabsByWorktree: Record<string, { id: string }[]>
   ptyIdsByTabId: Record<string, string[]>
-  browserTabsByWorktree: Record<string, { id: string }[]>
 }
 
 export type WorkspaceLineageMenuActions = {
@@ -18,13 +17,10 @@ export type WorkspaceLineageMenuActions = {
 
 export function hasSleepableWorkspaceActivity(
   worktreeId: string,
-  { tabsByWorktree, ptyIdsByTabId, browserTabsByWorktree }: WorkspaceActivityMaps
+  { tabsByWorktree, ptyIdsByTabId }: WorkspaceActivityMaps
 ): boolean {
   const tabs = tabsByWorktree[worktreeId] ?? []
-  return (
-    tabs.some((tab) => tabHasLivePty(ptyIdsByTabId, tab.id)) ||
-    (browserTabsByWorktree[worktreeId] ?? []).length > 0
-  )
+  return tabs.some((tab) => tabHasLivePty(ptyIdsByTabId, tab.id))
 }
 
 export function getWorkspaceLineageMenuActions(args: {
@@ -54,7 +50,7 @@ export function useWorkspaceLineageMenuActions(
   args: Parameters<typeof getWorkspaceLineageMenuActions>[0] & { enabled: boolean }
 ): WorkspaceLineageMenuActions {
   const { enabled, parent, worktrees, lineageById, activity } = args
-  const { tabsByWorktree, ptyIdsByTabId, browserTabsByWorktree } = activity
+  const { tabsByWorktree, ptyIdsByTabId } = activity
   return useMemo(
     () =>
       enabled
@@ -62,9 +58,9 @@ export function useWorkspaceLineageMenuActions(
             parent,
             worktrees,
             lineageById,
-            activity: { tabsByWorktree, ptyIdsByTabId, browserTabsByWorktree }
+            activity: { tabsByWorktree, ptyIdsByTabId }
           })
         : EMPTY_LINEAGE_MENU_ACTIONS,
-    [browserTabsByWorktree, enabled, lineageById, parent, ptyIdsByTabId, tabsByWorktree, worktrees]
+    [enabled, lineageById, parent, ptyIdsByTabId, tabsByWorktree, worktrees]
   )
 }

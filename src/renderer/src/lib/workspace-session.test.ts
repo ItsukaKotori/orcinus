@@ -50,44 +50,10 @@ function createSnapshot(overrides: Partial<AppState> = {}): AppState {
     ],
     activeFileIdByWorktree: { 'wt-1': '/tmp/demo.ts' },
     activeTabTypeByWorktree: { 'wt-1': 'editor', 'wt-2': 'terminal' },
-    browserTabsByWorktree: {
-      'wt-1': [
-        {
-          id: 'browser-1',
-          url: 'https://example.com',
-          title: 'Example',
-          loading: true,
-          canGoBack: false,
-          canGoForward: false,
-          errorCode: null,
-          errorDescription: null
-        }
-      ]
-    },
-    activeBrowserTabIdByWorktree: { 'wt-1': 'browser-1' },
     lastKnownRelayPtyIdByTabId: {},
     sshConnectionStates: new Map(),
     repos: [],
     worktreesByRepo: {},
-    browserPagesByWorkspace: {
-      'browser-1': [
-        {
-          id: 'page-1',
-          workspaceId: 'browser-1',
-          worktreeId: 'wt-1',
-          url: 'https://example.com',
-          title: 'Example',
-          loading: true,
-          faviconUrl: null,
-          canGoBack: false,
-          canGoForward: false,
-          loadError: null,
-          createdAt: Date.now()
-        }
-      ]
-    },
-    browserUrlHistory: [],
-    remoteBrowserPageHandlesByPageId: {},
     ...overrides
   } as AppState
 }
@@ -160,7 +126,7 @@ describe('buildWorkspaceSessionPayload', () => {
     expect(payload.activeWorktreeIdsOnShutdown).toEqual([FLOATING_TERMINAL_WORKTREE_ID])
   })
 
-  it('persists only edit-mode files and resets browser loading state', () => {
+  it('persists only edit-mode files', () => {
     const payload = buildWorkspaceSessionPayload(createSnapshot())
 
     expect(payload.openFilesByWorktree).toEqual({
@@ -174,7 +140,6 @@ describe('buildWorkspaceSessionPayload', () => {
         }
       ]
     })
-    expect(payload.browserTabsByWorktree?.['wt-1'][0].loading).toBe(false)
   })
 
   it('persists front-matter hide overrides only for restored editor files', () => {
@@ -244,153 +209,6 @@ describe('buildWorkspaceSessionPayload', () => {
     ])
     expect(payload.tabGroupLayouts?.['wt-1']).toEqual({ type: 'leaf', groupId: 'group-left' })
     expect(payload.activeGroupIdByWorktree?.['wt-1']).toBe('group-left')
-  })
-
-  it('does not persist a browser tab whose create never materialized', () => {
-    const payload = buildWorkspaceSessionPayload(
-      createSnapshot({
-        browserTabsByWorktree: {
-          'wt-1': [
-            {
-              id: 'browser-1',
-              activePageId: 'page-1',
-              pageIds: ['page-1'],
-              worktreeId: 'wt-1'
-            } as never,
-            {
-              id: 'staged-1',
-              activePageId: 'staged-page',
-              pageIds: ['staged-page'],
-              worktreeId: 'wt-1'
-            } as never
-          ]
-        },
-        browserPagesByWorkspace: {
-          'browser-1': [{ id: 'page-1', workspaceId: 'browser-1', worktreeId: 'wt-1' } as never],
-          'staged-1': [{ id: 'staged-page', workspaceId: 'staged-1', worktreeId: 'wt-1' } as never]
-        },
-        remoteBrowserPageHandlesByPageId: {
-          'page-1': { environmentId: 'env-1', remotePageId: 'remote-1' },
-          'staged-page': { environmentId: 'env-1', remotePageId: 'staged-page', staged: true }
-        },
-        activeBrowserTabIdByWorktree: { 'wt-1': 'staged-1' },
-        unifiedTabsByWorktree: {
-          'wt-1': [
-            {
-              id: 'browser-unified-1',
-              entityId: 'browser-1',
-              groupId: 'group-left',
-              worktreeId: 'wt-1',
-              contentType: 'browser',
-              label: 'Example',
-              customLabel: null,
-              color: null,
-              sortOrder: 0,
-              createdAt: 1
-            },
-            {
-              id: 'staged-unified-1',
-              entityId: 'staged-1',
-              groupId: 'group-left',
-              worktreeId: 'wt-1',
-              contentType: 'browser',
-              label: 'New Tab',
-              customLabel: null,
-              color: null,
-              sortOrder: 1,
-              createdAt: 2
-            }
-          ]
-        },
-        groupsByWorktree: {
-          'wt-1': [
-            {
-              id: 'group-left',
-              worktreeId: 'wt-1',
-              activeTabId: 'staged-unified-1',
-              tabOrder: ['browser-unified-1', 'staged-unified-1']
-            }
-          ]
-        },
-        layoutByWorktree: { 'wt-1': { type: 'leaf', groupId: 'group-left' } },
-        activeGroupIdByWorktree: { 'wt-1': 'group-left' }
-      })
-    )
-
-    expect(payload.browserTabsByWorktree?.['wt-1']?.map((tab) => tab.id)).toEqual(['browser-1'])
-    expect(payload.browserPagesByWorkspace).not.toHaveProperty('staged-1')
-    expect(payload.unifiedTabs?.['wt-1']?.map((tab) => tab.id)).toEqual(['browser-unified-1'])
-    // The group must not keep a slot pointing at a tab that no longer exists.
-    expect(payload.tabGroups?.['wt-1']).toEqual([
-      expect.objectContaining({ tabOrder: ['browser-unified-1'], activeTabId: null })
-    ])
-    expect(payload.activeBrowserTabIdByWorktree?.['wt-1']).toBeNull()
-  })
-
-  // Why: the handle map is in-memory only. Without stamping the remote page identity onto the row
-  // that reaches disk, a relaunch has nothing to rebuild the handle from and the restored tab
-  // silently downgrades to a fresh server page.
-  it('stamps the remote page identity of a client-hosted browser page onto its persisted row', () => {
-    const payload = buildWorkspaceSessionPayload(
-      createSnapshot({
-        remoteBrowserPageHandlesByPageId: {
-          'page-1': {
-            environmentId: 'env-1',
-            remotePageId: 'remote-page-1',
-            placement: {
-              kind: 'client',
-              browserHostClientId: 'host-a',
-              browserHostGeneration: 2,
-              pageHostGeneration: 4
-            }
-          }
-        }
-      })
-    )
-
-    expect(payload.browserPagesByWorkspace?.['browser-1']?.[0]).toMatchObject({
-      remoteBrowserPageId: 'remote-page-1',
-      remoteBrowserPageClientHosted: true
-    })
-  })
-
-  it('marks a server-hosted remote page row with its remote page id but not client hosting', () => {
-    const payload = buildWorkspaceSessionPayload(
-      createSnapshot({
-        remoteBrowserPageHandlesByPageId: {
-          'page-1': { environmentId: 'env-1', remotePageId: 'remote-page-1' }
-        }
-      })
-    )
-
-    expect(payload.browserPagesByWorkspace?.['browser-1']?.[0]).toMatchObject({
-      remoteBrowserPageId: 'remote-page-1'
-    })
-    expect(
-      payload.browserPagesByWorkspace?.['browser-1']?.[0].remoteBrowserPageClientHosted
-    ).toBeUndefined()
-  })
-
-  // Why: a row restored from a previous quit has no placement until the host republishes it, so
-  // reading client hosting off the placement alone would lose the marker on a second quit.
-  it('keeps the client-hosted marker on a restored row the host has not republished yet', () => {
-    const payload = buildWorkspaceSessionPayload(
-      createSnapshot({
-        remoteBrowserPageHandlesByPageId: {
-          'page-1': {
-            environmentId: 'env-1',
-            remotePageId: 'remote-page-1',
-            restoredFromSession: true,
-            restoredClientHosted: true
-          }
-        }
-      })
-    )
-
-    expect(payload.browserPagesByWorkspace?.['browser-1']?.[0]).toMatchObject({
-      remoteBrowserPageId: 'remote-page-1',
-      remoteBrowserPageClientHosted: true
-    })
   })
 
   it('keeps local terminal scrollback buffers in session payloads (ade has no daemon — spec R2)', () => {

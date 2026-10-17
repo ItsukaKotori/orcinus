@@ -7,10 +7,8 @@ describe('Phase 0 preflight mock', () => {
 
     const status = await preflight.check()
     status.git.installed = true
-    status.gh.authenticated = true
     await expect(preflight.check()).resolves.toEqual({
-      git: { installed: false },
-      gh: { installed: false, authenticated: false }
+      git: { installed: false }
     })
 
     const report = await preflight.refreshAgents()

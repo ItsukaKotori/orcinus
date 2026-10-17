@@ -16,18 +16,16 @@ vi.mock('@/components/ui/dialog', () => ({
   DialogTitle: ({ children }: { children: ReactModule.ReactNode }) => <h1>{children}</h1>
 }))
 
-function renderLocalStartStep(isSshLikely: boolean): string {
+function renderLocalStartStep(): string {
   return renderToStaticMarkup(
     <AddRepoLocalStartStep
       repoCount={1}
-      isSshLikely={isSshLikely}
       isAdding={false}
       addProjectBusyLabel={null}
       nestedScanInProgress={false}
       nestedScanId={null}
       onBrowse={vi.fn()}
       onOpenCloneStep={vi.fn()}
-      onOpenRemoteStep={vi.fn()}
       onOpenCreateStep={vi.fn()}
       onStopNestedScan={vi.fn()}
     />
@@ -60,7 +58,6 @@ type LocalStartStepDomOptions = {
 }
 
 async function renderLocalStartStepDom(
-  isSshLikely: boolean,
   options: LocalStartStepDomOptions = {}
 ): Promise<{
   container: HTMLDivElement
@@ -75,7 +72,6 @@ async function renderLocalStartStepDom(
       <TooltipProvider>
         <AddRepoLocalStartStep
           repoCount={1}
-          isSshLikely={isSshLikely}
           isAdding={options.isAdding ?? false}
           actionsDisabled={options.actionsDisabled ?? false}
           addProjectBusyLabel={options.addProjectBusyLabel ?? null}
@@ -83,7 +79,6 @@ async function renderLocalStartStepDom(
           nestedScanId={options.nestedScanId ?? null}
           onBrowse={vi.fn()}
           onOpenCloneStep={vi.fn()}
-          onOpenRemoteStep={vi.fn()}
           onOpenCreateStep={vi.fn()}
           onStopNestedScan={vi.fn()}
         />
@@ -104,15 +99,13 @@ function findButton(container: HTMLElement, label: string): HTMLButtonElement {
   return button
 }
 
-function getActionTitles(isSshLikely: boolean): {
+function getActionTitles(): {
   primary: string
   secondary: string[]
 } {
   const { primaryAction, secondaryActions } = getAddRepoLocalStartActions({
-    isSshLikely,
     onBrowse: vi.fn(),
     onOpenCloneStep: vi.fn(),
-    onOpenRemoteStep: vi.fn(),
     onOpenCreateStep: vi.fn()
   })
 
@@ -122,37 +115,14 @@ function getActionTitles(isSshLikely: boolean): {
   }
 }
 
-function getHostAwareActionModel(): {
-  secondary: string[]
-  createDisabled: boolean | undefined
-} {
-  const { secondaryActions } = getAddRepoLocalStartActions({
-    isSshLikely: true,
-    showRemoteAction: false,
-    onBrowse: vi.fn(),
-    onOpenCloneStep: vi.fn(),
-    onOpenRemoteStep: vi.fn(),
-    onOpenCreateStep: vi.fn()
-  })
-  const createAction = secondaryActions.find((action) => action.kind === 'create')
-
-  return {
-    secondary: secondaryActions.map((action) => action.title),
-    createDisabled: createAction?.disabled
-  }
-}
-
 function getRuntimeHostActionModel(): {
   primary: string
   description: string
 } {
   const { primaryAction } = getAddRepoLocalStartActions({
-    isSshLikely: false,
-    showRemoteAction: false,
     browseHostKind: 'runtime',
     onBrowse: vi.fn(),
     onOpenCloneStep: vi.fn(),
-    onOpenRemoteStep: vi.fn(),
     onOpenCreateStep: vi.fn()
   })
 
@@ -168,52 +138,20 @@ describe('AddRepoLocalStartStep', () => {
   })
 
   it('promotes browse folder and keeps secondary actions always visible', () => {
-    const markup = renderLocalStartStep(false)
+    const markup = renderLocalStartStep()
 
     expect(markup).toContain('Browse folder')
     expect(markup).toContain('Clone from URL')
-    expect(markup).toContain('Project on SSH host')
     expect(markup).toContain('Create new project')
     expect(markup).toContain('Other ways to add')
     expect(markup).not.toContain('More options')
   })
 
-  it('orders secondary actions clone-first for default users', () => {
-    const titles = getActionTitles(false)
+  it('orders secondary actions clone-first', () => {
+    const titles = getActionTitles()
 
     expect(titles.primary).toBe('Browse folder')
-    expect(titles.secondary).toEqual([
-      'Clone from URL',
-      'Project on SSH host',
-      'Create new project'
-    ])
-  })
-
-  it('keeps Browse folder primary for SSH-likely users', () => {
-    const markup = renderLocalStartStep(true)
-
-    expect(markup).toContain('Browse folder')
-    expect(markup).toContain('Project on SSH host')
-    expect(markup).toContain('Clone from URL')
-    expect(markup).toContain('Create new project')
-  })
-
-  it('orders secondary actions remote-first for SSH-likely users', () => {
-    const titles = getActionTitles(true)
-
-    expect(titles.primary).toBe('Browse folder')
-    expect(titles.secondary).toEqual([
-      'Project on SSH host',
-      'Clone from URL',
-      'Create new project'
-    ])
-  })
-
-  it('lets host-aware Add Project replace the separate remote row', () => {
-    const model = getHostAwareActionModel()
-
-    expect(model.secondary).toEqual(['Clone from URL', 'Create new project'])
-    expect(model.createDisabled).toBe(false)
+    expect(titles.secondary).toEqual(['Clone from URL', 'Create new project'])
   })
 
   it('uses host-neutral browse copy for runtime hosts', () => {
@@ -224,23 +162,10 @@ describe('AddRepoLocalStartStep', () => {
   })
 
   it('focuses Browse folder when the default Add Project step opens', async () => {
-    const { container, root } = await renderLocalStartStepDom(false)
+    const { container, root } = await renderLocalStartStepDom()
     const browseButton = findButton(container, 'Browse folder')
 
     expect(document.activeElement).toBe(browseButton)
-
-    await act(async () => {
-      root.unmount()
-    })
-  })
-
-  it('focuses Browse folder for SSH-likely users too', async () => {
-    const { container, root } = await renderLocalStartStepDom(true)
-    const browseButton = findButton(container, 'Browse folder')
-    const remoteButton = findButton(container, 'Project on SSH host')
-
-    expect(document.activeElement).toBe(browseButton)
-    expect(document.activeElement).not.toBe(remoteButton)
 
     await act(async () => {
       root.unmount()
@@ -248,10 +173,9 @@ describe('AddRepoLocalStartStep', () => {
   })
 
   it('renders secondary actions as enabled buttons without a disclosure toggle', async () => {
-    const { container, root } = await renderLocalStartStepDom(false)
+    const { container, root } = await renderLocalStartStepDom()
 
     expect(findButton(container, 'Clone from URL').disabled).toBe(false)
-    expect(findButton(container, 'Project on SSH host').disabled).toBe(false)
     expect(findButton(container, 'Create new project').disabled).toBe(false)
 
     await act(async () => {
@@ -260,11 +184,10 @@ describe('AddRepoLocalStartStep', () => {
   })
 
   it('disables host-scoped actions until a host is selectable', async () => {
-    const { container, root } = await renderLocalStartStepDom(false, { actionsDisabled: true })
+    const { container, root } = await renderLocalStartStepDom({ actionsDisabled: true })
 
     expect(findButton(container, 'Browse folder').disabled).toBe(true)
     expect(findButton(container, 'Clone from URL').disabled).toBe(true)
-    expect(findButton(container, 'Project on SSH host').disabled).toBe(true)
     expect(findButton(container, 'Create new project').disabled).toBe(true)
     expect(findButton(container, 'Browse folder').textContent).not.toContain('⏎')
 
@@ -274,7 +197,7 @@ describe('AddRepoLocalStartStep', () => {
   })
 
   it('marks the autofocused Browse action as selected with the ⏎ chip', async () => {
-    const { container, root } = await renderLocalStartStepDom(false)
+    const { container, root } = await renderLocalStartStepDom()
 
     expect(findButton(container, 'Browse folder').textContent).toContain('⏎')
     expect(findButton(container, 'Clone from URL').textContent).not.toContain('⏎')
@@ -285,7 +208,7 @@ describe('AddRepoLocalStartStep', () => {
   })
 
   it('moves the ⏎ selection to whichever action receives focus', async () => {
-    const { container, root } = await renderLocalStartStepDom(false)
+    const { container, root } = await renderLocalStartStepDom()
     const cloneButton = findButton(container, 'Clone from URL')
 
     await act(async () => {
@@ -301,7 +224,7 @@ describe('AddRepoLocalStartStep', () => {
   })
 
   it('clears the ⏎ selection when focus leaves the action list', async () => {
-    const { container, root } = await renderLocalStartStepDom(false)
+    const { container, root } = await renderLocalStartStepDom()
     const outsideButton = document.createElement('button')
     document.body.appendChild(outsideButton)
 
@@ -319,7 +242,7 @@ describe('AddRepoLocalStartStep', () => {
   })
 
   it('does not show an ⏎ selection while add actions are busy', async () => {
-    const { container, root } = await renderLocalStartStepDom(false, {
+    const { container, root } = await renderLocalStartStepDom({
       isAdding: true,
       addProjectBusyLabel: 'Scanning repositories',
       nestedScanInProgress: true,
@@ -343,7 +266,7 @@ describe('AddRepoLocalStartStep', () => {
   })
 
   it('hides the visual ⏎ chip from assistive technology', async () => {
-    const { container, root } = await renderLocalStartStepDom(false)
+    const { container, root } = await renderLocalStartStepDom()
     const browseButton = findButton(container, 'Browse folder')
     const enterChip = Array.from(browseButton.querySelectorAll('[aria-hidden="true"]')).find(
       (entry) => entry.textContent?.includes('⏎')
@@ -357,7 +280,7 @@ describe('AddRepoLocalStartStep', () => {
   })
 
   it('roves selection down the action list with the ArrowDown key', async () => {
-    const { container, root } = await renderLocalStartStepDom(false)
+    const { container, root } = await renderLocalStartStepDom()
 
     await act(async () => {
       findButton(container, 'Browse folder').dispatchEvent(

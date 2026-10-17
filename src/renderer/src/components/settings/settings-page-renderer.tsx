@@ -6,22 +6,16 @@ import type { SettingsInteractionController } from './use-settings-interaction-c
 import type { SettingsRenderContext } from './settings-render-context'
 import {
   renderAgentsSettingsSection,
-  renderDesktopCapabilitySettingsSections,
-  renderLinearSettingsSection,
   renderOrchestrationSettingsSection
 } from './settings-capability-section-renderers'
 import {
-  renderArtifactsSettingsSection,
-  renderAutomationsSettingsSection,
   renderGeneralSettingsSection,
   renderIntegrationsSettingsSection,
 } from './settings-setup-workflow-section-renderers'
 import {
   renderGitSettingsSection,
-  renderTasksSettingsSection
 } from './settings-git-task-section-renderers'
 import {
-  renderBrowserSettingsSection,
   renderFloatingWorkspaceSettingsSection,
   renderQuickCommandsSettingsSection,
   renderTerminalSettingsSection
@@ -104,17 +98,11 @@ export function renderSettingsPage(context: SettingsRenderContext): React.JSX.El
               <ActiveSettingsSectionProvider value={model.activeSectionId}>
                 {renderAgentsSettingsSection(context)}
                 {renderOrchestrationSettingsSection(context)}
-                {renderLinearSettingsSection(context)}
-                {renderDesktopCapabilitySettingsSections(context)}
                 {renderGeneralSettingsSection(context)}
                 {renderIntegrationsSettingsSection(context)}
-                {renderAutomationsSettingsSection(context)}
-                {renderArtifactsSettingsSection(context)}
                 {renderGitSettingsSection(context)}
-                {renderTasksSettingsSection(context)}
                 {renderTerminalSettingsSection(context)}
                 {renderQuickCommandsSettingsSection(context)}
-                {renderBrowserSettingsSection(context)}
                 {renderFloatingWorkspaceSettingsSection(context)}
                 {renderAppearanceSettingsSection(context)}
                 {renderInputSettingsSection(context)}

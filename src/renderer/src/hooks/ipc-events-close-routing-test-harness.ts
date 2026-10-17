@@ -167,7 +167,6 @@ export async function useIpcEventsForCloseRouting({
         onOpenQuickOpen: () => () => {},
         onToggleQuickCommandsMenu: () => () => {},
         onOpenNewWorkspace: () => () => {},
-        onOpenTasks: () => () => {},
         onJumpToWorktreeIndex: () => () => {},
         onJumpToTabIndex: () => () => {},
         onWorktreeHistoryNavigate: () => () => {},

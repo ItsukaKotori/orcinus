@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../../shared/constants'
-import type { BrowserTab } from '../../../../shared/browser-workspace-types'
-import type { Tab } from '../../../../shared/tab-types'
 import {
-  makeFile,
   makeTab,
   setFloatingTabs,
   storeBox,
@@ -174,61 +171,6 @@ describe('FloatingTerminalPanel close behavior', () => {
     expect(mocks.focusTerminalTabSurface).toHaveBeenCalledWith('created-tab')
   })
 
-  it('keeps floating browser create and duplicate local during active web runtime sessions', async () => {
-    setFloatingTabs([makeTab({ id: 'tab-1' })])
-    ;(storeBox.state as FloatingPanelStoreState).settings.activeRuntimeEnvironmentId = 'runtime-1'
-    ;(storeBox.state as FloatingPanelStoreState).browserTabsByWorktree = {
-      [FLOATING_TERMINAL_WORKTREE_ID]: [
-        {
-          id: 'browser-1',
-          worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
-          url: 'https://example.com',
-          title: 'Example',
-          loading: false,
-          faviconUrl: null,
-          canGoBack: false,
-          canGoForward: false,
-          loadError: null,
-          sessionProfileId: 'profile-1',
-          sessionPartition: 'persist:orca-browser-session-profile-1',
-          createdAt: 1
-        }
-      ]
-    }
-    mocks.isWebRuntimeSessionActive.mockReturnValue(true)
-    mocks.createWebRuntimeSessionBrowserTab.mockResolvedValue(true)
-
-    const element = await renderPanel(true)
-    const tabBar = findByTypeName(element, 'TabBar')
-    ;(tabBar.props.onNewBrowserTab as () => void)()
-    ;(tabBar.props.onDuplicateBrowserTab as (browserTabId: string) => void)('browser-1')
-
-    expect(mocks.createWebRuntimeSessionBrowserTab).not.toHaveBeenCalled()
-    expect(mocks.createBrowserTab).toHaveBeenNthCalledWith(
-      1,
-      FLOATING_TERMINAL_WORKTREE_ID,
-      'about:blank',
-      {
-        title: 'New Browser Tab',
-        focusAddressBar: true,
-        targetGroupId: 'floating-group',
-        browserRuntimeEnvironmentId: null
-      }
-    )
-    expect(mocks.createBrowserTab).toHaveBeenNthCalledWith(
-      2,
-      FLOATING_TERMINAL_WORKTREE_ID,
-      'https://example.com',
-      {
-        title: 'Example',
-        sessionProfileId: 'profile-1',
-        sessionPartition: 'persist:orca-browser-session-profile-1',
-        targetGroupId: 'floating-group',
-        browserRuntimeEnvironmentId: null
-      }
-    )
-  })
-
   it('hides the active terminal pane from the renderer while the panel is closed', async () => {
     setFloatingTabs([makeTab({ id: 'tab-1' })])
 
@@ -342,75 +284,6 @@ describe('FloatingTerminalPanel close behavior', () => {
     expect(mocks.shouldDeferParkedPtyExitTabClose).toHaveBeenCalledWith('tab-1', 'split-pty')
     expect(mocks.closeTerminalTab).not.toHaveBeenCalled()
     expect(mocks.closeTab).not.toHaveBeenCalled()
-  })
-
-  it('keeps browser tabs open when closing all files', async () => {
-    const state = storeBox.state as FloatingPanelStoreState
-    const groupId = 'floating-group'
-    const file = makeFile({ id: 'file-a' })
-    const editorTab: Tab = {
-      id: 'tab-file-a',
-      entityId: file.id,
-      groupId,
-      worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
-      contentType: 'editor',
-      label: file.relativePath,
-      customLabel: null,
-      color: null,
-      sortOrder: 0,
-      createdAt: 0
-    }
-    const browserTab: BrowserTab = {
-      id: 'browser-tab',
-      worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
-      url: '',
-      title: 'Browser',
-      loading: false,
-      faviconUrl: null,
-      canGoBack: false,
-      canGoForward: false,
-      loadError: null,
-      createdAt: 1
-    }
-    const browserUnifiedTab: Tab = {
-      id: 'browser-unified-tab',
-      entityId: browserTab.id,
-      groupId,
-      worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
-      contentType: 'browser',
-      label: 'Browser',
-      customLabel: null,
-      color: null,
-      sortOrder: 1,
-      createdAt: 1
-    }
-    state.openFiles = [file]
-    state.browserTabsByWorktree = { [FLOATING_TERMINAL_WORKTREE_ID]: [browserTab] }
-    state.unifiedTabsByWorktree = {
-      [FLOATING_TERMINAL_WORKTREE_ID]: [editorTab, browserUnifiedTab]
-    }
-    state.groupsByWorktree = {
-      [FLOATING_TERMINAL_WORKTREE_ID]: [
-        {
-          id: groupId,
-          worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
-          activeTabId: editorTab.id,
-          tabOrder: [editorTab.id, browserUnifiedTab.id],
-          recentTabIds: [editorTab.id, browserUnifiedTab.id]
-        }
-      ]
-    }
-    state.activeGroupIdByWorktree = { [FLOATING_TERMINAL_WORKTREE_ID]: groupId }
-    state.tabBarOrderByWorktree = {
-      [FLOATING_TERMINAL_WORKTREE_ID]: [editorTab.id, browserUnifiedTab.id]
-    }
-
-    const element = await renderPanel(true)
-    const tabBar = findByTypeName(element, 'TabBar')
-    ;(tabBar.props.onCloseAllFiles as () => void)()
-
-    expect(mocks.closeFile).toHaveBeenCalledWith(file.id)
-    expect(mocks.closeUnifiedTab).not.toHaveBeenCalledWith(browserUnifiedTab.id)
   })
 
   it('keeps floating terminal create and close local during active web runtime sessions', async () => {

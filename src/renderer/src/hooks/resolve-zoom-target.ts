@@ -35,11 +35,6 @@ export function resolveZoomTarget(args: {
   if (activeView !== 'terminal') {
     return 'ui'
   }
-  // Why: keyboard/menu zoom in an active browser tab belongs to Orca chrome.
-  // Browser page zoom has a dedicated route for wheel and page-specific IPC.
-  if (activeTabType === 'browser') {
-    return 'ui'
-  }
   if (activeTabType === 'editor' || editorFocused) {
     return 'editor'
   }

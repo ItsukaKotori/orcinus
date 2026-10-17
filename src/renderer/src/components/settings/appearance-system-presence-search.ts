@@ -1,7 +1,6 @@
 import { translate } from '@/i18n/i18n'
 import { createLocalizedCatalog } from '@/i18n/localized-catalog'
 import { getRendererAppPlatform } from '@/lib/renderer-app-platform'
-import { isWebClientLocation } from '@/lib/web-client-location'
 import type { SettingsSearchEntry } from './settings-search'
 import { translateSearchKeyword } from './settings-search-keywords'
 
@@ -87,17 +86,13 @@ type SystemPresenceSearchOptions = {
 export function getSystemTrayEntries(
   options: SystemPresenceSearchOptions = {}
 ): SettingsSearchEntry[] {
-  const show =
-    options.showSystemTray ??
-    // Why: a Windows web client can report win32, but it has no local tray.
-    (getRendererAppPlatform() === 'win32' && !isWebClientLocation())
+  const show = options.showSystemTray ?? getRendererAppPlatform() === 'win32'
   return show ? getSystemTrayEntryCatalog() : []
 }
 
 export function getMenuBarIconEntries(
   options: SystemPresenceSearchOptions = {}
 ): SettingsSearchEntry[] {
-  const show =
-    options.showMenuBarIcon ?? (getRendererAppPlatform() === 'darwin' && !isWebClientLocation())
+  const show = options.showMenuBarIcon ?? getRendererAppPlatform() === 'darwin'
   return show ? getMenuBarIconEntryCatalog() : []
 }

@@ -8,12 +8,12 @@ import { isEventTargetInsideCurrentTarget } from './worktree-card-dom-events'
 import type { ResolvedWorktreeCardProps } from './worktree-card-model'
 import { writeWorkspaceDragData } from './workspace-status'
 import type { useWorktreeCardFoundation } from './use-worktree-card-foundation'
+import type { useWorktreeCardIdentityDetails } from './use-worktree-card-identity-details'
 import type { useWorktreeCardLinkedDetails } from './use-worktree-card-linked-details'
-import type { useWorktreeCardReviewDetails } from './use-worktree-card-review-details'
 
 type Foundation = ReturnType<typeof useWorktreeCardFoundation>
 type LinkedDetails = ReturnType<typeof useWorktreeCardLinkedDetails>
-type ReviewDetails = ReturnType<typeof useWorktreeCardReviewDetails>
+type IdentityDetails = ReturnType<typeof useWorktreeCardIdentityDetails>
 
 export function useWorktreeCardWorkspaceActions({
   worktree,
@@ -45,7 +45,7 @@ export function useWorktreeCardWorkspaceActions({
 > &
   Pick<Foundation, 'deleteFolderWorkspace' | 'setActiveWorktree' | 'setShowRenameErrorDialog'> &
   Pick<LinkedDetails, 'isDeleting'> &
-  Pick<ReviewDetails, 'folderWorkspaceId'> & {
+  Pick<IdentityDetails, 'folderWorkspaceId'> & {
     showDeleteQuickAction: boolean
   }) {
   const handleWorkspaceQuickAction = useCallback(

@@ -40,7 +40,6 @@ export function useTerminalPaneStartupActions(controller: TerminalPaneStoreContr
     openSpacePage,
     quickCommandEditorHostId,
     refreshWorkspaceSpace,
-    requestLinkRoutingPreference,
     sessionRestoredBannerPaneIds,
     setQuickCommandDraft,
     setQuickCommandEditorHostId,
@@ -55,7 +54,6 @@ export function useTerminalPaneStartupActions(controller: TerminalPaneStoreContr
     shouldMeasureHiddenStartup,
     startup,
     tabId,
-    updateSettings,
     worktreeId
   } = controller
   const settleTabStartupCommand = useCallback(() => {
@@ -169,37 +167,6 @@ export function useTerminalPaneStartupActions(controller: TerminalPaneStoreContr
   // Startup callbacks can run before the next effect commit.
   // react-doctor-disable-next-line react-doctor/no-ref-current-in-render
   settingsRef.current = settings
-  const openLinksInAppPreferencePromiseRef = useRef<Promise<boolean> | null>(null)
-  const requestOpenLinksInAppPreference = useCallback(
-    (url: string): Promise<boolean> | null => {
-      if (settingsRef.current?.openLinksInAppPreferencePrompted === true) {
-        return null
-      }
-      if (!settingsRef.current) {
-        return null
-      }
-      if (openLinksInAppPreferencePromiseRef.current) {
-        return openLinksInAppPreferencePromiseRef.current
-      }
-      const preferencePromise = (async () => {
-        const openInOrca = await requestLinkRoutingPreference({
-          openLinksInAppDefault: settingsRef.current?.openLinksInApp === true,
-          url
-        })
-        await updateSettings({
-          openLinksInApp: openInOrca,
-          openLinksInAppPreferencePrompted: true
-        })
-        return openInOrca
-      })()
-      openLinksInAppPreferencePromiseRef.current = preferencePromise
-      void preferencePromise.finally(() => {
-        openLinksInAppPreferencePromiseRef.current = null
-      })
-      return preferencePromise
-    },
-    [requestLinkRoutingPreference, updateSettings]
-  )
   const effectiveMacOptionAsAlt = useEffectiveMacOptionAsAlt(settings?.terminalMacOptionAsAlt)
   const macOptionAsAltRef = useRef<MacOptionAsAlt>(effectiveMacOptionAsAlt)
   // Keyboard listeners need the current preference without a render lag.
@@ -226,7 +193,6 @@ export function useTerminalPaneStartupActions(controller: TerminalPaneStoreContr
     saveQuickCommand,
     settleTabStartupCommand,
     settingsRef,
-    requestOpenLinksInAppPreference,
     effectiveMacOptionAsAlt,
     macOptionAsAltRef,
     onPtyExitRef,

@@ -123,8 +123,7 @@ function SetProjectLocationDialogBody({
   }, [])
   const parsedHost = parseExecutionHostId(option.hostId)
   // Remote hosts browse in-dialog; the local host gets the native folder picker.
-  const remoteHost =
-    parsedHost?.kind === 'ssh' || parsedHost?.kind === 'runtime' ? parsedHost : null
+  const remoteHost = parsedHost?.kind === 'runtime' ? parsedHost : null
   const canClone = projectKind === 'git'
   // Both views browse for a path; this is the field each one writes back to.
   const pathFields: Record<BrowseField, { value: string; set: (path: string) => void }> = {
@@ -199,8 +198,7 @@ function SetProjectLocationDialogBody({
   if (browsing && remoteHost) {
     return (
       <CreateProjectParentBrowser
-        sshTargetId={remoteHost.kind === 'ssh' ? remoteHost.targetId : null}
-        runtimeEnvironmentId={remoteHost.kind === 'runtime' ? remoteHost.environmentId : null}
+        runtimeEnvironmentId={remoteHost.environmentId}
         createParent={pathFields[browseField].value}
         onParentChange={pathFields[browseField].set}
         onClose={() => setView(browseField)}

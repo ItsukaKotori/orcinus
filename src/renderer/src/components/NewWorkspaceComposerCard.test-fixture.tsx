@@ -62,10 +62,7 @@ export async function renderCard(
         primaryActionLabel="Create workspace"
         name=""
         onNameValueChange={() => {}}
-        onSmartGitHubItemSelect={() => {}}
-        onSmartGitLabItemSelect={() => {}}
         onSmartBranchSelect={() => {}}
-        onSmartLinearIssueSelect={() => {}}
         smartNameSelection={null}
         onClearSmartNameSelection={() => {}}
         canReuseSelectedBranch={false}

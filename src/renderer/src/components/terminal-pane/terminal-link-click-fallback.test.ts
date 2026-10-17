@@ -215,10 +215,10 @@ describe('createFilePathLinkProvider range bounds', () => {
     await flushAsyncWork()
 
     expect(opened).toBe(true)
-    expect(createBrowserTabMock).toHaveBeenCalledWith(
-      'wt-1',
-      'file:///tmp/mobile/mock-homepage.html',
-      expect.objectContaining({ title: 'mock-homepage.html', activate: true })
+    expect(createBrowserTabMock).not.toHaveBeenCalled()
+    expect(openFileMock).toHaveBeenCalledWith(
+      expect.objectContaining({ filePath: '/tmp/mobile/mock-homepage.html' }),
+      expect.anything()
     )
     expect(openFilePathMock).not.toHaveBeenCalled()
   })
@@ -363,7 +363,7 @@ describe('createFilePathLinkProvider range bounds', () => {
       makeBufferLine('PR opened: https://github.com/stablyai/orca-marketing-website/pull/82')
     ]
     const { terminal, element } = makeFallbackTerminal(rows)
-    const disposable = installHttpLinkClickFallback(terminal, { worktreeId: 'wt-1' })
+    const disposable = installHttpLinkClickFallback(terminal, {})
     const mouseUp = getRegisteredBubbleMouseUpHandler(element)
     const preventDefault = vi.fn()
     const stopPropagation = vi.fn()
@@ -396,7 +396,7 @@ describe('createFilePathLinkProvider range bounds', () => {
       makeBufferLine('PR opened: https://github.com/stablyai/orca-marketing-website/pull/82')
     ]
     const { terminal, element } = makeFallbackTerminal(rows)
-    const disposable = installHttpLinkClickFallback(terminal, { worktreeId: 'wt-1' })
+    const disposable = installHttpLinkClickFallback(terminal, {})
     const mouseUp = getRegisteredBubbleMouseUpHandler(element)
     const preventDefault = vi.fn()
     const stopPropagation = vi.fn()
@@ -429,7 +429,7 @@ describe('createFilePathLinkProvider range bounds', () => {
     storeState.settings = { openLinksInApp: false }
     const rows = [makeBufferLine('Open https://github.com/stablyai/orca/pull/2914')]
     const { terminal, element } = makeFallbackTerminal(rows)
-    const disposable = installHttpLinkClickFallback(terminal, { worktreeId: 'wt-1' })
+    const disposable = installHttpLinkClickFallback(terminal, {})
     const mouseUp = getRegisteredBubbleMouseUpHandler(element)
     const preventDefault = vi.fn()
 
@@ -452,61 +452,12 @@ describe('createFilePathLinkProvider range bounds', () => {
     disposable.dispose()
   })
 
-  it('asks for the first-use preference from the direct URL click fallback', async () => {
-    setPlatform('Macintosh')
-    storeState.settings = { openLinksInApp: false, openLinksInAppPreferencePrompted: false }
-    const rows = [
-      makeBufferLine('PR opened: https://github.com/stablyai/orca-marketing-website/pull/82')
-    ]
-    const requestOpenLinksInAppPreference = vi.fn(async () => {
-      storeState.settings = { openLinksInApp: true, openLinksInAppPreferencePrompted: true }
-      return true
-    })
-    const { terminal, element } = makeFallbackTerminal(rows)
-    const disposable = installHttpLinkClickFallback(terminal, {
-      worktreeId: 'wt-1',
-      requestOpenLinksInAppPreference
-    })
-    const mouseUp = getRegisteredBubbleMouseUpHandler(element)
-    const preventDefault = vi.fn()
-
-    mouseUp({
-      button: 0,
-      metaKey: true,
-      ctrlKey: false,
-      shiftKey: false,
-      defaultPrevented: false,
-      clientX: 230,
-      clientY: 25,
-      preventDefault,
-      stopPropagation: vi.fn()
-    } as unknown as MouseEvent)
-
-    expect(requestOpenLinksInAppPreference).toHaveBeenCalledWith(
-      'https://github.com/stablyai/orca-marketing-website/pull/82'
-    )
-    expect(openUrlMock).not.toHaveBeenCalled()
-    expect(createBrowserTabMock).not.toHaveBeenCalled()
-
-    await flushAsyncWork()
-
-    expect(createBrowserTabMock).toHaveBeenCalledWith(
-      'wt-1',
-      'https://github.com/stablyai/orca-marketing-website/pull/82',
-      { activate: true }
-    )
-    expect(preventDefault).toHaveBeenCalled()
-    expect(terminal.clearSelection).toHaveBeenCalled()
-
-    disposable.dispose()
-  })
-
   it('does not double-open URLs when xterm already handled the mouseup', () => {
     setPlatform('Macintosh')
     storeState.settings = { openLinksInApp: false }
     const rows = [makeBufferLine('Open https://github.com/stablyai/orca/pull/2914')]
     const { terminal, element } = makeFallbackTerminal(rows)
-    const disposable = installHttpLinkClickFallback(terminal, { worktreeId: 'wt-1' })
+    const disposable = installHttpLinkClickFallback(terminal, {})
     const mouseUp = getRegisteredBubbleMouseUpHandler(element)
 
     mouseUp({

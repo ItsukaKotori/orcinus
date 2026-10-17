@@ -40,9 +40,9 @@ import { SetProjectLocationDialog } from './SetProjectLocationDialog'
 
 const option: NeedsSetupProjectHostOption = {
   kind: 'needs-setup',
-  id: 'needs-setup:ssh:openclaw',
+  id: 'needs-setup:runtime:env-1',
   projectId: 'project-orca',
-  hostId: 'ssh:openclaw',
+  hostId: 'runtime:env-1',
   label: 'openclaw',
   detail: 'Project location not set',
   isAvailable: true,
@@ -100,7 +100,7 @@ describe('SetProjectLocationDialog', () => {
 
     expect(storeMocks.setupProjectExistingFolder).toHaveBeenCalledWith({
       projectId: 'project-orca',
-      hostId: 'ssh:openclaw',
+      hostId: 'runtime:env-1',
       path: '/remote/orca',
       kind: 'git',
       displayName: 'orca'
@@ -120,7 +120,7 @@ describe('SetProjectLocationDialog', () => {
 
     expect(storeMocks.setupProjectClone).toHaveBeenCalledWith({
       projectId: 'project-orca',
-      hostId: 'ssh:openclaw',
+      hostId: 'runtime:env-1',
       url: 'git@github.com:stablyai/orca.git',
       destination: '/remote/orca',
       displayName: 'orca'

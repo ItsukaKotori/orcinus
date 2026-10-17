@@ -18,7 +18,6 @@ describe('resolveWorktreeStatus terminal layout roots', () => {
   it('suppresses stale working titles without full layout snapshots', () => {
     const status = resolveWorktreeStatus({
       tabs: [{ id: 'tab-1', title: 'claude [working]' }],
-      browserTabs: [],
       ptyIdsByTabId: { 'tab-1': ['pty-0'] },
       runtimePaneTitlesByTabId: {
         'tab-1': {

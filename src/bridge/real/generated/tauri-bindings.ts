@@ -266,8 +266,6 @@ export const commands = {
 	gitRemoteUrls: (args: GitWorktreeArgs) => typedError<GitRemoteUrl[], BridgeError>(__TAURI_INVOKE("git_remote_urls", { args })),
 	gitRead: (args: GitReadArgs) => typedError<GitReadResult, BridgeError>(__TAURI_INVOKE("git_read", { args })),
 	gitPush: (args: GitPushArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_push", { args })),
-	ghExec: (args: GhExecArgs) => typedError<GhExecResult, BridgeError>(__TAURI_INVOKE("gh_exec", { args })),
-	ghEnvProbe: () => typedError<GhEnvProbe, BridgeError>(__TAURI_INVOKE("gh_env_probe")),
 	/**  `aiVault.listSessions`: `unlimited` is accepted and ignored (spec §5). */
 	aiVaultListSessions: (args: {
 	limit?: number | null,
@@ -282,55 +280,6 @@ export const commands = {
 	aiVaultCancelListSessions: (args: AiVaultCancelListSessionsArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("ai_vault_cancel_list_sessions", { args })),
 	aiVaultPrepareSessionResume: (args: AiVaultPrepareSessionResumeArgs) => typedError<AiVaultPrepareSessionResumeResult_Serialize, BridgeError>(__TAURI_INVOKE("ai_vault_prepare_session_resume", { args })),
 	aiVaultDeleteSession: (args: AiVaultDeleteSessionArgs) => typedError<AiVaultDeleteSessionResult, BridgeError>(__TAURI_INVOKE("ai_vault_delete_session", { args })),
-	/**  All automation definitions (fenced selector/expectedOwner ignored). */
-	automationsList: () => typedError<Json[], BridgeError>(__TAURI_INVOKE("automations_list")),
-	/**
-	 *  Create one automation; an invalid schedule/definition is rejected before
-	 *  anything touches the store. Broadcasts `automations:changed {reason:
-	 *  "definition"}`.
-	 */
-	automationsCreate: (args: AutomationsCreateArgs) => typedError<AutomationsCreateResult, BridgeError>(__TAURI_INVOKE("automations_create", { args })),
-	/**
-	 *  Merge `updates` into one automation (`null` removes a key); recomputes
-	 *  `nextRunAt` when `rrule`/`dtstart` change. `{automation: null}` when the id
-	 *  is unknown.
-	 */
-	automationsUpdate: (args: AutomationsUpdateArgs) => typedError<AutomationsUpdateResult, BridgeError>(__TAURI_INVOKE("automations_update", { args })),
-	/**  Delete one automation and every run it owns. */
-	automationsDelete: (args: AutomationsDeleteArgs) => typedError<AutomationsDeleteResult, BridgeError>(__TAURI_INVOKE("automations_delete", { args })),
-	/**
-	 *  Manual dispatch: create the run and publish `automations:dispatch-requested`
-	 *  (the service broadcasts `automations:changed {reason: "run"}` for the run
-	 *  write). Not gated by `enabled`.
-	 */
-	automationsRunNow: (args: AutomationsRunNowArgs) => typedError<AutomationsRunNowResult, BridgeError>(__TAURI_INVOKE("automations_run_now", { args })),
-	/**
-	 *  One keyset page of run history (`createdAt desc, id asc`); the cursor names
-	 *  the previous page's last run.
-	 */
-	automationsRuns: (args: AutomationsRunsArgs) => typedError<AutomationsRunsResult, BridgeError>(__TAURI_INVOKE("automations_runs", { args })),
-	/**
-	 *  Execute the configured precheck for a scheduled run and persist its result
-	 *  (`{result: null}` for manual runs or a missing run/precheck).
-	 */
-	automationsRunPrecheck: (args: AutomationsRunPrecheckArgs) => typedError<AutomationsRunPrecheckResult, BridgeError>(__TAURI_INVOKE("automations_run_precheck", { args })),
-	/**
-	 *  Write the renderer's dispatch result back (`{run: null}` when the run is
-	 *  gone; final runs are returned untouched).
-	 */
-	automationsMarkDispatchResult: (args: AutomationsMarkDispatchResultArgs) => typedError<AutomationsMarkDispatchResultResult, BridgeError>(__TAURI_INVOKE("automations_mark_dispatch_result", { args })),
-	/**
-	 *  Snapshot a workspace's display name onto every run pointing at it (called
-	 *  when a workspace is removed/renamed).
-	 */
-	automationsSnapshotWorkspaceName: (args: AutomationsSnapshotWorkspaceNameArgs) => typedError<AutomationsSnapshotWorkspaceNameResult, BridgeError>(__TAURI_INVOKE("automations_snapshot_workspace_name", { args })),
-	/**  Arm the service and run the catch-up tick (renderer boot). */
-	automationsRendererReady: () => typedError<null, BridgeError>(__TAURI_INVOKE("automations_renderer_ready")),
-	computerUsePermissionsGetStatus: () => typedError<ComputerUsePermissionStatusResult, BridgeError>(__TAURI_INVOKE("computer_use_permissions_get_status")),
-	computerUsePermissionsOpenSetup: (args: {
-	id?: ComputerUsePermissionId | null,
-} | null) => typedError<ComputerUseOpenSetupResult_Serialize, BridgeError>(__TAURI_INVOKE("computer_use_permissions_open_setup", { args })),
-	computerUsePermissionsReset: () => typedError<ComputerUseResetResult, BridgeError>(__TAURI_INVOKE("computer_use_permissions_reset")),
 	cliGetInstallStatus: () => typedError<CliInstallStatusDto, BridgeError>(__TAURI_INVOKE("cli_get_install_status")),
 	cliInstall: () => typedError<CliInstallStatusDto, BridgeError>(__TAURI_INVOKE("cli_install")),
 	cliRemove: () => typedError<CliInstallStatusDto, BridgeError>(__TAURI_INVOKE("cli_remove")),
@@ -587,99 +536,6 @@ export type AppIdentityInfo = {
 	dockBadgeLabel: string | null,
 };
 
-/**
- *  Payload for [`AUTOMATIONS_DISPATCH_REQUESTED`]（`AutomationDispatchRequest`
- *  的 bridge 侧同形——内核只产生该形状）。
- */
-export type AutomationDispatchRequestPayload = {
-	automation: Json,
-	run: Json,
-	dispatchToken: string,
-};
-
-/**
- *  Payload for [`AUTOMATIONS_CHANGED`]: why the store changed (`"definition"`
- *  for CRUD, `"run"`/`"usage"` for run writes).
- */
-export type AutomationsChangedPayload = {
-	reason: string,
-};
-
-export type AutomationsCreateArgs = {
-	input: Json,
-};
-
-export type AutomationsCreateResult = {
-	automation: Json,
-};
-
-export type AutomationsDeleteArgs = {
-	id: string,
-};
-
-export type AutomationsDeleteResult = {
-	removed: boolean,
-};
-
-export type AutomationsMarkDispatchResultArgs = {
-	runId: string,
-	result: Json,
-};
-
-export type AutomationsMarkDispatchResultResult = {
-	run: Json | null,
-};
-
-export type AutomationsRunNowArgs = {
-	id: string,
-};
-
-export type AutomationsRunNowResult = {
-	run: Json,
-};
-
-export type AutomationsRunPrecheckArgs = {
-	automationId: string,
-	runId: string,
-};
-
-export type AutomationsRunPrecheckResult = {
-	result: Json | null,
-};
-
-/**
- *  `expectedOwner`/`selector`/`destination` (fenced multi-host fields) and any
- *  other legacy extra deserialize into nothing; unknown keys are ignored.
- */
-export type AutomationsRunsArgs = {
-	automationId?: string | null,
-	limit?: number | null,
-	cursor?: string | null,
-};
-
-export type AutomationsRunsResult = {
-	runs: Json[],
-	nextCursor: string | null,
-};
-
-export type AutomationsSnapshotWorkspaceNameArgs = {
-	workspaceId: string,
-	displayName: string,
-};
-
-export type AutomationsSnapshotWorkspaceNameResult = {
-	updated: number,
-};
-
-export type AutomationsUpdateArgs = {
-	id: string,
-	updates: Json,
-};
-
-export type AutomationsUpdateResult = {
-	automation: Json | null,
-};
-
 /**  Bootstrap snapshot injected into the main window before the document parses. */
 export type BootstrapPayload = {
 	settings: Json,
@@ -726,74 +582,6 @@ export type CliInstallUnsupportedReason = "platform_not_supported" | "launcher_m
  */
 export type CliWslInstallArgs = {
 	distro?: string | null,
-};
-
-/**  `computerUsePermissions.openSetup` args (`{ id? }`). */
-export type ComputerUseOpenSetupArgs = {
-	id?: ComputerUsePermissionId | null,
-};
-
-/**
- *  `ComputerUsePermissionSetupResult` (`permissionId`/`permissions` omitted
- *  when absent; `nextStep` stays nullable).
- */
-export type ComputerUseOpenSetupResult = ComputerUseOpenSetupResult_Serialize | ComputerUseOpenSetupResult_Deserialize;
-
-/**
- *  `ComputerUsePermissionSetupResult` (`permissionId`/`permissions` omitted
- *  when absent; `nextStep` stays nullable).
- */
-export type ComputerUseOpenSetupResult_Deserialize = {
-	platform: string,
-	helperAppPath: string | null,
-	permissionId: ComputerUsePermissionId | null,
-	openedSettings: boolean,
-	launchedHelper: boolean,
-	permissions: ComputerUsePermissionState[] | null,
-	nextStep: string | null,
-};
-
-/**
- *  `ComputerUsePermissionSetupResult` (`permissionId`/`permissions` omitted
- *  when absent; `nextStep` stays nullable).
- */
-export type ComputerUseOpenSetupResult_Serialize = {
-	platform: string,
-	helperAppPath: string | null,
-	permissionId?: ComputerUsePermissionId | null,
-	openedSettings: boolean,
-	launchedHelper: boolean,
-	permissions?: ComputerUsePermissionState[] | null,
-	nextStep: string | null,
-};
-
-/**  `ComputerUsePermissionId` (`'accessibility' | 'screenshots'`). */
-export type ComputerUsePermissionId = "accessibility" | "screenshots";
-
-/**  `ComputerUsePermissionState` (`{id, status}`). */
-export type ComputerUsePermissionState = {
-	id: ComputerUsePermissionId,
-	status: ComputerUsePermissionStatus,
-};
-
-/**  `ComputerUsePermissionStatus` (`'granted' | 'not-granted' | 'unsupported'`). */
-export type ComputerUsePermissionStatus = "granted" | "not-granted" | "unsupported";
-
-/**  `ComputerUsePermissionStatusResult`. */
-export type ComputerUsePermissionStatusResult = {
-	platform: string,
-	helperAppPath: string | null,
-	helperUnavailableReason: string | null,
-	permissions: ComputerUsePermissionState[],
-};
-
-/**  `ComputerUsePermissionResetResult` (status plus the reset `bundleId`). */
-export type ComputerUseResetResult = {
-	platform: string,
-	helperAppPath: string | null,
-	helperUnavailableReason: string | null,
-	permissions: ComputerUsePermissionState[],
-	bundleId: string | null,
 };
 
 export type DiffLineCountMinimums = {
@@ -1005,24 +793,6 @@ export type FsWriteFileArgs = {
 export type GetBaseRefDefaultArgs = {
 	repoId: string,
 	hostId?: string | null,
-};
-
-export type GhEnvProbe = {
-	token: string | null,
-};
-
-export type GhExecArgs = {
-	args: string[],
-	cwd?: string | null,
-	timeoutMs?: number | null,
-	maxBuffer?: number | null,
-	stdin?: string | null,
-};
-
-export type GhExecResult = {
-	stdout: string,
-	stderr: string,
-	code: number | null,
 };
 
 /**  Mirrors `GitBranchChangeEntry` in `src/shared/git-diff-compare-types.ts`. */

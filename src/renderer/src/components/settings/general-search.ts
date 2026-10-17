@@ -4,10 +4,8 @@ import { translate } from '@/i18n/i18n'
 import { translateSearchKeyword } from './settings-search-keywords'
 import { createLocalizedCatalog } from '@/i18n/localized-catalog'
 import { getGeneralProjectRuntimeSearchEntries } from './general-project-runtime-search'
-import { getGeneralSupportSearchEntries } from './general-support-search'
 
 export { getGeneralEditorSearchEntries } from './general-editor-search'
-export { getGeneralSupportSearchEntries } from './general-support-search'
 
 export const getGeneralWorkspaceSearchEntries = createLocalizedCatalog(() => [
   {
@@ -66,24 +64,6 @@ export const getGeneralWorkspaceSearchEntries = createLocalizedCatalog(() => [
     keywords: [
       ...translateSearchKeyword('auto.components.settings.general.search.84c67d0108', 'delete'),
       ...translateSearchKeyword('auto.components.settings.general.search.df10666259', 'worktree'),
-      ...translateSearchKeyword('auto.components.settings.general.search.9f8558233a', 'confirm'),
-      ...translateSearchKeyword('auto.components.settings.general.search.ca86dd6e27', 'dialog'),
-      ...translateSearchKeyword('auto.components.settings.general.search.7e9b556873', 'skip'),
-      ...translateSearchKeyword('auto.components.settings.general.search.0efc9d96ad', 'prompt')
-    ]
-  },
-  {
-    title: translate(
-      'auto.components.settings.general.search.d0a65b27fd',
-      'Ask Before Deleting Automations'
-    ),
-    description: translate(
-      'auto.components.settings.general.search.a0c44061ee',
-      'Show a confirmation dialog before deleting an automation and its run history.'
-    ),
-    keywords: [
-      ...translateSearchKeyword('auto.components.settings.general.search.84c67d0108', 'delete'),
-      ...translateSearchKeyword('auto.components.settings.general.search.7edf4f69e2', 'automation'),
       ...translateSearchKeyword('auto.components.settings.general.search.9f8558233a', 'confirm'),
       ...translateSearchKeyword('auto.components.settings.general.search.ca86dd6e27', 'dialog'),
       ...translateSearchKeyword('auto.components.settings.general.search.7e9b556873', 'skip'),
@@ -185,7 +165,6 @@ export function getGeneralPaneSearchEntries(
     ...getGeneralNavigationSearchEntries(),
     ...(options.includeProjectRuntime === false ? [] : getGeneralProjectRuntimeSearchEntries()),
     ...getGeneralEditorSearchEntries(),
-    ...getGeneralUpdateSearchEntries(),
-    ...getGeneralSupportSearchEntries()
+    ...getGeneralUpdateSearchEntries()
   ]
 }

@@ -1,11 +1,9 @@
 // Why: split from source-control-primary-action — primary and dropdown are independent derivations with different priority ladders.
 
-import { translate } from '@/i18n/i18n'
 import type { DropdownActionInputs, DropdownEntry } from './source-control-dropdown-item-types'
 import { deriveDropdownActionContext } from './source-control-dropdown-action-context'
 import { buildCommitDropdownItems } from './source-control-dropdown-commit-items'
 import { buildRemoteDropdownItems } from './source-control-dropdown-remote-items'
-import { buildHostedReviewDropdownItems } from './source-control-dropdown-review-items'
 
 /**
  * Resolve the chevron dropdown items. Every row is always rendered — disabled with a
@@ -16,8 +14,7 @@ export function resolveDropdownItems(inputs: DropdownActionInputs): DropdownEntr
   const { commit, commitPush, commitSync } = buildCommitDropdownItems(ctx)
   const { push, forcePush, pull, fastForward, sync, rebase, fetch, publish } =
     buildRemoteDropdownItems(ctx)
-  const { createPR, pushCreatePR } = buildHostedReviewDropdownItems(ctx)
-  const { conflictOperation, isPullRequestOperationActive, globalBusy } = ctx
+  const { conflictOperation, globalBusy } = ctx
 
   const entries: DropdownEntry[] = [
     commit,
@@ -26,8 +23,6 @@ export function resolveDropdownItems(inputs: DropdownActionInputs): DropdownEntr
     { kind: 'separator', id: 'before-remote' },
     push,
     forcePush,
-    createPR,
-    pushCreatePR,
     pull,
     fastForward,
     sync,
@@ -49,19 +44,5 @@ export function resolveDropdownItems(inputs: DropdownActionInputs): DropdownEntr
       }
     )
   }
-  if (!isPullRequestOperationActive) {
-    return entries
-  }
-  return entries.map((entry) =>
-    entry.kind === 'separator'
-      ? entry
-      : {
-          ...entry,
-          title: translate(
-            'auto.components.right.sidebar.source.control.dropdown.items.7aad2c0240',
-            'Hosted review operation in progress…'
-          ),
-          disabled: true
-        }
-  )
+  return entries
 }

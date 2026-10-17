@@ -1,19 +1,16 @@
 import type React from 'react'
 import { useMemo } from 'react'
 import type { Virtualizer } from '@tanstack/react-virtual'
-import { joinPath } from '@/lib/path'
 import type { OpenFile } from '@/store/slices/editor'
 import type { DiffComment } from '../../../../../../shared/diff-comment-types'
 import { DiffSectionItem } from '../../DiffSectionItem'
 import type { DiffSectionItemProps } from '../../diff-section-item-props'
 import { DiffNotesSendMenu } from '../../DiffNotesSendMenu'
-import { canOpenDiffSectionPreviewToSide } from '../../diff-section-preview'
 import type { DiffSection } from '../../diff-section-types'
 import type { CombinedDiffScrollThumb } from './use-combined-diff-scrollbar'
 
 export function CombinedDiffSectionList({
   activeGroupId,
-  canOpenWorkspaceFileBrowserForPath,
   diffCommentsForWorktree,
   file,
   handleSectionSaveRef,
@@ -27,7 +24,6 @@ export function CombinedDiffSectionList({
   modifiedEditorsRef,
   onScrollbarPointerDown,
   openSection,
-  openSectionPreview,
   retrySection,
   scrollThumb,
   sectionHeights,
@@ -42,7 +38,6 @@ export function CombinedDiffSectionList({
   virtualizer
 }: {
   activeGroupId: string | undefined
-  canOpenWorkspaceFileBrowserForPath: (path: string) => boolean
   diffCommentsForWorktree: DiffComment[]
   file: OpenFile
   handleSectionSaveRef: DiffSectionItemProps['handleSectionSaveRef']
@@ -56,7 +51,6 @@ export function CombinedDiffSectionList({
   modifiedEditorsRef: DiffSectionItemProps['modifiedEditorsRef']
   onScrollbarPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void
   openSection: (index: number) => void
-  openSectionPreview: (section: DiffSection) => void
   retrySection: (index: number) => void
   scrollThumb: CombinedDiffScrollThumb
   sectionHeights: Record<number, number>
@@ -121,18 +115,6 @@ export function CombinedDiffSectionList({
                   openSection={openSection}
                   openSectionTitle={
                     isAllMode || isBranchMode || isCommitMode ? 'Open diff' : 'Open in editor'
-                  }
-                  onOpenPreview={
-                    canOpenDiffSectionPreviewToSide({
-                      path: section.path,
-                      status: section.status,
-                      isCommitSurface: isCommitMode,
-                      canOpenWorkspaceFileBrowser: canOpenWorkspaceFileBrowserForPath(
-                        joinPath(file.filePath, section.path)
-                      )
-                    })
-                      ? openSectionPreview
-                      : undefined
                   }
                   setSectionHeights={setSectionHeights}
                   setSections={setSections}

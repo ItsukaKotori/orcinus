@@ -52,7 +52,7 @@ describe('buildRows project grouping order', () => {
       [repoA.id, 1],
       [repoC.id, 2]
     ])
-    const rows = buildRows('repo', [wC, wA, wB], map, null, new Set(), repoOrder)
+    const rows = buildRows('repo', [wC, wA, wB], map, new Set(), repoOrder)
     const headerKeys = rows.filter((r) => r.type === 'header').map((r) => r.key)
     expect(headerKeys).toEqual(['repo:repo-b', 'repo:repo-a', 'repo:repo-c'])
   })
@@ -60,7 +60,7 @@ describe('buildRows project grouping order', () => {
   it('places unknown repo ids last and sorts them by label', () => {
     // Only repoB is in repoOrder; repoA and repoC fall through to label sort.
     const repoOrder = new Map([[repoB.id, 0]])
-    const rows = buildRows('repo', [wC, wA, wB], map, null, new Set(), repoOrder)
+    const rows = buildRows('repo', [wC, wA, wB], map, new Set(), repoOrder)
     const headerKeys = rows.filter((r) => r.type === 'header').map((r) => r.key)
     expect(headerKeys).toEqual(['repo:repo-b', 'repo:repo-a', 'repo:repo-c'])
   })
@@ -78,7 +78,6 @@ describe('buildRows project grouping order', () => {
       'repo',
       [wA, wB, wC],
       map,
-      null,
       new Set(),
       repoOrder,
       undefined,
@@ -94,7 +93,6 @@ describe('buildRows project grouping order', () => {
       'repo',
       [wAStale, wA, wB, wC],
       map,
-      null,
       new Set(),
       undefined,
       undefined,
@@ -132,7 +130,6 @@ describe('buildRows project grouping order', () => {
       'repo',
       [freshChild, wB, main],
       map,
-      null,
       new Set(),
       undefined,
       undefined,
@@ -154,7 +151,7 @@ describe('buildRows project grouping order', () => {
       [repoA.id, 1],
       [repoC.id, 2]
     ])
-    const rows = buildRows('repo', [wC, wA, wB], map, null, new Set(), repoOrder)
+    const rows = buildRows('repo', [wC, wA, wB], map, new Set(), repoOrder)
     const headerKeys = rows.filter((r) => r.type === 'header').map((r) => r.key)
     expect(headerKeys).toEqual(['repo:repo-b', 'repo:repo-a', 'repo:repo-c'])
   })
@@ -168,7 +165,7 @@ describe('buildRows project grouping order', () => {
       return { ...worktree, id: `wt-${index}`, repoId, displayName: `workspace ${index}` }
     })
 
-    const rows = buildRows('repo', worktrees, repos, null, new Set())
+    const rows = buildRows('repo', worktrees, repos, new Set())
 
     expect(rows).toHaveLength(count * 2)
     expect(rows[0]).toMatchObject({ type: 'header', key: 'repo:repo-0' })
@@ -199,7 +196,6 @@ describe('buildRows Recent project order fallbacks', () => {
       'repo',
       [activeWorktree],
       map,
-      null,
       new Set(),
       undefined,
       undefined,
@@ -259,7 +255,6 @@ describe('project groups', () => {
       'repo',
       [worktreeA, worktreeB],
       groupedMap,
-      null,
       new Set(),
       repoOrder,
       undefined,
@@ -313,7 +308,6 @@ describe('project groups', () => {
         { ...worktree, id: 'wt-c', repoId: repoC.id }
       ],
       groupedMap,
-      null,
       new Set(),
       repoOrder,
       undefined,
@@ -374,7 +368,6 @@ describe('project groups', () => {
         { ...worktree, id: 'wt-c', repoId: repoC.id }
       ],
       groupedMap,
-      null,
       new Set(),
       repoOrder,
       undefined,
@@ -437,7 +430,6 @@ describe('project groups', () => {
       'repo',
       worktrees,
       groupedMap,
-      null,
       new Set(),
       undefined,
       undefined,
@@ -497,7 +489,6 @@ describe('project groups', () => {
       'repo',
       [],
       new Map(),
-      null,
       new Set(),
       undefined,
       undefined,

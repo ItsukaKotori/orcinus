@@ -71,8 +71,7 @@ export function prepareWebSessionTabsSnapshotBase(
         : (snapshot.tabs.find(
             (tab) =>
               tab.id === focusIntentHostTabId ||
-              (tab.type === 'terminal' && tab.parentTabId === focusIntentHostTabId) ||
-              (tab.type === 'browser' && tab.browserPageId === focusIntentHostTabId)
+              (tab.type === 'terminal' && tab.parentTabId === focusIntentHostTabId)
           ) ?? null)
   const expectedCurrentLocalTabId = focusIntent?.expectedCurrentLocalTabId
   const currentVisibleLocalTabId = resolveWebSessionVisibleTabId(state, worktreeId)

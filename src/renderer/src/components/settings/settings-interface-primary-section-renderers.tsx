@@ -1,4 +1,3 @@
-import { BrowserPane } from './BrowserPane'
 import { FloatingWorkspacePane } from './FloatingWorkspacePane'
 import { QuickCommandsPane } from './QuickCommandsPane'
 import { TerminalPane } from './TerminalPane'
@@ -58,31 +57,6 @@ export function renderQuickCommandsSettingsSection(
       ) : null}
     </SettingsSection>
   )
-}
-
-export function renderBrowserSettingsSection(
-  context: SettingsRenderContext
-): React.JSX.Element | null {
-  const { model, actions, navigation, view } = context
-  return model.showDesktopOnlySettings ? (
-    <SettingsSection
-      id="browser"
-      title={translate('auto.components.settings.Settings.c46215ea03', 'Browser')}
-      description={translate(
-        'auto.components.settings.Settings.ad9788036f',
-        'Home page, link routing, and session cookies.'
-      )}
-      searchEntries={navigation.getSectionSearchEntries('browser')}
-    >
-      {view.isSectionMounted('browser') ? (
-        <BrowserPane
-          settings={model.settings}
-          updateSettings={model.updateSettings}
-          onOpenComputerUse={actions.openComputerUseFromBrowser}
-        />
-      ) : null}
-    </SettingsSection>
-  ) : null
 }
 
 export function renderFloatingWorkspaceSettingsSection(

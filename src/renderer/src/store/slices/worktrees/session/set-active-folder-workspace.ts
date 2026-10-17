@@ -2,7 +2,6 @@ import type { WorktreeSlice } from '../../worktree-helpers'
 import type { WorktreeSliceGet, WorktreeSliceSet } from '../listing/worktree-slice-types'
 import { folderWorkspaceKey } from '../../../../../../shared/workspace-scope'
 import { markInputQuietSchedulerInput } from '@/lib/input-quiet-scheduler'
-import { moveFocusToRendererBeforeFocusedWebviewHidden } from '../../browser-webview-cleanup'
 import {
   findKnownWorktreeById,
   folderWorkspaceMatchesHost
@@ -24,17 +23,18 @@ export function createSetActiveFolderWorkspace(
     if (shouldDeferActivationTerminalPrep()) {
       markInputQuietSchedulerInput()
     }
-    if (get().activeWorktreeId !== workspaceKey) {
-      moveFocusToRendererBeforeFocusedWebviewHidden()
-    }
     const reconciledActiveTabId =
       get().reconcileWorktreeTabModel(workspaceKey).activeRenderableTabId
     set((s) => {
-      const { activeFileId, activeBrowserTabId, activeTabType, activeTabId } =
-        deriveActiveSurfaceForWorktree(s, workspaceKey, undefined, {
+      const { activeFileId, activeTabType, activeTabId } = deriveActiveSurfaceForWorktree(
+        s,
+        workspaceKey,
+        undefined,
+        {
           legacySelection: 'remembered-type',
           preferredTabId: reconciledActiveTabId ?? undefined
-        })
+        }
+      )
       const nextEverActivated = s.everActivatedWorktreeIds.has(workspaceKey)
         ? s.everActivatedWorktreeIds
         : new Set([...s.everActivatedWorktreeIds, workspaceKey])
@@ -45,7 +45,6 @@ export function createSetActiveFolderWorkspace(
         activeWorkspaceExecutionHostId: executionHostId ?? null,
         activePendingCreationId: null,
         activeFileId,
-        activeBrowserTabId,
         activeTabType,
         activeTabTypeByWorktree:
           s.activeTabTypeByWorktree[workspaceKey] === activeTabType

@@ -6,7 +6,6 @@ import {
   hasDismissedHugeRepoWarning,
   markHugeRepoWarningDismissed
 } from '@/lib/source-control-huge-repo-warning-dismissals'
-import { getHostedReviewLinkMutationGenerationForTests } from './worktrees'
 import { makeLineage, makeTerminalTab, makeWorktree } from './worktrees-slice-test-fixtures'
 import {
   createTestStore,
@@ -96,13 +95,9 @@ describe('removeWorktree state cleanup', () => {
     await store.getState().updateWorktreeMeta(removed.id, { linkedBitbucketPR: 101 })
     await store.getState().updateWorktreeMeta(surviving.id, { linkedAzureDevOpsPR: 202 })
 
-    expect(getHostedReviewLinkMutationGenerationForTests(removed.id)).toBeGreaterThan(0)
-    expect(getHostedReviewLinkMutationGenerationForTests(surviving.id)).toBeGreaterThan(0)
 
     await store.getState().removeWorktree({ id: removed.id, executionHostId: null })
 
-    expect(getHostedReviewLinkMutationGenerationForTests(removed.id)).toBe(0)
-    expect(getHostedReviewLinkMutationGenerationForTests(surviving.id)).toBeGreaterThan(0)
   })
 
   it('cleans up expandedPaneByTabId/canExpandPaneByTabId for removed worktree tabs', async () => {
@@ -613,26 +608,6 @@ describe('removeWorktree state cleanup', () => {
     })
     expect(store.getState().gitBranchCompareRequestStatusHeadByWorktree).toEqual({
       'repo1::/path/wt2': 'head-2'
-    })
-  })
-
-  it('clears recentlyClosedBrowserTabsByWorktree for the removed worktree', async () => {
-    // Why: undo snapshots for a deleted worktree can never be restored, so removeWorktree clears the key (design §1.1).
-    const store = createTestStore()
-    const wt = makeWorktree({ id: 'repo1::/path/wt1', repoId: 'repo1', path: '/path/wt1' })
-
-    store.setState({
-      worktreesByRepo: { repo1: [wt] },
-      recentlyClosedBrowserTabsByWorktree: {
-        'repo1::/path/wt1': [{ workspace: { id: 'workspace-1' }, pages: [] }],
-        'repo1::/path/wt2': [{ workspace: { id: 'workspace-2' }, pages: [] }]
-      }
-    } as unknown as Partial<AppState>)
-
-    await store.getState().removeWorktree({ id: 'repo1::/path/wt1', executionHostId: null })
-
-    expect(store.getState().recentlyClosedBrowserTabsByWorktree).toEqual({
-      'repo1::/path/wt2': [{ workspace: { id: 'workspace-2' }, pages: [] }]
     })
   })
 

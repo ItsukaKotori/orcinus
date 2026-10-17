@@ -21,16 +21,13 @@ export function SourceControlPanelDialogs({
     getLaunchActionRecipe,
     handleConfirmDiffCommentsClear,
     handleGenerate,
-    handleGeneratePullRequestFields,
     handleSaveCommitMessageGenerationDefaults,
-    handleSavePullRequestGenerationDefaults,
     isClearingDiffComments,
     openSourceControlAiSettings,
     pendingDiffCommentsClearCount,
     pendingDiffCommentsClearDescription,
     pendingDiscard,
     pickerBaseRef,
-    pullRequestGenerationDialogOpen,
     refreshBranchCompare,
     resolveConflictsComposerOpen,
     resolveConflictsPrompt,
@@ -39,7 +36,6 @@ export function SourceControlPanelDialogs({
     setBaseRefDialogOpen,
     setCommitGenerationDialogOpen,
     setPendingDiffCommentsClear,
-    setPullRequestGenerationDialogOpen,
     setResolveConflictsComposerOpen,
     settings,
     sourceControlAiActionsVisible,
@@ -101,8 +97,6 @@ export function SourceControlPanelDialogs({
       onOpenSourceControlAiSettings={openSourceControlAiSettings}
       commitGenerationDialogOpen={commitGenerationDialogOpen}
       onCommitGenerationDialogOpenChange={setCommitGenerationDialogOpen}
-      pullRequestGenerationDialogOpen={pullRequestGenerationDialogOpen}
-      onPullRequestGenerationDialogOpenChange={setPullRequestGenerationDialogOpen}
       settings={settings}
       repo={activeRepo}
       discoveryHostKey={sourceControlAiDiscoveryHostKey}
@@ -111,10 +105,6 @@ export function SourceControlPanelDialogs({
         void handleGenerate({ sourceControlAiResolvedParams: params })
       }}
       onSaveCommitMessageDefaults={handleSaveCommitMessageGenerationDefaults}
-      onGeneratePullRequestFields={(params) => {
-        void handleGeneratePullRequestFields({ sourceControlAiResolvedParams: params })
-      }}
-      onSavePullRequestDefaults={handleSavePullRequestGenerationDefaults}
     />
   )
 }

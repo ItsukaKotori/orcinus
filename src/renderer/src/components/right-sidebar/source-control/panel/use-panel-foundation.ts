@@ -1,17 +1,17 @@
 import { useEffect } from 'react'
 import { useSourceControlAi } from '../ai/use-ai'
 import { useSourceControlFileListing } from '../listing/use-file-listing'
-import { useSourceControlReviewContext } from '../review/use-review-context'
+import { useSourceControlBaseRefContext } from './use-base-ref-context'
 import { useSourceControlPanelState } from './use-panel-state'
 
 /**
- * Everything the panel knows before any action runs: state, review context, the projected file
+ * Everything the panel knows before any action runs: state, base refs, the projected file
  * listing and the AI surface. Split from the flows so no action hook can be read as a dependency
  * of the data it acts on.
  */
 export function useSourceControlPanelFoundation() {
   const panelState = useSourceControlPanelState()
-  const reviewContext = useSourceControlReviewContext(panelState)
+  const baseRefContext = useSourceControlBaseRefContext(panelState)
   const {
     activeConnectionId,
     activeGroupId,
@@ -57,7 +57,7 @@ export function useSourceControlPanelFoundation() {
     branchSummary,
     collapsedSections,
     collapsedTreeDirs,
-    compareBaseRef: reviewContext.compareBaseRef,
+    compareBaseRef: baseRefContext.compareBaseRef,
     entries,
     filterQuery,
     isBranchVisible,
@@ -92,12 +92,8 @@ export function useSourceControlPanelFoundation() {
     openSettingsTarget,
     openSettingsPage
   })
-  const {
-    setCommitGenerationDialogOpen,
-    setPullRequestGenerationDialogOpen,
-    setResolveConflictsComposerOpen,
-    sourceControlAiActionsVisible
-  } = ai
+  const { setCommitGenerationDialogOpen, setResolveConflictsComposerOpen, sourceControlAiActionsVisible } =
+    ai
 
   useEffect(() => {
     if (sourceControlAiActionsVisible) {
@@ -105,15 +101,9 @@ export function useSourceControlPanelFoundation() {
     }
     setResolveConflictsComposerOpen(false)
     setCommitGenerationDialogOpen(false)
-    setPullRequestGenerationDialogOpen(false)
-  }, [
-    setCommitGenerationDialogOpen,
-    setPullRequestGenerationDialogOpen,
-    setResolveConflictsComposerOpen,
-    sourceControlAiActionsVisible
-  ])
+  }, [setCommitGenerationDialogOpen, setResolveConflictsComposerOpen, sourceControlAiActionsVisible])
 
-  return { ...panelState, ...reviewContext, ...listing, ...ai }
+  return { ...panelState, ...baseRefContext, ...listing, ...ai }
 }
 
 export type SourceControlPanelFoundation = ReturnType<typeof useSourceControlPanelFoundation>

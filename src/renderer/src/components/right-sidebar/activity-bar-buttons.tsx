@@ -1,7 +1,6 @@
 import React from 'react'
 import { MoreHorizontal } from 'lucide-react'
 import type { ActiveRightSidebarTab } from '@/store/slices/editor'
-import type { CheckStatus } from '../../../../shared/github/pull-request-types'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { RIGHT_SIDEBAR_HEADER_NO_DRAG_CLASS_NAME } from './right-sidebar-titlebar-drag-regions'
@@ -26,17 +25,19 @@ export type ActivityBarItem = {
   /** When true, shown only for worktrees that belong to an SSH repo. */
   sshOnly?: boolean
   /** Host-owned health indicator; plugin content cannot style this chrome. */
-  statusIndicator?: CheckStatus
+  statusIndicator?: ActivityItemStatus
 }
 
-const STATUS_DOT_COLOR: Record<CheckStatus, string> = {
+export type ActivityItemStatus = 'success' | 'failure' | 'pending' | 'neutral'
+
+const STATUS_DOT_COLOR: Record<ActivityItemStatus, string> = {
   success: 'bg-emerald-500',
   failure: 'bg-rose-500',
   pending: 'bg-amber-500',
   neutral: 'bg-muted-foreground'
 }
 
-function activityItemAriaLabel(item: ActivityBarItem, status?: CheckStatus | null): string {
+function activityItemAriaLabel(item: ActivityBarItem, status?: ActivityItemStatus | null): string {
   const base = item.shortcut ? `${item.title} (${item.shortcut})` : item.title
   return status === 'failure'
     ? `${base} — ${translate('auto.components.right.sidebar.activityBar.error', 'Error')}`
@@ -46,21 +47,15 @@ function activityItemAriaLabel(item: ActivityBarItem, status?: CheckStatus | nul
 export function TopActivityOverflowMenu({
   items,
   activeTab,
-  onSelect,
-  checksStatus
+  onSelect
 }: {
   items: ActivityBarItem[]
   activeTab: ActiveRightSidebarTab
   onSelect: (tab: ActiveRightSidebarTab) => void
-  checksStatus?: CheckStatus | null
 }): React.JSX.Element {
-  const hiddenChecksStatus =
-    checksStatus && checksStatus !== 'neutral' && items.some((item) => item.id === 'checks')
-      ? checksStatus
-      : null
   const hiddenItemStatus = items.some((item) => item.statusIndicator === 'failure')
     ? 'failure'
-    : hiddenChecksStatus
+    : null
   const moreTabsLabel = translate(
     'auto.components.right.sidebar.activity.bar.buttons.1fd284e931',
     'More sidebar tabs'
@@ -125,18 +120,16 @@ export function ActivityBarButton({
   item,
   active,
   onClick,
-  layout,
-  statusIndicator
+  layout
 }: {
   item: ActivityBarItem
   active: boolean
   onClick: () => void
   layout: 'top' | 'side'
-  statusIndicator?: CheckStatus | null
 }): React.JSX.Element {
   const Icon = item.icon
   const isTop = layout === 'top'
-  const effectiveStatus = item.statusIndicator ?? statusIndicator
+  const effectiveStatus = item.statusIndicator
 
   return (
     <Tooltip>

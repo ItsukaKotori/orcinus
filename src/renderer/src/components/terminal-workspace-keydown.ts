@@ -5,7 +5,6 @@ import { keybindingMatchesAction } from '../../../shared/keybindings'
 import { matchesRecentTabSwitcherChord } from '../../../shared/window-shortcut-policy'
 import { useAppStore } from '../store'
 import {
-  createFloatingWorkspaceBrowserTab,
   createFloatingWorkspaceMarkdownTab,
   createFloatingWorkspaceTerminalTab,
   handleEmptyFloatingWorkspacePanelCloseShortcut,
@@ -13,11 +12,7 @@ import {
   isFloatingWorkspacePanelFocused
 } from '@/lib/floating-workspace-terminal-actions'
 import { showTerminalShortcutCaptureNotification } from '@/lib/terminal-shortcut-capture-notification'
-import {
-  ensureClientCreationActionAllowed,
-  showClientCreationActionError
-} from '@/lib/client-creation-action-error'
-import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../shared/constants'
+import { showClientCreationActionError } from '@/lib/client-creation-action-error'
 import { translate } from '@/i18n/i18n'
 import { getKeybindingContext } from './terminal-workspace-model'
 import { resolveTerminalAgentTabShortcut } from './terminal-agent-tab-shortcut'
@@ -33,7 +28,6 @@ export function handleTerminalWorkspaceKeyDown(
     activeWorktreeId,
     handleCloseAllFiles,
     handleNewAgentTab,
-    handleNewBrowserTab,
     handleNewFile,
     handleNewTab,
     keybindings,
@@ -101,24 +95,6 @@ export function handleTerminalWorkspaceKeyDown(
     } catch (error) {
       showClientCreationActionError(error)
     }
-    return
-  }
-  if (!event.repeat && matchShortcut('tab.newBrowser')) {
-    event.preventDefault()
-    notifyTerminalCapture('tab.newBrowser')
-    const browserWorkspaceId = floatingWorkspaceFocused
-      ? FLOATING_TERMINAL_WORKTREE_ID
-      : activeWorktreeId
-    if (!ensureClientCreationActionAllowed(browserWorkspaceId, 'managed-browser')) {
-      return
-    }
-    if (floatingWorkspaceFocused) {
-      void createFloatingWorkspaceBrowserTab(useAppStore.getState()).catch(
-        showClientCreationActionError
-      )
-      return
-    }
-    handleNewBrowserTab()
     return
   }
   if (

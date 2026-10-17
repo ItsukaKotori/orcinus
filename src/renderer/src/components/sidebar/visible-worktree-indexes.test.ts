@@ -88,7 +88,6 @@ function visibleOptions(
     showSleepingWorkspaces: true,
     tabsByWorktree: null,
     ptyIdsByTabId: null,
-    browserTabsByWorktree: null,
     worktreeIdsWithLiveAgent: new Set<string>(),
     hideDefaultBranchWorkspace: false,
     hideAutomationGeneratedWorkspaces: false,

@@ -97,8 +97,6 @@ export function getWorkspaceCleanupReviewProviderLabel(provider: HostedReviewPro
   switch (provider) {
     case 'github':
       return 'GitHub'
-    case 'gitlab':
-      return 'GitLab'
     case 'bitbucket':
       return 'Bitbucket'
     case 'azure-devops':

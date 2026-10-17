@@ -57,7 +57,17 @@ describe('cleanup reads visit recency host-qualified', () => {
       [makeCandidate()],
       makeState({
         lastVisitedAtByWorktreeId: { [qualifiedKey]: Date.now() },
-        browserTabsByWorktree: { [WORKTREE_ID]: [{ id: 'tab-1' }] } as never
+        openFiles: [
+          {
+            id: `${WORKTREE_ID}::clean-file`,
+            worktreeId: WORKTREE_ID,
+            filePath: '/repo/clean-file.ts',
+            relativePath: 'clean-file.ts',
+            language: 'typescript',
+            isDirty: false,
+            mode: 'edit'
+          }
+        ] as never
       }),
       { applyDismissals: false }
     )

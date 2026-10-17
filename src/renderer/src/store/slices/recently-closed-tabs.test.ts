@@ -365,33 +365,22 @@ describe('reopenClosedTab cross-type MRU', () => {
   it('reopens closed tabs of mixed kinds in most-recent-first order', () => {
     const store = makeSeededStore()
 
-    // Close order: editor → terminal → browser.
+    // Close order: editor → terminal.
     store.setState({ openFiles: [makeOpenFile({ id: '/repo/a.ts', worktreeId: WT })] })
     store.getState().closeFile('/repo/a.ts')
     const terminal = store
       .getState()
       .createTab(WT, undefined, undefined, { startupCwd: '/path/wt1/api' })
     store.getState().closeTab(terminal.id)
-    const browser = store.getState().createBrowserTab(WT, 'https://example.com', { title: 'Ex' })
-    store.getState().closeBrowserTab(browser.id)
 
-    expect(store.getState().recentlyClosedTabKindsByWorktree[WT]).toEqual([
-      'browser',
-      'terminal',
-      'editor'
-    ])
+    expect(store.getState().recentlyClosedTabKindsByWorktree[WT]).toEqual(['terminal', 'editor'])
 
-    // First press: browser comes back.
-    expect(store.getState().reopenClosedTab(WT)).toBe(true)
-    expect(store.getState().browserTabsByWorktree[WT]?.[0]?.url).toBe('https://example.com')
-    expect(store.getState().tabsByWorktree[WT] ?? []).toHaveLength(0)
-
-    // Second press: terminal comes back.
+    // First press: terminal comes back.
     expect(store.getState().reopenClosedTab(WT)).toBe(true)
     expect(store.getState().tabsByWorktree[WT]?.[0]?.startupCwd).toBe('/path/wt1/api')
     expect(store.getState().openFiles).toHaveLength(0)
 
-    // Third press: editor comes back.
+    // Second press: editor comes back.
     expect(store.getState().reopenClosedTab(WT)).toBe(true)
     expect(store.getState().openFiles[0]?.filePath).toBe('/repo/a.ts')
 
@@ -403,8 +392,7 @@ describe('reopenClosedTab cross-type MRU', () => {
     const store = makeSeededStore()
     store.setState({
       recentlyClosedTabKindsByWorktree: { [WT]: ['browser', 'terminal'] },
-      recentlyClosedTerminalTabsByWorktree: { [WT]: [{ startupCwd: '/path/wt1' }] },
-      recentlyClosedBrowserTabsByWorktree: { [WT]: [] }
+      recentlyClosedTerminalTabsByWorktree: { [WT]: [{ startupCwd: '/path/wt1' }] }
     })
 
     expect(store.getState().reopenClosedTab(WT)).toBe(true)

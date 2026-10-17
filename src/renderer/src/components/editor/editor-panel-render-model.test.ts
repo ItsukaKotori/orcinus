@@ -45,89 +45,9 @@ function renderModel(args: {
     markdownViewMode: args.markdownViewMode ?? {},
     markdownRichModeSizeOverridden: args.markdownRichModeSizeOverridden ?? false,
     isChangesMode: args.isChangesMode ?? false,
-    canOpenWorkspaceFileBrowser: true
   })
 }
 
-function htmlFile(overrides: Partial<OpenFile> = {}): OpenFile {
-  return {
-    id: '/repo/mock.html',
-    filePath: '/repo/mock.html',
-    relativePath: 'mock.html',
-    worktreeId: 'wt-1',
-    language: 'html',
-    mode: 'edit',
-    isDirty: false,
-    ...overrides
-  }
-}
-
-describe('getEditorPanelRenderModel HTML preview affordance', () => {
-  it('enables preview for HTML edit tabs', () => {
-    expect(renderModel({ activeFile: htmlFile(), fileContents: {} }).canOpenPreviewToSide).toBe(
-      true
-    )
-  })
-
-  it('disables preview when the workspace browser provider is unavailable', () => {
-    const activeFile = htmlFile()
-    const model = getEditorPanelRenderModel({
-      activeFile,
-      fileContents: {},
-      editorDrafts: {},
-      gitStatusEntries: undefined,
-      gitBranchEntries: undefined,
-      markdownViewMode: {},
-      markdownRichModeSizeOverridden: false,
-      isChangesMode: false,
-      canOpenWorkspaceFileBrowser: false
-    })
-
-    expect(model.canOpenPreviewToSide).toBe(false)
-  })
-
-  it('enables preview for single HTML diffs whose file exists on disk', () => {
-    const model = renderModel({
-      activeFile: htmlFile({ mode: 'diff', diffSource: 'unstaged' } as Partial<OpenFile>),
-      fileContents: {},
-      gitStatusByWorktree: {
-        'wt-1': [{ path: 'mock.html', status: 'modified', area: 'unstaged' }]
-      }
-    })
-
-    expect(model.canOpenPreviewToSide).toBe(true)
-  })
-
-  it('disables preview for diffs of deleted HTML files', () => {
-    const model = renderModel({
-      activeFile: htmlFile({ mode: 'diff', diffSource: 'unstaged' } as Partial<OpenFile>),
-      fileContents: {},
-      gitStatusByWorktree: {
-        'wt-1': [{ path: 'mock.html', status: 'deleted', area: 'unstaged' }]
-      }
-    })
-
-    expect(model.canOpenPreviewToSide).toBe(false)
-  })
-
-  it('disables preview for commit diffs whose content may not match disk', () => {
-    const model = renderModel({
-      activeFile: htmlFile({ mode: 'diff', diffSource: 'commit' } as Partial<OpenFile>),
-      fileContents: {}
-    })
-
-    expect(model.canOpenPreviewToSide).toBe(false)
-  })
-
-  it('disables preview for non-HTML diffs', () => {
-    const model = renderModel({
-      activeFile: markdownFile({ mode: 'diff', diffSource: 'unstaged' } as Partial<OpenFile>),
-      fileContents: {}
-    })
-
-    expect(model.canOpenPreviewToSide).toBe(false)
-  })
-})
 
 describe('getEditorPanelRenderModel read-only raw rendering (AI Vault View Log)', () => {
   it('renders a read-only markdown log as raw source with no markdown viewer or chrome', () => {

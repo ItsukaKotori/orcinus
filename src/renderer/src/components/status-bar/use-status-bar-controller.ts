@@ -47,7 +47,6 @@ export function useStatusBarController(floatingTerminalOpen: boolean) {
   }
 
   const showResourceUsage = statusBarItems.includes('resource-usage')
-  const showPorts = statusBarItems.includes('ports')
   const showFloatingTerminalToggle =
     floatingTerminalEnabled && floatingTerminalTriggerLocation === 'status-bar'
 
@@ -71,7 +70,6 @@ export function useStatusBarController(floatingTerminalOpen: boolean) {
     setMenuPoint,
     showFloatingTerminalToggle,
     showFloatingWorkspaceAttentionDot,
-    showPorts,
     showResourceUsage,
     statusBarItems,
     toggleStatusBarItem

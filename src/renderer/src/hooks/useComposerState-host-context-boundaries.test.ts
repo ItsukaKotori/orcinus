@@ -2,10 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
-  canResolveFolderSmartGitHubSubmit,
   getInitialAutoManagedWorkspaceName,
-  getInitialGitHubPrStartPointSelection,
-  getMatchingLinkedTaskSourceContext,
   isExplicitWorkspaceNameInput,
   resolveSmartGitHubCreateNames,
   resolveInitialWorkspaceRunSeed
@@ -24,10 +21,6 @@ const COMPOSER_SOURCE = {
   fullSubmitOrchestration: readComposerModule('full-submit-orchestration.ts'),
   fullSubmitPreparation: readComposerModule('full-submit-preparation.ts'),
   fullSubmitSourcePreparation: readComposerModule('full-submit-source-preparation.ts'),
-  githubProvider: readComposerModule('github-provider-selection.ts'),
-  githubSourceApplication: readComposerModule('github-source-application.ts'),
-  githubSubmit: readComposerModule('github-submit-resolution.ts'),
-  gitlabProvider: readComposerModule('gitlab-provider-selection.ts'),
   hostRuntime: readComposerModule('host-runtime-effects.ts'),
   initialTarget: readComposerModule('initial-target-state.ts'),
   issueSource: readComposerModule('issue-source-actions.ts'),
@@ -60,52 +53,6 @@ function sourceBetween(source: string, startPattern: string, endPattern: string)
 }
 
 describe('useComposerState host-context boundaries', () => {
-  it('seeds TaskPage pull requests as submit-time PR start points', () => {
-    const item = {
-      id: 'pr-42',
-      type: 'pr' as const,
-      number: 42,
-      title: 'Fix PR workspace creation',
-      state: 'open' as const,
-      url: 'https://github.com/stablyai/orca/pull/42',
-      labels: [],
-      updatedAt: '2026-08-04T00:00:00.000Z',
-      author: 'octocat',
-      branchName: 'fix-pr-workspace',
-      baseRefName: 'main',
-      isCrossRepository: true,
-      repoId: 'repo-1'
-    }
-
-    expect(
-      getInitialGitHubPrStartPointSelection({
-        item,
-        linkedWorkItem: {
-          provider: 'github',
-          type: 'pr',
-          number: 42,
-          title: item.title,
-          url: item.url,
-          repoId: item.repoId
-        },
-        repoId: 'repo-1'
-      })
-    ).toEqual({ repoId: 'repo-1', item })
-    expect(
-      getInitialGitHubPrStartPointSelection({
-        item,
-        linkedWorkItem: {
-          provider: 'github',
-          type: 'pr',
-          number: 43,
-          title: item.title,
-          url: 'https://github.com/stablyai/orca/pull/43'
-        },
-        repoId: 'repo-1'
-      })
-    ).toBeNull()
-  })
-
   it('treats typed workspace names as user-authored, not auto-managed', () => {
     expect(isExplicitWorkspaceNameInput({ name: 'keep-my-name', lastAutoName: '' })).toBe(true)
     expect(
@@ -156,14 +103,6 @@ describe('useComposerState host-context boundaries', () => {
     ).toEqual({ workspaceName: 'title-derived-name', displayName: 'Title derived name' })
   })
 
-  it('requires pasted PR recovery to match the selected GitHub host', () => {
-    const recoverySection = COMPOSER_SOURCE.derived
-
-    expect(recoverySection).toContain('githubRepoIdentityKey(fromName.slug)')
-    expect(recoverySection).toContain('githubRepoIdentityKey(selectedRepoSlug)')
-    expect(recoverySection).not.toContain('fromName.slug.owner.toLowerCase()')
-  })
-
   it('auto-owns linked-item generated prefilled names', () => {
     expect(
       getInitialAutoManagedWorkspaceName({
@@ -179,36 +118,7 @@ describe('useComposerState host-context boundaries', () => {
     ).toBe('fix-workspace-name')
   })
 
-  it('resolves GitHub PR bases against the selected run repo, not the source item repo', () => {
-    const section = COMPOSER_SOURCE.githubProvider
 
-    expect(section).toContain('const runRepo = selectedRepo ??')
-    expect(section).toContain('resolveGitHubPrStartPointForRepo')
-    expect(section).toContain('repoId: runRepo.id')
-    expect(section).toContain('settings: itemRepoSettings')
-    expect(section).toContain('smartGitHubPrStartPointSelectionRef.current = startPointSelection')
-    expect(section).toContain(
-      'if (smartGitHubPrStartPointSelectionRef.current !== startPointSelection)'
-    )
-    expect(section).not.toContain('repoId: repoForItem.id')
-    expect(section).not.toContain('repo: repoForItem.id')
-  })
-
-  it('resolves GitLab MR bases against the selected run repo, not the source item repo', () => {
-    const section = COMPOSER_SOURCE.gitlabProvider
-
-    expect(section).toContain('const runRepo = selectedRepo ??')
-    expect(section).toContain('repoId: runRepo.id')
-    expect(section).toContain('getSettingsForRepoRuntimeOwner')
-    expect(section).toContain('worktree.resolveMrBase')
-    expect(section).toContain('repo: runRepo.id')
-    expect(section).not.toContain('repoId: repoForItem.id')
-    // Why (#6263): an unresolved MR base must surface a toast and clear stale
-    // state instead of silently dropping the worktree onto origin/master.
-    expect(section).toContain('toast.error(result.error)')
-    expect(section).toContain("'Failed to resolve MR base.'")
-    expect(section).toMatch(/\.catch\(\(error: unknown\) =>/)
-  })
 
   it('clears only repo-scoped linked work items when the repo or project changes', () => {
     // Why: Linear and Jira issues are workspace-scoped context — a repo or
@@ -326,76 +236,6 @@ describe('useComposerState host-context boundaries', () => {
     expect(section).toContain('projectHostSetupId: initialRunSeed.projectHostSetupId')
   })
 
-  it('resolves typed GitHub issue/PR input through the selected repo source context', () => {
-    expect(COMPOSER_SOURCE.sourceContext).toContain(
-      'const selectedRepoGitHubSourceContext = useMemo'
-    )
-
-    const directLookup = COMPOSER_SOURCE.linkedItemLookup
-    expect(directLookup).toContain('sourceContext: selectedRepoGitHubSourceContext')
-    expect(directLookup).toContain('lookupGitHubWorkItemByOwnerRepoForSource')
-    expect(directLookup).toContain('type: normalizedLinkQuery.directLink.type')
-
-    const submitLookup = COMPOSER_SOURCE.githubSubmit
-    expect(submitLookup).toContain('sourceContext:')
-    expect(submitLookup).toContain('selectedRepoGitHubSourceContext')
-  })
-
-  it('uses submit-time GitHub PR start points for the create payload', () => {
-    const submitLookup = COMPOSER_SOURCE.githubSubmit
-    expect(submitLookup).toContain('resolveGitHubPrStartPointForRepo')
-    expect(submitLookup).toContain("kind: 'pr-start-point'")
-    expect(submitLookup).toContain("kind: 'metadata-only'")
-    expect(submitLookup).toContain('baseBranch: prStartPoint.baseBranch')
-    expect(submitLookup).toContain('branchNameOverride: prStartPoint.branchNameOverride')
-    const selectedPrSubmitLookup = sourceBetween(
-      submitLookup,
-      'if (linkedWorkItem) {',
-      'const intent = getSmartGitHubSubmitIntent(name)'
-    )
-    expect(selectedPrSubmitLookup).toContain('smartGitHubPrStartPointSelectionRef.current')
-    expect(selectedPrSubmitLookup).toContain("linkedWorkItemIdentity?.type === 'pr'")
-    expect(selectedPrSubmitLookup).toContain("startPointIdentity?.type === 'pr'")
-    expect(selectedPrSubmitLookup).toContain(
-      'startPointIdentity.number === linkedWorkItemIdentity.number'
-    )
-    expect(selectedPrSubmitLookup).toContain('resolveGitHubPrStartPointForRepo')
-    expect(selectedPrSubmitLookup.indexOf('resolveGitHubPrStartPointForRepo')).toBeLessThan(
-      selectedPrSubmitLookup.indexOf("return { kind: 'none' }")
-    )
-
-    const fullSubmit = COMPOSER_SOURCE.fullSubmitSourcePreparation + COMPOSER_SOURCE.fullCreation
-    expect(fullSubmit).toContain("smartGitHubResolution.kind === 'pr-start-point'")
-    expect(fullSubmit).toContain("smartGitHubResolution.kind === 'metadata-only'")
-    expect(fullSubmit).toContain('effectiveLinkedPR !== null || linkedGitLabMR !== null')
-    expect(fullSubmit).toContain('selectedRepoIsGit ? submitBaseBranch : undefined')
-    expect(fullSubmit).toContain('submitPushTarget')
-    expect(fullSubmit).toContain('submitCompareBaseRef')
-    expect(fullSubmit).not.toContain('smartGitHubResolution?.baseBranch ?? baseBranch')
-    expect(fullSubmit).not.toContain('smartGitHubResolution?.compareBaseRef ?? compareBaseRef')
-    expect(fullSubmit).not.toContain('smartGitHubResolution?.pushTarget ?? pushTarget')
-    expect(fullSubmit).not.toContain(
-      'smartGitHubResolution?.branchNameOverride ?? branchNameOverride'
-    )
-
-    const quickSubmit =
-      COMPOSER_SOURCE.quickSubmitSourcePreparation +
-      COMPOSER_SOURCE.quickSubmitPreparation +
-      COMPOSER_SOURCE.quickCreation
-    expect(quickSubmit).toContain("smartGitHubResolution.kind === 'pr-start-point'")
-    expect(quickSubmit).toContain("smartGitHubResolution.kind === 'metadata-only'")
-    expect(quickSubmit).toContain('effectiveLinkedPR !== null || linkedGitLabMR !== null')
-    expect(quickSubmit).toContain('explicitBaseBranch: smartSubmitBaseBranch')
-    expect(quickSubmit).toContain('pushTarget: submitPushTarget')
-    expect(quickSubmit).toContain('compareBaseRef: submitCompareBaseRef')
-    expect(quickSubmit).not.toContain('smartGitHubResolution?.baseBranch ?? baseBranch')
-    expect(quickSubmit).not.toContain('smartGitHubResolution?.compareBaseRef ?? compareBaseRef')
-    expect(quickSubmit).not.toContain('smartGitHubResolution?.pushTarget ?? pushTarget')
-    expect(quickSubmit).not.toContain(
-      'smartGitHubResolution?.branchNameOverride ?? branchNameOverride'
-    )
-  })
-
   it('saves setup startup policy before creating a workspace', () => {
     const persistSection = COMPOSER_SOURCE.providerRuntime
     expect(persistSection).toContain('setupAgentStartupPolicySaveRef.current')
@@ -418,33 +258,6 @@ describe('useComposerState host-context boundaries', () => {
     expect(quickCreate).toBeGreaterThan(quickPolicySave)
   })
 
-  it('resolves submit-time GitHub smart input when folder child repos exist', () => {
-    expect(
-      canResolveFolderSmartGitHubSubmit({
-        hasFolderSourceRepos: true
-      })
-    ).toBe(true)
-    expect(
-      canResolveFolderSmartGitHubSubmit({
-        hasFolderSourceRepos: false
-      })
-    ).toBe(false)
-
-    const lookupSection = COMPOSER_SOURCE.githubSubmit
-    expect(lookupSection).toContain('isProjectGroupTarget')
-    expect(lookupSection).toContain('folderSourceRepos.filter(isGitRepoKind)')
-    expect(lookupSection).toContain('Promise.all')
-    expect(lookupSection).toContain('buildTaskSourceContextFromRepo')
-
-    const section = COMPOSER_SOURCE.folderSubmit
-    expect(section).toContain('canResolveFolderSmartGitHubSubmit')
-    expect(section).toContain('hasFolderSourceRepos: folderSourceRepos.length > 0')
-    expect(section).toContain('? resolvePendingSmartGitHubSubmit()')
-    expect(section).toContain("Promise.resolve({ kind: 'none' } as const)")
-    expect(section).toContain("smartGitHubSettlement.status === 'cancelled'")
-    expect(section).not.toContain('folderSourceRequiresConnection')
-  })
-
   it('clears branch reuse state when manually editing the branch name', () => {
     const section = COMPOSER_SOURCE.sourceIdentity
 
@@ -465,39 +278,11 @@ describe('useComposerState host-context boundaries', () => {
     )
   })
 
-  it('keeps a Linear branch override when its workspace-scoped issue survives a repo change', () => {
-    const section = COMPOSER_SOURCE.targetChange
 
-    expect(section).toContain('const preservedLinearBranchName = preserveLinearLinkedWorkItem')
-    expect(section).toContain('getLinearLinkedWorkItemBranchName(linkedWorkItem)')
-    expect(section).toContain('setBranchNameOverride(preservedLinearBranchName)')
-    expect(section).toContain(
-      'setBranchNameOverridePreservesNameEdits(Boolean(preservedLinearBranchName))'
-    )
-    expect(section).toContain("branchAutoNameRef.current = preservedLinearBranchName ?? ''")
-  })
 
-  it('clears a Linear branch override when its linked issue is removed', () => {
-    const section = COMPOSER_SOURCE.sourceIdentity
 
-    expect(section).toContain('const removedLinearItem = isLinearLinkedWorkItem(linkedWorkItem)')
-    expect(section).toContain('if (removedLinearItem)')
-    expect(section).toContain('setBranchNameOverride(undefined)')
-    expect(section).toContain('setBranchNameOverridePreservesNameEdits(false)')
-    expect(section).toContain("branchAutoNameRef.current = ''")
-  })
 
-  it('keeps Jira-mode URL edits synchronously blocked before lookup settles', () => {
-    // Why: derived on every render from the same name the submit path uses, so an in-flight
-    // URL cannot slip through between the keystroke and the create.
-    expect(COMPOSER_SOURCE.workspaceIdentity).toContain(
-      'isBlockingJiraUrlIntent(smartNameMode, name)'
-    )
-    const section = COMPOSER_SOURCE.sourceIdentity
 
-    expect(section).not.toContain("smartNameMode === 'smart'")
-    expect(section).not.toContain('setSourceIntentBlocksCreate')
-  })
 
   it('selects a project by its own host instead of pinning the current host', () => {
     // Regression: passing the current host as a hard `hostId` made picking a
@@ -508,49 +293,9 @@ describe('useComposerState host-context boundaries', () => {
     expect(handleProjectChange).not.toContain('hostId: preferredHostId')
   })
 
-  it('clears GitLab-specific linked state when clearing smart-name selection', () => {
-    const section = COMPOSER_SOURCE.issueSource
-    expect(section).toContain("setLinkedIssue('')")
-    expect(section).toContain('setLinkedPR(null)')
-    expect(section).toContain('setLinkedGitLabIssue(null)')
-    expect(section).toContain('setLinkedGitLabMR(null)')
-    expect(section).toContain('setLinkedWorkItem(null)')
-  })
 
-  it('clears stale opposite-provider review fields when selecting linked work items', () => {
-    const githubApply = COMPOSER_SOURCE.githubSourceApplication
-    expect(githubApply).toContain('setLinkedGitLabIssue(null)')
-    expect(githubApply).toContain('setLinkedGitLabMR(null)')
-    expect(githubApply).toContain('setBranchNameOverridePreservesNameEdits(false)')
-    expect(githubApply).toContain("branchAutoNameRef.current = ''")
 
-    const gitlabApply = COMPOSER_SOURCE.gitlabProvider
-    expect(gitlabApply).toContain("setLinkedIssue('')")
-    expect(gitlabApply).toContain('setLinkedPR(null)')
-    expect(gitlabApply).toContain('setBranchNameOverridePreservesNameEdits(false)')
-    expect(gitlabApply).toContain("branchAutoNameRef.current = ''")
 
-    const githubProjectGroupHandler = COMPOSER_SOURCE.githubProvider
-    const gitlabProjectGroupHandler = COMPOSER_SOURCE.githubProvider
-    expect(githubProjectGroupHandler).toContain('setLinkedGitLabIssue(null)')
-    expect(githubProjectGroupHandler).toContain('setLinkedGitLabMR(null)')
-    expect(gitlabProjectGroupHandler).toContain(
-      "setLinkedIssue(identity.type === 'issue' ? String(identity.number) : '')"
-    )
-    expect(gitlabProjectGroupHandler).toContain(
-      "setLinkedPR(identity.type === 'pr' ? identity.number : null)"
-    )
-  })
-
-  it('disables repo-backed folder smart lookup when a folder target has no source repos', () => {
-    const cardProps = COMPOSER_SOURCE.cardProps
-    expect(cardProps).toContain(
-      'repoBackedSourcesDisabled: isProjectGroupTarget ? folderSourceRepos.length === 0 : false'
-    )
-    expect(cardProps).toContain(
-      'repoBackedSearchRepos: isProjectGroupTarget ? folderSourceRepos : undefined'
-    )
-  })
 
   it('surfaces folder submit smart-resolution failures through create error UI', () => {
     const section = COMPOSER_SOURCE.folderSubmit
@@ -570,79 +315,14 @@ describe('useComposerState host-context boundaries', () => {
     expect(section).toContain('linkedWorkItem: submitLinkedWorkItem')
   })
 
-  it('gates every submit path on the derived source intent', () => {
-    // Why: derived from name+mode, so the submitted name and the gate can never disagree.
-    expect(COMPOSER_SOURCE.workspaceIdentity).toContain(
-      'const sourceIntentBlocksCreate = !linkedWorkItem && isBlockingJiraUrlIntent(smartNameMode, name)'
-    )
-    const submitSections = [
-      COMPOSER_SOURCE.navigation,
-      COMPOSER_SOURCE.fullSubmitOrchestration,
-      COMPOSER_SOURCE.quickSubmitAction
-    ]
 
-    for (const section of submitSections) {
-      expect(section).toContain('sourceIntentBlocksCreate')
-    }
-  })
-
-  it('passes folder child repos to smart lookup instead of building task source options', () => {
-    const cardProps = COMPOSER_SOURCE.cardProps
-    expect(cardProps).toContain(
-      'repoBackedSearchRepos: isProjectGroupTarget ? folderSourceRepos : undefined'
-    )
-    expect(cardProps).not.toContain('folderSourceProjectOptions')
-    expect(cardProps).not.toContain('handleFolderTaskSourceProjectChange')
-    expect(cardProps).not.toContain('getRepoIdFromNewWorkspaceFolderSourceOptionId')
-  })
-
-  it('keeps folder run repo changes inside the selected folder source set', () => {
-    const section = COMPOSER_SOURCE.targetChange
-    expect(section).toContain('folderSourceRepos.some((repo) => repo.id === value)')
-    expect(section).toContain('return')
-
-    const cardProps = COMPOSER_SOURCE.cardProps
-    expect(cardProps).toContain('allowSmartNameAddProject: !isProjectGroupTarget')
-  })
 
   it('preserves Jira linked items when switching from repo target to folder target', () => {
     const section = COMPOSER_SOURCE.projectTarget
     expect(section).toContain('!shouldPreserveWorkspaceSourceOnRepoChange(linkedWorkItem)')
   })
 
-  it('restores Jira draft context only when its site and issue identity agree', () => {
-    const item = {
-      provider: 'jira' as const,
-      type: 'issue' as const,
-      number: 0,
-      title: 'ORCA-123 Link Jira',
-      url: 'https://company.atlassian.net/jira/browse/ORCA-123',
-      jiraIdentifier: 'ORCA-123'
-    }
-    const context = {
-      kind: 'task-source' as const,
-      provider: 'jira' as const,
-      projectId: 'project-1',
-      hostId: 'local' as const,
-      providerIdentity: {
-        provider: 'jira' as const,
-        siteId: 'site-1',
-        siteUrl: 'https://company.atlassian.net/jira',
-        projectKey: 'ORCA'
-      }
-    }
 
-    expect(getMatchingLinkedTaskSourceContext(item, context)).toEqual(context)
-    expect(
-      getMatchingLinkedTaskSourceContext(item, {
-        ...context,
-        providerIdentity: { ...context.providerIdentity, siteUrl: 'https://other.atlassian.net' }
-      })
-    ).toBeNull()
-    expect(
-      getMatchingLinkedTaskSourceContext({ ...item, jiraIdentifier: 'ORCA-999' }, context)
-    ).toBeNull()
-  })
 
   it('resolves quick-create base refs through the worktree-create precedence helper', () => {
     const section = COMPOSER_SOURCE.quickSubmitPreparation
@@ -744,17 +424,7 @@ describe('useComposerState host-context boundaries', () => {
     expect(quickSubmit).toContain('startupPlan.draftPrompt = draftPrompt')
   })
 
-  it('selects the failed Jira source host before opening integration settings', () => {
-    const section = COMPOSER_SOURCE.navigation
 
-    expect(section).toContain('getTaskSourceRuntimeSettings(')
-    expect(section).toContain('smartNameJiraSourceContext')
-    expect(section).toContain('setActiveRuntimeEnvironmentPreference(targetRuntimeEnvironmentId)')
-    expect(section.indexOf('setActiveRuntimeEnvironmentPreference')).toBeLessThan(
-      section.indexOf("openSettingsTarget({ pane: 'integrations'")
-    )
-    expect(section).toContain('if (!selected)')
-  })
 
   it('gates per-workspace environment recipe discovery behind the experimental setting', () => {
     const recipeLoadSection = COMPOSER_SOURCE.runtimeTarget

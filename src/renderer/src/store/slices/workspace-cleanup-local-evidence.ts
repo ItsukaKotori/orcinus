@@ -72,24 +72,14 @@ export function getInitialWorkspaceCleanupGitDeferrals(state: AppState): string[
     }
   }
 
-  for (const worktreeId of new Set([
-    ...openEditorWorktreeIds,
-    ...Object.keys(state.browserTabsByWorktree)
-  ])) {
-    const hasVisibleContext =
-      openEditorWorktreeIds.has(worktreeId) ||
-      (state.browserTabsByWorktree[worktreeId]?.length ?? 0) > 0
+  for (const worktreeId of openEditorWorktreeIds) {
     // Why: enrichment state may be a plain snapshot without slice methods.
     const lastVisitedAt =
       getWorktreeVisitTimestamp(state.lastVisitedAtByWorktreeId, {
         id: worktreeId,
         hostId: state.getKnownWorktreeById?.(worktreeId)?.hostId
       }) ?? 0
-    if (
-      hasVisibleContext &&
-      lastVisitedAt > 0 &&
-      Date.now() - lastVisitedAt <= RECENT_VISIBLE_CONTEXT_MS
-    ) {
+    if (lastVisitedAt > 0 && Date.now() - lastVisitedAt <= RECENT_VISIBLE_CONTEXT_MS) {
       ids.add(worktreeId)
     }
   }

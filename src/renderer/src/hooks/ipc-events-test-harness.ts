@@ -1,7 +1,6 @@
 import { vi } from 'vitest'
 import type * as ReactModule from 'react'
 import type { HarnessStoreState } from './ipc-events-harness-store-state'
-import type { ClientHostedBrowserRowsEvent } from '../../../shared/client-hosted-browser-rows'
 
 // Re-exported so a suite needs one import for the harness and the store surface it seeds.
 export {
@@ -51,12 +50,6 @@ export type IpcEventsHarness = {
   /** Fire a main-process digit chord (zero-based index). */
   jumpToWorktreeIndex: (index: number) => void
   jumpToTabIndex: (index: number) => void
-  navigationUpdate: (event: { browserPageId: string; url: string; title: string }) => void
-  certificateFailureChanged: (event: { browserPageId: string; failure: unknown }) => void
-  /** Fire a host-local push of the pages a paired client renders for a worktree. */
-  clientHostedBrowserRowsChanged: (event: ClientHostedBrowserRowsEvent) => void
-  /** Resolves the hydration round trip the hook starts, so buffered pushes drain. */
-  settleClientHostedBrowserRowsSnapshot: () => Promise<void>
   /** Standard (non-palette) target of a workspace digit chord. */
   activateAndRevealWorkspace: ReturnType<typeof vi.fn>
 }
@@ -65,10 +58,6 @@ export type IpcEventsHarnessOptions = {
   /** Sidebar order the workspace digit chord indexes into. */
   visibleWorktreeIds?: string[]
   visibleWorktreeTargets?: { id: string; executionHostId?: 'local' | `ssh:${string}` }[]
-  /** Snapshot the client-hosted row hydration round trip resolves with. */
-  clientHostedBrowserRowsSnapshot?: ClientHostedBrowserRowsEvent[]
-  /** Rejects the hydration round trip instead of resolving it. */
-  clientHostedBrowserRowsSnapshotError?: Error
 }
 
 /**
@@ -84,17 +73,6 @@ export async function loadIpcEventsHarness(
   let requestTerminalCreateListener: ((request: RequestTerminalCreateRequest) => void) | null = null
   let focusEditorTabListener: ((request: { tabId: string; worktreeId: string }) => void) | null =
     null
-  let navigationUpdateListener:
-    | ((event: { browserPageId: string; url: string; title: string }) => void)
-    | null = null
-  let certificateFailureListener:
-    | ((event: { browserPageId: string; failure: unknown }) => void)
-    | null = null
-  let clientHostedBrowserRowsListener: ((event: ClientHostedBrowserRowsEvent) => void) | null = null
-  let resolveClientHostedBrowserRowsSnapshot: (() => void) | null = null
-  const clientHostedBrowserRowsSnapshotGate = new Promise<void>((resolve) => {
-    resolveClientHostedBrowserRowsSnapshot = resolve
-  })
   const indexJumpListeners = new Map<string, (index: number) => void>()
 
   vi.resetModules()
@@ -126,7 +104,6 @@ export async function loadIpcEventsHarness(
   vi.doMock('@/runtime/web-runtime-session', () => ({
     activateWebRuntimeSessionTab: vi.fn(),
     closeWebRuntimeSessionTab: vi.fn(),
-    createWebRuntimeSessionBrowserTab: vi.fn().mockResolvedValue(false),
     createWebRuntimeSessionTerminal: vi.fn().mockResolvedValue({ status: 'failed', message: '' }),
     isWebRuntimeSessionActive: vi.fn(() => false)
   }))
@@ -149,7 +126,6 @@ export async function loadIpcEventsHarness(
           set: vi.fn(),
           replyTabCreate: vi.fn(),
           replyTabClose: vi.fn(),
-          replyTabSetProfile: vi.fn(),
           replyTerminalCreate,
           onCreateTerminal: (listener: (request: CreateTerminalRequest) => void) => {
             createTerminalListener = listener
@@ -181,23 +157,8 @@ export async function loadIpcEventsHarness(
         runtime: {
           getTerminalFitOverrides: () => Promise.resolve([]),
           getTerminalDrivers: () => Promise.resolve([]),
-          getBrowserDrivers: () => Promise.resolve([]),
           onTerminalFitOverrideChanged: () => () => {},
-          onTerminalDriverChanged: () => () => {},
-          onBrowserDriverChanged: () => () => {},
-          onClientHostedBrowserRowsChanged: (
-            listener: (event: ClientHostedBrowserRowsEvent) => void
-          ) => {
-            clientHostedBrowserRowsListener = listener
-            return () => {}
-          },
-          getClientHostedBrowserRows: async () => {
-            await clientHostedBrowserRowsSnapshotGate
-            if (options.clientHostedBrowserRowsSnapshotError) {
-              throw options.clientHostedBrowserRowsSnapshotError
-            }
-            return options.clientHostedBrowserRowsSnapshot ?? []
-          }
+          onTerminalDriverChanged: () => () => {}
         },
         ssh: {
           listTargets: () => Promise.resolve([]),
@@ -216,20 +177,6 @@ export async function loadIpcEventsHarness(
           onStatus: () => () => {},
           onClearDismissal: () => () => {}
         },
-        browser: createApiNamespaceStub({
-          onNavigationUpdate: (
-            listener: (event: { browserPageId: string; url: string; title: string }) => void
-          ) => {
-            navigationUpdateListener = listener
-            return () => {}
-          },
-          onCertificateFailureChanged: (
-            listener: (event: { browserPageId: string; failure: unknown }) => void
-          ) => {
-            certificateFailureListener = listener
-            return () => {}
-          }
-        }),
         remoteWorkspace: createApiNamespaceStub({ clientId: () => Promise.resolve(null) })
       } as Record<string, unknown>,
       { get: (target, prop: string) => target[prop] ?? createApiNamespaceStub() }
@@ -260,30 +207,6 @@ export async function loadIpcEventsHarness(
     replyTerminalCreate,
     jumpToWorktreeIndex: (index) => fireIndexJump(indexJumpListeners, 'worktree', index),
     jumpToTabIndex: (index) => fireIndexJump(indexJumpListeners, 'tab', index),
-    navigationUpdate: (event) => {
-      if (typeof navigationUpdateListener !== 'function') {
-        throw new Error('Expected the browser navigation listener to be registered')
-      }
-      navigationUpdateListener(event)
-    },
-    certificateFailureChanged: (event) => {
-      if (typeof certificateFailureListener !== 'function') {
-        throw new Error('Expected the browser certificate-failure listener to be registered')
-      }
-      certificateFailureListener(event)
-    },
-    clientHostedBrowserRowsChanged: (event) => {
-      if (typeof clientHostedBrowserRowsListener !== 'function') {
-        throw new Error('Expected the client-hosted browser rows listener to be registered')
-      }
-      clientHostedBrowserRowsListener(event)
-    },
-    settleClientHostedBrowserRowsSnapshot: async () => {
-      resolveClientHostedBrowserRowsSnapshot?.()
-      await clientHostedBrowserRowsSnapshotGate
-      await Promise.resolve()
-      await Promise.resolve()
-    },
     activateAndRevealWorkspace
   }
 }

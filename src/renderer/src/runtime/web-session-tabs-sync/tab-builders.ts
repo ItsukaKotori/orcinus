@@ -1,8 +1,4 @@
-import type {
-  RuntimeMobileSessionBrowserTab,
-  RuntimeMobileSessionTabsResult
-} from '../../../../shared/runtime-types'
-import type { BrowserWorkspace } from '../../../../shared/browser-workspace-types'
+import type { RuntimeMobileSessionTabsResult } from '../../../../shared/runtime-types'
 import type { Tab } from '../../../../shared/tab-types'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
 import type { OpenFile } from '../../store/slices/editor'
@@ -36,33 +32,6 @@ export function buildTerminalUnifiedTab(
     isPreview: false,
     isPinned: tab.isPinned === true,
     ...(viewMode ? { viewMode } : {})
-  }
-}
-
-export function buildBrowserUnifiedTab(
-  tab: BrowserWorkspace,
-  hostTab: RuntimeMobileSessionBrowserTab,
-  existingUnifiedTab: Tab | null,
-  groupId: string,
-  environmentId: string
-): Tab {
-  return {
-    id: existingUnifiedTab?.id ?? hostTab.id,
-    entityId: tab.id,
-    groupId,
-    worktreeId: tab.worktreeId,
-    executionHostId: toRuntimeExecutionHostId(environmentId),
-    contentType: 'browser',
-    label: tab.title,
-    customLabel: null,
-    color: hostTab.color !== undefined ? hostTab.color : (existingUnifiedTab?.color ?? null),
-    sortOrder: tab.createdAt,
-    createdAt: tab.createdAt,
-    isPreview: false,
-    isPinned:
-      hostTab.isPinned !== undefined
-        ? hostTab.isPinned === true
-        : existingUnifiedTab?.isPinned === true
   }
 }
 

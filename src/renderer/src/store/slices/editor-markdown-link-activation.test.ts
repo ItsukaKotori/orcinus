@@ -195,7 +195,6 @@ describe('createEditorSlice activateMarkdownLink', () => {
       sourceOwner: { kind: 'local' }
     })
     expect(openHttpLinkMock).toHaveBeenCalledWith('https://example.com/', {
-      worktreeId: 'wt-1',
       sourceOwner: { kind: 'local' }
     })
   })
@@ -466,7 +465,6 @@ describe('createEditorSlice activateMarkdownLink', () => {
       worktreeRoot: '/repo'
     })
     expect(openHttpLinkMock).toHaveBeenCalledWith('https://example.com/', {
-      worktreeId: 'wt-1',
       sourceOwner: { kind: 'local' }
     })
     expect(openUrlMock).not.toHaveBeenCalled()
@@ -492,7 +490,6 @@ describe('createEditorSlice activateMarkdownLink', () => {
     })
 
     expect(openHttpLinkMock).toHaveBeenCalledWith('https://example.com/', {
-      worktreeId: 'wt-1',
       sourceOwner: { kind: 'local' }
     })
   })

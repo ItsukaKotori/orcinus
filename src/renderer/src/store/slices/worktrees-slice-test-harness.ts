@@ -21,7 +21,6 @@ import type {
 import {
   createWorktreeSlice,
   resetAuthoritativelyRemovedWorktreeMemoryForTests,
-  resetHostedReviewLinkMutationGenerationForTests
 } from './worktrees'
 import {
   makeDetectedResult,
@@ -118,7 +117,6 @@ globalThis.window = { api: mockApi }
 
 export function resetRemoteRuntimeMocks() {
   clearRuntimeCompatibilityCacheForTests()
-  resetHostedReviewLinkMutationGenerationForTests()
   runtimeEnvironmentCall.mockReset()
   runtimeEnvironmentTransportCall.mockReset()
   runtimeEnvironmentTransportCall.mockImplementation((args: RuntimeEnvironmentCallRequest) => {
@@ -195,7 +193,6 @@ export function createTestStore() {
           activeRenderableTabId: null,
           renderableTabCount: 0
         })),
-        refreshGitHubForWorktreeIfStale: vi.fn()
       }) as unknown as AppState
   )
 }

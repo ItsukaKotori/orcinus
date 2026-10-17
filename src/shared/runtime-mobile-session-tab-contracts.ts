@@ -1,6 +1,4 @@
 import type { AgentStatusEntry } from './agent-status-types'
-import type { BrowserCertificateFailure, BrowserLoadError } from './browser-workspace-types'
-import type { RuntimeBrowserPlacement } from './runtime-browser-placement'
 import type { TerminalColorOverrides } from './terminal-color-overrides'
 import type { TerminalLayoutSnapshot } from './terminal-tab-types'
 import type { TuiAgent } from './tui-agent'
@@ -71,26 +69,6 @@ export type RuntimeMobileSessionFileTab = {
   isActive: boolean
 }
 
-export type RuntimeMobileSessionBrowserTab = {
-  type: 'browser'
-  id: string
-  title: string
-  browserWorkspaceId: string
-  browserPageId: string | null
-  browserProfileId?: string
-  executionHostKey?: string
-  placement?: RuntimeBrowserPlacement
-  url: string
-  loading: boolean
-  canGoBack: boolean
-  canGoForward: boolean
-  loadError?: BrowserLoadError | null
-  certificateFailure?: BrowserCertificateFailure | null
-  color?: string | null
-  isPinned?: boolean
-  isActive: boolean
-}
-
 export type RuntimeMobileSessionAgentTab = {
   type: 'agent-session'
   id: string
@@ -107,7 +85,6 @@ export type RuntimeMobileSessionSnapshotTab =
   | RuntimeMobileSessionTerminalTab
   | RuntimeMobileSessionMarkdownTab
   | RuntimeMobileSessionFileTab
-  | RuntimeMobileSessionBrowserTab
   | RuntimeMobileSessionAgentTab
 
 export type RuntimeMobileSessionTerminalClientTab =
@@ -118,5 +95,4 @@ export type RuntimeMobileSessionClientTab =
   | RuntimeMobileSessionTerminalClientTab
   | RuntimeMobileSessionMarkdownTab
   | RuntimeMobileSessionFileTab
-  | RuntimeMobileSessionBrowserTab
   | RuntimeMobileSessionAgentTab

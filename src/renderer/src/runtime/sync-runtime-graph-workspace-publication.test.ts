@@ -103,7 +103,7 @@ describe('buildMobileSessionTabSnapshots', () => {
     expect(snapshots[0]?.worktreeInstanceId).toBeUndefined()
   })
 
-  it('publishes browser and editor color + pin state from unified tabs', () => {
+  it('publishes editor color + pin state from unified tabs', () => {
     const fileId = '/repo/README.md'
     const state = makeState({
       activeGroupIdByWorktree: { 'wt-1': 'group-1' },
@@ -112,28 +112,14 @@ describe('buildMobileSessionTabSnapshots', () => {
           {
             id: 'group-1',
             worktreeId: 'wt-1',
-            activeTabId: 'browser-tab-1',
-            tabOrder: ['browser-tab-1', 'editor-tab-1'],
-            recentTabIds: ['browser-tab-1']
+            activeTabId: 'editor-tab-1',
+            tabOrder: ['editor-tab-1'],
+            recentTabIds: ['editor-tab-1']
           }
         ]
       },
       unifiedTabsByWorktree: {
         'wt-1': [
-          {
-            id: 'browser-tab-1',
-            entityId: 'browser-workspace-1',
-            groupId: 'group-1',
-            worktreeId: 'wt-1',
-            contentType: 'browser',
-            label: 'Browser',
-            customLabel: null,
-            color: '#3b82f6',
-            sortOrder: 0,
-            createdAt: 1,
-            isPreview: false,
-            isPinned: false
-          },
           {
             id: 'editor-tab-1',
             entityId: fileId,
@@ -147,41 +133,6 @@ describe('buildMobileSessionTabSnapshots', () => {
             createdAt: 2,
             isPreview: false,
             isPinned: false
-          }
-        ]
-      },
-      browserTabsByWorktree: {
-        'wt-1': [
-          {
-            id: 'browser-workspace-1',
-            worktreeId: 'wt-1',
-            activePageId: 'browser-page-1',
-            pageIds: ['browser-page-1'],
-            url: 'https://example.com/',
-            title: 'Example Domain',
-            loading: false,
-            faviconUrl: null,
-            canGoBack: false,
-            canGoForward: false,
-            loadError: null,
-            createdAt: 1
-          }
-        ]
-      },
-      browserPagesByWorkspace: {
-        'browser-workspace-1': [
-          {
-            id: 'browser-page-1',
-            workspaceId: 'browser-workspace-1',
-            worktreeId: 'wt-1',
-            url: 'https://example.com/',
-            title: 'Example Domain',
-            loading: false,
-            faviconUrl: null,
-            canGoBack: false,
-            canGoForward: false,
-            loadError: null,
-            createdAt: 1
           }
         ]
       },
@@ -200,21 +151,13 @@ describe('buildMobileSessionTabSnapshots', () => {
 
     const snapshot = buildMobileSessionTabSnapshots(state)[0]
 
-    expect(snapshot?.tabs).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: 'browser',
-          id: 'browser-tab-1',
-          color: '#3b82f6',
-          isPinned: false
-        }),
-        expect.objectContaining({
-          type: 'markdown',
-          id: 'editor-tab-1',
-          color: '#16a34a',
-          isPinned: false
-        })
-      ])
-    )
+    expect(snapshot?.tabs).toEqual([
+      expect.objectContaining({
+        type: 'markdown',
+        id: 'editor-tab-1',
+        color: '#16a34a',
+        isPinned: false
+      })
+    ])
   })
 })

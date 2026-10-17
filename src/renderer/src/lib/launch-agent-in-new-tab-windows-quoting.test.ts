@@ -82,10 +82,9 @@ vi.mock('sonner', () => ({
 
 vi.mock('@/components/tab-bar/reconcile-order', () => ({
   reconcileTabOrder: vi.fn(
-    (_stored, termIds: string[], editorIds: string[], browserIds: string[]) => [
+    (_stored, termIds: string[], editorIds: string[]) => [
       ...termIds,
-      ...editorIds,
-      ...browserIds
+      ...editorIds
     ]
   )
 }))

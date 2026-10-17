@@ -1,4 +1,3 @@
-import { useAppStore } from '@/store'
 import { containsStatefulRendererQuery } from '../../../../../shared/terminal-reply-query-extraction'
 import { takeCurrentTerminalDeliveryCredit } from '@/lib/pane-manager/terminal-delivery-credit'
 import { recordAgentHibernationPaneOutput } from '@/lib/agent-hibernation-output-activity'
@@ -58,9 +57,6 @@ export function bindLiveDataCallback(session: ConnectPanePtySession): void {
     observeTerminalBracketedPasteModeOutput(session.pane.terminal, data)
     // Why: under main side-effect authority these facts arrive via pty:sideEffect; byte-scanning here would double-fire. Remote PTYs / kill-switch-off keep this path.
     if (!session.mainSideEffectAuthority) {
-      for (const link of session.observeTerminalGitHubPRLink(data)) {
-        useAppStore.getState().observeTerminalGitHubPullRequestLink(session.deps.worktreeId, link)
-      }
       session.commandLifecycle.handlePtyData(data)
     }
     session.commandCodeOutputStatusDetector?.observe(data)

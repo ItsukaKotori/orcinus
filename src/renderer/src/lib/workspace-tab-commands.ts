@@ -15,12 +15,8 @@ import {
   switchFloatingWorkspaceTab
 } from './floating-workspace-terminal-actions'
 import { TOGGLE_FLOATING_TERMINAL_EVENT } from './floating-terminal'
-import { closeWorkspaceBrowserTab } from './workspace-browser-tab-close'
-import { resolveBrowserWorkspaceOwner } from './browser-workspace-source-resolution'
 
-export type WorkspaceTabTarget =
-  | { kind: 'tab'; worktreeId: string; tabId: string }
-  | { kind: 'browser-source'; sourceId: string }
+export type WorkspaceTabTarget = { kind: 'tab'; worktreeId: string; tabId: string }
 
 export type WorkspaceTabCommand =
   | {
@@ -50,11 +46,7 @@ function resolveActiveTab(state: TabState, worktreeId: string): Tab | null {
   }
   // Hydration can publish the backing selection before its group selection.
   const entityId =
-    state.activeTabType === 'browser'
-      ? state.activeBrowserTabId
-      : state.activeTabType === 'editor'
-        ? state.activeFileId
-        : state.activeTabId
+    state.activeTabType === 'editor' ? state.activeFileId : state.activeTabId
   return (
     (state.unifiedTabsByWorktree[worktreeId] ?? []).find(
       (tab) =>
@@ -66,22 +58,12 @@ function resolveActiveTab(state: TabState, worktreeId: string): Tab | null {
 function resolveCloseTarget(
   state: TabState,
   target?: WorkspaceTabTarget
-): { worktreeId: string; tab: Tab | null; browserWorkspaceId?: string } | null {
+): { worktreeId: string; tab: Tab | null } | null {
   if (target?.kind === 'tab') {
     const tab = (state.unifiedTabsByWorktree[target.worktreeId] ?? []).find(
       (tab) => tab.id === target.tabId
     )
     return tab ? { worktreeId: target.worktreeId, tab } : null
-  }
-  if (target?.kind === 'browser-source') {
-    const owner = resolveBrowserWorkspaceOwner(state, target.sourceId)
-    if (!owner) {
-      return null
-    }
-    const tab = (state.unifiedTabsByWorktree[owner.worktreeId] ?? []).find(
-      (tab) => tab.contentType === 'browser' && tab.entityId === owner.workspaceId
-    )
-    return { worktreeId: owner.worktreeId, tab: tab ?? null, browserWorkspaceId: owner.workspaceId }
   }
   if (!state.activeWorktreeId) {
     return null
@@ -89,13 +71,6 @@ function resolveCloseTarget(
   const tab = resolveActiveTab(state, state.activeWorktreeId)
   if (tab) {
     return { worktreeId: state.activeWorktreeId, tab }
-  }
-  if (
-    !hasFocusedGroup(state, state.activeWorktreeId) &&
-    state.activeTabType === 'browser' &&
-    state.activeBrowserTabId
-  ) {
-    return resolveCloseTarget(state, { kind: 'browser-source', sourceId: state.activeBrowserTabId })
   }
   return null
 }
@@ -114,26 +89,8 @@ export function dispatchWorkspaceTabCommand(command: WorkspaceTabCommand): boole
       }
     }
     const target = resolveCloseTarget(state, command.target)
-    if (!target) {
+    if (!target || !target.tab) {
       return false
-    }
-    if (!target.tab) {
-      if (!target.browserWorkspaceId) {
-        return false
-      }
-      const plan = closeWorkspaceBrowserTab(target.worktreeId, target.browserWorkspaceId)
-      if (
-        plan.closesLocally &&
-        plan.localCloseReason !== 'cleanup' &&
-        !command.skipEmptyCheck &&
-        !command.bulk
-      ) {
-        createWorkspaceTabCloseCommands({
-          worktreeId: target.worktreeId,
-          groupTabs: []
-        }).leaveWorktreeIfEmpty()
-      }
-      return true
     }
     const tab = target.tab
     if (command.context === 'terminal' && tab.contentType === 'terminal') {

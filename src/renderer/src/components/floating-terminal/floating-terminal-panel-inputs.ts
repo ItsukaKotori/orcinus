@@ -3,16 +3,10 @@ import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../../shared/constants'
 
 type FloatingTerminalPanelState = Pick<
   AppState,
-  | 'browserTabsByWorktree'
-  | 'expandedPaneByTabId'
-  | 'groupsByWorktree'
-  | 'openFiles'
-  | 'tabsByWorktree'
-  | 'unifiedTabsByWorktree'
+  'expandedPaneByTabId' | 'groupsByWorktree' | 'openFiles' | 'tabsByWorktree' | 'unifiedTabsByWorktree'
 >
 
 export type FloatingTerminalPanelInputs = {
-  browserTabs: NonNullable<AppState['browserTabsByWorktree'][string]>
   expandedPaneByTabId: Record<string, boolean>
   floatingFiles: AppState['openFiles']
   groups: NonNullable<AppState['groupsByWorktree'][string]>
@@ -25,7 +19,6 @@ type SelectorDependencies = {
   onOpenFileVisited?: (fileId: string) => void
 }
 
-const EMPTY_BROWSER_TABS: FloatingTerminalPanelInputs['browserTabs'] = []
 const EMPTY_EXPANDED_PANES: FloatingTerminalPanelInputs['expandedPaneByTabId'] = {}
 const EMPTY_FILES: FloatingTerminalPanelInputs['floatingFiles'] = []
 const EMPTY_GROUPS: FloatingTerminalPanelInputs['groups'] = []
@@ -61,8 +54,6 @@ export function createFloatingTerminalPanelInputsSelector(
 
   return (state) => {
     const tabs = state.tabsByWorktree[FLOATING_TERMINAL_WORKTREE_ID] ?? EMPTY_TABS
-    const browserTabs =
-      state.browserTabsByWorktree[FLOATING_TERMINAL_WORKTREE_ID] ?? EMPTY_BROWSER_TABS
     const groups = state.groupsByWorktree[FLOATING_TERMINAL_WORKTREE_ID] ?? EMPTY_GROUPS
     const unifiedTabs =
       state.unifiedTabsByWorktree[FLOATING_TERMINAL_WORKTREE_ID] ?? EMPTY_UNIFIED_TABS
@@ -94,7 +85,6 @@ export function createFloatingTerminalPanelInputsSelector(
 
     if (
       previous?.tabs === tabs &&
-      previous.browserTabs === browserTabs &&
       previous.groups === groups &&
       previous.unifiedTabs === unifiedTabs &&
       previous.floatingFiles === floatingFiles &&
@@ -104,7 +94,6 @@ export function createFloatingTerminalPanelInputsSelector(
     }
 
     previous = {
-      browserTabs,
       expandedPaneByTabId,
       floatingFiles,
       groups,

@@ -382,31 +382,6 @@ describe('connectPanePty', () => {
     expect(createdTransportOptions[0]?.projectRuntime).toBeUndefined()
   })
 
-  it('observes live terminal GitHub PR URLs before agent completion', async () => {
-    const { connectPanePty } = await import('./pty-connection')
-    const transport = createMockTransport()
-    const capturedDataCallback: { current: ((data: string) => void) | null } = { current: null }
-    transport.connect.mockImplementation(async ({ callbacks }: { callbacks: ConnectCallbacks }) => {
-      capturedDataCallback.current = callbacks.onData ?? null
-      return 'pty-1'
-    })
-    transportFactoryQueue.push(transport)
-
-    connectPanePty(createPane(1) as never, createManager(1) as never, createDeps() as never)
-    await flushAsyncTicks()
-
-    capturedDataCallback.current?.('Created https://github.com/acme/orca/pull/42\r\n')
-
-    expect(mockStoreState.observeTerminalGitHubPullRequestLink).toHaveBeenCalledWith(
-      'wt-1',
-      expect.objectContaining({
-        url: 'https://github.com/acme/orca/pull/42',
-        slug: { owner: 'acme', repo: 'orca', host: 'github.com' },
-        number: 42
-      })
-    )
-  })
-
   it('surfaces an actionable error when a Codex backfill timeout drops to the shell', async () => {
     const { connectPanePty } = await import('./pty-connection')
     const transport = createMockTransport()

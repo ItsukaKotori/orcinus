@@ -103,7 +103,6 @@ describe('Cmd+J quick action context', () => {
       ...ctx({ activeWorktreeId: null, activeGroupId: null, isLoading: true }),
       activeWorktree: null,
       runtimeMode: 'local-desktop' as const,
-      openNewBrowserTab: async () => {},
       openNewMarkdownFile: async () => {},
       openNewTerminalTab: async () => {},
       openCreateWorkspace: () => {},
@@ -129,7 +128,7 @@ describe('Cmd+J quick action context', () => {
   })
 
   it('applies the availability matrix across curated actions', () => {
-    const workspaceActions = ['new-browser-tab', 'new-markdown-file', 'new-terminal-tab']
+    const workspaceActions = ['new-markdown-file', 'new-terminal-tab']
     const currentWorkspaceActions = ['delete-workspace']
     const workspaceAgnosticActions = ['create-workspace', 'add-quick-command']
     const actionById = new Map(getCmdJQuickActions().map((action) => [action.id, action]))
@@ -137,7 +136,6 @@ describe('Cmd+J quick action context', () => {
       ...ctx({}),
       activeWorktree: null,
       runtimeMode: 'local-desktop' as const,
-      openNewBrowserTab: async () => {},
       openNewMarkdownFile: async () => {},
       openNewTerminalTab: async () => {},
       openCreateWorkspace: () => {},
@@ -217,7 +215,6 @@ describe('Cmd+J quick action context', () => {
     const context = buildCmdJQuickActionContext({
       state,
       activeGroupSnapshot: { worktreeId: 'wt-1', groupId: 'closed-group' },
-      openNewBrowserTab: async () => {},
       openNewMarkdownFile: async () => {},
       openNewTerminalTab: async () => {},
       openCreateWorkspace: () => {},
@@ -243,7 +240,6 @@ describe('Cmd+J quick action context', () => {
     const context = buildCmdJQuickActionContext({
       state,
       activeGroupSnapshot: null,
-      openNewBrowserTab: async () => {},
       openNewMarkdownFile: async () => {},
       openNewTerminalTab: async () => {},
       openCreateWorkspace: () => {},
@@ -261,7 +257,6 @@ describe('Cmd+J quick action context', () => {
       ...ctx({ activeGroupId: null }),
       activeWorktree: null,
       runtimeMode: 'local-desktop' as const,
-      openNewBrowserTab: async () => {},
       openNewMarkdownFile: async () => {},
       openNewTerminalTab: async (groupId: string) => {
         calls.push(groupId)
@@ -278,17 +273,13 @@ describe('Cmd+J quick action context', () => {
     expect(calls).toEqual([])
   })
 
-  it('omits unsupported paired-web browser execution without affecting terminal or markdown', async () => {
+  it('keeps markdown and terminal execution available under paired-web', async () => {
     const calls: string[] = []
     const actions = new Map(getCmdJQuickActions().map((action) => [action.id, action]))
     const context = {
       ...ctx({}),
       activeWorktree: null,
       runtimeMode: 'paired-web' as const,
-      managedBrowserCreationEnabled: false,
-      openNewBrowserTab: async () => {
-        calls.push('browser')
-      },
       openNewMarkdownFile: async () => {
         calls.push('markdown')
       },
@@ -300,14 +291,6 @@ describe('Cmd+J quick action context', () => {
       openAddQuickCommand: () => {}
     } satisfies CmdJQuickActionContext
 
-    expect(actions.get('new-browser-tab')?.isAvailable(context)).toEqual({
-      available: false,
-      reason: 'client-action-unsupported'
-    })
-    await expect(actions.get('new-browser-tab')?.run(context)).resolves.toEqual({
-      status: 'unavailable',
-      reason: 'client-action-unsupported'
-    })
     expect(actions.get('new-markdown-file')?.isAvailable(context)).toEqual({ available: true })
     expect(actions.get('new-terminal-tab')?.isAvailable(context)).toEqual({ available: true })
     await actions.get('new-markdown-file')?.run(context)
@@ -322,7 +305,6 @@ describe('Cmd+J quick action context', () => {
       ...ctx({ activeGroupId: null }),
       activeWorktree: null,
       runtimeMode: 'local-desktop' as const,
-      openNewBrowserTab: async () => {},
       openNewMarkdownFile: async () => {},
       openNewTerminalTab: async () => {},
       openCreateWorkspace: () => {},

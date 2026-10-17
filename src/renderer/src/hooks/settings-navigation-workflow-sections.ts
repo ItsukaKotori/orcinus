@@ -1,24 +1,10 @@
-import { getArtifactsSettingsSearchEntries } from '@/components/settings/artifacts-settings-search'
-import { getAutomationsSettingsSearchEntries } from '@/components/settings/automations-settings-search'
-import { getBrowserPaneCombinedSearchEntries } from '@/components/settings/browser-pane-search'
 import { getCommitMessageAiPaneSearchEntries } from '@/components/settings/commit-message-ai-search'
 import { getFloatingWorkspaceSearchEntries } from '@/components/settings/floating-workspace-search'
-import { getGitProviderApiBudgetSearchEntries } from '@/components/settings/git-provider-api-budget-search'
 import { getGitPaneSearchEntries } from '@/components/settings/git-search'
 import { getQuickCommandsPaneSearchEntries } from '@/components/settings/quick-commands-search'
-import { getTasksPaneSearchEntries } from '@/components/settings/tasks-search'
 import { translate } from '@/i18n/i18n'
 import type { SettingsNavSection } from '@/lib/settings-navigation-types'
-import {
-  CalendarClock,
-  Files,
-  GitBranch,
-  Globe,
-  ListChecks,
-  PanelsTopLeft,
-  Play,
-  SquareTerminal
-} from 'lucide-react'
+import { GitBranch, PanelsTopLeft, Play, SquareTerminal } from 'lucide-react'
 import type { SettingsNavigationBuildOptions } from './settings-navigation-build-options'
 
 export function buildWorkflowSettingsSections(
@@ -27,29 +13,6 @@ export function buildWorkflowSettingsSections(
 ): SettingsNavSection[] {
   const showDesktopOnlySettings = !isWebClient
   return [
-    {
-      id: 'automations',
-      title: translate('auto.hooks.useSettingsNavigationMetadata.automationsTitle', 'Automations'),
-      description: translate(
-        'auto.hooks.useSettingsNavigationMetadata.automationsDescription',
-        'Schedule agent work and choose whether Automations appears in the sidebar.'
-      ),
-      icon: CalendarClock,
-      searchEntries: getAutomationsSettingsSearchEntries(),
-      group: 'workflows'
-    },
-    {
-      id: 'artifacts',
-      title: translate('auto.hooks.useSettingsNavigationMetadata.artifactsTitle', 'Artifacts'),
-      description: translate(
-        'auto.hooks.useSettingsNavigationMetadata.artifactsDescription',
-        'Share HTML and Markdown files with your team and manage their public links.'
-      ),
-      icon: Files,
-      searchEntries: getArtifactsSettingsSearchEntries(),
-      group: 'workflows',
-      badge: translate('auto.hooks.useSettingsNavigationMetadata.40d80bad8a', 'Beta')
-    },
     {
       id: 'git',
       title: translate(
@@ -63,22 +26,7 @@ export function buildWorkflowSettingsSections(
       icon: GitBranch,
       // Why: Git AI Author is rendered inside Git, so shared
       // metadata must search both surfaces wherever Git appears.
-      searchEntries: [
-        ...getGitPaneSearchEntries(),
-        ...getCommitMessageAiPaneSearchEntries(),
-        ...getGitProviderApiBudgetSearchEntries()
-      ],
-      group: 'workflows'
-    },
-    {
-      id: 'tasks',
-      title: translate('auto.hooks.useSettingsNavigationMetadata.85f4fd7710', 'Task Sources'),
-      description: translate(
-        'auto.hooks.useSettingsNavigationMetadata.tasksDescription',
-        'Connect providers, install the Linear skill, and choose what appears in Tasks.'
-      ),
-      icon: ListChecks,
-      searchEntries: getTasksPaneSearchEntries(),
+      searchEntries: [...getGitPaneSearchEntries(), ...getCommitMessageAiPaneSearchEntries()],
       group: 'workflows'
     },
     {
@@ -103,21 +51,6 @@ export function buildWorkflowSettingsSections(
       searchEntries: getQuickCommandsPaneSearchEntries(),
       group: 'workflows'
     },
-    ...(showDesktopOnlySettings
-      ? [
-          {
-            id: 'browser',
-            title: translate('auto.hooks.useSettingsNavigationMetadata.8c197f74a1', 'Browser'),
-            description: translate(
-              'auto.hooks.useSettingsNavigationMetadata.e815fd01bd',
-              'Home page, link routing, and session cookies.'
-            ),
-            icon: Globe,
-            searchEntries: getBrowserPaneCombinedSearchEntries(),
-            group: 'workflows'
-          }
-        ]
-      : []),
     {
       id: 'floating-workspace',
       title: translate('auto.hooks.useSettingsNavigationMetadata.65b19f5bde', 'Floating Workspace'),
@@ -125,7 +58,7 @@ export function buildWorkflowSettingsSections(
         ? translate(
             'auto.hooks.useSettingsNavigationMetadata.2d0659f6f0',
             'Global terminal, browser, and markdown tabs.'
-          )
+          ).replace('browser, and', 'and').replace('browser,', '')
         : translate(
             'auto.hooks.useSettingsNavigationMetadata.floatingWorkspaceWebDescription',
             'Global terminal and markdown tabs.'

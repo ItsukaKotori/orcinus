@@ -1,11 +1,9 @@
-import type { BrowserTab as BrowserTabState } from '../../../../shared/browser-workspace-types'
 import type { Tab, WorkspaceVisibleTabType } from '../../../../shared/tab-types'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
 import { resolveTerminalTabTitle } from '../../../../shared/tab-title-resolution'
 import type { OpenFile } from '../../store/slices/editor'
 import { getEditorDisplayLabel } from '@/components/editor/editor-labels'
 import { normalizeRelativePath } from '@/lib/path'
-import { getBrowserTabLabel } from './BrowserTab'
 import type { DropIndicator } from './drop-indicator'
 import { reconcileTabOrder } from './reconcile-order'
 import { resolveTabIndicatorEdges } from '../tab-group/tab-insertion'
@@ -27,13 +25,6 @@ export type TabBarItem =
       data: OpenFile & { tabId?: string }
     }
   | {
-      type: 'browser'
-      id: string
-      unifiedTabId: string
-      isPinned: boolean
-      data: BrowserTabState & { tabId?: string }
-    }
-  | {
       type: 'agent-session'
       id: string
       unifiedTabId: string
@@ -51,9 +42,6 @@ export type TabBarItem =
 export function getTabDragLabel(item: TabBarItem, generatedTitlesEnabled: boolean): string {
   if (item.type === 'terminal') {
     return resolveTerminalTabTitle(item.data, generatedTitlesEnabled, item.data.title)
-  }
-  if (item.type === 'browser') {
-    return getBrowserTabLabel(item.data)
   }
   if (item.type === 'agent-session') {
     return item.data.label
@@ -80,9 +68,6 @@ export function getTabLayoutSignature(
   if (item.type === 'terminal') {
     return `${item.type}:${item.id}:${item.isPinned}:${isExpanded}:${Boolean(item.data.color)}:${label}`
   }
-  if (item.type === 'browser') {
-    return `${item.type}:${item.id}:${item.isPinned}:${item.data.loading}:${Boolean(item.data.loadError)}:${label}`
-  }
   if (item.type === 'editor') {
     return `${item.type}:${item.id}:${item.isPinned}:${item.data.isDirty}:${item.data.isPreview}:${item.data.externalMutation ?? ''}:${status ?? ''}:${label}`
   }
@@ -96,7 +81,7 @@ export function createUnifiedTabLookup(tabs: readonly Tab[], groupId: string): M
       continue
     }
     lookup.set(tab.id, tab)
-    if (tab.contentType === 'terminal' || tab.contentType === 'browser') {
+    if (tab.contentType === 'terminal') {
       lookup.set(tab.entityId, tab)
     }
   }
@@ -107,12 +92,10 @@ export function buildOrderedTabItems({
   tabBarOrder,
   terminalIds,
   editorFileIds,
-  browserTabIds,
   agentSessionTabIds,
   pluginTabIds,
   terminalMap,
   editorMap,
-  browserMap,
   agentSessionMap,
   pluginTabMap,
   unifiedTabByVisibleId
@@ -120,12 +103,10 @@ export function buildOrderedTabItems({
   tabBarOrder?: string[]
   terminalIds: string[]
   editorFileIds: string[]
-  browserTabIds: string[]
   agentSessionTabIds: string[]
   pluginTabIds: string[]
   terminalMap: Map<string, TerminalTab & { unifiedTabId?: string }>
   editorMap: Map<string, OpenFile & { tabId?: string }>
-  browserMap: Map<string, BrowserTabState & { tabId?: string }>
   agentSessionMap: Map<string, Tab & { contentType: 'agent-session' }>
   pluginTabMap: Map<string, Tab & { contentType: 'plugin' }>
   unifiedTabByVisibleId: Map<string, Tab>
@@ -134,7 +115,6 @@ export function buildOrderedTabItems({
     tabBarOrder,
     terminalIds,
     editorFileIds,
-    browserTabIds,
     agentSessionTabIds,
     pluginTabIds
   )
@@ -161,18 +141,6 @@ export function buildOrderedTabItems({
         unifiedTabId: file.tabId ?? unifiedTab?.id ?? file.id,
         isPinned: unifiedTab?.isPinned === true,
         data: file
-      })
-      continue
-    }
-    const browserTab = browserMap.get(id)
-    if (browserTab) {
-      const unifiedTab = unifiedTabByVisibleId.get(id)
-      items.push({
-        type: 'browser',
-        id,
-        unifiedTabId: browserTab.tabId ?? unifiedTab?.id ?? browserTab.id,
-        isPinned: unifiedTab?.isPinned === true,
-        data: browserTab
       })
       continue
     }
@@ -221,16 +189,12 @@ export function findActiveVisibleTabId(
   active: {
     activeTabId: string | null
     activeFileId?: string | null
-    activeBrowserTabId?: string | null
     activeTabType?: WorkspaceVisibleTabType
   }
 ): string | null {
   const activeItem = items.find((item) => {
     if (item.type === 'terminal') {
       return active.activeTabType === 'terminal' && item.id === active.activeTabId
-    }
-    if (item.type === 'browser') {
-      return active.activeTabType === 'browser' && item.id === active.activeBrowserTabId
     }
     if (item.type === 'agent-session') {
       // Reachable only from TabGroupPanel, which passes the structured tab's own id; the store's

@@ -1,4 +1,4 @@
-import type { PluginHostListEntry } from '../../preload/api/plugin-host-api'
+import type { PluginHostListEntry } from '../../shared/preload-api/api/plugin-host-api'
 
 export const MOCK_GLOBAL_PLUGINS: PluginHostListEntry[] = [
   {

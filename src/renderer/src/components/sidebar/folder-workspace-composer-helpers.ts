@@ -1,8 +1,5 @@
 import type { LinkedWorkItemSummary } from '@/lib/new-workspace'
 import {
-  buildGitHubWorkspaceSource,
-  buildGitLabWorkspaceSource,
-  buildLinearWorkspaceSource,
   buildWorkspaceSourceSelection,
   getWorkspaceSourceName,
   getWorkspaceSourceProvider
@@ -18,9 +15,6 @@ import {
 import { getProjectGroupSubtreeIds } from '../../../../shared/project-groups'
 import { isGitRepoKind } from '../../../../shared/repo-kind'
 import type { FolderWorkspace } from '../../../../shared/folder-workspace-types'
-import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
-import type { GitLabWorkItem } from '../../../../shared/gitlab-types'
-import type { LinearIssue } from '../../../../shared/linear/issue-types'
 import type { ProjectGroup } from '../../../../shared/project-group-types'
 import type { Repo } from '../../../../shared/repo-types'
 import type { SmartWorkspaceNameSelection } from '@/components/new-workspace/SmartWorkspaceNameField'
@@ -85,18 +79,6 @@ export function getSmartNameSelection(
 
 export function getLinkedItemDisplayName(item: LinkedWorkItemSummary): string | null {
   return getWorkspaceSourceName(item).displayName || null
-}
-
-export function toGitHubLinkedWorkItem(item: GitHubWorkItem): LinkedWorkItemSummary {
-  return buildGitHubWorkspaceSource(item)
-}
-
-export function toGitLabLinkedWorkItem(item: GitLabWorkItem): LinkedWorkItemSummary {
-  return buildGitLabWorkspaceSource(item)
-}
-
-export function toLinearLinkedWorkItem(issue: LinearIssue): LinkedWorkItemSummary {
-  return buildLinearWorkspaceSource(issue)
 }
 
 export function getFolderWorkspacePrimaryActionLabel(): string {

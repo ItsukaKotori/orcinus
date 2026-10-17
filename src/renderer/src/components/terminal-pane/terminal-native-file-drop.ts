@@ -20,7 +20,6 @@ import {
 } from './terminal-drop-shell'
 import { writeTerminalDropPathsToCapturedTarget } from './terminal-drop-path-writer'
 import { resolveNativeTerminalDropPane } from './terminal-drop-pane-resolution'
-import { getTerminalPasteSshRemotePlatform } from './terminal-paste-ssh-platform'
 import { showTerminalDropWriteFailure } from './terminal-drop-write-failure'
 import { captureDirectSshMutationExpectation } from '@/lib/ssh-mutation-expectation'
 import {
@@ -120,8 +119,7 @@ async function handleNativeTerminalFileDropWithCapturedOwner(
   const targetShell = resolveTerminalDropTargetShell({
     activeRuntimeEnvironmentId: null,
     worktreePath,
-    connectionId,
-    remotePlatform: getTerminalPasteSshRemotePlatform(connectionId)
+    connectionId
   })
   const isRemote = connectionId !== null
   const localWslDrop = !isRemote && isWorktreeUsingLocalWslRuntime(state, worktreeId)

@@ -29,7 +29,6 @@
       },
       "GitHubItemDialog": {
         "04539beb48": "issue",
-        "307c98e8e3": "Show {{value0}} more lines above",
         "3853476a97": "GitHub item",
         "3ab6ac0fc8": "Preview and edit the selected GitHub issue or pull request.",
         "45af57999b": "Close preview",
@@ -40,7 +39,6 @@
         "b0b7344684": "Request up to 15 reviewers",
         "b1157c78ff": "sheet",
         "ce8a85d209": "default",
-        "checkActionRequiredHint": "This check needs a manual action on GitHub (for example, approving the workflow run) before merging is unblocked.",
         "d0a05e73f5": "compact",
         "e517b4d641": "closed",
         "e9b7cb7d17": "Failed to {{value0}} PR"
@@ -117,7 +115,6 @@
         "b0e80f083d": "wants to merge into",
         "b6bda618cf": "compact",
         "c9de94b07a": "Show more lines above",
-        "checkActionRequiredHint": "This check needs a manual action on GitHub (for example, approving the workflow run) before merging is unblocked.",
         "d65f70786e": "closed",
         "e1f3641bfd": "from",
         "e295a78c11": "Show {{value0}} more lines above",
@@ -192,128 +189,30 @@
         "dabd819ca1": "Type to see all {{value0}} worktrees"
       },
       "artifacts": {
-        "ArtifactsPage": {
-          "openArtifact": "Open artifact",
-          "signInCopy": "Sign in to view and manage artifacts shared through your account.",
-          "signInHeading": "Sign in to Orcinus"
-        },
-        "artifact-publish-flow": {
-          "5cb4f5ec36": "Copy link"
-        }
+        "ArtifactsPage": {},
+        "artifact-publish-flow": {}
       },
       "automations": {
-        "AutomationCustomCronPanel": {
-          "cadb7b0bc9": "invalid"
-        },
-        "AutomationDetail": {
-          "007c8ad874": "Prompt",
-          "51a470b966": "ssh",
-          "de0fedac06": "new_per_run"
-        },
-        "AutomationEditorDialog": {
-          "ff5db28639": "existing"
-        },
-        "AutomationEditorDialogHeader": {
-          "4c8e1a72b9": "A recurring agent task"
-        },
-        "AutomationRunHistory": {
-          "fdb3caa8fb": "known"
-        },
-        "AutomationRunsDashboard": {
-          "local": "Local",
-          "remote": "Remote"
-        },
-        "AutomationSchedulePicker": {
-          "55b2ef82a4": "Hourly",
-          "57e83307d0": "Weekdays",
-          "837d902bba": "Weekly",
-          "ddba78647e": "Custom cron",
-          "f0202f3a89": "Daily"
-        },
-        "AutomationsPage": {
-          "2695883141": "delete",
-          "0329f9bef1": "Close · Esc",
-          "0ae52dd760": "hermes",
-          "3e42a5cc1b": "SSH connection failed.",
-          "53f06f0ad5": "Retry source",
-          "587a4b205c": "Next",
-          "5918020edc": "run",
-          "67c7ff795b": "Close automations",
-          "761a35834d": "Automation",
-          "7934ee0d81": "Connect SSH",
-          "7b2e285552": "SSH connections are unavailable in this client.",
-          "82eb6cb933": "source",
-          "8705757e27": "job",
-          "8d1afa8269": "Add automation",
-          "97ff587ee3": "Connect this source to check for Hermes automations in the remote profile.",
-          "9f2855677c": "SSH connected.",
-          "a21f6c33ad": "Automation source refreshed.",
-          "aaa007846f": "source unavailable",
-          "aecdc3681f": "Manageable",
-          "createFromBaseRef": "Create from {{baseRef}}",
-          "d441032f7e": "pause",
-          "dd0bc7a1ba": "new_per_run",
-          "destinationProjectUnavailable": "Choose a project owned by the selected automation destination.",
-          "e059042585": "Read-only",
-          "f93ed7a6f8": "Connecting...",
-          "moveOriginalKept": "Created on {host}, but the original could not be deleted. Remove it on the old host.",
-          "moveOriginalUnverified": "Created on {host}, but the original deletion could not be verified. Check the old host before retrying.",
-          "noListMatches": "No automations match.",
-          "noSearchMatches": "No automations match your search.",
-          "projectDefaultBaseRef": "project default",
-          "runCount": "{{count}} runs",
-          "runCount_one": "{{count}} run",
-          "runCount_other": "{{count}} runs",
-          "tableLastRun": "Last run",
-          "tableName": "Name",
-          "tableProject": "Project"
-        },
-        "ExternalAutomationManagers": {
-          "330b3c32e8": "available",
-          "bf5f67b590": "hermes"
-        },
-        "HermesCronOutputView": {
-          "88d48157fc": "default"
-        },
-        "createDestination": {
-          "stale": "{host} changed while this form was open. Choose it again before saving.",
-          "unavailable": "That host cannot hold a new automation yet. Choose another host to create this one on."
-        },
-        "externalScope": {
-          "unknownManager": "This external automation is no longer listed for any host in view."
-        }
+        "AutomationCustomCronPanel": {},
+        "AutomationDetail": {},
+        "AutomationEditorDialog": {},
+        "AutomationEditorDialogHeader": {},
+        "AutomationRunHistory": {},
+        "AutomationRunsDashboard": {},
+        "AutomationSchedulePicker": {},
+        "AutomationsPage": {},
+        "ExternalAutomationManagers": {},
+        "HermesCronOutputView": {},
+        "createDestination": {},
+        "externalScope": {}
       },
       "browser-pane": {
-        "markup": {
-          "errorAttach": "Could not attach the markup screenshot.",
-          "errorCapture": "Could not capture the page to draw on.",
-          "errorUnavailable": "Screenshot markup is not available on this page."
-        }
+        "markup": {}
       },
       "browser": {
         "pane": {
-          "BrowserPane": {
-            "1c78adc73d": "Open Externally",
-            "26615e116b": "error",
-            "31375046b7": "Download from {{value0}}",
-            "3c085f638d": "Copy failed page URL",
-            "5f66313863": "annotation",
-            "8aec5bc044": "idle",
-            "8b6fab9ffa": "Save",
-            "93be92f8d1": "Copy Address",
-            "a3508d7e6e": "{{value0}} annotation{{value1}} ready. Select another element or copy all feedback.",
-            "a5dcd0fd1d": "confirming",
-            "b2856516e2": "Can't load this page",
-            "c6be71329e": "Refresh",
-            "c8bc7f1f9e": "requested",
-            "da68d35f7b": "Open failed page in default browser",
-            "db325a7eeb": "Can't reach {{value0}}",
-            "e72dfa268a": "annotate",
-            "e7ca5a098c": "success"
-          },
-          "BrowserToolbarMenu": {
-            "6aa42813e4": "Imported {{value0}} cookies from {{value1}}{{value2}}."
-          }
+          "BrowserPane": {},
+          "BrowserToolbarMenu": {}
         }
       },
       "editor": {
@@ -386,80 +285,23 @@
         }
       },
       "github": {
-        "CloseReasonDropdown": {
-          "e1f2a3b4c5": "Choose close reason"
-        },
-        "GitHubIssueCommentComposer": {
-          "082515176a": "Failed to add comment",
-          "0a73f59e85": "Send comment",
-          "9f88657c4e": "Issue closed",
-          "a1b2c3d4e5": "Add a comment",
-          "b1c2d3e4f5": "Reopen issue",
-          "bd3b4492a0": "Issue reopened",
-          "bf43425540": "Comment",
-          "c5c117270e": "Add your comment here, be kind",
-          "commentTooLarge": "Comment is too large to submit safely.",
-          "e9b7cb7d17": "Failed to close issue",
-          "f2a8c1d903": "Failed to reopen issue",
-          "f6a7b8c9d0": "Close issue"
-        },
-        "GitHubWorkItemAssigneePopoverContent": {
-          "4f8b6f2c1d": "Filter assignees...",
-          "a00830d3f7": "No users",
-          "cddd9b04a7": "Loading assignees"
-        },
-        "GitHubWorkItemLabelPopoverContent": {
-          "2aa9acdf34": "Edit labels on GitHub",
-          "8b0d52ee3a": "Filter labels...",
-          "cddd9b04a7": "Loading labels",
-          "de26e2eb06": "No labels"
-        },
-        "IssueSourceSelector": {
-          "643d7e9496": "upstream",
-          "cdc9bd64fa": "compact"
-        },
-        "PRFilterDropdowns": {
-          "19bb6f115f": "reviewed-by"
-        },
-        "PRFilterSections": {
-          "2e639b84fa": "reviewer",
-          "3ce4d5e96e": "prs",
-          "4e50c7bc03": "assignee",
-          "66256a73b3": "status",
-          "712c5abdbf": "label",
-          "7bf3a6e5ac": "author"
-        },
+        "CloseReasonDropdown": {},
+        "GitHubIssueCommentComposer": {},
+        "GitHubWorkItemAssigneePopoverContent": {},
+        "GitHubWorkItemLabelPopoverContent": {},
+        "IssueSourceSelector": {},
+        "PRFilterDropdowns": {},
+        "PRFilterSections": {},
         "githubIssueCloseReasons": {
-          "completed": {
-            "description": "Done, closed, fixed, resolved",
-            "label": "Close as completed"
-          },
-          "duplicate": {
-            "description": "Duplicate of another issue",
-            "label": "Close as duplicate"
-          },
-          "notPlanned": {
-            "description": "Won't fix, can't repro, stale",
-            "label": "Close as not planned"
-          }
+          "completed": {},
+          "duplicate": {},
+          "notPlanned": {}
         },
         "project": {
-          "ProjectCell": {
-            "ffeff79861": "PULL_REQUEST"
-          },
-          "ProjectPicker": {
-            "43a88ae574": "BOARD_LAYOUT",
-            "ab1a2c357d": "Roadmap (unsupported)",
-            "b787682111": "Browse all",
-            "ba0ab9a117": "Browse all (loading…)",
-            "cafb908f34": "TABLE_LAYOUT"
-          },
-          "ProjectRow": {
-            "c3b81ddea2": "DRAFT_ISSUE"
-          },
-          "ProjectViewWrapper": {
-            "1bf8c01c8b": "Switch to a Table view to work with this project in Orcinus."
-          }
+          "ProjectCell": {},
+          "ProjectPicker": {},
+          "ProjectRow": {},
+          "ProjectViewWrapper": {}
         }
       },
       "linear-issue-attribute-filter-dropdowns": {
@@ -468,18 +310,12 @@
       "linear": {
         "api": {
           "key": {
-            "dialog": {
-              "57a66522c8": "connecting",
-              "e689a4d0a6": "error"
-            }
+            "dialog": {}
           }
         },
         "project": {
           "view": {
-            "surfaces": {
-              "2c4b1c2c08": "number",
-              "7616c986c6": "Open {{value0}} issues"
-            }
+            "surfaces": {}
           }
         }
       },
@@ -492,34 +328,14 @@
         }
       },
       "onboarding": {
-        "IntegrationsStep": {
-          "93f0c49ad1": "not-authenticated",
-          "a3bcf13694": "connected",
-          "a74c6d6b18": "not-installed"
-        },
-        "NotificationStep": {
-          "2c47f5465f": "Turn on Allow notifications for Orcinus in System Settings. This step updates automatically once enabled.",
-          "8124d085a6": "Open Mac Settings",
-          "94562ba367": "macOS is asking for permission. Click Allow in the dialog and this step updates automatically.",
-          "aa36281b00": "Open System Settings and make sure Orcinus is allowed to send notifications.",
-          "d2dba86837": "Allow Orcinus in macOS"
-        },
-        "OnboardingFlow": {
-          "35bbaf5ae0": "notifications",
-          "984338477a": "theme",
-          "a5e5da02f7": "integrations",
-          "c47e1bd149": "agent",
-          "ff92d15436": "Orcinus will notify you know when agents are done or need help."
-        },
-        "ThemeStep": {
-          "ad19e5c916": "Importing…"
-        },
+        "IntegrationsStep": {},
+        "NotificationStep": {},
+        "OnboardingFlow": {},
+        "ThemeStep": {},
         "mac": {
           "notification": {
             "permission": {
-              "card": {
-                "3d18cf71f9": "Updates automatically."
-              }
+              "card": {}
             }
           }
         }
@@ -583,7 +399,6 @@
           "ChecksPanel": {
             "3c3ad3a1d2": "Started the agent. No selected comments can be marked resolved on the host.",
             "7202f4a40a": "unlink PR",
-            "abf59262fb": "Review the prompt before starting an agent.",
             "e56c42122e": "destructive",
             "gitlabUnlink": "Unlink MR"
           },
@@ -992,13 +807,7 @@
         "CommitMessageAiPane": {
           "841ed9884a": "Used by repositories that have not customized Source Control AI."
         },
-        "ComputerUsePane": {
-          "07bbe4c4cb": "Screenshots",
-          "0c9a33f468": "Capture app windows so agents can inspect visual state.",
-          "4b65070096": "darwin",
-          "4d03dec2d0": "Read app interface trees and perform requested actions.",
-          "6b5a2cd3a5": "Accessibility"
-        },
+        "ComputerUsePane": {},
         "EphemeralVmRuntimesSection": {
           "cleaned": "Cleaned up temporary VM runtime.",
           "cleanupFailedToast": "Couldn’t clean up temporary VM runtime.",
@@ -1406,14 +1215,7 @@
             "ff8de8a2ad": "display"
           }
         },
-        "artifacts": {
-          "account": "Orcinus account",
-          "connected": "Connected",
-          "enable": "Enable Artifacts",
-          "enableDescription": "Add Artifacts to the sidebar so you can open and delete shared files.",
-          "openArtifactsDescription": "View and delete links shared through your account.",
-          "signInRequired": "Sign in is required to upload and manage artifacts."
-        },
+        "artifacts": {},
         "auto": {
           "rename": {
             "branch": {
@@ -1430,13 +1232,8 @@
             }
           }
         },
-        "computerUseSkillRuntime": {
-          "thisDevice": "This device"
-        },
-        "computerUseSummary": {
-          "permissionsRequired_one": "1 permission required before agents can operate app windows.",
-          "permissionsRequired_other": "{{value0}} permissions required before agents can operate app windows."
-        },
+        "computerUseSkillRuntime": {},
+        "computerUseSummary": {},
         "experimental": {
           "search": {
             "10b52f79c1": "worktrees",
@@ -1491,32 +1288,7 @@
         },
         "jira": {
           "integration": {
-            "card": {
-              "09742875cd": "Jira",
-              "09d310e42d": "you@example.com",
-              "1666f8d562": "Create an Atlassian API token",
-              "1ab7f551f3": "Atlassian API token",
-              "255bfe98ec": "Test",
-              "27dae4ab60": "https://example.atlassian.net",
-              "2e8bb790fd": "Connect",
-              "33a8b261ee": "Update credentials",
-              "3df81cb0ac": "ok",
-              "5936977fcd": "Cancel",
-              "5fb1562315": "error",
-              "74f3063026": "{{value0}} site{{value1}} connected",
-              "8ff73fef62": "Jira tokens are encrypted by the active runtime and stored locally. Re-entering the same site URL and email replaces that site's API token.",
-              "9046a20d4c": "Disconnect {{value0}}",
-              "9a9f8d4910": "Connect Jira Cloud to browse, create, and link issues.",
-              "9bb34706ca": "Connected",
-              "a28f417220": "Connect Jira",
-              "ab350991b8": "Verified",
-              "cec06a0f79": "Testing…",
-              "d5c5b47bb9": "update",
-              "d914d7ab70": "Verifying…",
-              "eaffa454e9": "Update",
-              "efaab83c5d": "Add site",
-              "fb854902d9": "connecting"
-            }
+            "card": {}
           }
         },
         "mobile": {
@@ -1532,7 +1304,6 @@
             "availableHostsDescription": "Hosts where this project is set up.",
             "host": "host",
             "remote": "remote",
-            "ssh": "ssh",
             "vm": "vm"
           }
         },
@@ -1553,10 +1324,7 @@
           "showButton": "Show Skills button"
         },
         "ssh": {
-          "search": {
-            "62826efbe9": "Add a new remote SSH target.",
-            "74c6d90d78": "Manage remote SSH targets."
-          }
+          "search": {}
         },
         "terminal": {
           "windows": {
@@ -1628,8 +1396,7 @@
         "AddRepoHostSelector": {
           "addRemoteHostTooltip": "Choose SSH for a machine you can log into, or remote server for an Orcinus server.",
           "local": "Local",
-          "runtime": "Server",
-          "ssh": "SSH"
+          "runtime": "Server"
         },
         "AddRepoNestedImportStep": {
           "220dd32d83": "Scanning...",
@@ -2124,10 +1891,7 @@
             "task": {
               "page": {
                 "gitlab": {
-                  "filters": {
-                    "2328f6a40c": "My Todos",
-                    "e157d7ce4d": "MRs"
-                  }
+                  "filters": {}
                 }
               }
             }
@@ -2136,17 +1900,12 @@
             "new": {
               "github": {
                 "issue": {
-                  "dialog": {
-                    "e02508846c": "this repository"
-                  }
+                  "dialog": {}
                 }
               },
               "linear": {
                 "issue": {
-                  "dialog": {
-                    "dialogDescription": "Create a Linear issue for the selected team.",
-                    "dialogTitle": "New Linear issue"
-                  }
+                  "dialog": {}
                 }
               }
             },
@@ -2163,25 +1922,16 @@
           "github": {
             "github": {
               "detail": {
-                "host": {
-                  "312ca15778": "GitHub list",
-                  "8d5cde4770": "Pull requests"
-                }
+                "host": {}
               },
               "issue": {
                 "label": {
-                  "selector": {
-                    "2a1862c470": "Loading labels…"
-                  }
+                  "selector": {}
                 }
               },
               "work": {
                 "item": {
-                  "row": {
-                    "draftPullRequest": "Draft pull request",
-                    "issue": "Issue",
-                    "pullRequest": "Pull request"
-                  }
+                  "row": {}
                 }
               }
             }
@@ -2192,10 +1942,7 @@
                 "page": {
                   "linear": {
                     "active": {
-                      "collection": {
-                        "68462f8b29": "View: {{value0}}",
-                        "d8b3cd9488": "Project: {{value0}}"
-                      }
+                      "collection": {}
                     }
                   },
                   "session": {
@@ -2213,9 +1960,7 @@
           "linear": {
             "linear": {
               "connect": {
-                "empty": {
-                  "3e00e8ebd4": "Loading Linear"
-                }
+                "empty": {}
               }
             }
           }
@@ -2341,9 +2086,7 @@
       "browser": {
         "cookie": {
           "import": {
-            "toast": {
-              "googleCookiesSkipped": "Google cookies were not imported. Open a browser in Orcinus on {{value0}} with this profile, then sign into Google."
-            }
+            "toast": {}
           }
         }
       },
@@ -2392,25 +2135,14 @@
     }
   },
   "browser": {
-    "clientHosted": {
-      "popupBlocked": "Popup blocked: {{origin}}"
-    },
-    "sshEgress": {
-      "localChip": "This device"
-    },
-    "sshRoute": {
-      "errorDescription": "Pages in this workspace browse through its SSH host, and that connection is not available right now."
-    }
+    "clientHosted": {},
+    "sshEgress": {},
+    "sshRoute": {}
   },
   "components": {
     "onboarding": {
       "integrations": {
-        "capabilities": {
-          "browseIssues": "Browse GitHub issues and pull requests in the Tasks view without leaving Orcinus",
-          "managePullRequests": "Read, comment on, and merge pull requests without leaving Orcinus",
-          "reviewStatus": "See issue state, review status, and CI checks on every worktree",
-          "startWorkspaceFromIssue": "Start a workspace from any GitHub issue or pull request, prefilled with its title and context"
-        }
+        "capabilities": {}
       }
     },
     "workspace": {
@@ -2456,17 +2188,8 @@
   },
   "settings": {
     "browser": {
-      "clientHostedRemote": {
-        "description": "Render remote workspace pages on this desktop; network traffic still goes through the remote host. Applies to new pages only.",
-        "title": "Host remote browser pages on this device"
-      },
-      "sshWorkspaceRouting": {
-        "description": "Browser pages in SSH workspaces send their traffic through the workspace's SSH host, with DNS resolved there. Off means pages browse from this machine.",
-        "enableHost": "Route again",
-        "probeAgain": "Check again",
-        "probeSkippedHosts": "Hosts routed without the connection check (Try anyway):",
-        "title": "Browse through SSH workspace hosts"
-      }
+      "clientHostedRemote": {},
+      "sshWorkspaceRouting": {}
     }
   },
   "worktreeJumpPalette": {
@@ -2476,8 +2199,6 @@
       "noOptions": "No matching hosts or projects",
       "search": "Filter by host or project..."
     },
-    "matchLabel": {
-      "automation": "Run"
-    }
+    "matchLabel": {}
   }
 }

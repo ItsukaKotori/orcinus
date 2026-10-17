@@ -6,7 +6,6 @@ import {
   subscribeAutoAckPresenceSignals
 } from './agent-auto-ack-presence'
 import { useAppStore } from '@/store'
-import { isWebClientLocation } from '@/lib/web-client-location'
 import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../shared/constants'
 import { createTerminalAttentionSurface } from '@/components/terminal-pane/terminal-attention-surface'
 import {
@@ -102,8 +101,7 @@ export function useAutoAckViewedAgent(floatingPanelVisible: boolean): void {
       if (targets.length === 0) {
         return
       }
-      // Browsers have no native idle capability; their visible/focused gates still apply.
-      if (!options?.presenceConfirmed && !isWebClientLocation()) {
+      if (!options?.presenceConfirmed) {
         const records = readTurnRecords(s)
         const hasAttention = targets.some(({ tabId }) => {
           const subjectKey = surface.resolveViewedSubjectKey(tabId)

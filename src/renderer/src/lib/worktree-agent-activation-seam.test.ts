@@ -36,9 +36,7 @@ function baseState(): Partial<AppState> {
     layoutByWorktree: {},
     activeGroupIdByWorktree: {},
     openFiles: [],
-    browserTabsByWorktree: {},
     activeFileIdByWorktree: {},
-    activeBrowserTabIdByWorktree: {},
     activeTabTypeByWorktree: {},
     activeTabIdByWorktree: {},
     tabBarOrderByWorktree: {},
@@ -53,7 +51,6 @@ function baseState(): Partial<AppState> {
     } as AppState['settings'],
     markWorktreeVisited: vi.fn(),
     recordWorktreeVisit: vi.fn(),
-    refreshGitHubForWorktreeIfStale: vi.fn(),
     revealWorktreeInSidebar: vi.fn()
   }
 }

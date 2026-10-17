@@ -1,9 +1,5 @@
 import type { HttpLinkSourceOwner } from '@/lib/http-link-routing'
 import type {
-  CheckRunDetailsTabPatch,
-  OpenCheckRunDetailsState
-} from '@/components/editor/check-run-details-tab'
-import type {
   GitBranchChangeEntry,
   GitBranchCompareSummary,
   GitCommitCompareSummary
@@ -146,19 +142,6 @@ export type EditorFilesSlice = {
     entries: ConflictReviewEntry[],
     source: ConflictReviewState['source']
   ) => void
-  openCheckRunDetails: (
-    worktreeId: string,
-    contextKey: string,
-    check: OpenCheckRunDetailsState['check'],
-    state: CheckRunDetailsTabPatch
-  ) => void
-  patchOpenCheckRunDetails: (
-    worktreeId: string,
-    contextKey: string,
-    check: OpenCheckRunDetailsState['check'],
-    state: CheckRunDetailsTabPatch
-  ) => void
-  reloadOpenCheckRunDetailsTab: (fileId: string) => Promise<void>
   openBranchAllDiffs: (
     worktreeId: string,
     worktreePath: string,

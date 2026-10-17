@@ -141,14 +141,13 @@ function buildLegacyNavOrderView(
     unifiedTabsByWorktree: { [worktreeId]: inputs.unifiedTabs },
     tabBarOrderByWorktree: inputs.tabBarOrder ? { [worktreeId]: inputs.tabBarOrder } : {},
     tabsByWorktree: { [worktreeId]: inputs.terminalTabs },
-    openFiles: inputs.openFilesById ? [...inputs.openFilesById.values()] : [],
-    browserTabsByWorktree: { [worktreeId]: inputs.browserWorkspaces }
+    openFiles: inputs.openFilesById ? [...inputs.openFilesById.values()] : []
   }
 }
 
 export function buildMobileSessionGroupProjection(
   inputs: MobileSessionWorktreeInputs,
-  ids: { terminalIds: string[]; editorIds: string[]; browserIds: string[] }
+  ids: { terminalIds: string[]; editorIds: string[] }
 ): {
   order: VisibleTabRef[]
   tabGroups?: RuntimeMobileSessionTabGroup[]
@@ -168,19 +167,11 @@ export function buildMobileSessionGroupProjection(
 
   const terminalIds = new Set(ids.terminalIds)
   const editorIds = new Set(ids.editorIds)
-  const browserIds = new Set(ids.browserIds)
   const order: VisibleTabRef[] = []
   const tabGroups: RuntimeMobileSessionTabGroup[] = []
   for (const group of getOrderedTabGroups(groups, inputs.tabGroupLayout)) {
     const groupTabs = inputs.unifiedTabs.filter((tab) => tab.groupId === group.id)
-    const visibleOrder = getGroupVisibleTabOrder(
-      group,
-      groupTabs,
-      terminalIds,
-      editorIds,
-      browserIds,
-      true
-    )
+    const visibleOrder = getGroupVisibleTabOrder(group, groupTabs, terminalIds, editorIds, true)
     if (visibleOrder.length === 0) {
       continue
     }

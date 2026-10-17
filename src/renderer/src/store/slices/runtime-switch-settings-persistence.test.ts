@@ -44,8 +44,7 @@ it('does not persist a stale overlapping runtime switch', async () => {
     settings: { activeRuntimeEnvironmentId: null } as never,
     fetchRepos: vi.fn().mockResolvedValue(undefined),
     fetchAllWorktrees: vi.fn().mockResolvedValue(undefined),
-    fetchWorktreeLineage: vi.fn().mockResolvedValue(undefined),
-    fetchBrowserSessionProfiles: vi.fn().mockResolvedValue(undefined)
+    fetchWorktreeLineage: vi.fn().mockResolvedValue(undefined)
   })
 
   const first = store.getState().setActiveRuntimeEnvironmentPreference('env-a')

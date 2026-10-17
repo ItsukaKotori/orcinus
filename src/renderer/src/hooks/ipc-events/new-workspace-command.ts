@@ -1,33 +1,18 @@
-import { buildLinearIssueLinkedWorkItem } from '@/lib/linear-linked-work-item'
-import type { LinkedWorkItemSummary } from '@/lib/new-workspace'
-import { getLinearIssueWorkspaceName } from '../../../../shared/workspace-name'
 import type { AppState } from '../../store/types'
 
 type NewWorkspaceShortcutModalData = {
   telemetrySource: 'shortcut'
   prefilledName?: string
-  linkedWorkItem?: LinkedWorkItemSummary
 }
 
 export function buildNewWorkspaceShortcutModalData(
-  state: Pick<AppState, 'activeView' | 'taskPageData'>
+  _state: Pick<AppState, 'activeView'>
 ): NewWorkspaceShortcutModalData {
-  const linearIssue =
-    state.activeView === 'tasks' ? (state.taskPageData.openLinearIssue ?? null) : null
-  if (!linearIssue) {
-    return { telemetrySource: 'shortcut' }
-  }
-
-  return {
-    telemetrySource: 'shortcut',
-    prefilledName: getLinearIssueWorkspaceName(linearIssue),
-    // Cmd+N from a Linear issue mirrors its Start-workspace action with source context.
-    linkedWorkItem: buildLinearIssueLinkedWorkItem(linearIssue)
-  }
+  return { telemetrySource: 'shortcut' }
 }
 
 export function openNewWorkspaceFromShortcut(
-  state: Pick<AppState, 'activeModal' | 'activeView' | 'taskPageData' | 'openModal'>
+  state: Pick<AppState, 'activeModal' | 'activeView' | 'openModal'>
 ): void {
   if (state.activeModal === 'new-workspace-composer') {
     return

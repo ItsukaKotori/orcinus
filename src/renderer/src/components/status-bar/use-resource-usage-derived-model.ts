@@ -28,7 +28,6 @@ export function useResourceUsageDerivedModel({
   repos,
   allWorktrees,
   projectGroups,
-  browserTabsByWorktree,
   workspaceSessionReady,
   sessionCount,
   sessionsError,
@@ -44,7 +43,6 @@ export function useResourceUsageDerivedModel({
   repos: AppState['repos']
   allWorktrees: Worktree[]
   projectGroups: AppState['projectGroups']
-  browserTabsByWorktree: AppState['browserTabsByWorktree']
   workspaceSessionReady: boolean
   sessionCount: number
   sessionsError: boolean
@@ -109,7 +107,6 @@ export function useResourceUsageDerivedModel({
             repoDisplayNameById,
             repoConnectionIdById,
             repoRuntimeScopedById,
-            browserTabsByWorktree,
             worktreeById,
             ambiguousWorktreeIds
           })
@@ -123,7 +120,6 @@ export function useResourceUsageDerivedModel({
       repoDisplayNameById,
       repoConnectionIdById,
       repoRuntimeScopedById,
-      browserTabsByWorktree,
       worktreeById,
       ambiguousWorktreeIds
     ]

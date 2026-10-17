@@ -4,7 +4,6 @@ import type { BuiltInWindowsTerminalShell } from '../../../../shared/windows-ter
 import { isClipboardTextByteLengthOverLimit } from '../../../../shared/clipboard-text'
 
 export type TabCreateMenuOptionKind =
-  | 'new-browser'
   | 'new-markdown'
   | 'new-terminal'
   | 'new-terminal-shell'
@@ -19,7 +18,6 @@ export type TabCreateMenuOption = {
 }
 
 export type TabCreateMenuOptionsContext = {
-  hasNewBrowser: boolean
   hasNewMarkdown: boolean
   hasOpenMarkdown: boolean
   terminalOnly: boolean
@@ -95,20 +93,6 @@ export function buildTabCreateMenuOptions(
     })
   }
 
-  if (context.hasNewBrowser) {
-    const label = translate('auto.components.tab.bar.TabBar.4833fb2cbe', 'New Browser Tab')
-    options.push({
-      id: 'new-browser',
-      kind: 'new-browser',
-      label,
-      keywords: [
-        translate('auto.components.tab.bar.tab.create.menu.options.4f2a91e15b', 'browser'),
-        translate('auto.components.tab.bar.tab.create.menu.options.6d0e6a4b7a', 'new browser'),
-        translate('auto.components.tab.bar.tab.create.menu.options.c87ad57785', 'browser tab'),
-        translate('auto.components.tab.bar.tab.create.menu.options.cce7ef1d2c', 'web')
-      ]
-    })
-  }
 
   if (context.hasNewMarkdown) {
     const label = translate('auto.components.tab.bar.TabBar.3d5d6c960d', 'New Markdown')

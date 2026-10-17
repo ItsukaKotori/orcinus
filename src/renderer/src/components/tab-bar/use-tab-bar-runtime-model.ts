@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { useShallow } from 'zustand/react/shallow'
 import type { GitFileStatus } from '../../../../shared/git-status-types'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { Tab } from '../../../../shared/tab-types'
@@ -24,7 +23,6 @@ import type { TabAgentLaunchOption } from './tab-agent-launch-options'
 import { DEFAULT_DISABLED_TUI_AGENTS } from '../../../../shared/tui-agent-selection'
 import { shouldShowWindowsShellMenu } from './windows-shell-menu-visibility'
 import { createUnifiedTabLookup } from './tab-bar-item-model'
-import { getClientCreationActionPolicy } from '@/lib/client-creation-action-policy'
 
 const isWindows = navigator.userAgent.includes('Windows')
 export const isMacOs = navigator.userAgent.includes('Mac')
@@ -55,7 +53,6 @@ export function resolveWindowsPowerShellImplementationSetting(settings: GlobalSe
 
 export type TabBarRuntimeModel = {
   newTerminalShortcut: string
-  newBrowserShortcut: string
   newFileShortcut: string
   openMarkdownShortcut: string | null
   generatedTabTitlesEnabled: boolean
@@ -73,7 +70,6 @@ export type TabBarRuntimeModel = {
   resolvedGroupId: string
   statusByRelativePath: Map<string, GitFileStatus>
   unifiedTabByVisibleId: Map<string, Tab>
-  managedBrowserCreationEnabled: boolean
 }
 
 export function useTabBarRuntimeModel({
@@ -84,7 +80,6 @@ export function useTabBarRuntimeModel({
   groupId?: string
 }): TabBarRuntimeModel {
   const newTerminalShortcut = useShortcutLabel('tab.newTerminal')
-  const newBrowserShortcut = useShortcutLabel('tab.newBrowser')
   const newFileShortcut = useShortcutLabel('tab.newMarkdown')
   const openMarkdownShortcut = useOptionalShortcutLabel('tab.openMarkdown')
   const generatedTabTitlesEnabled = useAppStore((s) => s.settings?.tabAutoGenerateTitle === true)
@@ -211,16 +206,9 @@ export function useTabBarRuntimeModel({
     () => createUnifiedTabLookup(unifiedTabs, resolvedGroupId),
     [resolvedGroupId, unifiedTabs]
   )
-  const [managedBrowserCreationEnabled] = useAppStore(
-    useShallow((state) => {
-      const policy = getClientCreationActionPolicy(state, worktreeId)
-      return [policy['managed-browser'].state === 'enabled'] as const
-    })
-  )
 
   return {
     newTerminalShortcut,
-    newBrowserShortcut,
     newFileShortcut,
     openMarkdownShortcut,
     generatedTabTitlesEnabled,
@@ -235,7 +223,6 @@ export function useTabBarRuntimeModel({
     projectRuntimeShellMenuMode,
     resolvedGroupId,
     statusByRelativePath,
-    unifiedTabByVisibleId,
-    managedBrowserCreationEnabled
+    unifiedTabByVisibleId
   }
 }

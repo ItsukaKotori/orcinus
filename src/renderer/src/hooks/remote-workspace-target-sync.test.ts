@@ -152,7 +152,6 @@ describe('createRemoteWorkspaceTargetSync', () => {
       replaceWorkspaceKeys: ['repo-a::/remote/work']
     })
     expect(state.hydrateEditorSession).not.toHaveBeenCalled()
-    expect(state.hydrateBrowserSession).not.toHaveBeenCalled()
   })
 
   it('preserves a higher local generation from an older remote snapshot', async () => {

@@ -5,17 +5,12 @@ import {
 } from '@/lib/source-control-commit-draft-session'
 import type { GitConflictOperation } from '../../../../../../shared/git-status-types'
 import type { SourceControlActionError } from '../sync/action-error'
-import {
-  createPrIntentCurrentTargetConflictsWithToken,
-  type CreatePrIntentRunToken
-} from '../review/create-pr-intent-flow'
-import type { CreatePrIntentNotice } from '../commit/commit-area-types'
 import { readCommitDraftForWorktree, type CommitDraftsByWorktree } from '../commit/commit-drafts'
 import { clearRemoteActionErrorsForCompletedConflictOperations } from '../sync/remote-refresh'
 
 /**
  * Owns every per-worktree record the panel keeps outside the store — commit drafts and errors,
- * remote-action errors, and the in-flight flags for commit, abort, generation and Create PR —
+ * remote-action errors, and the in-flight flags for commit, abort and generation —
  * together with the pruning that drops records for worktrees that no longer exist.
  */
 export function useSourceControlWorktreeOperationState({
@@ -56,45 +51,6 @@ export function useSourceControlWorktreeOperationState({
     Record<string, boolean>
   >({})
   const [generateErrors, setGenerateErrors] = useState<Record<string, string | null>>({})
-  const createPrInFlightRef = useRef<Record<string, boolean>>({})
-  const [createPrInFlightByWorktree, setCreatePrInFlightByWorktree] = useState<
-    Record<string, boolean>
-  >({})
-  const isCreatingPr = createPrInFlightByWorktree[activeWorktreeId ?? ''] ?? false
-  const createPrIntentInFlightRef = useRef<Record<string, boolean>>({})
-  const createPrIntentRunTokenRef = useRef<Record<string, CreatePrIntentRunToken | null>>({})
-  const createPrIntentCurrentTargetRef = useRef({
-    repoId: null as string | null,
-    worktreeId: null as string | null,
-    worktreePath: null as string | null,
-    branch: null as string | null,
-    baseRef: null as string | null
-  })
-  const [createPrIntentInFlightByWorktree, setCreatePrIntentInFlightByWorktree] = useState<
-    Record<string, boolean>
-  >({})
-  const [createPrIntentNotices, setCreatePrIntentNotices] = useState<
-    Record<string, CreatePrIntentNotice | null>
-  >({})
-  const isCreatePrIntentInFlight = createPrIntentInFlightByWorktree[activeWorktreeId ?? ''] ?? false
-  const createPrIntentNotice = createPrIntentNotices[activeWorktreeId ?? ''] ?? null
-  const setCreatePrIntentNoticeForWorktree = useCallback(
-    (worktreeId: string, notice: CreatePrIntentNotice | null): void => {
-      setCreatePrIntentNotices((prev) => ({ ...prev, [worktreeId]: notice }))
-    },
-    []
-  )
-  const createPrIntentRunStillOwnsWorktree = useCallback(
-    (token: CreatePrIntentRunToken): boolean =>
-      createPrIntentRunTokenRef.current[token.worktreeId] === token,
-    []
-  )
-  const createPrIntentActiveTargetConflicts = useCallback(
-    (token: CreatePrIntentRunToken): boolean =>
-      createPrIntentCurrentTargetConflictsWithToken(token, createPrIntentCurrentTargetRef.current),
-    []
-  )
-
   const commitMessage = readCommitDraftForWorktree(commitDrafts, activeWorktreeId)
   const commitError = commitErrors[activeWorktreeId ?? ''] ?? null
   const remoteActionError = remoteActionErrors[activeWorktreeId ?? ''] ?? null
@@ -145,8 +101,6 @@ export function useSourceControlWorktreeOperationState({
     setAbortOperationInFlightByWorktree((prev) => pruneRecord(prev))
     setGenerateInFlightByWorktree((prev) => pruneRecord(prev))
     setGenerateErrors((prev) => pruneRecord(prev))
-    setCreatePrIntentInFlightByWorktree((prev) => pruneRecord(prev))
-    setCreatePrIntentNotices((prev) => pruneRecord(prev))
     // Refs don't need setState — mutate in place to drop stale keys.
     for (const key of Object.keys(commitInFlightRef.current)) {
       if (!worktreeMap.has(key)) {
@@ -161,12 +115,6 @@ export function useSourceControlWorktreeOperationState({
     for (const key of Object.keys(generateInFlightRef.current)) {
       if (!worktreeMap.has(key)) {
         delete generateInFlightRef.current[key]
-      }
-    }
-    for (const key of Object.keys(createPrIntentInFlightRef.current)) {
-      if (!worktreeMap.has(key)) {
-        delete createPrIntentInFlightRef.current[key]
-        delete createPrIntentRunTokenRef.current[key]
       }
     }
   }, [updateCommitDrafts, worktreeMap])
@@ -196,28 +144,16 @@ export function useSourceControlWorktreeOperationState({
     commitErrorsRef,
     commitInFlightRef,
     commitMessage,
-    createPrInFlightRef,
-    createPrIntentActiveTargetConflicts,
-    createPrIntentCurrentTargetRef,
-    createPrIntentInFlightRef,
-    createPrIntentNotice,
-    createPrIntentRunStillOwnsWorktree,
-    createPrIntentRunTokenRef,
     generateErrors,
     generateInFlightByWorktree,
     generateInFlightRef,
     isAbortingOperation,
     isCommitting,
-    isCreatePrIntentInFlight,
-    isCreatingPr,
     remoteActionError,
     remoteActionErrorSequenceByWorktreeRef,
     setAbortOperationInFlightByWorktree,
     setCommitErrorForWorktree,
     setCommitInFlightByWorktree,
-    setCreatePrInFlightByWorktree,
-    setCreatePrIntentInFlightByWorktree,
-    setCreatePrIntentNoticeForWorktree,
     setGenerateErrors,
     setGenerateInFlightByWorktree,
     setRemoteActionErrors,

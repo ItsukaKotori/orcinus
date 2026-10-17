@@ -28,18 +28,10 @@ export function SourceControlPanelReady(props: SourceControlPanelReadyProps) {
     handleBulkStage,
     handleBulkUnstage,
     handleCopyDiffComments,
-    handleCreatePrHeaderClick,
     handleOpenComment,
-    handleRelinkSuppressedGitHubPR,
     handleSourceControlKeyDown,
     handleToggleSourceControlViewMode,
-    hostedReview,
-    isCreatePrIntentInFlight,
-    isCreatingPr,
     isExecutingBulk,
-    manualReviewUrl,
-    openHostedReviewInChecks,
-    prGenerating,
     refreshBranchCompare,
     selectedKeys,
     setBaseRefDialogOpen,
@@ -50,9 +42,7 @@ export function SourceControlPanelReady(props: SourceControlPanelReadyProps) {
     setPendingDiffCommentsClear,
     setSourceControlRoot,
     settings,
-    sourceControlViewMode,
-    suppressedGitHubPRState,
-    visibleCreatePrHeaderAction
+    sourceControlViewMode
   } = model
 
   return (
@@ -67,16 +57,6 @@ export function SourceControlPanelReady(props: SourceControlPanelReadyProps) {
           filterExpanded={filterExpanded}
           onFilterQueryChange={setFilterQuery}
           onFilterExpandedChange={setFilterExpanded}
-          visibleCreatePrHeaderAction={visibleCreatePrHeaderAction}
-          hostedReview={hostedReview}
-          isCreatePrIntentInFlight={isCreatePrIntentInFlight}
-          isCreatingPr={isCreatingPr || prGenerating}
-          onCreatePrHeaderClick={handleCreatePrHeaderClick}
-          onOpenHostedReviewInChecks={openHostedReviewInChecks}
-          suppressedGitHubPRNumber={
-            suppressedGitHubPRState?.status === 'matched' ? suppressedGitHubPRState.number : null
-          }
-          onRelinkSuppressedGitHubPR={handleRelinkSuppressedGitHubPR}
           sourceControlViewMode={sourceControlViewMode}
           viewModeToggleDisabled={settings === null}
           onToggleViewMode={handleToggleSourceControlViewMode}
@@ -89,7 +69,6 @@ export function SourceControlPanelReady(props: SourceControlPanelReadyProps) {
           branchLineTotal={branchLineTotal}
           compareBaseRef={compareBaseRef}
           headDisplay={gitIdentityDisplay}
-          manualReviewUrl={manualReviewUrl}
         />
 
         {/* Why: hidden when count is 0 — notes are created from the diff view, so an empty Notes shelf here is pure chrome. */}

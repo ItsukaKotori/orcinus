@@ -37,8 +37,7 @@ export function hasInteractiveActiveGitStatusConsumer(args: ActiveGitStatusPolli
   return (
     (args.rightSidebarOpen &&
       (args.rightSidebarTab === 'source-control' ||
-        (args.rightSidebarTab === 'explorer' && args.rightSidebarExplorerView !== 'search') ||
-        args.rightSidebarTab === 'checks')) ||
+        (args.rightSidebarTab === 'explorer' && args.rightSidebarExplorerView !== 'search'))) ||
     (args.openFiles ?? []).some((file) => file.worktreeId === args.activeWorktreeId)
   )
 }

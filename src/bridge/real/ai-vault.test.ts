@@ -1,7 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { UnimplementedBridgeError } from '../unimplemented-fallback'
 import { createAiVaultRealApi } from './ai-vault'
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
@@ -134,18 +133,4 @@ describe('aiVault real adapter', () => {
     await Promise.resolve()
     expect(unlisten).toHaveBeenCalledTimes(1)
   })
-
-  it.each(['searchSessions', 'searchStatus', 'listSubagentSessions', 'getFirstUserPrompt'] as const)(
-    'keeps %s on the rejecting fallback',
-    async (method) => {
-      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      const api = createAiVaultRealApi() as unknown as Record<
-        string,
-        (...args: unknown[]) => unknown
-      >
-      await expect(api[method]?.({})).rejects.toBeInstanceOf(UnimplementedBridgeError)
-      expect(invokeMock).not.toHaveBeenCalled()
-      warn.mockRestore()
-    }
-  )
 })

@@ -40,18 +40,6 @@ const markdown = {
   sourceRelativePath: 'notes.md',
   documentVersion: 'v1'
 }
-const browser = {
-  type: 'browser' as const,
-  id: 'browser-1',
-  title: 'Docs',
-  browserWorkspaceId: 'browser-workspace',
-  browserPageId: 'page-1',
-  url: 'https://example.com',
-  loading: false,
-  canGoBack: false,
-  canGoForward: false,
-  isActive: false
-}
 const agent = {
   type: 'agent-session' as const,
   id: 'agent-1',
@@ -65,7 +53,6 @@ const rows = [
   { name: 'ready terminal', row: ready },
   { name: 'markdown', row: markdown },
   { name: 'file', row: file },
-  { name: 'browser', row: browser },
   { name: 'agent-session', row: agent }
 ] satisfies { name: string; row: RuntimeMobileSessionClientTab }[]
 
@@ -146,16 +133,6 @@ const fullSnapshot: RuntimeMobileSessionTabsResult = {
       isPinned: true,
       viewMode: 'chat'
     },
-    {
-      ...browser,
-      placement: {
-        kind: 'client',
-        browserHostClientId: 'client',
-        browserHostGeneration: 1,
-        pageHostGeneration: 2
-      },
-      loadError: null
-    },
     { ...file, mode: 'diff', diffSource: 'unstaged' },
     { ...markdown, mode: 'edit' },
     { ...agent, agent: 'codex' }
@@ -214,10 +191,10 @@ describe('terminal recovery session-tabs snapshot validation', () => {
   it.each(['id', 'title', 'isActive', 'type'])(
     'rejects a non-terminal row missing or mistyping %s',
     async (key) => {
-      const missing: Record<string, unknown> = { ...browser }
+      const missing: Record<string, unknown> = { ...markdown }
       delete missing[key]
       await expectBoundaryVerdict(snapshot([missing]), false)
-      await expectBoundaryVerdict(snapshot([{ ...browser, [key]: {} }]), false)
+      await expectBoundaryVerdict(snapshot([{ ...markdown, [key]: {} }]), false)
     }
   )
 
@@ -229,9 +206,9 @@ describe('terminal recovery session-tabs snapshot validation', () => {
   it.each([null, undefined, 1, 'tab', [], {}, Object.assign([], ready)])(
     'rejects malformed rows without salvaging other rows: %j',
     async (row) => {
-      const value = snapshot([ready, row, browser])
+      const value = snapshot([ready, row, markdown])
       await expectBoundaryVerdict(value, false)
-      expect(value.tabs).toEqual([ready, row, browser])
+      expect(value.tabs).toEqual([ready, row, markdown])
     }
   )
 
@@ -329,11 +306,11 @@ describe('terminal recovery session-tabs snapshot validation', () => {
         agentStatus: null,
         parentLayout: { root: null, activeLeafId: null, expandedLeafId: null }
       },
-      { ...browser, browserPageId: null, placement: { kind: 'server' }, loadError: null },
+      { ...agent, sessionId: null },
       { ...file, mode: 'edit', diffSource: 'staged' }
     ])
     await expectBoundaryVerdict({ ...value, tabGroupLayout: null, tabGroups: undefined }, true)
-    const legacy = snapshot([ready, file, browser])
+    const legacy = snapshot([ready, file, markdown])
     await expectBoundaryVerdict(legacy, true)
     expect(legacy).not.toHaveProperty('tabGroups')
     expect(legacy.tabs[0]).not.toHaveProperty('ptyId')
@@ -343,7 +320,7 @@ describe('terminal recovery session-tabs snapshot validation', () => {
   // Wire-compat Rule 3: a newer host may publish labels this client has never seen. Rejecting the
   // whole snapshot would stall recovery forever; recovery reads none of these, so they pass through.
   it.each([
-    ['tabs.4.agent', 'gemini'],
+    ['tabs.3.agent', 'gemini'],
     ['tabs.0.agentStatus.state', 'future-state'],
     ['tabs.0.agentStatus', { state: 'working' }],
     ['tabs.0.viewMode', 'future-view'],
@@ -370,7 +347,7 @@ describe('terminal recovery session-tabs snapshot validation', () => {
 
   it('accepts a newer host publishing a tab kind this client cannot render', async () => {
     const notebook = { type: 'notebook', id: 'nb-1', title: 'Notebook', isActive: false, cells: [] }
-    const value = snapshot([ready, notebook, browser])
+    const value = snapshot([ready, notebook])
     await expectBoundaryVerdict(value, true)
     expect(value.tabs[1]).toBe(notebook)
   })

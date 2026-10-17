@@ -12,10 +12,8 @@ import { useRemoteFileBrowserPathPreview } from './use-remote-file-browser-path-
 import { translate } from '@/i18n/i18n'
 import type { FilesystemPathFlavor } from '../../../../shared/filesystem-entry-types'
 
-type RemoteFileBrowserProps = (
-  | { targetId: string; runtimeEnvironmentId?: never }
-  | { runtimeEnvironmentId: string; targetId?: never }
-) & {
+type RemoteFileBrowserProps = {
+  runtimeEnvironmentId: string
   initialPath?: string
   onSelect: (path: string) => void
   onCancel: () => void
@@ -25,7 +23,6 @@ const FILE_HINT_MS = 2000
 const FILE_HINT_TEXT = "Files can't be opened as a project"
 
 export function RemoteFileBrowser({
-  targetId,
   runtimeEnvironmentId,
   initialPath = '~',
   onSelect,
@@ -43,7 +40,7 @@ export function RemoteFileBrowser({
   const fileHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { fetchListing, homePathRef } = useRemoteFileBrowserListing(targetId, runtimeEnvironmentId)
+  const { fetchListing, homePathRef } = useRemoteFileBrowserListing(runtimeEnvironmentId)
 
   const clearFileHint = useCallback(() => {
     if (fileHintTimerRef.current) {

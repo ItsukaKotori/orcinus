@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { buildRows } from './build-rows'
-import { getFolderWorkspaceLaneKey } from './folder-workspace-lanes'
-import { getPRGroupKey, getPRLaneKey } from './group-keys'
 import type { Row, WorktreeGroupBy } from './row-types'
 import { repo, worktree } from '../../worktree-list-groups-test-fixtures'
 import type { FolderWorkspace } from '../../../../../../shared/folder-workspace-types'
@@ -56,7 +54,6 @@ function buildSidebarRows(options: {
     options.groupBy,
     worktrees,
     new Map([[GROUPED_REPO.id, GROUPED_REPO]]),
-    null,
     options.collapsedGroups ?? new Set<string>(),
     undefined,
     undefined,
@@ -81,7 +78,7 @@ function folderRows(rows: Row[]): Extract<Row, { type: 'folder-workspace' }>[] {
   )
 }
 
-const ALL_GROUP_BY: WorktreeGroupBy[] = ['repo', 'workspace-status', 'pr-status', 'none']
+const ALL_GROUP_BY: WorktreeGroupBy[] = ['repo', 'workspace-status', 'none']
 
 describe('folder workspaces render under every Group by mode', () => {
   // The three non-repo arms are the acceptance evidence; the repo arm is a
@@ -112,20 +109,6 @@ describe('a folder workspace can be the only member of a lane', () => {
     // so a folder-only account saw nothing at all.
     const rows = buildSidebarRows({ groupBy: 'none', worktrees: [] })
     expect(folderRows(rows)).toHaveLength(1)
-  })
-})
-
-describe('lane assignment', () => {
-  it('routes to the same PR lane as a worktree with no PR', () => {
-    const laneKey = getFolderWorkspaceLaneKey(
-      { folderWorkspace: makeFolderWorkspace(), projectGroup: GROUP },
-      'pr-status',
-      []
-    )
-    const noPrWorktreeLane = getPRLaneKey(
-      getPRGroupKey(worktree, new Map([[GROUPED_REPO.id, GROUPED_REPO]]), null)
-    )
-    expect(laneKey).toBe(noPrWorktreeLane)
   })
 })
 
@@ -175,7 +158,7 @@ describe('membership is decided once, not per mode', () => {
     )
     // Parity with today's behaviour: nothing filters folder workspaces by
     // isArchived, so a mode must not be the thing that hides one.
-    expect(counts).toEqual([1, 1, 1, 1])
+    expect(counts).toEqual([1, 1, 1])
   })
 })
 
@@ -188,7 +171,6 @@ describe('host bookkeeping for lanes containing folder workspaces', () => {
       'workspace-status',
       [],
       new Map(),
-      null,
       new Set(['workspace-status:in-progress']),
       undefined,
       undefined,
@@ -219,7 +201,6 @@ describe('host bookkeeping for lanes containing folder workspaces', () => {
       'workspace-status',
       [],
       new Map(),
-      null,
       new Set(),
       undefined,
       undefined,

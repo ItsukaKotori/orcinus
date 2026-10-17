@@ -18,7 +18,6 @@ export function useTerminalWorkspaceFoundation() {
   > | null>(null)
   terminalTopologyProjectionRef.current ??= createTerminalWorktreeTopologyProjection()
   const mountedWorktreeIdsRef = useRef(new Set<string>())
-  const browserGuestWorktreeRecencyRef = useRef<string[]>([])
   const measurableBackgroundWorktreeIdsRef = useRef(new Set<string>())
   const terminalWorktreeHiddenSinceRef = useRef(new Map<string, number>())
   const measuringTerminalWorktreeIdsRef = useRef(new Set<string>())
@@ -84,9 +83,6 @@ export function useTerminalWorkspaceFoundation() {
   const terminalRetentionBudgetEnabled = useAppStore(
     (state) => state.settings?.terminalHiddenWorktreeRetentionBudget !== false
   )
-  const browserGuestRetentionBudgetEnabled = useAppStore(
-    (state) => state.settings?.browserGuestWorktreeRetentionBudget !== false
-  )
   const terminalTitleSnapshotAuthorityEnabled = useAppStore((state) =>
     isMainTerminalSideEffectAuthorityForPty({
       settings: state.settings,
@@ -96,7 +92,6 @@ export function useTerminalWorkspaceFoundation() {
 
   return {
     mountedWorktreeIdsRef,
-    browserGuestWorktreeRecencyRef,
     measurableBackgroundWorktreeIdsRef,
     terminalWorktreeHiddenSinceRef,
     measuringTerminalWorktreeIdsRef,
@@ -117,7 +112,6 @@ export function useTerminalWorkspaceFoundation() {
     runtimeStatusByEnvironmentId,
     pairedRuntimeParkingEnvironmentIds,
     terminalRetentionBudgetEnabled,
-    browserGuestRetentionBudgetEnabled,
     terminalTitleSnapshotAuthorityEnabled
   }
 }

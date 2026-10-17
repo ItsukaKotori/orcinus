@@ -14,7 +14,6 @@ import { translate } from '@/i18n/i18n'
 import type { AppState } from '../../../types'
 import type { WorktreeMeta } from '../../../../../../shared/worktree/meta-types'
 import type { ExecutionHostId } from '../../../../../../shared/execution-host'
-import { encodePushTargetClearForRuntimeRpc } from './hosted-review-link-mutation'
 
 type PendingDisplayNameWrite = {
   worktreeId: string
@@ -144,12 +143,18 @@ async function persistWorktreeMetaUntracked(
       compatibleUpdates = olderHostUpdates
     }
   }
+  // Why: remote runtime RPC is JSON-shaped and drops undefined, so null is the
+  // wire signal for clearing a persisted pushTarget.
+  const encodedUpdates =
+    Object.hasOwn(compatibleUpdates, 'pushTarget') && compatibleUpdates.pushTarget === undefined
+      ? { ...compatibleUpdates, pushTarget: null }
+      : compatibleUpdates
   await callRuntimeRpc(
     target,
     'worktree.set',
     {
       worktree: identityKey ? `identity:${identityKey}` : toRuntimeWorktreeSelector(worktreeId),
-      ...encodePushTargetClearForRuntimeRpc(compatibleUpdates)
+      ...encodedUpdates
     },
     { timeoutMs: 15_000 }
   )

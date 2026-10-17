@@ -21,7 +21,7 @@ describe('Cmd+J activation focus routing (#9939)', () => {
     const handler = sourceBetween(
       paletteSource('use-worktree-jump-palette-selection-actions.ts'),
       'const handleSelectWorktree = useCallback',
-      'const handleSelectBrowserPage'
+      'const handleSelectWorkspaceTab'
     )
 
     expect(handler).toContain('queueWorkspaceActivationTerminalFocus(worktree.id, activation)')
@@ -45,17 +45,4 @@ describe('Cmd+J activation focus routing (#9939)', () => {
     expect(handler).not.toMatch(/focusFallbackSurface\(\)/)
   })
 
-  it('falls back when scoped focus declines for an already-open issue match', () => {
-    const handler = paletteSource('worktree-jump-palette-create-worktree.ts')
-    const activationCalls =
-      handler.match(/const activation = activateAndRevealWorktree\(/g)?.length ?? 0
-    // Typed #N jumps to an existing match; pasted URLs stay in the composer
-    // so cross-project detection can choose the correct project.
-    expect(activationCalls).toBe(1)
-    expect(
-      handler.match(
-        /if \(!queueWorkspaceActivationTerminalFocus\(activeMatch\.id, activation\)\) \{\s*focusFallbackSurface\(\)\s*\}/g
-      )?.length
-    ).toBe(activationCalls)
-  })
 })

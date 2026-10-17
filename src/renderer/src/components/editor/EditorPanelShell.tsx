@@ -11,7 +11,6 @@ import type { EditorToggleValue } from './EditorViewToggle'
 import { shouldShowEditorPanelHeader } from './editor-header'
 import { getUntitledFileRoot } from './untitled-file-rename-path'
 import { translate } from '@/i18n/i18n'
-import type { ArtifactWriteRequest } from '../../../../shared/artifacts'
 
 type EditorPanelRenderModel = ReturnType<typeof getEditorPanelRenderModel>
 
@@ -35,7 +34,6 @@ type EditorPanelShellProps = {
   disableRenameBrowse: boolean
   onCopyPath: () => void
   onOpenDiffTargetFile: (preferredMarkdownViewMode?: 'rich') => void
-  onOpenPreviewToSide: () => void
   onOpenMarkdownPreview: () => void
   onOpenContainingFolder: () => void
   onToggleSideBySide: () => void
@@ -43,7 +41,6 @@ type EditorPanelShellProps = {
   onToggleMarkdownTableOfContents: () => void
   onToggleMarkdownFrontmatter: () => void
   onExportMarkdownToPdf: () => void
-  createMarkdownArtifactRequest?: () => Promise<ArtifactWriteRequest>
   onContentChange: (content: string) => void
   onContentChangeForFile: (file: OpenFile, content: string) => void
   onDirtyStateHint: (dirty: boolean) => void
@@ -76,7 +73,6 @@ export function EditorPanelShell({
   disableRenameBrowse,
   onCopyPath,
   onOpenDiffTargetFile,
-  onOpenPreviewToSide,
   onOpenMarkdownPreview,
   onOpenContainingFolder,
   onToggleSideBySide,
@@ -84,7 +80,6 @@ export function EditorPanelShell({
   onToggleMarkdownTableOfContents,
   onToggleMarkdownFrontmatter,
   onExportMarkdownToPdf,
-  createMarkdownArtifactRequest,
   onContentChange,
   onContentChangeForFile,
   onDirtyStateHint,
@@ -110,7 +105,6 @@ export function EditorPanelShell({
           hasEditorToggle={model.hasEditorToggle}
           availableEditorToggleModes={model.availableEditorToggleModes}
           effectiveToggleValue={model.effectiveToggleValue}
-          canOpenPreviewToSide={model.canOpenPreviewToSide}
           canShowMarkdownPreview={model.canShowMarkdownPreview}
           canShowMarkdownTableOfContents={model.canShowMarkdownTableOfContents}
           isMarkdownTableOfContentsDisabled={model.isMarkdownTableOfContentsDisabled}
@@ -123,7 +117,6 @@ export function EditorPanelShell({
           openFileState={model.openFileState}
           onCopyPath={onCopyPath}
           onOpenDiffTargetFile={onOpenDiffTargetFile}
-          onOpenPreviewToSide={onOpenPreviewToSide}
           onOpenMarkdownPreview={onOpenMarkdownPreview}
           onOpenContainingFolder={onOpenContainingFolder}
           onToggleSideBySide={onToggleSideBySide}
@@ -131,7 +124,6 @@ export function EditorPanelShell({
           onToggleMarkdownTableOfContents={onToggleMarkdownTableOfContents}
           onToggleMarkdownFrontmatter={onToggleMarkdownFrontmatter}
           onExportMarkdownToPdf={onExportMarkdownToPdf}
-          createMarkdownArtifactRequest={createMarkdownArtifactRequest}
         />
       )}
       <Suspense fallback={<EditorLoadingFallback />}>

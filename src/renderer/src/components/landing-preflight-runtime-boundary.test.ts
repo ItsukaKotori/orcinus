@@ -11,7 +11,6 @@ const invalidate = vi.fn()
 
 const status = (overrides: Partial<PreflightStatus> = {}): PreflightStatus => ({
   git: { installed: true },
-  gh: { installed: false, authenticated: false },
   ...overrides
 })
 
@@ -116,7 +115,10 @@ describe('landing preflight runtime boundary', () => {
   })
 
   it('stops the 30s preflight poll while hidden and lets the reveal refresh instead', () => {
-    useAppStore.setState({ repos: [githubRepo], preflightStatus: status() })
+    useAppStore.setState({
+      repos: [githubRepo],
+      preflightStatus: status({ git: { installed: false } })
+    })
     const view = renderHook(() => useLandingPreflightRuntime())
     refresh.mockClear()
 
@@ -139,7 +141,10 @@ describe('landing preflight runtime boundary', () => {
   })
 
   it('keeps one active interval and removes listeners and polling on cleanup', () => {
-    useAppStore.setState({ repos: [githubRepo], preflightStatus: status() })
+    useAppStore.setState({
+      repos: [githubRepo],
+      preflightStatus: status({ git: { installed: false } })
+    })
     const addEventListener = vi.spyOn(document, 'addEventListener')
     const removeEventListener = vi.spyOn(document, 'removeEventListener')
     const addWindowListener = vi.spyOn(window, 'addEventListener')

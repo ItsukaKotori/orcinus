@@ -8,11 +8,7 @@ import { createTabsSlice } from './slices/tabs'
 import { createUISlice } from './slices/ui'
 import { createSettingsSlice } from './slices/settings'
 import { createKeybindingsSlice } from './slices/keybindings'
-import { createGitHubSlice } from './slices/github'
-import { createHostedReviewSlice } from './slices/hosted-review'
-import { createLinearSlice } from './slices/linear'
 import { createPreflightSlice } from './slices/preflight'
-import { createJiraSlice } from './slices/jira'
 import { createEditorSlice } from './slices/editor'
 import { createStatsSlice } from './slices/stats'
 import { createMemorySlice } from './slices/memory'
@@ -22,7 +18,6 @@ import {
   createCodexUsageSlice,
   createOpenCodeUsageSlice
 } from './slices/usage-provider-slices'
-import { createBrowserSlice } from './slices/browser'
 import { createRateLimitSlice } from './slices/rate-limits'
 import { createSshSlice } from './slices/ssh'
 import { createRuntimeEnvironmentSshSlice } from './slices/runtime-environment-ssh'
@@ -35,21 +30,14 @@ import { createWorktreeNavHistorySlice } from './slices/worktree-nav-history'
 import { createWorkspaceCleanupSlice } from './slices/workspace-cleanup'
 import { createWorkspaceCleanupBrowseSlice } from './slices/workspace-cleanup-browse'
 import { createRuntimeStatusSlice } from './slices/runtime-status'
-import { createPullRequestGenerationSlice } from './slices/pull-request-generation'
 import { createCommitMessageGenerationSlice } from './slices/commit-message-generation'
 import { createPinnedTabCloseConfirmSlice } from './slices/pinned-tab-close-confirm'
 import { createRecentlyClosedTabsSlice } from './slices/recently-closed-tabs'
 import { createOrcaProfilesSlice } from './slices/orca-profiles'
-import { createNewIssueDraftSlice } from './slices/new-issue-draft'
-import { createTaskCreationDraftsSlice } from './slices/task-creation-drafts'
 import { createTerminalQuickCommandHostsSlice } from './slices/terminal-quick-command-hosts'
 import { createPluginCenterSlice } from './slices/plugin-center/plugin-center-slice'
 import { e2eConfig } from '@/lib/e2e-config'
 import type { createWebRuntimeSessionTerminal } from '@/runtime/web-runtime-session'
-import {
-  registerHttpLinkStoreAccessor,
-  registerWorkspaceHttpLinkBrowserOpener
-} from '@/lib/http-link-routing'
 import { installStoreListenerCensus } from './store-listener-census'
 import { withStoreIdentityChurnProbe } from './store-identity-churn-probe'
 
@@ -73,11 +61,7 @@ export const useAppStore = create<AppState>()(
       ...createUISlice(...a),
       ...createSettingsSlice(...a),
       ...createKeybindingsSlice(...a),
-      ...createGitHubSlice(...a),
-      ...createHostedReviewSlice(...a),
-      ...createLinearSlice(...a),
       ...createPreflightSlice(...a),
-      ...createJiraSlice(...a),
       ...createEditorSlice(...a),
       ...createStatsSlice(...a),
       ...createMemorySlice(...a),
@@ -85,7 +69,6 @@ export const useAppStore = create<AppState>()(
       ...createClaudeUsageSlice(...a),
       ...createCodexUsageSlice(...a),
       ...createOpenCodeUsageSlice(...a),
-      ...createBrowserSlice(...a),
       ...createRateLimitSlice(...a),
       ...createSshSlice(...a),
       ...createRuntimeEnvironmentSshSlice(...a),
@@ -98,24 +81,15 @@ export const useAppStore = create<AppState>()(
       ...createWorkspaceCleanupSlice(...a),
       ...createWorkspaceCleanupBrowseSlice(...a),
       ...createRuntimeStatusSlice(...a),
-      ...createPullRequestGenerationSlice(...a),
       ...createCommitMessageGenerationSlice(...a),
       ...createPinnedTabCloseConfirmSlice(...a),
       ...createRecentlyClosedTabsSlice(...a),
       ...createOrcaProfilesSlice(...a),
-      ...createNewIssueDraftSlice(...a),
-      ...createTaskCreationDraftsSlice(...a),
       ...createTerminalQuickCommandHostsSlice(...a),
       ...createPluginCenterSlice(...a)
     }
   })
 )
-
-registerHttpLinkStoreAccessor(() => useAppStore.getState())
-registerWorkspaceHttpLinkBrowserOpener(async (request) => {
-  const { openWorkspaceBrowserTab } = await import('@/lib/workspace-browser-tab-open')
-  await openWorkspaceBrowserTab(request)
-})
 
 export type { AppState } from './types'
 
