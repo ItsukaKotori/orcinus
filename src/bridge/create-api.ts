@@ -3,7 +3,6 @@ import { createAgentAwakeApi } from './mock/agent-awake-api'
 import { createHooksApi } from './mock/agent-hook-api'
 import { createAgentStatusApi } from './mock/agent-status-api'
 import { createAppApi } from './mock/app-api'
-import { createAutomationsApi } from './mock/automations-api'
 import { createCacheApi } from './mock/cache-api'
 import { createCliApi } from './mock/cli-api'
 import { createEphemeralVmApi } from './mock/ephemeral-vm-api'
@@ -37,7 +36,6 @@ import { createWorktreesApi } from './mock/worktrees-api'
 import { createAgentStatusRealApi } from './real/agent-status'
 import { createAiVaultRealApi } from './real/ai-vault'
 import { createAppRealApi } from './real/app'
-import { createAutomationsRealApi } from './real/automations'
 import { createCliRealApi } from './real/cli'
 import { createComputerUsePermissionsRealApi } from './real/computer-use-permissions'
 import { createFolderWorkspacesRealApi } from './real/folder-workspaces'
@@ -70,7 +68,6 @@ type RealDomains = Pick<
   | 'agentStatus'
   | 'aiVault'
   | 'app'
-  | 'automations'
   | 'cli'
   | 'computerUsePermissions'
   | 'folderWorkspaces'
@@ -101,7 +98,6 @@ function createMockDomains(): Partial<PreloadApi> {
     agentAwake: createAgentAwakeApi(),
     agentStatus: createAgentStatusApi(),
     app: createAppApi(),
-    automations: createAutomationsApi(),
     cache: createCacheApi(),
     cli: createCliApi(),
     ephemeralVm: createEphemeralVmApi(),
@@ -142,7 +138,6 @@ function createRealDomains(): RealDomains {
     agentStatus: createAgentStatusRealApi(),
     aiVault: createAiVaultRealApi(),
     app: createAppRealApi(),
-    automations: createAutomationsRealApi(),
     cli: createCliRealApi(),
     computerUsePermissions: createComputerUsePermissionsRealApi(),
     folderWorkspaces: createFolderWorkspacesRealApi(),

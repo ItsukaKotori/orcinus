@@ -43,8 +43,6 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
     metaCliProvenance,
     hoverComment,
     handleEditComment,
-    handleOpenAutomation,
-    handleOpenAutomationRun,
     detailsHoverControl,
     showDeleteQuickAction
   } = card
@@ -111,7 +109,6 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
     newCardStyle &&
     (hasWorktreeCardDetails({
       comment: hoverComment,
-      automationProvenance: metaAutomationProvenance,
       cliProvenance: metaCliProvenance
     }) ||
       hasHoverIdentity)
@@ -124,7 +121,6 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
       ? (title: React.ReactElement): React.ReactElement => (
           <WorktreeCardDetailsHover
             comment={metaComment}
-            automationProvenance={metaAutomationProvenance}
             cliProvenance={metaCliProvenance}
             branchName={showBranchIdentityHover ? branch : undefined}
             workspaceTitle={worktree.displayName}
@@ -133,8 +129,6 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
             // Why: compact mode also renders the plug/badge hover root; sharing one open-state made hovering the
             // plug force-open the wider title card and race it closed (#9304), so let this title hover own its state.
             onEditComment={affiliateListMode ? undefined : handleEditComment}
-            onOpenAutomation={affiliateListMode ? undefined : handleOpenAutomation}
-            onOpenAutomationRun={affiliateListMode ? undefined : handleOpenAutomationRun}
           >
             {title}
           </WorktreeCardDetailsHover>
@@ -168,12 +162,9 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
     detailsAndPortsContent && !newCardStyle ? (
       <WorktreeCardDetailsHover
         comment={metaComment}
-        automationProvenance={metaAutomationProvenance}
         cliProvenance={metaCliProvenance}
         hoverControl={detailsHoverControl}
         onEditComment={affiliateListMode ? undefined : handleEditComment}
-        onOpenAutomation={affiliateListMode ? undefined : handleOpenAutomation}
-        onOpenAutomationRun={affiliateListMode ? undefined : handleOpenAutomationRun}
       >
         {detailsAndPortsContent}
       </WorktreeCardDetailsHover>

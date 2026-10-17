@@ -132,8 +132,7 @@
       "mr": "MR",
       "port": "Port",
       "pr": "PR",
-      "task": "Task",
-      "automation": "Run"
+      "task": "Task"
     },
     "linearIssue": {
       "createLabel": "Create worktree from Linear issue {{value0}}: {{value1}}",
@@ -500,9 +499,7 @@
         },
         "worktree": {
           "background": {
-            "terminals": {
-              "setupTitle": "Setup"
-            }
+            "terminals": {}
           }
         },
         "work": {
@@ -744,13 +741,7 @@
       }
     },
     "hooks": {
-      "useAutomationDispatchEvents": {
-        "59718b120b": "The target workspace is no longer available.",
-        "16a21d6413": "SSH reconnect requires interactive credentials.",
-        "386db94f3e": "The target project is no longer available.",
-        "3ad7d77f57": "The target workspace is on a different host than this automation run target.",
-        "workspaceHostUnresolved": "The target workspace spans more than one host, so this run has no single host to use."
-      },
+      "useAutomationDispatchEvents": {},
       "useComposerState": {
         "7eb3f44ff7": "Selected agent is disabled. Choose an enabled agent before creating.",
         "b2ead86962": "Failed to resolve PR base.",
@@ -857,8 +848,6 @@
         "tasksDescription": "Connect providers, install the Linear skill, and choose what appears in Tasks.",
         "artifactsTitle": "Artifacts",
         "artifactsDescription": "Share HTML and Markdown files with your team and manage their public links.",
-        "automationsTitle": "Automations",
-        "automationsDescription": "Schedule agent work and choose whether Automations appears in the sidebar.",
         "shareSkillsTitle": "Share Skills",
         "shareSkillsDescription": "Share your skills with an unlisted link. Anyone who has it can install them.",
         "floatingWorkspaceWebDescription": "Global terminal and markdown tabs."
@@ -3859,7 +3848,6 @@
           "c86d83b5c3": "New",
           "1b5c41caee": "Orcinus Mobile",
           "9c95e1ce91": "Agents",
-          "f323383e9a": "Automations",
           "e7ad3c540d": "Open Jira tasks",
           "c39ab10000": "Open Linear tasks",
           "196c1b5362": "Open GitLab tasks",
@@ -4049,14 +4037,7 @@
           "b105fd3057": "Linked Linear {{value0}}",
           "3f2649eeb8": "Linked issue #{{value0}}",
           "fe075cb851": "Workspace notes",
-          "automationHeader": "Automation",
-          "openAutomation": "Open automation",
-          "openAutomationRun": "Open run",
           "automationCreated": "Created by automation",
-          "checkingAutomationAvailability": "Checking automation availability...",
-          "automationMissing": "Automation no longer available.",
-          "automationRunMissing": "Run history no longer available.",
-          "automationAvailabilityUnavailable": "Automation availability could not be checked.",
           "cliHeader": "Orcinus CLI",
           "cliCreatedFromAgent": "Created by an agent via `orca worktree create`",
           "cliCreatedFromShell": "Created via `orca worktree create`",
@@ -5014,7 +4995,6 @@
           "ca1590d42f": "App Icon",
           "5db6ba961f": "Show the Orcinus Mobile button at the top of the left sidebar.",
           "fa882a3e6b": "Show the Automations button at the top of the left sidebar.",
-          "511f270ebb": "Show Automations Button",
           "661942ab7f": "Show the Tasks button at the top of the left sidebar.",
           "cf81907069": "Show Tasks Button",
           "dc29f3cc0d": "Sidebar",
@@ -5468,9 +5448,6 @@
         "GeneralWorkspaceSettingsSection": {
           "3d538a98f7": "Choose apps available from a workspace's Open in menu.",
           "008f92085f": "Open In Apps",
-          "824b98a0d9": "Show a confirmation before deleting automations and their run history.",
-          "ea98373cd8": "Ask Before Deleting Automations",
-          "d2dd2ca2e3": "Show a confirmation dialog before deleting an automation and its run history.",
           "28bc3d085e": "Show a confirmation before deleting a workspace from the context menu. Failed deletes still surface a Force Delete fallback.",
           "9f380934cf": "Ask Before Deleting Workspaces",
           "5734db82af": "Show a confirmation dialog before deleting a workspace.",
@@ -7088,19 +7065,12 @@
             "e80c2af428": "Choose the app icon shown in the Dock and window switcher.",
             "2b313598c6": "App Icon",
             "839fb1e3ed": "toolbox",
-            "ac79fe4a04": "show",
             "648eeada79": "hide",
-            "6cf5f54ce1": "button",
             "5bff6a2ef0": "sidebar",
             "5e5b8878bf": "phone",
             "74618577c7": "mobile",
             "682293cadf": "Show the Orcinus Mobile button at the top of the left sidebar.",
             "1de96ec8a6": "Show Orcinus Mobile Button",
-            "4c920ab2d1": "schedule",
-            "58f4e22fa2": "automation",
-            "b186f3cefb": "automations",
-            "ae13a0d340": "Show the Automations button at the top of the left sidebar.",
-            "caa27e1a8e": "Show Automations Button",
             "6b846424cc": "linear",
             "2ee4810f38": "github",
             "0d5a74b606": "tasks",
@@ -7574,10 +7544,7 @@
             "7e9b556873": "skip",
             "ca86dd6e27": "dialog",
             "9f8558233a": "confirm",
-            "7edf4f69e2": "automation",
             "84c67d0108": "delete",
-            "a0c44061ee": "Show a confirmation dialog before deleting an automation and its run history.",
-            "d0a65b27fd": "Ask Before Deleting Automations",
             "df10666259": "worktree",
             "ae98c9cf36": "Show a confirmation dialog before deleting a workspace.",
             "913242091d": "Ask Before Deleting Workspaces",
@@ -9336,26 +9303,7 @@
           "keywordRelay": "relay",
           "keywordCloud": "cloud"
         },
-        "automations": {
-          "showButton": "Show Automations Button",
-          "showButtonDescription": "Show the Automations shortcut in the sidebar.",
-          "howItWorksTitle": "How Automations work",
-          "howItWorksDescription": "Schedule agent work once, then let Orcinus create each run and keep its results together.",
-          "defineStepTitle": "Describe the work",
-          "defineStepDescription": "Choose a project, agent, prompt, and schedule.",
-          "runStepTitle": "Orcinus starts each run",
-          "runStepDescription": "The selected agent gets a fresh workspace when the schedule is due.",
-          "reviewStepTitle": "Review the results",
-          "reviewStepDescription": "Inspect recent runs and continue the work whenever you need to.",
-          "openAutomations": "Open Automations",
-          "openAutomationsDescription": "Create schedules and inspect recent runs.",
-          "title": "Automations",
-          "description": "Schedule agent work and choose whether Automations appears in the sidebar.",
-          "keywordAutomations": "automations",
-          "keywordSchedule": "schedule",
-          "keywordAgent": "agent",
-          "keywordRuns": "runs"
-        },
+        "automations": {},
         "AgentAwakeSetting": {
           "on": "On",
           "auto": "Agent",
@@ -12095,541 +12043,128 @@
       },
       "automations": {
         "AutomationCustomCronPanel": {
-          "3e3b2c369f": "Cron expression",
-          "e81a02d61b": "Enter a valid five-field cron before saving.",
-          "968e66d686": "Enter a five-field cron.",
-          "cadb7b0bc9": "invalid",
-          "f6ca30da23": "Valid custom cron",
-          "a226dbdd40": "Minute",
-          "ec9c1e35df": "Hour",
-          "2d82246d23": "Day",
-          "0e1de0358b": "Month",
-          "77e96bded6": "Weekday"
+          "cadb7b0bc9": "invalid"
         },
-        "AutomationPromptDisclosure": {
-          "showLess": "Show less",
-          "showMore": "Show more"
-        },
+        "AutomationPromptDisclosure": {},
         "AutomationDetail": {
-          "host": "Host",
           "007c8ad874": "Prompt",
-          "a1d52c2189": "Usage coverage",
-          "449fc83bf7": "Tokens",
-          "401f40ae79": "Est. spend",
-          "a7c312430d": "Last run",
-          "2df8970cd5": "Agent",
-          "e353ab9516": "Precheck",
-          "620b22145e": "Grace",
-          "15ea446b93": "Session",
-          "5405a09b1f": "Run location",
-          "2f8baf5360": "Create from",
-          "578ff46987": "Next run",
-          "18763ded26": "Schedule",
-          "dbef8dc110": "This SSH automation runs only while Orcinus can reach the SSH host. If reconnect needs interactive credentials or the host is unavailable, the run is recorded as skipped.",
-          "1f6026358e": "Delete automation",
-          "d79452fb30": "Resume automation",
-          "91a4155e95": "Pause automation",
-          "4b1ea02d2e": "Edit automation",
-          "2fb1605beb": "Run Now",
-          "221916d93c": "Create an automation to start scheduling agent work.",
           "de0fedac06": "new_per_run",
-          "51a470b966": "ssh",
-          "b09b2384fd": "Paused",
-          "eaa02014f8": "Enabled",
-          "29baf8f4c2": "Source"
+          "51a470b966": "ssh"
         },
         "AutomationEditorDialog": {
-          "fb1896a5e7": "Cancel",
-          "57b722cbba": "Agent",
-          "6ff66f9012": "New run",
-          "a2e688226d": "Worktree",
-          "6f9610e667": "Worktree runs in the selected workspace. New run creates a fresh workspace from the selected branch each time.",
-          "2c3fd9bfa1": "Workspace mode help",
-          "b28b140eaf": "Workspace",
-          "0d17f4ca8f": "Select project",
-          "02d351877e": "Project",
-          "a4ac8fcc62": "/goal",
-          "827b25a81e": "Supports skills, file paths, and built-in commands like",
-          "6d778190b7": "Run the weekly dependency audit and summarize risky changes.",
-          "058c23cb3f": "Prompt",
-          "c4b19094c2": "Schedule",
-          "e46c1aa9ad": "Create",
-          "a9d9dccf77": "Save",
-          "777548c2d6": "Save Changes",
-          "e8c2a14f70": "Once saved, runs automatically until paused.",
           "ff5db28639": "existing"
         },
         "AutomationEditorDialogHeader": {
-          "31f9253920": "Use template",
-          "7e35393632": "Hermes",
-          "6f309eef8d": "Orcinus",
-          "58f56b73d9": "Automation name",
-          "1d9826933e": "Weekday repo audit",
-          "4133d33862": "Create automation",
-          "0a75e5e2fa": "Create Hermes automation",
-          "03142e7721": "Edit Hermes automation",
-          "17086b48ee": "Edit automation",
           "4c8e1a72b9": "A recurring agent task"
         },
-        "AutomationMissedRunGraceField": {
-          "0f4459e91d": "48 hours",
-          "adbab51feb": "24 hours",
-          "ba50e2a230": "12 hours",
-          "2dc9ee84d0": "3 hours",
-          "521f77cd58": "1 hour",
-          "e5ad263ae5": "30 minutes",
-          "529dc6c0b7": "No grace",
-          "3d70c185c8": "If Orcinus or the execution host was unavailable at the scheduled time, Orcinus runs one missed occurrence when it becomes available within this window. Older missed runs are skipped.",
-          "3df53d554a": "Missed-run grace help",
-          "fc089e5fde": "Grace"
-        },
-        "AutomationEditorPromptSection": {
-          "a7c3e91b04": "Edit name"
-        },
-        "AutomationPrecheckFields": {
-          "d2a2ac89ac": "10 min",
-          "bf49585b3c": "5 min",
-          "d84d3765fd": "2 min",
-          "c820119736": "1 min",
-          "51e28cdad9": "30 sec",
-          "bb2dfb3629": "Timeout",
-          "99a577306c": "gh pr list --json number -q '.[0].number'",
-          "c2a762a180": "Precheck"
-        },
+        "AutomationMissedRunGraceField": {},
+        "AutomationEditorPromptSection": {},
+        "AutomationPrecheckFields": {},
         "AutomationRunHistory": {
-          "402651bfb6": "No runs yet.",
-          "9974a2b429": "Status",
-          "13988187b3": "Tokens",
-          "86a248187e": "Spend",
-          "149c0b49c7": "Workspace",
-          "8faaa00726": "Run",
-          "53fc5f07ab": "Run history",
-          "a00e38d1a3": "n/a",
-          "fdb3caa8fb": "known",
-          "historyUnavailable": "Run history is unavailable from this host. This does not mean the automation failed or has no runs."
+          "fdb3caa8fb": "known"
         },
-        "AutomationRunPageFrame": {
-          "40a511bed4": "Run context",
-          "33741dd973": "Back to runs"
-        },
-        "AutomationSchedulePicker": {
-          "9e677335b0": "Minute",
-          "d90981f766": "Time",
-          "6b914c5fbb": "Day",
-          "233b8c94b6": "Cadence",
-          "55b2ef82a4": "Hourly",
-          "f0202f3a89": "Daily",
-          "57e83307d0": "Weekdays",
-          "837d902bba": "Weekly",
-          "ddba78647e": "Custom cron"
-        },
-        "AutomationTimeField": {
-          "39ec1383f6": "AM or PM",
-          "32a5e4e35e": "Minute",
-          "aa593eb5e2": "Hour"
-        },
-        "AutomationSessionField": {
-          "f3c76dce51": "Reuse",
-          "c90888ee94": "Fresh",
-          "b675112193": "Reuse sends future runs to the previous live automation session. If that session is gone, Orcinus starts a fresh one.",
-          "4bdce31f37": "Session reuse help",
-          "5ad314118e": "Session"
-        },
+        "AutomationRunPageFrame": {},
+        "AutomationSchedulePicker": {},
+        "AutomationTimeField": {},
+        "AutomationSessionField": {},
         "AutomationsPage": {
           "2695883141": "delete",
-          "c3a28c9793": "Select an automation to view runs.",
-          "295698292f": "Rerun",
-          "0e110a3469": "Runs",
-          "bb1b2cd31e": "Overview",
           "97ff587ee3": "Connect this source to check for Hermes automations in the remote profile.",
           "aaa007846f": "source unavailable",
-          "25060635c6": "Add new",
-          "d207ab4c25": "Start from a template",
-          "15e0bfb13b": "Delete",
-          "f4612e3f78": "Edit",
-          "2faecab10b": "Run Now",
           "82eb6cb933": "source",
-          "13118faadf": "Unknown project",
           "587a4b205c": "Next",
           "761a35834d": "Automation",
-          "73f630b49d": "Cancel",
-          "1b586f0e2b": "on",
-          "02a33e3204": "from",
-          "9adfab2596": "Delete External Automation",
-          "1e2e41392f": "Don't ask again",
-          "b264564427": "and its run history. Workspaces created by previous runs are not deleted.",
-          "080dcb5fbb": "Delete Automation",
-          "19a6e30eae": "Refresh automations",
           "8d1afa8269": "Add automation",
-          "77c2778945": "Automations",
           "0329f9bef1": "Close · Esc",
           "67c7ff795b": "Close automations",
-          "e1bf9b1512": "Workspace is not available.",
           "3e42a5cc1b": "SSH connection failed.",
           "9f2855677c": "SSH connected.",
-          "126d726546": "External automation action failed.",
-          "37288942f0": "External automation resumed.",
-          "77c518a34b": "External automation paused.",
-          "4d7878402c": "External automation queued.",
-          "4c22bc9913": "External automation deleted.",
-          "3a4c476aa0": "Failed to rerun automation.",
-          "a1bdb57008": "Automation run queued.",
-          "8a3226f172": "Open Settings",
-          "d2a01b0b6f": "You can change this in Settings.",
-          "690b94da54": "We'll skip this confirmation next time.",
-          "b11170a008": "Failed to save automation.",
-          "2a20596d6b": "Automation saved.",
-          "244727e655": "Automation updated.",
-          "moved": "Automation moved to {host}.",
-          "moveOriginalKept": "Created on {host}, but the original could not be deleted. Remove it on the old host.",
-          "moveOriginalUnverified": "Created on {host}, but the original deletion could not be verified. Check the old host before retrying.",
-          "77b81bc4ac": "Hermes automation created.",
-          "08efc3ae12": "Hermes automation updated.",
-          "e431bb85d4": "Choose a workspace on the same host as this Hermes automation.",
-          "32534e7c9c": "Choose an available workspace before saving.",
-          "2360ffc956": "Choose an enabled agent before saving.",
-          "6e91dab317": "Enter a valid advanced schedule before saving.",
-          "64bdb2304f": "Pick a supported schedule before saving.",
-          "2430fecf53": "Choose a run location and enter a prompt before saving.",
           "7934ee0d81": "Connect SSH",
           "f93ed7a6f8": "Connecting...",
           "8705757e27": "job",
-          "376631ef2b": "Resume",
-          "b457436d6a": "Pause",
           "0ae52dd760": "hermes",
           "e059042585": "Read-only",
           "aecdc3681f": "Manageable",
-          "8500baacb4": "external source",
-          "36f71740a7": "Selected workspace",
-          "cd8397cc32": "New workspace each run",
           "dd0bc7a1ba": "new_per_run",
           "7b2e285552": "SSH connections are unavailable in this client.",
           "d441032f7e": "pause",
           "5918020edc": "run",
           "a21f6c33ad": "Automation source refreshed.",
           "53f06f0ad5": "Retry source",
-          "pendingAutomationMissing": "Automation no longer available.",
-          "pendingAutomationRunMissing": "Run history no longer available.",
           "noSearchMatches": "No automations match your search.",
-          "paused": "Paused",
           "runCount": "{{count}} runs",
           "runCount_one": "{{count}} run",
           "runCount_other": "{{count}} runs",
           "projectDefaultBaseRef": "project default",
           "createFromBaseRef": "Create from {{baseRef}}",
-          "missingWorkspace": "Missing workspace",
-          "runUsageSummary": "{{cost}} est. · {{tokens}} tokens",
-          "usageUnavailable": "Usage unavailable",
-          "noRunUsageYet": "No run usage yet",
-          "noWorkspace": "No workspace",
-          "latestSavedOutput": "Latest saved output",
-          "backToList": "All automations",
-          "tableName": "Name",
-          "tableProject": "Project",
-          "tableHost": "Host",
-          "tableStatus": "Status",
-          "tableActions": "Actions",
-          "newAutomation": "New Automation",
-          "rowActions": "Automation actions",
-          "tableLastRun": "Last run",
           "noListMatches": "No automations match.",
-          "destinationProjectUnavailable": "Choose a project owned by the selected automation destination.",
-          "ownerChanged": "This automation changed hosts. Refresh and try again."
+          "destinationProjectUnavailable": "Choose a project owned by the selected automation destination."
         },
-        "AutomationsPageSkeleton": {
-          "55527b7bcf": "Loading automations"
-        },
-        "CreateFromPicker": {
-          "f061f49e3f": "Search repo branches...",
-          "dd3841b442": "Branch from",
-          "ef6d762538": "Project default",
-          "e53d306056": "{{value0}} (default)",
-          "79512f22a7": "No branches found.",
-          "9ce96621f4": "Searching branches..."
-        },
+        "AutomationsPageSkeleton": {},
+        "CreateFromPicker": {},
         "ExternalAutomationManagers": {
-          "e02f970595": "No external automation managers found.",
-          "6da3bfba4b": "automations found.",
-          "3d58d5b67d": "No",
-          "a42bf2b27e": "Delete external automation",
-          "1c3bfd38fe": "Resume external automation",
-          "0def1693bb": "Pause external automation",
-          "1df491fd00": "Edit external automation",
-          "cc77ba88ff": "Run external automation",
-          "5820648765": "Last",
-          "844f1acb72": "found",
-          "20fd7a3a15": "next",
-          "c6695e6fbd": "External automations",
-          "5524365227": "OpenClaw",
-          "766abf833c": "Hermes",
           "bf5f67b590": "hermes",
-          "e66091daf4": "runs",
-          "8e9165af08": "run",
-          "2b0adbce21": "Paused",
-          "b3feba84c7": "Active",
-          "92405f1431": "Unavailable",
-          "dbdcec22bd": "Read-only",
-          "0a2d4359a8": "Manageable",
-          "330b3c32e8": "available",
-          "e2532150ed": "automations",
-          "701515f010": "automation"
+          "330b3c32e8": "available"
         },
-        "ExternalAutomationRunTable": {
-          "0ba9c0a95c": "Next run page",
-          "52d468a0b8": "Previous run page",
-          "7475c0ce96": "of",
-          "be551397ca": "Status",
-          "a813df9808": "Preview",
-          "d4b34feb66": "Run time",
-          "2d4388a908": "Runs",
-          "9c080765ff": "No Hermes runs found yet.",
-          "8ea934cacf": "Loading runs...",
-          "d5527d8fe7": "runs",
-          "872d032d05": "run"
-        },
+        "ExternalAutomationRunTable": {},
         "HermesCronOutputView": {
-          "e27c716b43": "Prompt",
-          "4557213074": "Response",
-          "05affc68e3": "Error",
           "88d48157fc": "default"
         },
-        "WorkspaceCombobox": {
-          "ee5b280eba": "No workspaces found.",
-          "8e9c8cc6b5": "Search workspaces...",
-          "66a0cd9628": "Select workspace"
-        },
+        "WorkspaceCombobox": {},
         "automation": {
           "templates": {
-            "37571fcb16": "Look for stuck work, stale generated files, and failed local validation.",
-            "8a0228bea3": "Hourly queue check",
-            "3b7281c75f": "Scan recent work and call out correctness, UX, and test coverage risks.",
-            "6023075b27": "Daily change review",
-            "513401db93": "Prepare a weekly release risk summary from the current project state.",
-            "39ed39280a": "Release readiness",
-            "a7fbd32ddb": "Check dependencies, failing tests, and risky open changes each weekday.",
-            "b84757677d": "Weekday repo audit",
-            "repoHealth": {
-              "category": "Repo health",
-              "name": "Weekday repo audit",
-              "prompt": "Review the repository health. Check dependency updates, failing tests, lint/typecheck status, and risky open changes. Summarize findings and suggest the next action."
-            },
-            "releasePrep": {
-              "category": "Release prep",
-              "name": "Release readiness review",
-              "prompt": "Prepare a release readiness summary. Look for blockers, unmerged risky changes, missing validation, and documentation gaps. End with a concise release/no-release recommendation."
-            },
-            "recurringReview": {
-              "category": "Recurring review",
-              "name": "Daily change review",
-              "prompt": "Review recent changes in this workspace. Focus on correctness risks, UX regressions, missing tests, and follow-up tasks. Keep the report short and actionable."
-            },
-            "maintenance": {
-              "category": "Maintenance",
-              "name": "Hourly maintenance check",
-              "prompt": "Check for stuck work, stale generated files, failing validation, and anything that needs human attention. Report only actionable issues."
-            }
+            "repoHealth": {},
+            "releasePrep": {},
+            "recurringReview": {},
+            "maintenance": {}
           },
           "list": {
             "last": {
-              "run": {
-                "done": "Done",
-                "failed": "Failed"
-              }
+              "run": {}
             }
           },
           "schedule": {
-            "label": {
-              "086a5a9fe2": "Invalid schedule",
-              "ba20c92073": "Custom schedule",
-              "a95afb7483": "Hourly at :{{minute}}",
-              "280ccd2701": "Daily at {{time}}",
-              "3f1422adc1": "Weekdays at {{time}}",
-              "cc71e252ba": "{{day}}s at {{time}}"
-            }
+            "label": {}
           }
         },
         "external": {
           "automation": {
             "schedule": {
-              "display": {
-                "a8e92b815a": "Schedule unavailable"
-              }
+              "display": {}
             }
           }
         },
-        "AutomationProjectCombobox": {
-          "search": "Search projects/folders...",
-          "empty": "No projects/folders match your search.",
-          "chooseHost": "Choose automation host",
-          "adding": "Adding project…",
-          "addProject": "Add project"
-        },
-        "AutomationSetupDecisionField": {
-          "5a7863909c": "Run setup for each new workspace",
-          "18f000ad4e": "Advanced",
-          "874b72195b": "When this automation creates a workspace, prepare it the same way creating a worktree by hand does — run the project's setup and open its terminal tabs."
-        },
-        "AutomationListSearchField": {
-          "tooLong": "Search text is too long — list is unfiltered",
-          "label": "Search automations",
-          "placeholder": "Search...",
-          "tooLongShort": "Too long",
-          "clear": "Clear search"
-        },
-        "AutomationListLocalRows": {
-          "c92c9463c6": "Automation actions"
-        },
-        "AutomationListFilterMenu": {
-          "926e785e4d": "Search agents...",
-          "491043ee45": "No agents match your search.",
-          "removeFilter": "Remove {{value0}} filter",
-          "failed": "Failed",
-          "succeeded": "Succeeded",
-          "neverRan": "Never ran",
-          "filters": "Filters",
-          "all": "All",
-          "clear": "Clear filters",
-          "agent": "Agent",
-          "lastRun": "Last run"
-        },
-        "AutomationListSortHeader": {
-          "sortedAscending": "{{value0}}, sorted ascending",
-          "sortedDescending": "{{value0}}, sorted descending"
-        },
-        "hostSummary": {
-          "partialFailure": "{{failed}} of {{total}} hosts could not be loaded"
-        },
-        "emptyState": {
-          "unknownHost": "this host",
-          "hostLoading": "Loading host…",
-          "hostLoadingDetail": "Waiting for {{hostLabel}} to report its automations.",
-          "hostError": "Automations could not be loaded from {{hostLabel}}",
-          "hostUnavailableDetail": "The host could not be reached, so its automations are unknown.",
-          "hostIncompatibleDetail": "This server is too old to scope automations by host.",
-          "hostStaleDetail": "The most recent refresh did not complete.",
-          "hostNotConnected": "{{hostLabel}} is not connected",
-          "hostNotConnectedDetail": "Connect to this host to see the automations stored for it.",
-          "hostEmpty": "No automations on {{hostLabel}}",
-          "searchNoMatch": "No automations match your search",
-          "filtersNoMatch": "No automations match your filters",
-          "allHostsEmpty": "No automations across loaded hosts"
-        },
-        "hostNotice": {
-          "loading": "Loading host…",
-          "unavailable": "{{hostLabel}} could not be reached. Showing the automations last loaded from it.",
-          "ghost": "{{hostLabel}} was removed. Automations still assigned to it remain listed.",
-          "removed": "The selected host is no longer available. Showing all hosts."
-        },
-        "hostPicker": {
-          "allHosts": "All hosts",
-          "loadingHost": "Loading host…"
-        },
-        "ownerConflict": {
-          "dismiss": "Dismiss"
-        },
-        "capturedOwner": {
-          "orphan": "This automation has no host to run on. Delete it, or re-add the host it belongs to.",
-          "unfenced": "Orcinus on this host needs an update before you can view run history or manage this automation. Scheduled runs may still continue on the host."
-        },
+        "AutomationProjectCombobox": {},
+        "AutomationSetupDecisionField": {},
+        "AutomationListSearchField": {},
+        "AutomationListLocalRows": {},
+        "AutomationListFilterMenu": {},
+        "AutomationListSortHeader": {},
+        "hostSummary": {},
+        "emptyState": {},
+        "hostNotice": {},
+        "hostPicker": {},
+        "ownerConflict": {},
+        "capturedOwner": {},
         "hostStatus": {
-          "authority": {
-            "loading": "Loading",
-            "loadingDescription": "Loading automations from this host.",
-            "fresh": "Up to date",
-            "freshDescription": "Automations loaded from this host.",
-            "refreshing": "Refreshing",
-            "refreshingDescription": "Checking this host for changes.",
-            "staleError": "Not refreshed",
-            "staleErrorDescription": "Showing the automations last loaded from this host. The most recent refresh did not complete.",
-            "unavailable": "Unreachable",
-            "unavailableDescription": "This host could not be reached, so its automations could not be loaded.",
-            "incompatible": "Update server",
-            "incompatibleDescription": "This server does not support host-scoped automation queries. Update it to load automations for this host."
-          },
-          "execution": {
-            "connected": "Connected",
-            "connectedDescription": "This host is connected and can run automations.",
-            "connecting": "Connecting",
-            "connectingDescription": "Connecting to this host.",
-            "disconnected": "Not connected",
-            "disconnectedDescription": "Automations on this host cannot run until the connection is restored.",
-            "unavailable": "Unavailable",
-            "unavailableDescription": "This execution target is no longer available.",
-            "unknown": "Connection unknown",
-            "unknownDescription": "The connection state for this host has not loaded yet."
-          },
-          "query": {
-            "legacyUnscopedDescription": "This server lists automations without host scoping, so they cannot be edited or run from here.",
-            "incompatible": "Update server",
-            "incompatibleDescription": "This server is too old to scope automations by host. Update it to manage automations here.",
-            "viewOnly": "View only",
-            "targetRemovedDescription": "This host was removed, so its automations can no longer be edited or run from here.",
-            "targetUnverifiedDescription": "This host has not been verified since its connection dropped, so its automations cannot be edited or run from here.",
-            "targetUnregisteredDescription": "This host has no registration record, so its automations cannot be edited or run from here."
-          },
-          "action": {
-            "retry": "Retry",
-            "reconnect": "Reconnect",
-            "updateServer": "Update server"
-          }
+          "authority": {},
+          "execution": {},
+          "query": {},
+          "action": {}
         },
-        "ownerAction": {
-          "failed": "That automation action did not complete."
-        },
+        "ownerAction": {},
         "externalScope": {
-          "unknownManager": "This external automation is no longer listed for any host in view.",
-          "uncheckedHost": "External automation managers on {{hostLabel}} could not be checked.",
-          "uncheckedHosts": "External automation managers on {{count}} hosts could not be checked."
+          "unknownManager": "This external automation is no longer listed for any host in view."
         },
-        "enablement": {
-          "paused": "Paused"
-        },
-        "runHistory": {
-          "occurrencesWithLatest": "{{times}} times, most recently {{date}}",
-          "occurrences": "{{times}} times"
-        },
-        "createDestination": {
-          "label": "Host",
-          "placeholder": "Select a host",
-          "storedOn": "Stored and scheduled by {authority}.",
-          "unselected": "Choose the host that stores and schedules this automation.",
-          "orphan": "Automations with no host cannot hold new ones. Choose a host to create this automation on.",
-          "unavailable": "That host cannot hold a new automation yet. Choose another host to create this one on.",
-          "stale": "{host} changed while this form was open. Choose it again before saving.",
-          "projectMismatch": "That project is not on {host}. Choose a project on that host, or another host.",
-          "noProjects": "No projects are set up on {host}. Add one there, or choose another host.",
-          "updateRequired": "Update the Orcinus server on {hosts} to store automations there.",
-          "move": "Saving creates this automation on {host} and deletes the original and its run history."
-        },
-        "AutomationListToolbar": {
-          "runs": "Runs"
-        },
+        "enablement": {},
+        "runHistory": {},
+        "createDestination": {},
+        "AutomationListToolbar": {},
         "AutomationRunsDashboard": {
-          "search": "Search runs…",
-          "filters": "Filters",
-          "host": "Host",
-          "status": "Status",
-          "refresh": "Refresh runs",
-          "successful24h": "Successful · 24h",
-          "failed24h": "Failed · 24h",
-          "successful7d": "Successful · 7d",
-          "failed7d": "Failed · 7d",
-          "historyUnavailableOne": "Run history is unavailable for 1 automation. Counts include available history only.",
-          "historyUnavailableMany": "Run history is unavailable for {{count}} automations. Counts include available history only.",
-          "automation": "Automation",
-          "triggered": "Triggered",
-          "trigger": "Trigger",
-          "loading": "Loading runs…",
-          "noRuns": "No runs yet",
-          "emptyDescription": "Runs appear here after an automation is triggered.",
-          "runs": "Runs",
           "local": "Local",
           "remote": "Remote"
         },
-        "AutomationsPageBreadcrumb": {
-          "ariaLabel": "Automations breadcrumb",
-          "runDetails": "Run details"
-        }
+        "AutomationsPageBreadcrumb": {}
       },
       "agent": {
         "AgentCombobox": {
@@ -12879,11 +12414,7 @@
         "noGitLabWorkTitle": "No GitLab work",
         "noGitLabWorkDescription": "No GitLab work matches this filter."
       },
-      "taskSourceContextSummary": {
-        "sourceUnavailable": "{{value0}} source unavailable: {{value1}}",
-        "someSourceHostsUnavailable": "Some {{value0}} source hosts unavailable: {{value1}}",
-        "reconnectOrUpdateTitle": "Reconnect or update {{value0}} to load this source."
-      },
+      "taskSourceContextSummary": {},
       "ShortcutKeyCombo": {
         "07eb4985a1": "Double-tap {{value0}}"
       },

@@ -80,7 +80,6 @@ export type ManualRepoOrderEntry = {
 export type StaticTopLevelView =
   | 'terminal'
   | 'settings'
-  | 'automations'
   | 'space'
   | 'artifacts'
   | 'plugin-center'

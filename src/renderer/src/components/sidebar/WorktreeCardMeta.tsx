@@ -16,7 +16,6 @@ import type {
   WorktreeCardDetailsHoverProps
 } from './worktree-card-meta-types'
 import { translate } from '@/i18n/i18n'
-import { WorktreeCardAutomationDetailSection } from './WorktreeCardAutomationDetailSection'
 import { WorktreeCardCliDetailSection } from './WorktreeCardCliDetailSection'
 import { WorktreeCardHoverIdentityHeader } from './WorktreeCardHoverIdentityHeader'
 import { CommentMarkdownAsync, preloadCommentMarkdown } from './comment-markdown-lazy'
@@ -40,7 +39,6 @@ function hasComment(comment: string | null): boolean {
 
 export function WorktreeCardDetailsHover({
   comment,
-  automationProvenance,
   cliProvenance,
   children,
   branchName,
@@ -53,12 +51,10 @@ export function WorktreeCardDetailsHover({
   onRenameWorkspaceTitle,
   onWorkspaceTitleEditingChange,
   onEditComment,
-  onOpenAutomation,
-  onOpenAutomationRun,
   hoverControl
 }: WorktreeCardDetailsHoverProps): React.JSX.Element {
   const internalHoverControl = useWorktreeCardDetailsHoverControl()
-  const { hoverOpen, handleHoverOpenChange, closeHover } = hoverControl ?? internalHoverControl
+  const { hoverOpen, handleHoverOpenChange } = hoverControl ?? internalHoverControl
   const [workspaceTitleEditing, setWorkspaceTitleEditing] = React.useState(false)
   const pendingWorkspaceTitleCloseRef = React.useRef(false)
   const handleWorkspaceTitleEditingChange = React.useCallback(
@@ -83,21 +79,12 @@ export function WorktreeCardDetailsHover({
     },
     [handleHoverOpenChange, workspaceTitleEditing]
   )
-  const dismissAndRun = React.useCallback(
-    (handler: ((event: React.MouseEvent) => void) | undefined) => (event: React.MouseEvent) => {
-      closeHover()
-      handler?.(event)
-    },
-    [closeHover]
-  )
-
   const showIdentityHeader = Boolean(branchName || workspaceTitle)
 
   if (
     !showIdentityHeader &&
     !hasWorktreeCardDetails({
       comment,
-      automationProvenance,
       cliProvenance
     }) &&
     !detailsAfter
@@ -136,16 +123,6 @@ export function WorktreeCardDetailsHover({
               workspaceTitleRenameDisabled={workspaceTitleRenameDisabled}
               onRenameWorkspaceTitle={onRenameWorkspaceTitle}
               onWorkspaceTitleEditingChange={handleWorkspaceTitleEditingChange}
-            />
-          )}
-
-          {automationProvenance && (
-            <WorktreeCardAutomationDetailSection
-              provenance={automationProvenance}
-              onOpenAutomation={onOpenAutomation ? dismissAndRun(onOpenAutomation) : undefined}
-              onOpenAutomationRun={
-                onOpenAutomationRun ? dismissAndRun(onOpenAutomationRun) : undefined
-              }
             />
           )}
 

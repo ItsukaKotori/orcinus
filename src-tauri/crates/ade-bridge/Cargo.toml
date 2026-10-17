@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 ade-ai-vault = { path = "../ade-ai-vault" }
-ade-automations = { path = "../ade-automations" }
 ade-computer = { path = "../ade-computer" }
 ade-core = { path = "../ade-core", features = ["specta"] }
 ade-fs = { path = "../ade-fs", features = ["specta"] }

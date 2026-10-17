@@ -2,7 +2,6 @@ pub mod agent_sessions;
 pub mod agent_status;
 pub mod ai_vault;
 pub mod app;
-pub mod automations;
 pub mod cli_install;
 pub mod computer_use;
 pub mod folder_workspaces;
@@ -24,6 +23,15 @@ pub mod ui;
 pub mod worktrees;
 
 use crate::errors::BridgeError;
+
+/// Wall-clock milliseconds for command-side timestamps (plugin marketplace
+/// entries).
+pub fn now_millis() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|duration| duration.as_millis() as i64)
+        .unwrap_or(0)
+}
 
 /// Run blocking IO (fs, search, watch installs) off the async runtime threads,
 /// surfacing a panicked task as a bridge error instead of a silent hang.

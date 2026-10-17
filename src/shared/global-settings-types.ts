@@ -209,9 +209,6 @@ export type GlobalSettings = {
   sourceControlCompareAgainstUpstream: boolean
   /** Whether to show the Orca app name in the titlebar. */
   showTitlebarAppName: boolean
-  /** Hides the Tasks sidebar button (also removes it from keyboard navigation). */
-  /** Only toggles the sidebar shortcut; Automations stay reachable from Settings/View menu. */
-  showAutomationsButton?: boolean
   /** Deprecated: Artifacts are always available. Use showArtifactsButton for sidebar visibility. */
   artifactsEnabled?: boolean
   /** Capability gate for agent-driven publishing; off until granted, enforced in main, not just the UI. */
@@ -306,8 +303,6 @@ export type GlobalSettings = {
   skipDeleteWorktreeConfirm: boolean
   /** Why: closing a terminal with child processes kills foreground work; keep this skip separate from other confirmations. */
   skipCloseTerminalWithRunningProcessConfirm: boolean
-  /** Why: deleting an automation also deletes its run history; keep this skip separate from worktree deletion. */
-  skipDeleteAutomationConfirm: boolean
   /** Why: deleting an artifact breaks a public link others may already hold; keep this skip separate from local deletions. */
   skipDeleteArtifactConfirm: boolean
   /** Why: a Codex rate-limit reset spends a scarce credit on the live account; keep this skip separate from local confirmations. */

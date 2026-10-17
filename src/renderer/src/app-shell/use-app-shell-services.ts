@@ -1,6 +1,5 @@
 import { useAppStore } from '../store'
 import { useIpcEvents } from '../hooks/useIpcEvents'
-import { useAutomationDispatchEvents } from '../hooks/useAutomationDispatchEvents'
 import { useAutoAckViewedAgent } from '../hooks/useAutoAckViewedAgent'
 import { useEditorExternalWatch } from '../hooks/useEditorExternalWatch'
 import { useGlobalFileDrop } from '../hooks/useGlobalFileDrop'
@@ -34,7 +33,6 @@ export function useAppShellServices(options: { floatingPanelVisible: boolean }):
   // Subscribe to IPC push events
   useIpcEvents()
   useRemoteRuntimeRecoveryTriggers()
-  useAutomationDispatchEvents()
   // Why: git polling lives at App level (RightSidebar unmounts when closed, stranding stale Rebasing/Merging badges); gate on workspaceSessionReady so it doesn't compete with first paint.
   useGitStatusPolling({ enabled: workspaceSessionReady })
   // Why: wire file-change watching at App level so the editor keeps hearing FS changes when Explorer unmounts (right-sidebar switches to Source Control/Checks).

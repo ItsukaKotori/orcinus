@@ -35,9 +35,6 @@ describe('feature interactions', () => {
       'cmd-j-settings-open',
       'cmd-j-quick-action',
       'cmd-j-create-workspace',
-      'automations',
-      'automation-created',
-      'automation-run',
       'markdown-file-created',
       'workspace-creation',
       'agent-orchestration-setup',
@@ -80,7 +77,6 @@ describe('feature interactions', () => {
       })
     ).toEqual({
       'cmd-j': { firstInteractedAt: 100, interactionCount: 1 },
-      automations: { firstInteractedAt: 200, interactionCount: 3 },
       'review-notes': { firstInteractedAt: 250, interactionCount: 1 },
       'usage-tracking': { firstInteractedAt: 300, interactionCount: 1 }
     })

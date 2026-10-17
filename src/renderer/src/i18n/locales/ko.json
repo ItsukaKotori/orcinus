@@ -369,9 +369,7 @@
         },
         "worktree": {
           "background": {
-            "terminals": {
-              "setupTitle": "설정"
-            }
+            "terminals": {}
           }
         },
         "work": {
@@ -594,12 +592,7 @@
       }
     },
     "hooks": {
-      "useAutomationDispatchEvents": {
-        "59718b120b": "대상 워크스페이스를 더 이상 사용할 수 없습니다.",
-        "16a21d6413": "SSH 재연결에는 대화형 자격 증명이 필요합니다.",
-        "386db94f3e": "대상 프로젝트를 더 이상 사용할 수 없습니다.",
-        "3ad7d77f57": "대상 워크스페이스가 이 자동화 실행 대상과 다른 호스트에 있습니다."
-      },
+      "useAutomationDispatchEvents": {},
       "useComposerState": {
         "7eb3f44ff7": "선택한 agent가 비활성화되었습니다. 생성하기 전에 활성화된 agent를 선택하세요.",
         "b2ead86962": "PR 기반을 해결하지 못했습니다.",
@@ -701,9 +694,7 @@
         "linearDescription": "Orcinus에서 Linear가 작동하는 방식, 설정 체크리스트, 에이전트 스킬, 프롬프트 예시입니다.",
         "pluginsTitle": "플러그인",
         "pluginsDescription": "실험적인 Orcinus 플러그인을 설치하고 관리합니다.",
-        "tasksDescription": "제공업체를 연결하고 Linear 스킬을 설치한 다음 작업에 표시할 항목을 선택하세요.",
-        "automationsTitle": "자동화",
-        "automationsDescription": "에이전트 작업을 예약하고 사이드바에 자동화 표시 여부를 선택합니다."
+        "tasksDescription": "제공업체를 연결하고 Linear 스킬을 설치한 다음 작업에 표시할 항목을 선택하세요."
       },
       "useAppMenuPaste": {
         "pasteTooLarge": "붙여넣기 내용이 너무 큽니다."
@@ -3141,7 +3132,6 @@
           "c86d83b5c3": "신규",
           "1b5c41caee": "Orcinus 모바일",
           "9c95e1ce91": "에이전트",
-          "f323383e9a": "자동화",
           "e7ad3c540d": "Jira 작업 열기",
           "c39ab10000": "Linear 작업 열기",
           "196c1b5362": "GitLab 작업 열기",
@@ -3312,14 +3302,7 @@
           "b105fd3057": "연결된 Linear {{value0}}",
           "3f2649eeb8": "연결된 이슈 #{{value0}}",
           "fe075cb851": "워크스페이스 메모",
-          "automationHeader": "자동화",
-          "openAutomation": "자동화 열기",
-          "openAutomationRun": "실행 열기",
           "automationCreated": "자동화가 생성함",
-          "checkingAutomationAvailability": "자동화 사용 가능 여부 확인 중...",
-          "automationMissing": "자동화를 더 이상 사용할 수 없습니다.",
-          "automationRunMissing": "실행 기록을 더 이상 사용할 수 없습니다.",
-          "automationAvailabilityUnavailable": "자동화 사용 가능 여부를 확인할 수 없습니다.",
           "moreIssueActions": "추가 이슈 작업",
           "copyLink": "링크 복사",
           "copyLinkSuccess": "{{value0}} 복사됨",
@@ -4172,7 +4155,6 @@
           "ca1590d42f": "앱 아이콘",
           "5db6ba961f": "왼쪽 사이드바 상단에 Orcinus Mobile 버튼을 표시합니다.",
           "fa882a3e6b": "왼쪽 사이드바 상단에 자동화 버튼을 표시합니다.",
-          "511f270ebb": "자동화 버튼 표시",
           "661942ab7f": "왼쪽 사이드바 상단에 작업 버튼을 표시합니다.",
           "cf81907069": "작업 버튼 표시",
           "dc29f3cc0d": "사이드바",
@@ -4586,9 +4568,6 @@
         "GeneralWorkspaceSettingsSection": {
           "3d538a98f7": "워크스페이스의 열기 메뉴에서 사용 가능한 앱을 선택하세요.",
           "008f92085f": "앱에서 열기",
-          "824b98a0d9": "자동화 및 실행 기록을 삭제하기 전에 확인 메시지를 표시하세요.",
-          "ea98373cd8": "자동화를 삭제하기 전에 확인하세요",
-          "d2dd2ca2e3": "자동화 및 실행 기록을 삭제하기 전에 확인 대화 상자를 표시합니다.",
           "28bc3d085e": "컨텍스트 메뉴에서 워크스페이스를 삭제하기 전에 확인 메시지를 표시합니다. 삭제에 실패해도 여전히 강제 삭제 대체가 나타납니다.",
           "9f380934cf": "워크스페이스를 삭제하기 전에 확인",
           "5734db82af": "워크스페이스를 삭제하기 전에 확인 대화상자를 표시합니다.",
@@ -6115,19 +6094,12 @@
             "e80c2af428": "Dock 및 창 전환기에 표시된 앱 아이콘을 선택합니다.",
             "2b313598c6": "앱 아이콘",
             "839fb1e3ed": "도구 상자",
-            "ac79fe4a04": "표시",
             "648eeada79": "숨기기",
-            "6cf5f54ce1": "버튼",
             "5bff6a2ef0": "사이드바",
             "5e5b8878bf": "핸드폰",
             "74618577c7": "모바일",
             "682293cadf": "왼쪽 사이드바 상단에 Orcinus Mobile 버튼을 표시합니다.",
             "1de96ec8a6": "Orcinus 모바일 버튼 표시",
-            "4c920ab2d1": "일정",
-            "58f4e22fa2": "오토메이션",
-            "b186f3cefb": "자동화",
-            "ae13a0d340": "왼쪽 사이드바 상단에 자동화 버튼을 표시합니다.",
-            "caa27e1a8e": "자동화 버튼 표시",
             "6b846424cc": "Linear",
             "2ee4810f38": "GitHub",
             "0d5a74b606": "작업",
@@ -6580,10 +6552,7 @@
             "7e9b556873": "건너뛰기",
             "ca86dd6e27": "대화",
             "9f8558233a": "확인",
-            "7edf4f69e2": "자동화",
             "84c67d0108": "삭제",
-            "a0c44061ee": "자동화 및 실행 기록을 삭제하기 전에 확인 대화 상자를 표시합니다.",
-            "d0a65b27fd": "자동화를 삭제하기 전에 확인하세요",
             "df10666259": "작업 트리",
             "ae98c9cf36": "워크스페이스를 삭제하기 전에 확인 대화상자를 표시합니다.",
             "913242091d": "워크스페이스를 삭제하기 전에 확인",
@@ -8226,22 +8195,7 @@
           "skillsTitle": "스킬 공유",
           "skillsDescription": "단일 스킬 또는 전체 세트를 비공개 링크로 공유하고 사용하는 모든 기기에 설치하세요."
         },
-        "automations": {
-          "title": "자동화",
-          "description": "에이전트 작업을 예약하고 사이드바에 자동화 표시 여부를 선택합니다.",
-          "showButton": "자동화 버튼 표시",
-          "showButtonDescription": "사이드바에 자동화 바로 가기를 표시합니다.",
-          "howItWorksTitle": "자동화 작동 방식",
-          "howItWorksDescription": "에이전트 작업을 한 번만 예약하면 Orcinus가 각 실행을 생성하고 결과를 한곳에 모아 관리합니다.",
-          "defineStepTitle": "작업 설명",
-          "defineStepDescription": "프로젝트, 에이전트, 프롬프트 및 일정을 선택합니다.",
-          "runStepTitle": "Orcinus가 각 실행 시작",
-          "runStepDescription": "예약 시간이 되면 선택된 에이전트에게 새로운 작업 공간이 할당됩니다.",
-          "reviewStepTitle": "결과 검토",
-          "reviewStepDescription": "최근 실행을 검토하고 필요할 때 언제든지 작업을 계속할 수 있습니다.",
-          "openAutomations": "자동화 열기",
-          "openAutomationsDescription": "일정을 생성하고 최근 실행을 확인합니다."
-        }
+        "automations": {}
       },
       "right": {
         "sidebar": {
@@ -10621,429 +10575,100 @@
         }
       },
       "automations": {
-        "AutomationListToolbar": {
-          "runs": "실행"
-        },
+        "AutomationListToolbar": {},
         "AutomationRunsDashboard": {
-          "search": "실행 검색…",
-          "filters": "필터",
-          "host": "호스트",
-          "status": "상태",
-          "refresh": "실행 새로 고침",
-          "successful24h": "성공 · 24시간",
-          "failed24h": "실패 · 24시간",
-          "successful7d": "성공 · 7일",
-          "failed7d": "실패 · 7일",
-          "historyUnavailableOne": "자동화 1개의 실행 기록을 사용할 수 없습니다. 집계에는 사용 가능한 기록만 포함됩니다.",
-          "historyUnavailableMany": "자동화 {{count}}개의 실행 기록을 사용할 수 없습니다. 집계에는 사용 가능한 기록만 포함됩니다.",
-          "automation": "자동화",
-          "triggered": "트리거됨",
-          "trigger": "트리거",
-          "loading": "실행 로드 중…",
-          "noRuns": "아직 실행이 없습니다",
-          "emptyDescription": "자동화를 트리거하면 여기에 실행이 표시됩니다.",
-          "runs": "실행",
           "local": "로컬",
           "remote": "원격"
         },
-        "AutomationsPageBreadcrumb": {
-          "ariaLabel": "자동화 탐색경로",
-          "runDetails": "실행 세부정보"
-        },
+        "AutomationsPageBreadcrumb": {},
         "AutomationCustomCronPanel": {
-          "3e3b2c369f": "Cron 식",
-          "e81a02d61b": "저장하기 전에 유효한 5개 필드 크론을 입력하세요.",
-          "968e66d686": "5개 필드 크론을 입력하세요.",
-          "cadb7b0bc9": "유효하지 않은",
-          "f6ca30da23": "유효한 사용자 지정 cron",
-          "a226dbdd40": "분",
-          "ec9c1e35df": "시간",
-          "2d82246d23": "일",
-          "0e1de0358b": "월",
-          "77e96bded6": "요일"
+          "cadb7b0bc9": "유효하지 않은"
         },
-        "AutomationPromptDisclosure": {
-          "showLess": "접기",
-          "showMore": "더 보기"
-        },
+        "AutomationPromptDisclosure": {},
         "AutomationDetail": {
-          "host": "호스트",
           "007c8ad874": "프롬프트",
-          "a1d52c2189": "사용 범위",
-          "449fc83bf7": "토큰",
-          "401f40ae79": "예상 경비",
-          "a7c312430d": "마지막 실행",
-          "2df8970cd5": "에이전트",
-          "e353ab9516": "사전 확인",
-          "620b22145e": "유예 시간",
-          "15ea446b93": "세션",
-          "5405a09b1f": "실행 위치",
-          "2f8baf5360": "다음에서 생성",
-          "578ff46987": "다음 실행",
-          "18763ded26": "일정",
-          "dbef8dc110": "이 SSH 자동화는 Orcinus가 SSH 호스트에 연결할 수 있는 동안에만 실행됩니다. 다시 연결에 대화형 자격 증명이 필요하거나 호스트를 사용할 수 없는 경우 실행이 건너뛴 것으로 기록됩니다.",
-          "1f6026358e": "자동화 삭제",
-          "d79452fb30": "자동화 재개",
-          "91a4155e95": "자동화 일시 중지",
-          "4b1ea02d2e": "자동화 편집",
-          "2fb1605beb": "지금 실행",
-          "221916d93c": "agent 작업 예약을 시작하려면 자동화를 만드세요.",
           "de0fedac06": "실행마다 새로 생성",
-          "51a470b966": "SSH",
-          "b09b2384fd": "일시중지됨",
-          "eaa02014f8": "활성화됨",
-          "29baf8f4c2": "소스"
+          "51a470b966": "SSH"
         },
         "AutomationEditorDialog": {
-          "fb1896a5e7": "취소",
-          "57b722cbba": "에이전트",
-          "6ff66f9012": "새로운 실행",
-          "a2e688226d": "워크트리",
-          "6f9610e667": "작업 트리는 선택한 워크스페이스에서 실행됩니다. 새로 실행하면 매번 선택한 브랜치에서 새 워크스페이스가 생성됩니다.",
-          "2c3fd9bfa1": "워크스페이스 모드 도움말",
-          "b28b140eaf": "워크스페이스",
-          "0d17f4ca8f": "프로젝트 선택",
-          "02d351877e": "프로젝트",
-          "a4ac8fcc62": "/goal",
-          "827b25a81e": "다음과 같은 스킬, 파일 경로 및 내장 명령을 지원합니다.",
-          "6d778190b7": "주간 종속성 감사를 실행하고 위험한 변경 사항을 요약합니다.",
-          "058c23cb3f": "프롬프트",
-          "c4b19094c2": "일정",
-          "e46c1aa9ad": "생성",
-          "a9d9dccf77": "저장",
-          "777548c2d6": "변경 사항 저장",
-          "e8c2a14f70": "저장하면 일시 중지될 때까지 자동으로 실행됩니다.",
           "ff5db28639": "기존의"
         },
-        "AutomationEditorDialogHeader": {
-          "31f9253920": "템플릿 사용",
-          "7e35393632": "Hermes",
-          "6f309eef8d": "Orcinus",
-          "58f56b73d9": "자동화 이름",
-          "1d9826933e": "평일 repo 감사",
-          "4133d33862": "자동화 생성",
-          "0a75e5e2fa": "Hermes 자동화 생성",
-          "03142e7721": "Hermes 자동화 편집",
-          "17086b48ee": "자동화 편집"
-        },
-        "AutomationMissedRunGraceField": {
-          "0f4459e91d": "48시간",
-          "adbab51feb": "24시간",
-          "ba50e2a230": "12시간",
-          "2dc9ee84d0": "3시간",
-          "521f77cd58": "1시간",
-          "e5ad263ae5": "30분",
-          "529dc6c0b7": "유예 없음",
-          "3d70c185c8": "Orcinus 또는 실행 호스트를 예약된 시간에 사용할 수 없었다면, 이 기간 안에 다시 사용 가능해졌을 때 Orcinus가 놓친 실행을 한 번 실행합니다. 더 오래된 놓친 실행은 건너뜁니다.",
-          "3df53d554a": "누락된 실행 유예 도움말",
-          "fc089e5fde": "유예 시간"
-        },
-        "AutomationPrecheckFields": {
-          "d2a2ac89ac": "10분",
-          "bf49585b3c": "5분",
-          "d84d3765fd": "2분",
-          "c820119736": "1분",
-          "51e28cdad9": "30초",
-          "bb2dfb3629": "시간 초과",
-          "99a577306c": "gh pr list --json number -q '.[0].number'",
-          "c2a762a180": "사전 확인"
-        },
+        "AutomationEditorDialogHeader": {},
+        "AutomationMissedRunGraceField": {},
+        "AutomationPrecheckFields": {},
         "AutomationRunHistory": {
-          "402651bfb6": "아직 실행이 없습니다.",
-          "9974a2b429": "상태",
-          "13988187b3": "토큰",
-          "86a248187e": "경비",
-          "149c0b49c7": "워크스페이스",
-          "8faaa00726": "실행",
-          "53fc5f07ab": "실행 기록",
-          "a00e38d1a3": "해당 없음",
           "fdb3caa8fb": "알려진"
         },
-        "AutomationRunPageFrame": {
-          "40a511bed4": "실행 컨텍스트",
-          "33741dd973": "실행으로 돌아가기"
-        },
-        "AutomationSchedulePicker": {
-          "9e677335b0": "분",
-          "d90981f766": "시간",
-          "6b914c5fbb": "요일",
-          "233b8c94b6": "반복 주기",
-          "55b2ef82a4": "매시간",
-          "f0202f3a89": "매일",
-          "57e83307d0": "평일",
-          "837d902bba": "매주",
-          "ddba78647e": "사용자 지정 cron"
-        },
-        "AutomationTimeField": {
-          "39ec1383f6": "오전 또는 오후",
-          "32a5e4e35e": "분",
-          "aa593eb5e2": "시간"
-        },
-        "AutomationSessionField": {
-          "f3c76dce51": "재사용",
-          "c90888ee94": "새로 시작",
-          "b675112193": "재사용은 향후 실행을 이전 라이브 자동화 세션으로 보냅니다. 해당 세션이 사라지면 Orcinus는 새로운 세션을 시작합니다.",
-          "4bdce31f37": "세션 재사용 도움말",
-          "5ad314118e": "세션"
-        },
+        "AutomationRunPageFrame": {},
+        "AutomationSchedulePicker": {},
+        "AutomationTimeField": {},
+        "AutomationSessionField": {},
         "AutomationsPage": {
           "2695883141": "삭제",
-          "c3a28c9793": "실행을 보려면 자동화를 선택하세요.",
-          "295698292f": "재실행",
-          "0e110a3469": "실행",
-          "bb1b2cd31e": "개요",
           "97ff587ee3": "원격 프로필에서 Hermes 자동화를 확인하려면 이 소스를 연결하세요.",
           "aaa007846f": "소스를 사용할 수 없음",
-          "25060635c6": "새로 추가",
-          "d207ab4c25": "템플릿에서 시작",
-          "15e0bfb13b": "삭제",
-          "f4612e3f78": "편집",
-          "2faecab10b": "지금 실행",
           "82eb6cb933": "소스",
-          "13118faadf": "알 수 없는 프로젝트",
           "587a4b205c": "다음",
           "761a35834d": "자동화",
-          "73f630b49d": "취소",
-          "1b586f0e2b": "~에",
-          "02a33e3204": "~에서",
-          "9adfab2596": "외부 자동화 삭제",
-          "1e2e41392f": "다시 묻지 마세요",
-          "b264564427": "및 실행 기록. 이전 실행으로 생성된 워크스페이스는 삭제되지 않습니다.",
-          "080dcb5fbb": "자동화 삭제",
-          "19a6e30eae": "자동화 새로 고침",
           "8d1afa8269": "자동화 추가",
-          "77c2778945": "자동화",
           "0329f9bef1": "닫기 · Esc",
           "67c7ff795b": "자동화 닫기",
-          "e1bf9b1512": "워크스페이스를 사용할 수 없습니다.",
           "3e42a5cc1b": "SSH 연결에 실패했습니다.",
           "9f2855677c": "SSH가 연결되었습니다.",
-          "126d726546": "외부 자동화 작업이 실패했습니다.",
-          "37288942f0": "외부 자동화가 재개되었습니다.",
-          "77c518a34b": "외부 자동화가 일시중지되었습니다.",
-          "4d7878402c": "외부 자동화가 대기 중입니다.",
-          "4c22bc9913": "외부 자동화가 삭제되었습니다.",
-          "3a4c476aa0": "자동화를 다시 실행하지 못했습니다.",
-          "a1bdb57008": "자동화 실행이 대기 중입니다.",
-          "8a3226f172": "설정 열기",
-          "d2a01b0b6f": "설정에서 이를 변경할 수 있습니다.",
-          "690b94da54": "다음번에는 이 확인을 건너뛰겠습니다.",
-          "b11170a008": "자동화를 저장하지 못했습니다.",
-          "2a20596d6b": "자동화가 저장되었습니다.",
-          "244727e655": "자동화가 업데이트되었습니다.",
-          "moved": "자동화를 {host}(으)로 이동했습니다.",
-          "moveOriginalKept": "{host}에 생성했지만 원본을 삭제하지 못했습니다. 이전 호스트에서 삭제하세요.",
-          "moveOriginalUnverified": "{host}에 생성했지만 원본 삭제를 확인할 수 없습니다. 다시 시도하기 전에 이전 호스트를 확인하세요.",
-          "77b81bc4ac": "Hermes 자동화가 생성되었습니다.",
-          "08efc3ae12": "Hermes 자동화가 업데이트되었습니다.",
-          "e431bb85d4": "이 Hermes 자동화와 동일한 호스트에서 워크스페이스를 선택하세요.",
-          "32534e7c9c": "저장하기 전에 사용 가능한 워크스페이스를 선택하세요.",
-          "2360ffc956": "저장하기 전에 활성화된 agent를 선택하세요.",
-          "6e91dab317": "저장하기 전에 유효한 고급 일정을 입력하세요.",
-          "64bdb2304f": "저장하기 전에 지원되는 일정을 선택하세요.",
-          "2430fecf53": "실행 위치를 선택하고 저장하기 전에 프롬프트를 입력하세요.",
           "7934ee0d81": "SSH 연결",
           "f93ed7a6f8": "연결 중...",
           "8705757e27": "작업",
-          "376631ef2b": "재개",
-          "b457436d6a": "일시 중지",
           "0ae52dd760": "Hermes",
           "e059042585": "읽기 전용",
           "aecdc3681f": "관리 가능",
-          "8500baacb4": "외부 소스",
-          "36f71740a7": "선택된 워크스페이스",
-          "cd8397cc32": "실행될 때마다 새로운 워크스페이스",
           "dd0bc7a1ba": "실행마다 새로 생성",
           "7b2e285552": "이 클라이언트에서는 SSH 연결을 사용할 수 없습니다.",
           "d441032f7e": "일시 중지",
           "5918020edc": "실행",
           "a21f6c33ad": "자동화 소스를 새로 고쳤습니다.",
           "53f06f0ad5": "소스 다시 시도",
-          "pendingAutomationMissing": "자동화를 더 이상 사용할 수 없습니다.",
-          "pendingAutomationRunMissing": "실행 기록을 더 이상 사용할 수 없습니다.",
           "noSearchMatches": "검색과 일치하는 자동화가 없습니다.",
-          "paused": "일시 중지됨",
           "runCount": "실행 {{count}}회",
           "runCount_one": "실행 {{count}}회",
           "runCount_other": "실행 {{count}}회",
           "projectDefaultBaseRef": "프로젝트 기본값",
-          "createFromBaseRef": "{{baseRef}}에서 만들기",
-          "missingWorkspace": "워크스페이스 없음",
-          "runUsageSummary": "약 {{cost}} · {{tokens}} tokens",
-          "usageUnavailable": "사용량을 사용할 수 없음",
-          "noRunUsageYet": "아직 실행 사용량 없음",
-          "noWorkspace": "워크스페이스 없음",
-          "latestSavedOutput": "최근 저장된 출력",
-          "backToList": "모든 자동화",
-          "tableName": "이름",
-          "tableProject": "프로젝트",
-          "tableHost": "호스트",
-          "tableStatus": "상태",
-          "tableActions": "작업",
-          "newAutomation": "새 자동화",
-          "rowActions": "자동화 작업"
+          "createFromBaseRef": "{{baseRef}}에서 만들기"
         },
-        "CreateFromPicker": {
-          "f061f49e3f": "repo 브랜치 검색...",
-          "dd3841b442": "브랜치 생성 기준",
-          "ef6d762538": "프로젝트 기본값",
-          "e53d306056": "{{value0}}(기본값)",
-          "79512f22a7": "브랜치를 찾을 수 없습니다.",
-          "9ce96621f4": "브랜치 검색 중..."
-        },
+        "CreateFromPicker": {},
         "ExternalAutomationManagers": {
-          "e02f970595": "외부 자동화 관리자를 찾을 수 없습니다.",
-          "6da3bfba4b": "자동화가 발견되었습니다.",
-          "3d58d5b67d": "아니요",
-          "a42bf2b27e": "외부 자동화 삭제",
-          "1c3bfd38fe": "외부 자동화 재개",
-          "0def1693bb": "외부 자동화 일시 중지",
-          "1df491fd00": "외부 자동화 편집",
-          "cc77ba88ff": "외부 자동화 실행",
-          "5820648765": "마지막",
-          "844f1acb72": "발견됨",
-          "20fd7a3a15": "다음",
-          "c6695e6fbd": "외부 자동화",
-          "5524365227": "OpenClaw",
-          "766abf833c": "Hermes",
           "bf5f67b590": "Hermes",
-          "e66091daf4": "실행",
-          "8e9165af08": "실행",
-          "2b0adbce21": "일시중지됨",
-          "b3feba84c7": "활성",
-          "92405f1431": "사용 불가",
-          "dbdcec22bd": "읽기 전용",
-          "0a2d4359a8": "관리 가능",
-          "330b3c32e8": "사용 가능",
-          "e2532150ed": "자동화",
-          "701515f010": "자동화"
+          "330b3c32e8": "사용 가능"
         },
-        "ExternalAutomationRunTable": {
-          "0ba9c0a95c": "다음 실행 페이지",
-          "52d468a0b8": "이전 실행 페이지",
-          "7475c0ce96": "중",
-          "be551397ca": "상태",
-          "a813df9808": "미리보기",
-          "d4b34feb66": "실행 시간",
-          "2d4388a908": "실행",
-          "9c080765ff": "아직 Hermes 실행이 없습니다.",
-          "8ea934cacf": "실행 로드 중...",
-          "d5527d8fe7": "실행",
-          "872d032d05": "실행"
-        },
+        "ExternalAutomationRunTable": {},
         "HermesCronOutputView": {
-          "e27c716b43": "프롬프트",
-          "4557213074": "응답",
-          "05affc68e3": "오류",
           "88d48157fc": "기본"
         },
-        "WorkspaceCombobox": {
-          "ee5b280eba": "워크스페이스를 찾을 수 없습니다.",
-          "8e9c8cc6b5": "워크스페이스 검색...",
-          "66a0cd9628": "워크스페이스 선택"
-        },
+        "WorkspaceCombobox": {},
         "automation": {
           "templates": {
-            "37571fcb16": "중단된 작업, 오래된 생성 파일, 실패한 로컬 검증을 찾아보세요.",
-            "8a0228bea3": "시간별 대기열 확인",
-            "3b7281c75f": "최근 작업을 스캔하고 정확성, UX 및 테스트 적용 범위 위험을 알려줍니다.",
-            "6023075b27": "일일 변경 리뷰",
-            "513401db93": "현재 프로젝트 상태에서 주간 릴리스 위험 요약을 준비합니다.",
-            "39ed39280a": "출시 준비",
-            "a7fbd32ddb": "매주 종속성, 실패한 테스트, 위험한 공개 변경 사항을 확인하세요.",
-            "b84757677d": "평일 repo 감사",
-            "repoHealth": {
-              "category": "Repo 상태",
-              "name": "평일 repo 감사",
-              "prompt": "저장소 상태를 리뷰합니다. 종속성 업데이트, 실패한 테스트, lint/typecheck 상태, 위험한 공개 변경 사항을 확인하세요. 조사 결과를 요약하고 다음 조치를 제안합니다."
-            },
-            "releasePrep": {
-              "category": "출시 준비",
-              "name": "출시 준비 리뷰",
-              "prompt": "릴리스 준비 요약을 준비합니다. 차단 요소, 병합되지 않은 위험한 변경 사항, 유효성 검사 누락, 문서 공백을 찾아보세요. 간결한 릴리스/비 릴리스 권장 사항으로 끝납니다."
-            },
-            "recurringReview": {
-              "category": "반복 리뷰",
-              "name": "일일 변경 리뷰",
-              "prompt": "이 워크스페이스의 최근 변경사항을 리뷰하세요. 정확성 위험, UX 회귀, 누락된 테스트 및 후속 작업에 중점을 둡니다. 보고서를 짧고 실행 가능하게 유지하세요."
-            },
-            "maintenance": {
-              "category": "유지보수",
-              "name": "시간별 유지보수 점검",
-              "prompt": "작업 중단, 오래 생성된 파일, 유효성 검사 실패 및 사람의 주의가 필요한 모든 사항을 확인하세요. 실행 가능한 이슈만 보고하세요."
-            }
+            "repoHealth": {},
+            "releasePrep": {},
+            "recurringReview": {},
+            "maintenance": {}
           },
           "schedule": {
-            "label": {
-              "a95afb7483": "매시간 :{{minute}}",
-              "280ccd2701": "매일 {{time}}",
-              "3f1422adc1": "평일 {{time}}",
-              "cc71e252ba": "매주 {{day}} {{time}}",
-              "ba20c92073": "사용자 지정 일정",
-              "086a5a9fe2": "잘못된 일정"
-            }
+            "label": {}
           }
         },
         "external": {
           "automation": {
             "schedule": {
-              "display": {
-                "a8e92b815a": "일정을 사용할 수 없음"
-              }
+              "display": {}
             }
           }
         },
-        "AutomationProjectCombobox": {
-          "search": "프로젝트/폴더 검색...",
-          "empty": "검색과 일치하는 프로젝트/폴더가 없습니다.",
-          "chooseHost": "자동화 호스트 선택",
-          "adding": "프로젝트 추가 중...",
-          "addProject": "프로젝트 추가"
-        },
-        "AutomationSetupDecisionField": {
-          "5a7863909c": "새 워크스페이스마다 설정 실행",
-          "18f000ad4e": "고급",
-          "874b72195b": "이 자동화가 워크스페이스를 만들 때, 워크트리를 직접 만들 때와 같은 방식으로 준비합니다 — 프로젝트 설정을 실행하고 터미널 탭을 엽니다."
-        },
-        "AutomationsPageSkeleton": {
-          "55527b7bcf": "자동화 로딩 중"
-        },
-        "AutomationListSearchField": {
-          "tooLong": "검색 텍스트가 너무 깁니다 — 목록이 필터링되지 않음",
-          "label": "자동화 검색",
-          "placeholder": "검색...",
-          "tooLongShort": "너무 김",
-          "clear": "검색 지우기"
-        },
-        "AutomationListLocalRows": {
-          "c92c9463c6": "자동화 작업"
-        },
-        "AutomationListFilterMenu": {
-          "926e785e4d": "agents 검색...",
-          "491043ee45": "검색어와 일치하는 agents가 없습니다.",
-          "agent": "에이전트",
-          "lastRun": "마지막 실행",
-          "all": "전체",
-          "failed": "실패",
-          "succeeded": "성공",
-          "neverRan": "실행 안 함",
-          "filters": "필터",
-          "clear": "필터 지우기",
-          "removeFilter": "{{value0}} 필터 제거"
-        },
-        "createDestination": {
-          "label": "호스트",
-          "placeholder": "호스트 선택",
-          "storedOn": "{authority}에서 저장하고 예약합니다.",
-          "unselected": "이 자동화를 저장하고 예약할 호스트를 선택하세요.",
-          "orphan": "호스트가 없는 자동화는 새 자동화를 보유할 수 없습니다. 이 자동화를 만들 호스트를 선택하세요.",
-          "unavailable": "해당 호스트는 아직 새 자동화를 보유할 수 없습니다. 이 자동화를 만들 다른 호스트를 선택하세요.",
-          "stale": "이 양식이 열려 있는 동안 {host}이(가) 변경되었습니다. 저장하기 전에 다시 선택하세요.",
-          "projectMismatch": "해당 프로젝트는 {host}에 없습니다. 그 호스트의 프로젝트를 선택하거나 다른 호스트를 선택하세요.",
-          "noProjects": "{host}에 설정된 프로젝트가 없습니다. 거기에 추가하거나 다른 호스트를 선택하세요.",
-          "updateRequired": "{hosts}의 Orcinus 서버를 업데이트하면 거기에 자동화를 저장할 수 있습니다.",
-          "move": "저장하면 이 자동화가 {host}에 생성되고 원본과 실행 기록은 삭제됩니다."
-        }
+        "AutomationProjectCombobox": {},
+        "AutomationSetupDecisionField": {},
+        "AutomationsPageSkeleton": {},
+        "AutomationListSearchField": {},
+        "AutomationListLocalRows": {},
+        "AutomationListFilterMenu": {},
+        "createDestination": {}
       },
       "agent": {
         "AgentCombobox": {
@@ -11178,11 +10803,7 @@
         "noGitLabWorkTitle": "GitLab 작업 없음",
         "noGitLabWorkDescription": "이 필터와 일치하는 GitLab 작업이 없습니다."
       },
-      "taskSourceContextSummary": {
-        "sourceUnavailable": "{{value0}} 소스를 사용할 수 없음: {{value1}}",
-        "someSourceHostsUnavailable": "일부 {{value0}} 소스 호스트를 사용할 수 없음: {{value1}}",
-        "reconnectOrUpdateTitle": "이 소스를 불러오려면 {{value0}}을(를) 다시 연결하거나 업데이트하세요."
-      },
+      "taskSourceContextSummary": {},
       "ShortcutKeyCombo": {
         "07eb4985a1": "{{value0}} 두 번 누르기"
       },

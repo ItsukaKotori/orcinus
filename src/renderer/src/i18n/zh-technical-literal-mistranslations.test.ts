@@ -56,7 +56,6 @@ describe('zh technical literal / sense fixes (#9574)', () => {
 
   it('preserves brand names in product copy', () => {
     expect(findByKey(zh, '855a76343a')).toBe('从 Ghostty 导入')
-    expect(findByKey(zh, '0a75e5e2fa')).toBe('创建 Hermes 自动化')
   })
 })
 

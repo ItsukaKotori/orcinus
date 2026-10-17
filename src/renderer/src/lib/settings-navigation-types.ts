@@ -33,7 +33,6 @@ const SETTINGS_NAV_TARGETS = [
   'agents',
   'orchestration',
   'artifacts',
-  'automations',
   'linear',
   'repo'
 ] as const

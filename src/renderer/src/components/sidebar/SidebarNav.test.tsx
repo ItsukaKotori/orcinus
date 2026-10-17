@@ -12,7 +12,6 @@ import { PSEUDO_LOCALIZATION_LOCALE } from '../../i18n/pseudo-localization'
 
 const mocks = vi.hoisted(() => ({
   state: {} as Record<string, unknown>,
-  openAutomationsPage: vi.fn(),
   openArtifactsPage: vi.fn(),
   openModal: vi.fn(),
   updateSettings: vi.fn(),
@@ -50,10 +49,7 @@ vi.mock('@/components/ui/context-menu', () => ({
   )
 }))
 
-import SidebarNav, {
-  shouldShowAutomationsButton,
-  shouldShowArtifactsButton
-} from './SidebarNav'
+import SidebarNav, { shouldShowArtifactsButton } from './SidebarNav'
 
 function gitRepo(): Repo {
   return {
@@ -77,7 +73,6 @@ function setSidebarState({
     settings,
     repos,
     activeView: 'worktrees',
-    openAutomationsPage: mocks.openAutomationsPage,
     openArtifactsPage: mocks.openArtifactsPage,
     openModal: mocks.openModal,
     updateSettings: mocks.updateSettings,
@@ -194,13 +189,15 @@ describe('SidebarNav', () => {
   it('updates localized labels when the language changes after mount', async () => {
     const container = await renderSidebarNav()
 
-    expect(queryButtonByText(container, 'Automations')).not.toBeNull()
+    expect(
+      container.querySelector('[aria-label="Search worktrees and browser tabs"]')
+    ).not.toBeNull()
 
     await act(async () => {
       await i18n.changeLanguage('zh')
     })
 
-    expect(queryButtonByText(container, '自动化')).not.toBeNull()
+    expect(container.querySelector('[aria-label="搜索工作树和浏览器选项卡"]')).not.toBeNull()
   })
 
   it('updates labels when pseudo-localization is enabled after mount', async () => {
@@ -210,57 +207,27 @@ describe('SidebarNav', () => {
       await i18n.changeLanguage(PSEUDO_LOCALIZATION_LOCALE)
     })
 
-    expect(queryButtonByText(container, '[Automations]')).not.toBeNull()
-  })
-
-  it('shows the Automations entry by default for older settings', () => {
-    expect(shouldShowAutomationsButton(null)).toBe(true)
-    expect(shouldShowAutomationsButton({})).toBe(true)
-  })
-
-  it('hides the Automations entry when the sidebar setting is off', () => {
-    expect(shouldShowAutomationsButton({ showAutomationsButton: false })).toBe(false)
-  })
-
-  it('omits the Automations row when the sidebar setting is off', async () => {
-    setSidebarState({
-      settings: {
-        ...getDefaultSettings('/tmp'),
-        showAutomationsButton: false
-      }
-    })
-
-    const container = await renderSidebarNav()
-
-    expect(queryButtonByText(container, 'Automations')).toBeNull()
-  })
-
-  it('hides Automations from its sidebar context menu', async () => {
-    const container = await renderSidebarNav()
-
-    const automationsMenu = getButtonByText(container, 'Automations').closest(
-      '[data-testid="context-menu"]'
-    )
-    expect(automationsMenu).not.toBeNull()
-
-    await clickButton(getHideButton(automationsMenu as HTMLElement))
-
-    expect(mocks.updateSettings).toHaveBeenCalledWith({ showAutomationsButton: false })
+    expect(
+      container.querySelector('[aria-label="[Search worktrees and browser tabs]"]')
+    ).not.toBeNull()
   })
 
   it('places the worktree palette search above the sidebar nav rows', async () => {
+    setSidebarState({
+      settings: { ...getDefaultSettings('/tmp'), showArtifactsButton: true }
+    })
     const container = await renderSidebarNav()
     const searchButton = container.querySelector<HTMLButtonElement>(
       'button[aria-label="Search worktrees and browser tabs"]'
     )
-    const automationsButton = getButtonByText(container, 'Automations')
+    const artifactsButton = getButtonByText(container, 'Artifacts')
 
     if (!searchButton) {
       throw new Error('worktree palette search button not rendered')
     }
     expect(searchButton.parentElement?.firstElementChild).toBe(searchButton)
     expect(
-      searchButton.compareDocumentPosition(automationsButton) & Node.DOCUMENT_POSITION_FOLLOWING
+      searchButton.compareDocumentPosition(artifactsButton) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy()
   })
 

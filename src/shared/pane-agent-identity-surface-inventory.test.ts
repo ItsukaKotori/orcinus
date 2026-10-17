@@ -144,11 +144,6 @@ const SURFACE_ROWS: readonly SurfaceRow[] = [
     marker: 'resumeSleepingAgentSessionsForWorktree'
   },
   {
-    row: 57,
-    path: 'src/renderer/src/lib/automation-session-reuse.ts',
-    marker: 'findReusableAutomationSession'
-  },
-  {
     row: 58,
     path: 'src/renderer/src/components/terminal-pane/pty-connection/cold-restore-resume-startup.ts',
     marker: 'bindBuildColdRestoreAgentResumeStartup'

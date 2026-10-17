@@ -1,9 +1,6 @@
 import { buildPaletteDocument, type PaletteDocument } from './palette-match/palette-document'
 import type { PaletteComposedEvidence } from './palette-match/evidence-composer'
-import {
-  buildWorktreeAutomationEvidence,
-  buildWorktreeCommentEvidence
-} from './worktree-palette-evidence'
+import { buildWorktreeCommentEvidence } from './worktree-palette-evidence'
 import {
   resolveWorktreeBranchLabel,
   resolveWorktreeDisplayName
@@ -28,8 +25,7 @@ export type WorktreePaletteDocumentSources = {
 
 function buildEvidence(worktree: Worktree): PaletteComposedEvidence[] {
   const comment = buildWorktreeCommentEvidence(worktree.comment ?? '')
-  const units = [comment, buildWorktreeAutomationEvidence(worktree)]
-  return units.filter((unit): unit is PaletteComposedEvidence => unit !== null)
+  return [comment].filter((unit): unit is PaletteComposedEvidence => unit !== null)
 }
 
 export function buildWorktreePaletteDocument(

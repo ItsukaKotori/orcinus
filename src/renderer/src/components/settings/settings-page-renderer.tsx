@@ -11,7 +11,6 @@ import {
 } from './settings-capability-section-renderers'
 import {
   renderArtifactsSettingsSection,
-  renderAutomationsSettingsSection,
   renderGeneralSettingsSection,
   renderIntegrationsSettingsSection,
 } from './settings-setup-workflow-section-renderers'
@@ -104,7 +103,6 @@ export function renderSettingsPage(context: SettingsRenderContext): React.JSX.El
                 {renderDesktopCapabilitySettingsSections(context)}
                 {renderGeneralSettingsSection(context)}
                 {renderIntegrationsSettingsSection(context)}
-                {renderAutomationsSettingsSection(context)}
                 {renderArtifactsSettingsSection(context)}
                 {renderGitSettingsSection(context)}
                 {renderTerminalSettingsSection(context)}

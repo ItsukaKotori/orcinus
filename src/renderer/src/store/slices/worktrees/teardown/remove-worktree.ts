@@ -229,19 +229,6 @@ export function createRemoveWorktree(
         rememberAuthoritativelyRemovedWorktrees(hostId, [worktreeId])
       }
 
-      const worktreeDisplayName = worktreeBeforeRemoval?.displayName?.trim()
-      if (worktreeDisplayName) {
-        try {
-          await window.api.automations?.snapshotWorkspaceName?.({
-            workspaceId: worktreeId,
-            displayName: worktreeDisplayName
-          })
-        } catch (error) {
-          // Why: snapshotting automation labels is best-effort; a stale preload/test harness must not block removal.
-          console.warn('Failed to snapshot automation workspace name:', error)
-        }
-      }
-
       await tearDownRemovedWorktreeRendererState({
         set,
         get,

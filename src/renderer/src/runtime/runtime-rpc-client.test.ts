@@ -28,21 +28,7 @@ const localTerminalRpc = vi.hoisted(() => ({
   isLocalTerminalRpcMethod: (method: string) => method.startsWith('terminal.')
 }))
 
-const localAutomationRpc = vi.hoisted(() => ({
-  callLocalAutomationRpc: vi.fn(),
-  isLocalAutomationRpcMethod: (method: string) =>
-    [
-      'automation.list',
-      'automation.create',
-      'automation.update',
-      'automation.delete',
-      'automation.runNow',
-      'automation.runs'
-    ].includes(method)
-}))
-
 vi.mock('./local-terminal-rpc', () => localTerminalRpc)
-vi.mock('./local-automation-rpc', () => localAutomationRpc)
 
 beforeEach(() => {
   clearRuntimeCompatibilityCacheForTests()
@@ -50,7 +36,6 @@ beforeEach(() => {
   runtimeEnvironmentCall.mockReset()
   runtimeEnvironmentSubscribe.mockReset()
   localTerminalRpc.callLocalTerminalRpc.mockReset()
-  localAutomationRpc.callLocalAutomationRpc.mockReset()
   vi.stubGlobal('window', {
     api: {
       runtime: { call: runtimeCall },
@@ -137,52 +122,6 @@ describe('runtime RPC client routing', () => {
     await callRuntimeRpc({ kind: 'local' }, 'repo.list')
     expect(runtimeCall).toHaveBeenCalledWith({ method: 'repo.list', params: undefined })
     expect(localTerminalRpc.callLocalTerminalRpc).not.toHaveBeenCalled()
-  })
-
-  it('routes local automation methods to the local adapter without touching window.api.runtime.call', async () => {
-    localAutomationRpc.callLocalAutomationRpc.mockResolvedValue({ automations: [], items: [] })
-
-    await expect(
-      callRuntimeRpc({ kind: 'local' }, 'automation.list', { selector: { kind: 'self' } })
-    ).resolves.toEqual({ automations: [], items: [] })
-    expect(localAutomationRpc.callLocalAutomationRpc).toHaveBeenCalledWith('automation.list', {
-      selector: { kind: 'self' }
-    })
-    expect(runtimeCall).not.toHaveBeenCalled()
-  })
-
-  it('keeps non-automation local methods on window.api.runtime.call', async () => {
-    runtimeCall.mockResolvedValue({
-      id: 'local',
-      ok: true,
-      result: [],
-      _meta: { runtimeId: 'local-runtime' }
-    })
-    await callRuntimeRpc({ kind: 'local' }, 'repo.list')
-    expect(runtimeCall).toHaveBeenCalledWith({ method: 'repo.list', params: undefined })
-    expect(localAutomationRpc.callLocalAutomationRpc).not.toHaveBeenCalled()
-  })
-
-  it('does not intercept automation methods for remote environments', async () => {
-    runtimeEnvironmentCall.mockResolvedValue({
-      id: 'remote',
-      ok: true,
-      result: { automations: [], items: [] },
-      _meta: { runtimeId: 'remote-runtime' }
-    })
-
-    await expect(
-      callRuntimeRpc({ kind: 'environment', environmentId: 'env-1' }, 'automation.list', undefined, {
-        skipCompatibilityCheck: true
-      })
-    ).resolves.toEqual({ automations: [], items: [] })
-    expect(localAutomationRpc.callLocalAutomationRpc).not.toHaveBeenCalled()
-    expect(runtimeEnvironmentCall).toHaveBeenCalledWith({
-      selector: 'env-1',
-      method: 'automation.list',
-      params: undefined,
-      timeoutMs: undefined
-    })
   })
 
   it('routes remote runtime calls through window.api.runtimeEnvironments.call', async () => {

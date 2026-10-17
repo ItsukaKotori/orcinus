@@ -190,27 +190,6 @@ describe('createAdeApi real assembly', () => {
     warn.mockRestore()
   })
 
-  it('routes the automations domain through the real dispatch plumbing', async () => {
-    const api = createAdeApi()
-    invokeMock.mockResolvedValueOnce({ result: null })
-    await expect(
-      api.automations.runPrecheck({ automationId: 'auto-1', runId: 'run-1' })
-    ).resolves.toBeNull()
-    expect(invokeMock).toHaveBeenCalledWith('automations_run_precheck', {
-      args: { automationId: 'auto-1', runId: 'run-1' }
-    })
-
-    invokeMock.mockResolvedValueOnce(null)
-    await api.automations.rendererReady()
-    expect(invokeMock).toHaveBeenCalledWith('automations_renderer_ready')
-
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    await expect(api.automations.retainExternalScopes({ owners: [] })).rejects.toMatchObject({
-      name: 'UnimplementedBridgeError'
-    })
-    warn.mockRestore()
-  })
-
   it('routes the computerUsePermissions domain through its commands', async () => {
     const api = createAdeApi()
     invokeMock.mockResolvedValue({})

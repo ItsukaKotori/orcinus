@@ -8,29 +8,12 @@ import type { HostedReviewInfo } from '../../../shared/hosted-review'
 import type { Worktree } from '../../../shared/worktree/types'
 
 /** Chip label kinds the worktree row can render for a supporting-evidence unit. */
-export type PaletteSupportingKind =
-  | 'comment'
-  | 'pr'
-  | 'mr'
-  | 'issue'
-  | 'port'
-  | 'task'
-  | 'automation'
+export type PaletteSupportingKind = 'comment' | 'pr' | 'mr' | 'issue' | 'port' | 'task'
 
 export type WorktreePaletteReviewSource = {
   provider: HostedReviewInfo['provider']
   number: number
   title?: string
-}
-
-function toIsoDate(epochMs: number | undefined): string {
-  if (!epochMs || !Number.isFinite(epochMs)) {
-    return ''
-  }
-  const date = new Date(epochMs)
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${date.getFullYear()}-${month}-${day}`
 }
 
 export function buildWorktreeCommentEvidence(comment: string): PaletteComposedEvidence | null {
@@ -58,40 +41,6 @@ export function applyWorktreeCommentSnippet(
     .map((range) => ({ start: range.start + delta, end: range.end + delta }))
     .filter((range) => range.start >= 0 && range.end <= snippet.text.length)
   return { text: snippet.text, ranges: shifted.length ? shifted : [snippet.matchRange] }
-}
-
-export function buildWorktreeAutomationEvidence(
-  worktree: Worktree
-): PaletteComposedEvidence | null {
-  const provenance = worktree.automationProvenance
-  if (!provenance) {
-    return null
-  }
-  return composePaletteEvidence({
-    id: `automation:${provenance.automationRunId || provenance.automationId}`,
-    kind: 'automation',
-    accessibilityLabel: 'Created by automation',
-    parts: [
-      { key: 'name', text: provenance.automationNameSnapshot, profile: 'structured-label' },
-      {
-        key: 'run-title',
-        text: provenance.automationRunTitleSnapshot,
-        profile: 'structured-label'
-      },
-      {
-        key: 'run-id',
-        text: provenance.automationRunId,
-        profile: 'identifier',
-        identifier: { kind: 'key' }
-      },
-      {
-        key: 'created',
-        text: toIsoDate(provenance.createdAt),
-        profile: 'identifier',
-        identifier: { kind: 'date' }
-      }
-    ]
-  })
 }
 
 function resolveLinkedTaskIdentifier(worktree: Worktree): string {

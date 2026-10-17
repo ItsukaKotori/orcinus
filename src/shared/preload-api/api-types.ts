@@ -16,7 +16,6 @@ import type {
 } from './api/agent-usage-api'
 import type { AiVaultApi } from './api/ai-vault-api'
 import type { AppApi, E2EApi, PlatformApi } from './api/app-api'
-import type { AutomationsApi } from './api/automation-api'
 import type { CliApi } from './api/cli-install-api'
 import type { TerminalPreviewApi } from './api/terminal-preview-api'
 import type { EphemeralVmApi } from './api/ephemeral-vm-api'
@@ -120,7 +119,6 @@ export type PreloadApi = {
   minimaxCredentials: MinimaxCredentialsApi
   grokAccounts: GrokAccountsApi
   ssh: SshApi
-  automations: AutomationsApi
   wsl: RuntimeApi['wsl']
   pwsh: RuntimeApi['pwsh']
   gitBash: RuntimeApi['gitBash']
@@ -130,7 +128,6 @@ export type PreloadApi = {
 
 export type { ClaudeUsageApi, CodexUsageApi, OpenCodeUsageApi } from './api/agent-usage-api'
 export type { AiVaultApi } from './api/ai-vault-api'
-export type { AutomationsApi, ExternalAutomationManagerResult } from './api/automation-api'
 export type { AppApi } from './api/app-api'
 export type { ExportApi } from './api/filesystem-api'
 export type {

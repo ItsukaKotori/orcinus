@@ -87,8 +87,7 @@
       "mr": "MR",
       "port": "Port",
       "pr": "PR",
-      "task": "Tâche",
-      "automation": "Exécution"
+      "task": "Tâche"
     },
     "linearIssue": {
       "createLabel": "Créer un worktree à partir de l'issue Linear {{value0}} : {{value1}}",
@@ -444,9 +443,7 @@
         },
         "worktree": {
           "background": {
-            "terminals": {
-              "setupTitle": "Configuration"
-            }
+            "terminals": {}
           }
         },
         "work": {
@@ -682,12 +679,7 @@
       }
     },
     "hooks": {
-      "useAutomationDispatchEvents": {
-        "59718b120b": "L'espace de travail cible n'est plus disponible.",
-        "16a21d6413": "La reconnexion SSH nécessite des identifiants interactifs.",
-        "386db94f3e": "Le projet cible n'est plus disponible.",
-        "3ad7d77f57": "L'espace de travail cible se trouve sur un hôte différent de la cible de cette exécution d'automatisation."
-      },
+      "useAutomationDispatchEvents": {},
       "useComposerState": {
         "7eb3f44ff7": "L'agent sélectionné est désactivé. Choisissez un agent activé avant de créer.",
         "b2ead86962": "Échec de la résolution de la base de la PR.",
@@ -792,8 +784,6 @@
         "tasksDescription": "Connectez des fournisseurs, installez le skill Linear et choisissez ce qui apparaît dans Tâches.",
         "artifactsTitle": "Artefacts",
         "artifactsDescription": "Partagez des fichiers HTML et Markdown avec votre équipe et gérez leurs liens publics.",
-        "automationsTitle": "Automatisations",
-        "automationsDescription": "Planifiez le travail des agents et choisissez si Automatisations apparaît dans la barre latérale.",
         "shareSkillsTitle": "Partage de skills",
         "shareSkillsDescription": "Partagez vos skills avec un lien non répertorié. Toute personne qui l'a peut les installer.",
         "floatingWorkspaceWebDescription": "Onglets globaux de terminal et de markdown."
@@ -3716,7 +3706,6 @@
           "c86d83b5c3": "Nouveau",
           "1b5c41caee": "Orcinus Mobile",
           "9c95e1ce91": "Agents",
-          "f323383e9a": "Automatisations",
           "e7ad3c540d": "Ouvrir les tâches Jira",
           "c39ab10000": "Ouvrir les tâches Linear",
           "196c1b5362": "Ouvrir les tâches GitLab",
@@ -3905,14 +3894,7 @@
           "b105fd3057": "Lié à Linear {{value0}}",
           "3f2649eeb8": "Issue #{{value0}} liée",
           "fe075cb851": "Notes de l'espace de travail",
-          "automationHeader": "Automatisation",
-          "openAutomation": "Ouvrir l'automatisation",
-          "openAutomationRun": "Ouvrir l'exécution",
           "automationCreated": "Créé par automatisation",
-          "checkingAutomationAvailability": "Vérification de la disponibilité de l'automatisation...",
-          "automationMissing": "Cette automatisation n'est plus disponible.",
-          "automationRunMissing": "L'historique d'exécution n'est plus disponible.",
-          "automationAvailabilityUnavailable": "La disponibilité de l'automatisation n'a pas pu être vérifiée.",
           "cliHeader": "Orcinus CLI",
           "cliCreatedFromAgent": "Créé par un agent via `orca worktree create`",
           "cliCreatedFromShell": "Créé via `orca worktree create`",
@@ -4841,7 +4823,6 @@
           "ca1590d42f": "Icône de l'app",
           "5db6ba961f": "Afficher le bouton Orcinus Mobile en haut de la barre latérale gauche.",
           "fa882a3e6b": "Afficher le bouton Automatisations en haut de la barre latérale gauche.",
-          "511f270ebb": "Afficher le bouton Automatisations",
           "661942ab7f": "Afficher le bouton Tâches en haut de la barre latérale gauche.",
           "cf81907069": "Afficher le bouton Tâches",
           "dc29f3cc0d": "Barre latérale",
@@ -5290,9 +5271,6 @@
         "GeneralWorkspaceSettingsSection": {
           "3d538a98f7": "Choisissez les applications proposées dans le menu « Ouvrir dans » d'un espace de travail.",
           "008f92085f": "Applications « Ouvrir dans »",
-          "824b98a0d9": "Demander confirmation avant de supprimer des automatisations et leur historique d'exécution.",
-          "ea98373cd8": "Confirmer avant de supprimer les automatisations",
-          "d2dd2ca2e3": "Afficher une boîte de dialogue de confirmation avant de supprimer une automatisation et son historique d'exécution.",
           "28bc3d085e": "Demander confirmation avant de supprimer un espace de travail depuis le menu contextuel. En cas d'échec, l'option « Forcer la suppression » reste disponible.",
           "9f380934cf": "Confirmer avant de supprimer les espaces de travail",
           "5734db82af": "Afficher une boîte de dialogue de confirmation avant de supprimer un espace de travail.",
@@ -6884,19 +6862,12 @@
             "e80c2af428": "Choisissez l'icône d'app affichée dans le Dock et le sélecteur de fenêtres.",
             "2b313598c6": "Icône de l'app",
             "839fb1e3ed": "boîte à outils",
-            "ac79fe4a04": "afficher",
             "648eeada79": "masquer",
-            "6cf5f54ce1": "bouton",
             "5bff6a2ef0": "barre latérale",
             "5e5b8878bf": "téléphone",
             "74618577c7": "mobile",
             "682293cadf": "Afficher le bouton Orcinus Mobile en haut de la barre latérale gauche.",
             "1de96ec8a6": "Afficher le bouton Orcinus Mobile",
-            "4c920ab2d1": "planification",
-            "58f4e22fa2": "automatisation",
-            "b186f3cefb": "automatisations",
-            "ae13a0d340": "Afficher le bouton Automatisations en haut de la barre latérale gauche.",
-            "caa27e1a8e": "Afficher le bouton Automatisations",
             "6b846424cc": "linear",
             "2ee4810f38": "github",
             "0d5a74b606": "tâches",
@@ -7348,10 +7319,7 @@
             "7e9b556873": "ignorer",
             "ca86dd6e27": "boîte de dialogue",
             "9f8558233a": "confirmer",
-            "7edf4f69e2": "automatisation",
             "84c67d0108": "supprimer",
-            "a0c44061ee": "Afficher une boîte de dialogue de confirmation avant de supprimer une automatisation et son historique d'exécution.",
-            "d0a65b27fd": "Confirmer avant de supprimer les automatisations",
             "df10666259": "worktree",
             "ae98c9cf36": "Afficher une boîte de dialogue de confirmation avant de supprimer un espace de travail.",
             "913242091d": "Confirmer avant de supprimer les espaces de travail",
@@ -9011,22 +8979,7 @@
           "skillsTitle": "Partage de skills",
           "skillsDescription": "Partagez une skill ou tout un ensemble derrière un lien non répertorié, et installez-les sur toutes les machines que vous utilisez."
         },
-        "automations": {
-          "showButton": "Afficher le bouton Automatisations",
-          "showButtonDescription": "Afficher le raccourci Automations dans la barre latérale.",
-          "howItWorksTitle": "Fonctionnement des Automations",
-          "howItWorksDescription": "Planifiez le travail d'un agent une fois, puis laissez Orcinus créer chaque exécution et regrouper ses résultats.",
-          "defineStepTitle": "Décrire le travail",
-          "defineStepDescription": "Choisissez un projet, un agent, un prompt et une planification.",
-          "runStepTitle": "Orcinus lance chaque exécution",
-          "runStepDescription": "L'agent sélectionné reçoit un espace de travail neuf quand la planification arrive à échéance.",
-          "reviewStepTitle": "Consulter les résultats",
-          "reviewStepDescription": "Inspectez les exécutions récentes et poursuivez le travail dès que nécessaire.",
-          "openAutomations": "Ouvrir Automations",
-          "openAutomationsDescription": "Créez des planifications et inspectez les exécutions récentes.",
-          "title": "Automatisations",
-          "description": "Planifiez le travail des agents et choisissez si Automatisations apparaît dans la barre latérale."
-        },
+        "automations": {},
         "AgentAwakeSetting": {
           "on": "Activé",
           "auto": "Agent",
@@ -11698,399 +11651,102 @@
       },
       "automations": {
         "AutomationCustomCronPanel": {
-          "3e3b2c369f": "Expression cron",
-          "e81a02d61b": "Saisissez une expression cron à cinq champs valide avant d'enregistrer.",
-          "968e66d686": "Saisissez une expression cron à cinq champs.",
-          "cadb7b0bc9": "invalide",
-          "f6ca30da23": "Cron personnalisé valide",
-          "a226dbdd40": "Minute",
-          "ec9c1e35df": "Heure",
-          "2d82246d23": "Jour",
-          "0e1de0358b": "Mois",
-          "77e96bded6": "Jour de la semaine"
+          "cadb7b0bc9": "invalide"
         },
-        "AutomationPromptDisclosure": {
-          "showLess": "Afficher moins",
-          "showMore": "Afficher plus"
-        },
+        "AutomationPromptDisclosure": {},
         "AutomationDetail": {
           "007c8ad874": "Prompt",
-          "a1d52c2189": "Couverture d'utilisation",
-          "449fc83bf7": "Tokens",
-          "401f40ae79": "Dépense est.",
-          "a7c312430d": "Dernière exécution",
-          "2df8970cd5": "Agent",
-          "e353ab9516": "Pré-vérification",
-          "620b22145e": "Marge",
-          "15ea446b93": "Session",
-          "5405a09b1f": "Lieu d'exécution",
-          "2f8baf5360": "Créer depuis",
-          "578ff46987": "Prochaine exécution",
-          "18763ded26": "Planification",
-          "dbef8dc110": "Cette automatisation SSH ne s'exécute que si Orcinus peut joindre l'hôte SSH. Si la reconnexion exige des identifiants interactifs ou si l'hôte est indisponible, l'exécution est enregistrée comme ignorée.",
-          "1f6026358e": "Supprimer l'automatisation",
-          "d79452fb30": "Reprendre l'automatisation",
-          "91a4155e95": "Mettre l'automatisation en pause",
-          "4b1ea02d2e": "Modifier l'automatisation",
-          "2fb1605beb": "Exécuter maintenant",
-          "221916d93c": "Créez une automatisation pour planifier le travail des agents.",
           "de0fedac06": "new_per_run",
-          "51a470b966": "ssh",
-          "b09b2384fd": "En pause",
-          "eaa02014f8": "Activé",
-          "29baf8f4c2": "Source"
+          "51a470b966": "ssh"
         },
         "AutomationEditorDialog": {
-          "fb1896a5e7": "Annuler",
-          "57b722cbba": "Agent",
-          "6ff66f9012": "Nouvelle exécution",
-          "a2e688226d": "Worktree",
-          "6f9610e667": "Les exécutions se font dans un worktree de l'espace de travail sélectionné. Chaque nouvelle exécution crée un espace de travail neuf depuis la branche sélectionnée.",
-          "2c3fd9bfa1": "Aide sur le mode espace de travail",
-          "b28b140eaf": "Espace de travail",
-          "0d17f4ca8f": "Sélectionner un projet",
-          "02d351877e": "Projet",
-          "a4ac8fcc62": "/goal",
-          "827b25a81e": "Prend en charge les skills, les chemins de fichiers et les commandes intégrées comme",
-          "6d778190b7": "Exécuter l'audit hebdomadaire des dépendances et résumer les changements à risque.",
-          "058c23cb3f": "Prompt",
-          "c4b19094c2": "Planification",
-          "e46c1aa9ad": "Créer",
-          "a9d9dccf77": "Enregistrer",
-          "777548c2d6": "Enregistrer les modifications",
-          "e8c2a14f70": "Une fois enregistrée, s'exécute automatiquement jusqu'à sa mise en pause.",
           "ff5db28639": "existant"
         },
         "AutomationEditorDialogHeader": {
-          "31f9253920": "Utiliser un modèle",
-          "7e35393632": "Hermes",
-          "6f309eef8d": "Orcinus",
-          "58f56b73d9": "Nom de l'automatisation",
-          "1d9826933e": "Audit du dépôt en semaine",
-          "4133d33862": "Créer une automatisation",
-          "0a75e5e2fa": "Créer une automatisation Hermes",
-          "03142e7721": "Modifier une automatisation Hermes",
-          "17086b48ee": "Modifier l'automatisation",
           "4c8e1a72b9": "Une tâche d'agent récurrente"
         },
-        "AutomationMissedRunGraceField": {
-          "0f4459e91d": "48 heures",
-          "adbab51feb": "24 heures",
-          "ba50e2a230": "12 heures",
-          "2dc9ee84d0": "3 heures",
-          "521f77cd58": "1 heure",
-          "e5ad263ae5": "30 minutes",
-          "529dc6c0b7": "Pas de marge",
-          "3d70c185c8": "Si Orcinus ou l'hôte d'exécution était indisponible à l'heure prévue, Orcinus exécute une occurrence manquée dès qu'il redevient disponible dans cette fenêtre. Les exécutions manquées plus anciennes sont ignorées.",
-          "3df53d554a": "Aide sur la marge des exécutions manquées",
-          "fc089e5fde": "Marge"
-        },
-        "AutomationEditorPromptSection": {
-          "a7c3e91b04": "Modifier le nom"
-        },
-        "AutomationPrecheckFields": {
-          "d2a2ac89ac": "10 min",
-          "bf49585b3c": "5 min",
-          "d84d3765fd": "2 min",
-          "c820119736": "1 min",
-          "51e28cdad9": "30 s",
-          "bb2dfb3629": "Délai d'expiration",
-          "99a577306c": "gh pr list --json number -q '.[0].number'",
-          "c2a762a180": "Pré-vérification"
-        },
+        "AutomationMissedRunGraceField": {},
+        "AutomationEditorPromptSection": {},
+        "AutomationPrecheckFields": {},
         "AutomationRunHistory": {
-          "402651bfb6": "Aucune exécution pour l'instant.",
-          "9974a2b429": "Statut",
-          "13988187b3": "Tokens",
-          "86a248187e": "Dépense",
-          "149c0b49c7": "Espace de travail",
-          "8faaa00726": "Exécution",
-          "53fc5f07ab": "Historique des exécutions",
-          "a00e38d1a3": "n/d",
           "fdb3caa8fb": "connu"
         },
-        "AutomationRunPageFrame": {
-          "40a511bed4": "Contexte d'exécution",
-          "33741dd973": "Retour aux exécutions"
-        },
-        "AutomationSchedulePicker": {
-          "9e677335b0": "Minute",
-          "d90981f766": "Heure",
-          "6b914c5fbb": "Jour",
-          "233b8c94b6": "Cadence",
-          "55b2ef82a4": "Toutes les heures",
-          "f0202f3a89": "Chaque jour",
-          "57e83307d0": "En semaine",
-          "837d902bba": "Hebdomadaire",
-          "ddba78647e": "Cron personnalisé"
-        },
-        "AutomationTimeField": {
-          "39ec1383f6": "AM ou PM",
-          "32a5e4e35e": "Minute",
-          "aa593eb5e2": "Heure"
-        },
-        "AutomationSessionField": {
-          "f3c76dce51": "Réutiliser",
-          "c90888ee94": "Nouvelle",
-          "b675112193": "Réutiliser envoie les futures exécutions vers la précédente session d'automatisation encore vivante. Si cette session n'existe plus, Orcinus en démarre une nouvelle.",
-          "4bdce31f37": "Aide sur la réutilisation de session",
-          "5ad314118e": "Session"
-        },
+        "AutomationRunPageFrame": {},
+        "AutomationSchedulePicker": {},
+        "AutomationTimeField": {},
+        "AutomationSessionField": {},
         "AutomationsPage": {
           "2695883141": "supprimer",
-          "c3a28c9793": "Sélectionnez une automatisation pour voir ses exécutions.",
-          "295698292f": "Relancer",
-          "0e110a3469": "Exécutions",
-          "bb1b2cd31e": "Vue d'ensemble",
           "97ff587ee3": "Connectez cette source pour détecter les automatisations Hermes dans le profil distant.",
           "aaa007846f": "source indisponible",
-          "25060635c6": "Ajouter",
-          "d207ab4c25": "Partir d'un modèle",
-          "15e0bfb13b": "Supprimer",
-          "f4612e3f78": "Édition",
-          "2faecab10b": "Exécuter maintenant",
           "82eb6cb933": "source",
-          "13118faadf": "Projet inconnu",
           "587a4b205c": "Suivant",
           "761a35834d": "Automatisation",
-          "73f630b49d": "Annuler",
-          "1b586f0e2b": "activé",
-          "02a33e3204": "de",
-          "9adfab2596": "Supprimer l'automatisation externe",
-          "1e2e41392f": "Ne plus demander",
-          "b264564427": "et son historique d'exécution. Les espaces de travail créés par les exécutions précédentes ne sont pas supprimés.",
-          "080dcb5fbb": "Supprimer l'automatisation",
-          "19a6e30eae": "Actualiser les automatisations",
           "8d1afa8269": "Ajouter une automatisation",
-          "77c2778945": "Automatisations",
           "0329f9bef1": "Fermer · Esc",
           "67c7ff795b": "Fermer les automatisations",
-          "e1bf9b1512": "L'espace de travail n'est pas disponible.",
           "3e42a5cc1b": "Échec de la connexion SSH.",
           "9f2855677c": "SSH connecté.",
-          "126d726546": "L'action sur l'automatisation externe a échoué.",
-          "37288942f0": "Automatisation externe reprise.",
-          "77c518a34b": "Automatisation externe mise en pause.",
-          "4d7878402c": "Automatisation externe en file d'attente.",
-          "4c22bc9913": "Automatisation externe supprimée.",
-          "3a4c476aa0": "Échec de la nouvelle exécution de l'automatisation.",
-          "a1bdb57008": "Exécution de l'automatisation en file d'attente.",
-          "8a3226f172": "Ouvrir les paramètres",
-          "d2a01b0b6f": "Vous pouvez changer cela dans les paramètres.",
-          "690b94da54": "Cette confirmation sera ignorée la prochaine fois.",
-          "b11170a008": "Échec de l'enregistrement de l'automatisation.",
-          "2a20596d6b": "Automatisation enregistrée.",
-          "244727e655": "Automatisation mise à jour.",
-          "77b81bc4ac": "Automatisation Hermes créée.",
-          "08efc3ae12": "Automatisation Hermes mise à jour.",
-          "e431bb85d4": "Choisissez un espace de travail sur le même hôte que cette automatisation Hermes.",
-          "32534e7c9c": "Choisissez un espace de travail disponible avant d'enregistrer.",
-          "2360ffc956": "Choisissez un agent activé avant d'enregistrer.",
-          "6e91dab317": "Saisissez une planification avancée valide avant d'enregistrer.",
-          "64bdb2304f": "Choisissez une planification prise en charge avant d'enregistrer.",
-          "2430fecf53": "Choisissez un lieu d'exécution et saisissez un prompt avant d'enregistrer.",
           "7934ee0d81": "Connecter SSH",
           "f93ed7a6f8": "Connexion...",
           "8705757e27": "tâche",
-          "376631ef2b": "Reprendre",
-          "b457436d6a": "Pause",
           "0ae52dd760": "hermes",
           "e059042585": "Lecture seule",
           "aecdc3681f": "Gérable",
-          "8500baacb4": "source externe",
-          "36f71740a7": "Espace de travail sélectionné",
-          "cd8397cc32": "Nouvel espace de travail à chaque exécution",
           "dd0bc7a1ba": "new_per_run",
           "7b2e285552": "Les connexions SSH sont indisponibles dans ce client.",
           "d441032f7e": "pause",
           "5918020edc": "exécuter",
           "a21f6c33ad": "Source des automatisations actualisée.",
           "53f06f0ad5": "Réessayer la source",
-          "pendingAutomationMissing": "Cette automatisation n'est plus disponible.",
-          "pendingAutomationRunMissing": "L'historique d'exécution n'est plus disponible.",
           "noSearchMatches": "Aucune automatisation ne correspond à votre recherche.",
-          "paused": "En pause",
           "runCount": "{{count}} exécutions",
           "runCount_one": "{{count}} exécution",
           "runCount_other": "{{count}} exécutions",
           "projectDefaultBaseRef": "défaut du projet",
           "createFromBaseRef": "Créer depuis {{baseRef}}",
-          "missingWorkspace": "Espace de travail manquant",
-          "runUsageSummary": "{{cost}} est. · {{tokens}} tokens",
-          "usageUnavailable": "Utilisation indisponible",
-          "noRunUsageYet": "Aucune utilisation d'exécution pour l'instant",
-          "noWorkspace": "Aucun espace de travail",
-          "latestSavedOutput": "Dernière sortie enregistrée",
-          "backToList": "Toutes les automatisations",
-          "tableName": "Nom",
-          "tableProject": "Projet",
-          "tableStatus": "Statut",
-          "tableActions": "Actions",
-          "newAutomation": "Nouvelle automatisation",
-          "rowActions": "Actions d'automatisation",
-          "tableLastRun": "Dernière exécution",
           "noListMatches": "Aucune automatisation ne correspond."
         },
-        "AutomationsPageSkeleton": {
-          "55527b7bcf": "Chargement des automatisations"
-        },
-        "CreateFromPicker": {
-          "f061f49e3f": "Rechercher des branches du dépôt...",
-          "dd3841b442": "Brancher depuis",
-          "ef6d762538": "Défaut du projet",
-          "e53d306056": "{{value0}} (par défaut)",
-          "79512f22a7": "Aucune branche trouvée.",
-          "9ce96621f4": "Recherche des branches..."
-        },
+        "AutomationsPageSkeleton": {},
+        "CreateFromPicker": {},
         "ExternalAutomationManagers": {
-          "e02f970595": "Aucun gestionnaire d'automatisations externes trouvé.",
-          "6da3bfba4b": "automatisations trouvées.",
-          "3d58d5b67d": "Non",
-          "a42bf2b27e": "Supprimer l'automatisation externe",
-          "1c3bfd38fe": "Reprendre l'automatisation externe",
-          "0def1693bb": "Mettre l'automatisation externe en pause",
-          "1df491fd00": "Modifier l'automatisation externe",
-          "cc77ba88ff": "Exécuter l'automatisation externe",
-          "5820648765": "Dernière",
-          "844f1acb72": "trouvé(s)",
-          "20fd7a3a15": "suivant",
-          "c6695e6fbd": "Automatisations externes",
-          "5524365227": "OpenClaw",
-          "766abf833c": "Hermes",
           "bf5f67b590": "hermes",
-          "e66091daf4": "exécutions",
-          "8e9165af08": "exécuter",
-          "2b0adbce21": "En pause",
-          "b3feba84c7": "Actif",
-          "92405f1431": "Indisponible",
-          "dbdcec22bd": "Lecture seule",
-          "0a2d4359a8": "Gérable",
-          "330b3c32e8": "disponible",
-          "e2532150ed": "automatisations",
-          "701515f010": "automatisation"
+          "330b3c32e8": "disponible"
         },
-        "ExternalAutomationRunTable": {
-          "0ba9c0a95c": "Page d'exécutions suivante",
-          "52d468a0b8": "Page d'exécutions précédente",
-          "7475c0ce96": "sur",
-          "be551397ca": "Statut",
-          "a813df9808": "Aperçu",
-          "d4b34feb66": "Heure d'exécution",
-          "2d4388a908": "Exécutions",
-          "9c080765ff": "Aucune exécution Hermes trouvée pour l'instant.",
-          "8ea934cacf": "Chargement des exécutions...",
-          "d5527d8fe7": "exécutions",
-          "872d032d05": "exécuter"
-        },
+        "ExternalAutomationRunTable": {},
         "HermesCronOutputView": {
-          "e27c716b43": "Prompt",
-          "4557213074": "Réponse",
-          "05affc68e3": "Erreur",
           "88d48157fc": "default"
         },
-        "WorkspaceCombobox": {
-          "ee5b280eba": "Aucun espace de travail trouvé.",
-          "8e9c8cc6b5": "Rechercher des espaces de travail...",
-          "66a0cd9628": "Sélectionner un espace de travail"
-        },
+        "WorkspaceCombobox": {},
         "automation": {
           "templates": {
-            "37571fcb16": "Rechercher les travaux bloqués, les fichiers générés obsolètes et les validations locales en échec.",
-            "8a0228bea3": "Vérification horaire de la file d'attente",
-            "3b7281c75f": "Analyser le travail récent et signaler les risques de justesse, d'UX et de couverture de tests.",
-            "6023075b27": "Revue quotidienne des changements",
-            "513401db93": "Préparer un résumé hebdomadaire des risques de release à partir de l'état actuel du projet.",
-            "39ed39280a": "Préparation de la release",
-            "a7fbd32ddb": "Vérifier chaque jour de semaine les dépendances, les tests en échec et les changements ouverts à risque.",
-            "b84757677d": "Audit du dépôt en semaine",
-            "repoHealth": {
-              "category": "Santé du dépôt",
-              "name": "Audit du dépôt en semaine",
-              "prompt": "Passer en revue la santé du dépôt. Vérifier les mises à jour de dépendances, les tests en échec, l'état du lint/typecheck et les changements ouverts à risque. Résumer les constats et suggérer l'action suivante."
-            },
-            "releasePrep": {
-              "category": "Préparation de release",
-              "name": "Revue de préparation de release",
-              "prompt": "Préparer un résumé de préparation de release. Rechercher les bloqueurs, les changements à risque non mergés, les validations manquantes et les lacunes de documentation. Terminer par une recommandation concise : release ou pas."
-            },
-            "recurringReview": {
-              "category": "Revue récurrente",
-              "name": "Revue quotidienne des changements",
-              "prompt": "Passer en revue les changements récents de cet espace de travail. Se concentrer sur les risques de justesse, les régressions UX, les tests manquants et les tâches de suivi. Garder le rapport court et actionnable."
-            },
-            "maintenance": {
-              "category": "Maintenance",
-              "name": "Vérification de maintenance horaire",
-              "prompt": "Rechercher les travaux bloqués, les fichiers générés obsolètes, les validations en échec et tout ce qui requiert une attention humaine. Ne signaler que les problèmes actionnables."
-            }
+            "repoHealth": {},
+            "releasePrep": {},
+            "recurringReview": {},
+            "maintenance": {}
           },
           "list": {
             "last": {
-              "run": {
-                "done": "Terminé",
-                "failed": "Échec"
-              }
+              "run": {}
             }
           },
           "schedule": {
-            "label": {
-              "086a5a9fe2": "Planification invalide",
-              "ba20c92073": "Planification personnalisée",
-              "a95afb7483": "Toutes les heures à :{{minute}}",
-              "280ccd2701": "Chaque jour à {{time}}",
-              "3f1422adc1": "En semaine à {{time}}",
-              "cc71e252ba": "{{day}}s à {{time}}"
-            }
+            "label": {}
           }
         },
         "external": {
           "automation": {
             "schedule": {
-              "display": {
-                "a8e92b815a": "Planification indisponible"
-              }
+              "display": {}
             }
           }
         },
-        "AutomationProjectCombobox": {
-          "search": "Rechercher des projets/dossiers…",
-          "empty": "Aucun projet/dossier ne correspond à votre recherche.",
-          "chooseHost": "Choisir l'hôte d'automatisation",
-          "adding": "Ajout du projet…",
-          "addProject": "Ajouter un projet"
-        },
-        "AutomationSetupDecisionField": {
-          "5a7863909c": "Exécuter le setup pour chaque nouvel espace de travail",
-          "18f000ad4e": "Avancé",
-          "874b72195b": "Quand cette automatisation crée un espace de travail, le prépare comme lors de la création manuelle d'un worktree — exécute le setup du projet et ouvre ses onglets de terminal."
-        },
-        "AutomationListSearchField": {
-          "tooLong": "Le texte recherché est trop long — liste non filtrée",
-          "label": "Rechercher des automatisations",
-          "placeholder": "Rechercher...",
-          "tooLongShort": "Trop long",
-          "clear": "Effacer la recherche"
-        },
-        "AutomationListLocalRows": {
-          "c92c9463c6": "Actions d'automatisation"
-        },
-        "AutomationListFilterMenu": {
-          "926e785e4d": "Rechercher des agents...",
-          "491043ee45": "Aucun agent ne correspond à votre recherche.",
-          "removeFilter": "Retirer le filtre {{value0}}",
-          "failed": "Échec",
-          "succeeded": "Réussie",
-          "neverRan": "Jamais exécutée",
-          "filters": "Filtres",
-          "all": "Tous",
-          "clear": "Réinitialiser les filtres",
-          "agent": "Agent",
-          "lastRun": "Dernière exécution"
-        },
-        "AutomationListSortHeader": {
-          "sortedAscending": "{{value0}}, tri croissant",
-          "sortedDescending": "{{value0}}, tri décroissant"
-        }
+        "AutomationProjectCombobox": {},
+        "AutomationSetupDecisionField": {},
+        "AutomationListSearchField": {},
+        "AutomationListLocalRows": {},
+        "AutomationListFilterMenu": {},
+        "AutomationListSortHeader": {}
       },
       "agent": {
         "AgentCombobox": {
@@ -12234,11 +11890,7 @@
         "noGitLabWorkTitle": "Aucun travail GitLab",
         "noGitLabWorkDescription": "Aucun work GitLab ne correspond à ce filtre."
       },
-      "taskSourceContextSummary": {
-        "sourceUnavailable": "Source {{value0}} indisponible : {{value1}}",
-        "someSourceHostsUnavailable": "Certains hôtes de la source {{value0}} sont indisponibles : {{value1}}",
-        "reconnectOrUpdateTitle": "Reconnectez ou mettez à jour {{value0}} pour charger cette source."
-      },
+      "taskSourceContextSummary": {},
       "ShortcutKeyCombo": {
         "07eb4985a1": "Appuyez deux fois sur {{value0}}"
       },

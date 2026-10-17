@@ -8,7 +8,6 @@ import { StrictMode } from 'react'
 import { useTranslation } from 'react-i18next'
 import App from './App'
 import { RecoverableRenderErrorBoundary } from './components/error-boundaries/RecoverableRenderErrorBoundary'
-import { installAutomationHostDiagnostic } from './components/automations/automation-host-diagnostics'
 import { applyDocumentTheme } from './lib/document-theme'
 import { installTypingLatencyDiagnostic } from './lib/typing-latency/diagnostic'
 import { shouldEnableReactGrab } from './lib/react-grab-dev-gate'
@@ -32,7 +31,6 @@ if (!(globalThis as { __adeHostShortcutFallbackInstalled?: boolean }).__adeHostS
 }
 
 installTypingLatencyDiagnostic()
-installAutomationHostDiagnostic()
 
 if (
   import.meta.env.DEV &&

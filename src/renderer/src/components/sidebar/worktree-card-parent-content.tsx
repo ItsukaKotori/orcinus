@@ -30,13 +30,10 @@ export function WorktreeCardParentContent({
     titleRenaming,
     isDeleting,
     hoverComment,
-    metaAutomationProvenance,
     metaCliProvenance,
     detailsHoverControl,
     handleRenameTitle,
-    handleEditComment,
-    handleOpenAutomation,
-    handleOpenAutomationRun
+    handleEditComment
   } = card
   const {
     titleOnlyCard,
@@ -62,7 +59,6 @@ export function WorktreeCardParentContent({
     hasHoverDetails && !titleRenaming ? (
       <WorktreeCardDetailsHover
         comment={hoverComment}
-        automationProvenance={metaAutomationProvenance}
         cliProvenance={metaCliProvenance}
         branchName={hoverBranchName}
         workspaceTitle={hoverWorkspaceTitle}
@@ -71,8 +67,6 @@ export function WorktreeCardParentContent({
         hoverControl={detailsHoverControl}
         onRenameWorkspaceTitle={affiliateListMode ? undefined : handleRenameTitle}
         onEditComment={affiliateListMode ? undefined : handleEditComment}
-        onOpenAutomation={affiliateListMode ? undefined : handleOpenAutomation}
-        onOpenAutomationRun={affiliateListMode ? undefined : handleOpenAutomationRun}
       >
         {identityContent}
       </WorktreeCardDetailsHover>

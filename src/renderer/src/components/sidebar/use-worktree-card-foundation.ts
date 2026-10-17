@@ -27,8 +27,6 @@ export function useWorktreeCardFoundation({
   repo
 }: Pick<WorktreeCardProps, 'worktree' | 'repo'>) {
   const openModal = useAppStore((s) => s.openModal)
-  const openAutomationsPage = useAppStore((s) => s.openAutomationsPage)
-  const setPendingAutomationRunNavigation = useAppStore((s) => s.setPendingAutomationRunNavigation)
   const updateWorktreeMeta = useAppStore((s) => s.updateWorktreeMeta)
   const deleteFolderWorkspace = useAppStore((s) => s.deleteFolderWorkspace)
   const setActiveWorktree = useAppStore((s) => s.setActiveWorktree)
@@ -56,53 +54,6 @@ export function useWorktreeCardFoundation({
       })
     },
     [worktree, openModal]
-  )
-
-  const handleOpenAutomation = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation()
-      const automationId = worktree.automationProvenance?.automationId
-      if (!automationId) {
-        return
-      }
-      const hostId = worktree.automationProvenance?.hostId ?? worktree.hostId
-      setPendingAutomationRunNavigation({
-        automationId,
-        runId: null,
-        ...(hostId ? { hostId } : {})
-      })
-      openAutomationsPage()
-    },
-    [
-      openAutomationsPage,
-      setPendingAutomationRunNavigation,
-      worktree.automationProvenance?.automationId,
-      worktree.automationProvenance?.hostId,
-      worktree.hostId
-    ]
-  )
-
-  const handleOpenAutomationRun = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation()
-      const provenance = worktree.automationProvenance
-      if (!provenance) {
-        return
-      }
-      const hostId = provenance.hostId ?? worktree.hostId
-      setPendingAutomationRunNavigation({
-        automationId: provenance.automationId,
-        runId: provenance.automationRunId,
-        ...(hostId ? { hostId } : {})
-      })
-      openAutomationsPage()
-    },
-    [
-      openAutomationsPage,
-      setPendingAutomationRunNavigation,
-      worktree.automationProvenance,
-      worktree.hostId
-    ]
   )
 
   const deleteState = useAppStore((s) => {
@@ -187,8 +138,6 @@ export function useWorktreeCardFoundation({
     newCardStyle,
     compactCards,
     handleEditComment,
-    handleOpenAutomation,
-    handleOpenAutomationRun,
     deleteState,
     conflictOperation,
     remoteBranchConflict,

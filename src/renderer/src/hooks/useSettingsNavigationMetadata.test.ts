@@ -37,7 +37,7 @@ describe('settings navigation metadata', () => {
       'computer-use',
       'general',
       'integrations',
-      'automations'
+      'artifacts'
     ])
   })
 
@@ -57,27 +57,24 @@ describe('settings navigation metadata', () => {
     )
   })
 
-  it('places Automations and Artifacts first under Workflows', () => {
+  it('places Artifacts first under Workflows', () => {
     const sections = buildSettingsNavigationMetadata({
       isMac: false,
       isWindows: false,
       isWebClient: false,
       repos: [repo]
     })
-    const automations = sections.find((section) => section.id === 'automations')
     const artifacts = sections.find((section) => section.id === 'artifacts')
     const workflowIds = sections
       .filter((section) => section.group === 'workflows')
       .map((section) => section.id)
 
-    expect(automations?.group).toBe('workflows')
-    expect(automations?.searchEntries[0]?.title).toBe('Show Automations Button')
     expect(artifacts?.group).toBe('workflows')
     expect(artifacts?.badge).toBe('Beta')
     expect(artifacts?.description).toBe(
       'Share HTML and Markdown files with your team and manage their public links.'
     )
-    expect(workflowIds.slice(0, 2)).toEqual(['automations', 'artifacts'])
+    expect(workflowIds[0]).toBe('artifacts')
   })
 
   it('puts web-safe AI capability panes at the top while hiding desktop-only panes', () => {
@@ -86,7 +83,7 @@ describe('settings navigation metadata', () => {
       'orchestration',
       'general',
       'integrations',
-      'automations'
+      'artifacts'
     ])
   })
 

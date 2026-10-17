@@ -168,7 +168,6 @@ export const CMD_J_FIXTURE_CASES: readonly CmdJFixtureCase[] = [
   { query: 'scan daily 20260813', expected: ['wt-scan-daily'] },
   { query: 'scan daily 13/08', expected: [] },
   { query: '4182', expected: ['wt-scan-daily'] },
-  { query: 'nightly review run-184', expected: ['wt-scan-daily'] },
   { query: 'sta-4052 reconnect', expected: [] },
   { query: 'reconnect infra', expected: ['wt-reconnect'] },
   { query: 'acme/orca main', expected: ['wt-main-orca'] },

@@ -142,16 +142,6 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::ai_vault::ai_vault_cancel_list_sessions,
                 commands::ai_vault::ai_vault_prepare_session_resume,
                 commands::ai_vault::ai_vault_delete_session,
-                commands::automations::automations_list,
-                commands::automations::automations_create,
-                commands::automations::automations_update,
-                commands::automations::automations_delete,
-                commands::automations::automations_run_now,
-                commands::automations::automations_runs,
-                commands::automations::automations_run_precheck,
-                commands::automations::automations_mark_dispatch_result,
-                commands::automations::automations_snapshot_workspace_name,
-                commands::automations::automations_renderer_ready,
                 commands::computer_use::computer_use_permissions_get_status,
                 commands::computer_use::computer_use_permissions_open_setup,
                 commands::computer_use::computer_use_permissions_reset,
@@ -193,8 +183,6 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
             .typ::<crate::events::WorktreeChangedPayload>()
             .typ::<crate::events::ScanNestedProgressPayload>()
             .typ::<crate::events::AgentHookRawPayload>()
-            .typ::<crate::events::AutomationsChangedPayload>()
-            .typ::<crate::events::AutomationDispatchRequestPayload>()
             .typ::<commands::agent_status::AgentHookSnapshotEntry>()
             .typ::<commands::notifications::NotificationSoundReadResult>()
             .typ::<commands::notifications_native::NotificationAuthorizationStatus>()
@@ -371,16 +359,6 @@ mod tests {
             "ai_vault_cancel_list_sessions",
             "ai_vault_prepare_session_resume",
             "ai_vault_delete_session",
-            "automations_list",
-            "automations_create",
-            "automations_update",
-            "automations_delete",
-            "automations_run_now",
-            "automations_runs",
-            "automations_run_precheck",
-            "automations_mark_dispatch_result",
-            "automations_snapshot_workspace_name",
-            "automations_renderer_ready",
             "computer_use_permissions_get_status",
             "computer_use_permissions_open_setup",
             "computer_use_permissions_reset",

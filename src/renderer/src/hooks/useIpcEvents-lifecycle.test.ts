@@ -8,7 +8,6 @@ const EXPECTED_DIRECT_CALLBACK_METHODS = [
   'agentStatus.onMigrationUnsupported',
   'agentStatus.onMigrationUnsupportedClear',
   'agentStatus.onSet',
-  'automations.onChanged',
   'keybindings.onChanged',
   'orcaProfiles.onAuthStatusChanged',
   'pty.onExit',
@@ -79,7 +78,6 @@ const EXPECTED_DIRECT_CALLBACK_METHODS = [
 
 const EXPECTED_CALLBACK_REGISTRATION_SEQUENCE = [
   'ui.onMobileMarkdownRequest',
-  'automations.onChanged',
   'runtimeEnvironments.onStatusChanged',
   'repos.onChanged',
   'worktrees.onChanged',
@@ -325,10 +323,9 @@ describe('useIpcEvents App-lifetime lifecycle', () => {
       )
     ).toEqual([
       'ui.onMobileMarkdownRequest',
-      'automations.onChanged',
       'runtimeEnvironments.onStatusChanged',
       'runtimeEnvironments.subscribe',
-      ...EXPECTED_CALLBACK_REGISTRATION_SEQUENCE.slice(3)
+      ...EXPECTED_CALLBACK_REGISTRATION_SEQUENCE.slice(2)
     ])
     const groupOrder = (names: readonly string[]): string[] =>
       registrationOrder.filter((entry) => names.includes(entry))

@@ -53,7 +53,7 @@ describe('createUISlice feature interactions', () => {
       makePersistedUI({
         featureInteractions: {
           'cmd-j': { firstInteractedAt: 100 },
-          automations: { firstInteractedAt: 150, interactionCount: 4 },
+          notifications: { firstInteractedAt: 150, interactionCount: 4 },
           browser: { firstInteractedAt: Number.NaN },
           unknown: { firstInteractedAt: 200 }
         } as unknown as FeatureInteractionState
@@ -62,7 +62,7 @@ describe('createUISlice feature interactions', () => {
 
     expect(store.getState().featureInteractions).toEqual({
       'cmd-j': { firstInteractedAt: 100, interactionCount: 1 },
-      automations: { firstInteractedAt: 150, interactionCount: 4 }
+      notifications: { firstInteractedAt: 150, interactionCount: 4 }
     })
   })
 

@@ -85,62 +85,6 @@ describe('createUISlice settings navigation', () => {
   })
 })
 
-describe('createUISlice page navigation history', () => {
-  it('records and rewinds Automations visits on close', () => {
-    const store = createUIStore()
-    store.setState({ worktreesByRepo: { 'repo-1': [makeWorktree('a')] } })
-
-    store.getState().recordWorktreeVisit('a')
-    store.getState().openAutomationsPage()
-    expect(store.getState().worktreeNavHistory).toEqual(['a', 'automations'])
-    expect(store.getState().worktreeNavHistoryIndex).toBe(1)
-
-    store.getState().closeAutomationsPage()
-    expect(store.getState().activeView).toBe('terminal')
-    expect(store.getState().worktreeNavHistoryIndex).toBe(0)
-  })
-
-  it('dedupes repeated Automations opens against the current history entry', () => {
-    const store = createUIStore()
-    store.setState({ worktreesByRepo: { 'repo-1': [makeWorktree('a')] } })
-
-    store.getState().recordWorktreeVisit('a')
-    store.getState().openAutomationsPage()
-    store.getState().openAutomationsPage()
-
-    expect(store.getState().activeView).toBe('automations')
-    expect(store.getState().worktreeNavHistory).toEqual(['a', 'automations'])
-    expect(store.getState().worktreeNavHistoryIndex).toBe(1)
-  })
-
-  it('keeps the Automations history index when Automations is the only entry', () => {
-    const store = createUIStore()
-
-    store.getState().openAutomationsPage()
-    expect(store.getState().worktreeNavHistory).toEqual(['automations'])
-    expect(store.getState().worktreeNavHistoryIndex).toBe(0)
-
-    store.getState().closeAutomationsPage()
-    expect(store.getState().activeView).toBe('terminal')
-    expect(store.getState().worktreeNavHistoryIndex).toBe(0)
-  })
-
-  it('skips deleted prior worktrees when closing Automations', () => {
-    const store = createUIStore()
-    store.setState({
-      activeView: 'automations',
-      previousViewBeforeAutomations: 'terminal',
-      worktreesByRepo: { 'repo-1': [makeWorktree('c')] },
-      worktreeNavHistory: ['c', 'a', 'automations'],
-      worktreeNavHistoryIndex: 2
-    })
-
-    store.getState().closeAutomationsPage()
-    expect(store.getState().activeView).toBe('terminal')
-    expect(store.getState().worktreeNavHistoryIndex).toBe(0)
-  })
-})
-
 describe('createUISlice space navigation', () => {
   it('records Space page opens as workspace cleanup interactions', () => {
     const setMock = vi.fn(() => Promise.resolve())

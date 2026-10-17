@@ -4,7 +4,6 @@ export function createUiViewStateActions(set: UISliceSet): Partial<UISlice> {
   return {
     activeView: 'terminal',
     previousViewBeforeSettings: 'terminal',
-    previousViewBeforeAutomations: 'terminal',
     previousViewBeforeSpace: 'terminal',
     previousViewBeforeArtifacts: 'terminal',
     setActiveView: (view) => set({ activeView: view }),

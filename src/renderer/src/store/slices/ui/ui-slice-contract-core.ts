@@ -114,23 +114,10 @@ export type UISliceCore = {
   clearManuallyUnreadTurns: (paneKeys: string[]) => void
   activeView: TopLevelView
   previousViewBeforeSettings: Exclude<UiViewHistory, 'settings'>
-  previousViewBeforeAutomations: Exclude<UiViewHistory, 'automations'>
   previousViewBeforeSpace: Exclude<UiViewHistory, 'space'>
   previousViewBeforeArtifacts: Exclude<UiViewHistory, 'artifacts'>
   setActiveView: (view: UISliceCore['activeView']) => void
   newWorkspaceDraft: NewWorkspaceDraft | null
-  selectedAutomationId: string | null
-  setSelectedAutomationId: (id: string | null) => void
-  pendingAutomationRunNavigation: {
-    automationId: string
-    runId: string | null
-    hostId?: ExecutionHostId
-  } | null
-  setPendingAutomationRunNavigation: (
-    navigation: { automationId: string; runId: string | null; hostId?: ExecutionHostId } | null
-  ) => void
-  openAutomationsPage: () => void
-  closeAutomationsPage: () => void
   openSpacePage: () => void
   closeSpacePage: () => void
   openArtifactsPage: () => void

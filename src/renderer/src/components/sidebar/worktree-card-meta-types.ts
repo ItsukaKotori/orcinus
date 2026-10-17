@@ -13,7 +13,10 @@ export type WorktreeCardMetaBadgesProps = {
 export type WorktreeCardMetaBadgesRootProps = WorktreeCardMetaBadgesProps &
   React.HTMLAttributes<HTMLDivElement>
 
-export type WorktreeCardDetailsHoverProps = WorktreeCardMetaBadgesProps & {
+export type WorktreeCardDetailsHoverProps = Omit<
+  WorktreeCardMetaBadgesProps,
+  'automationProvenance'
+> & {
   children: React.ReactElement
   branchName?: string
   workspaceTitle?: string
@@ -25,7 +28,5 @@ export type WorktreeCardDetailsHoverProps = WorktreeCardMetaBadgesProps & {
   onRenameWorkspaceTitle?: (displayName: string) => Promise<void> | void
   onWorkspaceTitleEditingChange?: (editing: boolean) => void
   onEditComment?: (event: React.MouseEvent) => void
-  onOpenAutomation?: (event: React.MouseEvent) => void
-  onOpenAutomationRun?: (event: React.MouseEvent) => void
   hoverControl?: WorktreeCardDetailsHoverControl
 }

@@ -23,23 +23,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "ade-automations"
-version = "0.0.1"
-dependencies = [
- "ade-core",
- "chrono",
- "libc",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
 name = "ade-bridge"
 version = "0.0.1"
 dependencies = [
  "ade-ai-vault",
- "ade-automations",
  "ade-computer",
  "ade-core",
  "ade-fs",

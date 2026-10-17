@@ -220,13 +220,7 @@
           "local": "Local",
           "remote": "Remote"
         },
-        "AutomationSchedulePicker": {
-          "55b2ef82a4": "Hourly",
-          "57e83307d0": "Weekdays",
-          "837d902bba": "Weekly",
-          "ddba78647e": "Custom cron",
-          "f0202f3a89": "Daily"
-        },
+        "AutomationSchedulePicker": {},
         "AutomationsPage": {
           "2695883141": "delete",
           "0329f9bef1": "Close · Esc",
@@ -253,17 +247,12 @@
           "destinationProjectUnavailable": "Choose a project owned by the selected automation destination.",
           "e059042585": "Read-only",
           "f93ed7a6f8": "Connecting...",
-          "moveOriginalKept": "Created on {host}, but the original could not be deleted. Remove it on the old host.",
-          "moveOriginalUnverified": "Created on {host}, but the original deletion could not be verified. Check the old host before retrying.",
           "noListMatches": "No automations match.",
           "noSearchMatches": "No automations match your search.",
           "projectDefaultBaseRef": "project default",
           "runCount": "{{count}} runs",
           "runCount_one": "{{count}} run",
-          "runCount_other": "{{count}} runs",
-          "tableLastRun": "Last run",
-          "tableName": "Name",
-          "tableProject": "Project"
+          "runCount_other": "{{count}} runs"
         },
         "ExternalAutomationManagers": {
           "330b3c32e8": "available",
@@ -272,10 +261,7 @@
         "HermesCronOutputView": {
           "88d48157fc": "default"
         },
-        "createDestination": {
-          "stale": "{host} changed while this form was open. Choose it again before saving.",
-          "unavailable": "That host cannot hold a new automation yet. Choose another host to create this one on."
-        },
+        "createDestination": {},
         "externalScope": {
           "unknownManager": "This external automation is no longer listed for any host in view."
         }
@@ -2464,8 +2450,6 @@
       "noOptions": "No matching hosts or projects",
       "search": "Filter by host or project..."
     },
-    "matchLabel": {
-      "automation": "Run"
-    }
+    "matchLabel": {}
   }
 }

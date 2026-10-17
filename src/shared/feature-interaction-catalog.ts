@@ -4,9 +4,6 @@ export type FeatureInteractionId =
   | 'cmd-j-settings-open'
   | 'cmd-j-quick-action'
   | 'cmd-j-create-workspace'
-  | 'automations'
-  | 'automation-created'
-  | 'automation-run'
   | 'markdown-file-created'
   | 'workspace-creation'
   | 'agent-orchestration-setup'
@@ -44,9 +41,6 @@ export const FEATURE_INTERACTIONS = [
   { id: 'cmd-j-settings-open', interaction: 'settings opened from Cmd+J' },
   { id: 'cmd-j-quick-action', interaction: 'quick action run from Cmd+J' },
   { id: 'cmd-j-create-workspace', interaction: 'workspace creation started from Cmd+J' },
-  { id: 'automations', interaction: 'Automations page opened' },
-  { id: 'automation-created', interaction: 'automation created' },
-  { id: 'automation-run', interaction: 'automation run queued' },
   { id: 'markdown-file-created', interaction: 'untitled markdown file explicitly created' },
   { id: 'workspace-creation', interaction: 'workspace creation flow opened' },
   {

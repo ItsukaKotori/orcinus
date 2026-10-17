@@ -3,26 +3,6 @@ import { rewindHistoryIndexPastView } from '../worktree-nav-history'
 
 export function createUiViewActions(set: UISliceSet, get: UISliceGet): Partial<UISlice> {
   return {
-    selectedAutomationId: null,
-    setSelectedAutomationId: (id) => set({ selectedAutomationId: id }),
-    pendingAutomationRunNavigation: null,
-    setPendingAutomationRunNavigation: (navigation) =>
-      set({ pendingAutomationRunNavigation: navigation }),
-    openAutomationsPage: () => {
-      get().recordViewVisit('automations')
-      set((state) => ({
-        activeView: 'automations',
-        previousViewBeforeAutomations:
-          state.activeView === 'automations'
-            ? state.previousViewBeforeAutomations
-            : state.activeView
-      }))
-    },
-    closeAutomationsPage: () =>
-      set((state) => ({
-        activeView: state.previousViewBeforeAutomations,
-        worktreeNavHistoryIndex: rewindHistoryIndexPastView(state, 'automations')
-      })),
     openSpacePage: () => {
       get().recordFeatureInteraction?.('workspace-cleanup')
       set((state) => ({

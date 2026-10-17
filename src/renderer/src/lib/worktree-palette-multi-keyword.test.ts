@@ -85,10 +85,6 @@ describe('token coverage', () => {
 })
 
 describe('evidence and ranking', () => {
-  it('reads automation provenance without optional caches', () => {
-    expect(ids('nightly review run-184')).toEqual(['wt-scan-daily'])
-  })
-
   it('renders one supporting-evidence row for a hidden match', () => {
     const [result] = search('reconnect infra')
     expect(result.supportingText?.labelKind).toBe('comment')
