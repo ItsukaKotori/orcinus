@@ -19,7 +19,7 @@
 | host 方法 | `src/shared/plugins/plugin-host-api.ts`（`PLUGIN_HOST_API_V0`）+ Rust `host/methods.rs` dispatch | 新增 `git.log{limit?}`→`GitHistoryResult`、`git.commitFiles{oid}`→`GitBranchChangeEntry[]`；`scope:'active-worktree'`、`panel:true`、`capability:'git:read'`、`mutation:false`。 |
 | gate | `plugin-capability-gate.ts` / Rust `gate.rs` | 确认 `git.log`/`git.commitFiles` 属 panel-callable（不入 `panel_forbidden`）。 |
 | host service trait | `src-tauri/crates/ade-plugins/src/host/services.rs` | `PluginHostServices` 增 `git_log(&self, limit:Option<u32>)->Result<GitHistoryResultJson,HostServiceError>` + `git_commit_files(&self, oid:&str)->Result<Vec<GitBranchChangeEntryJson>,HostServiceError>`。**`ade-plugins` 不新增 ade-git 依赖**。 |
-| host service impl | `src-tauri/crates/ade-bridge/src/plugins_service.rs`（`BridgePluginHostServices`） | 解析 active worktree→repo path→调 `ade_git::history(path,limit,None)` / `ade_git::compare::commit_diff(...)`；结果 serde→JSON。 |
+| host service impl | `src-tauri/crates/ade-bridge/src/plugins_service.rs`（`BridgePluginHostServices`） | 解析 active worktree→repo path→调 `ade_git::history(path,limit,None)` / `ade_git::compare::commit_compare(path, oid)`（取 `.entries`）；结果 serde→JSON。 |
 | worktree→path | `ade-bridge/src/plugins_service.rs` `WorktreeContexts` trait | 增 `path_for(worktree_id)->Option<String>`（由现有 `list_all_worktrees` 目录项的 path 实现）；`active_worktree_context` 已有 id，复用同一目录。 |
 | 插件 UI 数据层 | `plugins/git-log/src/domain/host-repository.ts`（新） | `HostRepository implements GitLogRepository`：`call('git.log',{limit})` / `call('git.commitFiles',{oid})` 走 panel postMessage（同 `readContext` 桥）。返回体 zod 校验对齐 `GitHistoryResult`。 |
 | tab 挂载 | `plugins/git-log/src/ui/tab-main.tsx` | 用 `HostRepository` 替换 `FixtureRepository`。`FixtureRepository` 保留（测试/可选 dev 回退）。 |
@@ -37,11 +37,11 @@
 ## 3. Host 能力面（纯新增）
 - `git:read` capability：只读列举/查看提交历史与单提交文件；无副作用、无路径下发（path 由 host 内部解析）。scope=`active-worktree`，仅能读调用方所绑定的当前 worktree，不能指定任意路径 → 天然限域。
 - `git.log`：params `{ limit?: int 1..200 }`（复用 `GIT_HISTORY_MAX_LIMIT`）；result = `GitHistoryResult`（`items[]` + `currentRef/remoteRef/baseRef/mergeBase/hasIncomingChanges/hasOutgoingChanges/hasMore/limit`）。
-- `git.commitFiles`：params `{ oid: string(7..40) }`；result = `GitBranchChangeEntry[]`（`path/status/oldPath?/added?/removed?`）。
+- `git.commitFiles`：params `{ oid: string(7..40) }`；result = `GitBranchChangeEntry[]`（`path/status/oldPath?/added?/removed?`，源为 `ade_git::compare::commit_compare(...).entries`）。
 
 ## 4. Rust 实现要点
 - `host/methods.rs`：`dispatch()` 增两条 match 分支 `git.log`/`git.commitFiles`，校验参数后调 `ctx.services.*`；错误经 `HostServiceError` → 稳定错误码（`no-active-worktree` / `not-a-git-repo` / `unknown-oid` / `unavailable`）。
-- `BridgePluginHostServices`（ade-bridge）：`git_log(limit)` → `active_worktree_context()?.worktree_id` → `worktrees.path_for(id)?` → `ade_git::history(path, limit, None)`；`git_commit_files(oid)` → 同路径 → `ade_git::compare::commit_diff(...)` 取 `entries`。path 解析失败/无 active worktree → `HostServiceError`。
+- `BridgePluginHostServices`（ade-bridge）：`git_log(limit)` → `active_worktree_context()?.worktree_id` → `worktrees.path_for(id)?` → `ade_git::history(path, limit, None)`；`git_commit_files(oid)` → 同路径 → `ade_git::compare::commit_compare(path, oid)` 取 `entries`（内部走 `--name-status`）。path 解析失败/无 active worktree → `HostServiceError`。
 - serde：`GitHistoryResult`/`GitBranchChangeEntry` 已带 serde（bridge 已用）；host 结果以 JSON 透传，字段与 TS `GitHistoryResult`/`GitBranchChangeEntry` **逐字段一致**（增量 1 fixture 即按此对齐，故 UI 无感）。
 - 两处 `FakeServices`（`ade-plugins` host/methods.rs、service.rs）+ 新增 ade-bridge 集成测试补齐。
 
