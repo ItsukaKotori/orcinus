@@ -23,18 +23,28 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
   const [activeRef, setActiveRef] = useState<string | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
   const [files, setFiles] = useState<GitBranchChangeEntry[]>([])
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    const snap = await repository.loadSnapshot()
-    const next = buildGraphRows(snap)
-    setRows(next)
-    setBranch(snap.currentRef?.name ?? 'HEAD')
-    setAhead(snap.hasOutgoingChanges ? 1 : 0)
-    setBehind(snap.hasIncomingChanges ? 1 : 0)
-    const seen = new Map<string, GitHistoryItemRef>()
-    for (const item of snap.items) for (const r of item.references ?? []) seen.set(r.id, r)
-    setRefs([...seen.values()])
-    setSelected((cur) => cur ?? next.find((r) => !isBoundaryRow(r))?.viewModel.historyItem.id ?? null)
+    setStatus('loading')
+    setError(null)
+    try {
+      const snap = await repository.loadSnapshot()
+      const next = buildGraphRows(snap)
+      setRows(next)
+      setBranch(snap.currentRef?.name ?? 'HEAD')
+      setAhead(snap.hasOutgoingChanges ? 1 : 0)
+      setBehind(snap.hasIncomingChanges ? 1 : 0)
+      const seen = new Map<string, GitHistoryItemRef>()
+      for (const item of snap.items) for (const r of item.references ?? []) seen.set(r.id, r)
+      setRefs([...seen.values()])
+      setSelected((cur) => cur ?? next.find((r) => !isBoundaryRow(r))?.viewModel.historyItem.id ?? null)
+      setStatus('ready')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'failed to load git history')
+      setStatus('error')
+    }
   }, [repository])
 
   useEffect(() => {
@@ -47,9 +57,14 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
       return
     }
     let alive = true
-    repository.loadCommitFiles(selected).then((f) => {
-      if (alive) setFiles(f)
-    })
+    repository
+      .loadCommitFiles(selected)
+      .then((f) => {
+        if (alive) setFiles(f)
+      })
+      .catch(() => {
+        if (alive) setFiles([])
+      })
     return () => {
       alive = false
     }
@@ -78,8 +93,18 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
     <div className="flex h-screen flex-col bg-background text-foreground" tabIndex={0} onKeyDown={onKey}>
       <Toolbar branch={branch} query={query} onQuery={setQuery} localCount={ahead} remoteCount={behind} onRefresh={() => void load()} />
       <div className="flex min-h-0 flex-1">
-        <RefPanel refs={refs} activeRef={activeRef} onPick={setActiveRef} />
-        <GraphList rows={visible} selectedOid={selected} onSelect={onSelect} />
+        {status === 'error' ? (
+          <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-muted-foreground">
+            Git history unavailable: {error}
+          </div>
+        ) : status === 'loading' ? (
+          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">Loading commits…</div>
+        ) : (
+          <>
+            <RefPanel refs={refs} activeRef={activeRef} onPick={setActiveRef} />
+            <GraphList rows={visible} selectedOid={selected} onSelect={onSelect} />
+          </>
+        )}
       </div>
       <CommitDetail item={selectedItem} files={files} />
     </div>
