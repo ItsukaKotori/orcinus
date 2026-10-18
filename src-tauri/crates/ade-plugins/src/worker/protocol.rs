@@ -33,6 +33,14 @@ pub enum LogLevel {
     Error,
 }
 
+/// Session identity attached to a UI-originated command invocation: the
+/// worker can push progress back through `session.post`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SessionRef {
+    pub token: String,
+}
+
 /// Host → worker frames.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
@@ -50,6 +58,8 @@ pub enum ParentFrame {
         command_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         args: Option<Value>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        session: Option<SessionRef>,
     },
     #[serde(rename_all = "camelCase")]
     DeliverEvent {
@@ -255,11 +265,13 @@ mod tests {
                 call_id: 7,
                 command_id: "echo".to_owned(),
                 args: Some(json!({ "key": "greeting" })),
+                session: None,
             },
             ParentFrame::InvokeCommand {
                 call_id: 8,
                 command_id: "no-args".to_owned(),
                 args: None,
+                session: None,
             },
             ParentFrame::DeliverEvent {
                 event_id: 3,
@@ -279,6 +291,14 @@ mod tests {
                 value: None,
                 error_code: Some("capability_denied".to_owned()),
                 error: Some("denied by gate".to_owned()),
+            },
+            ParentFrame::InvokeCommand {
+                call_id: 9,
+                command_id: "check".to_owned(),
+                args: None,
+                session: Some(SessionRef {
+                    token: "t".repeat(32),
+                }),
             },
             ParentFrame::Shutdown,
         ]
@@ -408,6 +428,31 @@ mod tests {
         assert!(host_call.get("params").is_none());
         let result = serde_json::to_value(&child_frames()[1]).unwrap();
         assert!(result.get("error").is_none());
+    }
+
+    #[test]
+    fn invoke_command_session_is_optional_and_camel_case() {
+        let without = ParentFrame::InvokeCommand {
+            call_id: 8,
+            command_id: "no-args".to_owned(),
+            args: None,
+            session: None,
+        };
+        let value = serde_json::to_value(&without).unwrap();
+        assert!(value.get("session").is_none());
+
+        let with = ParentFrame::InvokeCommand {
+            call_id: 9,
+            command_id: "check".to_owned(),
+            args: None,
+            session: Some(SessionRef {
+                token: "t".repeat(32),
+            }),
+        };
+        assert_eq!(
+            serde_json::to_value(&with).unwrap()["session"],
+            json!({ "token": "t".repeat(32) })
+        );
     }
 
     #[test]

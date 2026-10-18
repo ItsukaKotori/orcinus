@@ -1025,6 +1025,19 @@ impl PluginService {
         command_id: &str,
         args: Option<Value>,
     ) -> Result<Value, PluginError> {
+        self.invoke_command_with_session(plugin_ref, command_id, args, None)
+    }
+
+    /// [`Self::invoke_command`] with an optional UI session token attached to
+    /// the worker frame, letting the command push progress back through
+    /// `session.post`.
+    pub fn invoke_command_with_session(
+        &self,
+        plugin_ref: &PluginRef,
+        command_id: &str,
+        args: Option<Value>,
+        session_token: Option<&str>,
+    ) -> Result<Value, PluginError> {
         let discovered = self.discover_all();
         let entry = find_discovered(&discovered, plugin_ref).ok_or_else(|| {
             PluginError::new(
@@ -1062,8 +1075,15 @@ impl PluginService {
         self.ensure_active(plugin_ref)?;
         let instance_key = instance_key_of(plugin_ref)?;
         let call_id = self.next_call_id.fetch_add(1, Ordering::SeqCst);
-        self.manager()
-            .invoke_command(&instance_key, call_id, command_id, args)
+        self.manager().invoke_command(
+            &instance_key,
+            call_id,
+            command_id,
+            args,
+            session_token.map(|token| crate::worker::protocol::SessionRef {
+                token: token.to_string(),
+            }),
+        )
     }
 
     /// Projects `raw_payload` for the plugin event `name` and delivers it to
@@ -3126,6 +3146,18 @@ mod tests {
             _payload: Value,
         ) -> Result<(), HostServiceError> {
             Ok(())
+        }
+
+        fn invoke_worker_command(
+            &self,
+            _plugin_key: &str,
+            _scope: PluginScope,
+            _repo_id: Option<&str>,
+            _command_id: &str,
+            _args: Option<Value>,
+            _session_token: Option<&str>,
+        ) -> Result<Value, HostServiceError> {
+            Ok(serde_json::json!({ "started": true }))
         }
     }
 

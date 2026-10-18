@@ -97,6 +97,16 @@ function parseParentFrame(raw) {
       return raw
     case 'invokeCommand':
       if (!isCallId(raw.callId) || !isNonEmptyString(raw.commandId)) return null
+      if (raw.session !== undefined) {
+        if (
+          typeof raw.session !== 'object' ||
+          raw.session === null ||
+          !isNonEmptyString(raw.session.token) ||
+          raw.session.token.length > 128
+        ) {
+          return null
+        }
+      }
       return raw
     case 'deliverEvent':
       if (!isCallId(raw.eventId) || !PLUGIN_EVENT_NAMES.includes(raw.event)) return null
@@ -121,6 +131,29 @@ let nextHostCallId = 0
 let initialized = false
 let shuttingDown = false
 let deactivate = null
+
+function hostCall(method, params) {
+  const callId = nextHostCallId++
+  return new Promise((resolve, reject) => {
+    pendingHostCalls.set(callId, { resolve, reject })
+    send({ type: 'hostCall', callId, method, params })
+  })
+}
+
+function makeCommandContext(message) {
+  if (!message.session || typeof message.session.token !== 'string' || message.session.token.length === 0) {
+    return undefined
+  }
+  const token = message.session.token
+  return {
+    session: {
+      token,
+      post(topic, payload) {
+        return hostCall('session.post', { sessionToken: token, topic, payload })
+      }
+    }
+  }
+}
 
 async function handleInit(message) {
   if (initialized) {
@@ -157,11 +190,7 @@ async function handleInit(message) {
     },
     host: {
       call(method, params) {
-        const callId = nextHostCallId++
-        return new Promise((resolve, reject) => {
-          pendingHostCalls.set(callId, { resolve, reject })
-          send({ type: 'hostCall', callId, method, params })
-        })
+        return hostCall(method, params)
       }
     },
     grantedCapabilities: message.grantedCapabilities,
@@ -185,7 +214,7 @@ async function handleInvokeCommand(message) {
     return
   }
   try {
-    const value = await handler(message.args)
+    const value = await handler(message.args, makeCommandContext(message))
     send({ type: 'commandResult', callId: message.callId, ok: true, value })
   } catch (error) {
     send({

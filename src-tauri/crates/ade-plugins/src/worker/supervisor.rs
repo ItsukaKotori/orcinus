@@ -762,6 +762,7 @@ rl.on('line', (line) => {
                     call_id: 7,
                     command_id: "echo".to_owned(),
                     args: Some(json!({ "n": 1 })),
+                    session: None,
                 },
                 ReplyKind::Command { call_id: 7 },
             )
@@ -864,6 +865,7 @@ rl.on('line', (line) => {
                     call_id: 1,
                     command_id: "echo".to_owned(),
                     args: None,
+                    session: None,
                 },
                 ReplyKind::Command { call_id: 1 },
             )

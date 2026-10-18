@@ -669,6 +669,33 @@ impl PluginHostServices for BridgePluginHostServices {
             .session_post(plugin_key, session_token, topic, payload)
             .map_err(|error| HostServiceError::new(error.code(), error.message()))
     }
+
+    fn invoke_worker_command(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        command_id: &str,
+        args: Option<Value>,
+        session_token: Option<&str>,
+    ) -> Result<Value, HostServiceError> {
+        let service = self
+            .service
+            .get()
+            .ok_or_else(|| HostServiceError::new("unavailable", "plugin service is not assembled"))?;
+        service
+            .invoke_command_with_session(
+                &PluginRef {
+                    plugin_key: plugin_key.to_string(),
+                    scope,
+                    repo_id: repo_id.map(str::to_string),
+                },
+                command_id,
+                args,
+                session_token,
+            )
+            .map_err(|error| HostServiceError::new(error.code(), error.message()))
+    }
 }
 
 /// Emits service callbacks as Tauri events through an injected emitter.

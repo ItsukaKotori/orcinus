@@ -167,6 +167,17 @@ pub trait PluginHostServices: Send + Sync {
         topic: Option<&str>,
         payload: Value,
     ) -> Result<(), HostServiceError>;
+    /// Invoke a declared worker command on behalf of a UI session (spec §3.5);
+    /// `session_token` is attached to the worker frame for `session.post` routing.
+    fn invoke_worker_command(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        command_id: &str,
+        args: Option<Value>,
+        session_token: Option<&str>,
+    ) -> Result<Value, HostServiceError>;
 }
 
 /// Raw single-directory convenience impl: the store is already bound to one

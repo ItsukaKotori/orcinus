@@ -12,7 +12,9 @@ use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use ade_plugins::worker::protocol::{read_frame, write_frame, ChildFrame, LogLevel, ParentFrame};
+use ade_plugins::worker::protocol::{
+    read_frame, write_frame, ChildFrame, LogLevel, ParentFrame, SessionRef,
+};
 use ade_plugins::PluginError;
 use serde_json::json;
 
@@ -235,6 +237,7 @@ fn hello_plugin_worker_round_trip_over_ndjson() {
         call_id: 1,
         command_id: "echo".to_owned(),
         args: Some(json!({ "key": "greeting" })),
+        session: None,
     });
     assert_eq!(
         worker.next_frame(),
@@ -265,6 +268,7 @@ fn hello_plugin_worker_round_trip_over_ndjson() {
         call_id: 2,
         command_id: "fail".to_owned(),
         args: None,
+        session: None,
     });
     assert_eq!(
         worker.next_frame(),
@@ -298,6 +302,7 @@ fn hello_plugin_worker_round_trip_over_ndjson() {
         call_id: 3,
         command_id: "nope".to_owned(),
         args: None,
+        session: None,
     });
     assert_eq!(
         worker.next_frame(),
@@ -360,4 +365,102 @@ fn activate_failure_reports_fatal_and_exits_one() {
         other => panic!("unexpected frame: {other:?}"),
     }
     assert_eq!(worker.wait_exit(), 1);
+}
+
+#[test]
+fn invoke_command_receives_session_context_and_posts_over_host_calls() {
+    let Some(node) = node_executable() else {
+        eprintln!("SKIP invoke_command_receives_session_context_and_posts_over_host_calls: no node on PATH (set ORCINUS_NODE_PATH)");
+        return;
+    };
+    let source = r#"
+export default function activate(orca) {
+  orca.commands.register('probe', async (args, ctx) => {
+    if (!ctx || !ctx.session) return { hasSession: false }
+    await ctx.session.post('log', { line: 'hi' })
+    return { hasSession: true, tokenLength: ctx.session.token.length }
+  })
+}
+"#;
+    let temp = tempfile::tempdir().unwrap();
+    let plugin_root = write_fixture(temp.path(), source);
+    let mut harness = WorkerHarness::start(&node, &plugin_root);
+    harness.send(&init_frame(&plugin_root));
+    match harness.next_frame() {
+        ChildFrame::Ready { .. } => {}
+        other => panic!("unexpected frame: {other:?}"),
+    }
+
+    let token = "t".repeat(32);
+    harness.send(&ParentFrame::InvokeCommand {
+        call_id: 7,
+        command_id: "probe".to_owned(),
+        args: None,
+        session: Some(SessionRef { token: token.clone() }),
+    });
+
+    match harness.next_frame() {
+        ChildFrame::HostCall {
+            call_id,
+            method,
+            params,
+        } => {
+            assert_eq!(method, "session.post");
+            assert_eq!(
+                params,
+                Some(json!({ "sessionToken": token, "topic": "log", "payload": { "line": "hi" } }))
+            );
+            harness.send(&ParentFrame::HostResult {
+                call_id,
+                ok: true,
+                value: Some(json!({ "ok": true })),
+                error_code: None,
+                error: None,
+            });
+        }
+        other => panic!("unexpected frame: {other:?}"),
+    }
+    match harness.next_frame() {
+        ChildFrame::CommandResult { ok: true, value, .. } => {
+            assert_eq!(value, Some(json!({ "hasSession": true, "tokenLength": 32 })));
+        }
+        other => panic!("unexpected frame: {other:?}"),
+    }
+}
+
+#[test]
+fn invoke_command_without_session_reports_no_session() {
+    let Some(node) = node_executable() else {
+        eprintln!("SKIP invoke_command_without_session_reports_no_session: no node on PATH (set ORCINUS_NODE_PATH)");
+        return;
+    };
+    let source = r#"
+export default function activate(orca) {
+  orca.commands.register('probe', async (args, ctx) => {
+    if (!ctx || !ctx.session) return { hasSession: false }
+    return { hasSession: true, tokenLength: ctx.session.token.length }
+  })
+}
+"#;
+    let temp = tempfile::tempdir().unwrap();
+    let plugin_root = write_fixture(temp.path(), source);
+    let mut harness = WorkerHarness::start(&node, &plugin_root);
+    harness.send(&init_frame(&plugin_root));
+    match harness.next_frame() {
+        ChildFrame::Ready { .. } => {}
+        other => panic!("unexpected frame: {other:?}"),
+    }
+
+    harness.send(&ParentFrame::InvokeCommand {
+        call_id: 8,
+        command_id: "probe".to_owned(),
+        args: None,
+        session: None,
+    });
+    match harness.next_frame() {
+        ChildFrame::CommandResult { ok: true, value, .. } => {
+            assert_eq!(value, Some(json!({ "hasSession": false })));
+        }
+        other => panic!("unexpected frame: {other:?}"),
+    }
 }
