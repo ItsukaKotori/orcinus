@@ -425,7 +425,7 @@ Create `plugins/git-log/src/ui/theme.css`（`@theme inline { … }` 处粘贴 St
   --git-graph-lane-3: #994f00;
   --git-graph-lane-4: #40b0a6;
   --git-graph-lane-5: #b66dff;
-  --font-sans: 'Geist', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 html.dark {
   --git-graph-ref: #3794ff;
