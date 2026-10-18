@@ -1,9 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import './theme.css'
-
-function Placeholder() {
-  return <div className="p-4 text-foreground">Git Log (loading scaffold)</div>
-}
+import { GitLogView } from './GitLogView'
+import { FixtureRepository } from '../fixtures/fixture-repository'
 
 const el = document.getElementById('git-log-root')
-if (el) createRoot(el).render(<Placeholder />)
+if (el) createRoot(el).render(<GitLogView repository={new FixtureRepository()} />)

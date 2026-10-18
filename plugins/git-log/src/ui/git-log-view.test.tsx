@@ -1,0 +1,48 @@
+// @vitest-environment happy-dom
+import { act } from 'react'
+import { createRoot, type Root } from 'react-dom/client'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { GitLogView } from './GitLogView'
+import { CommitDetail } from './CommitDetail'
+import type { GitHistoryItem } from '@shared/git-history-types'
+import { FixtureRepository } from '../fixtures/fixture-repository'
+
+;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+let host: HTMLDivElement
+let root: Root
+beforeEach(() => {
+  host = document.createElement('div')
+  document.body.append(host)
+  root = createRoot(host)
+})
+afterEach(() => {
+  act(() => root.unmount())
+  host.remove()
+})
+
+const flush = async () => { await act(async () => { await Promise.resolve() }) }
+
+// 不依赖 @tanstack/react-virtual 的行测量（happy-dom 无布局）：只断言始终渲染在
+// 虚拟列表之外的头部/分支；过滤与选中行为由 node 环境的 select-rows.test.ts 覆盖。
+describe('GitLogView', () => {
+  it('挂载后显示标题与当前分支', async () => {
+    await act(async () => { root.render(<GitLogView repository={new FixtureRepository()} />) })
+    await flush()
+    expect(host.textContent).toContain('Git Log')
+    expect(host.textContent).toContain('main')
+  })
+})
+
+describe('CommitDetail', () => {
+  it('渲染选中提交的 subject 与文件列表', async () => {
+    const item: GitHistoryItem = {
+      id: 'a'.repeat(40), parentIds: [], subject: 'Merge branch feature into main', message: 'body',
+      author: 'Ada', authorEmail: 'ada@example.com', timestamp: Date.UTC(2026, 9, 18), statistics: { files: 2, insertions: 10, deletions: 3 }
+    }
+    const files = [{ path: 'src/core/engine.ts', status: 'modified' as const, added: 1, removed: 1 }]
+    await act(async () => { root.render(<CommitDetail item={item} files={files} />) })
+    expect(host.querySelector('[data-testid="commit-detail"]')?.textContent).toContain('Merge branch feature into main')
+    expect(host.textContent).toContain('src/core/engine.ts')
+  })
+})
