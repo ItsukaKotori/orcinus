@@ -9,12 +9,13 @@ import { z } from 'zod'
  *
  * v0 is a closed set of unscoped kinds so a typo (or a capability from a newer
  * Orca) fails manifest validation instead of silently granting nothing. The
- * fork adds `workspace:open-tab`, `session:push`, and `worker:call` (10 total);
- * scoped kinds (net:fetch hosts, process:exec globs) arrive in later phases.
+ * fork adds `workspace:open-tab`, `session:push`, `worker:call`, and `git:read`
+ * (11 total); scoped kinds (net:fetch hosts, process:exec globs) arrive in later phases.
  */
 
 export const PLUGIN_CAPABILITY_KINDS = [
   'events:subscribe',
+  'git:read',
   'notifications:show',
   'secrets',
   'session:push',
@@ -39,6 +40,8 @@ export type PluginCapability = z.infer<typeof pluginCapabilitySchema>
 export const PLUGIN_CAPABILITY_DESCRIPTIONS: Record<PluginCapabilityKind, string> = {
   'events:subscribe':
     'Get notified when worktrees are created or removed and when agent status changes',
+  'git:read':
+    'Read the commit history and per-commit changed files of the current worktree (read-only)',
   'notifications:show': 'Show desktop notifications labeled with the plugin name',
   secrets: "Store and read secrets in the plugin's own encrypted vault",
   'session:push':
