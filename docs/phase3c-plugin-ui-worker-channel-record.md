@@ -21,7 +21,7 @@
 | **A 部分 · TS 通道契约** | capability 联合 + spec 表（16 方法）+ panel action 集合（含 `worker.invokeCommand`）+ guest 消息 `orca-panel-push` + 订阅 `onPanelPush`（契约 25→26：23 命令 + 3 订阅） | `e32e647e` |
 | **A 部分 · 渲染层推送转发** | 三个宿主组件共用 `use-plugin-panel-entry.ts`：按 token 匹配 → `contentWindow.postMessage({type:'orca-panel-push', …})`；web 端维持无插件面 | `fe200e52` |
 | **A 部分 · internal 过滤** | 命令面板与 `plugin-quick-actions`（含 keybinding 消费面）过滤 internal 命令 | `8e652407` |
-| **B 部分 · 脚手架与构建** | `plugins/updater/{ade-plugin.json, build.mjs, tsconfig*.json, src/**}`；`pnpm build:updater`（worker esbuild 单文件 `dist/main.mjs` + UI vite 多入口 → 单文件 `dist/tab.html`/`dist/panel.html`，Geist data: URI 内联）；`vitest` include `plugins/**`；`dist` 不入库 | `9fbf2fec` |
+| **B 部分 · 脚手架与构建** | `plugins/updater/{ade-plugin.json, build.mjs, tsconfig*.json, src/**}`；`pnpm build:updater`（worker esbuild 单文件 `dist/main.mjs` + UI vite 单入口两趟构建，见 §5.2-1 → 单文件 `dist/tab.html`/`dist/panel.html`，Geist data: URI 内联）；`vitest` include `plugins/**`；`dist` 不入库 | `9fbf2fec` |
 | **B 部分 · parse** | 纯函数 `parseNpmOutdated`（exit 1 = 有更新 / 空 `{}` = 无）、`parseBrewOutdated`（v2 `formulae`/`casks`）→ 统一条目 `{manager,kind,name,current,latest}` | `71377856` |
 | **B 部分 · runner** | `runCommand`：spawn（继承 worker 环境）、stdout+stderr 行化、退出码、取消 SIGTERM→2s→SIGKILL、超时 | `aac11a61` + `3b068c86` |
 | **B 部分 · managers** | 适配器注册表 `ManagerAdapter{id,label,kinds,detect,outdated,parse,upgrades}`；v1 注册 npm（`npm outdated -g --json` / `npm install -g <name>@latest`）与 brew（`brew outdated --json=v2` / `brew upgrade [--cask] <name>`）；check/update-all/cancel/UI 全注册表驱动 | `e0286d05` |
@@ -131,7 +131,7 @@
 12. **brief 测试/模板补全**（多任务实现者修正）：T1 实现者改 `service.rs`/`gate.rs`/`methods.rs`（编译强制）且 consent 文案初为中文 → `fed1f087` 统一英文；T2 测试用例补 `main`、assert 片段改 `"hidden"`；T4 跳过 brief 中未用的 `panel_ctx` helper（避免死代码）；T6 额外纳入 6 个 fixture 测试文件（typecheck 强制）；T9 brief 模板无参调用与实际签名不符，按既有夹具改写；T14 brief 测试两处缺 `sessions` 已补。
 13. **T1 gate.rs 过渡 skip**：T1 引入 `SessionPush|WorkerCall => None` 过渡 skip，由 T3 替换为真实方法映射（覆盖率缺口已闭环，无遗留）。
 14. **契约成员 26**（T7）：23 命令 + 3 订阅（`onChanged`/`onOpenTab`/`onPanelPush`）；规格事实修正见 `2353bb09`（原 25 计数为笔误）。
-15. **台账尾部残留行**（文档性）：`progress.md` 末尾遗留一行 `- Task 8: 待实现`，与任务清单表（Task 8 ✅ 完成）不一致，属台账编辑残留，不影响代码与门禁结论。
+15. **台账内部不一致**（文档性）：`progress.md` 任务清单表与进度记录段在 Task 8 上不一致——**表行停留「未开始」**（行 1 已记 ✅ 完成、行 2–18 停留「未开始」），而**进度记录段已记 `Task 8: complete`**；末尾残留行 `- Task 8: 待实现` 与表一致、与进度记录段冲突。台账为工作区临时文件（`.superpowers/` 已 gitignore），不影响代码与门禁结论。
 
 ### 5.3 minor/deferred（评审遗留，均已 deferred，不影响验收）
 
