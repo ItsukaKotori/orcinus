@@ -31,8 +31,8 @@
 
 | 面 | 载体 | 说明 |
 |---|---|---|
-| 插件包 | `plugins/git-log/`（新） | `orca-plugin.json`、`build.mjs`、`tsconfig.json`、`src/ui/*`、`src/fixtures/*`、`src/graph/*`（复用/薄封装 shared 纯逻辑）；产物 `dist/tab.html` + `dist/panel.html`（launcher）（均单文件内联；**dist 不入库**）。 |
-| manifest | `plugins/git-log/orca-plugin.json` | `contributes.tabs:[{id:"git-log",title:"Git Log",icon:"<宿主图标注册表键>",entry:"dist/tab.html"}]`（主区大视图）+ `contributes.panels:[{id:"launcher",title:"Git Log",entry:"dist/panel.html"}]`（右侧栏极简启动器）；`capabilities:[{kind:"workspace:open-tab"}]`（**仅现有 kind，不新增**；launcher panel 内联脚本调 `workspace.openTab`）。**增量 1 不声明 `contributes.commands`、不含 worker**（命令触发需 worker handler，见「打开入口」行）。 |
+| 插件包 | `plugins/git-log/`（新） | `orca-plugin.json`、`build.mjs`、`tsconfig.json`、`src/ui/*`、`src/fixtures/*`、`src/graph/*`（复用/薄封装 shared 纯逻辑）；产物：`dist/tab.html`（vite 内联构建；**dist 不入库**）+ `launcher.html`（**手写入库**、最简内联，非构建产物——YAGNI：不为启动器开第二个 vite 入口）。 |
+| manifest | `plugins/git-log/orca-plugin.json` | `contributes.tabs:[{id:"git-log",title:"Git Log",icon:"<宿主图标注册表键>",entry:"dist/tab.html"}]`（主区大视图）+ `contributes.panels:[{id:"launcher",title:"Git Log",entry:"launcher.html"}]`（右侧栏极简启动器，手写入库内联）；`capabilities:[{kind:"workspace:open-tab"}]`（**仅现有 kind，不新增**；launcher panel 内联脚本调 `workspace.openTab`）。**增量 1 不声明 `contributes.commands`、不含 worker**（命令触发需 worker handler，见「打开入口」行）。 |
 | UI 框架 | React 19 + Tailwind v4 | 与宿主同版本，复用根依赖与 `@tailwindcss/vite`；沿用 3C 六项视觉一致约束（§5）。 |
 | 数据缝 | `GitLogRepository` 接口 + `FixtureRepository` | UI 仅依赖接口；fixture 产出**对齐 `GitHistoryResult`/`GitHistoryItem` 形状**的快照，令增量 2 换真实数据零 UI 改动。`ChannelRepository` 仅留**类型占位**，不接、不声明 `worker:call`。 |
 | 图谱逻辑 | import `src/shared/git-history-graph.ts` 等纯模块进 bundle | 只读复用泳道布局 / ref 显示 / boundary rows；**不修改**共享模块与现有 Source Control。 |
@@ -67,7 +67,7 @@
 
 ## 5. 构建与视觉一致规范（沿用 3C §3.5/3.8）
 
-- `plugins/git-log/build.mjs`：vite 多入口产出 `dist/tab.html`（主视图）与 `dist/panel.html`（launcher，最轻内联）；自定义内联插件把 **JS/CSS 全部内联**（CSP 禁外链/import）；Geist woff2（`src/renderer/src/assets/fonts/Geist-Variable.woff2`）内联为 `data:` URI。
+- `plugins/git-log/build.mjs`：vite **单入口**产出 `dist/tab.html`（主视图）；launcher 为手写入库 `launcher.html`（不走构建）；自定义内联把 **JS/CSS 全部内联**（CSP 禁外链/import），并对内容中的 `</script>` 做提前闭合中和；Geist woff2（`src/renderer/src/assets/fonts/Geist-Variable.woff2`）内联为 `data:` URI。
 - `@theme inline` 块与宿主 `src/renderer/src/assets/main.css`（`@theme inline`）**逐字相同**；vitest parity 测试读取两处文本比对锁死。
 - 字体栈与宿主逐字一致；mono 用宿主同栈（系统字体）。
 - 类型：`plugins/git-log/tsconfig.json`（UI 层，禁引 node types；增量 1 无 worker）。并入根 `typecheck`。
