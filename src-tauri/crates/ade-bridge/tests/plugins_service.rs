@@ -536,6 +536,18 @@ fn git_log_requires_resolvable_worktree_path() {
 }
 
 #[test]
+fn git_log_rejects_non_git_workspace() {
+    let root = tempfile::tempdir().unwrap();
+    let not_a_repo = tempfile::tempdir().unwrap(); // plain empty dir, never `git init`
+    let worktrees = Arc::new(RepoWorktrees {
+        path: not_a_repo.path().to_string_lossy().into_owned(),
+    });
+    let services = git_host_services(root.path(), ui_store(root.path(), Some(WORKTREE)), worktrees);
+    let err = services.git_log(Some(WORKTREE), None).unwrap_err();
+    assert_eq!(err.code(), "not-a-git-repo");
+}
+
+#[test]
 fn terminals_list_by_worktree_and_send_appends_enter() {
     let root = tempfile::tempdir().unwrap();
     let pty = FakePty::with_sessions(vec![
