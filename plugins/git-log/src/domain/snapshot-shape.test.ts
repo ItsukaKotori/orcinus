@@ -29,4 +29,8 @@ describe('fixture snapshot', () => {
       for (const pid of item.parentIds) expect(order.get(pid)!).toBeGreaterThan(order.get(item.id)!)
     }
   })
+
+  it('确定性：两次构建输出深度相等', () => {
+    expect(buildFixtureSnapshot()).toEqual(buildFixtureSnapshot())
+  })
 })

@@ -24,7 +24,7 @@ for (let k = 0; k < FEAT_LEN; k += 1) ORDER.push(`feat${k}`)
 for (let k = 8; k < MAIN_LEN; k += 1) ORDER.push(`main${k}`)
 
 function parentsOf(key: string): string[] {
-  if (key === 'M') return ['main0', `feat${FEAT_LEN - 1}`]
+  if (key === 'M') return ['main0', 'feat0'] // 合并 feature 分支 tip(feat0)，整条 feature 链可达
   if (key.startsWith('feat')) {
     const k = Number(key.slice(4))
     return k === FEAT_LEN - 1 ? ['main8'] : [`feat${k + 1}`]
