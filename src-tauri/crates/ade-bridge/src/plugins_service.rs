@@ -240,6 +240,11 @@ impl PtyTerminals for HostPtyTerminals {
 /// Resolves `(branch, display_name)` for one worktree id.
 pub trait WorktreeContexts: Send + Sync {
     fn resolve(&self, worktree_id: &str) -> Option<(String, String)>;
+    /// The worktree's filesystem path, when known. Used by read-only git host
+    /// methods to run `git` in the right directory. Default: unavailable.
+    fn path_for(&self, _worktree_id: &str) -> Option<String> {
+        None
+    }
 }
 
 /// Production resolver: worktree metadata plus the worktrees projection
@@ -261,6 +266,18 @@ impl WorkspaceWorktrees {
 }
 
 impl WorktreeContexts for WorkspaceWorktrees {
+    fn path_for(&self, worktree_id: &str) -> Option<String> {
+        let (repos, folders, items) = {
+            let projects = lock(&self.projects);
+            (projects.repos(), projects.folder_workspaces(), self.meta.items())
+        };
+        crate::commands::worktrees::list_all_worktrees(&repos, &folders, &items, &self.fs)
+            .ok()?
+            .into_iter()
+            .find(|worktree| worktree.id == worktree_id)
+            .map(|worktree| worktree.path)
+    }
+
     fn resolve(&self, worktree_id: &str) -> Option<(String, String)> {
         let meta = self.meta.get(worktree_id);
         let (repos, folders, items) = {
@@ -499,6 +516,21 @@ impl BridgePluginHostServices {
     }
 }
 
+impl BridgePluginHostServices {
+    /// Resolve the filesystem path of the caller's worktree: the tab-session
+    /// hint when present, else the focused worktree. Never exposes the id/path
+    /// to the plugin; used only to run read-only `git` in the right directory.
+    fn resolve_worktree_path(&self, worktree_id: Option<&str>) -> Result<String, HostServiceError> {
+        let id = worktree_id
+            .map(str::to_string)
+            .or_else(|| self.active_worktree_context().map(|context| context.worktree_id))
+            .ok_or_else(|| HostServiceError::new("no-active-worktree", "no active worktree"))?;
+        self.worktrees.path_for(&id).ok_or_else(|| {
+            HostServiceError::new("unavailable", "worktree path is unavailable")
+        })
+    }
+}
+
 impl PluginHostServices for BridgePluginHostServices {
     fn active_worktree_context(&self) -> Option<WorktreeContext> {
         let worktree_id = lock(&self.ui)
@@ -516,6 +548,63 @@ impl PluginHostServices for BridgePluginHostServices {
             branch,
             display_name,
         })
+    }
+
+    fn git_log(
+        &self,
+        worktree_id: Option<&str>,
+        limit: Option<u32>,
+    ) -> Result<serde_json::Value, HostServiceError> {
+        let path = self.resolve_worktree_path(worktree_id)?;
+        if !ade_git::is_inside_work_tree(&path) {
+            return Err(HostServiceError::new(
+                "not-a-git-repo",
+                "the active workspace is not a git repository",
+            ));
+        }
+        let result = ade_git::history::history(&path, limit, None).map_err(|error| {
+            // Detail stays host-side; the plugin only sees a stable message (no path).
+            eprintln!("[ade-bridge] git.log failed: {error}");
+            HostServiceError::new("not-a-git-repo", "git history is unavailable")
+        })?;
+        serde_json::to_value(result).map_err(|error| {
+            eprintln!("[ade-bridge] git.log serialize failed: {error}");
+            HostServiceError::new("unavailable", "git history is unavailable")
+        })
+    }
+
+    fn git_commit_files(
+        &self,
+        worktree_id: Option<&str>,
+        oid: &str,
+    ) -> Result<serde_json::Value, HostServiceError> {
+        let path = self.resolve_worktree_path(worktree_id)?;
+        if !ade_git::is_inside_work_tree(&path) {
+            return Err(HostServiceError::new(
+                "not-a-git-repo",
+                "the active workspace is not a git repository",
+            ));
+        }
+        let cmp = ade_git::compare::commit_compare(&path, oid).map_err(|error| {
+            eprintln!("[ade-bridge] git.commitFiles failed: {error}");
+            HostServiceError::new("unknown-oid", "commit is unavailable")
+        })?;
+        // commit_compare reports an unresolvable oid as Ok{status:"invalid-commit"},
+        // not Err; surface it as a stable `unknown-oid` (and never leak the raw git text).
+        match cmp.summary.status.as_str() {
+            "ready" => serde_json::to_value(cmp.entries).map_err(|error| {
+                eprintln!("[ade-bridge] git.commitFiles serialize failed: {error}");
+                HostServiceError::new("unavailable", "commit files are unavailable")
+            }),
+            "invalid-commit" => Err(HostServiceError::new("unknown-oid", "unknown commit")),
+            other => {
+                eprintln!("[ade-bridge] git.commitFiles status={other}");
+                Err(HostServiceError::new(
+                    "unavailable",
+                    "commit files are unavailable",
+                ))
+            }
+        }
     }
 
     fn list_worktree_terminals(&self, worktree_id: &str) -> Vec<TerminalRef> {

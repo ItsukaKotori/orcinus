@@ -113,6 +113,30 @@ pub trait PluginSettingsAccess: Send + Sync {
 pub trait PluginHostServices: Send + Sync {
     /// The focused worktree, when one exists.
     fn active_worktree_context(&self) -> Option<WorktreeContext>;
+    /// Read-only commit history for the caller's active worktree. The host
+    /// resolves the worktree path internally; no path is returned to the plugin.
+    /// Default is `unavailable` until a host layer overrides it.
+    fn git_log(
+        &self,
+        _worktree_id: Option<&str>,
+        _limit: Option<u32>,
+    ) -> Result<serde_json::Value, HostServiceError> {
+        Err(HostServiceError::new(
+            "unavailable",
+            "git history service is not available",
+        ))
+    }
+    /// Changed files for one commit in the caller's active worktree.
+    fn git_commit_files(
+        &self,
+        _worktree_id: Option<&str>,
+        _oid: &str,
+    ) -> Result<serde_json::Value, HostServiceError> {
+        Err(HostServiceError::new(
+            "unavailable",
+            "git history service is not available",
+        ))
+    }
     /// Terminals belonging to `worktree_id`; used for the write-target
     /// whitelist immediately before routing plugin input.
     fn list_worktree_terminals(&self, worktree_id: &str) -> Vec<TerminalRef>;

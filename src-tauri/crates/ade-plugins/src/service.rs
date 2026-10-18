@@ -2901,6 +2901,9 @@ fn install_source_kind(source: &InstallSource) -> String {
 /// `workspace:open-tab`).
 fn capability_description(capability: Capability) -> &'static str {
     match capability {
+        Capability::GitRead => {
+            "Read the commit history and per-commit changed files of the current worktree (read-only)"
+        }
         Capability::WorkspaceRead => {
             "Read the name, branch, and terminal list of your focused worktree"
         }
@@ -3046,6 +3049,14 @@ mod tests {
                 branch: "main".to_string(),
                 display_name: "main".to_string(),
             })
+        }
+
+        fn git_log(&self, _worktree_id: Option<&str>, _limit: Option<u32>) -> Result<serde_json::Value, HostServiceError> {
+            Ok(serde_json::json!({ "items": [], "hasIncomingChanges": false, "hasOutgoingChanges": false, "hasMore": false, "limit": 50 }))
+        }
+
+        fn git_commit_files(&self, _worktree_id: Option<&str>, _oid: &str) -> Result<serde_json::Value, HostServiceError> {
+            Ok(serde_json::json!([]))
         }
 
         fn list_worktree_terminals(&self, _worktree_id: &str) -> Vec<TerminalRef> {

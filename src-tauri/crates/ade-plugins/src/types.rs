@@ -30,12 +30,13 @@ pub const PLUGIN_ID_MAX_LENGTH: usize = 64;
 const DANGEROUS_PLUGIN_NAMES: [&str; 3] = ["__proto__", "prototype", "constructor"];
 
 /// v1 capability model: a closed set of unscoped kinds plus the fork's
-/// `workspace:open-tab` extension and the `worker:call` / `session:push`
-/// plugin UI↔worker channel kinds (10 total). Declaration order is the
-/// canonical order produced by [`canonical_capability_set`].
+/// `workspace:open-tab` extension, the `worker:call` / `session:push` plugin
+/// UI↔worker channel kinds, and the read-only `git:read` kind (11 total).
+/// Declaration order is the canonical order produced by [`canonical_capability_set`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Capability {
     EventsSubscribe,
+    GitRead,
     NotificationsShow,
     Secrets,
     SessionPush,
@@ -48,8 +49,9 @@ pub enum Capability {
 }
 
 impl Capability {
-    pub const ALL: [Capability; 10] = [
+    pub const ALL: [Capability; 11] = [
         Capability::EventsSubscribe,
+        Capability::GitRead,
         Capability::NotificationsShow,
         Capability::Secrets,
         Capability::SessionPush,
@@ -64,6 +66,7 @@ impl Capability {
     pub fn as_str(self) -> &'static str {
         match self {
             Capability::EventsSubscribe => "events:subscribe",
+            Capability::GitRead => "git:read",
             Capability::NotificationsShow => "notifications:show",
             Capability::Secrets => "secrets",
             Capability::SessionPush => "session:push",
@@ -265,9 +268,10 @@ mod tests {
     }
 
     #[test]
-    fn capability_as_str_covers_closed_set_of_ten() {
-        assert_eq!(Capability::ALL.len(), 10);
+    fn capability_as_str_covers_closed_set_of_eleven() {
+        assert_eq!(Capability::ALL.len(), 11);
         assert_eq!(Capability::EventsSubscribe.as_str(), "events:subscribe");
+        assert_eq!(Capability::GitRead.as_str(), "git:read");
         assert_eq!(Capability::NotificationsShow.as_str(), "notifications:show");
         assert_eq!(Capability::Secrets.as_str(), "secrets");
         assert_eq!(Capability::SessionPush.as_str(), "session:push");

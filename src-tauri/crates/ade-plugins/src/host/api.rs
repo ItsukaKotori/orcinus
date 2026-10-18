@@ -27,6 +27,12 @@ pub const WORKER_COMMAND_ID_MAX_CHARS: usize = 256;
 pub const WORKER_COMMAND_RESULT_MAX_BYTES: usize = 64 * 1024;
 pub const SESSION_POST_TOPIC_MAX_CHARS: usize = 64;
 pub const SESSION_POST_PAYLOAD_MAX_BYTES: usize = 64 * 1024;
+pub const GIT_HISTORY_LIMIT_MAX: u64 = 200;
+pub const GIT_OID_MIN_CHARS: usize = 7;
+pub const GIT_OID_MAX_CHARS: usize = 40;
+// Must stay under the worker NDJSON frame cap (worker::MAX_FRAME_BYTES = 1 MiB) so a
+// worker-hosted git.log fails closed as an error instead of a silent dropped frame.
+pub const GIT_RESULT_MAX_BYTES: usize = 768 * 1024;
 
 pub type Validator = fn(&Value) -> Result<Value, String>;
 
@@ -39,7 +45,7 @@ pub struct MethodSpec {
     pub result: Validator,
 }
 
-static SPECS: [MethodSpec; 16] = [
+static SPECS: [MethodSpec; 18] = [
     MethodSpec {
         name: "workspace.readContext",
         capability: Capability::WorkspaceRead,
@@ -55,6 +61,22 @@ static SPECS: [MethodSpec; 16] = [
         panel_callable: true,
         params: open_tab_params,
         result: open_tab_result,
+    },
+    MethodSpec {
+        name: "git.log",
+        capability: Capability::GitRead,
+        mutation: false,
+        panel_callable: true,
+        params: git_log_params,
+        result: git_result,
+    },
+    MethodSpec {
+        name: "git.commitFiles",
+        capability: Capability::GitRead,
+        mutation: false,
+        panel_callable: true,
+        params: git_commit_files_params,
+        result: git_result,
     },
     MethodSpec {
         name: "worker.invokeCommand",
@@ -170,7 +192,7 @@ static SPECS: [MethodSpec; 16] = [
     },
 ];
 
-pub fn specs() -> &'static [MethodSpec; 16] {
+pub fn specs() -> &'static [MethodSpec; 18] {
     &SPECS
 }
 
@@ -611,6 +633,61 @@ fn open_tab_result(value: &Value) -> Result<Value, String> {
     Ok(serde_json::json!({ "instanceId": instance_id, "worktreeId": worktree_id }))
 }
 
+fn git_log_params(value: &Value) -> Result<Value, String> {
+    let obj = require_object(value, "(root)")?;
+    reject_extra_keys(obj, &["limit"], "(root)")?;
+    let limit = match obj.get("limit") {
+        None | Some(Value::Null) => None,
+        Some(Value::Number(number)) => {
+            let value = number
+                .as_u64()
+                .ok_or_else(|| invalid("limit", "expected a positive integer"))?;
+            if value < 1 || value > GIT_HISTORY_LIMIT_MAX {
+                return Err(invalid(
+                    "limit",
+                    format!("must be between 1 and {GIT_HISTORY_LIMIT_MAX}"),
+                ));
+            }
+            Some(value as u32)
+        }
+        Some(_) => return Err(invalid("limit", "expected a positive integer")),
+    };
+    let mut normalized = Map::new();
+    if let Some(limit) = limit {
+        normalized.insert("limit".to_string(), Value::from(limit));
+    }
+    Ok(Value::Object(normalized))
+}
+
+fn git_commit_files_params(value: &Value) -> Result<Value, String> {
+    let obj = require_object(value, "(root)")?;
+    reject_extra_keys(obj, &["oid"], "(root)")?;
+    let oid = require_string(obj, "oid")?;
+    if oid.len() < GIT_OID_MIN_CHARS || oid.len() > GIT_OID_MAX_CHARS {
+        return Err(invalid(
+            "oid",
+            format!("must contain between {GIT_OID_MIN_CHARS} and {GIT_OID_MAX_CHARS} characters"),
+        ));
+    }
+    if !oid.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err(invalid("oid", "must be a hexadecimal commit id"));
+    }
+    Ok(serde_json::json!({ "oid": oid }))
+}
+
+fn git_result(value: &Value) -> Result<Value, String> {
+    // Host-produced (ade-git camelCase serde); shape is pinned to the TS
+    // contract by an end-to-end test. Only bound the serialized size here.
+    let bytes = serde_json::to_vec(value).map_err(|error| invalid("(root)", error))?;
+    if bytes.len() > GIT_RESULT_MAX_BYTES {
+        return Err(invalid(
+            "(root)",
+            format!("must serialize to at most {GIT_RESULT_MAX_BYTES} bytes"),
+        ));
+    }
+    Ok(value.clone())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -625,14 +702,16 @@ mod tests {
     }
 
     #[test]
-    fn spec_table_has_sixteen_methods_with_expected_metadata() {
-        assert_eq!(specs().len(), 16);
+    fn spec_table_has_eighteen_methods_with_expected_metadata() {
+        assert_eq!(specs().len(), 18);
         let names: Vec<&str> = specs().iter().map(|entry| entry.name).collect();
         assert_eq!(
             names,
             vec![
                 "workspace.readContext",
                 "workspace.openTab",
+                "git.log",
+                "git.commitFiles",
                 "worker.invokeCommand",
                 "terminal.sendText",
                 "notifications.show",
@@ -659,16 +738,19 @@ mod tests {
             vec![
                 "workspace.readContext",
                 "workspace.openTab",
+                "git.log",
+                "git.commitFiles",
                 "worker.invokeCommand",
                 "terminal.sendText",
                 "notifications.show",
             ]
         );
-        assert_eq!(
-            spec("worker.invokeCommand").unwrap().capability,
-            Capability::WorkerCall
-        );
+        assert_eq!(spec("worker.invokeCommand").unwrap().capability, Capability::WorkerCall);
         assert_eq!(spec("session.post").unwrap().capability, Capability::SessionPush);
+        assert_eq!(spec("git.log").unwrap().capability, Capability::GitRead);
+        assert_eq!(spec("git.commitFiles").unwrap().capability, Capability::GitRead);
+        assert!(!spec("git.log").unwrap().mutation);
+        assert!(!spec("git.commitFiles").unwrap().mutation);
         assert!(!spec("worker.invokeCommand").unwrap().mutation);
         assert!(!spec("session.post").unwrap().mutation);
     }
@@ -715,6 +797,32 @@ mod tests {
         assert!(validate_result("session.post", json!({ "ok": false })).is_err());
         let huge = json!({ "blob": "x".repeat(WORKER_COMMAND_RESULT_MAX_BYTES + 1) });
         assert!(validate_result("worker.invokeCommand", huge).is_err());
+    }
+
+    #[test]
+    fn git_params_and_result_enforce_bounds() {
+        assert_eq!(
+            validate_params("git.log", json!({ "limit": 50 })).unwrap(),
+            json!({ "limit": 50 })
+        );
+        assert_eq!(validate_params("git.log", json!({})).unwrap(), json!({}));
+        assert!(validate_params("git.log", json!({ "limit": 201 })).is_err());
+        assert!(validate_params("git.log", json!({ "limit": 0 })).is_err());
+        assert!(validate_params("git.log", json!({ "limit": 1.5 })).is_err());
+        assert!(validate_params("git.log", json!({ "extra": 1 })).is_err());
+
+        assert_eq!(
+            validate_params("git.commitFiles", json!({ "oid": "a".repeat(40) })).unwrap(),
+            json!({ "oid": "a".repeat(40) })
+        );
+        assert!(validate_params("git.commitFiles", json!({ "oid": "abc" })).is_err());
+        assert!(validate_params("git.commitFiles", json!({ "oid": "z".repeat(40) })).is_err());
+        assert!(validate_params("git.commitFiles", json!({ "oid": "a".repeat(41) })).is_err());
+        assert!(validate_params("git.commitFiles", json!({})).is_err());
+
+        assert!(validate_result("git.log", json!({ "items": [] })).is_ok());
+        let huge = json!({ "items": "x".repeat(GIT_RESULT_MAX_BYTES + 16) });
+        assert!(validate_result("git.log", huge).is_err());
     }
 
     #[test]

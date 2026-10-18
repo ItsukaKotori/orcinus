@@ -12,6 +12,7 @@ export default defineConfig({
       // the throwing stub instead of an unresolved-module crash. Remove with the Phase 1 shim cleanup.
       { find: /^electron$/, replacement: electronTestShim },
       { find: '@renderer', replacement: resolve('src/renderer/src') },
+      { find: '@shared', replacement: resolve('src/shared') },
       { find: '@', replacement: resolve('src/renderer/src') }
     ]
   },

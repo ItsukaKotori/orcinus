@@ -158,6 +158,26 @@ export const PLUGIN_HOST_API_V0: readonly PluginHostMethodSpec[] = [
     result: workspaceOpenTabResult
   }),
   spec({
+    name: 'git.log',
+    since: '1.1',
+    scope: 'active-worktree',
+    capability: 'git:read',
+    mutation: false,
+    panel: true,
+    params: z.object({ limit: z.number().int().min(1).max(200).optional() }).strict(),
+    result: pluginJsonValueSchema
+  }),
+  spec({
+    name: 'git.commitFiles',
+    since: '1.1',
+    scope: 'active-worktree',
+    capability: 'git:read',
+    mutation: false,
+    panel: true,
+    params: z.object({ oid: z.string().min(7).max(40) }).strict(),
+    result: pluginJsonValueSchema
+  }),
+  spec({
     name: 'worker.invokeCommand',
     since: '1.1',
     scope: 'plugin-private',
