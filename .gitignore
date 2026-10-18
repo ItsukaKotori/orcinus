@@ -9,3 +9,4 @@ spikes/*/target/
 *.tsbuildinfo
 .DS_Store
 .superpowers/
+plugins/updater/dist/

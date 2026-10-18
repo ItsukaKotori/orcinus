@@ -29,6 +29,7 @@ export default defineConfig({
     include: [
       'src/**/*.test.ts',
       'src/**/*.test.tsx',
+      'plugins/**/*.test.ts',
       'config/scripts/**/*.test.mjs'
     ],
     exclude: [...configDefaults.exclude],

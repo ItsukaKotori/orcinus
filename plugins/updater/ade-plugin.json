@@ -1,0 +1,29 @@
+{
+  "manifestVersion": 1,
+  "id": "updater",
+  "publisher": "itsuka",
+  "name": "Package Updater",
+  "version": "0.1.0",
+  "description": "Check and update global npm packages and Homebrew formulae/casks.",
+  "engines": { "orca": ">=0.0.1" },
+  "pluginApi": 1,
+  "main": "dist/main.mjs",
+  "contributes": {
+    "tabs": [{ "id": "updates", "title": "Updates", "icon": "package", "entry": "dist/tab.html" }],
+    "panels": [{ "id": "updater", "title": "Package Updater", "icon": "package", "entry": "dist/panel.html" }],
+    "commands": [
+      { "id": "check", "title": "Updates: Check for updates" },
+      { "id": "update-all", "title": "Updates: Update all packages" },
+      { "id": "cancel", "title": "Updates: Cancel running update" },
+      { "id": "open", "title": "Updates: Open updater tab" },
+      { "id": "snapshot", "title": "Updates: Get state", "visibility": "internal" },
+      { "id": "set-managers", "title": "Updates: Set enabled managers", "visibility": "internal" }
+    ]
+  },
+  "capabilities": [
+    { "kind": "worker:call" },
+    { "kind": "session:push" },
+    { "kind": "workspace:open-tab" },
+    { "kind": "storage" }
+  ]
+}
