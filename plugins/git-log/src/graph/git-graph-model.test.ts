@@ -14,14 +14,22 @@ describe('buildGraphRows', () => {
     expect(merge?.viewModel.outputSwimlanes.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('laneIndex 全部 ≥ 0 且合理（≤ 提交数）', () => {
+  it('laneIndex 全部落在合理泳道范围（本 fixture 并发泳道 ≤ 6）', () => {
     for (const r of rows) expect(r.laneIndex).toBeGreaterThanOrEqual(0)
-    expect(Math.max(...rows.map((r) => r.laneIndex))).toBeLessThanOrEqual(rows.length)
+    expect(Math.max(...rows.map((r) => r.laneIndex))).toBeLessThanOrEqual(6)
   })
 
-  it('色 id 映射到 --git-graph-* CSS 变量', () => {
-    expect(graphColorVar('git-graph-lane-1')).toBe('var(--git-graph-lane-1)')
-    expect(graphColorVar('git-graph-ref')).toBe('var(--git-graph-ref)')
-    expect(graphColorVar('git-graph-remote-ref')).toBe('var(--git-graph-remote-ref)')
+  it('全部 8 个 GitHistoryGraphColorId 映射到对应 --git-graph-* CSS 变量', () => {
+    const ids = [
+      'git-graph-ref',
+      'git-graph-remote-ref',
+      'git-graph-base-ref',
+      'git-graph-lane-1',
+      'git-graph-lane-2',
+      'git-graph-lane-3',
+      'git-graph-lane-4',
+      'git-graph-lane-5'
+    ] as const
+    for (const id of ids) expect(graphColorVar(id)).toBe(`var(--${id})`)
   })
 })
