@@ -37,3 +37,8 @@ export function buildGraphRows(snapshot: GitLogSnapshot): GraphRow[] {
 export function graphColorVar(colorId: GitHistoryGraphColorId): string {
   return `var(--git-graph-${colorId.replace(/^git-graph-/, '')})`
 }
+
+// 行渲染宽度（以泳道格计）：需覆盖输入/输出泳道与自身落位，否则顶端多父合并的分叉线会被裁掉。
+export function graphLaneCellCount(row: GraphRow): number {
+  return Math.max(row.viewModel.inputSwimlanes.length, row.viewModel.outputSwimlanes.length, row.laneIndex + 1)
+}

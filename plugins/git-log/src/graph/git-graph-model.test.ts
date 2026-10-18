@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildGraphRows, graphColorVar } from './git-graph-model'
+import { buildGraphRows, graphColorVar, graphLaneCellCount } from './git-graph-model'
 import { buildFixtureSnapshot } from '../fixtures/fixture-snapshot'
 
 describe('buildGraphRows', () => {
@@ -31,5 +31,11 @@ describe('buildGraphRows', () => {
       'git-graph-lane-5'
     ] as const
     for (const id of ids) expect(graphColorVar(id)).toBe(`var(--${id})`)
+  })
+
+  it('泳道宽度盖住输入/输出泳道（顶端合并分叉线不被裁）', () => {
+    const merge = rows.find((r) => r.viewModel.historyItem.subject.startsWith('Merge branch'))!
+    expect(graphLaneCellCount(merge)).toBeGreaterThanOrEqual(merge.viewModel.outputSwimlanes.length)
+    for (const r of rows) expect(graphLaneCellCount(r)).toBeGreaterThan(r.laneIndex)
   })
 })
