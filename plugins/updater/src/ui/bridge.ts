@@ -2,7 +2,6 @@ import {
   PANEL_ACTION_REQUEST_TYPE,
   PANEL_ACTION_RESULT_TYPE,
   PANEL_INIT_TYPE,
-  PANEL_PONG_TYPE,
   PANEL_PUSH_TYPE,
   parsePanelInitMessage,
   parsePanelPushMessage,
@@ -25,20 +24,16 @@ export function createHostBridge(): HostBridge {
   const initListeners: Array<(params: unknown) => void> = []
   const pending = new Map<string, (result: PanelActionResult) => void>()
   let sequence = 0
-  let connected = false
-  let resolveReady: () => void = () => {}
-  const ready = new Promise<void>((resolve) => {
-    resolveReady = resolve
-  })
+  // Why: the host mounts its message listener before the iframe document runs,
+  // so by the time this bridge (and its own listener) exists, a command posted
+  // to the parent is already handled. The guest only receives orca-panel-init /
+  // -push / -action-result; pongs travel guest→host, so there is no round-trip
+  // to await before issuing commands.
+  const ready: Promise<void> = Promise.resolve()
 
   window.addEventListener('message', (event) => {
     const data = event.data as Record<string, unknown> | null
     if (!data || typeof data !== 'object') {
-      return
-    }
-    if (data.type === PANEL_PONG_TYPE && !connected) {
-      connected = true
-      resolveReady()
       return
     }
     if (data.type === PANEL_ACTION_RESULT_TYPE) {
