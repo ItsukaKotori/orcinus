@@ -113,6 +113,11 @@ pub trait PluginSettingsAccess: Send + Sync {
 pub trait PluginHostServices: Send + Sync {
     /// The focused worktree, when one exists.
     fn active_worktree_context(&self) -> Option<WorktreeContext>;
+    /// Read-only commit history for the caller's active worktree. The host
+    /// resolves the worktree path internally; no path is returned to the plugin.
+    fn git_log(&self, limit: Option<u32>) -> Result<serde_json::Value, HostServiceError>;
+    /// Changed files for one commit in the caller's active worktree.
+    fn git_commit_files(&self, oid: &str) -> Result<serde_json::Value, HostServiceError>;
     /// Terminals belonging to `worktree_id`; used for the write-target
     /// whitelist immediately before routing plugin input.
     fn list_worktree_terminals(&self, worktree_id: &str) -> Vec<TerminalRef>;

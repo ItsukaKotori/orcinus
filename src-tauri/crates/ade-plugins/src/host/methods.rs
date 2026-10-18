@@ -212,6 +212,8 @@ fn dispatch(
     match method {
         "workspace.readContext" => read_context(ctx),
         "workspace.openTab" => open_tab(params, ctx),
+        "git.log" => git_log(params, ctx),
+        "git.commitFiles" => git_commit_files(params, ctx),
         "terminal.sendText" => send_text(params, ctx),
         "notifications.show" => show_notification(params, ctx),
         "storage.get" => storage_get(params, ctx),
@@ -313,6 +315,19 @@ fn open_tab(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerE
         "instanceId": result.instance_id,
         "worktreeId": result.worktree_id
     }))
+}
+
+fn git_log(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
+    let limit = params.get("limit").and_then(Value::as_u64).map(|n| n as u32);
+    Ok(ctx.services.git_log(limit)?)
+}
+
+fn git_commit_files(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
+    let oid = field_str(params, "oid");
+    if oid.is_empty() {
+        return Err(HandlerError::new(INVALID_PARAMS, "missing oid"));
+    }
+    Ok(ctx.services.git_commit_files(&oid)?)
 }
 
 fn send_text(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
@@ -544,7 +559,7 @@ mod tests {
 
     const KEY: &str = "orca-samples.demo";
 
-    static ALL_CAPABILITIES: [Capability; 10] = Capability::ALL;
+    static ALL_CAPABILITIES: [Capability; 11] = Capability::ALL;
 
     #[derive(Default)]
     struct FakeStorage {
@@ -709,6 +724,14 @@ mod tests {
     impl PluginHostServices for FakeServices {
         fn active_worktree_context(&self) -> Option<WorktreeContext> {
             self.context.clone()
+        }
+
+        fn git_log(&self, _limit: Option<u32>) -> Result<serde_json::Value, HostServiceError> {
+            Ok(serde_json::json!({ "items": [], "hasIncomingChanges": false, "hasOutgoingChanges": false, "hasMore": false, "limit": 50 }))
+        }
+
+        fn git_commit_files(&self, _oid: &str) -> Result<serde_json::Value, HostServiceError> {
+            Ok(serde_json::json!([]))
         }
 
         fn list_worktree_terminals(&self, worktree_id: &str) -> Vec<TerminalRef> {
