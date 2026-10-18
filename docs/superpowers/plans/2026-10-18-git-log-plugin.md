@@ -58,6 +58,7 @@
 - Create: `plugins/git-log/tsconfig.json`
 - Create: `plugins/git-log/src/ui/tab-main.tsx`（占位渲染，Task 5 填充）
 - Create: `plugins/git-log/src/ui/theme.css`（占位 tailwind 入口，Task 2 填充 tokens）
+- Create: `plugins/git-log/src/vite-env.d.ts`（`/// <reference types="vite/client" />`，供 CSS side-effect import 类型）
 - Create: `plugins/git-log/src/build-inline.test.ts`
 - Modify: `package.json`、`vitest.config.ts`、`.gitignore`
 
@@ -101,7 +102,7 @@ Create `plugins/git-log/src/build-inline.ts`:
 
 ```ts
 const FORBIDDEN: Array<[RegExp, string]> = [
-  [/<script[^>]+\ssrc=/i, 'external'],
+  [/<script[^>]*\ssrc=/i, 'external'],
   [/url\(\s*['"]?https?:/i, 'external'],
   [/@import\s+url\(/i, 'external'],
   [/\bimport\s*\(/, 'dynamic-import'],
@@ -265,13 +266,14 @@ Create `plugins/git-log/tsconfig.json`:
   "extends": "../../config/tsconfig.web.json",
   "compilerOptions": {
     "noEmit": true,
-    "baseUrl": ".",
     "paths": { "@shared/*": ["../../src/shared/*"] },
     "types": []
   },
   "include": ["src/**/*", "src/**/*.tsx"]
 }
 ```
+
+> TS 7.0.2 已移除 `baseUrl`；`paths` 直接相对 tsconfig 所在目录解析。另需 `plugins/git-log/src/vite-env.d.ts`：`/// <reference types="vite/client" />`（为 `import './theme.css'` side-effect 引入提供 `*.css` 模块声明）。
 
 - [ ] **Step 8: 根接线（package.json / vitest.config.ts / .gitignore）**
 

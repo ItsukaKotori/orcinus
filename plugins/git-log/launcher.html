@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body { margin: 0; padding: 10px; font-family: system-ui, sans-serif; color: var(--foreground, #ddd); background: var(--background, transparent); }
+      button { width: 100%; padding: 8px 10px; border: 1px solid var(--border, #555); border-radius: 6px; background: var(--secondary, #2a2a2a); color: var(--foreground, #ddd); cursor: pointer; font: inherit; }
+    </style>
+  </head>
+  <body>
+    <button id="open">Open Git Log</button>
+    <script>
+      'use strict'
+      document.getElementById('open').addEventListener('click', function () {
+        window.parent.postMessage({ type: 'orca-panel-action', requestId: 'gl-open-1', action: 'workspace.openTab', params: { tabId: 'git-log' } }, '*')
+      })
+    </script>
+  </body>
+</html>
