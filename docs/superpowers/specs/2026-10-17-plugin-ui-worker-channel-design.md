@@ -56,7 +56,7 @@
 | method | 调用方 | params / result | 语义 |
 |---|---|---|---|
 | `worker.invokeCommand` | 仅面板/tab/全局视图（`panel_callable=true`） | `{commandId≤256, args?}`（args 序列化 ≤64KiB）/ handler 返回值（序列化 ≤64KiB） | 以会话绑定的插件身份调用其 `commands.register` 注册的处理器；`commandId` 必须是该插件在当前作用域声明过的命令（长度上限同 manifest `validate_command_id`）；沿用 supervisor `invoke 30s` 超时——**长任务 handler 必须立即返回 started，进度经 `session.post` 推送** |
-| `session.post` | 仅 worker（`panel_callable=false`） | `{sessionToken, topic?≤64, payload}`（sessionToken 校验同 `panelSessionTokenSchema` ≤128；payload ≤64KiB）/ `{ok:true}` | 向指定 UI 会话推送消息；host 校验 token 有效 + `binding.plugin_key` 等于调用方插件 + kind ∈ {Panel, MainTab, GlobalView} |
+| `session.post` | 仅 worker（`panel_callable=false`） | `{sessionToken, topic?≤64, payload}`（sessionToken 校验同 `panelSessionTokenSchema` ≤128；payload ≤64KiB）/ `{ok:true}` | 向指定 UI 会话推送消息；host 校验 token 有效 + `binding.plugin_key` 等于调用方插件（会话注册表仅存在 Panel/MainTab/GlobalView 三种 UI 形态） |
 
 - `worker.invokeCommand` 被 worker 自身调用（无 UI 会话上下文）→ `unavailable`；不新增 `worker_callable` 表标志（自调无语义，拒绝方式与"无会话"一致）。
 - `session.post` 显式携带 `sessionToken`（而非帧级隐式上下文）：hostCall 帧无需扩展，token 本就是该插件自己的会话令符（worker 进程本就持有全部插件能力，无越权面）；传他插件 token 会因 `plugin_key` 不匹配被拒。
@@ -94,7 +94,7 @@
 | worker.invokeCommand：worker 未激活/errored | `unavailable`（既有 `ensure_active`/supervisor 语义） |
 | worker.invokeCommand：崩溃早退 / 30s 超时 / handler 抛错 | `action_failed`（错误文本截断同帧上限；与既有 `invoke_command` 映射一致） |
 | worker.invokeCommand：worker 自身调用（无会话上下文） | `unavailable` |
-| session.post：token 无效 / 非本插件 / 非 UI kind | `unavailable` |
+| session.post：token 无效 / 非本插件 | `unavailable` |
 | session.post：payload/topic 超限 | `invalid_params` |
 | session.post：推送预算超限（host 丢弃） | `rate_limited` |
 | 面板调 `session.post` | `panel_forbidden` |
@@ -160,7 +160,7 @@
 | `cancel` | palette | 有运行中任务 → 杀当前子进程、剩余标 skipped、推取消汇总，返回 `{canceled:true}`；无 → `{canceled:false}` |
 | `open` | palette | `workspace.openTab({tabId:"updates"})` |
 | `snapshot` | internal | 只读：返回 `{job:{state,progress?}, report:lastReport|null, config:{managers, enabled[], detected[]}}`（不触发网络）；panel/tab 载入时取初始状态 |
-| `set-managers` | internal | `{managers:string[]}`：与注册表校验（未知 id → `invalid_params`）→ storage 持久化 → 向全部已知会话推更新后的状态（panel 开关即时同步到已开 tab） |
+| `set-managers` | internal | `{managers:string[]}`：与注册表校验（未知 id → 结构化失败 `{ok:false,error:"unknown_manager",manager}`，不抛错）→ storage 持久化 → 向全部已知会话推更新后的状态（panel 开关即时同步到已开 tab） |
 
 - 逐包执行的选择理由：包级进度可见、可取消粒度清晰、单包失败隔离；代价（npm 每包一次进程启动）v1 接受。
 - 会话同步模型：worker 记住各会话 token（每次 invoke 的 `ctx.session` 更新簿记；含 panel 与 tab）；任何状态变化（检查完成、单包状态迁移、配置变更）推给全部已知 token，令牌失效（`unavailable`）即剔除——满足"panel 开关 → 已开 tab 同步"而无需 host 侧广播（§2.2）。
@@ -232,7 +232,7 @@
 
 - 通道见 §3.4；updater 见 §3.7/3.9；另：畸形 JSON/超时检查→失败 banner + 原始尾部；brew auto-update 慢→started 立即返回不误报失败；日志洪峰→缓冲节流；超长行→截断。
 - 会话并发：同 tab 重挂载/多 tab 同开 → 单飞任务 + 快照重推（后调用者获得当前状态，不重复起任务）；已知 token 的 `unavailable` 推送失败即剔除（不重试、不阻断任务）。
-- 配置：`set-managers` 未知管理器 id → `invalid_params`（UI 保留旧开关态）；storage 写入失败 → 返回 `action_failed`，panel 显示错误并保留旧值。
+- 配置：`set-managers` 未知管理器 id → 结构化失败 `{ok:false,error:"unknown_manager",manager}`（不抛错，UI 保留旧开关态）；storage 写入失败 → 返回 `action_failed`，panel 显示错误并保留旧值。
 
 ## 4. 测试与门禁
 
