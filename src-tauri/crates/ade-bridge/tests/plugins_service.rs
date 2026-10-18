@@ -8,7 +8,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use ade_bridge::events::{
-    PluginOpenTabPayload, PluginsChangedPayload, PLUGINS_CHANGED, PLUGINS_OPEN_TAB,
+    PluginOpenTabPayload, PluginPanelPushPayload, PluginsChangedPayload, PLUGINS_CHANGED,
+    PLUGINS_OPEN_TAB, PLUGINS_PANEL_PUSH,
 };
 use ade_bridge::plugins_service::{
     build_plugin_service, notification_id, resolve_host_entry_path, BridgeHostServicesDeps,
@@ -20,7 +21,8 @@ use ade_plugins::consent::ConsentState;
 use ade_plugins::host::services::{PluginHostServices, WorktreeContext};
 use ade_plugins::secrets::{SecretStore, SECRET_VALUE_MAX_BYTES};
 use ade_plugins::service::{
-    OpenTabRequest, PluginService, ServiceConfig, ServiceEventSink, WorkerRuntimeConfig,
+    OpenTabRequest, PanelPushRequest, PluginService, ServiceConfig, ServiceEventSink,
+    WorkerRuntimeConfig,
 };
 use ade_plugins::types::{PluginError, PluginScope};
 use ade_store::projects_store::ProjectsStore;
@@ -161,6 +163,7 @@ impl RecordingEmitter {
 struct RecordingSink {
     changes: Mutex<Vec<(bool, bool)>>,
     tabs: Mutex<Vec<OpenTabRequest>>,
+    pushes: Mutex<Vec<PanelPushRequest>>,
 }
 
 impl ServiceEventSink for RecordingSink {
@@ -173,6 +176,10 @@ impl ServiceEventSink for RecordingSink {
 
     fn open_tab_requested(&self, request: OpenTabRequest) {
         self.tabs.lock().unwrap().push(request);
+    }
+
+    fn panel_push_requested(&self, request: PanelPushRequest) {
+        self.pushes.lock().unwrap().push(request);
     }
 }
 
@@ -766,6 +773,46 @@ fn bridge_sink_emits_both_plugin_events_with_ts_shapes() {
     let value = serde_json::to_value(tab).unwrap();
     assert_eq!(value["scope"], "global");
     assert!(value.get("title").is_none() && value.get("repoId").is_none());
+}
+
+#[test]
+fn bridge_sink_emits_panel_push_with_camel_case_payload() {
+    let emitter = Arc::new(RecordingEmitter::default());
+    let sink = BridgeServiceEventSink::new(emitter.emitter());
+    sink.panel_push_requested(PanelPushRequest {
+        session_token: "t".repeat(32),
+        topic: Some("state".to_string()),
+        payload: json!({ "n": 1 }),
+    });
+    sink.panel_push_requested(PanelPushRequest {
+        session_token: "t".repeat(32),
+        topic: None,
+        payload: json!(null),
+    });
+
+    let events = emitter.events.lock().unwrap();
+    assert_eq!(events.len(), 2);
+    assert_eq!(events[0].0, PLUGINS_PANEL_PUSH);
+    assert_eq!(
+        events[0].1,
+        json!({ "sessionToken": "t".repeat(32), "topic": "state", "payload": { "n": 1 } })
+    );
+    assert_eq!(events[1].0, PLUGINS_PANEL_PUSH);
+    assert_eq!(
+        events[1].1,
+        json!({ "sessionToken": "t".repeat(32), "payload": null })
+    );
+    assert!(events[1].1.get("topic").is_none());
+
+    let payload = PluginPanelPushPayload::from(PanelPushRequest {
+        session_token: "t".repeat(32),
+        topic: Some("state".to_string()),
+        payload: json!({ "n": 1 }),
+    });
+    assert_eq!(
+        serde_json::to_value(payload).unwrap(),
+        json!({ "sessionToken": "t".repeat(32), "topic": "state", "payload": { "n": 1 } })
+    );
 }
 
 // ===== assembly / ticker =====

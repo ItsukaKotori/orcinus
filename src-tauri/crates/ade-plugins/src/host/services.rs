@@ -159,6 +159,14 @@ pub trait PluginHostServices: Send + Sync {
         scope: PluginScope,
         repo_id: Option<&str>,
     ) -> Vec<String>;
+    /// Push one message to a UI session of the calling plugin (spec §3.5).
+    fn session_post(
+        &self,
+        plugin_key: &str,
+        session_token: &str,
+        topic: Option<&str>,
+        payload: Value,
+    ) -> Result<(), HostServiceError>;
 }
 
 /// Raw single-directory convenience impl: the store is already bound to one

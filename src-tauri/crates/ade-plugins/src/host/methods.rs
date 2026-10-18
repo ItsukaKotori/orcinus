@@ -35,6 +35,9 @@ pub struct HostCallContext<'a> {
     pub granted: Option<&'a [Capability]>,
     /// True when the call arrives over the sandboxed panel bridge.
     pub via_panel: bool,
+    /// Panel-session token when the call arrives over a UI bridge; `None` for
+    /// worker-originated calls.
+    pub session_token: Option<&'a str>,
     /// Scope the caller's plugin is loaded under (needed for `openTab`).
     pub scope: PluginScope,
     /// Project id when `scope` is project.
@@ -220,6 +223,7 @@ fn dispatch(
         "settings.get" => settings_get(ctx),
         "settings.set" => settings_set(params, ctx),
         "events.subscribe" => events_subscribe(params, ctx),
+        "session.post" => session_post(params, ctx),
         _ => Err(HandlerError::new(
             gate::UNKNOWN_METHOD,
             format!("unknown host method: {method}"),
@@ -448,6 +452,14 @@ fn events_subscribe(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, 
     Ok(serde_json::json!({ "subscribed": subscribed }))
 }
 
+fn session_post(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
+    let topic = params.get("topic").and_then(Value::as_str);
+    let payload = field(params, "payload").clone();
+    ctx.services
+        .session_post(ctx.plugin_key, field_str(params, "sessionToken"), topic, payload)?;
+    Ok(serde_json::json!({ "ok": true }))
+}
+
 fn field<'a>(params: &'a Value, name: &str) -> &'a Value {
     params.get(name).unwrap_or(&Value::Null)
 }
@@ -633,6 +645,7 @@ mod tests {
         send_calls: Mutex<Vec<(String, String, bool)>>,
         notification_calls: Mutex<Vec<(String, String, Option<String>)>>,
         open_tab_calls: Mutex<Vec<OpenTabCall>>,
+        session_post_calls: Mutex<Vec<(String, Option<String>, Value)>>,
         storage: FakeStorage,
         settings: FakeSettings,
         secrets: FakeSecrets,
@@ -749,6 +762,21 @@ mod tests {
         ) -> Vec<String> {
             self.declared.clone()
         }
+
+        fn session_post(
+            &self,
+            _plugin_key: &str,
+            session_token: &str,
+            topic: Option<&str>,
+            payload: Value,
+        ) -> Result<(), HostServiceError> {
+            self.session_post_calls.lock().unwrap().push((
+                session_token.to_string(),
+                topic.map(str::to_string),
+                payload,
+            ));
+            Ok(())
+        }
     }
 
     #[derive(Default)]
@@ -800,6 +828,7 @@ mod tests {
             plugin_key: KEY,
             granted: Some(&ALL_CAPABILITIES),
             via_panel: false,
+            session_token: None,
             scope: PluginScope::Global,
             repo_id: None,
             worktree_hint: None,
@@ -1194,5 +1223,31 @@ mod tests {
         ));
         assert_eq!(code, ACTION_FAILED);
         assert_eq!(error, "internal: malformed events.subscribe result");
+    }
+
+    #[test]
+    fn session_post_reaches_services_only_from_workers() {
+        let services = services_with_context();
+        let value = expect_ok(execute(
+            "session.post",
+            json!({ "sessionToken": "t".repeat(32), "topic": "log", "payload": { "line": "x" } }),
+            &context(&services, None),
+        ));
+        assert_eq!(value, json!({ "ok": true }));
+        assert_eq!(
+            services.session_post_calls.lock().unwrap().as_slice(),
+            [("t".repeat(32), Some("log".to_string()), json!({ "line": "x" }))]
+        );
+
+        let session_token = "t".repeat(32);
+        let mut panel_ctx = context(&services, None);
+        panel_ctx.via_panel = true;
+        panel_ctx.session_token = Some(session_token.as_str());
+        let (code, _) = expect_err(execute(
+            "session.post",
+            json!({ "sessionToken": "t".repeat(32), "payload": 1 }),
+            &panel_ctx,
+        ));
+        assert_eq!(code, gate::PANEL_FORBIDDEN);
     }
 }
