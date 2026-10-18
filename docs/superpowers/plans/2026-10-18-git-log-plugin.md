@@ -288,9 +288,12 @@ Create `plugins/git-log/tsconfig.json`:
     "paths": { "@shared/*": ["../../src/shared/*"] },
     "types": []
   },
-  "include": ["src/**/*", "src/**/*.tsx"]
+  "include": ["src/**/*", "src/**/*.tsx"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]
 }
 ```
+
+> 测试文件（如 theme-parity.test.ts 用 `node:fs`）不走此 UI tsconfig（`types:[]` 禁 node types）：它们由 vitest 转译执行，从 tsc 类型检查中排除。
 
 > TS 7.0.2 已移除 `baseUrl`；`paths` 直接相对 tsconfig 所在目录解析。另需 `plugins/git-log/src/vite-env.d.ts`：`/// <reference types="vite/client" />`（为 `import './theme.css'` side-effect 引入提供 `*.css` 模块声明）。
 
