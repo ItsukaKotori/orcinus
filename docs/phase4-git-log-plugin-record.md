@@ -34,3 +34,17 @@ IDEA VcsLog 风格的**独立主区提交图谱**，以**插件**形态交付：
 1. `pnpm build:git-log` → `pnpm dev`（真实桥）→ 设置→插件：**开 `pluginSystemEnabled` 总开关** → `devPluginPaths` 指 `plugins/git-log` → 插件中心启用（consent 仅 `workspace:open-tab`）。
 2. 右侧栏 "Git Log" 启动器 → 点 → 主区 tab 打开图谱/refs/详情。
 3. 搜索过滤、点 refs 过滤、↑/↓ 选提交、选中显示详情（date/message/files）；light/dark 与宿主同屏对照；≥30 行虚拟滚动流畅。
+
+
+## 增量 2a（真实 HEAD 数据，复用 ade-git）
+
+规格：`docs/superpowers/specs/2026-10-18-git-log-plugin-increment2-design.md`；计划：`docs/superpowers/plans/2026-10-18-git-log-plugin-increment2.md`。
+
+- **能力/方法表纯新增**：`git:read` capability；host 方法 `git.log`/`git.commitFiles`（`scope:active-worktree`、`panel:true`、`mutation:false`、只读）。consent 现含 `git:read`（新能力 → 重新授权）。
+- **Rust 实现**：`PluginHostServices::git_log/git_commit_files`（默认实现，`ade-plugins` 不依赖 ade-git）；`ade-bridge` `BridgePluginHostServices` 覆盖：解析 active worktree 路径（`WorktreeContexts::path_for`，仅宿主内部用）→ `ade_git::history` / `commit_compare`。非 git 仓 → `not-a-git-repo`；`commit_compare` 软 `invalid-commit` → `unknown-oid`；错误原文只 `eprintln` 宿主侧，插件收稳定 message（**无 fs 路径下发**）。
+- **UI**：`HostRepository` 经 panel 桥 `callHost('git.log'|'git.commitFiles')`（带 5s 超时）；结果 `gitHistoryResultSchema`/`gitCommitFilesSchema` 运行时 zod 校验；`GitLogView` 补 loading/error。快照形状不变 → 图谱/主题零改动。
+- **隔离**：`ade-git` 0 改动；未改现有 git bridge 命令/Source Control UI。`git diff --name-only main...HEAD` 落在 `plugins/git-log/**`、`src/shared/plugins/{plugin-capabilities.ts,plugin-host-api.ts,plugin-git-host-api.test.ts}`、`src-tauri/crates/ade-plugins/{types.rs,host/*,service.rs}`、`src-tauri/crates/ade-bridge/{plugins_service.rs,tests/plugins_service.rs}`、`src-tauri/resources/plugins/host-entry.mjs`、根接线 + docs。
+- **门禁**：`cargo test -p ade-plugins -p ade-bridge` 全绿；`pnpm typecheck`、`build:web`、`build:git-log`、`pnpm test plugins/git-log`（含 host-contract）全绿。
+
+## 增量 2b / 后续（明确顺延，非静默）
+`--all`/author·date·path 过滤/skip 分页（扩 ade-git 查询）、Date/Path filter chips、分支选择器接真 ref、新错误码并入 TS `PluginPanelActionErrorCode` union（如 UI 需分类文案）、manifest 与 updater 完全统一命名。
