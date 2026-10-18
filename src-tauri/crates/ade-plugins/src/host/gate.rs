@@ -63,13 +63,13 @@ mod tests {
             Capability::EventsSubscribe => Some("events.subscribe"),
             Capability::NotificationsShow => Some("notifications.show"),
             Capability::Secrets => Some("secrets.get"),
+            Capability::SessionPush => Some("session.post"),
             Capability::SettingsOwn => Some("settings.get"),
             Capability::Storage => Some("storage.get"),
             Capability::TerminalSend => Some("terminal.sendText"),
+            Capability::WorkerCall => Some("worker.invokeCommand"),
             Capability::WorkspaceOpenTab => Some("workspace.openTab"),
             Capability::WorkspaceRead => Some("workspace.readContext"),
-            // Why: channel methods land with their host surface (Phase 3C T3+).
-            Capability::SessionPush | Capability::WorkerCall => None,
         }
     }
 
@@ -107,10 +107,11 @@ mod tests {
     }
 
     #[test]
-    fn panel_surface_is_exactly_the_four_panel_callable_methods() {
+    fn panel_surface_is_exactly_the_five_panel_callable_methods() {
         let panel_methods = [
             "workspace.readContext",
             "workspace.openTab",
+            "worker.invokeCommand",
             "terminal.sendText",
             "notifications.show",
         ];
