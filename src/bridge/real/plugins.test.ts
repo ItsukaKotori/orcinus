@@ -300,4 +300,23 @@ describe('plugins real adapter events', () => {
     await Promise.resolve()
     expect(unlisten).toHaveBeenCalledTimes(1)
   })
+
+  it('subscribes onPanelPush to plugins:panel-push', async () => {
+    const unlisten = vi.fn()
+    const handlers: Array<(event: { payload: unknown }) => void> = []
+    listenMock.mockImplementationOnce(async (_event, callback) => {
+      handlers.push(callback as (event: { payload: unknown }) => void)
+      return unlisten
+    })
+    const callback = vi.fn()
+    const unsubscribe = createPluginsRealApi().onPanelPush(callback)
+
+    expect(listenMock).toHaveBeenCalledWith('plugins:panel-push', expect.any(Function))
+    handlers[0]?.({ payload: { sessionToken: 't', payload: 1 } })
+    expect(callback).toHaveBeenCalledWith({ sessionToken: 't', payload: 1 })
+
+    unsubscribe()
+    await Promise.resolve()
+    expect(unlisten).toHaveBeenCalledTimes(1)
+  })
 })

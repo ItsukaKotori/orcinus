@@ -298,7 +298,7 @@ const skillsSurfaceMethods = (disposition: SkillsMethodDisposition): string[] =>
     .map(([method]) => method)
 
 /**
- * plugins 契约方法的处置全集（Task 14，Phase 3A）。宿主 23 命令 + 2 事件订阅全接真，
+ * plugins 契约方法的处置全集（Task 14，Phase 3A）。宿主 23 命令 + 3 事件订阅全接真，
  * 无缺失面；`satisfies Record<keyof …>` 把契约键集锁死：`PluginsApi` 新增方法而
  * 不在此处置时 `pnpm typecheck` 失败。
  */
@@ -329,6 +329,7 @@ const pluginsSurfaceDispositions = {
   installMissingFromLockfile: 'explicit',
   refresh: 'explicit',
   onOpenTab: 'explicit',
+  onPanelPush: 'explicit',
   onChanged: 'explicit'
 } satisfies Record<keyof PreloadApi['plugins'], PluginsMethodDisposition>
 
@@ -616,8 +617,8 @@ const surfaceCases: SurfaceCase[] = [
     missing: skillsSurfaceMethods('missing')
   },
   {
-    // Task 14（3A）：23 命令 + `plugins:changed`/`plugins:open-tab` 两订阅全接真，
-    // 无缺失面。契约共 25 方法（含 3A 的 tab entry 面）。
+    // Task 14（3A）：23 命令 + `plugins:changed`/`plugins:open-tab`/`plugins:panel-push`
+    // 三订阅全接真，无缺失面。契约共 26 方法（含 3A 的 tab entry 面）。
     domain: 'plugins',
     explicit: pluginsSurfaceMethods('explicit'),
     missing: pluginsSurfaceMethods('missing')
@@ -673,10 +674,10 @@ describe('mock/real parity: method surface', () => {
     }
   )
 
-  it('plugins implements all 25 contract methods (23 commands + 2 subscriptions)', () => {
+  it('plugins implements all 26 contract methods (23 commands + 3 subscriptions)', () => {
     // The `satisfies` lock above is the authority; this keeps the numeric
     // expectation visible.
-    expect(pluginsSurfaceMethods('explicit')).toHaveLength(25)
+    expect(pluginsSurfaceMethods('explicit')).toHaveLength(26)
     expect(pluginsSurfaceMethods('missing')).toEqual([])
   })
 
