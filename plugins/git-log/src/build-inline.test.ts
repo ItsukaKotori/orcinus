@@ -29,5 +29,7 @@ describe('assertInlinedSingleFile', () => {
     assertInlinedSingleFile(
       '<style>@font-face{src:url(data:font/woff2;base64,AAA)} a{color:var(--x)}</style><script>/* no imports */</script>'
     )
+    assertInlinedSingleFile('<style>a{background:url(#grad)}</style>')
+    assertInlinedSingleFile('<script>const label="import";</script>')
   })
 })

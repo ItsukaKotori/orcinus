@@ -64,7 +64,7 @@
 
 **Interfaces:**
 - Consumes: 无（起点）
-- Produces: `pnpm build:git-log` → `plugins/git-log/dist/tab.html`（全内联单文件）；`inlineSingleFile(html, {js, css})` 纯函数（供测试与 build 复用）
+- Produces: `pnpm build:git-log` → `plugins/git-log/dist/tab.html`（全内联单文件）；`inlineSingleFile({js, css})` 与 `assertInlinedSingleFile(html)` 纯函数（供测试与 build 复用）
 
 - [ ] **Step 1: 写失败测试——内联自检纯函数**
 
@@ -75,18 +75,33 @@ import { describe, expect, it } from 'vitest'
 import { assertInlinedSingleFile, inlineSingleFile } from './build-inline'
 
 describe('inlineSingleFile', () => {
-  it('在单个 HTML 内联 style 与 script，且无任何外部引用', () => {
+  it('内联 style 与 script，且无外部引用', () => {
     const html = inlineSingleFile({ js: 'console.log(1)', css: ':root{--x:1}' })
     expect(html).toContain('<style>:root{--x:1}</style>')
     expect(html).toContain('<script>console.log(1)</script>')
     expect(html).toContain('<div id="git-log-root"></div>')
-    assertInlinedSingleFile(html) // 不抛异常
+    assertInlinedSingleFile(html)
   })
 
-  it('拒绝外链 script / import / @import url / http 引用', () => {
+  it('中和内容里的提前闭合 </script>，只保留一个真实闭合标签', () => {
+    const html = inlineSingleFile({ js: 'var t="</script><img>", u=1', css: '' })
+    expect(html).toContain('<\\/script')
+    expect((html.match(/<\/script>/g) ?? []).length).toBe(1)
+  })
+})
+
+describe('assertInlinedSingleFile', () => {
+  it('拒绝外部 script / link / css 引用', () => {
     expect(() => assertInlinedSingleFile('<script src="a.js"></script>')).toThrow(/external/)
-    expect(() => assertInlinedSingleFile('<script>import("x")</script>')).toThrow(/dynamic-import/)
+    expect(() => assertInlinedSingleFile('<link rel="stylesheet" href="a.css">')).toThrow(/external/)
     expect(() => assertInlinedSingleFile('<style>@import url(http://a)</style>')).toThrow(/external/)
+    expect(() => assertInlinedSingleFile('<style>*{background:url(https://x/y.png)}</style>')).toThrow(/external/)
+  })
+
+  it('放过仅内联、含 data: 字体 / #hash / “import” 文案的合法文档', () => {
+    assertInlinedSingleFile('<style>@font-face{src:url(data:font/woff2;base64,AAA)} a{color:var(--x)}</style><script>/* no imports */</script>')
+    assertInlinedSingleFile('<style>a{background:url(#grad)}</style>')
+    assertInlinedSingleFile('<script>const label="import";</script>')
   })
 })
 ```
@@ -101,24 +116,28 @@ Expected: FAIL —`Cannot find module './build-inline'`
 Create `plugins/git-log/src/build-inline.ts`:
 
 ```ts
+// 只做结构性外部引用检测；不文本扫描 import（iife+inlineDynamicImports 保证产物无 import，
+// 文本扫描会对 UI/fixture 文案误判）。
 const FORBIDDEN: Array<[RegExp, string]> = [
-  [/<script[^>]*\ssrc=/i, 'external'],
-  [/url\(\s*['"]?https?:/i, 'external'],
-  [/@import\s+url\(/i, 'external'],
-  [/\bimport\s*\(/, 'dynamic-import'],
-  [/\bimport\s+[\w{*]/, 'dynamic-import']
+  [/<script[^>]*\ssrc=/i, 'external-script'],
+  [/<link[^>]*\shref=/i, 'external-link'],
+  [/url\(\s*['"]?https?:/i, 'external-url'],
+  [/@import\s+url\(/i, 'external-css-import']
 ]
 
 export function inlineSingleFile({ js, css }: { js: string; css: string }): string {
+  // 中和 payload 内的提前闭合（JS 中 `\/`===`/`，值不变）。
+  const safeJs = js.replace(/<\/(script)/gi, '<\\/$1')
+  const safeCss = css.replace(/<\/(style)/gi, '<\\/$1')
   return `<!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
-    <style>${css}</style>
+    <style>${safeCss}</style>
   </head>
   <body>
     <div id="git-log-root"></div>
-    <script>${js}</script>
+    <script>${safeJs}</script>
   </body>
 </html>
 `
