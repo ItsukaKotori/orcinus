@@ -89,7 +89,7 @@ export class Updater {
 
   async updateAll(): Promise<{ started: boolean; running: boolean }> {
     await this.ensureLoaded()
-    if (this.running) {
+    if (this.running || this.phase === 'checking' || this.phase === 'updating') {
       this.broadcastState()
       return { started: false, running: true }
     }
@@ -217,6 +217,8 @@ export class Updater {
   }
 
   private async runUpdate(): Promise<void> {
+    const running: RunningJob = { abort: new AbortController() }
+    this.running = running
     if (this.checkedAt === null || this.rows.every((row) => row.state !== 'pending')) {
       await this.runCheck()
     }
@@ -224,10 +226,9 @@ export class Updater {
     if (pending.length === 0) {
       this.phase = 'done'
       this.broadcastState()
+      this.running = null
       return
     }
-    const running: RunningJob = { abort: new AbortController() }
-    this.running = running
     this.phase = 'updating'
     this.summary = undefined
     this.error = undefined

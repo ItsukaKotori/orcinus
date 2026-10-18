@@ -50,6 +50,7 @@ function fakeAdapter(id: 'npm' | 'brew', options: FakeAdapterOptions = {}): Mana
 function harness(adapters: ManagerAdapter[], options: { sessions?: string[] } = {}) {
   const storage = new Map<string, unknown>()
   const posts: Array<{ token: string; topic: string; payload: unknown }> = []
+  const postAttempts: Array<{ token: string }> = []
   const failingTokens = new Set<string>()
   let clock = 1_000
   const deps: UpdaterDeps = {
@@ -59,6 +60,7 @@ function harness(adapters: ManagerAdapter[], options: { sessions?: string[] } = 
       storage.set(key, value)
     },
     postTo: async (token, topic, payload) => {
+      postAttempts.push({ token })
       if (failingTokens.has(token)) {
         const error = new Error('session is not available') as Error & { code?: string }
         error.code = 'unavailable'
@@ -74,7 +76,7 @@ function harness(adapters: ManagerAdapter[], options: { sessions?: string[] } = 
   for (const token of options.sessions ?? []) {
     updater.rememberSession(token)
   }
-  return { updater, posts, storage, failingTokens }
+  return { updater, posts, postAttempts, storage, failingTokens }
 }
 
 describe('Updater.check', () => {
@@ -170,6 +172,37 @@ describe('Updater.updateAll', () => {
     })
     await expect(updater.cancel()).resolves.toEqual({ canceled: false })
   })
+
+  it('rejects updateAll while a check is in flight or an update is re-checking', async () => {
+    const npm = fakeAdapter('npm', { entries: [entry('a')], outdatedDelayMs: 50 })
+    const { updater, posts } = harness([npm], { sessions: ['tok-1'] })
+
+    // 1) updateAll during a standalone check is rejected
+    await updater.check()
+    await expect(updater.updateAll()).resolves.toEqual({ started: false, running: true })
+    await vi.waitFor(() => {
+      const state = posts.filter((post) => post.topic === 'state').at(-1)?.payload as UpdaterState
+      expect(state?.phase).toBe('done')
+    })
+
+    // 2) first update completes (rows pending, no re-check needed)
+    await expect(updater.updateAll()).resolves.toEqual({ started: true, running: false })
+    await vi.waitFor(() => {
+      const state = posts.filter((post) => post.topic === 'state').at(-1)?.payload as UpdaterState
+      expect(state?.phase).toBe('done')
+      expect(state?.summary).toEqual({ updated: 1, failed: 0, skipped: 0, elapsedMs: expect.any(Number) })
+    })
+
+    // 3) second updateAll needs a re-check (rows all non-pending) — a third call
+    //    during that re-check must be rejected
+    await expect(updater.updateAll()).resolves.toEqual({ started: true, running: false })
+    await expect(updater.updateAll()).resolves.toEqual({ started: false, running: true })
+    await vi.waitFor(() => {
+      const state = posts.filter((post) => post.topic === 'state').at(-1)?.payload as UpdaterState
+      expect(state?.phase).toBe('done')
+    })
+    expect(npm.upgrades).toEqual(['a', 'a'])
+  })
 })
 
 describe('Updater.setManagers / snapshot / sessions', () => {
@@ -204,12 +237,16 @@ describe('Updater.setManagers / snapshot / sessions', () => {
 
   it('prunes sessions that report unavailable and stops posting to them', async () => {
     const npm = fakeAdapter('npm')
-    const { updater, posts, failingTokens } = harness([npm], { sessions: ['dead', 'live'] })
+    const { updater, posts, postAttempts, failingTokens } = harness([npm], { sessions: ['dead', 'live'] })
     failingTokens.add('dead')
     await updater.setManagers(['npm'])
+    expect(postAttempts.some((attempt) => attempt.token === 'dead')).toBe(true)
     expect(posts.every((post) => post.token === 'live')).toBe(true)
+
+    const attemptsAfterFirstBroadcast = postAttempts.length
     await updater.setManagers(['npm'])
-    expect(posts.every((post) => post.token === 'live')).toBe(true)
-    expect(posts.length).toBeGreaterThan(0)
+    const secondBroadcast = postAttempts.slice(attemptsAfterFirstBroadcast)
+    expect(secondBroadcast.length).toBeGreaterThan(0)
+    expect(secondBroadcast.every((attempt) => attempt.token === 'live')).toBe(true)
   })
 })
