@@ -396,6 +396,133 @@ fn active_worktree_context_reads_ui_state_and_resolver() {
     assert_eq!(empty.active_worktree_context(), None);
 }
 
+/// A `WorktreeContexts` whose `path_for` points at a real git repository.
+struct RepoWorktrees {
+    path: String,
+}
+
+impl WorktreeContexts for RepoWorktrees {
+    fn resolve(&self, worktree_id: &str) -> Option<(String, String)> {
+        (worktree_id == WORKTREE).then(|| ("main".to_string(), "main".to_string()))
+    }
+    fn path_for(&self, worktree_id: &str) -> Option<String> {
+        (worktree_id == WORKTREE).then(|| self.path.clone())
+    }
+}
+
+fn git_host_services(
+    root: &Path,
+    ui: Arc<Mutex<UiStateStore>>,
+    worktrees: Arc<dyn WorktreeContexts>,
+) -> BridgePluginHostServices {
+    let notifications: NotificationLog = Arc::new(Mutex::new(Vec::new()));
+    let notify = Arc::new(move |plugin_key: &str, title: &str, body: Option<&str>| {
+        notifications.lock().unwrap().push((
+            plugin_key.to_string(),
+            title.to_string(),
+            body.map(str::to_string),
+        ));
+        true
+    });
+    BridgePluginHostServices::new(BridgeHostServicesDeps {
+        app_data_dir: root.join("app-data"),
+        ui,
+        projects: projects_store(root),
+        worktree_meta: worktree_meta(root),
+        fs: Arc::new(FsService::new()),
+        dev_paths: Vec::new(),
+        pty: FakePty::with_sessions(Vec::new()),
+        secrets: Arc::new(FakeSecrets::default()),
+        notify,
+        worktrees: Some(worktrees),
+    })
+}
+
+/// `git init` + two commits; returns `(head, parent)` oids.
+fn init_git_repo(dir: &Path) -> (String, String) {
+    let git = |args: &[&str]| -> String {
+        let out = std::process::Command::new("git")
+            .arg("-C")
+            .arg(dir)
+            .args(args)
+            .output()
+            .expect("invoke git");
+        assert!(
+            out.status.success(),
+            "git {:?}: {}",
+            args,
+            String::from_utf8_lossy(&out.stderr)
+        );
+        String::from_utf8_lossy(&out.stdout).trim().to_string()
+    };
+    git(&["init", "-b", "main", "."]);
+    fs::write(dir.join("a.txt"), "one\n").unwrap();
+    git(&["add", "."]);
+    git(&[
+        "-c",
+        "user.name=T",
+        "-c",
+        "user.email=t@example.com",
+        "commit",
+        "-m",
+        "first",
+    ]);
+    fs::write(dir.join("a.txt"), "one\ntwo\n").unwrap();
+    git(&["add", "."]);
+    git(&[
+        "-c",
+        "user.name=T",
+        "-c",
+        "user.email=t@example.com",
+        "commit",
+        "-m",
+        "second",
+    ]);
+    (git(&["rev-parse", "HEAD"]), git(&["rev-parse", "HEAD~1"]))
+}
+
+#[test]
+fn git_log_reads_real_history_and_commit_files() {
+    let root = tempfile::tempdir().unwrap();
+    let repo = tempfile::tempdir().unwrap();
+    let (head, _parent) = init_git_repo(repo.path());
+    let worktrees = Arc::new(RepoWorktrees {
+        path: repo.path().to_string_lossy().into_owned(),
+    });
+    let services = git_host_services(root.path(), ui_store(root.path(), Some(WORKTREE)), worktrees);
+
+    let value = services.git_log(Some(WORKTREE), Some(50)).expect("git.log ok");
+    assert_eq!(value["items"].as_array().map(|items| items.len()), Some(2));
+    assert!(value["items"][0].get("parentIds").is_some()); // camelCase contract
+    assert_eq!(value["currentRef"]["name"].as_str(), Some("main"));
+
+    let files = services
+        .git_commit_files(Some(WORKTREE), &head)
+        .expect("commitFiles ok");
+    let entries = files.as_array().expect("array");
+    assert!(entries.iter().any(|e| e["path"].as_str() == Some("a.txt")));
+
+    let err = services
+        .git_commit_files(Some(WORKTREE), &"f".repeat(40))
+        .unwrap_err();
+    assert_eq!(err.code(), "unknown-oid");
+}
+
+#[test]
+fn git_log_requires_resolvable_worktree_path() {
+    let root = tempfile::tempdir().unwrap();
+    // FakeWorktrees.resolve works but path_for defaults to None → unresolvable.
+    let services = host_services(
+        root.path(),
+        ui_store(root.path(), Some(WORKTREE)),
+        FakePty::with_sessions(Vec::new()),
+        Vec::new(),
+        Arc::new(Mutex::new(Vec::new())),
+    );
+    let err = services.git_log(Some(WORKTREE), None).unwrap_err();
+    assert_eq!(err.code(), "no-active-worktree");
+}
+
 #[test]
 fn terminals_list_by_worktree_and_send_appends_enter() {
     let root = tempfile::tempdir().unwrap();
