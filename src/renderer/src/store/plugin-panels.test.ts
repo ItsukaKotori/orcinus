@@ -70,6 +70,37 @@ describe('plugin panel list loading', () => {
     ).toEqual([expect.objectContaining({ pluginKey: enabled.pluginKey, id: 'tasks' })])
   })
 
+  it('hides internal commands from palette and shortcut collectors', () => {
+    const withCommands = {
+      ...plugin('orca-samples.commands'),
+      commands: [
+        {
+          id: 'check',
+          title: 'Check',
+          context: 'global' as const,
+          handler: { type: 'built-in' as const, action: 'view.check' },
+          keybindings: [],
+          visibility: 'palette' as const
+        },
+        {
+          id: 'snapshot',
+          title: 'Snapshot',
+          context: 'global' as const,
+          handler: { type: 'built-in' as const, action: 'view.snapshot' },
+          keybindings: [{ key: 'Mod+Shift+S', when: 'global' as const }],
+          visibility: 'internal' as const
+        }
+      ]
+    }
+
+    expect(collectActivePluginCommands([withCommands]).map((command) => command.id)).toEqual([
+      'check'
+    ])
+    expect(collectEditablePluginCommands([withCommands]).map((command) => command.id)).toEqual([
+      'check'
+    ])
+  })
+
   it('bounds watchdog errors to installed panels and clears them on recovery', () => {
     const installed = {
       ...plugin('orca-samples.current'),
