@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 @source "./";
+/* 复用的宿主泳道 SVG 依赖 `overflow-visible`（防 HEAD/merge 外圈被裁），其类名在 renderer 目录，需纳入 tailwind 扫描 */
+@source "../../../../src/renderer/src/components/right-sidebar/source-control/sync";
 @custom-variant dark (&:is(.dark *));
 
 @font-face {
