@@ -278,6 +278,7 @@ pub struct PluginCommandProjection {
     pub context: crate::manifest::CommandContext,
     pub handler: PluginCommandHandler,
     pub keybindings: Vec<PluginKeybindingProjection>,
+    pub visibility: crate::manifest::CommandVisibility,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2288,6 +2289,7 @@ impl PluginService {
                             },
                             None => PluginCommandHandler::Worker,
                         },
+                        visibility: command.visibility,
                         keybindings: contributes
                             .keybindings
                             .iter()
@@ -3182,6 +3184,38 @@ mod tests {
             .iter()
             .find(|entry| entry.plugin_key == key)
             .unwrap_or_else(|| panic!("missing entry for {key}"))
+    }
+
+    #[test]
+    fn projects_command_visibility() {
+        let temp = tempdir().unwrap();
+        let source = write_plugin(
+            &temp.path().join("visibility-cmd"),
+            "visibility-cmd",
+            "1.0.0",
+            ">=1.0.0",
+            json!({
+                "main": "main.mjs",
+                "contributes": {
+                    "commands": [
+                        { "id": "check", "title": "Check" },
+                        { "id": "snapshot", "title": "Snapshot", "visibility": "internal" }
+                    ]
+                }
+            }),
+        );
+        std::fs::write(source.join("main.mjs"), b"// fake worker main\n").unwrap();
+        let harness = harness_with_dev(temp.path(), "1.0.0", vec![source]);
+        let listed = harness.service.list();
+        let commands = &entry(&listed, "orca-samples.visibility-cmd").commands;
+        assert_eq!(
+            commands[0].visibility,
+            crate::manifest::CommandVisibility::Palette
+        );
+        assert_eq!(
+            commands[1].visibility,
+            crate::manifest::CommandVisibility::Internal
+        );
     }
 
     #[test]

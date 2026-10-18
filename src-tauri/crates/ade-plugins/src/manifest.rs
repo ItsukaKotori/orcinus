@@ -139,6 +139,14 @@ pub struct TabContrib {
     pub entry: String,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum CommandVisibility {
+    #[default]
+    Palette,
+    Internal,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CommandContrib {
     pub id: String,
@@ -147,6 +155,8 @@ pub struct CommandContrib {
     pub context: Option<CommandContext>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub action: Option<String>,
+    #[serde(default)]
+    pub visibility: CommandVisibility,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -309,6 +319,11 @@ fn validate_contributes(contributes: &Contributes) -> Result<(), PluginError> {
         if let Some(action) = &command.action {
             validate_command_id(&format!("contributes.commands.{index}.action"), action)?;
         }
+        if command.visibility == CommandVisibility::Internal && command.action.is_some() {
+            return Err(invalid(format!(
+                "contributes.commands.{index}: internal commands must not declare an action alias"
+            )));
+        }
     }
 
     check_limit(
@@ -431,6 +446,11 @@ fn validate_contribution_cross_checks(manifest: &Manifest) -> Result<(), PluginE
             )));
         };
         let command_context = command.context.unwrap_or(CommandContext::Global);
+        if command.visibility == CommandVisibility::Internal {
+            return Err(invalid(format!(
+                "contributes.keybindings.{index}.command: internal commands cannot be bound"
+            )));
+        }
         if let Some(when) = keybinding.when {
             if when != command_context {
                 return Err(invalid(format!(
@@ -1402,6 +1422,46 @@ mod tests {
         value["contributes"]["commands"] =
             json!([{ "id": "run", "title": "Run", "context": "worktree" }]);
         parse(value).expect("worktree context is valid");
+    }
+
+    #[test]
+    fn command_visibility_defaults_to_palette_and_rejects_conflicts() {
+        let mut value = base_manifest();
+        value["main"] = json!("main.mjs");
+        value["contributes"]["commands"] = json!([{ "id": "check", "title": "Check" }]);
+        let manifest = parse(value).expect("defaults to palette");
+        assert_eq!(
+            manifest.contributes.commands[0].visibility,
+            CommandVisibility::Palette
+        );
+
+        let mut internal = base_manifest();
+        internal["main"] = json!("main.mjs");
+        internal["contributes"]["commands"] =
+            json!([{ "id": "snapshot", "title": "Snapshot", "visibility": "internal" }]);
+        let manifest = parse(internal).expect("internal is valid");
+        assert_eq!(
+            manifest.contributes.commands[0].visibility,
+            CommandVisibility::Internal
+        );
+
+        let mut with_action = base_manifest();
+        with_action["contributes"]["commands"] = json!([{
+            "id": "snapshot", "title": "Snapshot", "visibility": "internal", "action": "open-tab"
+        }]);
+        assert_invalid(with_action, "must not declare an action alias");
+
+        let mut bound = base_manifest();
+        bound["contributes"]["commands"] =
+            json!([{ "id": "snapshot", "title": "Snapshot", "visibility": "internal" }]);
+        bound["contributes"]["keybindings"] =
+            json!([{ "command": "snapshot", "key": "Cmd+Shift+U" }]);
+        assert_invalid(bound, "internal commands cannot be bound");
+
+        let mut unknown = base_manifest();
+        unknown["contributes"]["commands"] =
+            json!([{ "id": "check", "title": "Check", "visibility": "hidden" }]);
+        assert_invalid(unknown, "hidden");
     }
 
     #[test]
