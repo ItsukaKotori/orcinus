@@ -161,3 +161,30 @@
   - Minor 5：`plugin-capabilities.ts` 注释 "(8 total)" → "(10 total)"。
 - F1 后复验：scoped re-review 全数 ADDRESSED、无新破坏；`pnpm test` **26952 passed / 51 skipped（3003 files）**（260.93s）、`pnpm typecheck` exit 0、`pnpm build:updater` exit 0 + 单文件断言通过；Rust 面未动（四组门禁中 Rust/bindings 两组仍以 §3 为准）。
 - 残余（评为可后续）：日志批字节统计未含 JSON 包装开销（改善方向，未消除）；TS schema 未镜像 Rust 的 `internal+action` 组合拒绝；计划历史文本仍含 `LOG_FLUSH_INTERVAL_MS=500` 与 T17 panel 测试旧断言（以本记录 §5.2 为准）。
+
+## 8. 上线后体验诊断（2026-10-18；按用户裁定：只留档，暂不修）
+
+用户反馈"安装插件和使用插件的过程很卡"，细化后为三处：①切走再切回 Updates tab 需等待数秒才出列表；③"启用/consent 后"感觉卡；④Update all 运行时界面粘滞（用户下次观察后再定因）。
+
+### 8.1 证据链
+
+- **后端耗时实测（本机）**：`npm outdated -g --json` 0.73s；`brew outdated --json=v2` 0.51s；插件树 31 文件 / 1MB——检查与发现/哈希均为毫秒~秒级，非瓶颈。
+- **构建产物实测**：`dist/tab.html` 453KB（内联 JS 346KB minified + CSS 107KB 含 91KB base64 字体）——每次 iframe 重挂载需完整重新解析。
+- **应用数据事实**（`~/Library/Application Support/dev.itsuka.orcinus/`）：`plugins.lock.json` 显示实际安装源为 **local-path**（16:48:27），非 dev 路径；`plugin-data/itsuka.updater/audit.log`：install 16:48:27 → consent approved 16:49:15（48s 为人工操作间隔）；`settings.json` 的 `devPluginPaths` 及其两个备份均为 `[]`（dev 流程从未成功使用）；`disabledPlugins: []` → consent 批准后插件即视为已启用（故无 `plugins.set_enabled` 记录）。consent 状态持久化于 `settings.json` 的 `pluginConsents`。
+- **代码路径**：`TabGroupPanel.tsx:298-307` 仅渲染激活 tab（切走即卸载 `PluginTabContent`）；`tab/App.tsx` 挂载流程只 `invokeCommand('check')`（worker 有 `snapshot` 缓存可用但未先取）；`jobs.ts` 的 `check` 在空闲态无条件全量重跑；`service.rs` 的 `install`/`consent`/`set_enabled` 命令均为毫秒级（list=discover+投影+状态读，无树哈希）。
+
+### 8.2 根因判定
+
+- **①（已定案）**：插件 tab 卸载-重挂载 + `TabApp` 状态清零 + 全量 `check` 重跑 + 骨架屏至检查完成（数秒）。放大器：每次重挂载重新解析 453KB 文档；首次使用叠加 worker 冷启动。
+- **③（已定案≈①）**：安装/consent 命令本体无秒级任务（代码与审计时间戳双重证实）；"consent 后卡"即批准后首次打开使用界面所经历的同一条 ① 链路。
+- **②（真实缺口，未触发）**：`devPluginPaths` 仅在应用启动装配时读取一次（`state.rs` 唯一读者；`service.start()` 从冻结 config 建 watcher；全仓无运行时更新命令），运行中添加/修改 dev 路径**需重启应用**才生效；设置页 Add path 后的 `plugins.refresh()` 仅用旧路径重列。属 Phase 3A 遗留（验收清单第 6 条未复核）。
+- **④（待定因）**：用户下次观察需区分"整个应用 vs 仅插件面"、"连续 vs 阵发"。候选机制：(a) npm/brew 子进程的系统级 CPU/磁盘负载（环境因素）；(b) stale session token 扇出放大——每次 `load()`（挂载 + 每个 `plugins:changed`）签发新 token 且旧 token 不作废（registry 仅按 owner/plugin/scope/kind 失效；worker 侧仅 `unavailable` 剔除），更新期间每次推送按历史 token 数放大 IPC 往返——该累积本身是独立成立的卫生缺陷，与 ④ 归因无关。
+
+### 8.3 建议修复（未实施，待定；用户裁定"暂不修，先记录"）
+
+1. **①最小修复**：`TabApp` 挂载顺序改为 注册推送 → 先 `snapshot`（仅当 `state.checkedAt !== null` 应用，避免首开误导"全部最新"）→ 再 `check` 后台刷新。TDD：`tab/App.test.tsx` 断言调用序 `['snapshot','check']` 与缓存即时渲染；验证 = plugins 全测 + typecheck + build:updater。
+2. **token 卫生（可选）**：`tab_entry`/`panel_entry_for` 重读同一 surface 时作废旧 token（sessions 注册表加按绑定失效查询），或渲染层加载后主动释放前一代 token。
+3. **②修复（独立小项）**：`PluginService::set_dev_paths`（重建 DevWatcher + 重发现） + 设置保存钩子 + 测试；或在设置 UI 明示"重启后生效"。
+4. **④**：先按 8.2 的观察要点取证；必要时在启用路径加时间戳仪表复现。
+
+- 状态：**留档完成；未产生代码改动**（本节提交即唯一变更）。
