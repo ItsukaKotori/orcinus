@@ -30,28 +30,33 @@ pub const PLUGIN_ID_MAX_LENGTH: usize = 64;
 const DANGEROUS_PLUGIN_NAMES: [&str; 3] = ["__proto__", "prototype", "constructor"];
 
 /// v1 capability model: a closed set of unscoped kinds plus the fork's
-/// `workspace:open-tab` extension (8 total). Declaration order is the
+/// `workspace:open-tab` extension and the `worker:call` / `session:push`
+/// plugin UI↔worker channel kinds (10 total). Declaration order is the
 /// canonical order produced by [`canonical_capability_set`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Capability {
     EventsSubscribe,
     NotificationsShow,
     Secrets,
+    SessionPush,
     SettingsOwn,
     Storage,
     TerminalSend,
+    WorkerCall,
     WorkspaceOpenTab,
     WorkspaceRead,
 }
 
 impl Capability {
-    pub const ALL: [Capability; 8] = [
+    pub const ALL: [Capability; 10] = [
         Capability::EventsSubscribe,
         Capability::NotificationsShow,
         Capability::Secrets,
+        Capability::SessionPush,
         Capability::SettingsOwn,
         Capability::Storage,
         Capability::TerminalSend,
+        Capability::WorkerCall,
         Capability::WorkspaceOpenTab,
         Capability::WorkspaceRead,
     ];
@@ -61,9 +66,11 @@ impl Capability {
             Capability::EventsSubscribe => "events:subscribe",
             Capability::NotificationsShow => "notifications:show",
             Capability::Secrets => "secrets",
+            Capability::SessionPush => "session:push",
             Capability::SettingsOwn => "settings:own",
             Capability::Storage => "storage",
             Capability::TerminalSend => "terminal:send",
+            Capability::WorkerCall => "worker:call",
             Capability::WorkspaceOpenTab => "workspace:open-tab",
             Capability::WorkspaceRead => "workspace:read",
         }
@@ -258,14 +265,16 @@ mod tests {
     }
 
     #[test]
-    fn capability_as_str_covers_closed_set_of_eight() {
-        assert_eq!(Capability::ALL.len(), 8);
+    fn capability_as_str_covers_closed_set_of_ten() {
+        assert_eq!(Capability::ALL.len(), 10);
         assert_eq!(Capability::EventsSubscribe.as_str(), "events:subscribe");
         assert_eq!(Capability::NotificationsShow.as_str(), "notifications:show");
         assert_eq!(Capability::Secrets.as_str(), "secrets");
+        assert_eq!(Capability::SessionPush.as_str(), "session:push");
         assert_eq!(Capability::SettingsOwn.as_str(), "settings:own");
         assert_eq!(Capability::Storage.as_str(), "storage");
         assert_eq!(Capability::TerminalSend.as_str(), "terminal:send");
+        assert_eq!(Capability::WorkerCall.as_str(), "worker:call");
         assert_eq!(Capability::WorkspaceOpenTab.as_str(), "workspace:open-tab");
         assert_eq!(Capability::WorkspaceRead.as_str(), "workspace:read");
         for capability in Capability::ALL {

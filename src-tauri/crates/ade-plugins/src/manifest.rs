@@ -1084,6 +1084,19 @@ mod tests {
     }
 
     #[test]
+    fn accepts_channel_capability_kinds_and_rejects_unknown() {
+        let mut value = base_manifest();
+        value["capabilities"] = json!([{ "kind": "worker:call" }, { "kind": "session:push" }]);
+        let manifest = parse(value).expect("channel capabilities are valid");
+        assert!(manifest.capabilities.contains(&Capability::WorkerCall));
+        assert!(manifest.capabilities.contains(&Capability::SessionPush));
+
+        let mut unknown = base_manifest();
+        unknown["capabilities"] = json!([{ "kind": "ui:call" }]);
+        assert_invalid(unknown, "ui:call");
+    }
+
+    #[test]
     fn rejects_unknown_capabilities() {
         let mut value = base_manifest();
         value["capabilities"] = json!([{ "kind": "net:fetch" }]);

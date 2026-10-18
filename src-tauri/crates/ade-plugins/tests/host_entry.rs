@@ -183,6 +183,30 @@ export function deactivate() {
 "#;
 
 #[test]
+fn init_accepts_the_channel_capability_kinds() {
+    let Some(node) = node_executable() else {
+        eprintln!("SKIP init_accepts_the_channel_capability_kinds: no node on PATH (set ORCINUS_NODE_PATH)");
+        return;
+    };
+    let temp = tempfile::tempdir().unwrap();
+    let plugin_root = write_fixture(temp.path(), "export default function activate() {}\n");
+    let mut worker = WorkerHarness::start(&node, &plugin_root);
+    let mut init = init_frame(&plugin_root);
+    if let ParentFrame::Init {
+        granted_capabilities,
+        ..
+    } = &mut init
+    {
+        *granted_capabilities = vec!["worker:call".to_owned(), "session:push".to_owned()];
+    }
+    worker.send(&init);
+    match worker.next_frame() {
+        ChildFrame::Ready { .. } => {}
+        other => panic!("unexpected frame: {other:?}"),
+    }
+}
+
+#[test]
 fn hello_plugin_worker_round_trip_over_ndjson() {
     let Some(node) = node_executable() else {
         eprintln!("SKIP hello_plugin_worker_round_trip_over_ndjson: no node on PATH (set ORCINUS_NODE_PATH)");

@@ -490,7 +490,7 @@ mod tests {
 
     const KEY: &str = "orca-samples.demo";
 
-    static ALL_CAPABILITIES: [Capability; 8] = Capability::ALL;
+    static ALL_CAPABILITIES: [Capability; 10] = Capability::ALL;
 
     #[derive(Default)]
     struct FakeStorage {
