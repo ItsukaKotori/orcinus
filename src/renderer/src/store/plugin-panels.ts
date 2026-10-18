@@ -181,13 +181,15 @@ export function collectActivePluginCommands(
         plugin.status === 'running' || plugin.status === 'restarting' || plugin.status === 'idle'
     )
     .flatMap((plugin) =>
-      plugin.commands.map((command) => ({
-        ...command,
-        pluginKey: plugin.pluginKey,
-        pluginName: plugin.name,
-        scope: plugin.scope,
-        repoId: plugin.repoId
-      }))
+      plugin.commands
+        .filter((command) => command.visibility !== 'internal')
+        .map((command) => ({
+          ...command,
+          pluginKey: plugin.pluginKey,
+          pluginName: plugin.name,
+          scope: plugin.scope,
+          repoId: plugin.repoId
+        }))
     )
 }
 
@@ -197,13 +199,15 @@ export function collectEditablePluginCommands(
   return plugins
     .filter((plugin) => ['running', 'restarting', 'idle', 'errored'].includes(plugin.status))
     .flatMap((plugin) =>
-      plugin.commands.map((command) => ({
-        ...command,
-        pluginKey: plugin.pluginKey,
-        pluginName: plugin.name,
-        scope: plugin.scope,
-        repoId: plugin.repoId
-      }))
+      plugin.commands
+        .filter((command) => command.visibility !== 'internal')
+        .map((command) => ({
+          ...command,
+          pluginKey: plugin.pluginKey,
+          pluginName: plugin.name,
+          scope: plugin.scope,
+          repoId: plugin.repoId
+        }))
     )
 }
 

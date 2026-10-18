@@ -15,6 +15,7 @@ use crate::host::services::{HostServiceError, PluginHostServices, WorktreeContex
 use crate::types::{
     Capability, PluginError, PluginScope, ACTION_FAILED, INVALID_PARAMS, UNAVAILABLE,
 };
+use crate::worker::manager::UNKNOWN_COMMAND;
 
 /// Mutation audit sink. [`crate::audit::AuditLog`] is the production
 /// implementation; tests bind recorders and failing fakes.
@@ -35,6 +36,9 @@ pub struct HostCallContext<'a> {
     pub granted: Option<&'a [Capability]>,
     /// True when the call arrives over the sandboxed panel bridge.
     pub via_panel: bool,
+    /// Panel-session token when the call arrives over a UI bridge; `None` for
+    /// worker-originated calls.
+    pub session_token: Option<&'a str>,
     /// Scope the caller's plugin is loaded under (needed for `openTab`).
     pub scope: PluginScope,
     /// Project id when `scope` is project.
@@ -220,6 +224,8 @@ fn dispatch(
         "settings.get" => settings_get(ctx),
         "settings.set" => settings_set(params, ctx),
         "events.subscribe" => events_subscribe(params, ctx),
+        "session.post" => session_post(params, ctx),
+        "worker.invokeCommand" => invoke_worker_command(params, ctx),
         _ => Err(HandlerError::new(
             gate::UNKNOWN_METHOD,
             format!("unknown host method: {method}"),
@@ -448,6 +454,54 @@ fn events_subscribe(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, 
     Ok(serde_json::json!({ "subscribed": subscribed }))
 }
 
+fn session_post(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
+    let topic = params.get("topic").and_then(Value::as_str);
+    let payload = field(params, "payload").clone();
+    ctx.services
+        .session_post(ctx.plugin_key, field_str(params, "sessionToken"), topic, payload)?;
+    Ok(serde_json::json!({ "ok": true }))
+}
+
+fn invoke_worker_command(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
+    let Some(session_token) = ctx.session_token.filter(|_| ctx.via_panel) else {
+        return Err(HandlerError::new(
+            UNAVAILABLE,
+            "worker.invokeCommand requires a UI session context",
+        ));
+    };
+    let command_id = field_str(params, "commandId");
+    let args = params.get("args").filter(|value| !value.is_null()).cloned();
+    let value = ctx
+        .services
+        .invoke_worker_command(
+            ctx.plugin_key,
+            ctx.scope,
+            ctx.repo_id,
+            command_id,
+            args,
+            Some(session_token),
+        )
+        .map_err(|error| {
+            if error.code() == UNKNOWN_COMMAND {
+                HandlerError::new(INVALID_PARAMS, error.message().to_string())
+            } else {
+                error.into()
+            }
+        })?;
+    let bytes = serde_json::to_vec(&value)
+        .map_err(|error| HandlerError::new(INVALID_PARAMS, error.to_string()))?;
+    if bytes.len() > api::WORKER_COMMAND_RESULT_MAX_BYTES {
+        return Err(HandlerError::new(
+            INVALID_PARAMS,
+            format!(
+                "command result exceeds {} bytes; use session.post to stream large payloads",
+                api::WORKER_COMMAND_RESULT_MAX_BYTES
+            ),
+        ));
+    }
+    Ok(value)
+}
+
 fn field<'a>(params: &'a Value, name: &str) -> &'a Value {
     params.get(name).unwrap_or(&Value::Null)
 }
@@ -490,7 +544,7 @@ mod tests {
 
     const KEY: &str = "orca-samples.demo";
 
-    static ALL_CAPABILITIES: [Capability; 8] = Capability::ALL;
+    static ALL_CAPABILITIES: [Capability; 10] = Capability::ALL;
 
     #[derive(Default)]
     struct FakeStorage {
@@ -633,6 +687,9 @@ mod tests {
         send_calls: Mutex<Vec<(String, String, bool)>>,
         notification_calls: Mutex<Vec<(String, String, Option<String>)>>,
         open_tab_calls: Mutex<Vec<OpenTabCall>>,
+        session_post_calls: Mutex<Vec<(String, Option<String>, Value)>>,
+        invoke_result: Mutex<Option<Result<Value, HostServiceError>>>,
+        invoke_calls: Mutex<Vec<(String, Option<Value>, Option<String>)>>,
         storage: FakeStorage,
         settings: FakeSettings,
         secrets: FakeSecrets,
@@ -749,6 +806,41 @@ mod tests {
         ) -> Vec<String> {
             self.declared.clone()
         }
+
+        fn session_post(
+            &self,
+            _plugin_key: &str,
+            session_token: &str,
+            topic: Option<&str>,
+            payload: Value,
+        ) -> Result<(), HostServiceError> {
+            self.session_post_calls.lock().unwrap().push((
+                session_token.to_string(),
+                topic.map(str::to_string),
+                payload,
+            ));
+            Ok(())
+        }
+
+        fn invoke_worker_command(
+            &self,
+            _plugin_key: &str,
+            _scope: PluginScope,
+            _repo_id: Option<&str>,
+            command_id: &str,
+            args: Option<Value>,
+            session_token: Option<&str>,
+        ) -> Result<Value, HostServiceError> {
+            self.invoke_calls.lock().unwrap().push((
+                command_id.to_string(),
+                args,
+                session_token.map(str::to_string),
+            ));
+            if let Some(result) = self.invoke_result.lock().unwrap().clone() {
+                return result;
+            }
+            Ok(json!({ "started": true }))
+        }
     }
 
     #[derive(Default)]
@@ -800,6 +892,7 @@ mod tests {
             plugin_key: KEY,
             granted: Some(&ALL_CAPABILITIES),
             via_panel: false,
+            session_token: None,
             scope: PluginScope::Global,
             repo_id: None,
             worktree_hint: None,
@@ -1194,5 +1287,87 @@ mod tests {
         ));
         assert_eq!(code, ACTION_FAILED);
         assert_eq!(error, "internal: malformed events.subscribe result");
+    }
+
+    #[test]
+    fn session_post_reaches_services_only_from_workers() {
+        let services = services_with_context();
+        let value = expect_ok(execute(
+            "session.post",
+            json!({ "sessionToken": "t".repeat(32), "topic": "log", "payload": { "line": "x" } }),
+            &context(&services, None),
+        ));
+        assert_eq!(value, json!({ "ok": true }));
+        assert_eq!(
+            services.session_post_calls.lock().unwrap().as_slice(),
+            [("t".repeat(32), Some("log".to_string()), json!({ "line": "x" }))]
+        );
+
+        let session_token = "t".repeat(32);
+        let mut panel_ctx = context(&services, None);
+        panel_ctx.via_panel = true;
+        panel_ctx.session_token = Some(session_token.as_str());
+        let (code, _) = expect_err(execute(
+            "session.post",
+            json!({ "sessionToken": "t".repeat(32), "payload": 1 }),
+            &panel_ctx,
+        ));
+        assert_eq!(code, gate::PANEL_FORBIDDEN);
+    }
+
+    #[test]
+    fn worker_invoke_command_requires_a_panel_session_and_sanitizes_errors() {
+        let services = services_with_context();
+        // 面板会话上下文成功路径
+        let token_owned = "t".repeat(32);
+        let mut panel = context(&services, None);
+        panel.via_panel = true;
+        panel.session_token = Some(token_owned.as_str());
+        *services.invoke_result.lock().unwrap() = Some(Ok(json!({ "started": true })));
+        let value = expect_ok(execute(
+            "worker.invokeCommand",
+            json!({ "commandId": "check" }),
+            &panel,
+        ));
+        assert_eq!(value, json!({ "started": true }));
+        assert_eq!(services.invoke_calls.lock().unwrap().len(), 1);
+
+        // worker 自调（无会话上下文）→ unavailable
+        let (code, _) = expect_err(execute(
+            "worker.invokeCommand",
+            json!({ "commandId": "check" }),
+            &context(&services, None),
+        ));
+        assert_eq!(code, UNAVAILABLE);
+
+        // 未声明命令 → 面板层 invalid_params
+        *services.invoke_result.lock().unwrap() =
+            Some(Err(HostServiceError::new("unknown_command", "plugin does not declare command x")));
+        let (code, error) = expect_err(execute(
+            "worker.invokeCommand",
+            json!({ "commandId": "missing" }),
+            &panel,
+        ));
+        assert_eq!(code, INVALID_PARAMS);
+        assert!(error.contains("does not declare"), "{error}");
+
+        // 超限结果 → invalid_params
+        *services.invoke_result.lock().unwrap() = Some(Ok(json!({ "blob": "x".repeat(64 * 1024 + 1) })));
+        let (code, _) = expect_err(execute(
+            "worker.invokeCommand",
+            json!({ "commandId": "check" }),
+            &panel,
+        ));
+        assert_eq!(code, INVALID_PARAMS);
+
+        // 面板桥外（palette/worker）无 session → unavailable（同 worker 自调分支）
+        let mut no_session = context(&services, None);
+        no_session.via_panel = true;
+        let (code, _) = expect_err(execute(
+            "worker.invokeCommand",
+            json!({ "commandId": "check" }),
+            &no_session,
+        ));
+        assert_eq!(code, UNAVAILABLE);
     }
 }

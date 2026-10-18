@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   PLUGIN_COMMAND_LIMIT,
@@ -86,5 +87,25 @@ describe('pluginManifestSchema boundaries', () => {
         })
       ).ok
     ).toBe(false)
+  })
+
+  it('parses the shipped updater manifest without dropping or rejecting fields', () => {
+    // Real file (vitest cwd is the repo root): guards the schema against
+    // silently stripping fork fields such as `visibility` or `tabs`.
+    const raw = JSON.parse(readFileSync('plugins/updater/ade-plugin.json', 'utf8')) as unknown
+    const result = parsePluginManifest(raw)
+    expect(result.ok).toBe(true)
+    if (!result.ok) {
+      return
+    }
+    const { commands } = result.manifest.contributes
+    expect(commands).toHaveLength(6)
+    const visibilityById = new Map(commands.map((command) => [command.id, command.visibility]))
+    expect(visibilityById.get('snapshot')).toBe('internal')
+    expect(visibilityById.get('set-managers')).toBe('internal')
+    for (const id of ['check', 'update-all', 'cancel', 'open']) {
+      expect(visibilityById.get(id) ?? 'palette').toBe('palette')
+    }
+    expect(result.manifest.contributes.tabs).toHaveLength(1)
   })
 })

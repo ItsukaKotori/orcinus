@@ -68,6 +68,7 @@ const preview: PluginMarketplaceHostInstallPreview = {
     main: 'dist/worker.js',
     contributes: {
       panels: [],
+      tabs: [],
       commands: [],
       events: [],
       languagePacks: [],

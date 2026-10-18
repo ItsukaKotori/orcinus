@@ -47,7 +47,7 @@
 **Interfaces:**
 - Produces: `Capability::WorkerCall` / `Capability::SessionPush`（`as_str()` = `"worker:call"` / `"session:push"`），供 T3/T4/T5/T7 使用。
 
-- [ ] **Step 1: 写失败测试（types.rs 末尾新增测试模块）**
+- [x] **Step 1: 写失败测试（types.rs 末尾新增测试模块）**
 
 ```rust
 #[cfg(test)]
@@ -66,18 +66,18 @@ mod tests {
 }
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `cargo test -p ade-plugins capability_kinds_round_trip_all_ten`
 Expected: 编译失败（`no variant named WorkerCall`）
 
-- [ ] **Step 3: 实现（types.rs）**
+- [x] **Step 3: 实现（types.rs）**
 
 - enum 插入两个变体（保持既有的字母序）：`Secrets,` 之后 `SessionPush,`；`TerminalSend,` 之后 `WorkerCall,`。
 - `ALL` 改为 `[Capability; 10]`，按同序插入 `Capability::SessionPush,`（Secrets 后）与 `Capability::WorkerCall,`（TerminalSend 后）。
 - `as_str` 增两臂：`Capability::SessionPush => "session:push",`、`Capability::WorkerCall => "worker:call",`。
 
-- [ ] **Step 4: host-entry.mjs 同步闭集（L22-31）**
+- [x] **Step 4: host-entry.mjs 同步闭集（L22-31）**
 
 ```js
 const PLUGIN_CAPABILITY_KINDS = [
@@ -94,7 +94,7 @@ const PLUGIN_CAPABILITY_KINDS = [
 ]
 ```
 
-- [ ] **Step 5: manifest 解析测试（manifest.rs tests 模块，使用既有 `base_manifest()` / `assert_invalid()`）**
+- [x] **Step 5: manifest 解析测试（manifest.rs tests 模块，使用既有 `base_manifest()` / `assert_invalid()`）**
 
 ```rust
 #[test]
@@ -111,7 +111,7 @@ fn accepts_channel_capability_kinds_and_rejects_unknown() {
 }
 ```
 
-- [ ] **Step 6: host_entry.rs 集成测试**
+- [x] **Step 6: host_entry.rs 集成测试**
 
 复制同文件 `hello_plugin_worker_round_trip_over_ndjson`（L186 起）的 tempdir/fixture/harness 搭建方式（node 缺失时按既有 SKIP 模式直接 return），新增：
 
@@ -136,12 +136,12 @@ fn init_accepts_the_channel_capability_kinds() {
 
 （`ParentFrame` / `ChildFrame` / `init_frame` / `write_fixture` / `WorkerHarness` 均为该文件既有导入与工具，按邻近测试校准签名。）
 
-- [ ] **Step 7: 运行全部相关测试**
+- [x] **Step 7: 运行全部相关测试**
 
 Run: `cargo test -p ade-plugins capability` 与 `cargo test -p ade-plugins --test host_entry`
 Expected: PASS（node 存在时实跑）
 
-- [ ] **Step 8: 提交**
+- [x] **Step 8: 提交**
 
 ```bash
 git add src-tauri/crates/ade-plugins/src/types.rs src-tauri/resources/plugins/host-entry.mjs src-tauri/crates/ade-plugins/src/manifest.rs src-tauri/crates/ade-plugins/tests/host_entry.rs
@@ -157,7 +157,7 @@ git commit -m "feat(plugins): 新增 worker:call/session:push 能力（T1）"
 **Interfaces:**
 - Produces: `crate::manifest::CommandVisibility { Palette, Internal }`（`Default = Palette`，serde `lowercase`）；`PluginCommandProjection.visibility: CommandVisibility`。供 T6（bridge DTO）与 T9（TS 过滤）使用。
 
-- [ ] **Step 1: 写失败测试（manifest.rs tests）**
+- [x] **Step 1: 写失败测试（manifest.rs tests）**
 
 ```rust
 #[test]
@@ -198,12 +198,12 @@ fn command_visibility_defaults_to_palette_and_rejects_conflicts() {
 }
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `cargo test -p ade-plugins command_visibility_defaults_to_palette_and_rejects_conflicts`
 Expected: FAIL（无 `visibility` 字段 / 无 `CommandVisibility`）
 
-- [ ] **Step 3: 实现（manifest.rs）**
+- [x] **Step 3: 实现（manifest.rs）**
 
 结构体（`CommandContrib` 上方新增 enum；`CommandContrib` 增字段）：
 
@@ -250,7 +250,7 @@ if command.visibility == CommandVisibility::Internal {
 }
 ```
 
-- [ ] **Step 4: 投影（service.rs）**
+- [x] **Step 4: 投影（service.rs）**
 
 `PluginCommandProjection`（L275）增字段：
 
@@ -267,7 +267,7 @@ pub struct PluginCommandProjection {
 
 `project_entry`（~L2167）中命令映射处（`PluginCommandProjection {` 构造字面量）增 `visibility: command.visibility,`（`command` 为该处循环变量；编译器会指出确切位置）。
 
-- [ ] **Step 5: service.rs 投影测试**
+- [x] **Step 5: service.rs 投影测试**
 
 在 service.rs tests 模块中、改造/新增一个最小投影断言（沿用该模块既有构建 fixture 的辅助函数；若既有测试已断言 commands 投影，直接在其上追加 `visibility: CommandVisibility::Internal` 用例）：
 
@@ -278,12 +278,12 @@ let command = &entry.commands[0];
 assert_eq!(command.visibility, crate::manifest::CommandVisibility::Internal);
 ```
 
-- [ ] **Step 6: 运行**
+- [x] **Step 6: 运行**
 
 Run: `cargo test -p ade-plugins command_visibility` 与 `cargo test -p ade-plugins project`
 Expected: PASS
 
-- [ ] **Step 7: 提交**
+- [x] **Step 7: 提交**
 
 ```bash
 git add src-tauri/crates/ade-plugins/src/manifest.rs src-tauri/crates/ade-plugins/src/service.rs
@@ -300,7 +300,7 @@ git commit -m "feat(plugins): 命令可见性 visibility（manifest+投影）（
 - Consumes: T1 的 `Capability::WorkerCall` / `Capability::SessionPush`。
 - Produces: `api::spec("worker.invokeCommand")` / `api::spec("session.post")`；常量 `WORKER_COMMAND_ID_MAX_CHARS`、`WORKER_COMMAND_RESULT_MAX_BYTES`、`SESSION_POST_TOPIC_MAX_CHARS`、`SESSION_POST_PAYLOAD_MAX_BYTES`。供 T4/T5/T7。
 
-- [ ] **Step 1: 写失败测试（api.rs tests 与 gate.rs tests）**
+- [x] **Step 1: 写失败测试（api.rs tests 与 gate.rs tests）**
 
 api.rs tests 内：把既有 `spec_table_has_fourteen_methods_with_expected_metadata` 改名/更新为：
 
@@ -401,12 +401,12 @@ fn worker_invoke_and_session_post_params_enforce_bounds() {
 
 gate.rs tests：`method_for` match 增 `Capability::WorkerCall => "worker.invokeCommand",` 与 `Capability::SessionPush => "session.post",`；`panel_surface_is_exactly_the_four_panel_callable_methods` 的 `panel_methods` 数组增 `"worker.invokeCommand"`，并把测试名与注释改为 "five panel callable methods"。
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `cargo test -p ade-plugins spec_table_has_sixteen_methods`
 Expected: FAIL（`specs()` 仍是 14 / 找不到方法）
 
-- [ ] **Step 3: 实现（api.rs）**
+- [x] **Step 3: 实现（api.rs）**
 
 常量（顶部常量区）：
 
@@ -511,12 +511,12 @@ MethodSpec {
 
 `specs()` 返回类型改 `&'static [MethodSpec; 16]`。
 
-- [ ] **Step 4: 运行**
+- [x] **Step 4: 运行**
 
 Run: `cargo test -p ade-plugins --lib`（api/gate 全部）
 Expected: PASS
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src-tauri/crates/ade-plugins/src/host/api.rs src-tauri/crates/ade-plugins/src/host/gate.rs
@@ -537,7 +537,7 @@ git commit -m "feat(plugins): host methods 扩至 16（worker.invokeCommand/sess
 **Interfaces:**
 - Produces: `HostCallContext.session_token: Option<&'a str>`；`PluginHostServices::session_post(plugin_key, session_token, topic, payload) -> Result<(), HostServiceError>`；`PluginService::session_post(...)`；`ServiceEventSink::panel_push_requested(PanelPushRequest)`；事件 `plugins:panel-push`。供 T5（trait 同文件追加）与 T7（TS 订阅）使用。
 
-- [ ] **Step 1: 写失败测试（service.rs tests：校验/预算/发射）**
+- [x] **Step 1: 写失败测试（service.rs tests：校验/预算/发射）**
 
 在 service.rs tests 模块新增（同模块可直接访问私有字段 `sessions`/`push_admission`）：
 
@@ -625,9 +625,10 @@ fn session_post_reaches_services_only_from_workers() {
         [("t".repeat(32), Some("log".to_string()), json!({ "line": "x" }))]
     );
 
+    let session_token = "t".repeat(32);
     let mut panel_ctx = context(&services, None);
     panel_ctx.via_panel = true;
-    panel_ctx.session_token = Some("t".repeat(32).as_str());
+    panel_ctx.session_token = Some(session_token.as_str());
     let (code, _) = expect_err(execute(
         "session.post",
         json!({ "sessionToken": "t".repeat(32), "payload": 1 }),
@@ -639,12 +640,12 @@ fn session_post_reaches_services_only_from_workers() {
 
 （`services_with_context()` 的 `FakeServices` 增字段 `session_post_calls: Mutex<Vec<(String, Option<String>, Value)>>` 并在 trait impl 中记录，返回 `Ok(())`。）
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `cargo test -p ade-plugins session_post`
 Expected: FAIL（字段/方法缺失）
 
-- [ ] **Step 3: 实现（ade-plugins）**
+- [x] **Step 3: 实现（ade-plugins）**
 
 methods.rs：
 1. `HostCallContext` 增字段：
@@ -781,7 +782,7 @@ pub fn session_post(
 ```
 6. tests：`FakeHostServices`（L2919）与 `RecordingSink`（L3025）补齐新 trait 方法（sink 记 `pushes: Mutex<Vec<PanelPushRequest>>`）。
 
-- [ ] **Step 4: 实现（ade-bridge）**
+- [x] **Step 4: 实现（ade-bridge）**
 
 events.rs（`PLUGINS_OPEN_TAB` 旁）：
 
@@ -844,12 +845,12 @@ fn panel_push_requested(&self, request: PanelPushRequest) {
 ```
 - tests/plugins_service.rs 的 `RecordingSink` 增方法（记录到 `pushes`），并加一条断言测试：驱动 `BridgeServiceEventSink`/或直接调 sink 的 `panel_push_requested` 断言事件名与载荷 camelCase。
 
-- [ ] **Step 5: 运行**
+- [x] **Step 5: 运行**
 
 Run: `cargo test -p ade-plugins session_post` 与 `cargo test -p ade-bridge panel_push`
 Expected: PASS
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add src-tauri/crates/ade-plugins src-tauri/crates/ade-bridge
@@ -873,7 +874,7 @@ git commit -m "feat(plugins): session.post 全链（推送预算+事件 plugins:
 - Consumes: T3 表与常量、T4 的 `HostCallContext.session_token`。
 - Produces: `ParentFrame::InvokeCommand { call_id, command_id, args, session: Option<SessionRef> }`；SDK handler 第二参数 `ctx.session { token, post }`；`PluginHostServices::invoke_worker_command(...)`；`PluginService::invoke_command_with_session`。供 T7/T8 与 updater 使用。
 
-- [ ] **Step 1: 写失败测试（protocol.rs tests）**
+- [x] **Step 1: 写失败测试（protocol.rs tests）**
 
 ```rust
 // parent_frames() 增一条带 session 的 InvokeCommand：
@@ -910,12 +911,12 @@ fn invoke_command_session_is_optional_and_camel_case() {
 
 （既有 `parent_frames()`/`parent_frame_shapes_match_oracle_fields`/round-trip 测试同步补 `session: None` 字段。）
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `cargo test -p ade-plugins invoke_command_session`
 Expected: FAIL（`SessionRef` 不存在）
 
-- [ ] **Step 3: 实现 Rust 透传链**
+- [x] **Step 3: 实现 Rust 透传链**
 
 protocol.rs：
 
@@ -981,7 +982,7 @@ pub fn invoke_command_with_session(
 
 （`SessionRef` 的模块路径按 `worker` 模块的 re-export 实际形状调整；`cargo check` 会指出。既有 manager/service 测试中 `invoke_command(...)` 直调点补 `None`。）
 
-- [ ] **Step 4: methods.rs handler + trait + bridge impl**
+- [x] **Step 4: methods.rs handler + trait + bridge impl**
 
 services.rs trait 增：
 
@@ -1136,7 +1137,7 @@ fn worker_invoke_command_requires_a_panel_session_and_sanitizes_errors() {
 }
 ```
 
-- [ ] **Step 5: host-entry.mjs（帧解析 + SDK ctx）**
+- [x] **Step 5: host-entry.mjs（帧解析 + SDK ctx）**
 
 `parseParentFrame` 的 `invokeCommand` 分支追加可选 session 校验：
 
@@ -1190,7 +1191,7 @@ async function handleInvokeCommand(message) {
 }
 ```
 
-- [ ] **Step 6: host_entry.rs 集成测试**
+- [x] **Step 6: host_entry.rs 集成测试**
 
 ```rust
 #[test]
@@ -1251,12 +1252,12 @@ export default function activate(orca) {
 
 （`SessionRef` 需在测试文件 use 列表补充。另加一条：不带 session 的 InvokeCommand → `{ "hasSession": false }`。）
 
-- [ ] **Step 7: 运行**
+- [x] **Step 7: 运行**
 
 Run: `cargo test -p ade-plugins --test host_entry` 与 `cargo test -p ade-plugins --lib` 与 `cargo test -p ade-bridge`
 Expected: PASS
 
-- [ ] **Step 8: 提交**
+- [x] **Step 8: 提交**
 
 ```bash
 git add src-tauri/crates/ade-plugins src-tauri/crates/ade-bridge src-tauri/resources/plugins/host-entry.mjs
@@ -1274,7 +1275,7 @@ git commit -m "feat(plugins): worker.invokeCommand 全链与会话上下文透�
 - Consumes: T2 的 `CommandVisibility`。
 - Produces: `PluginCommandDto.visibility: "palette" | "internal"`（bindings 与 TS 类型同形）。供 T7/T9 使用。
 
-- [ ] **Step 1: Rust DTO 修改（commands/plugins.rs）**
+- [x] **Step 1: Rust DTO 修改（commands/plugins.rs）**
 
 ```rust
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
@@ -1302,13 +1303,13 @@ pub visibility: PluginCommandVisibilityDto,
 
 命令映射（~L264 `PluginCommandDto {` 构造处）增 `visibility: command.visibility.into(),`（变量名按现场）。
 
-- [ ] **Step 2: 重生成 bindings 并跑新鲜度测试**
+- [x] **Step 2: 重生成 bindings 并跑新鲜度测试**
 
 Run: `cargo run -p ade-bridge --bin export-bindings`（`src-tauri/`）→ 仓库根 `git diff --exit-code -- src/bridge/real/generated/tauri-bindings.ts` 应显示 diff；
 Run: `cargo test -p ade-bridge bindings_are_fresh`（`src-tauri/`）
 Expected: 重生成后 PASS
 
-- [ ] **Step 3: TS 契约类型（src/shared/preload-api/api/plugin-host-api.ts）**
+- [x] **Step 3: TS 契约类型（src/shared/preload-api/api/plugin-host-api.ts）**
 
 `PluginHostListEntry.commands` 条目类型增：
 
@@ -1324,14 +1325,14 @@ Expected: 重生成后 PASS
   }[]
 ```
 
-- [ ] **Step 4: 修 fixture/测试的编译破坏**
+- [x] **Step 4: 修 fixture/测试的编译破坏**
 
 Run: `pnpm typecheck`
 Expected: 报出所有缺 `visibility` 的命令 fixture 构造点；逐一补 `visibility: 'palette'`（或按语义 `'internal'`）。典型位置：`src/bridge/mock/fixtures.ts`（当前 commands 为 `[]`，可能无需改）、快捷键面板/命令相关测试的 fixture。
 Run: `pnpm test`（仅受影响文件的定向运行：`pnpm vitest run src/bridge src/renderer/src/store/plugin-panels.test.ts`）
 Expected: PASS
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src-tauri/crates/ade-bridge/src/commands/plugins.rs src/bridge/real/generated/tauri-bindings.ts src/shared/preload-api/api/plugin-host-api.ts
@@ -1355,7 +1356,7 @@ git commit -m "feat(plugins): visibility 贯通 bridge DTO/bindings/TS 类型（
 - Consumes: 事件 `plugins:panel-push`（T4）。
 - Produces: `PANEL_PUSH_TYPE = 'orca-panel-push'`、`createPanelPushMessage`、`parsePanelPushMessage`、`PluginPanelPushRequest`、`PluginsApi.onPanelPush`。供 T8 使用。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `src/shared/plugins/plugin-panel-bridge.test.ts`（新建或追加）：
 
@@ -1402,12 +1403,12 @@ describe('orca-panel-push', () => {
 
 （对齐该文件既有 `onOpenTab` 测试的写法与夹具变量名。）
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `pnpm vitest run src/shared/plugins/plugin-panel-bridge.test.ts src/bridge/real/plugins.test.ts`
 Expected: FAIL（导出/成员不存在）
 
-- [ ] **Step 3: 实现（shared）**
+- [x] **Step 3: 实现（shared）**
 
 `plugin-capabilities.ts`：
 
@@ -1503,7 +1504,7 @@ export function parsePanelPushMessage(data: unknown): PanelPushMessageParseResul
 }
 ```
 
-- [ ] **Step 4: 实现（preload/mock/real/parity）**
+- [x] **Step 4: 实现（preload/mock/real/parity）**
 
 `src/shared/preload-api/api/plugin-host-api.ts`：
 
@@ -1539,12 +1540,12 @@ export type PluginPanelPushRequest = {
 
 `parity.test.ts`：disposition 表增 `onPanelPush: 'explicit',`；`toHaveLength(25)` 改 `26`，注释改 "23 commands + 3 subscriptions"；surfaceCase 注释同步。
 
-- [ ] **Step 5: 运行**
+- [x] **Step 5: 运行**
 
 Run: `pnpm vitest run src/shared/plugins src/bridge`
 Expected: PASS
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add src/shared/plugins src/shared/preload-api src/bridge
@@ -1562,7 +1563,7 @@ git commit -m "feat(plugins): TS 侧通道契约（spec 表/推送消息/onPanel
 - Consumes: T7 的 `PluginPanelPushRequest`、`createPanelPushMessage`。
 - Produces: `forwardPanelPush(getWindow, sessionToken, push): boolean`。三个宿主组件经共用 hook 自动获得转发，无组件级改动。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
 import { describe, expect, it, vi } from 'vitest'
@@ -1602,12 +1603,12 @@ describe('forwardPanelPush', () => {
 })
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `pnpm vitest run src/renderer/src/components/right-sidebar/plugin-panel-push.test.ts`
 Expected: FAIL（模块不存在）
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 ```ts
 import type { PluginPanelPushRequest } from '../../../../shared/preload-api/api/plugin-host-api'
@@ -1632,7 +1633,7 @@ export function forwardPanelPush(
 }
 ```
 
-- [ ] **Step 4: 接入共用 hook（use-plugin-panel-entry.ts）**
+- [x] **Step 4: 接入共用 hook（use-plugin-panel-entry.ts）**
 
 在 `sessionToken` 与 `iframeRef` 均已存在的组件作用域内新增 effect（放在既有 watchdog/message-handler effect 邻近；`sessionToken` 已在 hook state 中）：
 
@@ -1650,12 +1651,12 @@ export function forwardPanelPush(
 
 （导入 `forwardPanelPush`；`iframeRef` 为 hook 既有 ref。）
 
-- [ ] **Step 5: 运行**
+- [x] **Step 5: 运行**
 
 Run: `pnpm vitest run src/renderer/src/components/right-sidebar/plugin-panel-push.test.ts src/renderer/src/components/right-sidebar/plugin-panel-watchdog.test.ts`
 Expected: PASS
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add src/renderer/src/components/right-sidebar/plugin-panel-push.ts src/renderer/src/components/right-sidebar/plugin-panel-push.test.ts src/renderer/src/components/right-sidebar/use-plugin-panel-entry.ts
@@ -1672,7 +1673,7 @@ git commit -m "feat(plugins): 渲染层按会话 token 转发 panel-push（T8）
 - Consumes: T6 的 `visibility` 字段。
 - Produces: 收集器不再输出 `visibility === 'internal'` 的命令（palette、`findPluginCommandForKeybinding`、ShortcutsPane 三个消费面同时生效）。
 
-- [ ] **Step 1: 写失败测试（plugin-panels.test.ts 追加）**
+- [x] **Step 1: 写失败测试（plugin-panels.test.ts 追加）**
 
 ```ts
   it('hides internal commands from palette and shortcut collectors', async () => {
@@ -1688,12 +1689,12 @@ git commit -m "feat(plugins): 渲染层按会话 token 转发 panel-push（T8）
   })
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `pnpm vitest run src/renderer/src/store/plugin-panels.test.ts`
 Expected: FAIL（internal 命令仍出现）
 
-- [ ] **Step 3: 实现（store/plugin-panels.ts）**
+- [x] **Step 3: 实现（store/plugin-panels.ts）**
 
 `collectActivePluginCommands` 与 `collectEditablePluginCommands` 的 entries 遍历中，对 `entry.commands` 增加过滤：
 
@@ -1707,12 +1708,12 @@ Expected: FAIL（internal 命令仍出现）
 
 （两处按现场结构修改；保持既有类型与字段一致。）
 
-- [ ] **Step 4: 运行**
+- [x] **Step 4: 运行**
 
 Run: `pnpm vitest run src/renderer/src/store/plugin-panels.test.ts src/renderer/src/components/cmd-j`
 Expected: PASS
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/renderer/src/store/plugin-panels.ts src/renderer/src/store/plugin-panels.test.ts
@@ -1741,7 +1742,7 @@ git commit -m "feat(plugins): 命令面板与快捷键面过滤 internal 命令�
 **Interfaces:**
 - Produces: `pnpm build:updater` → `plugins/updater/dist/{main.mjs,tab.html,panel.html}`（单文件）；后续所有插件任务的构建入口。
 
-- [ ] **Step 1: 写 manifest（与 spec §3.5 逐字一致；`icon` 用 curated 映射内已有的 `package`，见 `plugin-panel-activity-items.ts`）**
+- [x] **Step 1: 写 manifest（与 spec §3.5 逐字一致；`icon` 用 curated 映射内已有的 `package`，见 `plugin-panel-activity-items.ts`）**
 
 ```json
 {
@@ -1775,7 +1776,7 @@ git commit -m "feat(plugins): 命令面板与快捷键面过滤 internal 命令�
 }
 ```
 
-- [ ] **Step 2: 构建脚本（完整写盘）**
+- [x] **Step 2: 构建脚本（完整写盘）**
 
 `plugins/updater/build.mjs`：
 
@@ -1862,7 +1863,7 @@ await viteBuild({
 console.log(`updater plugin built -> ${distDir}`)
 ```
 
-- [ ] **Step 3: tsconfig 分层**
+- [x] **Step 3: tsconfig 分层**
 
 `plugins/updater/tsconfig.worker.json`：
 
@@ -1902,7 +1903,7 @@ console.log(`updater plugin built -> ${distDir}`)
 }
 ```
 
-- [ ] **Step 4: 入口与 HTML（含占位实现）**
+- [x] **Step 4: 入口与 HTML（含占位实现）**
 
 `src/ui/tab.html`：
 
@@ -1949,7 +1950,7 @@ export default function activate(_orca: unknown): void {
 }
 ```
 
-- [ ] **Step 5: 根仓库接线**
+- [x] **Step 5: 根仓库接线**
 
 `package.json` scripts 修改为：
 
@@ -1975,7 +1976,7 @@ export default function activate(_orca: unknown): void {
 plugins/updater/dist/
 ```
 
-- [ ] **Step 6: 构建并断言产物**
+- [x] **Step 6: 构建并断言产物**
 
 Run: `pnpm build:updater`
 Expected: exit 0；`dist/main.mjs`、`dist/tab.html`、`dist/panel.html` 存在。
@@ -1989,12 +1990,12 @@ node -e "const fs=require('fs');for(const f of ['plugins/updater/dist/tab.html',
 
 Expected: `single-file ok`
 
-- [ ] **Step 7: typecheck**
+- [x] **Step 7: typecheck**
 
 Run: `pnpm typecheck`
 Expected: 三个 tsconfig 全部 exit 0
 
-- [ ] **Step 8: 提交**
+- [x] **Step 8: 提交**
 
 ```bash
 git add plugins/updater package.json vitest.config.ts .gitignore
@@ -2011,7 +2012,7 @@ git commit -m "feat(updater): 插件脚手架与单文件构建管线（T10）"
 **Interfaces:**
 - Produces: `ManagerId`、`PackageKind`、`OutdatedEntry`（shared）；`parseNpmOutdated(stdout): OutdatedEntry[]`、`parseBrewOutdated(stdout): OutdatedEntry[]`。供 T13/T14/T17 使用。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `src/shared/types.ts`（本任务先落域类型）：
 
@@ -2089,12 +2090,12 @@ describe('parseBrewOutdated', () => {
 })
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `pnpm vitest run plugins/updater/src/worker/parse.test.ts`
 Expected: FAIL（模块不存在）
 
-- [ ] **Step 3: 实现（`src/worker/parse.ts`）**
+- [x] **Step 3: 实现（`src/worker/parse.ts`）**
 
 ```ts
 import type { OutdatedEntry, PackageKind } from '../shared/types'
@@ -2164,12 +2165,12 @@ export function parseBrewOutdated(stdout: string): OutdatedEntry[] {
 }
 ```
 
-- [ ] **Step 4: 运行通过**
+- [x] **Step 4: 运行通过**
 
 Run: `pnpm vitest run plugins/updater/src/worker/parse.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add plugins/updater/src/shared/types.ts plugins/updater/src/worker/parse.ts plugins/updater/src/worker/parse.test.ts
@@ -2185,7 +2186,7 @@ git commit -m "feat(updater): npm/brew outdated 解析层（T11）"
 **Interfaces:**
 - Produces: `RunResult`、`RunOptions`、`runCommand(cmd, args, options?): Promise<RunResult>`、`MAX_LINE_LENGTH = 4096`、`DEFAULT_TIMEOUT_MS = 120_000`。供 T13 使用。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `src/worker/runner.test.ts`：
 
@@ -2242,12 +2243,12 @@ describe('runCommand', () => {
 })
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `pnpm vitest run plugins/updater/src/worker/runner.test.ts`
 Expected: FAIL（模块不存在）
 
-- [ ] **Step 3: 实现（`src/worker/runner.ts`）**
+- [x] **Step 3: 实现（`src/worker/runner.ts`）**
 
 ```ts
 import { spawn } from 'node:child_process'
@@ -2357,12 +2358,12 @@ export function runCommand(cmd: string, args: string[], options: RunOptions = {}
 }
 ```
 
-- [ ] **Step 4: 运行通过**
+- [x] **Step 4: 运行通过**
 
 Run: `pnpm vitest run plugins/updater/src/worker/runner.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add plugins/updater/src/worker/runner.ts plugins/updater/src/worker/runner.test.ts
@@ -2379,7 +2380,7 @@ git commit -m "feat(updater): 进程执行层（行流/超时/取消）（T12）
 - Consumes: T11 `parse*`、T12 `runCommand`/`RunResult`。
 - Produces: `RunFn`、`ManagerAdapter{id,label,kinds,detect,outdated,upgradeArgs,upgrade}`、`createNpmAdapter(run?)`、`createBrewAdapter(run?)`、`defaultAdapters()`。供 T14/T15 使用。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `src/worker/managers.test.ts`：
 
@@ -2459,12 +2460,12 @@ describe('brew adapter', () => {
 })
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `pnpm vitest run plugins/updater/src/worker/managers.test.ts`
 Expected: FAIL（模块不存在）
 
-- [ ] **Step 3: 实现（`src/worker/managers.ts`）**
+- [x] **Step 3: 实现（`src/worker/managers.ts`）**
 
 ```ts
 import type { ManagerId, OutdatedEntry, PackageKind } from '../shared/types'
@@ -2551,12 +2552,12 @@ export function defaultAdapters(): ManagerAdapter[] {
 }
 ```
 
-- [ ] **Step 4: 运行通过**
+- [x] **Step 4: 运行通过**
 
 Run: `pnpm vitest run plugins/updater/src/worker/managers.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add plugins/updater/src/worker/managers.ts plugins/updater/src/worker/managers.test.ts
@@ -2576,7 +2577,7 @@ git commit -m "feat(updater): 管理器适配器注册表（npm/brew）（T13）
 
 注：spec §3.6/§3.10 关于 `set-managers` 未知 id 的 `invalid_params` 措辞已更正为**结构化失败** `{ ok:false, error:'unknown_manager', manager }`（实现侧不抛错，保持 UI 控制流）；spec 修正已单独提交。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `src/shared/types.ts` 追加：
 
@@ -2838,12 +2839,12 @@ describe('Updater.setManagers / snapshot / sessions', () => {
 })
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `pnpm vitest run plugins/updater/src/worker/jobs.test.ts`
 Expected: FAIL（模块不存在）
 
-- [ ] **Step 3: 实现（`src/worker/jobs.ts`）**
+- [x] **Step 3: 实现（`src/worker/jobs.ts`）**
 
 ```ts
 import type { ManagerAdapter } from './managers'
@@ -3215,12 +3216,12 @@ function messageOf(error: unknown): string {
 }
 ```
 
-- [ ] **Step 4: 运行通过**
+- [x] **Step 4: 运行通过**
 
 Run: `pnpm vitest run plugins/updater/src/worker/jobs.test.ts`
 Expected: PASS（单飞/取消/失败隔离/会话剔除用例全绿）
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add plugins/updater/src/shared/types.ts plugins/updater/src/worker/jobs.ts plugins/updater/src/worker/jobs.test.ts
@@ -3237,7 +3238,7 @@ git commit -m "feat(updater): 单飞任务状态机与推送/预算控制（T14�
 - Consumes: T14 `Updater`。
 - Produces: `OrcaSdk` 类型、`createUpdater(orca, overrides?)`、`registerCommands(orca, updater)`；`activate` 注册 `check` / `update-all` / `cancel` / `open` / `snapshot` / `set-managers` 六个命令。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `src/worker/main.test.ts`：
 
@@ -3324,12 +3325,12 @@ describe('createUpdater', () => {
 
 （`open` 命令的 `workspace.openTab` 断言并入 `registerCommands` 测试其余分支即可；`hostCalls` 由 createFakeOrca 暴露。）
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `pnpm vitest run plugins/updater/src/worker/main.test.ts`
 Expected: FAIL（导出不存在）
 
-- [ ] **Step 3: 实现（`src/worker/main.ts` 全量替换）**
+- [x] **Step 3: 实现（`src/worker/main.ts` 全量替换）**
 
 ```ts
 import { Updater, type UpdaterDeps } from './jobs'
@@ -3405,17 +3406,17 @@ export default function activate(orca: OrcaSdk): void {
 }
 ```
 
-- [ ] **Step 4: 运行通过**
+- [x] **Step 4: 运行通过**
 
 Run: `pnpm vitest run plugins/updater/src/worker/main.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: 构建冒烟（产物可被 node 加载且无缺依赖）**
+- [x] **Step 5: 构建冒烟（产物可被 node 加载且无缺依赖）**
 
 Run: `pnpm build:updater && node --check plugins/updater/dist/main.mjs`
 Expected: exit 0
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add plugins/updater/src/worker/main.ts plugins/updater/src/worker/main.test.ts
@@ -3435,7 +3436,7 @@ git commit -m "feat(updater): 六命令接线与宿主桥装配（T15）"
 **Interfaces:**
 - Produces: `HostBridge`（`ready` / `invokeCommand` / `onPush` / `onInit`）、`createHostBridge()`、`reducePush(state, message)`、`UiState`、`Button` / `Chip` / `Toggle` / `Skeleton`。供 T17 使用。
 
-- [ ] **Step 1: 写 parity 失败测试**
+- [x] **Step 1: 写 parity 失败测试**
 
 `src/ui/theme-parity.test.ts`：
 
@@ -3480,12 +3481,12 @@ describe('host theme parity', () => {
 })
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `pnpm vitest run plugins/updater/src/ui/theme-parity.test.ts`
 Expected: FAIL（无 parity 区）
 
-- [ ] **Step 3: 实现 theme.css（完整替换）**
+- [x] **Step 3: 实现 theme.css（完整替换）**
 
 把宿主 `src/renderer/src/assets/main.css` 中的两段原文**逐字复制**进 parity 区：① `@custom-variant dark (&:is(.dark *))` 行；② `@theme inline { … }` 整块（自 `@theme inline {` 到其闭合 `}`；不含注释）。成品结构：
 
@@ -3536,12 +3537,12 @@ body {
 
 （`@theme inline` 块内注释不复制——parity 测试按提取串逐字比对，宿主块无注释，插件块必须一致。）
 
-- [ ] **Step 4: 运行 parity 通过**
+- [x] **Step 4: 运行 parity 通过**
 
 Run: `pnpm vitest run plugins/updater/src/ui/theme-parity.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: 状态归并测试（`src/ui/state.test.ts`）**
+- [x] **Step 5: 状态归并测试（`src/ui/state.test.ts`）**
 
 ```ts
 import { describe, expect, it } from 'vitest'
@@ -3572,7 +3573,7 @@ describe('reducePush', () => {
 })
 ```
 
-- [ ] **Step 6: 实现 state / kit / bridge**
+- [x] **Step 6: 实现 state / kit / bridge**
 
 `src/ui/state.ts`：
 
@@ -3800,7 +3801,7 @@ export function createHostBridge(): HostBridge {
 }
 ```
 
-- [ ] **Step 7: 运行并提交**
+- [x] **Step 7: 运行并提交**
 
 Run: `pnpm vitest run plugins/updater/src/ui` 与 `pnpm typecheck`
 Expected: PASS / exit 0
@@ -3822,7 +3823,7 @@ git commit -m "feat(updater): UI 基建（主题 parity/kit/桥/状态）（T16�
 - Consumes: T14 的 `UpdaterState`/`ManagerState`、T16 的 `HostBridge`/`UiState`/`reducePush`/kit。
 - Produces: `TabApp({bridge})`、`PanelApp({bridge})`；两个入口挂载真实 `createHostBridge()`。
 
-- [ ] **Step 1: 写 tab 渲染测试（失败）**
+- [x] **Step 1: 写 tab 渲染测试（失败）**
 
 `src/ui/tab/App.test.tsx`：
 
@@ -3971,12 +3972,12 @@ describe('PanelApp', () => {
 })
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `pnpm vitest run plugins/updater/src/ui/tab plugins/updater/src/ui/panel`
 Expected: FAIL（App 不存在）
 
-- [ ] **Step 3: 实现 tab 视图（`src/ui/tab/App.tsx`）**
+- [x] **Step 3: 实现 tab 视图（`src/ui/tab/App.tsx`）**
 
 ```tsx
 import { useEffect, useMemo, useState } from 'react'
@@ -4151,7 +4152,7 @@ function renderBody(report: UpdaterState | null, rows: UpdateRow[], connected: b
 }
 ```
 
-- [ ] **Step 4: 实现 panel 视图（`src/ui/panel/App.tsx`）**
+- [x] **Step 4: 实现 panel 视图（`src/ui/panel/App.tsx`）**
 
 ```tsx
 import { useEffect, useState } from 'react'
@@ -4266,7 +4267,7 @@ export function PanelApp({ bridge }: { bridge: HostBridge }) {
 }
 ```
 
-- [ ] **Step 5: 替换两个入口**
+- [x] **Step 5: 替换两个入口**
 
 `src/ui/tab/main.tsx`：
 
@@ -4283,7 +4284,7 @@ createRoot(document.getElementById('root') as HTMLElement).render(
 
 `src/ui/panel/main.tsx`：同构，导入 `./App` 的 `PanelApp`。
 
-- [ ] **Step 6: 运行 UI 测试 + 全插件测试 + 构建**
+- [x] **Step 6: 运行 UI 测试 + 全插件测试 + 构建**
 
 Run: `pnpm vitest run plugins/updater`
 Expected: PASS（parse/runner/managers/jobs/main/state/parity/App 全部）
@@ -4292,7 +4293,7 @@ Expected: `single-file ok`；`dist/tab.html` 含 `Geist`（data: URI 已内联�
 Run: `pnpm typecheck`
 Expected: exit 0
 
-- [ ] **Step 7: 提交**
+- [x] **Step 7: 提交**
 
 ```bash
 git add plugins/updater/src/ui
@@ -4308,27 +4309,27 @@ git commit -m "feat(updater): tab 与 panel 视图接入单文件入口（T17）
 **Interfaces:**
 - Produces: 与 Phase 3A 记录同构的实施记录（提交清单/门禁证据/手工验收状态/偏差备案），供用户做手工验收。
 
-- [ ] **Step 1: 门禁一（Rust 全量）**
+- [x] **Step 1: 门禁一（Rust 全量）**
 
 Run: `cargo test --workspace`（`src-tauri/`）
 Expected: exit 0；失败则修复后重跑并记录
 
-- [ ] **Step 2: 门禁二（bindings 新鲜度）**
+- [x] **Step 2: 门禁二（bindings 新鲜度）**
 
 Run: `cargo run -p ade-bridge --bin export-bindings`（`src-tauri/`）→ 仓库根 `git diff --exit-code -- src/bridge/real/generated/tauri-bindings.ts`
 Expected: 零差异
 
-- [ ] **Step 3: 门禁三（类型与构建）**
+- [x] **Step 3: 门禁三（类型与构建）**
 
 Run: `rm -f tsconfig.tsbuildinfo && pnpm typecheck && pnpm build:web && pnpm build:updater`
 Expected: 全部 exit 0
 
-- [ ] **Step 4: 门禁四（TS 全量）**
+- [x] **Step 4: 门禁四（TS 全量）**
 
 Run: `pnpm test`
 Expected: exit 0（含 `plugins/**` 单测与 parity；全量约 8–10 分钟）
 
-- [ ] **Step 5: 写实施记录（`docs/phase3c-plugin-ui-worker-channel-record.md`）**
+- [x] **Step 5: 写实施记录（`docs/phase3c-plugin-ui-worker-channel-record.md`）**
 
 按 `docs/phase3a-plugin-system-record.md` 的章节结构落盘，必含：
 
@@ -4339,7 +4340,7 @@ Expected: exit 0（含 `plugins/**` 单测与 parity；全量约 8–10 分钟�
 5. 规格偏差与边界备案（实施中新发现逐条；已知偏差：`set-managers` 结构化失败措辞修正、host-entry 与 app 同版发布假设等）
 6. 已知边界与后续项（照抄 spec §7）
 
-- [ ] **Step 6: 提交记录**
+- [x] **Step 6: 提交记录**
 
 ```bash
 git add docs/phase3c-plugin-ui-worker-channel-record.md

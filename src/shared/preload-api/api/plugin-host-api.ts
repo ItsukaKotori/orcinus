@@ -75,6 +75,8 @@ export type PluginHostListEntry = {
     context: 'global' | 'worktree'
     handler: { type: 'built-in'; action: string } | { type: 'worker' }
     keybindings: { key: string; when: 'global' | 'worktree' }[]
+    /** `internal` commands are UI-only: never surfaced in the palette or shortcut surfaces. */
+    visibility: 'palette' | 'internal'
   }[]
   hasWorker: boolean
   vmRecipes?: {
@@ -196,6 +198,14 @@ export type PluginOpenTabRequest = {
   repoId?: string
 }
 
+/** Payload of the `plugins:panel-push` bridge event: worker-streamed data for
+ *  one open UI session (panel or tab), matched by `sessionToken`. */
+export type PluginPanelPushRequest = {
+  sessionToken: string
+  topic?: string
+  payload: unknown
+}
+
 export type PluginsApi = {
   list: () => Promise<PluginHostListEntry[]>
   listLanguagePacks: () => Promise<PluginLanguagePackRegistration[]>
@@ -254,6 +264,8 @@ export type PluginsApi = {
   installMissingFromLockfile: (args: { repoId: string }) => Promise<PluginHostInstallResult[]>
   /** Subscribes to `workspace.openTab` requests from plugin workers/panels. */
   onOpenTab: (callback: (request: PluginOpenTabRequest) => void) => () => void
+  /** Subscribes to worker pushes targeting this renderer's plugin sessions. */
+  onPanelPush: (callback: (push: PluginPanelPushRequest) => void) => () => void
   /** Re-discovers after settings edits (feature flag, dev paths). */
   refresh: () => Promise<PluginHostListEntry[]>
   /** Fires whenever installed plugins, worker states, panels, or content packs change. */

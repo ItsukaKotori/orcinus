@@ -30,7 +30,7 @@ use serde_json::Value;
 use crate::types::{ACTION_FAILED, UNAVAILABLE};
 use crate::PluginError;
 
-use super::protocol::{write_frame, ChildFrame, LogLevel, ParentFrame};
+use super::protocol::{write_frame, ChildFrame, LogLevel, ParentFrame, SessionRef};
 use super::spawn::{resolve_node, spawn_worker, WorkerHandle, WorkerSpec, NODE_MISSING};
 use super::supervisor::{FrameSink, ReplyKind, SupervisorConfig, WorkerState, WorkerSupervisor};
 
@@ -227,6 +227,7 @@ impl WorkerManager {
         call_id: u64,
         command_id: &str,
         args: Option<Value>,
+        session: Option<SessionRef>,
     ) -> Result<Value, PluginError> {
         let entry = self.workers.get_mut(instance_key).ok_or_else(|| {
             PluginError::new(
@@ -252,6 +253,7 @@ impl WorkerManager {
                 call_id,
                 command_id: command_id.to_owned(),
                 args,
+                session,
             },
             ReplyKind::Command { call_id },
         )?;
@@ -865,7 +867,7 @@ rl.on('line', async (line) => {
             .unwrap();
 
         let value = manager
-            .invoke_command("global:pub.invoke", 1, "echo", Some(json!({ "n": 7 })))
+            .invoke_command("global:pub.invoke", 1, "echo", Some(json!({ "n": 7 })), None)
             .unwrap();
         assert_eq!(value, json!({ "command": "echo", "args": { "n": 7 } }));
         {
@@ -880,7 +882,7 @@ rl.on('line', async (line) => {
         }
 
         let error = manager
-            .invoke_command("global:pub.invoke", 2, "fail", None)
+            .invoke_command("global:pub.invoke", 2, "fail", None, None)
             .unwrap_err();
         assert_eq!(error.code(), ACTION_FAILED);
         assert_eq!(error.message(), "boom");
@@ -888,7 +890,7 @@ rl.on('line', async (line) => {
         // The worker's host.call is answered by the handler mid-invoke; only
         // then does the command resolve, so the value proves the write-back.
         let value = manager
-            .invoke_command("global:pub.invoke", 3, "host-call", None)
+            .invoke_command("global:pub.invoke", 3, "host-call", None, None)
             .unwrap();
         assert_eq!(value, json!({ "hostValue": { "stored": "k" } }));
         {
@@ -901,7 +903,7 @@ rl.on('line', async (line) => {
 
         // Handler failures come back with `ok:false` + `errorCode`.
         let error = manager
-            .invoke_command("global:pub.invoke", 4, "host-call-error", None)
+            .invoke_command("global:pub.invoke", 4, "host-call-error", None, None)
             .unwrap_err();
         assert_eq!(error.message(), "capability_denied:denied by gate");
 
@@ -909,7 +911,7 @@ rl.on('line', async (line) => {
         // error text is a plain error: worker-controlled text never changes
         // lifecycle state.
         let error = manager
-            .invoke_command("global:pub.invoke", 5, "undeclared", None)
+            .invoke_command("global:pub.invoke", 5, "undeclared", None, None)
             .unwrap_err();
         assert_eq!(error.code(), ACTION_FAILED);
         assert_eq!(
@@ -928,7 +930,7 @@ rl.on('line', async (line) => {
         // A command outside the manifest's declared set is rejected before
         // any frame is sent, and the worker keeps running.
         let error = manager
-            .invoke_command("global:pub.invoke", 6, "not-declared", None)
+            .invoke_command("global:pub.invoke", 6, "not-declared", None, None)
             .unwrap_err();
         assert_eq!(error.code(), UNKNOWN_COMMAND);
         assert!(matches!(

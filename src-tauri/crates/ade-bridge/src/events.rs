@@ -1,6 +1,8 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use tauri::{AppHandle, Emitter, Runtime};
 
+use ade_plugins::service::PanelPushRequest;
 use crate::json::Json;
 
 /// Out-of-band settings updates (View > Appearance toggles etc.). Payload is a
@@ -31,6 +33,8 @@ pub const PLUGINS_CHANGED: &str = "plugins:changed";
 /// 插件请求打开一个主区 tab（payload `PluginOpenTabPayload`，规格 §3.6/§3.9）。
 /// 去重/限额已在 Rust 侧判定；渲染层按 `instanceId` 建立或聚焦 tab。
 pub const PLUGINS_OPEN_TAB: &str = "plugins:open-tab";
+/// 插件推送一条消息到其 UI 会话（payload `PluginPanelPushPayload`，规格 §3.5）。
+pub const PLUGINS_PANEL_PUSH: &str = "plugins:panel-push";
 
 /// Payload for [`WORKTREES_CHANGED`] (spec §5.3).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
@@ -132,6 +136,26 @@ impl From<ade_plugins::service::OpenTabRequest> for PluginOpenTabPayload {
             worktree_id: request.worktree_id,
             scope: request.scope.as_str().to_string(),
             repo_id: request.repo_id,
+        }
+    }
+}
+
+/// Payload of [`PLUGINS_PANEL_PUSH`]（TS `PluginPanelPushRequest` 同形）。
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PluginPanelPushPayload {
+    pub session_token: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub topic: Option<String>,
+    pub payload: Value,
+}
+
+impl From<PanelPushRequest> for PluginPanelPushPayload {
+    fn from(request: PanelPushRequest) -> Self {
+        Self {
+            session_token: request.session_token,
+            topic: request.topic,
+            payload: request.payload,
         }
     }
 }
@@ -301,6 +325,25 @@ mod tests {
         assert_eq!(value["scope"], "global");
         assert!(value.get("title").is_none());
         assert!(value.get("repoId").is_none());
+
+        assert_eq!(PLUGINS_PANEL_PUSH, "plugins:panel-push");
+        let push = PluginPanelPushPayload::from(PanelPushRequest {
+            session_token: "t".repeat(32),
+            topic: Some("state".to_string()),
+            payload: json!({ "n": 1 }),
+        });
+        assert_eq!(
+            serde_json::to_value(&push).unwrap(),
+            json!({ "sessionToken": "t".repeat(32), "topic": "state", "payload": { "n": 1 } })
+        );
+        let bare_push = PluginPanelPushPayload::from(PanelPushRequest {
+            session_token: "t".repeat(32),
+            topic: None,
+            payload: Value::Null,
+        });
+        let bare_value = serde_json::to_value(&bare_push).unwrap();
+        assert!(bare_value.get("topic").is_none());
+        assert_eq!(bare_value["payload"], Value::Null);
     }
 
     #[test]

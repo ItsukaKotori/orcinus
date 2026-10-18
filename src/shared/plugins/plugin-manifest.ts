@@ -32,6 +32,8 @@ import { validatePluginManifestContributions } from './plugin-manifest-contribut
 const SEMVER_RE =
   /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/
 export const PLUGIN_PANEL_LIMIT = 64
+/** Fork extension: main-area tabs share the panel shape (see manifest.rs). */
+export const PLUGIN_TAB_LIMIT = 64
 export const PLUGIN_COMMAND_LIMIT = 256
 
 // Why: v0 supports only the ">=x.y.z" form. A closed grammar keeps the gate
@@ -50,12 +52,19 @@ const panelContributionSchema = z.object({
   entry: pluginRelativePathSchema
 })
 
+/** Fork extension: `contributes.tabs` mirrors panels (main-area tab entries). */
+const tabContributionSchema = panelContributionSchema
+
 const commandContributionSchema = z.object({
   id: pluginCommandIdSchema,
   title: z.string().min(1).max(256),
   context: z.enum(['global', 'worktree']).optional(),
   /** Built-in action aliases remain declarative and do not activate a worker. */
-  action: pluginCommandIdSchema.optional()
+  action: pluginCommandIdSchema.optional(),
+  /** `internal` commands stay out of the palette/shortcuts surface (fork
+   *  extension; mirrors Rust `CommandVisibility`). Without this field zod would
+   *  silently strip a real manifest's `visibility`. */
+  visibility: z.enum(['palette', 'internal']).optional()
 })
 
 /** Domain events a plugin can subscribe to in v0. Closed set: server-side
@@ -97,6 +106,7 @@ export const pluginManifestSchema = z
     contributes: z
       .object({
         panels: z.array(panelContributionSchema).max(PLUGIN_PANEL_LIMIT).default([]),
+        tabs: z.array(tabContributionSchema).max(PLUGIN_TAB_LIMIT).default([]),
         commands: z.array(commandContributionSchema).max(PLUGIN_COMMAND_LIMIT).default([]),
         events: z.array(eventContributionSchema).max(PLUGIN_EVENT_SUBSCRIPTION_LIMIT).default([]),
         languagePacks: z
@@ -119,6 +129,7 @@ export const pluginManifestSchema = z
       .strict()
       .default(() => ({
         panels: [],
+        tabs: [],
         commands: [],
         events: [],
         languagePacks: [],
@@ -132,6 +143,7 @@ export const pluginManifestSchema = z
 
 export type PluginManifest = z.infer<typeof pluginManifestSchema>
 export type PluginPanelContribution = z.infer<typeof panelContributionSchema>
+export type PluginTabContribution = z.infer<typeof tabContributionSchema>
 export type PluginCommandContribution = z.infer<typeof commandContributionSchema>
 export type PluginEventContribution = z.infer<typeof eventContributionSchema>
 

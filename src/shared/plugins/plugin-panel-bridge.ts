@@ -178,3 +178,29 @@ export function readPanelPongId(data: unknown): number | null {
   // wider reader would admit ids the watchdog can never have issued.
   return Number.isSafeInteger(frame.pingId) && frame.pingId >= 0 ? frame.pingId : null
 }
+
+/** Host→guest push carrying worker-streamed updates (spec §3.3). */
+export const PANEL_PUSH_TYPE = 'orca-panel-push'
+
+export const panelPushMessageSchema = z.object({
+  type: z.literal(PANEL_PUSH_TYPE),
+  topic: z.string().min(1).max(64).optional(),
+  payload: z.unknown()
+})
+
+export type PluginPanelPushMessage = z.infer<typeof panelPushMessageSchema>
+
+export function createPanelPushMessage(topic: string | undefined, payload: unknown): PluginPanelPushMessage {
+  return topic === undefined ? { type: PANEL_PUSH_TYPE, payload } : { type: PANEL_PUSH_TYPE, topic, payload }
+}
+
+export type PanelPushMessageParseResult =
+  | { ok: true; topic: string | undefined; payload: unknown }
+  | { ok: false }
+
+export function parsePanelPushMessage(data: unknown): PanelPushMessageParseResult {
+  const parsed = panelPushMessageSchema.safeParse(data)
+  return parsed.success
+    ? { ok: true, topic: parsed.data.topic, payload: parsed.data.payload }
+    : { ok: false }
+}

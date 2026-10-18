@@ -1540,9 +1540,12 @@ export type PluginCommandDto = {
 	context: PluginCommandContextDto,
 	handler: PluginCommandHandlerDto,
 	keybindings: PluginKeybindingDto[],
+	visibility: PluginCommandVisibilityDto,
 };
 
 export type PluginCommandHandlerDto = { type: "built-in"; action: string } | { type: "worker" };
+
+export type PluginCommandVisibilityDto = "palette" | "internal";
 
 export type PluginConsentDecisionDto = PluginConsentDecisionDto_Serialize | PluginConsentDecisionDto_Deserialize;
 

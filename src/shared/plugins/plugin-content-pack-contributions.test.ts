@@ -44,6 +44,7 @@ describe('content-pack manifest contributions', () => {
 
     expect(parsed.contributes).toEqual({
       panels: [],
+      tabs: [],
       commands: [],
       events: [],
       languagePacks: [],

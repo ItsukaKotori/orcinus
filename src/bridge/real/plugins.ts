@@ -1,4 +1,4 @@
-import type { PluginOpenTabRequest } from '../../shared/preload-api/api/plugin-host-api'
+import type { PluginOpenTabRequest, PluginPanelPushRequest } from '../../shared/preload-api/api/plugin-host-api'
 import type { PreloadApi } from '../../shared/preload-api/api-types'
 import type { PluginChangeEvent } from '../../shared/plugins/plugin-change-event'
 import type {
@@ -100,6 +100,8 @@ export function createPluginsRealApi(): PreloadApi['plugins'] {
       invokeCommand('plugins_install_missing_from_lockfile', { args }),
     refresh: () => invokeCommand('plugins_refresh'),
     onOpenTab: (callback) => subscribeToEvent<PluginOpenTabRequest>('plugins:open-tab', callback),
+    onPanelPush: (callback) =>
+      subscribeToEvent<PluginPanelPushRequest>('plugins:panel-push', callback),
     onChanged: (callback) => subscribeToEvent<PluginChangeEvent>('plugins:changed', callback)
   })
 }

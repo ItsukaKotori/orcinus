@@ -58,16 +58,18 @@ pub fn decide(granted: Option<&[Capability]>, via_panel: bool, method: &str) -> 
 mod tests {
     use super::*;
 
-    fn method_for(capability: Capability) -> &'static str {
+    fn method_for(capability: Capability) -> Option<&'static str> {
         match capability {
-            Capability::EventsSubscribe => "events.subscribe",
-            Capability::NotificationsShow => "notifications.show",
-            Capability::Secrets => "secrets.get",
-            Capability::SettingsOwn => "settings.get",
-            Capability::Storage => "storage.get",
-            Capability::TerminalSend => "terminal.sendText",
-            Capability::WorkspaceOpenTab => "workspace.openTab",
-            Capability::WorkspaceRead => "workspace.readContext",
+            Capability::EventsSubscribe => Some("events.subscribe"),
+            Capability::NotificationsShow => Some("notifications.show"),
+            Capability::Secrets => Some("secrets.get"),
+            Capability::SessionPush => Some("session.post"),
+            Capability::SettingsOwn => Some("settings.get"),
+            Capability::Storage => Some("storage.get"),
+            Capability::TerminalSend => Some("terminal.sendText"),
+            Capability::WorkerCall => Some("worker.invokeCommand"),
+            Capability::WorkspaceOpenTab => Some("workspace.openTab"),
+            Capability::WorkspaceRead => Some("workspace.readContext"),
         }
     }
 
@@ -81,7 +83,9 @@ mod tests {
     #[test]
     fn matrix_grants_matching_capability_and_denies_the_rest() {
         for capability in Capability::ALL {
-            let method = method_for(capability);
+            let Some(method) = method_for(capability) else {
+                continue;
+            };
             let granted = [capability];
             assert_eq!(
                 decide(Some(&granted), false, method),
@@ -103,10 +107,11 @@ mod tests {
     }
 
     #[test]
-    fn panel_surface_is_exactly_the_four_panel_callable_methods() {
+    fn panel_surface_is_exactly_the_five_panel_callable_methods() {
         let panel_methods = [
             "workspace.readContext",
             "workspace.openTab",
+            "worker.invokeCommand",
             "terminal.sendText",
             "notifications.show",
         ];

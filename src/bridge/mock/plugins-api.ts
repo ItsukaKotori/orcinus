@@ -75,6 +75,7 @@ export function createPluginsApi(): PluginsApi {
     installMissingFromLockfile: async () => [],
     refresh: async () => cloneMockValue(state),
     onOpenTab: () => () => {},
+    onPanelPush: () => () => {},
     onChanged: () => () => {}
   }
 }

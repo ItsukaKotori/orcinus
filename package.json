@@ -8,8 +8,9 @@
     "build": "tauri build",
     "build:orcinus-cli": "node config/scripts/build-orcinus-cli.mjs",
     "build:web": "vite build",
+    "build:updater": "node plugins/updater/build.mjs",
     "rebuild:node": "node config/scripts/rebuild-node-pty.mjs",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p plugins/updater/tsconfig.worker.json && tsc --noEmit -p plugins/updater/tsconfig.ui.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "tauri": "tauri"

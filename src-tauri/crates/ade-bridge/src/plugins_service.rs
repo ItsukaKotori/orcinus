@@ -47,7 +47,8 @@ use ade_plugins::paths::{global_roots, project_roots, ScopeRoots};
 use ade_plugins::plugin_settings::PluginSettingsStore;
 use ade_plugins::secrets::{KeychainSecrets, SecretStore, KEYCHAIN_SERVICE};
 use ade_plugins::service::{
-    OpenTabRequest, PluginRef, PluginService, ServiceConfig, ServiceEventSink, WorkerRuntimeConfig,
+    OpenTabRequest, PanelPushRequest, PluginRef, PluginService, ServiceConfig, ServiceEventSink,
+    WorkerRuntimeConfig,
 };
 use ade_plugins::storage::StorageStore;
 use ade_plugins::types::{PluginError, PluginScope, INVALID_PARAMS, UNAVAILABLE};
@@ -652,6 +653,49 @@ impl PluginHostServices for BridgePluginHostServices {
             .map(|tab| tab.id)
             .collect()
     }
+
+    fn session_post(
+        &self,
+        plugin_key: &str,
+        session_token: &str,
+        topic: Option<&str>,
+        payload: Value,
+    ) -> Result<(), HostServiceError> {
+        let service = self
+            .service
+            .get()
+            .ok_or_else(|| HostServiceError::new("unavailable", "plugin service is not assembled"))?;
+        service
+            .session_post(plugin_key, session_token, topic, payload)
+            .map_err(|error| HostServiceError::new(error.code(), error.message()))
+    }
+
+    fn invoke_worker_command(
+        &self,
+        plugin_key: &str,
+        scope: PluginScope,
+        repo_id: Option<&str>,
+        command_id: &str,
+        args: Option<Value>,
+        session_token: Option<&str>,
+    ) -> Result<Value, HostServiceError> {
+        let service = self
+            .service
+            .get()
+            .ok_or_else(|| HostServiceError::new("unavailable", "plugin service is not assembled"))?;
+        service
+            .invoke_command_with_session(
+                &PluginRef {
+                    plugin_key: plugin_key.to_string(),
+                    scope,
+                    repo_id: repo_id.map(str::to_string),
+                },
+                command_id,
+                args,
+                session_token,
+            )
+            .map_err(|error| HostServiceError::new(error.code(), error.message()))
+    }
 }
 
 /// Emits service callbacks as Tauri events through an injected emitter.
@@ -685,6 +729,14 @@ impl ServiceEventSink for BridgeServiceEventSink {
         let payload = events::PluginOpenTabPayload::from(request);
         self.emit_payload(
             events::PLUGINS_OPEN_TAB,
+            serde_json::to_value(payload).unwrap_or(Value::Null),
+        );
+    }
+
+    fn panel_push_requested(&self, request: PanelPushRequest) {
+        let payload = events::PluginPanelPushPayload::from(request);
+        self.emit_payload(
+            events::PLUGINS_PANEL_PUSH,
             serde_json::to_value(payload).unwrap_or(Value::Null),
         );
     }

@@ -164,6 +164,52 @@ impl PanelAdmission {
     }
 }
 
+/// Push budget window per session token (spec §3.4).
+pub const PANEL_PUSH_WINDOW: Duration = Duration::from_secs(10);
+/// Maximum pushes per token inside [`PANEL_PUSH_WINDOW`].
+pub const PANEL_PUSH_MAX_PER_WINDOW: usize = 30;
+/// Maximum serialized push payload (spec §3.4: ≤64KiB).
+pub const PANEL_PUSH_PAYLOAD_MAX_BYTES: usize = 64 * 1024;
+
+#[derive(Debug, Default)]
+struct PushAdmission {
+    hits: Mutex<HashMap<String, VecDeque<Instant>>>,
+}
+
+impl PushAdmission {
+    fn admit(&self, token: &str, payload_bytes: usize) -> Result<(), PluginError> {
+        if payload_bytes > PANEL_PUSH_PAYLOAD_MAX_BYTES {
+            return Err(PluginError::new(
+                INVALID_PARAMS,
+                format!("payload must not exceed {PANEL_PUSH_PAYLOAD_MAX_BYTES} bytes"),
+            ));
+        }
+        let now = Instant::now();
+        let mut hits = self
+            .hits
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        hits.retain(|_, times| {
+            while times
+                .front()
+                .is_some_and(|time| now.duration_since(*time) >= PANEL_PUSH_WINDOW)
+            {
+                times.pop_front();
+            }
+            !times.is_empty()
+        });
+        let times = hits.entry(token.to_string()).or_default();
+        if times.len() >= PANEL_PUSH_MAX_PER_WINDOW {
+            return Err(PluginError::new(
+                gate::RATE_LIMITED,
+                format!("push rate limit exceeded ({PANEL_PUSH_MAX_PER_WINDOW} per 10s)"),
+            ));
+        }
+        times.push_back(now);
+        Ok(())
+    }
+}
+
 /// Locates one plugin instance across the dual-scope model.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -278,6 +324,7 @@ pub struct PluginCommandProjection {
     pub context: crate::manifest::CommandContext,
     pub handler: PluginCommandHandler,
     pub keybindings: Vec<PluginKeybindingProjection>,
+    pub visibility: crate::manifest::CommandVisibility,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -395,11 +442,22 @@ pub struct OpenTabRequest {
     pub repo_id: Option<String>,
 }
 
+/// Payload of the `plugins:panel-push` bridge event (spec §3.3).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PanelPushRequest {
+    pub session_token: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub topic: Option<String>,
+    pub payload: Value,
+}
+
 /// Outbound seam to the host application (mirrors the automations service
 /// sink). Implemented by ade-bridge over Tauri events.
 pub trait ServiceEventSink: Send + Sync {
     fn plugins_changed(&self, content_packs_changed: bool, plugins_changed: bool);
     fn open_tab_requested(&self, request: OpenTabRequest);
+    fn panel_push_requested(&self, request: PanelPushRequest);
 }
 
 /// Worker-pool tunables: pool size, supervision timeouts, dev-watch batching.
@@ -621,6 +679,7 @@ impl HostCallHandler for WorkerBridge {
             plugin_key: &record.plugin_key,
             granted: Some(&record.granted),
             via_panel: false,
+            session_token: None,
             scope: record.scope,
             repo_id: record.repo_id.as_deref(),
             worktree_hint: None,
@@ -708,6 +767,7 @@ pub struct PluginService {
     /// for `workspace.openTab`; pruned on worktree removal and deactivation.
     tab_trackers: Mutex<HashMap<(String, String), TabTracker>>,
     panel_admission: PanelAdmission,
+    push_admission: PushAdmission,
     watcher: Mutex<Option<DevWatcher>>,
     next_call_id: AtomicU64,
 }
@@ -761,6 +821,7 @@ impl PluginService {
             sessions: SessionRegistry::new(),
             tab_trackers: Mutex::new(HashMap::new()),
             panel_admission: PanelAdmission::default(),
+            push_admission: PushAdmission::default(),
             watcher: Mutex::new(None),
             next_call_id: AtomicU64::new(1),
         })
@@ -964,6 +1025,19 @@ impl PluginService {
         command_id: &str,
         args: Option<Value>,
     ) -> Result<Value, PluginError> {
+        self.invoke_command_with_session(plugin_ref, command_id, args, None)
+    }
+
+    /// [`Self::invoke_command`] with an optional UI session token attached to
+    /// the worker frame, letting the command push progress back through
+    /// `session.post`.
+    pub fn invoke_command_with_session(
+        &self,
+        plugin_ref: &PluginRef,
+        command_id: &str,
+        args: Option<Value>,
+        session_token: Option<&str>,
+    ) -> Result<Value, PluginError> {
         let discovered = self.discover_all();
         let entry = find_discovered(&discovered, plugin_ref).ok_or_else(|| {
             PluginError::new(
@@ -1001,8 +1075,15 @@ impl PluginService {
         self.ensure_active(plugin_ref)?;
         let instance_key = instance_key_of(plugin_ref)?;
         let call_id = self.next_call_id.fetch_add(1, Ordering::SeqCst);
-        self.manager()
-            .invoke_command(&instance_key, call_id, command_id, args)
+        self.manager().invoke_command(
+            &instance_key,
+            call_id,
+            command_id,
+            args,
+            session_token.map(|token| crate::worker::protocol::SessionRef {
+                token: token.to_string(),
+            }),
+        )
     }
 
     /// Projects `raw_payload` for the plugin event `name` and delivers it to
@@ -1512,6 +1593,7 @@ impl PluginService {
             plugin_key: &binding.plugin_key,
             granted,
             via_panel: true,
+            session_token: Some(token),
             scope: binding.scope,
             repo_id: binding.repo_id.as_deref(),
             worktree_hint: binding.worktree_id.as_deref(),
@@ -1519,6 +1601,40 @@ impl PluginService {
             audit: Some(&audit),
         };
         methods::execute(action, params, &ctx)
+    }
+
+    /// `session.post` core (spec §3.5): resolves the panel session token,
+    /// verifies it belongs to the calling plugin, admits the push against the
+    /// token's per-window budget, and emits
+    /// [`ServiceEventSink::panel_push_requested`] to the renderer.
+    pub fn session_post(
+        &self,
+        plugin_key: &str,
+        session_token: &str,
+        topic: Option<&str>,
+        payload: Value,
+    ) -> Result<(), PluginError> {
+        let Some(binding) = self.sessions.resolve(session_token) else {
+            return Err(PluginError::new(UNAVAILABLE, "session is not available"));
+        };
+        if binding.plugin_key != plugin_key {
+            return Err(PluginError::new(
+                UNAVAILABLE,
+                "session does not belong to the calling plugin",
+            ));
+        }
+        let payload_bytes = serde_json::to_vec(&payload)
+            .map(|encoded| encoded.len())
+            .unwrap_or(usize::MAX);
+        self.push_admission.admit(session_token, payload_bytes)?;
+        self.config
+            .event_sink
+            .panel_push_requested(PanelPushRequest {
+                session_token: session_token.to_string(),
+                topic: topic.map(str::to_string),
+                payload,
+            });
+        Ok(())
     }
 
     /// `workspace.openTab` core: validates `tab_id` against the plugin's
@@ -2288,6 +2404,7 @@ impl PluginService {
                             },
                             None => PluginCommandHandler::Worker,
                         },
+                        visibility: command.visibility,
                         keybindings: contributes
                             .keybindings
                             .iter()
@@ -2798,6 +2915,12 @@ fn capability_description(capability: Capability) -> &'static str {
         }
         Capability::SettingsOwn => "Read and change the plugin's own settings",
         Capability::WorkspaceOpenTab => "Open a new tab in the main workspace area",
+        Capability::WorkerCall => {
+            "Invoke the plugin's own background commands from its panels and tabs"
+        }
+        Capability::SessionPush => {
+            "Push live updates from the plugin's background worker into its panels and tabs"
+        }
     }
 }
 
@@ -3014,12 +3137,35 @@ mod tests {
         ) -> Vec<String> {
             vec!["board".to_string()]
         }
+
+        fn session_post(
+            &self,
+            _plugin_key: &str,
+            _session_token: &str,
+            _topic: Option<&str>,
+            _payload: Value,
+        ) -> Result<(), HostServiceError> {
+            Ok(())
+        }
+
+        fn invoke_worker_command(
+            &self,
+            _plugin_key: &str,
+            _scope: PluginScope,
+            _repo_id: Option<&str>,
+            _command_id: &str,
+            _args: Option<Value>,
+            _session_token: Option<&str>,
+        ) -> Result<Value, HostServiceError> {
+            Ok(serde_json::json!({ "started": true }))
+        }
     }
 
     #[derive(Default)]
     struct RecordingSink {
         changes: Mutex<Vec<(bool, bool)>>,
         tabs: Mutex<Vec<OpenTabRequest>>,
+        pushes: Mutex<Vec<PanelPushRequest>>,
     }
 
     impl ServiceEventSink for RecordingSink {
@@ -3032,6 +3178,13 @@ mod tests {
 
         fn open_tab_requested(&self, request: OpenTabRequest) {
             self.tabs
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .push(request);
+        }
+
+        fn panel_push_requested(&self, request: PanelPushRequest) {
+            self.pushes
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner())
                 .push(request);
@@ -3176,6 +3329,38 @@ mod tests {
             .iter()
             .find(|entry| entry.plugin_key == key)
             .unwrap_or_else(|| panic!("missing entry for {key}"))
+    }
+
+    #[test]
+    fn projects_command_visibility() {
+        let temp = tempdir().unwrap();
+        let source = write_plugin(
+            &temp.path().join("visibility-cmd"),
+            "visibility-cmd",
+            "1.0.0",
+            ">=1.0.0",
+            json!({
+                "main": "main.mjs",
+                "contributes": {
+                    "commands": [
+                        { "id": "check", "title": "Check" },
+                        { "id": "snapshot", "title": "Snapshot", "visibility": "internal" }
+                    ]
+                }
+            }),
+        );
+        std::fs::write(source.join("main.mjs"), b"// fake worker main\n").unwrap();
+        let harness = harness_with_dev(temp.path(), "1.0.0", vec![source]);
+        let listed = harness.service.list();
+        let commands = &entry(&listed, "orca-samples.visibility-cmd").commands;
+        assert_eq!(
+            commands[0].visibility,
+            crate::manifest::CommandVisibility::Palette
+        );
+        assert_eq!(
+            commands[1].visibility,
+            crate::manifest::CommandVisibility::Internal
+        );
     }
 
     #[test]
@@ -5186,6 +5371,77 @@ rl.on('line', (line) => {
             Outcome::Err { code, .. } => assert_eq!(code, gate::RATE_LIMITED),
             other => panic!("the 31st action must be rate limited: {other:?}"),
         }
+    }
+
+    fn issue_ui_session(service: &PluginService, plugin_key: &str, kind: SessionKind) -> String {
+        service.sessions.issue(SessionBinding {
+            plugin_key: plugin_key.to_string(),
+            kind,
+            panel_id: Some("updater".to_string()),
+            tab_id: None,
+            instance_id: None,
+            scope: PluginScope::Global,
+            repo_id: None,
+            worktree_id: None,
+            manifest_revision: "rev".to_string(),
+            owner: SessionOwner::Renderer {
+                window_label: "main".to_string(),
+            },
+        })
+    }
+
+    #[test]
+    fn session_post_validates_binding_and_emits_pushes() {
+        let temp = tempdir().unwrap();
+        let harness = harness(temp.path(), "1.0.0");
+        let token = issue_ui_session(&harness.service, "itsuka.updater", SessionKind::MainTab);
+
+        harness
+            .service
+            .session_post("itsuka.updater", &token, Some("state"), json!({ "n": 1 }))
+            .expect("push accepted");
+        assert_eq!(harness.sink.pushes.lock().unwrap().len(), 1);
+
+        assert_eq!(
+            harness
+                .service
+                .session_post("other.plugin", &token, None, json!({}))
+                .unwrap_err()
+                .code(),
+            UNAVAILABLE
+        );
+        assert_eq!(
+            harness
+                .service
+                .session_post("itsuka.updater", "unknown-token", None, json!({}))
+                .unwrap_err()
+                .code(),
+            UNAVAILABLE
+        );
+    }
+
+    #[test]
+    fn session_post_budget_is_per_token() {
+        let temp = tempdir().unwrap();
+        let harness = harness(temp.path(), "1.0.0");
+        let token = issue_ui_session(&harness.service, "itsuka.updater", SessionKind::Panel);
+        for _ in 0..PANEL_PUSH_MAX_PER_WINDOW {
+            harness
+                .service
+                .session_post("itsuka.updater", &token, None, json!({}))
+                .expect("within budget");
+        }
+        let error = harness
+            .service
+            .session_post("itsuka.updater", &token, None, json!({}))
+            .unwrap_err();
+        assert_eq!(error.code(), gate::RATE_LIMITED);
+
+        let other = issue_ui_session(&harness.service, "itsuka.updater", SessionKind::Panel);
+        harness
+            .service
+            .session_post("itsuka.updater", &other, None, json!({}))
+            .expect("per-token buckets are independent");
     }
 
     #[test]

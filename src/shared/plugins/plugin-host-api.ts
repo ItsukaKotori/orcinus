@@ -158,6 +158,18 @@ export const PLUGIN_HOST_API_V0: readonly PluginHostMethodSpec[] = [
     result: workspaceOpenTabResult
   }),
   spec({
+    name: 'worker.invokeCommand',
+    since: '1.1',
+    scope: 'plugin-private',
+    capability: 'worker:call',
+    mutation: false,
+    panel: true,
+    params: z
+      .object({ commandId: z.string().min(1).max(256), args: z.json().optional() })
+      .strict(),
+    result: z.json()
+  }),
+  spec({
     name: 'terminal.sendText',
     since: '1.0',
     scope: 'explicit-terminal',
@@ -276,6 +288,22 @@ export const PLUGIN_HOST_API_V0: readonly PluginHostMethodSpec[] = [
     panel: false,
     params: eventsSubscribeParams,
     result: eventsSubscribeResult
+  }),
+  spec({
+    name: 'session.post',
+    since: '1.1',
+    scope: 'plugin-private',
+    capability: 'session:push',
+    mutation: false,
+    panel: false,
+    params: z
+      .object({
+        sessionToken: z.string().min(32).max(128),
+        topic: z.string().min(1).max(64).optional(),
+        payload: z.json()
+      })
+      .strict(),
+    result: z.object({ ok: z.literal(true) }).strict()
   })
 ]
 

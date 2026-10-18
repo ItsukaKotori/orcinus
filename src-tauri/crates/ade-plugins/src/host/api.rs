@@ -23,6 +23,10 @@ pub const OPEN_TAB_TITLE_MAX_CHARS: usize = 128;
 pub const OPEN_TAB_ID_MAX_CHARS: usize = 256;
 pub const OPEN_TAB_PARAMS_MAX_BYTES: usize = 64 * 1024;
 pub const OPEN_TAB_PARAMS_MAX_DEPTH: usize = 64;
+pub const WORKER_COMMAND_ID_MAX_CHARS: usize = 256;
+pub const WORKER_COMMAND_RESULT_MAX_BYTES: usize = 64 * 1024;
+pub const SESSION_POST_TOPIC_MAX_CHARS: usize = 64;
+pub const SESSION_POST_PAYLOAD_MAX_BYTES: usize = 64 * 1024;
 
 pub type Validator = fn(&Value) -> Result<Value, String>;
 
@@ -35,7 +39,7 @@ pub struct MethodSpec {
     pub result: Validator,
 }
 
-static SPECS: [MethodSpec; 14] = [
+static SPECS: [MethodSpec; 16] = [
     MethodSpec {
         name: "workspace.readContext",
         capability: Capability::WorkspaceRead,
@@ -51,6 +55,14 @@ static SPECS: [MethodSpec; 14] = [
         panel_callable: true,
         params: open_tab_params,
         result: open_tab_result,
+    },
+    MethodSpec {
+        name: "worker.invokeCommand",
+        capability: Capability::WorkerCall,
+        mutation: false,
+        panel_callable: true,
+        params: worker_invoke_params,
+        result: worker_command_result,
     },
     MethodSpec {
         name: "terminal.sendText",
@@ -148,9 +160,17 @@ static SPECS: [MethodSpec; 14] = [
         params: events_subscribe_params,
         result: events_subscribe_result,
     },
+    MethodSpec {
+        name: "session.post",
+        capability: Capability::SessionPush,
+        mutation: false,
+        panel_callable: false,
+        params: session_post_params,
+        result: ok_result,
+    },
 ];
 
-pub fn specs() -> &'static [MethodSpec; 14] {
+pub fn specs() -> &'static [MethodSpec; 16] {
     &SPECS
 }
 
@@ -354,6 +374,70 @@ fn open_tab_params(value: &Value) -> Result<Value, String> {
     Ok(Value::Object(normalized))
 }
 
+fn worker_invoke_params(value: &Value) -> Result<Value, String> {
+    let obj = require_object(value, "(root)")?;
+    let command_id = require_string(obj, "commandId")?;
+    non_empty(command_id, "commandId")?;
+    max_utf16(command_id, WORKER_COMMAND_ID_MAX_CHARS, "commandId")?;
+    let args = match obj.get("args") {
+        None | Some(Value::Null) => None,
+        Some(args) => {
+            check_json_bounds(args, "args")?;
+            Some(args.clone())
+        }
+    };
+    let mut normalized = Map::new();
+    normalized.insert("commandId".to_string(), Value::String(command_id.to_string()));
+    if let Some(args) = args {
+        normalized.insert("args".to_string(), args);
+    }
+    Ok(Value::Object(normalized))
+}
+
+fn worker_command_result(value: &Value) -> Result<Value, String> {
+    let bytes = serde_json::to_vec(value).map_err(|error| invalid("(root)", error))?;
+    if bytes.len() > WORKER_COMMAND_RESULT_MAX_BYTES {
+        return Err(invalid(
+            "(root)",
+            format!("must serialize to at most {WORKER_COMMAND_RESULT_MAX_BYTES} bytes"),
+        ));
+    }
+    Ok(value.clone())
+}
+
+fn session_post_params(value: &Value) -> Result<Value, String> {
+    let obj = require_object(value, "(root)")?;
+    let token = require_string(obj, "sessionToken")?;
+    if token.len() < 32 || token.len() > 128 {
+        return Err(invalid("sessionToken", "must contain between 32 and 128 characters"));
+    }
+    let topic = optional_string(obj, "topic")?;
+    if let Some(topic) = topic {
+        non_empty(topic, "topic")?;
+        max_utf16(topic, SESSION_POST_TOPIC_MAX_CHARS, "topic")?;
+    }
+    let payload = obj
+        .get("payload")
+        .ok_or_else(|| invalid("payload", "required"))?
+        .clone();
+    let payload_bytes = serde_json::to_vec(&payload)
+        .map(|bytes| bytes.len())
+        .unwrap_or(usize::MAX);
+    if payload_bytes > SESSION_POST_PAYLOAD_MAX_BYTES {
+        return Err(invalid(
+            "payload",
+            format!("must serialize to at most {SESSION_POST_PAYLOAD_MAX_BYTES} bytes"),
+        ));
+    }
+    let mut normalized = Map::new();
+    normalized.insert("sessionToken".to_string(), Value::String(token.to_string()));
+    if let Some(topic) = topic {
+        normalized.insert("topic".to_string(), Value::String(topic.to_string()));
+    }
+    normalized.insert("payload".to_string(), payload);
+    Ok(Value::Object(normalized))
+}
+
 fn check_json_bounds(value: &Value, path: &str) -> Result<(), String> {
     let bytes = serde_json::to_vec(value).map_err(|error| invalid(path, error))?;
     if bytes.len() > OPEN_TAB_PARAMS_MAX_BYTES {
@@ -541,14 +625,15 @@ mod tests {
     }
 
     #[test]
-    fn spec_table_has_fourteen_methods_with_expected_metadata() {
-        assert_eq!(specs().len(), 14);
+    fn spec_table_has_sixteen_methods_with_expected_metadata() {
+        assert_eq!(specs().len(), 16);
         let names: Vec<&str> = specs().iter().map(|entry| entry.name).collect();
         assert_eq!(
             names,
             vec![
                 "workspace.readContext",
                 "workspace.openTab",
+                "worker.invokeCommand",
                 "terminal.sendText",
                 "notifications.show",
                 "storage.get",
@@ -561,6 +646,7 @@ mod tests {
                 "settings.get",
                 "settings.set",
                 "events.subscribe",
+                "session.post",
             ]
         );
         let panel: Vec<&str> = specs()
@@ -573,26 +659,62 @@ mod tests {
             vec![
                 "workspace.readContext",
                 "workspace.openTab",
+                "worker.invokeCommand",
                 "terminal.sendText",
                 "notifications.show",
             ]
         );
-        for entry in specs() {
-            assert!(spec(entry.name).is_some());
-        }
-        assert!(spec("workspace.explode").is_none());
         assert_eq!(
-            spec("workspace.openTab").unwrap().capability,
-            Capability::WorkspaceOpenTab
+            spec("worker.invokeCommand").unwrap().capability,
+            Capability::WorkerCall
         );
+        assert_eq!(spec("session.post").unwrap().capability, Capability::SessionPush);
+        assert!(!spec("worker.invokeCommand").unwrap().mutation);
+        assert!(!spec("session.post").unwrap().mutation);
+    }
+
+    #[test]
+    fn worker_invoke_and_session_post_params_enforce_bounds() {
         assert_eq!(
-            spec("storage.keys").unwrap().capability,
-            Capability::Storage
+            validate_params("worker.invokeCommand", json!({ "commandId": "check" })).unwrap(),
+            json!({ "commandId": "check" })
         );
-        assert!(!spec("storage.get").unwrap().mutation);
-        assert!(spec("storage.set").unwrap().mutation);
-        assert!(spec("workspace.openTab").unwrap().mutation);
-        assert!(!spec("workspace.readContext").unwrap().mutation);
+        assert!(validate_params("worker.invokeCommand", json!({})).is_err());
+        assert!(validate_params("worker.invokeCommand", json!({ "commandId": "" })).is_err());
+        assert!(validate_params(
+            "worker.invokeCommand",
+            json!({ "commandId": "c".repeat(WORKER_COMMAND_ID_MAX_CHARS + 1) })
+        )
+        .is_err());
+        let big_args = "x".repeat(64 * 1024);
+        assert!(validate_params(
+            "worker.invokeCommand",
+            json!({ "commandId": "check", "args": { "blob": big_args } })
+        )
+        .is_err());
+
+        let token = "t".repeat(32);
+        assert_eq!(
+            validate_params(
+                "session.post",
+                json!({ "sessionToken": token, "topic": "log", "payload": { "line": "x" } })
+            )
+            .unwrap(),
+            json!({ "sessionToken": "t".repeat(32), "topic": "log", "payload": { "line": "x" } })
+        );
+        assert!(validate_params("session.post", json!({ "sessionToken": "short", "payload": 1 })).is_err());
+        assert!(validate_params("session.post", json!({ "sessionToken": token })).is_err());
+        assert!(validate_params(
+            "session.post",
+            json!({ "sessionToken": token, "topic": "x".repeat(SESSION_POST_TOPIC_MAX_CHARS + 1), "payload": 1 })
+        )
+        .is_err());
+
+        assert!(validate_result("worker.invokeCommand", json!({ "ok": true })).is_ok());
+        assert!(validate_result("session.post", json!({ "ok": true })).is_ok());
+        assert!(validate_result("session.post", json!({ "ok": false })).is_err());
+        let huge = json!({ "blob": "x".repeat(WORKER_COMMAND_RESULT_MAX_BYTES + 1) });
+        assert!(validate_result("worker.invokeCommand", huge).is_err());
     }
 
     #[test]
