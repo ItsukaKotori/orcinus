@@ -14,6 +14,7 @@ import {
   createPanelBridgeMessageHandler
 } from './plugin-panel-bridge-host'
 import { createPanelWatchdog } from './plugin-panel-watchdog'
+import { forwardPanelPush } from './plugin-panel-push'
 import { buildPanelDesignTokenCss, currentPanelColorScheme } from './plugin-panel-design-token-css'
 import { usePluginPanelThemeRevision } from './use-plugin-panel-theme-revision'
 
@@ -145,6 +146,16 @@ export function usePluginPanelEntry(
       window.removeEventListener('message', handler)
     }
   }, [panelDocument, sessionToken, watchdog])
+
+  useEffect(() => {
+    const plugins = window.api?.plugins
+    if (!plugins?.onPanelPush || !sessionToken) {
+      return
+    }
+    return plugins.onPanelPush((push) => {
+      forwardPanelPush(() => iframeRef.current?.contentWindow ?? null, sessionToken, push)
+    })
+  }, [sessionToken])
 
   useEffect(() => {
     if (!panelFrameKey || loadedFrameKey !== panelFrameKey) {
