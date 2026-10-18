@@ -5,7 +5,7 @@
 ## 交付内容
 IDEA VcsLog 风格的**独立主区提交图谱**，以**插件**形态交付：`plugins/git-log/`（React 19 + Tailwind v4，vite 单入口全内联 `dist/tab.html`；右侧栏 `launcher.html` 调 `workspace.openTab`）。增量 1 数据来自内嵌确定性 fixture（31 提交，含 merge/fork/tag/remote/ahead-behind）。
 
-## 隔离自证（spec §2.2 硬约束）
+## 隔离自证（spec §2.2 硬约束 · **增量 1 时点**；增量 2a 会新增 `git:read`/host 方法与 Rust 实现，见文末「增量 2a」节）
 `git diff --name-only main...HEAD` 仅落在：`plugins/git-log/**`、`package.json`、`vitest.config.ts`、`.gitignore`、`docs/**`。
 **未触碰**：插件能力表 `plugin-capability-gate(s).ts` / `plugin-capabilities.ts` / `plugin-host-api.ts`、Rust `ade-plugins` `host/methods.rs`·`service.rs`、现有 Source Control 组件、`src/shared/git-history*`。
 → **零 Rust 改动，`cargo test --workspace` 与 `main` 等价，故未重跑。**

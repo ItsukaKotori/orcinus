@@ -1,6 +1,6 @@
-# Git Log 插件（增量 1：fixture UI）
+# Git Log 插件（增量 1 fixture UI → 增量 2a 真实 HEAD 数据）
 
-IDEA VcsLog 风格的独立主区提交图谱，以**插件**形态交付。增量 1 为 **fixture 驱动**：零后端、零插件能力表改动，数据来自内嵌 fixture，可与宿主同屏对照迭代 UI。
+IDEA VcsLog 风格的独立主区提交图谱，以**插件**形态交付。增量 1 先建 fixture 驱动 UI（可与宿主同屏对照迭代）；增量 2a 已接**真实 HEAD 历史**（新增只读 `git:read` capability + host `git.log`/`git.commitFiles`，复用 Rust `ade-git`）。数据源详见下方「数据源」。
 
 ## 本地加载（tauri dev，真实桥）
 1. `pnpm build:git-log`（产出 `dist/tab.html`，全内联单文件；`dist` 不入库）。
