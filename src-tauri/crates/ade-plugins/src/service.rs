@@ -2798,8 +2798,12 @@ fn capability_description(capability: Capability) -> &'static str {
         }
         Capability::SettingsOwn => "Read and change the plugin's own settings",
         Capability::WorkspaceOpenTab => "Open a new tab in the main workspace area",
-        Capability::WorkerCall => "允许插件界面调用插件后台命令",
-        Capability::SessionPush => "允许插件后台向界面推送实时数据",
+        Capability::WorkerCall => {
+            "Invoke the plugin's own background commands from its panels and tabs"
+        }
+        Capability::SessionPush => {
+            "Push live updates from the plugin's background worker into its panels and tabs"
+        }
     }
 }
 
