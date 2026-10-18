@@ -5,15 +5,28 @@
     <style>
       body { margin: 0; padding: 10px; font-family: system-ui, sans-serif; color: var(--foreground, #ddd); background: var(--background, transparent); }
       button { width: 100%; padding: 8px 10px; border: 1px solid var(--border, #555); border-radius: 6px; background: var(--secondary, #2a2a2a); color: var(--foreground, #ddd); cursor: pointer; font: inherit; }
+      .status { margin-top: 8px; min-height: 1.2em; font-size: 12px; color: var(--muted-foreground, #999); }
     </style>
   </head>
   <body>
     <button id="open">Open Git Log</button>
+    <p class="status" id="status"></p>
     <script>
       'use strict'
-      document.getElementById('open').addEventListener('click', function () {
-        window.parent.postMessage({ type: 'orca-panel-action', requestId: 'gl-open-1', action: 'workspace.openTab', params: { tabId: 'git-log' } }, '*')
-      })
+      var statusEl = document.getElementById('status')
+      function openTab() {
+        var requestId = 'gl-open-' + Date.now()
+        var onResult = function (event) {
+          var data = event.data
+          if (!data || data.type !== 'orca-panel-action-result' || data.requestId !== requestId) return
+          window.removeEventListener('message', onResult)
+          statusEl.textContent = data.ok ? 'Opened.' : ('Failed: ' + (data.error || data.errorCode))
+        }
+        window.addEventListener('message', onResult)
+        window.parent.postMessage({ type: 'orca-panel-action', requestId: requestId, action: 'workspace.openTab', params: { tabId: 'git-log' } }, '*')
+        statusEl.textContent = 'Opening…'
+      }
+      document.getElementById('open').addEventListener('click', openTab)
     </script>
   </body>
 </html>
