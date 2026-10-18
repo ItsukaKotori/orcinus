@@ -285,6 +285,7 @@ Create `plugins/git-log/tsconfig.json`:
   "extends": "../../config/tsconfig.web.json",
   "compilerOptions": {
     "noEmit": true,
+    "composite": false,
     "paths": { "@shared/*": ["../../src/shared/*"] },
     "types": []
   },
@@ -295,7 +296,7 @@ Create `plugins/git-log/tsconfig.json`:
 
 > 测试文件（如 theme-parity.test.ts 用 `node:fs`）不走此 UI tsconfig（`types:[]` 禁 node types）：它们由 vitest 转译执行，从 tsc 类型检查中排除。
 
-> TS 7.0.2 已移除 `baseUrl`；`paths` 直接相对 tsconfig 所在目录解析。另需 `plugins/git-log/src/vite-env.d.ts`：`/// <reference types="vite/client" />`（为 `import './theme.css'` side-effect 引入提供 `*.css` 模块声明）。
+> TS 7.0.2 已移除 `baseUrl`；`paths` 直接相对 tsconfig 所在目录解析。基础 `config/tsconfig.web.json` 为 `composite: true`，会禁止 import 未列入 `include` 的 `@shared/*` 文件（错 6307）——插件工程非被引用项目，改 `composite: false` 让 TS 自动拉入依赖。另需 `plugins/git-log/src/vite-env.d.ts`：`/// <reference types="vite/client" />`（为 `import './theme.css'` side-effect 引入提供 `*.css` 模块声明）。
 
 - [ ] **Step 8: 根接线（package.json / vitest.config.ts / .gitignore）**
 

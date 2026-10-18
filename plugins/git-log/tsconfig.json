@@ -2,6 +2,7 @@
   "extends": "../../config/tsconfig.web.json",
   "compilerOptions": {
     "noEmit": true,
+    "composite": false,
     "paths": { "@shared/*": ["../../src/shared/*"] },
     "types": []
   },
