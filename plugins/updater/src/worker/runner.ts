@@ -34,6 +34,9 @@ export function runCommand(cmd: string, args: string[], options: RunOptions = {}
     let settled = false
     let killTimer: ReturnType<typeof setTimeout> | null = null
 
+    child.stdout.setEncoding('utf8')
+    child.stderr.setEncoding('utf8')
+
     const timeoutTimer = setTimeout(() => requestKill(), timeoutMs)
 
     function cleanup() {
@@ -77,8 +80,8 @@ export function runCommand(cmd: string, args: string[], options: RunOptions = {}
 
     const lineReader = (stream: RunStream, sink: (line: string) => void) => {
       let buffer = ''
-      return (chunk: Buffer) => {
-        buffer += chunk.toString('utf8')
+      return (chunk: string) => {
+        buffer += chunk
         let index = buffer.indexOf('\n')
         while (index !== -1) {
           const raw = buffer.slice(0, index).replace(/\r$/, '')

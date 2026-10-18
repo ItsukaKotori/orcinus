@@ -44,6 +44,17 @@ describe('runCommand', () => {
     expect(result.signal).toBe('SIGTERM')
   })
 
+  it('decodes multi-byte characters split across chunks', async () => {
+    const script = [
+      "const bytes = Buffer.from('中文测试\\n', 'utf8')",
+      "process.stdout.write(bytes.subarray(0, 4))",
+      "setTimeout(() => process.stdout.write(bytes.subarray(4)), 20)"
+    ].join(';')
+    const result = await runCommand(process.execPath, ['-e', script])
+    expect(result.stdout).toBe('中文测试\n')
+    expect(result.stdout).not.toContain('\uFFFD')
+  })
+
   it('rejects when the binary cannot be spawned', async () => {
     await expect(runCommand('__ade_missing_binary__', [])).rejects.toThrowError()
   })
