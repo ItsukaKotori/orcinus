@@ -1,6 +1,6 @@
 import type { GitBranchChangeEntry } from '@shared/git-diff-compare-types'
 import type { GitHistoryItem } from '@shared/git-history-types'
-import { shortHash } from './format'
+import { formatAbsoluteDate, shortHash } from './format'
 
 type Props = { item: GitHistoryItem | null; files: GitBranchChangeEntry[] }
 
@@ -11,9 +11,12 @@ export function CommitDetail({ item, files }: Props): React.JSX.Element {
         <div className="text-muted-foreground">Select a commit.</div>
       ) : (
         <div className="space-y-2">
-          <div className="font-mono text-muted-foreground">{shortHash(item.id)}</div>
+          <div className="font-mono text-muted-foreground">{shortHash(item.displayId ?? item.id)}</div>
           <div className="font-medium text-foreground">{item.subject}</div>
-          <div className="text-muted-foreground">{item.author} &lt;{item.authorEmail}&gt;</div>
+          <div className="text-muted-foreground">{item.author} &lt;{item.authorEmail}&gt; · {formatAbsoluteDate(item.timestamp)}</div>
+          {item.message && item.message !== item.subject ? (
+            <pre className="whitespace-pre-wrap font-sans text-foreground">{item.message}</pre>
+          ) : null}
           <div className="text-muted-foreground">{item.statistics ? `+${item.statistics.insertions} −${item.statistics.deletions} in ${item.statistics.files} files` : ''}</div>
           <ul className="mt-1 space-y-0.5">
             {files.map((f) => (

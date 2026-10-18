@@ -14,3 +14,8 @@ export function formatRelativeDate(ts: number | undefined, now = Date.now()): st
 export function shortHash(oid: string): string {
   return oid.slice(0, 7)
 }
+
+export function formatAbsoluteDate(ts: number | undefined): string {
+  if (!ts) return ''
+  return new Date(ts).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+}

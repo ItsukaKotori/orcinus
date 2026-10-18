@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { formatRelativeDate, shortHash } from './format'
+import { formatAbsoluteDate, formatRelativeDate, shortHash } from './format'
 
 it('formatRelativeDate 按阈值输出相对时间', () => {
   const now = Date.UTC(2026, 9, 18, 12)
@@ -10,3 +10,7 @@ it('formatRelativeDate 按阈值输出相对时间', () => {
   expect(formatRelativeDate(undefined, now)).toBe('')
 })
 it('shortHash 取前 7 位', () => expect(shortHash('abcdef0123456789')).toBe('abcdef0'))
+it('formatAbsoluteDate：undefined 空串，有效时间含年份', () => {
+  expect(formatAbsoluteDate(undefined)).toBe('')
+  expect(formatAbsoluteDate(Date.UTC(2026, 9, 18))).toContain('2026')
+})

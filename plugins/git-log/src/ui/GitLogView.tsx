@@ -9,6 +9,10 @@ import { RefPanel } from './RefPanel'
 import { GraphList } from './GraphList'
 import { CommitDetail } from './CommitDetail'
 
+function isBoundaryRow(row: GraphRow): boolean {
+  return row.viewModel.kind === 'incoming-changes' || row.viewModel.kind === 'outgoing-changes'
+}
+
 export function GitLogView({ repository }: { repository: GitLogRepository }): React.JSX.Element {
   const [rows, setRows] = useState<GraphRow[]>([])
   const [refs, setRefs] = useState<GitHistoryItemRef[]>([])
@@ -30,7 +34,7 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
     const seen = new Map<string, GitHistoryItemRef>()
     for (const item of snap.items) for (const r of item.references ?? []) seen.set(r.id, r)
     setRefs([...seen.values()])
-    setSelected((cur) => cur ?? next[0]?.viewModel.historyItem.id ?? null)
+    setSelected((cur) => cur ?? next.find((r) => !isBoundaryRow(r))?.viewModel.historyItem.id ?? null)
   }, [repository])
 
   useEffect(() => {
@@ -59,9 +63,10 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
     (e: React.KeyboardEvent) => {
       if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
       e.preventDefault()
-      const idx = visible.findIndex((r) => r.viewModel.historyItem.id === selected)
-      const nextIdx = e.key === 'ArrowDown' ? Math.min(visible.length - 1, idx + 1) : Math.max(0, idx - 1)
-      const nxt = visible[nextIdx]
+      const navigable = visible.filter((r) => !isBoundaryRow(r))
+      const idx = navigable.findIndex((r) => r.viewModel.historyItem.id === selected)
+      const nextIdx = e.key === 'ArrowDown' ? Math.min(navigable.length - 1, idx + 1) : Math.max(0, idx - 1)
+      const nxt = navigable[nextIdx]
       if (nxt) setSelected(nxt.viewModel.historyItem.id)
     },
     [visible, selected]

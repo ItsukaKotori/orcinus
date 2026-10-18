@@ -35,8 +35,8 @@
 - `src/ui/theme.css` — tailwind 入口 + 逐字 `@theme inline` + git-graph tokens + Geist `@font-face`
 - `src/ui/tab-main.tsx` — tab 挂载入口
 - `src/ui/GitLogView.tsx` — 视图组合（工具条 / 分支面板 / 图谱列表 / 详情）
-- `src/ui/Toolbar.tsx`、`src/ui/RefPanel.tsx`、`src/ui/GraphList.tsx`、`src/ui/GraphLane.tsx`、`src/ui/CommitDetail.tsx`
-- `src/ui/host-bridge.ts` — panel 侧 `call(action, params)` postMessage 助手（launcher 与 tab 共用逻辑）
+- `src/ui/Toolbar.tsx`、`src/ui/RefPanel.tsx`、`src/ui/GraphList.tsx`、`src/ui/CommitDetail.tsx`（泳道 SVG 几何**复用宿主** `git-history-graph-svg.tsx`，不另写 `GraphLane`——见下方“最终审查修正”）
+- （无 `host-bridge.ts`：tab 为纯 fixture、不调 host 方法；launcher 手写内联自带 postMessage 逻辑）
 - `src/domain/types.ts` — `GitLogSnapshot` / `GitLogRepository` / `ChannelRepository`(占位)
 - `src/fixtures/fixture-snapshot.ts`、`src/fixtures/fixture-repository.ts`
 - `src/graph/git-graph-model.ts` — 复用 shared 泳道、色 id→CSS var 映射
@@ -1441,3 +1441,15 @@ git commit -m "chore(git-log): 增量 1 集成门禁通过，确认零后端/零
 - `workspace.openTab` `params:{tabId}`（Task 6 launcher）匹配 `workspaceOpenTabParams`（`tabId` 必填）。✓
 
 **4. 范围：** 单插件包、单可合可演示增量 → 单一实施计划合适。✓
+
+
+---
+
+## 最终审查修正（覆盖上文 Task 4/5 片段）
+
+全分支审查发现两处计划级缺陷（单任务审查无法发现），实现已按下述修正，**以此为准，覆盖上文 GraphLane/Step 4 与 graphColorVar/graphLaneCellCount 片段**：
+
+- **I-1（图谱几何）**：上文 `GraphLane` 对所有 `inputSwimlanes` 一律收敛到提交 dot，产生假 fan-in，与 shared 语义/宿主不符。修正：**复用宿主 `git-history-graph-svg.tsx` 的 `GitHistoryGraphSvg`**（仅依赖 React + `src/shared`，`var(--git-graph-*)` 与插件 token 对齐）作泳道渲染，正确处理直通竖线 / merge / HEAD / boundary 节点。`git-graph-model.ts` 移除 `graphColorVar`/`graphLaneCellCount`（配色/宽度由复用组件负责）；`GraphRow` 仍保留 `laneIndex`（由 `getGitHistoryItemLaneIndex` 计算、被 graph 测试覆盖）。`src/ui/GraphLane.tsx` 删除。
+- **I-2（合成边界行）**：`GitLogView` 初始选中/键盘导航改为**跳过** `kind==='incoming-changes'|'outgoing-changes'` 的合成行（`isBoundaryRow`），`GraphList` 对边界行不可点击，避免详情区出现伪 hash/虚构文件。
+- **I-3（spec §3 可得项）**：`GraphList` 行内补 ref chips（复用 `@shared/git-history-ref-display` 的 `dedupeRemoteTrackingRefs`，最多 2 + `+N`），`CommitDetail` 补 date + message 正文 + `displayId ?? id`。分支选择器/RefPanel 折叠/Enter/Date·Path chips 明确顺延增量 2（记于 `docs/phase4-git-log-plugin-record.md`，非静默缺口）。
+- **I-4/I-5**：新增 `docs/phase4-git-log-plugin-record.md`；`package.json`/`vitest.config.ts` 与 phase3c 为必然文本冲突，合并拼接方案记于该 record。

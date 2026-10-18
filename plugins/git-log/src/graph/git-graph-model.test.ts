@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildGraphRows, graphColorVar, graphLaneCellCount } from './git-graph-model'
+import { buildGraphRows } from './git-graph-model'
 import { buildFixtureSnapshot } from '../fixtures/fixture-snapshot'
 
 describe('buildGraphRows', () => {
@@ -19,23 +19,8 @@ describe('buildGraphRows', () => {
     expect(Math.max(...rows.map((r) => r.laneIndex))).toBeLessThanOrEqual(6)
   })
 
-  it('全部 8 个 GitHistoryGraphColorId 映射到对应 --git-graph-* CSS 变量', () => {
-    const ids = [
-      'git-graph-ref',
-      'git-graph-remote-ref',
-      'git-graph-base-ref',
-      'git-graph-lane-1',
-      'git-graph-lane-2',
-      'git-graph-lane-3',
-      'git-graph-lane-4',
-      'git-graph-lane-5'
-    ] as const
-    for (const id of ids) expect(graphColorVar(id)).toBe(`var(--${id})`)
-  })
-
-  it('泳道宽度盖住输入/输出泳道（顶端合并分叉线不被裁）', () => {
-    const merge = rows.find((r) => r.viewModel.historyItem.subject.startsWith('Merge branch'))!
-    expect(graphLaneCellCount(merge)).toBeGreaterThanOrEqual(merge.viewModel.outputSwimlanes.length)
-    for (const r of rows) expect(graphLaneCellCount(r)).toBeGreaterThan(r.laneIndex)
+  it('视图 kind 含真实提交(node/HEAD)，供选中/导航过滤', () => {
+    const kinds = new Set(rows.map((r) => r.viewModel.kind))
+    expect([...kinds].some((k) => k === 'node' || k === 'HEAD')).toBe(true)
   })
 })
