@@ -75,6 +75,8 @@ export type PluginHostListEntry = {
     context: 'global' | 'worktree'
     handler: { type: 'built-in'; action: string } | { type: 'worker' }
     keybindings: { key: string; when: 'global' | 'worktree' }[]
+    /** `internal` commands are UI-only: never surfaced in the palette or shortcut surfaces. */
+    visibility: 'palette' | 'internal'
   }[]
   hasWorker: boolean
   vmRecipes?: {

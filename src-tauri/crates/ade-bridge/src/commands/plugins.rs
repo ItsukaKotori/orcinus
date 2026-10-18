@@ -120,6 +120,22 @@ pub enum PluginCommandContextDto {
     Worktree,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "lowercase")]
+pub enum PluginCommandVisibilityDto {
+    Palette,
+    Internal,
+}
+
+impl From<ade_plugins::manifest::CommandVisibility> for PluginCommandVisibilityDto {
+    fn from(value: ade_plugins::manifest::CommandVisibility) -> Self {
+        match value {
+            ade_plugins::manifest::CommandVisibility::Palette => Self::Palette,
+            ade_plugins::manifest::CommandVisibility::Internal => Self::Internal,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum PluginCommandHandlerDto {
@@ -142,6 +158,7 @@ pub struct PluginCommandDto {
     pub context: PluginCommandContextDto,
     pub handler: PluginCommandHandlerDto,
     pub keybindings: Vec<PluginKeybindingDto>,
+    pub visibility: PluginCommandVisibilityDto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
@@ -295,6 +312,7 @@ impl From<PluginListEntry> for PluginListEntryDto {
                             },
                         })
                         .collect(),
+                    visibility: command.visibility.into(),
                 })
                 .collect(),
             has_worker: entry.has_worker,

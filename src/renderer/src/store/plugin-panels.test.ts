@@ -47,7 +47,8 @@ describe('plugin panel list loading', () => {
           title: 'Tasks',
           context: 'global' as const,
           handler: { type: 'built-in' as const, action: 'view.tasks' },
-          keybindings: [{ key: 'Mod+Alt+T', when: 'global' as const }]
+          keybindings: [{ key: 'Mod+Alt+T', when: 'global' as const }],
+          visibility: 'palette' as const
         }
       ]
     }

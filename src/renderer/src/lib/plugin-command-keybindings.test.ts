@@ -20,7 +20,8 @@ const command: ActivePluginCommand = {
   title: 'Open Tasks',
   context: 'global',
   handler: { type: 'built-in', action: 'view.tasks' },
-  keybindings: [{ key: 'Mod+Alt+T', when: 'global' }]
+  keybindings: [{ key: 'Mod+Alt+T', when: 'global' }],
+  visibility: 'palette'
 }
 
 describe('plugin command keybindings', () => {

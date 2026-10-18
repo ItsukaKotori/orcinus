@@ -21,7 +21,8 @@ function command(handler: ActivePluginCommand['handler']): ActivePluginCommand {
     title: 'Open Settings',
     context: 'global',
     handler,
-    keybindings: []
+    keybindings: [],
+    visibility: 'palette'
   }
 }
 

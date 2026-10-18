@@ -13,7 +13,8 @@ function command(context: 'global' | 'worktree'): ActivePluginCommand {
     title: 'Open Tasks',
     context,
     handler: { type: 'built-in', action: 'view.tasks' },
-    keybindings: []
+    keybindings: [],
+    visibility: 'palette'
   }
 }
 

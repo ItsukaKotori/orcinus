@@ -246,7 +246,8 @@ describe('PluginConsentDialog', () => {
             title: 'Open Tasks',
             context: 'global',
             handler: { type: 'built-in', action: 'view.tasks' },
-            keybindings: [{ key: 'Mod+P', when: 'global' }]
+            keybindings: [{ key: 'Mod+P', when: 'global' }],
+            visibility: 'palette'
           }
         ]
       },
