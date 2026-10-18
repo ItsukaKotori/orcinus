@@ -14,15 +14,22 @@
     <script>
       'use strict'
       var statusEl = document.getElementById('status')
+      var seq = 0
       function openTab() {
-        var requestId = 'gl-open-' + Date.now()
+        var requestId = 'gl-open-' + Date.now() + '-' + (++seq)
+        var timer = 0
         var onResult = function (event) {
           var data = event.data
           if (!data || data.type !== 'orca-panel-action-result' || data.requestId !== requestId) return
+          clearTimeout(timer)
           window.removeEventListener('message', onResult)
-          statusEl.textContent = data.ok ? 'Opened.' : ('Failed: ' + (data.error || data.errorCode))
+          statusEl.textContent = data.ok === true ? 'Opened.' : ('Failed: ' + (data.error || data.errorCode || 'unknown'))
         }
         window.addEventListener('message', onResult)
+        timer = setTimeout(function () {
+          window.removeEventListener('message', onResult)
+          statusEl.textContent = 'No response from host.'
+        }, 5000)
         window.parent.postMessage({ type: 'orca-panel-action', requestId: requestId, action: 'workspace.openTab', params: { tabId: 'git-log' } }, '*')
         statusEl.textContent = 'Opening…'
       }

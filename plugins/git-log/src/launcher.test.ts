@@ -9,11 +9,13 @@ const html = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../l
 it('launcher 内联调用 workspace.openTab 且无外部引用', () => {
   expect(html).toContain("'workspace.openTab'")
   expect(html).toContain("tabId: 'git-log'")
-  // 处理 host 回执（成功/失败可见）
+  // 回执处理关键行为（字符串契约）：监听回执、按 requestId 关联、清理监听器
   expect(html).toContain('orca-panel-action-result')
-  // CSP：无外部 script/link/网络字体
-  expect(html).not.toMatch(/<script[^>]+\ssrc=/i)
-  expect(html).not.toMatch(/<link[^>]+\shref=/i)
+  expect(html).toContain('data.requestId !== requestId')
+  expect(html).toContain('window.removeEventListener')
+  // CSP：无外部 script/link/网络字体（正则允许单空格属性）
+  expect(html).not.toMatch(/<script[^>]*\ssrc=/i)
+  expect(html).not.toMatch(/<link[^>]*\shref=/i)
   expect(html).not.toMatch(/@import\s+url\(/i)
   expect(html).not.toMatch(/url\(\s*['"]?https?:/i)
 })
