@@ -23,8 +23,8 @@ IDEA VcsLog 风格的**独立主区提交图谱**，以**插件**形态交付：
 ## 遗留与增量归属（非静默缺口）
 - **spec §3 未落地项**（增量 1 有意简化）：工具条分支选择器、RefPanel 折叠、Enter 打开提交。行内 ref chips、详情区 date/message 正文、`displayId ?? id` 已在最终审查补齐。Date/Path filter chips 顺延增量 2（`GitHistoryItem` 不带文件路径，Path 无真实数据可过滤）。
 - **异步错误/加载态（M-2）**：fixture 恒不 reject，未加 try/catch；增量 2 接 `ChannelRepository` 前必补。
-- **manifest 命名**：本插件用 legacy `orca-plugin.json`（Rust dev discovery 有 legacy 回退，桌面加载可用）。与 phase3c updater 的规范名 `ade-plugin.json` **命名差异待合并时统一**（见下）。
-- **`build:git-log` 依赖 Node ≥ 22.6**（`--experimental-strip-types`）；仓库未固定 `engines.node`。
+- **manifest 命名**：已对齐 phase3c updater 的规范名 **`ade-plugin.json`**（rebase 入新 main 时统一；Rust dev discovery 同时接受 legacy `orca-plugin.json`，二者皆可加载）。
+- **构建 Node 版本**：`build:git-log` 已去掉 `--experimental-strip-types`，与 `build:updater` 同为纯 `node`（Node ≥ 22.18 默认启用类型擦除）。
 
 ## 与 phase3c 的合并协调（I-5）
 - `package.json` 的 `typecheck` 行、`vitest.config.ts` 的 `include`/alias 两侧都被改写 → **是必然文本冲突，非"行级可并存"**。合并顺序建议：先 phase3c（updater 的 `build:updater` + worker/ui 两串 tsc），本分支 rebase 后把 `typecheck` 拼接为：`tsc -p tsconfig.json && tsc -p plugins/updater/tsconfig.worker.json && tsc -p plugins/updater/tsconfig.ui.json && tsc -p plugins/git-log/tsconfig.json`；`include` 合并 `plugins/**`；`build:git-log` 与 `build:updater` 并列。
