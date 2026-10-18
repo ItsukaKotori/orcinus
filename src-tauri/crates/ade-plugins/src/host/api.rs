@@ -30,7 +30,9 @@ pub const SESSION_POST_PAYLOAD_MAX_BYTES: usize = 64 * 1024;
 pub const GIT_HISTORY_LIMIT_MAX: u64 = 200;
 pub const GIT_OID_MIN_CHARS: usize = 7;
 pub const GIT_OID_MAX_CHARS: usize = 40;
-pub const GIT_RESULT_MAX_BYTES: usize = 4 * 1024 * 1024;
+// Must stay under the worker NDJSON frame cap (worker::MAX_FRAME_BYTES = 1 MiB) so a
+// worker-hosted git.log fails closed as an error instead of a silent dropped frame.
+pub const GIT_RESULT_MAX_BYTES: usize = 768 * 1024;
 
 pub type Validator = fn(&Value) -> Result<Value, String>;
 
@@ -667,6 +669,9 @@ fn git_commit_files_params(value: &Value) -> Result<Value, String> {
             format!("must contain between {GIT_OID_MIN_CHARS} and {GIT_OID_MAX_CHARS} characters"),
         ));
     }
+    if !oid.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err(invalid("oid", "must be a hexadecimal commit id"));
+    }
     Ok(serde_json::json!({ "oid": oid }))
 }
 
@@ -792,6 +797,32 @@ mod tests {
         assert!(validate_result("session.post", json!({ "ok": false })).is_err());
         let huge = json!({ "blob": "x".repeat(WORKER_COMMAND_RESULT_MAX_BYTES + 1) });
         assert!(validate_result("worker.invokeCommand", huge).is_err());
+    }
+
+    #[test]
+    fn git_params_and_result_enforce_bounds() {
+        assert_eq!(
+            validate_params("git.log", json!({ "limit": 50 })).unwrap(),
+            json!({ "limit": 50 })
+        );
+        assert_eq!(validate_params("git.log", json!({})).unwrap(), json!({}));
+        assert!(validate_params("git.log", json!({ "limit": 201 })).is_err());
+        assert!(validate_params("git.log", json!({ "limit": 0 })).is_err());
+        assert!(validate_params("git.log", json!({ "limit": 1.5 })).is_err());
+        assert!(validate_params("git.log", json!({ "extra": 1 })).is_err());
+
+        assert_eq!(
+            validate_params("git.commitFiles", json!({ "oid": "a".repeat(40) })).unwrap(),
+            json!({ "oid": "a".repeat(40) })
+        );
+        assert!(validate_params("git.commitFiles", json!({ "oid": "abc" })).is_err());
+        assert!(validate_params("git.commitFiles", json!({ "oid": "z".repeat(40) })).is_err());
+        assert!(validate_params("git.commitFiles", json!({ "oid": "a".repeat(41) })).is_err());
+        assert!(validate_params("git.commitFiles", json!({})).is_err());
+
+        assert!(validate_result("git.log", json!({ "items": [] })).is_ok());
+        let huge = json!({ "items": "x".repeat(GIT_RESULT_MAX_BYTES + 16) });
+        assert!(validate_result("git.log", huge).is_err());
     }
 
     #[test]

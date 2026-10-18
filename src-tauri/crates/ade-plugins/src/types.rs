@@ -30,9 +30,9 @@ pub const PLUGIN_ID_MAX_LENGTH: usize = 64;
 const DANGEROUS_PLUGIN_NAMES: [&str; 3] = ["__proto__", "prototype", "constructor"];
 
 /// v1 capability model: a closed set of unscoped kinds plus the fork's
-/// `workspace:open-tab` extension and the `worker:call` / `session:push`
-/// plugin UI↔worker channel kinds (10 total). Declaration order is the
-/// canonical order produced by [`canonical_capability_set`].
+/// `workspace:open-tab` extension, the `worker:call` / `session:push` plugin
+/// UI↔worker channel kinds, and the read-only `git:read` kind (11 total).
+/// Declaration order is the canonical order produced by [`canonical_capability_set`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Capability {
     EventsSubscribe,

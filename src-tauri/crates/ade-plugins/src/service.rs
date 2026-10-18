@@ -3051,11 +3051,11 @@ mod tests {
             })
         }
 
-        fn git_log(&self, _limit: Option<u32>) -> Result<serde_json::Value, HostServiceError> {
+        fn git_log(&self, _worktree_id: Option<&str>, _limit: Option<u32>) -> Result<serde_json::Value, HostServiceError> {
             Ok(serde_json::json!({ "items": [], "hasIncomingChanges": false, "hasOutgoingChanges": false, "hasMore": false, "limit": 50 }))
         }
 
-        fn git_commit_files(&self, _oid: &str) -> Result<serde_json::Value, HostServiceError> {
+        fn git_commit_files(&self, _worktree_id: Option<&str>, _oid: &str) -> Result<serde_json::Value, HostServiceError> {
             Ok(serde_json::json!([]))
         }
 
