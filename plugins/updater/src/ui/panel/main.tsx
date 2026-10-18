@@ -1,6 +1,8 @@
 import { createRoot } from 'react-dom/client'
 import '../theme.css'
+import { createHostBridge } from '../bridge'
+import { PanelApp } from './App'
 
 createRoot(document.getElementById('root') as HTMLElement).render(
-  <main style={{ padding: 12 }}>Package Updater</main>
+  <PanelApp bridge={createHostBridge()} />
 )
