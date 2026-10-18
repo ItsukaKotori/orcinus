@@ -44,6 +44,12 @@ export type UpdaterState = {
 }
 
 export const MANAGERS_STORAGE_KEY = 'managers'
-export const LOG_FLUSH_INTERVAL_MS = 500
+/** State broadcast coalescing window. Budgeted against the host push cap
+ *  (`PANEL_PUSH_MAX_PER_WINDOW = 30` per token per 10s, shared by state+log):
+ *  ceil(10 / 0.6) ≈ 17 state pushes / 10s. */
+export const STATE_COALESCE_INTERVAL_MS = 600
+/** Log flush interval. ceil(10 / 1.2) ≈ 9 log pushes / 10s, leaving jitter
+ *  headroom under the shared 30-push host budget. */
+export const LOG_FLUSH_INTERVAL_MS = 1200
 export const MAX_LOG_LINE_CHARS = 4096
 export const MAX_LOG_CHUNK_BYTES = 48 * 1024

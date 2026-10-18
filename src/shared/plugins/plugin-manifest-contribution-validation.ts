@@ -9,6 +9,7 @@ type ContributionValidationManifest = {
   main?: string
   contributes: {
     panels: IdentifiedContribution[]
+    tabs: IdentifiedContribution[]
     commands: (IdentifiedContribution & { action?: string; context?: 'global' | 'worktree' })[]
     events: { on: string }[]
     languagePacks: { locale: string }[]
@@ -44,7 +45,7 @@ export function validatePluginManifestContributions(
   manifest: ContributionValidationManifest,
   ctx: RefinementCtx
 ): void {
-  for (const path of ['panels', 'commands'] as const) {
+  for (const path of ['panels', 'tabs', 'commands'] as const) {
     rejectDuplicateValues(
       manifest.contributes[path],
       (entry) => (entry as IdentifiedContribution).id,

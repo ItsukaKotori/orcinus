@@ -12,7 +12,8 @@ import {
   LOG_FLUSH_INTERVAL_MS,
   MANAGERS_STORAGE_KEY,
   MAX_LOG_CHUNK_BYTES,
-  MAX_LOG_LINE_CHARS
+  MAX_LOG_LINE_CHARS,
+  STATE_COALESCE_INTERVAL_MS
 } from '../shared/types'
 
 export type UpdaterDeps = {
@@ -62,7 +63,7 @@ export class Updater {
 
   constructor(deps: UpdaterDeps) {
     this.deps = deps
-    this.stateCoalesceMs = deps.stateCoalesceMs ?? 250
+    this.stateCoalesceMs = deps.stateCoalesceMs ?? STATE_COALESCE_INTERVAL_MS
     this.logFlushMs = deps.logFlushMs ?? LOG_FLUSH_INTERVAL_MS
   }
 
@@ -213,7 +214,9 @@ export class Updater {
     if (this.phase === 'failed') {
       this.error = active.map((adapter) => this.managerErrors.get(adapter.id)).filter(Boolean).join('; ')
     }
-    this.broadcastState()
+    // Terminal state must reach every session in the same round, regardless of
+    // where the coalescing window is (spec §3.4 push-budget review, I1).
+    this.flushStateNow()
   }
 
   private async runUpdate(): Promise<void> {
@@ -225,7 +228,7 @@ export class Updater {
     const pending = this.rows.filter((row) => row.state === 'pending')
     if (pending.length === 0) {
       this.phase = 'done'
-      this.broadcastState()
+      this.flushStateNow()
       this.running = null
       return
     }
@@ -285,7 +288,8 @@ export class Updater {
     this.summary = { updated, failed, skipped, elapsedMs: this.deps.now() - startedAt }
     this.phase = 'done'
     this.running = null
-    this.broadcastState()
+    // summary+done is the job's terminal state: flush it in this round.
+    this.flushStateNow()
     this.stopLogFlush()
   }
 
@@ -308,6 +312,17 @@ export class Updater {
     }
   }
 
+  /** Terminal-state escape hatch: cancels any pending coalesce timer and
+   *  broadcasts the current state synchronously. Used at job terminal points so
+   *  `done`/`failed`+summary never waits out (or gets dropped by) the window. */
+  private flushStateNow(): void {
+    if (this.stateTimer !== null) {
+      clearTimeout(this.stateTimer)
+      this.stateTimer = null
+    }
+    this.flushState()
+  }
+
   private flushState(): void {
     this.lastStateAt = this.deps.now()
     const state = this.buildState()
@@ -319,7 +334,12 @@ export class Updater {
   private pushLogLine(line: string): void {
     const bounded = line.length > MAX_LOG_LINE_CHARS ? line.slice(0, MAX_LOG_LINE_CHARS) : line
     this.logBuffer.push(bounded)
-    const bytes = this.logBuffer.reduce((total, entry) => total + entry.length + 1, 0)
+    // The host meters the serialized payload in bytes, so a UTF-8 byte count
+    // (not code units) is the only safe way to stay under MAX_LOG_CHUNK_BYTES.
+    const bytes = this.logBuffer.reduce(
+      (total, entry) => total + Buffer.byteLength(entry, 'utf8') + 1,
+      0
+    )
     if (this.logFlushMs === 0 || bytes >= MAX_LOG_CHUNK_BYTES || this.logBuffer.length >= 200) {
       this.flushLogs()
       return

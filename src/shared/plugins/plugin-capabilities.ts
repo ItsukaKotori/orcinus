@@ -9,8 +9,8 @@ import { z } from 'zod'
  *
  * v0 is a closed set of unscoped kinds so a typo (or a capability from a newer
  * Orca) fails manifest validation instead of silently granting nothing. The
- * fork adds `workspace:open-tab` (8 total); scoped kinds (net:fetch hosts,
- * process:exec globs) arrive in later phases.
+ * fork adds `workspace:open-tab`, `session:push`, and `worker:call` (10 total);
+ * scoped kinds (net:fetch hosts, process:exec globs) arrive in later phases.
  */
 
 export const PLUGIN_CAPABILITY_KINDS = [
