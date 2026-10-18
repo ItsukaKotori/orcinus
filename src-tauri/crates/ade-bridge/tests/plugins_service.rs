@@ -438,12 +438,26 @@ fn git_host_services(
     })
 }
 
-/// `git init` + two commits; returns `(head, parent)` oids.
+/// `git init` + two commits (config isolated from user/global/system); returns `(head, parent)` oids.
 fn init_git_repo(dir: &Path) -> (String, String) {
     let git = |args: &[&str]| -> String {
         let out = std::process::Command::new("git")
+            .env("GIT_CONFIG_GLOBAL", "/dev/null")
+            .env("GIT_CONFIG_SYSTEM", "/dev/null")
             .arg("-C")
             .arg(dir)
+            .args([
+                "-c",
+                "core.hooksPath=",
+                "-c",
+                "commit.gpgsign=false",
+                "-c",
+                "color.ui=false",
+                "-c",
+                "user.name=T",
+                "-c",
+                "user.email=t@example.com",
+            ])
             .args(args)
             .output()
             .expect("invoke git");
@@ -458,26 +472,10 @@ fn init_git_repo(dir: &Path) -> (String, String) {
     git(&["init", "-b", "main", "."]);
     fs::write(dir.join("a.txt"), "one\n").unwrap();
     git(&["add", "."]);
-    git(&[
-        "-c",
-        "user.name=T",
-        "-c",
-        "user.email=t@example.com",
-        "commit",
-        "-m",
-        "first",
-    ]);
+    git(&["commit", "-m", "first"]);
     fs::write(dir.join("a.txt"), "one\ntwo\n").unwrap();
     git(&["add", "."]);
-    git(&[
-        "-c",
-        "user.name=T",
-        "-c",
-        "user.email=t@example.com",
-        "commit",
-        "-m",
-        "second",
-    ]);
+    git(&["commit", "-m", "second"]);
     (git(&["rev-parse", "HEAD"]), git(&["rev-parse", "HEAD~1"]))
 }
 
@@ -485,7 +483,7 @@ fn init_git_repo(dir: &Path) -> (String, String) {
 fn git_log_reads_real_history_and_commit_files() {
     let root = tempfile::tempdir().unwrap();
     let repo = tempfile::tempdir().unwrap();
-    let (head, _parent) = init_git_repo(repo.path());
+    let (head, parent) = init_git_repo(repo.path());
     let worktrees = Arc::new(RepoWorktrees {
         path: repo.path().to_string_lossy().into_owned(),
     });
@@ -493,8 +491,22 @@ fn git_log_reads_real_history_and_commit_files() {
 
     let value = services.git_log(Some(WORKTREE), Some(50)).expect("git.log ok");
     assert_eq!(value["items"].as_array().map(|items| items.len()), Some(2));
-    assert!(value["items"][0].get("parentIds").is_some()); // camelCase contract
-    assert_eq!(value["currentRef"]["name"].as_str(), Some("main"));
+    assert_eq!(value["items"][0]["id"].as_str(), Some(head.as_str()));
+    assert_eq!(
+        value["items"][0]["parentIds"].as_array().map(|p| p.len()),
+        Some(1)
+    );
+    assert_eq!(value["items"][1]["id"].as_str(), Some(parent.as_str()));
+    assert_eq!(
+        value["items"][1]["parentIds"].as_array().map(|p| p.len()),
+        Some(0)
+    );
+    assert_eq!(value["currentRef"]["name"].as_str(), Some("main")); // camelCase contract
+    assert_eq!(value["hasMore"].as_bool(), Some(false));
+
+    // No explicit hint → falls back to the UI active worktree.
+    let fallback = services.git_log(None, None).expect("git.log fallback ok");
+    assert_eq!(fallback["items"].as_array().map(|items| items.len()), Some(2));
 
     let files = services
         .git_commit_files(Some(WORKTREE), &head)
@@ -520,7 +532,7 @@ fn git_log_requires_resolvable_worktree_path() {
         Arc::new(Mutex::new(Vec::new())),
     );
     let err = services.git_log(Some(WORKTREE), None).unwrap_err();
-    assert_eq!(err.code(), "no-active-worktree");
+    assert_eq!(err.code(), "unavailable");
 }
 
 #[test]

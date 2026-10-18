@@ -526,7 +526,7 @@ impl BridgePluginHostServices {
             .or_else(|| self.active_worktree_context().map(|context| context.worktree_id))
             .ok_or_else(|| HostServiceError::new("no-active-worktree", "no active worktree"))?;
         self.worktrees.path_for(&id).ok_or_else(|| {
-            HostServiceError::new("no-active-worktree", "worktree path is unavailable")
+            HostServiceError::new("unavailable", "worktree path is unavailable")
         })
     }
 }
@@ -556,9 +556,21 @@ impl PluginHostServices for BridgePluginHostServices {
         limit: Option<u32>,
     ) -> Result<serde_json::Value, HostServiceError> {
         let path = self.resolve_worktree_path(worktree_id)?;
-        let result = ade_git::history::history(&path, limit, None)
-            .map_err(|error| HostServiceError::new("not-a-git-repo", error.to_string()))?;
-        serde_json::to_value(result).map_err(|error| HostServiceError::new("internal", error.to_string()))
+        if !ade_git::is_inside_work_tree(&path) {
+            return Err(HostServiceError::new(
+                "not-a-git-repo",
+                "the active workspace is not a git repository",
+            ));
+        }
+        let result = ade_git::history::history(&path, limit, None).map_err(|error| {
+            // Detail stays host-side; the plugin only sees a stable message (no path).
+            eprintln!("[ade-bridge] git.log failed: {error}");
+            HostServiceError::new("not-a-git-repo", "git history is unavailable")
+        })?;
+        serde_json::to_value(result).map_err(|error| {
+            eprintln!("[ade-bridge] git.log serialize failed: {error}");
+            HostServiceError::new("unavailable", "git history is unavailable")
+        })
     }
 
     fn git_commit_files(
@@ -567,20 +579,31 @@ impl PluginHostServices for BridgePluginHostServices {
         oid: &str,
     ) -> Result<serde_json::Value, HostServiceError> {
         let path = self.resolve_worktree_path(worktree_id)?;
-        let cmp = ade_git::compare::commit_compare(&path, oid)
-            .map_err(|error| HostServiceError::new("not-a-git-repo", error.to_string()))?;
+        if !ade_git::is_inside_work_tree(&path) {
+            return Err(HostServiceError::new(
+                "not-a-git-repo",
+                "the active workspace is not a git repository",
+            ));
+        }
+        let cmp = ade_git::compare::commit_compare(&path, oid).map_err(|error| {
+            eprintln!("[ade-bridge] git.commitFiles failed: {error}");
+            HostServiceError::new("unknown-oid", "commit is unavailable")
+        })?;
         // commit_compare reports an unresolvable oid as Ok{status:"invalid-commit"},
-        // not Err, so surface it as a stable `unknown-oid` for the UI.
+        // not Err; surface it as a stable `unknown-oid` (and never leak the raw git text).
         match cmp.summary.status.as_str() {
-            "ready" => serde_json::to_value(cmp.entries)
-                .map_err(|error| HostServiceError::new("internal", error.to_string())),
-            "invalid-commit" => {
-                Err(HostServiceError::new("unknown-oid", format!("unknown commit: {oid}")))
+            "ready" => serde_json::to_value(cmp.entries).map_err(|error| {
+                eprintln!("[ade-bridge] git.commitFiles serialize failed: {error}");
+                HostServiceError::new("unavailable", "commit files are unavailable")
+            }),
+            "invalid-commit" => Err(HostServiceError::new("unknown-oid", "unknown commit")),
+            other => {
+                eprintln!("[ade-bridge] git.commitFiles status={other}");
+                Err(HostServiceError::new(
+                    "unavailable",
+                    "commit files are unavailable",
+                ))
             }
-            other => Err(HostServiceError::new(
-                "unavailable",
-                format!("git commit compare failed: {other}"),
-            )),
         }
     }
 
