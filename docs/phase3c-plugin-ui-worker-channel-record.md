@@ -151,3 +151,13 @@
 - host 侧会话枚举/广播推送（现由插件自记 token 解决；插件数量增长后可平台化）
 - 跨插件共享 UI kit 抽包（第二个数据驱动插件出现时）
 - updater 增强：单包选择、wanted/latest 双列、greedy cask、定时检查、系统通知、项目依赖、更多包管理器适配器（pipx/cargo/mas 等）、输出栏拖拽调宽、表格排序、失败行点击定位日志
+
+## 7. 终态全分支评审与 F1 修复波（追加）
+
+- 终态评审（范围 `e11d9cda..2c09d2b2`，24 提交）结论：**With fixes** —— 2 条 Important：I1 插件推送节流上限（最坏 6/s）超宿主预算（30/10s）且生产节流路径零测试、终态 state 推送可能被静默丢弃；I2 TS 共享 `plugin-manifest.ts` 的 zod 未知键剥离 `visibility`（计划缺项）。
+- F1 修复波（单次；提交 `7db4a651`）：
+  - I1：默认节流 `STATE_COALESCE_INTERVAL_MS=600` / `LOG_FLUSH_INTERVAL_MS=1200`（稳态 ≈26/10s < 30 预算）；新增 `flushStateNow()` 在三个作业终态点立即冲刷（终态必达）；日志批字节统计改 `Buffer.byteLength(utf8)+1`；新增 `jobs.throttle.test.ts`（真实默认值 + fake timers：coalescing/日志批/200 行即刷/字节触发/终态必达/10s 窗口 ≤30）。
+  - I2：`commandContributionSchema` 增 `visibility` 枚举（optional）；真实 manifest 解析测试（`plugins/updater/ade-plugin.json`：6 命令、snapshot/set-managers internal）暴露 schema 同缺 `contributes.tabs`（strict 拒绝）→ 伴随修复：schema 增 `tabs`（上限 64）、重复 id 校验、2 个渲染层 fixture 与 content-pack 默认期望补 `tabs: []`。
+  - Minor 5：`plugin-capabilities.ts` 注释 "(8 total)" → "(10 total)"。
+- F1 后复验：scoped re-review 全数 ADDRESSED、无新破坏；`pnpm test` **26952 passed / 51 skipped（3003 files）**（260.93s）、`pnpm typecheck` exit 0、`pnpm build:updater` exit 0 + 单文件断言通过；Rust 面未动（四组门禁中 Rust/bindings 两组仍以 §3 为准）。
+- 残余（评为可后续）：日志批字节统计未含 JSON 包装开销（改善方向，未消除）；TS schema 未镜像 Rust 的 `internal+action` 组合拒绝；计划历史文本仍含 `LOG_FLUSH_INTERVAL_MS=500` 与 T17 panel 测试旧断言（以本记录 §5.2 为准）。
