@@ -625,9 +625,10 @@ fn session_post_reaches_services_only_from_workers() {
         [("t".repeat(32), Some("log".to_string()), json!({ "line": "x" }))]
     );
 
+    let session_token = "t".repeat(32);
     let mut panel_ctx = context(&services, None);
     panel_ctx.via_panel = true;
-    panel_ctx.session_token = Some("t".repeat(32).as_str());
+    panel_ctx.session_token = Some(session_token.as_str());
     let (code, _) = expect_err(execute(
         "session.post",
         json!({ "sessionToken": "t".repeat(32), "payload": 1 }),
