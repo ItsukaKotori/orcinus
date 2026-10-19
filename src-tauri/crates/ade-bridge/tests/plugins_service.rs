@@ -18,7 +18,7 @@ use ade_bridge::plugins_service::{
 };
 use ade_fs::FsService;
 use ade_plugins::consent::ConsentState;
-use ade_plugins::host::services::{PluginHostServices, WorktreeContext};
+use ade_plugins::host::services::{GitLogQuery, PluginHostServices, WorktreeContext};
 use ade_plugins::secrets::{SecretStore, SECRET_VALUE_MAX_BYTES};
 use ade_plugins::service::{
     OpenTabRequest, PanelPushRequest, PluginService, ServiceConfig, ServiceEventSink,
@@ -489,7 +489,9 @@ fn git_log_reads_real_history_and_commit_files() {
     });
     let services = git_host_services(root.path(), ui_store(root.path(), Some(WORKTREE)), worktrees);
 
-    let value = services.git_log(Some(WORKTREE), Some(50)).expect("git.log ok");
+    let value = services
+        .git_log(Some(WORKTREE), &GitLogQuery { limit: 50, ..Default::default() })
+        .expect("git.log ok");
     assert_eq!(value["items"].as_array().map(|items| items.len()), Some(2));
     assert_eq!(value["items"][0]["id"].as_str(), Some(head.as_str()));
     assert_eq!(
@@ -505,7 +507,7 @@ fn git_log_reads_real_history_and_commit_files() {
     assert_eq!(value["hasMore"].as_bool(), Some(false));
 
     // No explicit hint → falls back to the UI active worktree.
-    let fallback = services.git_log(None, None).expect("git.log fallback ok");
+    let fallback = services.git_log(None, &GitLogQuery::default()).expect("git.log fallback ok");
     assert_eq!(fallback["items"].as_array().map(|items| items.len()), Some(2));
 
     let files = services
@@ -531,7 +533,7 @@ fn git_log_requires_resolvable_worktree_path() {
         Vec::new(),
         Arc::new(Mutex::new(Vec::new())),
     );
-    let err = services.git_log(Some(WORKTREE), None).unwrap_err();
+    let err = services.git_log(Some(WORKTREE), &GitLogQuery::default()).unwrap_err();
     assert_eq!(err.code(), "unavailable");
 }
 
@@ -543,7 +545,7 @@ fn git_log_rejects_non_git_workspace() {
         path: not_a_repo.path().to_string_lossy().into_owned(),
     });
     let services = git_host_services(root.path(), ui_store(root.path(), Some(WORKTREE)), worktrees);
-    let err = services.git_log(Some(WORKTREE), None).unwrap_err();
+    let err = services.git_log(Some(WORKTREE), &GitLogQuery::default()).unwrap_err();
     assert_eq!(err.code(), "not-a-git-repo");
 }
 

@@ -213,6 +213,7 @@ fn dispatch(
         "workspace.readContext" => read_context(ctx),
         "workspace.openTab" => open_tab(params, ctx),
         "git.log" => git_log(params, ctx),
+        "git.refs" => git_refs(params, ctx),
         "git.commitFiles" => git_commit_files(params, ctx),
         "terminal.sendText" => send_text(params, ctx),
         "notifications.show" => show_notification(params, ctx),
@@ -319,8 +320,28 @@ fn open_tab(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerE
 
 fn git_log(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
     let worktree_id = resolve_worktree(ctx);
-    let limit = params.get("limit").and_then(Value::as_u64).map(|n| n as u32);
-    Ok(ctx.services.git_log(worktree_id.as_deref(), limit)?)
+    let opt = |key: &str| {
+        params
+            .get(key)
+            .and_then(Value::as_str)
+            .map(str::to_string)
+    };
+    let query = crate::host::services::GitLogQuery {
+        refs: opt("refs"),
+        author: opt("author"),
+        since: opt("since"),
+        until: opt("until"),
+        grep: opt("grep"),
+        path: opt("path"),
+        skip: params.get("skip").and_then(Value::as_u64).unwrap_or(0) as u32,
+        limit: params.get("limit").and_then(Value::as_u64).unwrap_or(100) as u32,
+    };
+    Ok(ctx.services.git_log(worktree_id.as_deref(), &query)?)
+}
+
+fn git_refs(_params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
+    let worktree_id = resolve_worktree(ctx);
+    Ok(ctx.services.git_refs(worktree_id.as_deref())?)
 }
 
 fn git_commit_files(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
@@ -728,8 +749,12 @@ mod tests {
             self.context.clone()
         }
 
-        fn git_log(&self, _worktree_id: Option<&str>, _limit: Option<u32>) -> Result<serde_json::Value, HostServiceError> {
+        fn git_log(&self, _worktree_id: Option<&str>, _query: &crate::host::services::GitLogQuery) -> Result<serde_json::Value, HostServiceError> {
             Ok(serde_json::json!({ "items": [], "hasIncomingChanges": false, "hasOutgoingChanges": false, "hasMore": false, "limit": 50 }))
+        }
+
+        fn git_refs(&self, _worktree_id: Option<&str>) -> Result<serde_json::Value, HostServiceError> {
+            Ok(serde_json::json!([]))
         }
 
         fn git_commit_files(&self, _worktree_id: Option<&str>, _oid: &str) -> Result<serde_json::Value, HostServiceError> {
@@ -1003,6 +1028,20 @@ mod tests {
         // Non-hex oid is rejected at param validation, before services.
         let (code, _) = expect_err(execute("git.commitFiles", json!({ "oid": "z".repeat(40) }), &panel_ctx));
         assert_eq!(code, INVALID_PARAMS);
+    }
+
+    #[test]
+    fn git_refs_panel_callable_and_capability_gated() {
+        let services = services_with_context();
+        let mut panel_ctx = context(&services, None);
+        panel_ctx.via_panel = true;
+        let value = expect_ok(execute("git.refs", json!({}), &panel_ctx));
+        assert!(value.is_array());
+        let narrow = [Capability::Storage];
+        let mut denied = context(&services, None);
+        denied.granted = Some(&narrow);
+        let (code, _) = expect_err(execute("git.refs", json!({}), &denied));
+        assert_eq!(code, gate::CAPABILITY_DENIED);
     }
 
     #[test]
