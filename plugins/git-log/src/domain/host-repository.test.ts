@@ -2,14 +2,17 @@
 import { afterEach, expect, it, vi } from 'vitest'
 import { callHost } from '../ui/host-bridge'
 import { HostRepository } from './host-repository'
+import { PAGE_SIZE } from './query'
 
 const originalParent = window.parent
+const requests: { action: string; params: unknown }[] = []
 
 function stubParentReply(reply: Record<string, unknown>): void {
   Object.defineProperty(window, 'parent', {
     configurable: true,
     value: {
-      postMessage: (msg: { requestId: string }): void => {
+      postMessage: (msg: { requestId: string; action: string; params: unknown }): void => {
+        requests.push({ action: msg.action, params: msg.params })
         setTimeout(() => {
           window.dispatchEvent(
             new MessageEvent('message', {
@@ -26,6 +29,7 @@ const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 
 
 afterEach(() => {
   Object.defineProperty(window, 'parent', { configurable: true, value: originalParent })
+  requests.length = 0
   vi.restoreAllMocks()
 })
 
@@ -58,14 +62,26 @@ it('HostRepository.loadRefs posts git.refs and returns refs', async () => {
   await flush()
   const refs = await promise
   expect(refs[0]?.name).toBe('main')
+  // Discriminating: the outgoing action must be git.refs (not git.log).
+  expect(requests[0]?.action).toBe('git.refs')
 })
 
-it('HostRepository.loadSnapshot validates the parsed result and forwards filter/offset', async () => {
+it('HostRepository.loadSnapshot forwards filter/offset and validates the result', async () => {
   stubParentReply({
     ok: true,
-    value: { items: [], hasIncomingChanges: false, hasOutgoingChanges: false, hasMore: false, limit: 100 },
+    value: { items: [], hasIncomingChanges: false, hasOutgoingChanges: false, hasMore: false, limit: PAGE_SIZE },
   })
   const promise = new HostRepository().loadSnapshot({ refs: 'all', author: 'Lin' }, 100)
   await flush()
   await expect(promise).resolves.toMatchObject({ items: [], hasMore: false })
+  // Discriminating: filter + offset actually reach the host call.
+  expect(requests[0]?.action).toBe('git.log')
+  expect(requests[0]?.params).toEqual({ refs: 'all', author: 'Lin', skip: 100, limit: PAGE_SIZE })
+})
+
+it('HostRepository.loadSnapshot rejects a malformed host result', async () => {
+  stubParentReply({ ok: true, value: { items: [] } }) // missing required booleans/limit
+  const promise = new HostRepository().loadSnapshot()
+  await flush()
+  await expect(promise).rejects.toThrow()
 })

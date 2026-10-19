@@ -13,20 +13,24 @@ const page = (items: GitHistoryItem[], hasMore = false): GitHistoryResult => ({
 
 describe('query', () => {
   it('logParams always sets skip/limit and omits empty filter fields', () => {
-    expect(logParams({}, 0)).toEqual({ skip: 0, limit: PAGE_SIZE })
-    const filter: GitLogFilter = { refs: 'all', author: 'Lin', path: 'src/a.ts' }
-    expect(logParams(filter, 100)).toEqual({
-      skip: 100,
-      limit: PAGE_SIZE,
+    // toStrictEqual: no stray `undefined` keys when the filter is empty.
+    expect(logParams({}, 0)).toStrictEqual({ skip: 0, limit: PAGE_SIZE })
+    const filter: GitLogFilter = {
       refs: 'all',
       author: 'Lin',
+      since: '2026-01-01',
+      until: '2026-02-01',
+      grep: 'fix',
       path: 'src/a.ts',
-    })
+    }
+    expect(logParams(filter, 100)).toStrictEqual({ skip: 100, limit: PAGE_SIZE, ...filter })
   })
 
   it('mergePages appends a page, de-dupes by id, keeps the latest metadata', () => {
-    const merged = mergePages([item('a'), item('b')], page([item('b'), item('c')], true))
+    const next = page([item('b'), item('c')], true)
+    const merged = mergePages([item('a'), item('b')], next)
     expect(merged.items.map((i) => i.id)).toEqual(['a', 'b', 'c'])
     expect(merged.hasMore).toBe(true)
+    expect(merged.limit).toBe(next.limit)
   })
 })
