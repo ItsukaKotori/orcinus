@@ -26,6 +26,9 @@ const PANEL_ACTION_ERROR_CODES = [
   'invalid_params',
   'rate_limited',
   'unavailable',
+  'no-active-worktree',
+  'not-a-git-repo',
+  'unknown-oid',
   'action_failed'
 ] as const satisfies readonly PluginPanelActionErrorCode[]
 

@@ -164,7 +164,28 @@ export const PLUGIN_HOST_API_V0: readonly PluginHostMethodSpec[] = [
     capability: 'git:read',
     mutation: false,
     panel: true,
-    params: z.object({ limit: z.number().int().min(1).max(200).optional() }).strict(),
+    params: z
+      .object({
+        refs: z.union([z.literal('head'), z.literal('all'), z.string().min(1).max(255)]).optional(),
+        author: z.string().min(1).max(200).optional(),
+        since: z.string().min(1).max(64).optional(),
+        until: z.string().min(1).max(64).optional(),
+        grep: z.string().min(1).max(200).optional(),
+        path: z.string().min(1).max(1024).optional(),
+        skip: z.number().int().min(0).max(1_000_000).optional(),
+        limit: z.number().int().min(1).max(200).optional()
+      })
+      .strict(),
+    result: pluginJsonValueSchema
+  }),
+  spec({
+    name: 'git.refs',
+    since: '1.1',
+    scope: 'active-worktree',
+    capability: 'git:read',
+    mutation: false,
+    panel: true,
+    params: z.object({}).strict(),
     result: pluginJsonValueSchema
   }),
   spec({
