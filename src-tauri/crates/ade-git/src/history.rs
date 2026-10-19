@@ -280,12 +280,12 @@ pub fn history_with(
         GitHistoryRefs::All => args.push("--all".into()),
         GitHistoryRefs::Rev(rev) => match resolve_commit(worktree_path, rev) {
             Some(oid) => args.push(oid),
-            None => return Ok(empty(limit)),
+            None => return Err(CoreError::NotFound(format!("unknown revision: {rev}"))),
         },
     }
     if let Some(path) = &query.path {
         if path.is_empty() || path.starts_with('-') {
-            return Ok(empty(limit));
+            return Err(CoreError::InvalidInput("invalid path".to_string()));
         }
         args.push("--".into());
         args.push(path.clone());
@@ -339,6 +339,10 @@ pub fn list_refs(worktree_path: &str) -> Result<Vec<GitHistoryItemRef>, CoreErro
             continue;
         };
         if full.is_empty() || oid.is_empty() {
+            continue;
+        }
+        // Skip the remote HEAD symref (e.g. refs/remotes/origin/HEAD) — noise for a branch picker.
+        if full.starts_with("refs/remotes/") && full.ends_with("/HEAD") {
             continue;
         }
         refs.push(git_history_ref_from_full_name(Some(full), full, oid));

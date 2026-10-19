@@ -5,6 +5,9 @@ fn git(dir: &str, extra: &[&str], args: &[&str]) -> bool {
     Command::new("git")
         .arg("-C")
         .arg(dir)
+        .env("GIT_CONFIG_GLOBAL", "/dev/null")
+        .env("GIT_CONFIG_SYSTEM", "/dev/null")
+        .args(["-c", "commit.gpgsign=false", "-c", "core.hooksPath=", "-c", "init.templateDir="])
         .args(extra)
         .args(args)
         .status()
@@ -99,4 +102,16 @@ fn list_refs_categorizes_branches() {
     assert!(has("main"));
     assert!(has("feature"));
     assert!(refs.iter().any(|r| format!("{:?}", r.category).contains("Branches")));
+}
+
+#[test]
+fn rev_scope_unknown_revision_is_error() {
+    let d = repo();
+    let p = d.path().to_str().unwrap();
+    let q = GitHistoryQuery {
+        refs: GitHistoryRefs::Rev("does-not-exist".into()),
+        limit: 50,
+        ..Default::default()
+    };
+    assert!(history_with(p, &q).is_err());
 }
