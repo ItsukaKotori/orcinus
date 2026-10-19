@@ -334,7 +334,11 @@ fn git_log(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerEr
         grep: opt("grep"),
         path: opt("path"),
         skip: params.get("skip").and_then(Value::as_u64).unwrap_or(0) as u32,
-        limit: params.get("limit").and_then(Value::as_u64).unwrap_or(100) as u32,
+        limit: params
+            .get("limit")
+            .and_then(Value::as_u64)
+            .unwrap_or(crate::host::services::GIT_LOG_DEFAULT_LIMIT as u64)
+            as u32,
     };
     Ok(ctx.services.git_log(worktree_id.as_deref(), &query)?)
 }

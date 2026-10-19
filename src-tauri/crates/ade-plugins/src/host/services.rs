@@ -19,6 +19,10 @@ pub struct WorktreeContext {
     pub display_name: String,
 }
 
+/// Default `git.log` page size for the host layer. Chosen below `ade_git`'s
+/// `GIT_HISTORY_MAX_LIMIT` (200) to stay well under the host result budget.
+pub const GIT_LOG_DEFAULT_LIMIT: u32 = 100;
+
 /// Validated `git.log` query passed to the host service layer (ade-git-free).
 #[derive(Clone, Debug)]
 pub struct GitLogQuery {
@@ -42,7 +46,7 @@ impl Default for GitLogQuery {
             grep: None,
             path: None,
             skip: 0,
-            limit: 100,
+            limit: GIT_LOG_DEFAULT_LIMIT,
         }
     }
 }
