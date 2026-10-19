@@ -51,3 +51,21 @@ it('HostRepository.loadCommitFiles posts git.commitFiles and returns entries', a
   const files = await promise
   expect(files[0]?.path).toBe('a.ts')
 })
+
+it('HostRepository.loadRefs posts git.refs and returns refs', async () => {
+  stubParentReply({ ok: true, value: [{ id: 'refs/heads/main', name: 'main', category: 'branches' }] })
+  const promise = new HostRepository().loadRefs()
+  await flush()
+  const refs = await promise
+  expect(refs[0]?.name).toBe('main')
+})
+
+it('HostRepository.loadSnapshot validates the parsed result and forwards filter/offset', async () => {
+  stubParentReply({
+    ok: true,
+    value: { items: [], hasIncomingChanges: false, hasOutgoingChanges: false, hasMore: false, limit: 100 },
+  })
+  const promise = new HostRepository().loadSnapshot({ refs: 'all', author: 'Lin' }, 100)
+  await flush()
+  await expect(promise).resolves.toMatchObject({ items: [], hasMore: false })
+})

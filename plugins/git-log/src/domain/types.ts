@@ -1,11 +1,17 @@
 import { z } from 'zod'
-import type { GitHistoryResult } from '@shared/git-history-types'
+import type { GitHistoryItemRef, GitHistoryResult } from '@shared/git-history-types'
 import type { GitBranchChangeEntry } from '@shared/git-diff-compare-types'
+import type { GitLogFilter } from './query'
 
 export type GitLogSnapshot = GitHistoryResult
 
 export interface GitLogRepository {
-  loadSnapshot(): Promise<GitLogSnapshot>
+  /** Loads a page of history for `filter`, starting at commit offset `skip`.
+   *  Both args optional so a first load (`loadSnapshot()`) yields the default
+   *  HEAD page (increment 2a behaviour). */
+  loadSnapshot(filter?: GitLogFilter, skip?: number): Promise<GitLogSnapshot>
+  /** Lists branch / remote / tag refs for the branch selector (host `git.refs`). */
+  loadRefs(): Promise<GitHistoryItemRef[]>
   loadCommitFiles(oid: string): Promise<GitBranchChangeEntry[]>
 }
 
@@ -64,3 +70,5 @@ export const gitCommitFilesSchema = z.array(
     removed: z.number().optional()
   })
 )
+/** Host `git.refs` result: the same ref shape the log decorations use. */
+export const gitRefsSchema = z.array(refSchema)
