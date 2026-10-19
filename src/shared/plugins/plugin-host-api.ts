@@ -166,6 +166,7 @@ export const PLUGIN_HOST_API_V0: readonly PluginHostMethodSpec[] = [
     panel: true,
     params: z
       .object({
+        // head|all 为语义保留字；其余按 rev 交给后端 resolve_commit 校验。
         refs: z.union([z.literal('head'), z.literal('all'), z.string().min(1).max(255)]).optional(),
         author: z.string().min(1).max(200).optional(),
         since: z.string().min(1).max(64).optional(),
@@ -185,7 +186,7 @@ export const PLUGIN_HOST_API_V0: readonly PluginHostMethodSpec[] = [
     capability: 'git:read',
     mutation: false,
     panel: true,
-    params: z.object({}).strict(),
+    params: z.object({}).strict().optional(),
     result: pluginJsonValueSchema
   }),
   spec({
