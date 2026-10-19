@@ -21,4 +21,17 @@ describe('git:read host surface', () => {
     expect(m!.params.safeParse({ oid: 'abc' }).success).toBe(false)
     expect(m!.params.safeParse({ oid: 'a'.repeat(40) }).success).toBe(true)
   })
+  it('git.log 接受 query 字段并拒非法', () => {
+    const m = byName('git.log')!
+    expect(m.params.safeParse({ refs: 'all', author: 'Lin', since: '2026-01-01', until: '2026-12-31', grep: 'fix', path: 'src/a.ts', skip: 0, limit: 100 }).success).toBe(true)
+    expect(m.params.safeParse({ refs: 'refs/heads/feature' }).success).toBe(true)
+    expect(m.params.safeParse({ skip: -1 }).success).toBe(false)
+    expect(m.params.safeParse({ nope: 1 }).success).toBe(false)
+  })
+  it('git.refs 存在、无参、panel-callable、capability=git:read', () => {
+    const m = byName('git.refs')
+    expect(m).toMatchObject({ panel: true, capability: 'git:read', mutation: false, scope: 'active-worktree' })
+    expect(m!.params.safeParse({}).success).toBe(true)
+    expect(m!.params.safeParse({ extra: 1 }).success).toBe(false)
+  })
 })

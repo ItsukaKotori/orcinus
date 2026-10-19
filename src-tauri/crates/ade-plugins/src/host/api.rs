@@ -45,7 +45,7 @@ pub struct MethodSpec {
     pub result: Validator,
 }
 
-static SPECS: [MethodSpec; 18] = [
+static SPECS: [MethodSpec; 19] = [
     MethodSpec {
         name: "workspace.readContext",
         capability: Capability::WorkspaceRead,
@@ -68,6 +68,14 @@ static SPECS: [MethodSpec; 18] = [
         mutation: false,
         panel_callable: true,
         params: git_log_params,
+        result: git_result,
+    },
+    MethodSpec {
+        name: "git.refs",
+        capability: Capability::GitRead,
+        mutation: false,
+        panel_callable: true,
+        params: empty_object_params,
         result: git_result,
     },
     MethodSpec {
@@ -192,7 +200,7 @@ static SPECS: [MethodSpec; 18] = [
     },
 ];
 
-pub fn specs() -> &'static [MethodSpec; 18] {
+pub fn specs() -> &'static [MethodSpec; 19] {
     &SPECS
 }
 
@@ -635,26 +643,77 @@ fn open_tab_result(value: &Value) -> Result<Value, String> {
 
 fn git_log_params(value: &Value) -> Result<Value, String> {
     let obj = require_object(value, "(root)")?;
-    reject_extra_keys(obj, &["limit"], "(root)")?;
-    let limit = match obj.get("limit") {
-        None | Some(Value::Null) => None,
-        Some(Value::Number(number)) => {
-            let value = number
-                .as_u64()
-                .ok_or_else(|| invalid("limit", "expected a positive integer"))?;
-            if value < 1 || value > GIT_HISTORY_LIMIT_MAX {
-                return Err(invalid(
-                    "limit",
-                    format!("must be between 1 and {GIT_HISTORY_LIMIT_MAX}"),
-                ));
-            }
-            Some(value as u32)
-        }
-        Some(_) => return Err(invalid("limit", "expected a positive integer")),
-    };
+    reject_extra_keys(
+        obj,
+        &[
+            "refs", "author", "since", "until", "grep", "path", "skip", "limit",
+        ],
+        "(root)",
+    )?;
     let mut normalized = Map::new();
-    if let Some(limit) = limit {
-        normalized.insert("limit".to_string(), Value::from(limit));
+    if let Some(rev) = optional_string(obj, "refs")? {
+        if rev.is_empty() || rev.starts_with('-') {
+            return Err(invalid("refs", "expected head, all, or a revision"));
+        }
+        max_utf16(rev, 255, "refs")?;
+        normalized.insert("refs".to_string(), Value::String(rev.to_string()));
+    }
+    for (key, max) in [
+        ("author", 200usize),
+        ("grep", 200),
+        ("since", 64),
+        ("until", 64),
+    ] {
+        if let Some(v) = optional_string(obj, key)? {
+            if v.is_empty() {
+                return Err(invalid(key, "must contain at least 1 character"));
+            }
+            max_utf16(v, max, key)?;
+            normalized.insert(key.to_string(), Value::String(v.to_string()));
+        }
+    }
+    if let Some(path) = optional_string(obj, "path")? {
+        if path.is_empty() || path.starts_with('-') {
+            return Err(invalid("path", "invalid path"));
+        }
+        max_utf16(path, 1024, "path")?;
+        normalized.insert("path".to_string(), Value::String(path.to_string()));
+    }
+    if let Some(skip) = obj.get("skip") {
+        match skip {
+            Value::Null => {}
+            Value::Number(number) => {
+                let value = number
+                    .as_u64()
+                    .ok_or_else(|| invalid("skip", "expected a non-negative integer"))?;
+                if value > 1_000_000 {
+                    return Err(invalid("skip", "out of range"));
+                }
+                normalized.insert("skip".to_string(), Value::from(value as u32));
+            }
+            _ => return Err(invalid("skip", "expected a non-negative integer")),
+        }
+    }
+    if let Some(limit) = obj.get("limit") {
+        let limit = match limit {
+            Value::Null => None,
+            Value::Number(number) => {
+                let value = number
+                    .as_u64()
+                    .ok_or_else(|| invalid("limit", "expected a positive integer"))?;
+                if value < 1 || value > GIT_HISTORY_LIMIT_MAX {
+                    return Err(invalid(
+                        "limit",
+                        format!("must be between 1 and {GIT_HISTORY_LIMIT_MAX}"),
+                    ));
+                }
+                Some(value as u32)
+            }
+            _ => return Err(invalid("limit", "expected a positive integer")),
+        };
+        if let Some(limit) = limit {
+            normalized.insert("limit".to_string(), Value::from(limit));
+        }
     }
     Ok(Value::Object(normalized))
 }
@@ -702,8 +761,8 @@ mod tests {
     }
 
     #[test]
-    fn spec_table_has_eighteen_methods_with_expected_metadata() {
-        assert_eq!(specs().len(), 18);
+    fn spec_table_has_nineteen_methods_with_expected_metadata() {
+        assert_eq!(specs().len(), 19);
         let names: Vec<&str> = specs().iter().map(|entry| entry.name).collect();
         assert_eq!(
             names,
@@ -711,6 +770,7 @@ mod tests {
                 "workspace.readContext",
                 "workspace.openTab",
                 "git.log",
+                "git.refs",
                 "git.commitFiles",
                 "worker.invokeCommand",
                 "terminal.sendText",
@@ -739,6 +799,7 @@ mod tests {
                 "workspace.readContext",
                 "workspace.openTab",
                 "git.log",
+                "git.refs",
                 "git.commitFiles",
                 "worker.invokeCommand",
                 "terminal.sendText",
@@ -748,6 +809,9 @@ mod tests {
         assert_eq!(spec("worker.invokeCommand").unwrap().capability, Capability::WorkerCall);
         assert_eq!(spec("session.post").unwrap().capability, Capability::SessionPush);
         assert_eq!(spec("git.log").unwrap().capability, Capability::GitRead);
+        assert_eq!(spec("git.refs").unwrap().capability, Capability::GitRead);
+        assert!(spec("git.refs").unwrap().panel_callable);
+        assert!(!spec("git.refs").unwrap().mutation);
         assert_eq!(spec("git.commitFiles").unwrap().capability, Capability::GitRead);
         assert!(!spec("git.log").unwrap().mutation);
         assert!(!spec("git.commitFiles").unwrap().mutation);
@@ -823,6 +887,20 @@ mod tests {
         assert!(validate_result("git.log", json!({ "items": [] })).is_ok());
         let huge = json!({ "items": "x".repeat(GIT_RESULT_MAX_BYTES + 16) });
         assert!(validate_result("git.log", huge).is_err());
+    }
+
+    #[test]
+    fn git_log_accepts_query_and_rejects_bad_refs_path() {
+        assert!(validate_params(
+            "git.log",
+            json!({ "refs": "all", "author": "L", "skip": 5, "limit": 100 })
+        )
+        .is_ok());
+        assert!(validate_params("git.log", json!({ "refs": "-x" })).is_err());
+        assert!(validate_params("git.log", json!({ "path": "-rf" })).is_err());
+        assert!(validate_params("git.log", json!({ "skip": -1 })).is_err());
+        assert!(validate_params("git.log", json!({ "nope": 1 })).is_err());
+        assert_eq!(validate_params("git.refs", json!({})).unwrap(), json!({}));
     }
 
     #[test]

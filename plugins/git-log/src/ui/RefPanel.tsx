@@ -6,13 +6,35 @@ export function groupRefs(refs: GitHistoryItemRef[]): Record<string, GitHistoryI
   return out
 }
 
-type Props = { refs: GitHistoryItemRef[]; activeRef: string | null; onPick: (id: string | null) => void }
+type Props = {
+  refs: GitHistoryItemRef[]
+  /** Current backend range: undefined = HEAD, 'all' = every ref, else a revision name. */
+  activeName: 'head' | 'all' | (string & {}) | null | undefined
+  onPickName: (name: 'head' | 'all' | (string & {}) | undefined) => void
+}
 
-export function RefPanel({ refs, activeRef, onPick }: Props): React.JSX.Element {
+export function RefPanel({ refs, activeName, onPickName }: Props): React.JSX.Element {
   const groups = groupRefs(refs)
   const order = ['branches', 'remote branches', 'tags'] as const
+  const current = activeName == null || activeName === 'head'
   return (
     <div className="w-44 shrink-0 overflow-auto border-r border-border p-2 text-xs">
+      <div className="mb-2 flex gap-1">
+        <button
+          type="button"
+          onClick={() => onPickName(undefined)}
+          className={`flex-1 rounded px-1.5 py-0.5 ${current ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent/40'}`}
+        >
+          Current
+        </button>
+        <button
+          type="button"
+          onClick={() => onPickName('all')}
+          className={`flex-1 rounded px-1.5 py-0.5 ${activeName === 'all' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent/40'}`}
+        >
+          All
+        </button>
+      </div>
       {order.map((cat) => (groups[cat]?.length ? (
         <div key={cat} className="mb-2">
           <div className="mb-1 uppercase tracking-wide text-muted-foreground">{cat}</div>
@@ -20,8 +42,8 @@ export function RefPanel({ refs, activeRef, onPick }: Props): React.JSX.Element 
             <button
               key={r.id}
               type="button"
-              onClick={() => onPick(activeRef === r.id ? null : r.id)}
-              className={`block w-full truncate rounded px-1.5 py-0.5 text-left ${activeRef === r.id ? 'bg-accent text-foreground' : 'hover:bg-accent/40 text-muted-foreground'}`}
+              onClick={() => onPickName(activeName === r.name ? undefined : r.name)}
+              className={`block w-full truncate rounded px-1.5 py-0.5 text-left ${activeName === r.name ? 'bg-accent text-foreground' : 'hover:bg-accent/40 text-muted-foreground'}`}
             >
               {r.name}
             </button>

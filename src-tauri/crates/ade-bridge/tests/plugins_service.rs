@@ -18,7 +18,7 @@ use ade_bridge::plugins_service::{
 };
 use ade_fs::FsService;
 use ade_plugins::consent::ConsentState;
-use ade_plugins::host::services::{PluginHostServices, WorktreeContext};
+use ade_plugins::host::services::{GitLogQuery, PluginHostServices, WorktreeContext};
 use ade_plugins::secrets::{SecretStore, SECRET_VALUE_MAX_BYTES};
 use ade_plugins::service::{
     OpenTabRequest, PanelPushRequest, PluginService, ServiceConfig, ServiceEventSink,
@@ -489,7 +489,9 @@ fn git_log_reads_real_history_and_commit_files() {
     });
     let services = git_host_services(root.path(), ui_store(root.path(), Some(WORKTREE)), worktrees);
 
-    let value = services.git_log(Some(WORKTREE), Some(50)).expect("git.log ok");
+    let value = services
+        .git_log(Some(WORKTREE), &GitLogQuery { limit: 50, ..Default::default() })
+        .expect("git.log ok");
     assert_eq!(value["items"].as_array().map(|items| items.len()), Some(2));
     assert_eq!(value["items"][0]["id"].as_str(), Some(head.as_str()));
     assert_eq!(
@@ -505,7 +507,7 @@ fn git_log_reads_real_history_and_commit_files() {
     assert_eq!(value["hasMore"].as_bool(), Some(false));
 
     // No explicit hint → falls back to the UI active worktree.
-    let fallback = services.git_log(None, None).expect("git.log fallback ok");
+    let fallback = services.git_log(None, &GitLogQuery::default()).expect("git.log fallback ok");
     assert_eq!(fallback["items"].as_array().map(|items| items.len()), Some(2));
 
     let files = services
@@ -521,6 +523,92 @@ fn git_log_reads_real_history_and_commit_files() {
 }
 
 #[test]
+fn git_refs_and_query_scopes_bridge_through() {
+    let root = tempfile::tempdir().unwrap();
+    let repo = tempfile::tempdir().unwrap();
+    let (head, _) = init_git_repo(repo.path());
+    let worktrees = Arc::new(RepoWorktrees {
+        path: repo.path().to_string_lossy().into_owned(),
+    });
+    let services = git_host_services(root.path(), ui_store(root.path(), Some(WORKTREE)), worktrees);
+
+    // git.refs lists the checked-out branch.
+    let refs = services.git_refs(Some(WORKTREE)).expect("git.refs ok");
+    let arr = refs.as_array().expect("array");
+    assert!(arr.iter().any(|r| r["name"].as_str() == Some("main")));
+
+    // all scope returns the branch's commits.
+    let all = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { refs: Some("all".into()), ..Default::default() },
+        )
+        .expect("all log ok");
+    assert_eq!(all["items"].as_array().map(|v| v.len()), Some(2));
+
+    // Rev scope resolves a valid revision...
+    let ok = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { refs: Some(head.clone()), ..Default::default() },
+        )
+        .expect("rev log ok");
+    assert!(ok["items"].as_array().map(|v| !v.is_empty()).unwrap_or(false));
+
+    // ...and an unknown one maps to the stable unknown-oid code.
+    let err = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { refs: Some("no-such-ref".into()), ..Default::default() },
+        )
+        .unwrap_err();
+    assert_eq!(err.code(), "unknown-oid");
+
+    // author reaches the backend: a non-matching author yields nothing, "T" yields both.
+    let no_author = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { author: Some("nobody".into()), ..Default::default() },
+        )
+        .expect("author filter ok");
+    assert_eq!(no_author["items"].as_array().map(|v| v.len()), Some(0));
+    let author = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { author: Some("T".into()), ..Default::default() },
+        )
+        .expect("author match ok");
+    assert_eq!(author["items"].as_array().map(|v| v.len()), Some(2));
+
+    // path reaches the backend (pathspec after `--`). Every commit touches a.txt,
+    // so the discriminating case is a path no commit touched → 0 items (a dropped
+    // `path` field would wrongly return 2).
+    let path_hit = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { path: Some("a.txt".into()), ..Default::default() },
+        )
+        .expect("path ok");
+    assert_eq!(path_hit["items"].as_array().map(|v| v.len()), Some(2));
+    let path_miss = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { path: Some("nope.txt".into()), ..Default::default() },
+        )
+        .expect("path miss ok");
+    assert_eq!(path_miss["items"].as_array().map(|v| v.len()), Some(0));
+
+    // skip advances the page (2 commits, skip 1 → 1 left).
+    let paged = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { skip: 1, limit: 50, ..Default::default() },
+        )
+        .expect("skip ok");
+    assert_eq!(paged["items"].as_array().map(|v| v.len()), Some(1));
+}
+
+#[test]
 fn git_log_requires_resolvable_worktree_path() {
     let root = tempfile::tempdir().unwrap();
     // FakeWorktrees.resolve works but path_for defaults to None → unresolvable.
@@ -531,7 +619,7 @@ fn git_log_requires_resolvable_worktree_path() {
         Vec::new(),
         Arc::new(Mutex::new(Vec::new())),
     );
-    let err = services.git_log(Some(WORKTREE), None).unwrap_err();
+    let err = services.git_log(Some(WORKTREE), &GitLogQuery::default()).unwrap_err();
     assert_eq!(err.code(), "unavailable");
 }
 
@@ -543,7 +631,7 @@ fn git_log_rejects_non_git_workspace() {
         path: not_a_repo.path().to_string_lossy().into_owned(),
     });
     let services = git_host_services(root.path(), ui_store(root.path(), Some(WORKTREE)), worktrees);
-    let err = services.git_log(Some(WORKTREE), None).unwrap_err();
+    let err = services.git_log(Some(WORKTREE), &GitLogQuery::default()).unwrap_err();
     assert_eq!(err.code(), "not-a-git-repo");
 }
 

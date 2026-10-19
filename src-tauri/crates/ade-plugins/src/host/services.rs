@@ -19,6 +19,38 @@ pub struct WorktreeContext {
     pub display_name: String,
 }
 
+/// Default `git.log` page size for the host layer. Chosen below `ade_git`'s
+/// `GIT_HISTORY_MAX_LIMIT` (200) to stay well under the host result budget.
+pub const GIT_LOG_DEFAULT_LIMIT: u32 = 100;
+
+/// Validated `git.log` query passed to the host service layer (ade-git-free).
+#[derive(Clone, Debug)]
+pub struct GitLogQuery {
+    pub refs: Option<String>,
+    pub author: Option<String>,
+    pub since: Option<String>,
+    pub until: Option<String>,
+    pub grep: Option<String>,
+    pub path: Option<String>,
+    pub skip: u32,
+    pub limit: u32,
+}
+
+impl Default for GitLogQuery {
+    fn default() -> Self {
+        Self {
+            refs: None,
+            author: None,
+            since: None,
+            until: None,
+            grep: None,
+            path: None,
+            skip: 0,
+            limit: GIT_LOG_DEFAULT_LIMIT,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TerminalRef {
     pub id: String,
@@ -119,11 +151,18 @@ pub trait PluginHostServices: Send + Sync {
     fn git_log(
         &self,
         _worktree_id: Option<&str>,
-        _limit: Option<u32>,
+        _query: &GitLogQuery,
     ) -> Result<serde_json::Value, HostServiceError> {
         Err(HostServiceError::new(
             "unavailable",
             "git history service is not available",
+        ))
+    }
+    /// Lists branch / remote / tag refs for the caller's active worktree.
+    fn git_refs(&self, _worktree_id: Option<&str>) -> Result<serde_json::Value, HostServiceError> {
+        Err(HostServiceError::new(
+            "unavailable",
+            "git refs service is not available",
         ))
     }
     /// Changed files for one commit in the caller's active worktree.

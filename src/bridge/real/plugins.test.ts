@@ -138,6 +138,17 @@ describe('plugins real adapter panel action', () => {
     })
   })
 
+  it('passes git.* host-method error codes through unchanged', async () => {
+    for (const code of ['no-active-worktree', 'not-a-git-repo', 'unknown-oid'] as const) {
+      invokeMock.mockResolvedValueOnce({ ok: false, code, error: 'x' })
+      await expect(createPluginsRealApi().panelAction(call)).resolves.toEqual({
+        ok: false,
+        code,
+        error: 'x'
+      })
+    }
+  })
+
   it('maps the bridge disabled_system code to the frozen unavailable code', async () => {
     invokeMock.mockResolvedValueOnce({
       ok: false,

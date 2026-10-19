@@ -108,11 +108,12 @@ mod tests {
     }
 
     #[test]
-    fn panel_surface_is_exactly_the_seven_panel_callable_methods() {
+    fn panel_surface_is_exactly_the_eight_panel_callable_methods() {
         let panel_methods = [
             "workspace.readContext",
             "workspace.openTab",
             "git.log",
+            "git.refs",
             "git.commitFiles",
             "worker.invokeCommand",
             "terminal.sendText",

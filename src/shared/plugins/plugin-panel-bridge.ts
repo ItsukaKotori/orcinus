@@ -87,6 +87,9 @@ export type PluginPanelActionErrorCode =
   | 'invalid_params'
   | 'rate_limited'
   | 'unavailable'
+  | 'no-active-worktree'
+  | 'not-a-git-repo'
+  | 'unknown-oid'
   | 'action_failed'
 
 /** Result message posted back into the panel iframe. */

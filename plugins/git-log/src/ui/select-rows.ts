@@ -1,6 +1,6 @@
 import type { GraphRow } from '../graph/git-graph-model'
 
-export function selectVisibleRows(rows: GraphRow[], query: string, activeRef: string | null): GraphRow[] {
+export function selectVisibleRows(rows: GraphRow[], query: string, activeRef: string | null = null): GraphRow[] {
   const q = query.trim().toLowerCase()
   return rows.filter((r) => {
     const it = r.viewModel.historyItem
