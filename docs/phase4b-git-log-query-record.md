@@ -26,7 +26,7 @@
 - **后端过滤而非客户端**：`refs/author/since/until/grep/path/skip` 全部落到 `git log` 参数拼装（options → range rev/`--all` → `--skip`/`-n{limit+1}` → `-- <path>`），TS 侧仅长度/边界，字符集/`--end-of-options`/`resolve_commit` 二次校验在 Rust（T3 `git_log_params` 拒 `-` 前缀；T1 `resolve_commit` 拒空/`-`）。
 - **注入防护**：`Rev(r)` 先 `resolve_commit` 校验取 oid 再入 argv，绝不把用户串当 range/option；`path` 拒空/`-` 起 + `--` 分隔。
 - **边界语义稳定**：`currentRef/remoteRef/baseRef/mergeBase/ahead/behind` 恒按 HEAD 计算，与 `refs=all` / 分页无关（`history_with` metadata 在拼 argv 前算）。
-- **分页去重**：`mergePages` 按 commit id 去重追加，metadata 取最新页；offset 分页在历史剧变时可能跳/重，已按 VcsLog 惯例判为可接受（spec §7）。`skip` 取后端 `limit` 回显，防后端 clamp 后错位。
+- **分页去重**：`mergePages` 按 commit id 去重追加，metadata 取最新页；offset 分页在历史剧变时可能跳/重，已按 VcsLog 惯例判为可接受（spec §7）。**offset 按本页实际消费条数累加**（`skip += next.items.length`，首屏 `skip = snap.items.length`），而非页大小回显——终审据此修正了「`skip = next.limit`」的回归。
 - **错误码契约**：`unknown-oid`/`not-a-git-repo`/`no-active-worktree`/`invalid_params`/`unavailable` 均入 `PluginPanelActionErrorCode` 且同步运行时镜像数组 `PANEL_ACTION_ERROR_CODES`（否则具体码被折叠成 `action_failed`，回归测试锁死）。
 - **面板限流友好**：`GitLogView` 对 filter 变更做 300ms debounce；相同内容保持 `debounced` 引用触发 React bail-out，避免挂载误触双请求 + 打字即查风暴（宿主 panel 面 30/10s）。
 - **refs 降级**：`loadRefs` reject（含超大仓整体失败）→ 选择器退化为 Current/All，不阻塞日志。
@@ -38,6 +38,11 @@
 - T4：`path=a.txt` 断言恒真（fixture 每提交都改它）→ 加不匹配路径→`Some(0)` 判别。
 - T5：转发不可证（stub 丢 action/params）→ 加请求记录器断言出站 `git.refs`/`git.log` params + 畸形结果 reject。
 - T6：`Current` 恒不高亮（`undefined` 塌 `null`）；挂载双请求；`loadMore` 失败静默终止分页 → 三条全部修复 + 判别测试 + 翻页 in-flight ref 闸门。
+
+## UI 错误分类（终审补入）
+
+- `callHost` 抛 `HostCallError`（携带稳定 code），`GitLogView.describeHostError` 按码出英文文案（unknown-oid/not-a-git-repo/no-active-worktree/rate_limited/invalid_params/capability_denied）。
+- 再查（切分支/过滤）失败**保留已加载列表** + 工具栏下内联 banner；仅「从未成功加载」才整屏错误。与 `loadMore` 失败「保留 + 重试」策略一致。
 
 ## 门禁
 
@@ -52,4 +57,4 @@
 - `git.commit_files` 仍把所有 `commit_compare` 错误映射为 `unknown-oid`（2a 既有），与 `git_log` 新按变体区分不一致；终局清理可统一走 `map_core_err`。
 - `selectVisibleRows` 第三参 `activeRef` 已成死参（range 转后端），可在增量 2c 连同测试一并清。
 - 缺省 limit 口径：本增量定稿 **100**（`GIT_LOG_DEFAULT_LIMIT`）；spec §3「缺省＝2a 行为」原指 ade-git `GIT_HISTORY_DEFAULT_LIMIT=50`，UI/host 层统一取 100（分页友好、仍 ≤ host 上限 200）。
-- 全量 `pnpm test` 有 3 个与本体无关的时序 flaky（满并行超时、单跑通过），判 flaky 放行。
+- 全量 `pnpm test`：仅 `src/shared/pty-reply-echo-shapes.node-pty.test.ts` 4 例失败 = `posix_spawnp failed`（沙箱禁起 PTY，**非 2b 触及文件**、与本体无关，判环境失败放行；非「时序 flaky」）。

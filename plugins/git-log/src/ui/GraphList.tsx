@@ -79,8 +79,8 @@ export function GraphList({ rows, selectedOid, onSelect, hasMore, loadingMore, l
             'Loading more commits…'
           ) : loadMoreError ? (
             <span className="flex items-center justify-center gap-2">
-              <span>加载失败：{loadMoreError}</span>
-              <button type="button" onClick={onLoadMore} className="rounded border border-border px-2 py-0.5 hover:bg-accent">重试</button>
+              <span>Failed to load more: {loadMoreError}</span>
+              <button type="button" onClick={onLoadMore} className="rounded border border-border px-2 py-0.5 hover:bg-accent">Retry</button>
             </span>
           ) : (
             <button type="button" onClick={onLoadMore} className="rounded border border-border px-2 py-0.5 hover:bg-accent">Load more</button>

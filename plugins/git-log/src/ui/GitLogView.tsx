@@ -5,6 +5,7 @@ import type { GitLogRepository } from '../domain/types'
 import { PAGE_SIZE, mergePages, type GitLogFilter } from '../domain/query'
 import { buildGraphRows, type GraphRow } from '../graph/git-graph-model'
 import { selectVisibleRows } from './select-rows'
+import { HostCallError } from './host-bridge'
 import { Toolbar } from './Toolbar'
 import { RefPanel } from './RefPanel'
 import { GraphList } from './GraphList'
@@ -12,6 +13,26 @@ import { CommitDetail } from './CommitDetail'
 
 function isBoundaryRow(row: GraphRow): boolean {
   return row.viewModel.kind === 'incoming-changes' || row.viewModel.kind === 'outgoing-changes'
+}
+
+/** Map a host error code to user-facing copy (spec §2.1: at least `unknown-oid`). */
+function describeHostError(e: unknown): string {
+  switch (e instanceof HostCallError ? e.code : undefined) {
+    case 'unknown-oid':
+      return 'That branch or revision does not exist.'
+    case 'not-a-git-repo':
+      return 'The active workspace is not a git repository.'
+    case 'no-active-worktree':
+      return 'No active workspace.'
+    case 'rate_limited':
+      return 'Too many requests — slow down.'
+    case 'invalid_params':
+      return 'Invalid query.'
+    case 'capability_denied':
+      return 'Git read permission was not granted.'
+    default:
+      return e instanceof Error && e.message ? e.message : 'Failed to read git history.'
+  }
 }
 
 /** Coalesce rapid filter edits into one backend query per pause. The panel host
@@ -45,6 +66,7 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
   const [files, setFiles] = useState<GitBranchChangeEntry[]>([])
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [error, setError] = useState<string | null>(null)
+  const [reloadError, setReloadError] = useState<string | null>(null)
   const [skip, setSkip] = useState(PAGE_SIZE)
   const [hasMore, setHasMore] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -52,6 +74,7 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
   // Latest filter the in-flight page belongs to, so a late response from a
   // superseded query can't overwrite newer results.
   const requestSeq = useRef(0)
+  const hasLoaded = useRef(false)
   const statusRef = useRef(status)
   const inFlightMore = useRef(false)
   statusRef.current = status
@@ -72,8 +95,11 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
   const reload = useCallback(
     async (f: GitLogFilter) => {
       const seq = ++requestSeq.current
-      setStatus('loading')
+      // Only blank to a loading state on the very first load; a re-query (branch /
+      // filter change) keeps the already-rendered list so it isn't destroyed on error.
+      if (!hasLoaded.current) setStatus('loading')
       setError(null)
+      setReloadError(null)
       try {
         const snap = await repository.loadSnapshot(f, 0)
         if (seq !== requestSeq.current) return
@@ -81,14 +107,19 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
         setBranch(snap.currentRef?.name ?? 'HEAD')
         setAhead(snap.hasOutgoingChanges ? 1 : 0)
         setBehind(snap.hasIncomingChanges ? 1 : 0)
-        setSkip(snap.limit)
+        setSkip(snap.items.length)
         setHasMore(snap.hasMore)
         setLoadMoreError(null)
+        hasLoaded.current = true
         setStatus('ready')
       } catch (e) {
         if (seq !== requestSeq.current) return
-        setError(e instanceof Error ? e.message : 'failed to load git history')
-        setStatus('error')
+        const msg = describeHostError(e)
+        if (hasLoaded.current) setReloadError(msg) // keep list, show inline banner
+        else {
+          setError(msg)
+          setStatus('error')
+        }
       }
     },
     [repository],
@@ -128,11 +159,13 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
       if (seq !== requestSeq.current) return // a filter reload started meanwhile
       const merged = mergePages(result.items, next)
       setResult(merged)
-      setSkip(next.limit)
+      // Offset accumulates by commits actually consumed on this page (NOT the
+      // per-page size), so page 3+ advances instead of re-requesting page 2.
+      setSkip((cur) => cur + next.items.length)
       setHasMore(next.hasMore)
     } catch (e) {
       // Keep what's loaded and let the user retry; do NOT silently end paging.
-      setLoadMoreError(e instanceof Error ? e.message : 'failed to load more commits')
+      setLoadMoreError(describeHostError(e))
     } finally {
       inFlightMore.current = false
       setLoadingMore(false)
@@ -201,6 +234,9 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
         onFilterChange={applyFilter}
         onRefresh={() => void reload(filter)}
       />
+      {reloadError && (
+        <div className="border-b border-border bg-destructive/10 px-3 py-1 text-xs text-destructive">{reloadError}</div>
+      )}
       <div className="flex min-h-0 flex-1">
         {status === 'error' ? (
           <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-muted-foreground">

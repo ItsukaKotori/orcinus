@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { GitLogView } from './GitLogView'
 import { CommitDetail } from './CommitDetail'
+import { HostCallError } from './host-bridge'
 import type { GitHistoryItem, GitHistoryResult } from '@shared/git-history-types'
 import type { GitLogRepository } from '../domain/types'
 import type { GitLogFilter } from '../domain/query'
@@ -66,6 +67,67 @@ describe('GitLogView', () => {
     await act(async () => { await new Promise((r) => setTimeout(r, 400)) })
     expect(calls).toHaveLength(1)
     expect(calls[0]?.skip).toBe(0)
+  })
+
+  const twoItems = (skip: number): GitHistoryItem[] => [
+    { id: `c${skip}a`, parentIds: [], subject: `s${skip}a`, message: 'm' },
+    { id: `c${skip}b`, parentIds: [], subject: `s${skip}b`, message: 'm' },
+  ]
+  const pageOf = (skip: number): GitHistoryResult => ({
+    items: twoItems(skip),
+    hasIncomingChanges: false,
+    hasOutgoingChanges: false,
+    hasMore: true,
+    limit: 2,
+  })
+
+  it('加载更多按已消费条数累加 offset（page3+ 不回退到 page2）', async () => {
+    const skips: number[] = []
+    const repo: GitLogRepository = {
+      loadSnapshot: (_f = {}, skip = 0) => {
+        skips.push(skip)
+        return Promise.resolve(pageOf(skip))
+      },
+      loadRefs: () => Promise.resolve([]),
+      loadCommitFiles: () => Promise.resolve([]),
+    }
+    await act(async () => { root.render(<GitLogView repository={repo} />) })
+    await flush()
+    const clickMore = async () => {
+      const btn = Array.from(host.querySelectorAll('button')).find((b) => b.textContent === 'Load more')
+      await act(async () => {
+        btn?.click()
+        await Promise.resolve()
+      })
+    }
+    await clickMore()
+    await clickMore()
+    // First page consumed 2 → next offset 2; second → 4. (Old `setSkip(next.limit)` would repeat 2.)
+    expect(skips).toEqual([0, 2, 4])
+  })
+
+  it('再查失败（如 unknown-oid）时保留列表并内联分类文案', async () => {
+    let n = 0
+    const repo: GitLogRepository = {
+      loadSnapshot: () =>
+        ++n === 1
+          ? Promise.resolve(pageOf(0))
+          : Promise.reject(new HostCallError('unknown-oid', 'unknown-oid: x')),
+      loadRefs: () => Promise.resolve([]),
+      loadCommitFiles: () => Promise.resolve([]),
+    }
+    await act(async () => { root.render(<GitLogView repository={repo} />) })
+    await flush()
+    // Trigger a re-query via Refresh; it now rejects.
+    const refresh = Array.from(host.querySelectorAll('button')).find((b) => b.textContent === 'Refresh')
+    await act(async () => {
+      refresh?.click()
+      await Promise.resolve()
+    })
+    // List region (RefPanel Current/All) survives; no full-screen error; friendly copy shown.
+    expect(host.textContent).toContain('Current')
+    expect(host.textContent).not.toContain('Git history unavailable')
+    expect(host.textContent).toContain('That branch or revision does not exist.')
   })
 })
 
