@@ -32,6 +32,15 @@ describe('GitLogView', () => {
     expect(host.textContent).toContain('Git Log')
     expect(host.textContent).toContain('main')
   })
+
+  it('渲染后端过滤控件与范围切换（Current / All + chips）', async () => {
+    await act(async () => { root.render(<GitLogView repository={new FixtureRepository()} />) })
+    await flush()
+    expect(host.querySelector('[data-testid="filter-author"]')).toBeTruthy()
+    expect(host.querySelector('[data-testid="filter-path"]')).toBeTruthy()
+    expect(host.textContent).toContain('Current')
+    expect(host.textContent).toContain('All')
+  })
 })
 
 describe('CommitDetail', () => {

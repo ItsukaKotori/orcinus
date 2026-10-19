@@ -9,6 +9,9 @@ type Props = {
   rows: GraphRow[]
   selectedOid: string | null
   onSelect: (oid: string) => void
+  hasMore: boolean
+  loadingMore: boolean
+  onLoadMore: () => void
 }
 
 function isBoundary(row: GraphRow): boolean {
@@ -16,11 +19,16 @@ function isBoundary(row: GraphRow): boolean {
   return kind === 'incoming-changes' || kind === 'outgoing-changes'
 }
 
-export function GraphList({ rows, selectedOid, onSelect }: Props): React.JSX.Element {
+export function GraphList({ rows, selectedOid, onSelect, hasMore, loadingMore, onLoadMore }: Props): React.JSX.Element {
   const parentRef = useRef<HTMLDivElement>(null)
   const virt = useVirtualizer({ count: rows.length, getScrollElement: () => parentRef.current, estimateSize: () => 24, overscan: 12 })
+  const onScroll = (): void => {
+    const el = parentRef.current
+    if (!el || !hasMore || loadingMore) return
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 48) onLoadMore()
+  }
   return (
-    <div ref={parentRef} className="h-full min-h-0 flex-1 overflow-auto">
+    <div ref={parentRef} onScroll={onScroll} className="h-full min-h-0 flex-1 overflow-auto">
       <div style={{ height: virt.getTotalSize(), position: 'relative' }}>
         {virt.getVirtualItems().map((vi) => {
           const row = rows[vi.index]!
@@ -64,6 +72,11 @@ export function GraphList({ rows, selectedOid, onSelect }: Props): React.JSX.Ele
           )
         })}
       </div>
+      {(loadingMore || hasMore) && (
+        <div className="px-2 py-1 text-center text-xs text-muted-foreground">
+          {loadingMore ? 'Loading more commits…' : <button type="button" onClick={onLoadMore} className="rounded border border-border px-2 py-0.5 hover:bg-accent">Load more</button>}
+        </div>
+      )}
     </div>
   )
 }
