@@ -535,8 +535,14 @@ impl BridgePluginHostServices {
 fn map_core_err(error: ade_core::errors::CoreError) -> HostServiceError {
     use ade_core::errors::CoreError;
     match error {
-        CoreError::NotFound(_) => HostServiceError::new("unknown-oid", "unknown revision"),
-        CoreError::InvalidInput(_) => HostServiceError::new("invalid_params", "invalid git query"),
+        CoreError::NotFound(msg) => {
+            eprintln!("[ade-bridge] git host not-found: {msg}");
+            HostServiceError::new("unknown-oid", "unknown revision")
+        }
+        CoreError::InvalidInput(msg) => {
+            eprintln!("[ade-bridge] git host invalid-input: {msg}");
+            HostServiceError::new("invalid_params", "invalid git query")
+        }
         other => {
             eprintln!("[ade-bridge] git host call failed: {other}");
             HostServiceError::new("not-a-git-repo", "git history is unavailable")

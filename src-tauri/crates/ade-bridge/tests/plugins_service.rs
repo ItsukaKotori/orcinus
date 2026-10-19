@@ -563,6 +563,40 @@ fn git_refs_and_query_scopes_bridge_through() {
         )
         .unwrap_err();
     assert_eq!(err.code(), "unknown-oid");
+
+    // author reaches the backend: a non-matching author yields nothing, "T" yields both.
+    let no_author = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { author: Some("nobody".into()), ..Default::default() },
+        )
+        .expect("author filter ok");
+    assert_eq!(no_author["items"].as_array().map(|v| v.len()), Some(0));
+    let author = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { author: Some("T".into()), ..Default::default() },
+        )
+        .expect("author match ok");
+    assert_eq!(author["items"].as_array().map(|v| v.len()), Some(2));
+
+    // path reaches the backend (pathspec after `--`).
+    let path_hit = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { path: Some("a.txt".into()), ..Default::default() },
+        )
+        .expect("path ok");
+    assert_eq!(path_hit["items"].as_array().map(|v| v.len()), Some(2));
+
+    // skip advances the page (2 commits, skip 1 → 1 left).
+    let paged = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { skip: 1, limit: 50, ..Default::default() },
+        )
+        .expect("skip ok");
+    assert_eq!(paged["items"].as_array().map(|v| v.len()), Some(1));
 }
 
 #[test]
