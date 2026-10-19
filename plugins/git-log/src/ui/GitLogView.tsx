@@ -18,6 +18,20 @@ function isBoundaryRow(row: GraphRow): boolean {
  *  rate-limits calls (30 / 10 s), so "type → immediate re-query" would storm it. */
 const FILTER_DEBOUNCE_MS = 300
 
+/** Shallow compare of the 6 backend filter fields, so a debounce tick that
+ *  produces an equal filter keeps the previous identity and React bails out of
+ *  the reload effect (avoids a redundant first-page request on mount). */
+function isSameFilter(a: GitLogFilter, b: GitLogFilter): boolean {
+  return (
+    a.refs === b.refs &&
+    a.author === b.author &&
+    a.since === b.since &&
+    a.until === b.until &&
+    a.grep === b.grep &&
+    a.path === b.path
+  )
+}
+
 export function GitLogView({ repository }: { repository: GitLogRepository }): React.JSX.Element {
   const [filter, setFilter] = useState<GitLogFilter>({})
   const [debounced, setDebounced] = useState<GitLogFilter>({})
@@ -34,9 +48,13 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
   const [skip, setSkip] = useState(PAGE_SIZE)
   const [hasMore, setHasMore] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null)
   // Latest filter the in-flight page belongs to, so a late response from a
   // superseded query can't overwrite newer results.
   const requestSeq = useRef(0)
+  const statusRef = useRef(status)
+  const inFlightMore = useRef(false)
+  statusRef.current = status
 
   const applyFilter = useCallback((patch: Partial<GitLogFilter>) => {
     setFilter((cur) => ({ ...cur, ...patch }))
@@ -44,7 +62,10 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
 
   // Debounce filter → the query that actually hits the backend.
   useEffect(() => {
-    const t = setTimeout(() => setDebounced(filter), FILTER_DEBOUNCE_MS)
+    const t = setTimeout(
+      () => setDebounced((prev) => (isSameFilter(prev, filter) ? prev : filter)),
+      FILTER_DEBOUNCE_MS,
+    )
     return () => clearTimeout(t)
   }, [filter])
 
@@ -60,8 +81,9 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
         setBranch(snap.currentRef?.name ?? 'HEAD')
         setAhead(snap.hasOutgoingChanges ? 1 : 0)
         setBehind(snap.hasIncomingChanges ? 1 : 0)
-        setSkip(PAGE_SIZE)
+        setSkip(snap.limit)
         setHasMore(snap.hasMore)
+        setLoadMoreError(null)
         setStatus('ready')
       } catch (e) {
         if (seq !== requestSeq.current) return
@@ -94,23 +116,28 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
   }, [repository])
 
   const loadMore = useCallback(async () => {
-    if (loadingMore || !hasMore || !result) return
+    // Gate on a ref (not just state) so scroll + footer in the same tick can't
+    // fire two requests with the same offset, and skip while a reload is in flight.
+    if (inFlightMore.current || !hasMore || !result || statusRef.current !== 'ready') return
+    inFlightMore.current = true
     setLoadingMore(true)
+    setLoadMoreError(null)
     const seq = requestSeq.current
     try {
       const next = await repository.loadSnapshot(debounced, skip)
       if (seq !== requestSeq.current) return // a filter reload started meanwhile
       const merged = mergePages(result.items, next)
       setResult(merged)
-      setSkip((s) => s + PAGE_SIZE)
+      setSkip(next.limit)
       setHasMore(next.hasMore)
-    } catch {
-      // Keep what's loaded; stop paging rather than erroring out the view.
-      setHasMore(false)
+    } catch (e) {
+      // Keep what's loaded and let the user retry; do NOT silently end paging.
+      setLoadMoreError(e instanceof Error ? e.message : 'failed to load more commits')
     } finally {
+      inFlightMore.current = false
       setLoadingMore(false)
     }
-  }, [loadingMore, hasMore, result, repository, debounced, skip])
+  }, [hasMore, result, repository, debounced, skip])
 
   const rows = useMemo(() => (result ? buildGraphRows(result) : []), [result])
 
@@ -190,6 +217,7 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
               onSelect={onSelect}
               hasMore={hasMore}
               loadingMore={loadingMore}
+              loadMoreError={loadMoreError}
               onLoadMore={() => void loadMore()}
             />
           </>

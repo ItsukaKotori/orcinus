@@ -16,7 +16,7 @@ type Props = {
 export function RefPanel({ refs, activeName, onPickName }: Props): React.JSX.Element {
   const groups = groupRefs(refs)
   const order = ['branches', 'remote branches', 'tags'] as const
-  const current = activeName === undefined || activeName === 'head'
+  const current = activeName == null || activeName === 'head'
   return (
     <div className="w-44 shrink-0 overflow-auto border-r border-border p-2 text-xs">
       <div className="mb-2 flex gap-1">

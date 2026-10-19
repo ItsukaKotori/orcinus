@@ -11,6 +11,7 @@ type Props = {
   onSelect: (oid: string) => void
   hasMore: boolean
   loadingMore: boolean
+  loadMoreError: string | null
   onLoadMore: () => void
 }
 
@@ -19,7 +20,7 @@ function isBoundary(row: GraphRow): boolean {
   return kind === 'incoming-changes' || kind === 'outgoing-changes'
 }
 
-export function GraphList({ rows, selectedOid, onSelect, hasMore, loadingMore, onLoadMore }: Props): React.JSX.Element {
+export function GraphList({ rows, selectedOid, onSelect, hasMore, loadingMore, loadMoreError, onLoadMore }: Props): React.JSX.Element {
   const parentRef = useRef<HTMLDivElement>(null)
   const virt = useVirtualizer({ count: rows.length, getScrollElement: () => parentRef.current, estimateSize: () => 24, overscan: 12 })
   const onScroll = (): void => {
@@ -72,9 +73,18 @@ export function GraphList({ rows, selectedOid, onSelect, hasMore, loadingMore, o
           )
         })}
       </div>
-      {(loadingMore || hasMore) && (
+      {(loadingMore || hasMore || loadMoreError) && (
         <div className="px-2 py-1 text-center text-xs text-muted-foreground">
-          {loadingMore ? 'Loading more commits…' : <button type="button" onClick={onLoadMore} className="rounded border border-border px-2 py-0.5 hover:bg-accent">Load more</button>}
+          {loadingMore ? (
+            'Loading more commits…'
+          ) : loadMoreError ? (
+            <span className="flex items-center justify-center gap-2">
+              <span>加载失败：{loadMoreError}</span>
+              <button type="button" onClick={onLoadMore} className="rounded border border-border px-2 py-0.5 hover:bg-accent">重试</button>
+            </span>
+          ) : (
+            <button type="button" onClick={onLoadMore} className="rounded border border-border px-2 py-0.5 hover:bg-accent">Load more</button>
+          )}
         </div>
       )}
     </div>

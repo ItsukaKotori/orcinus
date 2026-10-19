@@ -4,7 +4,9 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { GitLogView } from './GitLogView'
 import { CommitDetail } from './CommitDetail'
-import type { GitHistoryItem } from '@shared/git-history-types'
+import type { GitHistoryItem, GitHistoryResult } from '@shared/git-history-types'
+import type { GitLogRepository } from '../domain/types'
+import type { GitLogFilter } from '../domain/query'
 import { FixtureRepository } from '../fixtures/fixture-repository'
 
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -40,6 +42,30 @@ describe('GitLogView', () => {
     expect(host.querySelector('[data-testid="filter-path"]')).toBeTruthy()
     expect(host.textContent).toContain('Current')
     expect(host.textContent).toContain('All')
+  })
+
+  it('挂载首屏只请求一次（debounce 不误触第二次 reload）', async () => {
+    const empty: GitHistoryResult = {
+      items: [],
+      hasIncomingChanges: false,
+      hasOutgoingChanges: false,
+      hasMore: false,
+      limit: 100,
+    }
+    const calls: { filter: GitLogFilter; skip: number }[] = []
+    const repo: GitLogRepository = {
+      loadSnapshot: (filter = {}, skip = 0) => {
+        calls.push({ filter, skip })
+        return Promise.resolve(empty)
+      },
+      loadRefs: () => Promise.resolve([]),
+      loadCommitFiles: () => Promise.resolve([]),
+    }
+    await act(async () => { root.render(<GitLogView repository={repo} />) })
+    // Cross the 300 ms debounce window: an equal filter must NOT re-trigger reload.
+    await act(async () => { await new Promise((r) => setTimeout(r, 400)) })
+    expect(calls).toHaveLength(1)
+    expect(calls[0]?.skip).toBe(0)
   })
 })
 
