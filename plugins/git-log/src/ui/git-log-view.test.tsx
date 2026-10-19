@@ -129,6 +129,37 @@ describe('GitLogView', () => {
     expect(host.textContent).not.toContain('Git history unavailable')
     expect(host.textContent).toContain('That branch or revision does not exist.')
   })
+
+  it('reload 在飞时点击加载更多不发陈旧请求', async () => {
+    const calls: number[] = []
+    let resolvePending: ((v: GitHistoryResult) => void) | null = null
+    let n = 0
+    const repo: GitLogRepository = {
+      loadSnapshot: (_f = {}, skip = 0) => {
+        n++
+        calls.push(skip)
+        if (n === 1) return Promise.resolve(pageOf(0))
+        return new Promise<GitHistoryResult>((res) => {
+          resolvePending = res
+        })
+      },
+      loadRefs: () => Promise.resolve([]),
+      loadCommitFiles: () => Promise.resolve([]),
+    }
+    await act(async () => { root.render(<GitLogView repository={repo} />) })
+    await flush()
+    // Start a re-query (Refresh) and hold its response pending.
+    const refresh = Array.from(host.querySelectorAll('button')).find((b) => b.textContent === 'Refresh')
+    await act(async () => { refresh?.click() })
+    // While that reload is in flight, a "Load more" click must be gated (no stale page request).
+    const more = Array.from(host.querySelectorAll('button')).find((b) => b.textContent === 'Load more')
+    await act(async () => { more?.click() })
+    expect(calls).toEqual([0, 0]) // mount + refresh only; loadMore blocked by reloadInFlight
+    await act(async () => {
+      resolvePending?.(pageOf(0))
+      await Promise.resolve()
+    })
+  })
 })
 
 describe('CommitDetail', () => {

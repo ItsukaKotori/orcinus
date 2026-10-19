@@ -77,6 +77,7 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
   const hasLoaded = useRef(false)
   const statusRef = useRef(status)
   const inFlightMore = useRef(false)
+  const reloadInFlight = useRef(false)
   statusRef.current = status
 
   const applyFilter = useCallback((patch: Partial<GitLogFilter>) => {
@@ -95,6 +96,7 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
   const reload = useCallback(
     async (f: GitLogFilter) => {
       const seq = ++requestSeq.current
+      reloadInFlight.current = true
       // Only blank to a loading state on the very first load; a re-query (branch /
       // filter change) keeps the already-rendered list so it isn't destroyed on error.
       if (!hasLoaded.current) setStatus('loading')
@@ -120,6 +122,10 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
           setError(msg)
           setStatus('error')
         }
+      } finally {
+        // Only the newest reload clears the gate; a superseded one must not unlock
+        // while the latest is still in flight.
+        if (seq === requestSeq.current) reloadInFlight.current = false
       }
     },
     [repository],
@@ -149,7 +155,7 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
   const loadMore = useCallback(async () => {
     // Gate on a ref (not just state) so scroll + footer in the same tick can't
     // fire two requests with the same offset, and skip while a reload is in flight.
-    if (inFlightMore.current || !hasMore || !result || statusRef.current !== 'ready') return
+    if (inFlightMore.current || reloadInFlight.current || !hasMore || !result || statusRef.current !== 'ready') return
     inFlightMore.current = true
     setLoadingMore(true)
     setLoadMoreError(null)
