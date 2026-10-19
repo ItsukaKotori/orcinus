@@ -531,6 +531,19 @@ impl BridgePluginHostServices {
     }
 }
 
+/// Map a `CoreError` from `ade_git` to a stable, path-free host error code.
+fn map_core_err(error: ade_core::errors::CoreError) -> HostServiceError {
+    use ade_core::errors::CoreError;
+    match error {
+        CoreError::NotFound(_) => HostServiceError::new("unknown-oid", "unknown revision"),
+        CoreError::InvalidInput(_) => HostServiceError::new("invalid_params", "invalid git query"),
+        other => {
+            eprintln!("[ade-bridge] git host call failed: {other}");
+            HostServiceError::new("not-a-git-repo", "git history is unavailable")
+        }
+    }
+}
+
 impl PluginHostServices for BridgePluginHostServices {
     fn active_worktree_context(&self) -> Option<WorktreeContext> {
         let worktree_id = lock(&self.ui)
@@ -562,14 +575,41 @@ impl PluginHostServices for BridgePluginHostServices {
                 "the active workspace is not a git repository",
             ));
         }
-        let result = ade_git::history::history(&path, Some(query.limit), None).map_err(|error| {
-            // Detail stays host-side; the plugin only sees a stable message (no path).
-            eprintln!("[ade-bridge] git.log failed: {error}");
-            HostServiceError::new("not-a-git-repo", "git history is unavailable")
-        })?;
+        let refs = match query.refs.as_deref() {
+            None | Some("head") => ade_git::history::GitHistoryRefs::Head,
+            Some("all") => ade_git::history::GitHistoryRefs::All,
+            Some(rev) => ade_git::history::GitHistoryRefs::Rev(rev.to_string()),
+        };
+        let history_query = ade_git::history::GitHistoryQuery {
+            refs,
+            author: query.author.clone(),
+            since: query.since.clone(),
+            until: query.until.clone(),
+            grep: query.grep.clone(),
+            path: query.path.clone(),
+            base_ref: None,
+            skip: query.skip,
+            limit: query.limit,
+        };
+        let result = ade_git::history::history_with(&path, &history_query).map_err(map_core_err)?;
         serde_json::to_value(result).map_err(|error| {
             eprintln!("[ade-bridge] git.log serialize failed: {error}");
             HostServiceError::new("unavailable", "git history is unavailable")
+        })
+    }
+
+    fn git_refs(&self, worktree_id: Option<&str>) -> Result<serde_json::Value, HostServiceError> {
+        let path = self.resolve_worktree_path(worktree_id)?;
+        if !ade_git::is_inside_work_tree(&path) {
+            return Err(HostServiceError::new(
+                "not-a-git-repo",
+                "the active workspace is not a git repository",
+            ));
+        }
+        let refs = ade_git::history::list_refs(&path).map_err(map_core_err)?;
+        serde_json::to_value(refs).map_err(|error| {
+            eprintln!("[ade-bridge] git.refs serialize failed: {error}");
+            HostServiceError::new("unavailable", "refs unavailable")
         })
     }
 

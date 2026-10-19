@@ -523,6 +523,49 @@ fn git_log_reads_real_history_and_commit_files() {
 }
 
 #[test]
+fn git_refs_and_query_scopes_bridge_through() {
+    let root = tempfile::tempdir().unwrap();
+    let repo = tempfile::tempdir().unwrap();
+    let (head, _) = init_git_repo(repo.path());
+    let worktrees = Arc::new(RepoWorktrees {
+        path: repo.path().to_string_lossy().into_owned(),
+    });
+    let services = git_host_services(root.path(), ui_store(root.path(), Some(WORKTREE)), worktrees);
+
+    // git.refs lists the checked-out branch.
+    let refs = services.git_refs(Some(WORKTREE)).expect("git.refs ok");
+    let arr = refs.as_array().expect("array");
+    assert!(arr.iter().any(|r| r["name"].as_str() == Some("main")));
+
+    // all scope returns the branch's commits.
+    let all = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { refs: Some("all".into()), ..Default::default() },
+        )
+        .expect("all log ok");
+    assert_eq!(all["items"].as_array().map(|v| v.len()), Some(2));
+
+    // Rev scope resolves a valid revision...
+    let ok = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { refs: Some(head.clone()), ..Default::default() },
+        )
+        .expect("rev log ok");
+    assert!(ok["items"].as_array().map(|v| !v.is_empty()).unwrap_or(false));
+
+    // ...and an unknown one maps to the stable unknown-oid code.
+    let err = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { refs: Some("no-such-ref".into()), ..Default::default() },
+        )
+        .unwrap_err();
+    assert_eq!(err.code(), "unknown-oid");
+}
+
+#[test]
 fn git_log_requires_resolvable_worktree_path() {
     let root = tempfile::tempdir().unwrap();
     // FakeWorktrees.resolve works but path_for defaults to None → unresolvable.
