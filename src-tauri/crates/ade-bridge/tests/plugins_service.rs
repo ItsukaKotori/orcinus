@@ -580,7 +580,9 @@ fn git_refs_and_query_scopes_bridge_through() {
         .expect("author match ok");
     assert_eq!(author["items"].as_array().map(|v| v.len()), Some(2));
 
-    // path reaches the backend (pathspec after `--`).
+    // path reaches the backend (pathspec after `--`). Every commit touches a.txt,
+    // so the discriminating case is a path no commit touched → 0 items (a dropped
+    // `path` field would wrongly return 2).
     let path_hit = services
         .git_log(
             Some(WORKTREE),
@@ -588,6 +590,13 @@ fn git_refs_and_query_scopes_bridge_through() {
         )
         .expect("path ok");
     assert_eq!(path_hit["items"].as_array().map(|v| v.len()), Some(2));
+    let path_miss = services
+        .git_log(
+            Some(WORKTREE),
+            &GitLogQuery { path: Some("nope.txt".into()), ..Default::default() },
+        )
+        .expect("path miss ok");
+    assert_eq!(path_miss["items"].as_array().map(|v| v.len()), Some(0));
 
     // skip advances the page (2 commits, skip 1 → 1 left).
     let paged = services
