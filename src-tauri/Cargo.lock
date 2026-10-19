@@ -92,6 +92,7 @@ dependencies = [
  "serde",
  "serde_json",
  "specta",
+ "tempfile",
 ]
 
 [[package]]

@@ -131,13 +131,75 @@ pub struct GitHistoryResult {
     pub limit: u32,
 }
 
-/// Mirrors `loadGitHistoryFromExecutor` (`git-history.ts:167-239`).
+/// Range selector for [`history_with`]: HEAD-reachable, all refs, or one rev.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GitHistoryRefs {
+    Head,
+    All,
+    Rev(String),
+}
+
+impl Default for GitHistoryRefs {
+    fn default() -> Self {
+        GitHistoryRefs::Head
+    }
+}
+
+/// Query parameters for a bounded `git log` graph read (increment 2b).
+#[derive(Debug, Clone)]
+pub struct GitHistoryQuery {
+    pub refs: GitHistoryRefs,
+    pub author: Option<String>,
+    pub since: Option<String>,
+    pub until: Option<String>,
+    pub grep: Option<String>,
+    pub path: Option<String>,
+    pub base_ref: Option<String>,
+    pub skip: u32,
+    pub limit: u32,
+}
+
+impl Default for GitHistoryQuery {
+    fn default() -> Self {
+        Self {
+            refs: GitHistoryRefs::Head,
+            author: None,
+            since: None,
+            until: None,
+            grep: None,
+            path: None,
+            base_ref: None,
+            skip: 0,
+            limit: GIT_HISTORY_DEFAULT_LIMIT,
+        }
+    }
+}
+
+/// Mirrors `loadGitHistoryFromExecutor` (`git-history.ts:167-239`), scoped to
+/// HEAD with a bounded limit. Backward-compatible wrapper over [`history_with`].
 pub fn history(
     worktree_path: &str,
     limit: Option<u32>,
     base_ref: Option<&str>,
 ) -> Result<GitHistoryResult, CoreError> {
-    let limit = clamp_history_limit(limit);
+    let query = GitHistoryQuery {
+        refs: GitHistoryRefs::Head,
+        base_ref: base_ref.map(str::to_string),
+        skip: 0,
+        limit: clamp_history_limit(limit),
+        ..Default::default()
+    };
+    history_with(worktree_path, &query)
+}
+
+/// Bounded `git log` graph read with configurable range/filters/paging.
+/// HEAD/upstream/base refs stay comparison metadata regardless of `query.refs`,
+/// so `--all` / paging never disturbs the ahead/behind boundary semantics.
+pub fn history_with(
+    worktree_path: &str,
+    query: &GitHistoryQuery,
+) -> Result<GitHistoryResult, CoreError> {
+    let limit = query.limit.clamp(1, GIT_HISTORY_MAX_LIMIT);
     let empty = |limit: u32| GitHistoryResult {
         items: Vec::new(),
         current_ref: None,
@@ -159,7 +221,7 @@ pub fn history(
     let remote_ref = branch_name
         .as_deref()
         .and_then(|name| resolve_upstream_ref(worktree_path, name));
-    let raw_base_ref = resolve_named_ref(worktree_path, base_ref);
+    let raw_base_ref = resolve_named_ref(worktree_path, query.base_ref.as_deref());
     let base_ref = match raw_base_ref {
         Some(candidate)
             if Some(candidate.id.as_str()) != remote_ref.as_ref().map(|entry| entry.id.as_str())
@@ -189,20 +251,47 @@ pub fn history(
         }
     }
 
-    // Why: this panel is scoped to the active workspace; upstream and base refs
-    // stay comparison metadata, so only HEAD feeds the log range.
-    let stdout = run(
-        worktree_path,
-        &[
-            "log",
-            &format!("--format={GIT_HISTORY_COMMIT_FORMAT}"),
-            "-z",
-            "--topo-order",
-            "--decorate=full",
-            &format!("-n{}", limit + 1),
-            &head_oid,
-        ],
-    )?;
+    // Options, then the range revision, then `-n`/`--skip`, then pathspec after `--`.
+    let mut args: Vec<String> = vec![
+        "log".into(),
+        format!("--format={GIT_HISTORY_COMMIT_FORMAT}"),
+        "-z".into(),
+        "--topo-order".into(),
+        "--decorate=full".into(),
+    ];
+    if let Some(author) = &query.author {
+        args.push(format!("--author={author}"));
+    }
+    if let Some(grep) = &query.grep {
+        args.push(format!("--grep={grep}"));
+    }
+    if let Some(since) = &query.since {
+        args.push(format!("--since={since}"));
+    }
+    if let Some(until) = &query.until {
+        args.push(format!("--until={until}"));
+    }
+    if query.skip > 0 {
+        args.push(format!("--skip={}", query.skip));
+    }
+    args.push(format!("-n{}", limit + 1));
+    match &query.refs {
+        GitHistoryRefs::Head => args.push(head_oid.clone()),
+        GitHistoryRefs::All => args.push("--all".into()),
+        GitHistoryRefs::Rev(rev) => match resolve_commit(worktree_path, rev) {
+            Some(oid) => args.push(oid),
+            None => return Ok(empty(limit)),
+        },
+    }
+    if let Some(path) = &query.path {
+        if path.is_empty() || path.starts_with('-') {
+            return Ok(empty(limit));
+        }
+        args.push("--".into());
+        args.push(path.clone());
+    }
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
+    let stdout = run(worktree_path, &args_refs)?;
     let parsed = parse_git_history_log(&String::from_utf8_lossy(&stdout));
     let has_more = parsed.len() > limit as usize;
     let items: Vec<GitHistoryItem> = parsed.into_iter().take(limit as usize).collect();
@@ -229,6 +318,32 @@ pub fn history(
         has_more,
         limit,
     })
+}
+
+/// Lists branch / remote / tag refs for the Git Log branch selector.
+pub fn list_refs(worktree_path: &str) -> Result<Vec<GitHistoryItemRef>, CoreError> {
+    let stdout = run_text(
+        worktree_path,
+        &[
+            "for-each-ref",
+            "--format=%(refname)%09%(objectname)",
+            "refs/heads",
+            "refs/remotes",
+            "refs/tags",
+        ],
+    )?;
+    let mut refs = Vec::new();
+    for line in stdout.lines() {
+        let mut parts = line.split('\t');
+        let (Some(full), Some(oid)) = (parts.next(), parts.next()) else {
+            continue;
+        };
+        if full.is_empty() || oid.is_empty() {
+            continue;
+        }
+        refs.push(git_history_ref_from_full_name(Some(full), full, oid));
+    }
+    Ok(refs)
 }
 
 const GIT_HISTORY_DECORATION_SEPARATOR: char = '\u{1f}';
