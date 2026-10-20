@@ -362,7 +362,7 @@ export function PluginsSettingsSection({
       />
       <PluginInstallDialog open={installOpen} onOpenChange={setInstallOpen} onInstall={install} />
       <PluginConsentDialog
-        key={consentTarget ? pluginRefKey(consentTarget) : 'closed'}
+        key={consentPlugin ? pluginRefKey(consentPlugin) : 'closed'}
         plugin={consentPlugin}
         onDecision={decideConsent}
       />
