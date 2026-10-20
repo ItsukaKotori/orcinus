@@ -67,3 +67,12 @@
 - 附带：修「审查并启用无反应」（consent 对话框 key 改按已解析 `consentPlugin`）+ install→consent 时序回归测试；`git-log` manifest `engines.orca` `>=1.4.0`→`>=0.0.1`（匹配宿主实际版本）。
 - **仍未做**（后续可选）：`is_inside_work_tree` 探测缓存、`commitFiles` 统一走 `map_core_err`、`selectVisibleRows` `activeRef` 死参清理、`git.refs` 截断无 truncated 信号（>2000 heads 时 tags 组可能不显）、日期语义合法性（月/日范围）。
 - 门禁：cargo ade-git/plugins/bridge 0、typecheck/build:web/build:git-log 绿、git-log+plugins+bridge+settings 172 文件/1357 绿。origin/main == main == 96cec477。
+
+## 增量 2d（收尾清理，已合入 main cd5826b1）
+
+分支 `phase4d-git-log-cleanup`（worktree 已清理），闭 2b/2c 遗留三项：
+- **D1** `ade-bridge::git_commit_files`：`commit_compare` 的 Err 改走 `map_core_err`（与 git_log/git_refs 一致按变体分码），保留 `invalid-commit→unknown-oid`。（现网 `commit_compare` 的 Err 一支当前从不构造，属一致性/前瞻）
+- **D3** `ade-bridge`：`assert_git_repo` + 进程内正向缓存（`OnceLock<Mutex<HashSet>>`，仅缓存 true、锁中毒 fail-safe、无嵌套锁），git.log/git.refs/git.commitFiles 不再各 spawn 一次 `git rev-parse`；路径失去 git 属性时后续真跑 git 经 `map_core_err` 报错（不静默错数据）。
+- **D2** UI：`selectVisibleRows` 移除 `activeRef` 死参（range 已后端化）+ 更新测试。
+- **仍开放（可选）**：`git.refs` 截断无 truncated 信号（>2000 heads 时 tags 组可能不显）、日期语义合法性（月/日范围，仅形状校验）。
+- 门禁：cargo ade-git/plugins/bridge 0、typecheck/build:web/build:git-log 绿、git-log+plugins+bridge 68 文件/654 绿。审查无 Critical/Important/Minor。origin/main == main == cd5826b1。
