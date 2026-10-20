@@ -76,3 +76,12 @@
 - **D2** UI：`selectVisibleRows` 移除 `activeRef` 死参（range 已后端化）+ 更新测试。
 - **仍开放（可选）**：`git.refs` 截断无 truncated 信号（>2000 heads 时 tags 组可能不显）、日期语义合法性（月/日范围，仅形状校验）。
 - 门禁：cargo ade-git/plugins/bridge 0、typecheck/build:web/build:git-log 绿、git-log+plugins+bridge 68 文件/654 绿。审查无 Critical/Important/Minor。origin/main == main == cd5826b1。
+
+## 增量 2e（refs 截断信号 + 日期范围，已合入 main 25a46d20）
+
+分支 `phase4e-git-log-refs-dates`（worktree 已清理），闭 2c/2d 最后两项遗留：
+- **E1** `git.refs` 截断信号：`ade_git::list_refs`/`list_refs_capped` 返回 `GitRefsResult{refs,truncated}`（装满 max+1 即停、不全量物化）；桥接 `git_refs` 自动序列化 `{refs,truncated}`；TS `gitRefsSchema`→object、`GitLogRepository.loadRefs():Promise<GitRefs>`、host/fixture 同步；`GitLogView` 存 `refsTruncated`、`RefPanel` truncated 时显示「Some refs are not shown」。reject 仍降级 `{refs:[],truncated:false}`。
+- **E2** `is_date_prefix` 加月 01-12 / 日 01-31 范围（Rust 为强制点；TS 保持 shape regex）。
+- 审查修复：ade-plugins 两处 `git_refs` 测试替身改对象形状（此前锁旧数组、回退会误绿）；`GitRefsResult` 补 specta derive。
+- **仍开放（低优先）**：日历非法日（`2026-02-31`）仍放过（需按年月判大小月）；破坏性形状变更未抬 `engines.orca` 下界（本插件随宿主同构建分发，旧宿主场景下会优雅降级为只剩 Current/All）。
+- 门禁：cargo ade-git/plugins/bridge 0、typecheck/build:web/build:git-log 绿、git-log+plugins+bridge 68 文件/655 绿。审查无 Critical。
