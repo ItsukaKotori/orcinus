@@ -5,13 +5,16 @@ import type { GitLogFilter } from './query'
 
 export type GitLogSnapshot = GitHistoryResult
 
+/** Host `git.refs` result: capped ref list + whether it was truncated. */
+export type GitRefs = { refs: GitHistoryItemRef[]; truncated: boolean }
+
 export interface GitLogRepository {
   /** Loads a page of history for `filter`, starting at commit offset `skip`.
    *  Both args optional so a first load (`loadSnapshot()`) yields the default
    *  HEAD page (increment 2a behaviour). */
   loadSnapshot(filter?: GitLogFilter, skip?: number): Promise<GitLogSnapshot>
   /** Lists branch / remote / tag refs for the branch selector (host `git.refs`). */
-  loadRefs(): Promise<GitHistoryItemRef[]>
+  loadRefs(): Promise<GitRefs>
   loadCommitFiles(oid: string): Promise<GitBranchChangeEntry[]>
 }
 
@@ -70,5 +73,8 @@ export const gitCommitFilesSchema = z.array(
     removed: z.number().optional()
   })
 )
-/** Host `git.refs` result: the same ref shape the log decorations use. */
-export const gitRefsSchema = z.array(refSchema)
+/** Host `git.refs` result: a capped ref list plus a truncation flag. */
+export const gitRefsSchema = z.object({
+  refs: z.array(refSchema),
+  truncated: z.boolean()
+})
