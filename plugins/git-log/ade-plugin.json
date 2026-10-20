@@ -5,7 +5,7 @@
   "name": "Git Log",
   "version": "0.2.0",
   "description": "IDEA VcsLog-style commit graph for the active workspace (reads real HEAD history via git.log).",
-  "engines": { "orca": ">=1.4.0" },
+  "engines": { "orca": ">=0.0.1" },
   "pluginApi": 1,
   "contributes": {
     "tabs": [{ "id": "git-log", "title": "Git Log", "icon": "plug", "entry": "dist/tab.html" }],
