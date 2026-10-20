@@ -58,3 +58,12 @@
 - `selectVisibleRows` 第三参 `activeRef` 已成死参（range 转后端），可在增量 2c 连同测试一并清。
 - 缺省 limit 口径：本增量定稿 **100**（`GIT_LOG_DEFAULT_LIMIT`）；spec §3「缺省＝2a 行为」原指 ade-git `GIT_HISTORY_DEFAULT_LIMIT=50`，UI/host 层统一取 100（分页友好、仍 ≤ host 上限 200）。
 - 全量 `pnpm test`：仅 `src/shared/pty-reply-echo-shapes.node-pty.test.ts` 4 例失败 = `posix_spawnp failed`（沙箱禁起 PTY，**非 2b 触及文件**、与本体无关，判环境失败放行；非「时序 flaky」）。
+
+## 增量 2c（A 组加固，已合入 main 96cec477）
+
+收尾 2b 遗留的 refs/日期项（分支 `phase4c-git-log-hardening`，worktree 已清理）：
+- **C1** `ade_git::list_refs`：`GIT_REFS_MAX_LIMIT=2000` 条数上限（`list_refs_capped(path,max)`，签名不变）→ 超大仓不再整体撑爆 host `git_result`；`for-each-ref` 加 `%(*objectname)`，annotated tag 的 `revision` 用 peeled commit oid（与图内 commit 对齐，闭 M-5）。
+- **C2** `since/until` ISO 校验：TS zod 加 `^\d{4}-\d{2}-\d{2}([T ].*)?$`，Rust `git_log_params` 用 `is_date_prefix`（含尾随字符守卫，与 TS 同口径）在入口判 `invalid_params` → 非法日期不再被 git 失败折叠成 `not-a-git-repo`。
+- 附带：修「审查并启用无反应」（consent 对话框 key 改按已解析 `consentPlugin`）+ install→consent 时序回归测试；`git-log` manifest `engines.orca` `>=1.4.0`→`>=0.0.1`（匹配宿主实际版本）。
+- **仍未做**（后续可选）：`is_inside_work_tree` 探测缓存、`commitFiles` 统一走 `map_core_err`、`selectVisibleRows` `activeRef` 死参清理、`git.refs` 截断无 truncated 信号（>2000 heads 时 tags 组可能不显）、日期语义合法性（月/日范围）。
+- 门禁：cargo ade-git/plugins/bridge 0、typecheck/build:web/build:git-log 绿、git-log+plugins+bridge+settings 172 文件/1357 绿。origin/main == main == 96cec477。
