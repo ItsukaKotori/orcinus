@@ -8,12 +8,14 @@ export function groupRefs(refs: GitHistoryItemRef[]): Record<string, GitHistoryI
 
 type Props = {
   refs: GitHistoryItemRef[]
+  /** True when the host capped the ref list; shows a partial-results note. */
+  truncated: boolean
   /** Current backend range: undefined = HEAD, 'all' = every ref, else a revision name. */
   activeName: 'head' | 'all' | (string & {}) | null | undefined
   onPickName: (name: 'head' | 'all' | (string & {}) | undefined) => void
 }
 
-export function RefPanel({ refs, activeName, onPickName }: Props): React.JSX.Element {
+export function RefPanel({ refs, truncated, activeName, onPickName }: Props): React.JSX.Element {
   const groups = groupRefs(refs)
   const order = ['branches', 'remote branches', 'tags'] as const
   const current = activeName == null || activeName === 'head'
@@ -35,6 +37,11 @@ export function RefPanel({ refs, activeName, onPickName }: Props): React.JSX.Ele
           All
         </button>
       </div>
+      {truncated && (
+        <p className="mb-2 text-[11px] leading-4 text-muted-foreground">
+          Some refs are not shown (list limit reached).
+        </p>
+      )}
       {order.map((cat) => (groups[cat]?.length ? (
         <div key={cat} className="mb-2">
           <div className="mb-1 uppercase tracking-wide text-muted-foreground">{cat}</div>

@@ -324,9 +324,18 @@ pub fn history_with(
 /// under the host result budget for oversized repositories.
 pub const GIT_REFS_MAX_LIMIT: usize = 2000;
 
+/// Result of [`list_refs`]: the (capped) refs plus a flag telling the UI that
+/// more refs existed than were returned, so it can note a partial branch list.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GitRefsResult {
+    pub refs: Vec<GitHistoryItemRef>,
+    pub truncated: bool,
+}
+
 /// Lists branch / remote / tag refs for the Git Log branch selector (capped at
 /// [`GIT_REFS_MAX_LIMIT`]).
-pub fn list_refs(worktree_path: &str) -> Result<Vec<GitHistoryItemRef>, CoreError> {
+pub fn list_refs(worktree_path: &str) -> Result<GitRefsResult, CoreError> {
     list_refs_capped(worktree_path, GIT_REFS_MAX_LIMIT)
 }
 
@@ -334,7 +343,7 @@ pub fn list_refs(worktree_path: &str) -> Result<Vec<GitHistoryItemRef>, CoreErro
 pub fn list_refs_capped(
     worktree_path: &str,
     max: usize,
-) -> Result<Vec<GitHistoryItemRef>, CoreError> {
+) -> Result<GitRefsResult, CoreError> {
     let stdout = run_text(
         worktree_path,
         &[
@@ -347,9 +356,6 @@ pub fn list_refs_capped(
     )?;
     let mut refs = Vec::new();
     for line in stdout.lines() {
-        if refs.len() >= max {
-            break;
-        }
         let mut parts = line.split('\t');
         let (Some(full), Some(oid)) = (parts.next(), parts.next()) else {
             continue;
@@ -368,7 +374,11 @@ pub fn list_refs_capped(
         let revision = if peeled.is_empty() { oid } else { peeled };
         refs.push(git_history_ref_from_full_name(Some(full), full, revision));
     }
-    Ok(refs)
+    let truncated = refs.len() > max;
+    if truncated {
+        refs.truncate(max);
+    }
+    Ok(GitRefsResult { refs, truncated })
 }
 
 const GIT_HISTORY_DECORATION_SEPARATOR: char = '\u{1f}';

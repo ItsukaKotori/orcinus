@@ -653,6 +653,11 @@ fn is_date_prefix(value: &str) -> bool {
         && b[7] == b'-'
         && b[8..10].iter().all(u8::is_ascii_digit)
         && (b.len() == 10 || b[10] == b'T' || b[10] == b' ')
+        && {
+            let month = (b[5] - b'0') * 10 + (b[6] - b'0');
+            let day = (b[8] - b'0') * 10 + (b[9] - b'0');
+            (1..=12).contains(&month) && (1..=31).contains(&day)
+        }
 }
 
 fn git_log_params(value: &Value) -> Result<Value, String> {
@@ -934,6 +939,10 @@ mod tests {
         assert!(validate_params("git.log", json!({ "since": "last tuesday" })).is_err());
         assert!(validate_params("git.log", json!({ "until": "2026/01/01" })).is_err());
         assert!(validate_params("git.log", json!({ "since": "2026-01-01garbage" })).is_err());
+        // Out-of-range month/day rejected (would otherwise reach git and collapse).
+        assert!(validate_params("git.log", json!({ "since": "2026-13-01" })).is_err());
+        assert!(validate_params("git.log", json!({ "until": "2026-00-10" })).is_err());
+        assert!(validate_params("git.log", json!({ "until": "2026-01-32" })).is_err());
     }
 
     #[test]

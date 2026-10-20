@@ -1,6 +1,6 @@
 import type { GitHistoryItemRef } from '@shared/git-history-types'
 import type { GitBranchChangeEntry } from '@shared/git-diff-compare-types'
-import type { GitLogRepository, GitLogSnapshot } from '../domain/types'
+import type { GitLogRepository, GitLogSnapshot, GitRefs } from '../domain/types'
 import type { GitLogFilter } from '../domain/query'
 import { buildFixtureSnapshot } from './fixture-snapshot'
 
@@ -18,7 +18,7 @@ export class FixtureRepository implements GitLogRepository {
     return skip > 0 ? { ...snap, items: [], hasMore: false } : snap
   }
 
-  async loadRefs(): Promise<GitHistoryItemRef[]> {
+  async loadRefs(): Promise<GitRefs> {
     const snap = buildFixtureSnapshot()
     const seen = new Map<string, GitHistoryItemRef>()
     for (const ref of [snap.currentRef, snap.remoteRef, snap.baseRef]) {
@@ -27,7 +27,7 @@ export class FixtureRepository implements GitLogRepository {
     for (const item of snap.items) {
       for (const ref of item.references ?? []) seen.set(ref.id, ref)
     }
-    return [...seen.values()]
+    return { refs: [...seen.values()], truncated: false }
   }
 
   async loadCommitFiles(_oid: string): Promise<GitBranchChangeEntry[]> {

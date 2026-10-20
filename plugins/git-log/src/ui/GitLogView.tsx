@@ -58,6 +58,7 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
   const [debounced, setDebounced] = useState<GitLogFilter>({})
   const [result, setResult] = useState<GitHistoryResult | null>(null)
   const [refs, setRefs] = useState<GitHistoryItemRef[]>([])
+  const [refsTruncated, setRefsTruncated] = useState(false)
   const [branch, setBranch] = useState('')
   const [ahead, setAhead] = useState(0)
   const [behind, setBehind] = useState(0)
@@ -142,10 +143,16 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
     repository
       .loadRefs()
       .then((r) => {
-        if (alive) setRefs(r)
+        if (alive) {
+          setRefs(r.refs)
+          setRefsTruncated(r.truncated)
+        }
       })
       .catch(() => {
-        if (alive) setRefs([])
+        if (alive) {
+          setRefs([])
+          setRefsTruncated(false)
+        }
       })
     return () => {
       alive = false
@@ -252,7 +259,7 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
           <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">Loading commits…</div>
         ) : (
           <>
-            <RefPanel refs={refs} activeName={filter.refs ?? null} onPickName={(name) => applyFilter({ refs: name })} />
+            <RefPanel refs={refs} truncated={refsTruncated} activeName={filter.refs ?? null} onPickName={(name) => applyFilter({ refs: name })} />
             <GraphList
               rows={visible}
               selectedOid={selected}

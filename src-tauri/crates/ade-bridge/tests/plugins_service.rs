@@ -532,10 +532,11 @@ fn git_refs_and_query_scopes_bridge_through() {
     });
     let services = git_host_services(root.path(), ui_store(root.path(), Some(WORKTREE)), worktrees);
 
-    // git.refs lists the checked-out branch.
+    // git.refs lists the checked-out branch (object shape: { refs, truncated }).
     let refs = services.git_refs(Some(WORKTREE)).expect("git.refs ok");
-    let arr = refs.as_array().expect("array");
+    let arr = refs["refs"].as_array().expect("refs array");
     assert!(arr.iter().any(|r| r["name"].as_str() == Some("main")));
+    assert_eq!(refs["truncated"].as_bool(), Some(false));
 
     // all scope returns the branch's commits.
     let all = services

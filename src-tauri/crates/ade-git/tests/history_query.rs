@@ -98,10 +98,10 @@ fn list_refs_categorizes_branches() {
     let d = repo();
     let p = d.path().to_str().unwrap();
     let refs = list_refs(p).unwrap();
-    let has = |name: &str| refs.iter().any(|r| r.name == name);
+    let has = |name: &str| refs.refs.iter().any(|r| r.name == name);
     assert!(has("main"));
     assert!(has("feature"));
-    assert!(refs.iter().any(|r| format!("{:?}", r.category).contains("Branches")));
+    assert!(refs.refs.iter().any(|r| format!("{:?}", r.category).contains("Branches")));
 }
 
 #[test]
@@ -125,7 +125,7 @@ fn list_refs_peels_annotated_tag_to_its_commit() {
         &["-c", "user.name=T", "-c", "user.email=t@example.com"],
         &["tag", "-a", "v1", "-m", "release", "HEAD"],
     ));
-    let refs = list_refs(p).unwrap();
+    let refs = list_refs(p).unwrap().refs;
     let main = refs.iter().find(|r| r.name == "main").expect("main ref");
     let v1 = refs.iter().find(|r| r.name == "v1").expect("v1 tag");
     // Annotated tag must report the peeled commit oid, matching the branch on
@@ -139,7 +139,8 @@ fn list_refs_capped_limits_the_returned_count() {
     let d = repo();
     let p = d.path().to_str().unwrap();
     assert!(git(p, &[], &["branch", "third"]));
-    assert!(list_refs(p).unwrap().len() >= 3);
+    assert!(list_refs(p).unwrap().refs.len() >= 3);
     let capped = list_refs_capped(p, 2).unwrap();
-    assert_eq!(capped.len(), 2);
+    assert_eq!(capped.refs.len(), 2);
+    assert!(capped.truncated);
 }

@@ -1,8 +1,8 @@
-import type { GitHistoryItemRef, GitHistoryResult } from '@shared/git-history-types'
+import type { GitHistoryResult } from '@shared/git-history-types'
 import type { GitBranchChangeEntry } from '@shared/git-diff-compare-types'
 import { callHost } from '../ui/host-bridge'
 import { gitCommitFilesSchema, gitHistoryResultSchema, gitRefsSchema } from './types'
-import type { GitLogRepository, GitLogSnapshot } from './types'
+import type { GitLogRepository, GitLogSnapshot, GitRefs } from './types'
 import { logParams, type GitLogFilter } from './query'
 
 /** Real-data repository: reads the active worktree via host `git.log` /
@@ -15,8 +15,8 @@ export class HostRepository implements GitLogRepository {
     return gitHistoryResultSchema.parse(value) as GitHistoryResult
   }
 
-  async loadRefs(): Promise<GitHistoryItemRef[]> {
-    return gitRefsSchema.parse(await callHost('git.refs', {})) as GitHistoryItemRef[]
+  async loadRefs(): Promise<GitRefs> {
+    return gitRefsSchema.parse(await callHost('git.refs', {})) as GitRefs
   }
 
   async loadCommitFiles(oid: string): Promise<GitBranchChangeEntry[]> {

@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { GitLogView } from './GitLogView'
 import { CommitDetail } from './CommitDetail'
+import { RefPanel } from './RefPanel'
 import { HostCallError } from './host-bridge'
 import type { GitHistoryItem, GitHistoryResult } from '@shared/git-history-types'
 import type { GitLogRepository } from '../domain/types'
@@ -59,7 +60,7 @@ describe('GitLogView', () => {
         calls.push({ filter, skip })
         return Promise.resolve(empty)
       },
-      loadRefs: () => Promise.resolve([]),
+      loadRefs: () => Promise.resolve({ refs: [], truncated: false }),
       loadCommitFiles: () => Promise.resolve([]),
     }
     await act(async () => { root.render(<GitLogView repository={repo} />) })
@@ -88,7 +89,7 @@ describe('GitLogView', () => {
         skips.push(skip)
         return Promise.resolve(pageOf(skip))
       },
-      loadRefs: () => Promise.resolve([]),
+      loadRefs: () => Promise.resolve({ refs: [], truncated: false }),
       loadCommitFiles: () => Promise.resolve([]),
     }
     await act(async () => { root.render(<GitLogView repository={repo} />) })
@@ -113,7 +114,7 @@ describe('GitLogView', () => {
         ++n === 1
           ? Promise.resolve(pageOf(0))
           : Promise.reject(new HostCallError('unknown-oid', 'unknown-oid: x')),
-      loadRefs: () => Promise.resolve([]),
+      loadRefs: () => Promise.resolve({ refs: [], truncated: false }),
       loadCommitFiles: () => Promise.resolve([]),
     }
     await act(async () => { root.render(<GitLogView repository={repo} />) })
@@ -143,7 +144,7 @@ describe('GitLogView', () => {
           resolvePending = res
         })
       },
-      loadRefs: () => Promise.resolve([]),
+      loadRefs: () => Promise.resolve({ refs: [], truncated: false }),
       loadCommitFiles: () => Promise.resolve([]),
     }
     await act(async () => { root.render(<GitLogView repository={repo} />) })
@@ -172,5 +173,14 @@ describe('CommitDetail', () => {
     await act(async () => { root.render(<CommitDetail item={item} files={files} />) })
     expect(host.querySelector('[data-testid="commit-detail"]')?.textContent).toContain('Merge branch feature into main')
     expect(host.textContent).toContain('src/core/engine.ts')
+  })
+})
+
+describe('RefPanel', () => {
+  it('truncated 时提示部分引用未显示', async () => {
+    await act(async () => {
+      root.render(<RefPanel refs={[]} truncated activeName={null} onPickName={() => {}} />)
+    })
+    expect(host.textContent).toContain('not shown')
   })
 })

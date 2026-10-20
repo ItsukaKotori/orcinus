@@ -56,12 +56,13 @@ it('HostRepository.loadCommitFiles posts git.commitFiles and returns entries', a
   expect(files[0]?.path).toBe('a.ts')
 })
 
-it('HostRepository.loadRefs posts git.refs and returns refs', async () => {
-  stubParentReply({ ok: true, value: [{ id: 'refs/heads/main', name: 'main', category: 'branches' }] })
+it('HostRepository.loadRefs posts git.refs and returns { refs, truncated }', async () => {
+  stubParentReply({ ok: true, value: { refs: [{ id: 'refs/heads/main', name: 'main', category: 'branches' }], truncated: false } })
   const promise = new HostRepository().loadRefs()
   await flush()
-  const refs = await promise
-  expect(refs[0]?.name).toBe('main')
+  const result = await promise
+  expect(result.refs[0]?.name).toBe('main')
+  expect(result.truncated).toBe(false)
   // Discriminating: the outgoing action must be git.refs (not git.log).
   expect(requests[0]?.action).toBe('git.refs')
 })
