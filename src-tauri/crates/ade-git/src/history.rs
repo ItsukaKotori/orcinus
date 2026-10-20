@@ -320,13 +320,26 @@ pub fn history_with(
     })
 }
 
-/// Lists branch / remote / tag refs for the Git Log branch selector.
+/// Max refs returned by [`list_refs`] — bounds the branch-picker payload well
+/// under the host result budget for oversized repositories.
+pub const GIT_REFS_MAX_LIMIT: usize = 2000;
+
+/// Lists branch / remote / tag refs for the Git Log branch selector (capped at
+/// [`GIT_REFS_MAX_LIMIT`]).
 pub fn list_refs(worktree_path: &str) -> Result<Vec<GitHistoryItemRef>, CoreError> {
+    list_refs_capped(worktree_path, GIT_REFS_MAX_LIMIT)
+}
+
+/// [`list_refs`] with an explicit cap, so callers/tests can bound the payload.
+pub fn list_refs_capped(
+    worktree_path: &str,
+    max: usize,
+) -> Result<Vec<GitHistoryItemRef>, CoreError> {
     let stdout = run_text(
         worktree_path,
         &[
             "for-each-ref",
-            "--format=%(refname)%09%(objectname)",
+            "--format=%(refname)%09%(objectname)%09%(*objectname)",
             "refs/heads",
             "refs/remotes",
             "refs/tags",
@@ -334,6 +347,9 @@ pub fn list_refs(worktree_path: &str) -> Result<Vec<GitHistoryItemRef>, CoreErro
     )?;
     let mut refs = Vec::new();
     for line in stdout.lines() {
+        if refs.len() >= max {
+            break;
+        }
         let mut parts = line.split('\t');
         let (Some(full), Some(oid)) = (parts.next(), parts.next()) else {
             continue;
@@ -345,7 +361,12 @@ pub fn list_refs(worktree_path: &str) -> Result<Vec<GitHistoryItemRef>, CoreErro
         if full.starts_with("refs/remotes/") && full.ends_with("/HEAD") {
             continue;
         }
-        refs.push(git_history_ref_from_full_name(Some(full), full, oid));
+        // For an annotated tag `%(objectname)` is the tag object and
+        // `%(*objectname)` is the peeled commit; prefer the peeled oid so
+        // `revision` matches the commit rendered in the graph.
+        let peeled = parts.next().unwrap_or("");
+        let revision = if peeled.is_empty() { oid } else { peeled };
+        refs.push(git_history_ref_from_full_name(Some(full), full, revision));
     }
     Ok(refs)
 }

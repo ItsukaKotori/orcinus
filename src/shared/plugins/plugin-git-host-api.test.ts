@@ -27,6 +27,11 @@ describe('git:read host surface', () => {
     expect(m.params.safeParse({ refs: 'refs/heads/feature' }).success).toBe(true)
     expect(m.params.safeParse({ skip: -1 }).success).toBe(false)
     expect(m.params.safeParse({ nope: 1 }).success).toBe(false)
+    // since/until must be ISO YYYY-MM-DD (optionally with time); reject free text.
+    expect(m.params.safeParse({ since: '2026-01-01' }).success).toBe(true)
+    expect(m.params.safeParse({ until: '2026-12-31T10:00' }).success).toBe(true)
+    expect(m.params.safeParse({ since: 'last tuesday' }).success).toBe(false)
+    expect(m.params.safeParse({ until: '2026/01/01' }).success).toBe(false)
   })
   it('git.refs 存在、无参、panel-callable、capability=git:read', () => {
     const m = byName('git.refs')
