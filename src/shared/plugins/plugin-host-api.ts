@@ -169,8 +169,8 @@ export const PLUGIN_HOST_API_V0: readonly PluginHostMethodSpec[] = [
         // head|all 为语义保留字；其余按 rev 交给后端 resolve_commit 校验。
         refs: z.union([z.literal('head'), z.literal('all'), z.string().min(1).max(255)]).optional(),
         author: z.string().min(1).max(200).optional(),
-        since: z.string().min(1).max(64).optional(),
-        until: z.string().min(1).max(64).optional(),
+        since: z.string().min(1).max(64).regex(/^\d{4}-\d{2}-\d{2}([T ].*)?$/).optional(),
+        until: z.string().min(1).max(64).regex(/^\d{4}-\d{2}-\d{2}([T ].*)?$/).optional(),
         grep: z.string().min(1).max(200).optional(),
         path: z.string().min(1).max(1024).optional(),
         skip: z.number().int().min(0).max(1_000_000).optional(),

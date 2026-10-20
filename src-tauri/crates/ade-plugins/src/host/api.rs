@@ -641,6 +641,18 @@ fn open_tab_result(value: &Value) -> Result<Value, String> {
     Ok(serde_json::json!({ "instanceId": instance_id, "worktreeId": worktree_id }))
 }
 
+/// True when `value` begins with an ISO `YYYY-MM-DD` date (git also accepts a
+/// trailing time/zone, which we leave to git after this shape check).
+fn is_date_prefix(value: &str) -> bool {
+    let b = value.as_bytes();
+    b.len() >= 10
+        && b[..4].iter().all(u8::is_ascii_digit)
+        && b[4] == b'-'
+        && b[5..7].iter().all(u8::is_ascii_digit)
+        && b[7] == b'-'
+        && b[8..10].iter().all(u8::is_ascii_digit)
+}
+
 fn git_log_params(value: &Value) -> Result<Value, String> {
     let obj = require_object(value, "(root)")?;
     reject_extra_keys(
@@ -667,6 +679,12 @@ fn git_log_params(value: &Value) -> Result<Value, String> {
         if let Some(v) = optional_string(obj, key)? {
             if v.is_empty() {
                 return Err(invalid(key, "must contain at least 1 character"));
+            }
+            // Bound the date fields to an ISO `YYYY-MM-DD` prefix so a malformed
+            // value fails as `invalid_params` here rather than surfacing later as
+            // a git error collapsed into `not-a-git-repo`.
+            if (key == "since" || key == "until") && !is_date_prefix(v) {
+                return Err(invalid(key, "expected an ISO date YYYY-MM-DD"));
             }
             max_utf16(v, max, key)?;
             normalized.insert(key.to_string(), Value::String(v.to_string()));
@@ -901,6 +919,14 @@ mod tests {
         assert!(validate_params("git.log", json!({ "skip": -1 })).is_err());
         assert!(validate_params("git.log", json!({ "nope": 1 })).is_err());
         assert_eq!(validate_params("git.refs", json!({})).unwrap(), json!({}));
+    }
+
+    #[test]
+    fn git_log_requires_iso_dates() {
+        assert!(validate_params("git.log", json!({ "since": "2026-01-01" })).is_ok());
+        assert!(validate_params("git.log", json!({ "until": "2026-12-31T10:00" })).is_ok());
+        assert!(validate_params("git.log", json!({ "since": "last tuesday" })).is_err());
+        assert!(validate_params("git.log", json!({ "until": "2026/01/01" })).is_err());
     }
 
     #[test]
