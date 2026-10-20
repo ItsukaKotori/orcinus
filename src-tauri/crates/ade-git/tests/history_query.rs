@@ -1,4 +1,4 @@
-use ade_git::history::{history_with, list_refs, GitHistoryQuery, GitHistoryRefs};
+use ade_git::history::{history_with, list_refs, list_refs_capped, GitHistoryQuery, GitHistoryRefs};
 use std::process::Command;
 
 fn git(dir: &str, extra: &[&str], args: &[&str]) -> bool {
@@ -114,4 +114,32 @@ fn rev_scope_unknown_revision_is_error() {
         ..Default::default()
     };
     assert!(history_with(p, &q).is_err());
+}
+
+#[test]
+fn list_refs_peels_annotated_tag_to_its_commit() {
+    let d = repo();
+    let p = d.path().to_str().unwrap();
+    assert!(git(
+        p,
+        &["-c", "user.name=T", "-c", "user.email=t@example.com"],
+        &["tag", "-a", "v1", "-m", "release", "HEAD"],
+    ));
+    let refs = list_refs(p).unwrap();
+    let main = refs.iter().find(|r| r.name == "main").expect("main ref");
+    let v1 = refs.iter().find(|r| r.name == "v1").expect("v1 tag");
+    // Annotated tag must report the peeled commit oid, matching the branch on
+    // the same commit — not the tag-object oid.
+    assert_eq!(v1.revision.as_deref(), main.revision.as_deref());
+    assert!(v1.revision.is_some());
+}
+
+#[test]
+fn list_refs_capped_limits_the_returned_count() {
+    let d = repo();
+    let p = d.path().to_str().unwrap();
+    assert!(git(p, &[], &["branch", "third"]));
+    assert!(list_refs(p).unwrap().len() >= 3);
+    let capped = list_refs_capped(p, 2).unwrap();
+    assert_eq!(capped.len(), 2);
 }
