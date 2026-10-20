@@ -29,7 +29,7 @@ vi.mock('./PluginInstallDialog', () => ({
     <button
       type="button"
       data-testid="test-install"
-      onClick={() => void onInstall({ scope: 'global', kind: 'local', path: '/tmp/new' } as unknown as PluginHostInstallSource)}
+      onClick={() => void onInstall({ scope: 'global', kind: 'local-path', path: '/tmp/new' })}
     >
       install
     </button>

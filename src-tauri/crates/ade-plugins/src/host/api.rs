@@ -641,8 +641,9 @@ fn open_tab_result(value: &Value) -> Result<Value, String> {
     Ok(serde_json::json!({ "instanceId": instance_id, "worktreeId": worktree_id }))
 }
 
-/// True when `value` begins with an ISO `YYYY-MM-DD` date (git also accepts a
-/// trailing time/zone, which we leave to git after this shape check).
+/// True when `value` is an ISO `YYYY-MM-DD` optionally followed by a space or
+/// `T` and a time (git parses the suffix; we only gate the shape so a malformed
+/// value fails as `invalid_params` here, matching the TS zod regex).
 fn is_date_prefix(value: &str) -> bool {
     let b = value.as_bytes();
     b.len() >= 10
@@ -651,6 +652,7 @@ fn is_date_prefix(value: &str) -> bool {
         && b[5..7].iter().all(u8::is_ascii_digit)
         && b[7] == b'-'
         && b[8..10].iter().all(u8::is_ascii_digit)
+        && (b.len() == 10 || b[10] == b'T' || b[10] == b' ')
 }
 
 fn git_log_params(value: &Value) -> Result<Value, String> {
@@ -923,10 +925,15 @@ mod tests {
 
     #[test]
     fn git_log_requires_iso_dates() {
+        // Valid ISO: bare date (what the UI date input emits) and with a time.
         assert!(validate_params("git.log", json!({ "since": "2026-01-01" })).is_ok());
+        assert!(validate_params("git.log", json!({ "until": "2026-01-01" })).is_ok());
         assert!(validate_params("git.log", json!({ "until": "2026-12-31T10:00" })).is_ok());
+        // Invalid shapes rejected at the boundary (never reach git → not collapsed
+        // into not-a-git-repo).
         assert!(validate_params("git.log", json!({ "since": "last tuesday" })).is_err());
         assert!(validate_params("git.log", json!({ "until": "2026/01/01" })).is_err());
+        assert!(validate_params("git.log", json!({ "since": "2026-01-01garbage" })).is_err());
     }
 
     #[test]
