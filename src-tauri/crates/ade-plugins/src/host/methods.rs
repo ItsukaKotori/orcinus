@@ -758,7 +758,7 @@ mod tests {
         }
 
         fn git_refs(&self, _worktree_id: Option<&str>) -> Result<serde_json::Value, HostServiceError> {
-            Ok(serde_json::json!([]))
+            Ok(serde_json::json!({ "refs": [], "truncated": false }))
         }
 
         fn git_commit_files(&self, _worktree_id: Option<&str>, _oid: &str) -> Result<serde_json::Value, HostServiceError> {
@@ -1040,7 +1040,7 @@ mod tests {
         let mut panel_ctx = context(&services, None);
         panel_ctx.via_panel = true;
         let value = expect_ok(execute("git.refs", json!({}), &panel_ctx));
-        assert!(value.is_array());
+        assert!(value["refs"].is_array() && value["truncated"].is_boolean());
         let narrow = [Capability::Storage];
         let mut denied = context(&services, None);
         denied.granted = Some(&narrow);

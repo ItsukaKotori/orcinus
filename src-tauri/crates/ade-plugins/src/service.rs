@@ -3056,7 +3056,7 @@ mod tests {
         }
 
         fn git_refs(&self, _worktree_id: Option<&str>) -> Result<serde_json::Value, HostServiceError> {
-            Ok(serde_json::json!([]))
+            Ok(serde_json::json!({ "refs": [], "truncated": false }))
         }
 
         fn git_commit_files(&self, _worktree_id: Option<&str>, _oid: &str) -> Result<serde_json::Value, HostServiceError> {

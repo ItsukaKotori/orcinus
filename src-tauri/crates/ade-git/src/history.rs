@@ -327,6 +327,7 @@ pub const GIT_REFS_MAX_LIMIT: usize = 2000;
 /// Result of [`list_refs`]: the (capped) refs plus a flag telling the UI that
 /// more refs existed than were returned, so it can note a partial branch list.
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct GitRefsResult {
     pub refs: Vec<GitHistoryItemRef>,
@@ -373,6 +374,11 @@ pub fn list_refs_capped(
         let peeled = parts.next().unwrap_or("");
         let revision = if peeled.is_empty() { oid } else { peeled };
         refs.push(git_history_ref_from_full_name(Some(full), full, revision));
+        // Stop once we've seen one past the cap: enough to set `truncated`
+        // without materializing every ref in a huge repository.
+        if refs.len() > max {
+            break;
+        }
     }
     let truncated = refs.len() > max;
     if truncated {
