@@ -88,3 +88,26 @@
 - **已定**：`'git-log'` 为独立可见类型（`WorkspaceVisibleTabType` 增项，不并入 editor）。
 - **已定**：插件退役放 3d（主应用达平后）。
 - 待 3b 核实：主应用 diff-open 路径（`use-row-opening`/`split-open`）可被 Git Log 复用（入参形态）。
+
+## 11. 续做清单（增量 3 未完成 — fresh session 直接执行）
+
+分支 `phase5-git-log-native`（HEAD `4c284c0f`）已提交、全绿，但**功能不完整、暂不合 main**。全分支 CodeReview 抓出的缺口（多数在**无测试覆盖的 tab 系统接入面**，`===` 判断不报错但运行时不处理 `git-log`）：
+
+### 必修（合并前）
+- **C2 · 标签条接入 `git-log`**（否则打开 Git Log 主体能渲染，但标签条无该行 → 不可见/关不掉/键盘不可达）。按 `plugin` tab 的既有路径逐处镜像：
+  1. `components/tab-group/useTabGroupItemProjections.ts`：加 `gitLogItems = groupTabs.filter(t => t.contentType === 'git-log')`，随 return 暴露。
+  2. `TabGroupPanel.tsx`：把 `gitLogItems` 传入 `TabBar`（与 `pluginItems` 同列）。
+  3. `components/tab-bar/tab-bar-item-model.ts`（`buildOrderedTabItems`/`getTabLayoutSignature`）+ `tab-bar-item-surface.tsx`：渲染 git-log 行（图标/label/关闭按钮，仿 plugin）。
+  4. `components/tab-bar/group-tab-order.ts` 的 `toRef` + `shared/tab-types.ts` 的 `VisibleTabRef` 联合：显式处理 `'git-log'`（勿折进 editor 的 `editorEntityIds.has` 分支，否则返回 null 被排除）。
+  5. `components/tab-group/tab-group-active-surface.ts` `resolveTabGroupActiveSurface`：`activeTabId` 三元扩到含 `'git-log'`（否则不高亮）。
+  - **测试**：reconcile 保活（仿 plugin 的 `keeps the plugin tab through reconcileWorktreeTabModel`）+ 渲染级（打开后标签条有可点/可关的 Git Log 行）。
+
+### 建议（合并前，低成本）
+- **I1 · 持久化**：`shared/workspace-session-tab-type-schema.ts` 的 `tabContentTypeSchema`/`workspaceVisibleTabTypeSchema` 加 `'git-log'`，且 `workspace-session-schema.ts` 的 `tabSchema` 加 `gitLog: z.object({ worktreeId: z.string() }).optional().catch(undefined)`（**必须同时加**，否则恢复了 tab 但丢 `gitLog` 绑定 → 被 C1 的 `gitLog != null` 立刻删）。或显式记录「Git Log tab 不持久化」（与 plugin 现状一致，可不补）。
+- **I4 · web 会话同步**：`runtime/web-session-tabs-sync/state-equality-files.ts` 手抄的 `toVisibleTabType` 把 `'git-log'` 与 `'plugin'` 同列透传（勿落 `return 'editor'`）；必要时扩 `WebSessionTabsSyncState['activeTabType']` 联合。
+
+### 延后（登记，勿在合并说明中称已完成）
+- **T11b · 退役 host 面**：`git.log/git.refs/git.commitFiles` MethodSpec + `git:read` capability（`Capability::GitRead`、`PLUGIN_CAPABILITY_KINDS`、`PLUGIN_CAPABILITY_DESCRIPTIONS`）+ `gate.rs` panel_methods + `ade-plugins` api/services/methods/service + `ade-bridge` plugins_service 的 `git_log/git_refs/git_commit_files`/`map_core_err`/`assert_git_repo`/`git_repo_cache` + 相关测试；SPECS 19→16、panel 面 8→5。**保留** `ade_git::history_with/list_refs`（主应用命令用）。注意 11 能力闭集变更涉及 manifest 兼容，谨慎。
+- **命令面板入口** `git.log.open`（spec §3.5，当前唯一入口是底部条「Log」按钮）。
+- **docs 清理**：`docs/phase4b-git-log-query-record.md` 等仍引用 `plugins/git-log`/`build:git-log`（历史台账，不断链）。
+- **Minor**：RefPanel 分组标题（branches/remote branches/tags）未 translate；打开 diff 由双击变单击；GitLogTabContent 每次点文件重跑 commitCompare（未复用底部条缓存）；数据层放弃 zod 运行时校验（信任 specta 类型）；`specta_export.rs` 的 `export_lists_every_command` 名单未含新命令（不报错，建议补）。
