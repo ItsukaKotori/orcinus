@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { translate } from '@/i18n/i18n'
 import type { GitBranchChangeEntry } from '../../../../shared/git-diff-compare-types'
 import type { GitHistoryItem, GitHistoryItemRef, GitHistoryResult } from '../../../../shared/git-history-types'
 import type { GitLogRepository } from './types'
@@ -17,7 +18,7 @@ function isBoundaryRow(row: GraphRow): boolean {
 /** Native git commands reject with an `Error(message)` (BridgeError serializes to
  *  `{ message }`), so surface the message directly. */
 function describeHostError(e: unknown): string {
-  return e instanceof Error && e.message ? e.message : 'Failed to read git history.'
+  return e instanceof Error && e.message ? e.message : translate('auto.components.git-log.loadFailed', 'Failed to read git history.')
 }
 
 /** Coalesce rapid filter edits into one backend query per pause. The panel host
@@ -244,10 +245,10 @@ export function GitLogView({
       <div className="flex min-h-0 flex-1">
         {status === 'error' ? (
           <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-muted-foreground">
-            Git history unavailable: {error}
+            {translate('auto.components.git-log.unavailable', 'Git history unavailable')}: {error}
           </div>
         ) : status === 'loading' ? (
-          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">Loading commits…</div>
+          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">{translate('auto.components.git-log.loading', 'Loading commits…')}</div>
         ) : (
           <>
             <RefPanel refs={refs} truncated={refsTruncated} activeName={filter.refs ?? null} onPickName={(name) => applyFilter({ refs: name })} />

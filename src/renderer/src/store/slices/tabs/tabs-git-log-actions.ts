@@ -1,3 +1,4 @@
+import { translate } from '@/i18n/i18n'
 import type { TabsSlice, TabsSliceGet, TabsSliceSet } from './tabs-slice-contract'
 import { buildActiveSurfacePatch } from './tabs-surface'
 
@@ -28,7 +29,7 @@ export function createTabsGitLogActions(
       const created = get().createUnifiedTab(worktreeId, 'git-log', {
         id,
         entityId: id,
-        label: 'Git Log',
+        label: translate('auto.components.git-log.title', 'Git Log'),
         gitLog: { worktreeId },
         activate: shouldActivate
       })

@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useAppStore } from '@/store'
+import { translate } from '@/i18n/i18n'
 import { findWorktreeById } from '@/store/slices/worktree-helpers'
 import { detectLanguage } from '@/lib/language-detect'
 import type { GitBranchChangeEntry } from '../../../../shared/git-diff-compare-types'
@@ -49,7 +50,7 @@ export function GitLogTabContent({ tab }: { tab: Tab }): React.JSX.Element {
   if (!repository) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-        Git Log: workspace unavailable
+        {translate('auto.components.git-log.workspaceUnavailable', 'Git Log: workspace unavailable')}
       </div>
     )
   }

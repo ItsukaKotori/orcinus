@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
+import { translate } from '@/i18n/i18n'
 import { GitHistoryGraphSvg, graphColor } from '@/components/right-sidebar/source-control/sync/git-history-graph-svg'
 import { dedupeRemoteTrackingRefs } from '../../../../shared/git-history-ref-display'
 import type { GraphRow } from './git-graph-model'
@@ -76,14 +77,14 @@ export function GraphList({ rows, selectedOid, onSelect, hasMore, loadingMore, l
       {(loadingMore || hasMore || loadMoreError) && (
         <div className="px-2 py-1 text-center text-xs text-muted-foreground">
           {loadingMore ? (
-            'Loading more commits…'
+            translate('auto.components.git-log.loadingMore', 'Loading more commits…')
           ) : loadMoreError ? (
             <span className="flex items-center justify-center gap-2">
-              <span>Failed to load more: {loadMoreError}</span>
-              <button type="button" onClick={onLoadMore} className="rounded border border-border px-2 py-0.5 hover:bg-accent">Retry</button>
+              <span>{translate('auto.components.git-log.loadMoreFailed', 'Failed to load more:')} {loadMoreError}</span>
+              <button type="button" onClick={onLoadMore} className="rounded border border-border px-2 py-0.5 hover:bg-accent">{translate('auto.components.git-log.retry', 'Retry')}</button>
             </span>
           ) : (
-            <button type="button" onClick={onLoadMore} className="rounded border border-border px-2 py-0.5 hover:bg-accent">Load more</button>
+            <button type="button" onClick={onLoadMore} className="rounded border border-border px-2 py-0.5 hover:bg-accent">{translate('auto.components.git-log.loadMore', 'Load more')}</button>
           )}
         </div>
       )}
