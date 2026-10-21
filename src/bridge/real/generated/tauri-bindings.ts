@@ -263,6 +263,7 @@ export const commands = {
 	gitBranchDiff: (args: GitBranchDiffArgs) => typedError<GitDiffResult_Serialize, BridgeError>(__TAURI_INVOKE("git_branch_diff", { args })),
 	gitCommitDiff: (args: GitCommitDiffArgs) => typedError<GitDiffResult_Serialize, BridgeError>(__TAURI_INVOKE("git_commit_diff", { args })),
 	gitHistory: (args: GitHistoryArgs) => typedError<GitHistoryResult_Serialize, BridgeError>(__TAURI_INVOKE("git_history", { args })),
+	gitLogQuery: (args: GitLogQueryArgs) => typedError<GitHistoryResult_Serialize, BridgeError>(__TAURI_INVOKE("git_log_query", { args })),
 	gitRemoteUrls: (args: GitWorktreeArgs) => typedError<GitRemoteUrl[], BridgeError>(__TAURI_INVOKE("git_remote_urls", { args })),
 	gitRead: (args: GitReadArgs) => typedError<GitReadResult, BridgeError>(__TAURI_INVOKE("git_read", { args })),
 	gitPush: (args: GitPushArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_push", { args })),
@@ -1177,6 +1178,26 @@ export type GitHistoryResult_Serialize = {
 	hasOutgoingChanges: boolean,
 	hasMore: boolean,
 	limit: number,
+};
+
+export type GitLogQueryArgs = {
+	worktreePath: string,
+	query: GitLogQueryIn,
+};
+
+/**
+ *  Renderer `git.log` query (native Git Log view). Field names match the
+ *  frontend `logParams` verbatim.
+ */
+export type GitLogQueryIn = {
+	refs?: string | null,
+	author?: string | null,
+	since?: string | null,
+	until?: string | null,
+	grep?: string | null,
+	path?: string | null,
+	skip?: number | null,
+	limit?: number | null,
 };
 
 export type GitPushArgs = {

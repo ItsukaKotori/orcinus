@@ -12,7 +12,7 @@ use std::time::Duration;
 use ade_fs::FsService;
 use ade_git::compare::{GitBranchCompareResult, GitCommitCompareResult};
 use ade_git::diff::GitDiffResult;
-use ade_git::history::GitHistoryResult;
+use ade_git::history::{GitHistoryQuery, GitHistoryRefs, GitHistoryResult};
 use ade_git::runner::CancelToken;
 use ade_git::status::{GitConflictOperation, GitStatusResult, GitUpstreamStatus};
 use ade_git::status_read::StatusOptions;
@@ -617,6 +617,102 @@ pub async fn git_history(
     require_authorized_worktree(&state.fs, &args.worktree_path)?;
     run_blocking(move || history_impl(&args.worktree_path, args.limit, args.base_ref.as_deref()))
         .await
+}
+
+/// Renderer `git.log` query (native Git Log view). Field names match the
+/// frontend `logParams` verbatim.
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitLogQueryIn {
+    #[serde(default)]
+    pub refs: Option<String>,
+    #[serde(default)]
+    pub author: Option<String>,
+    #[serde(default)]
+    pub since: Option<String>,
+    #[serde(default)]
+    pub until: Option<String>,
+    #[serde(default)]
+    pub grep: Option<String>,
+    #[serde(default)]
+    pub path: Option<String>,
+    #[serde(default)]
+    pub skip: Option<u32>,
+    #[serde(default)]
+    pub limit: Option<u32>,
+}
+
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitLogQueryArgs {
+    pub worktree_path: String,
+    pub query: GitLogQueryIn,
+}
+
+/// ISO `YYYY-MM-DD` (optionally with a time suffix), month 01-12 / day 01-31.
+fn is_iso_date(value: &str) -> bool {
+    let b = value.as_bytes();
+    b.len() >= 10
+        && b[..4].iter().all(u8::is_ascii_digit)
+        && b[4] == b'-'
+        && b[5..7].iter().all(u8::is_ascii_digit)
+        && b[7] == b'-'
+        && b[8..10].iter().all(u8::is_ascii_digit)
+        && (b.len() == 10 || b[10] == b'T' || b[10] == b' ')
+        && {
+            let month = (b[5] - b'0') * 10 + (b[6] - b'0');
+            let day = (b[8] - b'0') * 10 + (b[9] - b'0');
+            (1..=12).contains(&month) && (1..=31).contains(&day)
+        }
+}
+
+fn to_history_query(q: &GitLogQueryIn) -> Result<GitHistoryQuery, BridgeError> {
+    for (key, value) in [("since", q.since.as_deref()), ("until", q.until.as_deref())] {
+        if let Some(value) = value {
+            if !is_iso_date(value) {
+                return Err(BridgeError::message(format!(
+                    "{key} must be an ISO date (YYYY-MM-DD)"
+                )));
+            }
+        }
+    }
+    let refs = match q.refs.as_deref() {
+        None | Some("head") => GitHistoryRefs::Head,
+        Some("all") => GitHistoryRefs::All,
+        Some(rev) => GitHistoryRefs::Rev(rev.to_string()),
+    };
+    Ok(GitHistoryQuery {
+        refs,
+        author: q.author.clone(),
+        since: q.since.clone(),
+        until: q.until.clone(),
+        grep: q.grep.clone(),
+        path: q.path.clone(),
+        base_ref: None,
+        skip: q.skip.unwrap_or(0),
+        limit: q
+            .limit
+            .unwrap_or(ade_git::history::GIT_HISTORY_DEFAULT_LIMIT)
+            .clamp(1, ade_git::history::GIT_HISTORY_MAX_LIMIT),
+    })
+}
+
+pub fn git_log_query_impl(
+    worktree_path: &str,
+    query: &GitLogQueryIn,
+) -> Result<GitHistoryResult, BridgeError> {
+    let history_query = to_history_query(query)?;
+    Ok(ade_git::history::history_with(worktree_path, &history_query)?)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_log_query(
+    state: State<'_, AppState>,
+    args: GitLogQueryArgs,
+) -> Result<GitHistoryResult, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    run_blocking(move || git_log_query_impl(&args.worktree_path, &args.query)).await
 }
 
 #[tauri::command]
