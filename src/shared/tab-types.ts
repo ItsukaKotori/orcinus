@@ -25,12 +25,14 @@ export type TabContentType =
   | 'check-details'
   | 'agent-session'
   | 'plugin'
+  | 'git-log'
 
 export type WorkspaceVisibleTabType =
   | 'terminal'
   | 'editor'
   | 'agent-session'
   | 'plugin'
+  | 'git-log'
 export type CtrlTabOrderMode = 'mru' | 'sequential'
 
 // Why: many-to-one — every editor-family kind collapses to 'editor'. Never invert it by equality;
@@ -39,7 +41,8 @@ export function toVisibleTabType(contentType: TabContentType): WorkspaceVisibleT
   if (
     contentType === 'agent-session' ||
     contentType === 'terminal' ||
-    contentType === 'plugin'
+    contentType === 'plugin' ||
+    contentType === 'git-log'
   ) {
     return contentType
   }
@@ -93,6 +96,8 @@ export type Tab = {
   /** Present iff `contentType === 'plugin'`; optional so persisted sessions
    *  written before plugin tabs existed hydrate unchanged. */
   pluginTab?: PluginTabBinding
+  /** Present iff `contentType === 'git-log'`; one native Git Log view per worktree. */
+  gitLog?: { worktreeId: string }
 }
 
 export type TabGroup = {
