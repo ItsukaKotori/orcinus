@@ -6,11 +6,14 @@ export const tabContentTypeSchema = z.enum([
   'diff',
   'conflict-review',
   'check-details',
-  'agent-session'
+  'agent-session',
+  'git-log'
 ])
 
 export const workspaceVisibleTabTypeSchema = z.enum([
   'terminal',
   'editor',
-  'agent-session'
+  'agent-session',
+  'plugin',
+  'git-log'
 ])

@@ -148,6 +148,9 @@ const tabSchema = z.object({
   lastFocusedAt: z.number().finite().nonnegative().optional().catch(undefined),
   isPreview: z.boolean().optional(),
   isPinned: z.boolean().optional(),
+  // Why: restoring a git-log tab without its binding trips the C1 reconcile
+  // guard (`gitLog != null`), silently deleting the resurrected tab.
+  gitLog: z.object({ worktreeId: z.string() }).optional().catch(undefined),
   // Why: persist the per-tab chat view mode so 'chat' survives reload /
   // session restore. `.catch('terminal')` tolerates unknown future values (a
   // newer build that wrote an unrecognized mode) by degrading to the safe

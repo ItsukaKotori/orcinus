@@ -524,6 +524,45 @@ describe('parseWorkspaceSession', () => {
     }
   })
 
+  it('preserves a git-log tab with its gitLog binding and its active projection', () => {
+    // Why: restoring the tab while stripping `gitLog` (or rejecting 'git-log'
+    // outright) makes reconcile drop the resurrected tab immediately.
+    const result = parseWorkspaceSession({
+      activeRepoId: null,
+      activeWorktreeId: 'wt',
+      activeTabId: 'git-log/wt',
+      tabsByWorktree: {},
+      terminalLayoutsByTabId: {},
+      unifiedTabs: {
+        wt: [
+          {
+            id: 'git-log/wt',
+            entityId: 'git-log/wt',
+            groupId: 'group1',
+            worktreeId: 'wt',
+            contentType: 'git-log',
+            label: 'Git Log',
+            customLabel: null,
+            color: null,
+            sortOrder: 0,
+            createdAt: 0,
+            gitLog: { worktreeId: 'wt' }
+          }
+        ]
+      },
+      activeTabTypeByWorktree: { wt: 'git-log' }
+    })
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.value.unifiedTabs?.wt[0]).toMatchObject({
+        contentType: 'git-log',
+        gitLog: { worktreeId: 'wt' }
+      })
+      expect(result.value.activeTabTypeByWorktree?.wt).toBe('git-log')
+    }
+  })
+
   it('degrades an unknown viewMode to the safe default instead of failing parse', () => {
     const result = parseWorkspaceSession({
       activeRepoId: null,
