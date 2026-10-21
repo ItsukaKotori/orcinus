@@ -2,9 +2,13 @@ import type { GitBranchChangeEntry } from '../../../../shared/git-diff-compare-t
 import type { GitHistoryItem } from '../../../../shared/git-history-types'
 import { formatAbsoluteDate, shortHash } from './format'
 
-type Props = { item: GitHistoryItem | null; files: GitBranchChangeEntry[] }
+type Props = {
+  item: GitHistoryItem | null
+  files: GitBranchChangeEntry[]
+  onOpenFile?: (item: GitHistoryItem, entry: GitBranchChangeEntry) => void
+}
 
-export function CommitDetail({ item, files }: Props): React.JSX.Element {
+export function CommitDetail({ item, files, onOpenFile }: Props): React.JSX.Element {
   return (
     <div data-testid="commit-detail" className="h-48 shrink-0 overflow-auto border-t border-border p-3 text-xs">
       {!item ? (
@@ -22,7 +26,18 @@ export function CommitDetail({ item, files }: Props): React.JSX.Element {
             {files.map((f) => (
               <li key={f.path} className="flex items-center gap-2">
                 <span className="w-4 text-center text-muted-foreground">{f.status[0]!.toUpperCase()}</span>
-                <span className="truncate">{f.path}</span>
+                {onOpenFile && item ? (
+                  <button
+                    type="button"
+                    className="truncate text-left hover:underline"
+                    onClick={() => onOpenFile(item, f)}
+                    title={`Open diff: ${f.path}`}
+                  >
+                    {f.path}
+                  </button>
+                ) : (
+                  <span className="truncate">{f.path}</span>
+                )}
               </li>
             ))}
           </ul>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { GitBranchChangeEntry } from '../../../../shared/git-diff-compare-types'
-import type { GitHistoryItemRef, GitHistoryResult } from '../../../../shared/git-history-types'
+import type { GitHistoryItem, GitHistoryItemRef, GitHistoryResult } from '../../../../shared/git-history-types'
 import type { GitLogRepository } from './types'
 import { PAGE_SIZE, mergePages, type GitLogFilter } from './query'
 import { buildGraphRows, type GraphRow } from './git-graph-model'
@@ -38,7 +38,13 @@ function isSameFilter(a: GitLogFilter, b: GitLogFilter): boolean {
   )
 }
 
-export function GitLogView({ repository }: { repository: GitLogRepository }): React.JSX.Element {
+export function GitLogView({
+  repository,
+  onOpenFileDiff
+}: {
+  repository: GitLogRepository
+  onOpenFileDiff?: (item: GitHistoryItem, entry: GitBranchChangeEntry) => void
+}): React.JSX.Element {
   const [filter, setFilter] = useState<GitLogFilter>({})
   const [debounced, setDebounced] = useState<GitLogFilter>({})
   const [result, setResult] = useState<GitHistoryResult | null>(null)
@@ -257,7 +263,7 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
           </>
         )}
       </div>
-      <CommitDetail item={selectedItem} files={files} />
+      <CommitDetail item={selectedItem} files={files} onOpenFile={onOpenFileDiff} />
     </div>
   )
 }
