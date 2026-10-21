@@ -35,6 +35,8 @@ export function createGitRealApi(): PreloadApi['git'] {
     branchDiff: (args) => invokeCommand('git_branch_diff', { args }),
     commitDiff: (args) => invokeCommand('git_commit_diff', { args }),
     history: (args) => invokeCommand('git_history', { args }),
+    logQuery: (args) => invokeCommand('git_log_query', { args }),
+    refs: (args) => invokeCommand('git_refs', { args }),
     push: async (args) => {
       const runGit = createRunGit(defaultGitReadExecutor(args.worktreePath))
       const forceWithLease = args.forceWithLease === true

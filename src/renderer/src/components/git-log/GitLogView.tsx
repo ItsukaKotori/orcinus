@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { GitBranchChangeEntry } from '@shared/git-diff-compare-types'
-import type { GitHistoryItemRef, GitHistoryResult } from '@shared/git-history-types'
-import type { GitLogRepository } from '../domain/types'
-import { PAGE_SIZE, mergePages, type GitLogFilter } from '../domain/query'
-import { buildGraphRows, type GraphRow } from '../graph/git-graph-model'
+import { translate } from '@/i18n/i18n'
+import type { GitBranchChangeEntry } from '../../../../shared/git-diff-compare-types'
+import type { GitHistoryItem, GitHistoryItemRef, GitHistoryResult } from '../../../../shared/git-history-types'
+import type { GitLogRepository } from './types'
+import { PAGE_SIZE, mergePages, type GitLogFilter } from './query'
+import { buildGraphRows, type GraphRow } from './git-graph-model'
 import { selectVisibleRows } from './select-rows'
-import { HostCallError } from './host-bridge'
 import { Toolbar } from './Toolbar'
 import { RefPanel } from './RefPanel'
 import { GraphList } from './GraphList'
@@ -15,24 +15,10 @@ function isBoundaryRow(row: GraphRow): boolean {
   return row.viewModel.kind === 'incoming-changes' || row.viewModel.kind === 'outgoing-changes'
 }
 
-/** Map a host error code to user-facing copy (spec §2.1: at least `unknown-oid`). */
+/** Native git commands reject with an `Error(message)` (BridgeError serializes to
+ *  `{ message }`), so surface the message directly. */
 function describeHostError(e: unknown): string {
-  switch (e instanceof HostCallError ? e.code : undefined) {
-    case 'unknown-oid':
-      return 'That branch or revision does not exist.'
-    case 'not-a-git-repo':
-      return 'The active workspace is not a git repository.'
-    case 'no-active-worktree':
-      return 'No active workspace.'
-    case 'rate_limited':
-      return 'Too many requests — slow down.'
-    case 'invalid_params':
-      return 'Invalid query.'
-    case 'capability_denied':
-      return 'Git read permission was not granted.'
-    default:
-      return e instanceof Error && e.message ? e.message : 'Failed to read git history.'
-  }
+  return e instanceof Error && e.message ? e.message : translate('auto.components.git-log.loadFailed', 'Failed to read git history.')
 }
 
 /** Coalesce rapid filter edits into one backend query per pause. The panel host
@@ -53,7 +39,13 @@ function isSameFilter(a: GitLogFilter, b: GitLogFilter): boolean {
   )
 }
 
-export function GitLogView({ repository }: { repository: GitLogRepository }): React.JSX.Element {
+export function GitLogView({
+  repository,
+  onOpenFileDiff
+}: {
+  repository: GitLogRepository
+  onOpenFileDiff?: (item: GitHistoryItem, entry: GitBranchChangeEntry) => void
+}): React.JSX.Element {
   const [filter, setFilter] = useState<GitLogFilter>({})
   const [debounced, setDebounced] = useState<GitLogFilter>({})
   const [result, setResult] = useState<GitHistoryResult | null>(null)
@@ -236,7 +228,7 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
   const selectedItem = rows.find((r) => r.viewModel.historyItem.id === selected)?.viewModel.historyItem ?? null
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground" tabIndex={0} onKeyDown={onKey}>
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col bg-background text-foreground" tabIndex={0} onKeyDown={onKey}>
       <Toolbar
         branch={branch}
         query={query}
@@ -253,10 +245,10 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
       <div className="flex min-h-0 flex-1">
         {status === 'error' ? (
           <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-muted-foreground">
-            Git history unavailable: {error}
+            {translate('auto.components.git-log.unavailable', 'Git history unavailable')}: {error}
           </div>
         ) : status === 'loading' ? (
-          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">Loading commits…</div>
+          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">{translate('auto.components.git-log.loading', 'Loading commits…')}</div>
         ) : (
           <>
             <RefPanel refs={refs} truncated={refsTruncated} activeName={filter.refs ?? null} onPickName={(name) => applyFilter({ refs: name })} />
@@ -272,7 +264,7 @@ export function GitLogView({ repository }: { repository: GitLogRepository }): Re
           </>
         )}
       </div>
-      <CommitDetail item={selectedItem} files={files} />
+      <CommitDetail item={selectedItem} files={files} onOpenFile={onOpenFileDiff} />
     </div>
   )
 }

@@ -124,6 +124,11 @@ export function projectWorktreeTabModelReconciliation(
       // right after open. Dropping it here silently closed every plugin tab.
       return tab.pluginTab != null
     }
+    if (tab.contentType === 'git-log') {
+      // Same rationale as plugin: the `gitLog` binding is the render contract, so
+      // reconcile must not drop it via the editor-liveness fallback below.
+      return tab.gitLog != null
+    }
     return liveEditorIds.has(tab.entityId)
   }
 

@@ -263,6 +263,8 @@ export const commands = {
 	gitBranchDiff: (args: GitBranchDiffArgs) => typedError<GitDiffResult_Serialize, BridgeError>(__TAURI_INVOKE("git_branch_diff", { args })),
 	gitCommitDiff: (args: GitCommitDiffArgs) => typedError<GitDiffResult_Serialize, BridgeError>(__TAURI_INVOKE("git_commit_diff", { args })),
 	gitHistory: (args: GitHistoryArgs) => typedError<GitHistoryResult_Serialize, BridgeError>(__TAURI_INVOKE("git_history", { args })),
+	gitLogQuery: (args: GitLogQueryArgs) => typedError<GitHistoryResult_Serialize, BridgeError>(__TAURI_INVOKE("git_log_query", { args })),
+	gitRefs: (args: GitRefsArgs) => typedError<GitRefsResult_Serialize, BridgeError>(__TAURI_INVOKE("git_refs", { args })),
 	gitRemoteUrls: (args: GitWorktreeArgs) => typedError<GitRemoteUrl[], BridgeError>(__TAURI_INVOKE("git_remote_urls", { args })),
 	gitRead: (args: GitReadArgs) => typedError<GitReadResult, BridgeError>(__TAURI_INVOKE("git_read", { args })),
 	gitPush: (args: GitPushArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_push", { args })),
@@ -1179,6 +1181,26 @@ export type GitHistoryResult_Serialize = {
 	limit: number,
 };
 
+export type GitLogQueryArgs = {
+	worktreePath: string,
+	query: GitLogQueryIn,
+};
+
+/**
+ *  Renderer `git.log` query (native Git Log view). Field names match the
+ *  frontend `logParams` verbatim.
+ */
+export type GitLogQueryIn = {
+	refs?: string | null,
+	author?: string | null,
+	since?: string | null,
+	until?: string | null,
+	grep?: string | null,
+	path?: string | null,
+	skip?: number | null,
+	limit?: number | null,
+};
+
 export type GitPushArgs = {
 	worktreePath: string,
 	remote?: string | null,
@@ -1195,6 +1217,34 @@ export type GitReadResult = {
 	stdout: string,
 	stderr: string,
 	code: number | null,
+};
+
+export type GitRefsArgs = {
+	worktreePath: string,
+};
+
+/**
+ *  Result of [`list_refs`]: the (capped) refs plus a flag telling the UI that
+ *  more refs existed than were returned, so it can note a partial branch list.
+ */
+export type GitRefsResult = GitRefsResult_Serialize | GitRefsResult_Deserialize;
+
+/**
+ *  Result of [`list_refs`]: the (capped) refs plus a flag telling the UI that
+ *  more refs existed than were returned, so it can note a partial branch list.
+ */
+export type GitRefsResult_Deserialize = {
+	refs: GitHistoryItemRef_Deserialize[],
+	truncated: boolean,
+};
+
+/**
+ *  Result of [`list_refs`]: the (capped) refs plus a flag telling the UI that
+ *  more refs existed than were returned, so it can note a partial branch list.
+ */
+export type GitRefsResult_Serialize = {
+	refs: GitHistoryItemRef_Serialize[],
+	truncated: boolean,
 };
 
 export type GitRemoteUrl = {

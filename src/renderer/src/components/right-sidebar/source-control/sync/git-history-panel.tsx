@@ -48,7 +48,8 @@ export function GitHistoryPanel({
   onOpenCommit,
   onLoadCommitFiles,
   onOpenCommitFile,
-  onCommitAction
+  onCommitAction,
+  onOpenGitLog
 }: {
   state: GitHistoryPanelState
   collapsed: boolean
@@ -62,6 +63,8 @@ export function GitHistoryPanel({
     event?: SourceControlRowOpenEvent
   ) => void
   onCommitAction?: (action: GitHistoryCommitAction, item: GitHistoryItem) => void
+  /** Opens the full-width native Git Log view for this worktree (spec §3.6). */
+  onOpenGitLog?: () => void
 }): React.JSX.Element | null {
   const result = state.result
   const viewModels = useMemo(() => {
@@ -261,6 +264,19 @@ export function GitHistoryPanel({
             {result && <span className="text-[10px] font-medium tabular-nums">{count}</span>}
             {result?.hasMore && <span className="text-[10px] font-medium">+</span>}
           </button>
+          {onOpenGitLog && (
+            <button
+              type="button"
+              onClick={onOpenGitLog}
+              className="my-auto shrink-0 rounded px-1 text-[10px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+              title={translate(
+                'auto.components.right.sidebar.GitHistoryPanel.openGitLog',
+                'Open Git Log'
+              )}
+            >
+              {translate('auto.components.right.sidebar.GitHistoryPanel.openGitLogShort', 'Log')}
+            </button>
+          )}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

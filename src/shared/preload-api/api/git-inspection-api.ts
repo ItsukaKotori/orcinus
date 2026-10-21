@@ -10,7 +10,22 @@ import type {
   GitUpstreamStatus
 } from '../../git-status-types'
 import type { GitPushTarget } from '../../worktree/types'
-import type { GitHistoryOptions, GitHistoryResult } from '../../git-history'
+import type { GitHistoryItemRef, GitHistoryOptions, GitHistoryResult } from '../../git-history'
+
+/** Native Git Log view query (maps 1:1 to the `git_log_query` command). */
+export type GitLogQuery = {
+  refs?: string
+  author?: string
+  since?: string
+  until?: string
+  grep?: string
+  path?: string
+  skip?: number
+  limit?: number
+}
+
+/** `git_refs` result: capped ref list + truncation flag. */
+export type GitRefsResult = { refs: GitHistoryItemRef[]; truncated: boolean }
 import type {
   CommitMessageAgentCapability,
   CommitMessageModelCapability
@@ -53,6 +68,8 @@ export type GitInspectionApi = {
   history: (
     args: { worktreePath: string; connectionId?: string } & GitHistoryOptions
   ) => Promise<GitHistoryResult>
+  logQuery: (args: { worktreePath: string; query: GitLogQuery }) => Promise<GitHistoryResult>
+  refs: (args: { worktreePath: string }) => Promise<GitRefsResult>
   conflictOperation: (args: {
     worktreePath: string
     connectionId?: string

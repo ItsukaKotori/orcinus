@@ -3,8 +3,8 @@ import {
   buildGitHistoryViewModels,
   getGitHistoryItemLaneIndex,
   type GitHistoryItemViewModel
-} from '@shared/git-history-graph'
-import type { GitLogSnapshot } from '../domain/types'
+} from '../../../../shared/git-history-graph'
+import type { GitLogSnapshot } from './types'
 
 export type GraphRow = {
   viewModel: GitHistoryItemViewModel

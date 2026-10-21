@@ -1,4 +1,4 @@
-import type { GitHistoryItem, GitHistoryResult } from '@shared/git-history-types'
+import type { GitHistoryItem, GitHistoryResult } from '../../../../shared/git-history-types'
 
 /** Backend-driven filter for `git.log`. `refs` selects the range: omitted or
  *  `'head'` → current branch, `'all'` → every ref, otherwise a revision string. */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { GitHistoryItem, GitHistoryResult } from '@shared/git-history-types'
+import type { GitHistoryItem, GitHistoryResult } from '../../../../shared/git-history-types'
 import { logParams, mergePages, PAGE_SIZE, type GitLogFilter } from './query'
 
 const item = (id: string): GitHistoryItem => ({ id, parentIds: [], subject: id, message: id })

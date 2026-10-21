@@ -1,4 +1,6 @@
-import type { GitHistoryItemRef } from '@shared/git-history-types'
+import { useState } from 'react'
+import { translate } from '@/i18n/i18n'
+import type { GitHistoryItemRef } from '../../../../shared/git-history-types'
 
 export function groupRefs(refs: GitHistoryItemRef[]): Record<string, GitHistoryItemRef[]> {
   const out: Record<string, GitHistoryItemRef[]> = {}
@@ -16,30 +18,38 @@ type Props = {
 }
 
 export function RefPanel({ refs, truncated, activeName, onPickName }: Props): React.JSX.Element {
-  const groups = groupRefs(refs)
+  const [term, setTerm] = useState('')
+  const needle = term.trim().toLowerCase()
+  const groups = groupRefs(needle ? refs.filter((r) => r.name.toLowerCase().includes(needle)) : refs)
   const order = ['branches', 'remote branches', 'tags'] as const
   const current = activeName == null || activeName === 'head'
   return (
     <div className="w-44 shrink-0 overflow-auto border-r border-border p-2 text-xs">
+      <input
+        value={term}
+        onChange={(e) => setTerm(e.target.value)}
+        placeholder={translate('auto.components.git-log.filterBranches', 'Filter branches…')}
+        className="mb-2 w-full rounded border border-input bg-transparent px-1.5 py-0.5 text-xs outline-none focus:ring-1 focus:ring-ring"
+      />
       <div className="mb-2 flex gap-1">
         <button
           type="button"
           onClick={() => onPickName(undefined)}
           className={`flex-1 rounded px-1.5 py-0.5 ${current ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent/40'}`}
         >
-          Current
+          {translate('auto.components.git-log.current', 'Current')}
         </button>
         <button
           type="button"
           onClick={() => onPickName('all')}
           className={`flex-1 rounded px-1.5 py-0.5 ${activeName === 'all' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent/40'}`}
         >
-          All
+          {translate('auto.components.git-log.all', 'All')}
         </button>
       </div>
       {truncated && (
         <p className="mb-2 text-[11px] leading-4 text-muted-foreground">
-          Some refs are not shown (list limit reached).
+          {translate('auto.components.git-log.refsTruncated', 'Some refs are not shown (list limit reached).')}
         </p>
       )}
       {order.map((cat) => (groups[cat]?.length ? (
