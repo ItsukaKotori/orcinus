@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { GitHistoryResult } from '../../../../shared/git-history-types'
 import { GitLogView } from './GitLogView'
+import { RefPanel } from './RefPanel'
 import type { GitLogFilter } from './query'
 import type { GitLogRepository, GitRefs } from './types'
 
@@ -87,5 +88,30 @@ describe('GitLogView (native)', () => {
     })
     const last = calls[calls.length - 1]
     expect(last?.filter).toEqual({ refs: 'all' })
+  })
+
+  it('RefPanel search filters the branch list by name', async () => {
+    await act(async () => {
+      root.render(
+        <RefPanel
+          refs={[
+            { id: 'refs/heads/main', name: 'main', category: 'branches' },
+            { id: 'refs/heads/release', name: 'release', category: 'branches' },
+          ]}
+          truncated={false}
+          activeName={null}
+          onPickName={() => {}}
+        />
+      )
+    })
+    expect(host.textContent).toContain('release')
+    const input = host.querySelector('input')!
+    const valueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
+    await act(async () => {
+      valueSetter?.call(input, 'main')
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    expect(host.textContent).toContain('main')
+    expect(host.textContent).not.toContain('release')
   })
 })

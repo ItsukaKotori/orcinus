@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { GitHistoryItemRef } from '../../../../shared/git-history-types'
 
 export function groupRefs(refs: GitHistoryItemRef[]): Record<string, GitHistoryItemRef[]> {
@@ -16,11 +17,19 @@ type Props = {
 }
 
 export function RefPanel({ refs, truncated, activeName, onPickName }: Props): React.JSX.Element {
-  const groups = groupRefs(refs)
+  const [term, setTerm] = useState('')
+  const needle = term.trim().toLowerCase()
+  const groups = groupRefs(needle ? refs.filter((r) => r.name.toLowerCase().includes(needle)) : refs)
   const order = ['branches', 'remote branches', 'tags'] as const
   const current = activeName == null || activeName === 'head'
   return (
     <div className="w-44 shrink-0 overflow-auto border-r border-border p-2 text-xs">
+      <input
+        value={term}
+        onChange={(e) => setTerm(e.target.value)}
+        placeholder="Filter branches…"
+        className="mb-2 w-full rounded border border-input bg-transparent px-1.5 py-0.5 text-xs outline-none focus:ring-1 focus:ring-ring"
+      />
       <div className="mb-2 flex gap-1">
         <button
           type="button"
