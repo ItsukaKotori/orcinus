@@ -29,7 +29,7 @@
 - 注册进 tauri `invoke_handler`；前端 `window.api.git.*` 增对应封装（沿用现有 git api 命名/错误约定）。
 
 ### 3.2 tab 扩展（`src/shared/tab-types.ts` + tabs store + 渲染）
-- `TabContentType` 加 `'git-log'`；`toVisibleTabType` 归入 `'editor'`（编辑器族，参与 MRU/预览）。
+- `TabContentType` 加 `'git-log'`，并加入 `WorkspaceVisibleTabType`（**独立可见类型**，不并入 editor）；`toVisibleTabType('git-log') → 'git-log'`（Ctrl+Tab 作为独立族）。
 - `Tab` 加可选 `gitLog?: { worktreeId: string; initialRefs?: string }` 绑定（类比 `pluginTab`），承载去重/水合身份（同 worktree 复用同一 Log tab）。
 - 新增 open action `openGitLogTab(worktreeId)`（类比 `openPluginTab`）+ 渲染分派：主区 tab 内容按 `contentType==='git-log'` 渲染 `<GitLogView/>`。
 
@@ -83,7 +83,8 @@
 - **3c** 分支树 + 过滤 chips + offset 分页对齐 IDEA（迁移插件逻辑）。
 - **3d** 入口（Source Control/命令面板）+ i18n + 退役插件（§7）。
 
-## 10. 开放点/假设
-- 假设主应用 diff-open 路径可被 Git Log 复用（3b 前置核实 `use-row-opening`/`split-open` 的入参形态）。
-- `toVisibleTabType('git-log')→'editor'` 是否符合预期（Ctrl+Tab 分组）；若需独立可见类型另议。
-- 底部历史条保留（§3.6）；若你要直接替换，3b 调整。
+## 10. 已定决策 / 假设
+- **已定**：底部历史条保留 + 加「在 Git Log 中打开」跳转（§3.6）。
+- **已定**：`'git-log'` 为独立可见类型（`WorkspaceVisibleTabType` 增项，不并入 editor）。
+- **已定**：插件退役放 3d（主应用达平后）。
+- 待 3b 核实：主应用 diff-open 路径（`use-row-opening`/`split-open`）可被 Git Log 复用（入参形态）。
