@@ -85,6 +85,7 @@ export type KeybindingActionId =
   | 'editor.nextChange'
   | 'editor.addReviewNote'
   | 'sourceControl.sendReviewNotes'
+  | 'git.log.open'
   | 'fileExplorer.undo'
   | 'fileExplorer.redo'
   | 'fileExplorer.copyPath'

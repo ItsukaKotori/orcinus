@@ -256,6 +256,19 @@ export function createAppCommandHandlers(
         document.querySelector('[data-terminal-search-root]')
           ? false
           : revealRightSidebarTab('sidebar.sourceControl.toggle', 'source-control')
+    ],
+    [
+      'git.log.open',
+      () => {
+        // Palette/dispatch entry for the native Git Log tab (spec §3.5); the
+        // store action dedupes to the worktree's single Log tab.
+        if (!activeWorktreeId) {
+          return false
+        }
+        return claim('git.log.open', () => {
+          useAppStore.getState().openGitLogTab({ worktreeId: activeWorktreeId })
+        })
+      }
     ]
   ])
 }

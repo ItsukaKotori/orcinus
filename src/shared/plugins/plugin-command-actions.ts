@@ -13,7 +13,8 @@ export const PLUGIN_COMMAND_ALIAS_ACTION_IDS = [
   'sidebar.right.toggle',
   'sidebar.explorer.toggle',
   'sidebar.search.toggle',
-  'sidebar.sourceControl.toggle'
+  'sidebar.sourceControl.toggle',
+  'git.log.open'
 ] as const satisfies readonly KeybindingActionId[]
 
 export type PluginCommandAliasActionId = (typeof PLUGIN_COMMAND_ALIAS_ACTION_IDS)[number]
