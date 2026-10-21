@@ -12,7 +12,7 @@ use std::time::Duration;
 use ade_fs::FsService;
 use ade_git::compare::{GitBranchCompareResult, GitCommitCompareResult};
 use ade_git::diff::GitDiffResult;
-use ade_git::history::{GitHistoryQuery, GitHistoryRefs, GitHistoryResult};
+use ade_git::history::{GitHistoryQuery, GitHistoryRefs, GitHistoryResult, GitRefsResult};
 use ade_git::runner::CancelToken;
 use ade_git::status::{GitConflictOperation, GitStatusResult, GitUpstreamStatus};
 use ade_git::status_read::StatusOptions;
@@ -713,6 +713,26 @@ pub async fn git_log_query(
 ) -> Result<GitHistoryResult, BridgeError> {
     require_authorized_worktree(&state.fs, &args.worktree_path)?;
     run_blocking(move || git_log_query_impl(&args.worktree_path, &args.query)).await
+}
+
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitRefsArgs {
+    pub worktree_path: String,
+}
+
+pub fn git_refs_impl(worktree_path: &str) -> Result<GitRefsResult, BridgeError> {
+    Ok(ade_git::history::list_refs(worktree_path)?)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_refs(
+    state: State<'_, AppState>,
+    args: GitRefsArgs,
+) -> Result<GitRefsResult, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    run_blocking(move || git_refs_impl(&args.worktree_path)).await
 }
 
 #[tauri::command]
