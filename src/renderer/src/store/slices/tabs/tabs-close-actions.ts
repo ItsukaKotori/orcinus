@@ -56,12 +56,14 @@ export function createTabsCloseActions(
         const nextTabs = (current.unifiedTabsByWorktree[worktreeId] ?? []).filter(
           (item) => item.id !== tabId
         )
-        // Why: plugin tabs have no per-type close handler, so the unified close
-        // path records their kind in the reopen stack (reopen skips them).
+        // Why: plugin/git-log tabs have no per-type close handler, so the unified
+        // close path records their kind in the reopen stack (reopen skips them).
         const nextRecentlyClosedTabKinds =
           tab.contentType === 'plugin'
             ? pushRecentlyClosedTabKind(current.recentlyClosedTabKindsByWorktree, worktreeId, 'plugin')
-            : current.recentlyClosedTabKindsByWorktree
+            : tab.contentType === 'git-log'
+              ? pushRecentlyClosedTabKind(current.recentlyClosedTabKindsByWorktree, worktreeId, 'git-log')
+              : current.recentlyClosedTabKindsByWorktree
         // Why: close-to-right/others bypass terminals.closeTab, so clear the entityId-keyed unread flag here or a stale dot leaks.
         let nextUnreadTerminalTabs = current.unreadTerminalTabs
         if (terminalEntityId && current.unreadTerminalTabs[terminalEntityId]) {

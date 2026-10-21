@@ -67,6 +67,7 @@ export default function TabGroupPanel({
     commands,
     editorItems,
     pluginItems,
+    gitLogItems,
     tabBarOrder,
     terminalTabs
   } = model
@@ -135,12 +136,14 @@ export default function TabGroupPanel({
       groupActiveTabId={activeTab?.id ?? null}
       agentSessionTabs={agentSessionItems}
       pluginTabs={pluginItems}
+      gitLogTabs={gitLogItems}
       activeFileId={activeSurface.activeFileId}
       activeTabType={activeSurface.activeTabType}
       onActivateFile={commands.activateEditor}
       onCloseFile={commands.closeItem}
       onActivateAgentSession={commands.activateAgentSession}
       onActivatePlugin={commands.activatePlugin}
+      onActivateGitLog={commands.activateGitLog}
       onCloseAllFiles={commands.closeAllEditorTabsInGroup}
       onMakePreviewFilePermanent={(_fileId, tabId) => {
         if (!tabId) {

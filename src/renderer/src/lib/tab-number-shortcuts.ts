@@ -87,6 +87,12 @@ export function activateTabNumberShortcut(index: number): boolean {
     return true
   }
 
+  if (target.contentType === 'git-log') {
+    // Self-backed like plugin tabs — never set the active file to a git-log id.
+    store.setActiveTabType('git-log')
+    return true
+  }
+
   store.setActiveFile(target.entityId)
   store.setActiveTabType('editor')
   return true

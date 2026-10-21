@@ -1,4 +1,5 @@
 import React from 'react'
+import { GitGraph } from 'lucide-react'
 import { resolveTerminalTabTitle } from '../../../../shared/tab-title-resolution'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
@@ -45,6 +46,7 @@ export function renderTabBarItems({
     onCloseFile,
     onActivateAgentSession,
     onActivatePlugin,
+    onActivateGitLog,
     onCloseAllFiles,
     onMakePreviewFilePermanent
   } = props
@@ -171,6 +173,50 @@ export function renderTabBarItems({
           isExpanded={false}
           leadingIcon={<PluginTabLeadingIcon binding={item.data.pluginTab} />}
           onActivate={() => activateRealTab(onActivatePlugin)(item.id)}
+          onClose={() => onCloseFile?.(item.id)}
+          onCloseOthers={() => onCloseOthers(item.id)}
+          onCloseToRight={() => onCloseToRight(item.id)}
+          onCloseToLeft={() => onCloseToLeft(item.id)}
+          onSetCustomTitle={onSetCustomTitle}
+          onSetTabColor={onSetTabColor}
+          onTogglePin={() => togglePinned(item)}
+          onToggleExpand={() => {}}
+          canSplitTerminal={false}
+          dragData={dragData}
+          dropIndicator={dropIndicatorByVisibleId.get(item.id) ?? null}
+          includeTopTabBorder={includeTopTabBorder}
+        />
+      )
+    }
+    if (item.type === 'git-log') {
+      // Git Log rows reuse the same terminal chrome as plugin rows; the
+      // unified id is the visible id (self-backed, one Log per worktree).
+      const gitLogRowTab: TerminalTab = {
+        id: item.id,
+        ptyId: null,
+        worktreeId,
+        title: item.data.label,
+        customTitle: item.data.customLabel,
+        color: item.data.color,
+        sortOrder: item.data.sortOrder,
+        createdAt: item.data.createdAt
+      }
+      return (
+        <SortableTab
+          key={item.id}
+          tab={gitLogRowTab}
+          unifiedTabId={item.unifiedTabId}
+          groupId={resolvedGroupId}
+          tabCount={items.length}
+          hasTabsToRight={index < items.length - 1}
+          hasTabsToLeft={index > 0}
+          isActive={activeTabType === 'git-log' && item.id === activeTabId}
+          isPinned={item.isPinned}
+          isExpanded={false}
+          leadingIcon={
+            <GitGraph className="mr-1 size-3 shrink-0 text-muted-foreground" aria-hidden />
+          }
+          onActivate={() => activateRealTab(onActivateGitLog)(item.id)}
           onClose={() => onCloseFile?.(item.id)}
           onCloseOthers={() => onCloseOthers(item.id)}
           onCloseToRight={() => onCloseToRight(item.id)}

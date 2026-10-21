@@ -136,11 +136,29 @@ export function useTabGroupActivationCommands({
     [activateTab, focusGroup, groupId, groupTabs, setActiveTabType, worktreeId]
   )
 
+  const activateGitLog = useCallback(
+    (tabId: string) => {
+      // Git Log tabs are self-backed like plugin tabs: moving the group's
+      // activeTabId plus the visible type is the whole activation.
+      const item = groupTabs.find(
+        (candidate) => candidate.id === tabId && candidate.contentType === 'git-log'
+      )
+      if (!item) {
+        return
+      }
+      focusGroup(worktreeId, groupId)
+      activateTab(item.id)
+      setActiveTabType('git-log')
+    },
+    [activateTab, focusGroup, groupId, groupTabs, setActiveTabType, worktreeId]
+  )
+
   return {
     activateTerminal,
     toggleTerminalPaneExpand,
     activateEditor,
     activateAgentSession,
-    activatePlugin
+    activatePlugin,
+    activateGitLog
   }
 }
