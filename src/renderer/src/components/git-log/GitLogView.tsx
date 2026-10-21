@@ -228,7 +228,7 @@ export function GitLogView({
   const selectedItem = rows.find((r) => r.viewModel.historyItem.id === selected)?.viewModel.historyItem ?? null
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground" tabIndex={0} onKeyDown={onKey}>
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col bg-background text-foreground" tabIndex={0} onKeyDown={onKey}>
       <Toolbar
         branch={branch}
         query={query}
