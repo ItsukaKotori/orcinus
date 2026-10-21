@@ -36,7 +36,9 @@ describe('git real adapter commands', () => {
     ['commitCompare', 'git_commit_compare'],
     ['branchDiff', 'git_branch_diff'],
     ['commitDiff', 'git_commit_diff'],
-    ['history', 'git_history']
+    ['history', 'git_history'],
+    ['logQuery', 'git_log_query'],
+    ['refs', 'git_refs']
   ] satisfies Array<[GitMethod, string]>
 
   it.each(commandCases)('maps git.%s to %s with the { args } envelope', async (method, command) => {
