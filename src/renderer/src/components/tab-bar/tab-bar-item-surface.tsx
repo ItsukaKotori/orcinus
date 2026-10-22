@@ -70,7 +70,11 @@ export function renderTabBarItems({
       label: getTabDragLabel(item, generatedTabTitlesEnabled),
       iconPath: item.type === 'editor' ? item.data.filePath : undefined,
       color:
-        item.type === 'terminal' || item.type === 'plugin' ? (item.data.color ?? null) : null
+        item.type === 'terminal' ||
+        item.type === 'plugin' ||
+        item.type === 'git-log'
+          ? (item.data.color ?? null)
+          : null
     }
     if (item.type === 'terminal') {
       const terminalTab = {

@@ -121,3 +121,9 @@
 - ✅ **Minor**：RefPanel 分组标题走 `translate`（en/zh 补键，其余 locale 依 call-site 回退，沿用 T10 惯例）；`specta_export.export_lists_every_command` 名单补 `git_log_query`/`git_refs`。
 - ✅ **门禁**：`pnpm typecheck`、`pnpm build:web`、全量 `pnpm test`（0 失败）、`cargo test -p ade-bridge --lib`（含 specta `bindings_are_fresh`）。
 - ⏭ **仍延后**：**T11b 退役 host 面**（风险高，11 能力闭集 + manifest 兼容，需用户确认）；docs 历史台账（不断链，故意保留）；Minor 中的「双击→单击 / commitCompare 复用缓存 / zod 运行时校验」未做（非阻断，达平不依赖）。
+
+### CodeReview 审查门结果（本轮已处理）
+- ✅ **Critical · 拖拽预览手抄镜像缺 git-log 分支**（`tab-drag-preview-activation.ts previewActiveSurfacePatch`）：Git Log 为活动 tab 时拖动/悬停会把 git-log 静默折进 editor（写 `activeFileId='git-log/<wt>'` + 丢高亮，同组 reorder 后永久错误）。已补自背书分支（经 `toVisibleTabType`）+ 回归测试。
+- ✅ **Important · `git.log.open` TS/Rust 别名表分叉**：TS `PLUGIN_COMMAND_ALIAS_ACTION_IDS` 加了但 Rust manifest `[&str;15]` 未同步→插件声明会 pre-flight 通过、装入时被拒。因 spec §3.5 只要求面板/快捷键动作（已由 KeybindingActionId+handler 满足），不需插件别名，故**回退 TS 这一条**保持两侧一致，不触碰 manifest 闭集（属 T11b 延后范畴）。
+- ✅ **Minor · 拖拽幽灵颜色 + Cmd-Tab 切换器图标**：`tab-bar-item-surface` 颜色三元、`RecentTabSwitcher.TabIcon` 均补 git-log（GitGraph）。
+- ⏭ **审查发现但本轮未改（登记）**：Cmd-J workspace tab 面板白名单（`workspace-tab-palette-content-type.ts`）不含 git-log——现网**无功能缺陷**（提前 continue 不折 editor），但若要纳入需同时镜像 entry-builder `getActiveUnifiedTabId`/`visibleType` 三元与 activation 自背书分支（否则新静默缺陷）。另：既有缺口——`workspaceTabContentTypeSchema` 不含 `'plugin'` 且 `tabSchema` 无 `pluginTab`，持久化 plugin tab 恢复时被静默丢弃（非本会话引入，另计）。

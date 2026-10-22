@@ -80,4 +80,43 @@ describe('restoreTabDragActivationSnapshot', () => {
     expect(state.activeTabId).toBe('terminal-1')
     expect(state.activeTabIdByWorktree[WT]).toBe('terminal-1')
   })
+
+  it('does not fold a git-log tab into the editor surface during drag preview', () => {
+    // Why: previewActiveSurfacePatch is a hand-copied mirror that once omitted
+    // the git-log branch, so hovering/reordering while Git Log is active wrote
+    // activeFileId = 'git-log/<wt>' + activeTabType 'editor' (blank editor pane,
+    // lost highlight, and a permanently-wrong surface after a same-group reorder).
+    useAppStore.setState((state) => ({
+      unifiedTabsByWorktree: {
+        [WT]: [
+          ...(state.unifiedTabsByWorktree[WT] ?? []),
+          {
+            id: 'git-log-tab',
+            groupId: 'group-1',
+            worktreeId: WT,
+            contentType: 'git-log',
+            entityId: 'git-log-tab',
+            label: 'Git Log',
+            customLabel: null,
+            color: null,
+            sortOrder: 2,
+            createdAt: 2,
+            gitLog: { worktreeId: WT }
+          } satisfies Tab
+        ]
+      }
+    }))
+
+    applyDragPreviewTab({
+      worktreeId: WT,
+      groupId: 'group-1',
+      tabId: 'git-log-tab',
+      activeGroupId: 'group-1'
+    })
+
+    const state = useAppStore.getState()
+    expect(state.activeTabType).toBe('git-log')
+    expect(state.activeTabTypeByWorktree[WT]).toBe('git-log')
+    expect(state.activeFileId ?? null).not.toBe('git-log-tab')
+  })
 })
