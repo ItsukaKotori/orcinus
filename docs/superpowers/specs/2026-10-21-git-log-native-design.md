@@ -111,3 +111,13 @@
 - **命令面板入口** `git.log.open`（spec §3.5，当前唯一入口是底部条「Log」按钮）。
 - **docs 清理**：`docs/phase4b-git-log-query-record.md` 等仍引用 `plugins/git-log`/`build:git-log`（历史台账，不断链）。
 - **Minor**：RefPanel 分组标题（branches/remote branches/tags）未 translate；打开 diff 由双击变单击；GitLogTabContent 每次点文件重跑 commitCompare（未复用底部条缓存）；数据层放弃 zod 运行时校验（信任 specta 类型）；`specta_export.rs` 的 `export_lists_every_command` 名单未含新命令（不报错，建议补）。
+
+### 本轮执行结果（fresh session 已完成 — 提交至 HEAD 见 git log）
+- ✅ **C2 标签条接入**：按 plugin 路径逐处镜像（`useTabGroupItemProjections` 暴露 `gitLogItems` → `TabGroupPanel` 传 `gitLogTabs` → `tab-bar-item-model` 增 `git-log` 项与渲染 → `tab-bar-item-surface` git-log 行（GitGraph 图标/关闭）→ `group-tab-order` `toRef`/`VisibleTabRef` + `shared/tab-types` 联合 → `resolveTabGroupActiveSurface` 三元）。测试：reconcile 保活 + 渲染级（TabBar.context-menu 打开/激活/关闭）+ 键盘 cycle。
+- ✅ **同类级联面**（grep `=== 'plugin'` 补全 git-log）：`ipc-tab-switch.activateCyclableTab`、`tab-number-shortcuts`、`recently-closed-tabs`（`RecentlyClosedTabKind` 加 `'git-log'` + 记录/跳过）、`tabs-close-actions` 记录 kind、`tab-drag-data`/`TabDragPreview`。
+- ✅ **I1 持久化**：`workspace-session-tab-type-schema` 两 schema 加 `'git-log'`（visible 联合另补 `'plugin'`），`workspace-session-schema.tabSchema` 加 `gitLog` 绑定（同加，避免 C1 立刻删）。测试：schema 保活断言。
+- ✅ **I4 web 会话同步**：`state-equality-files.toVisibleTabType` 与 plugin 同列透传 `'git-log'`。测试断言不折 editor。
+- ✅ **命令面板/插件动作** `git.log.open`：`KeybindingActionId` 联合 + `definitions-core-3`（默认 unbound）+ `app-command-handlers` handler（无 activeWorktree 不 claim）+ `PLUGIN_COMMAND_ALIAS_ACTION_IDS`。测试：命令激活 worktree / 空 worktree 拒绝。
+- ✅ **Minor**：RefPanel 分组标题走 `translate`（en/zh 补键，其余 locale 依 call-site 回退，沿用 T10 惯例）；`specta_export.export_lists_every_command` 名单补 `git_log_query`/`git_refs`。
+- ✅ **门禁**：`pnpm typecheck`、`pnpm build:web`、全量 `pnpm test`（0 失败）、`cargo test -p ade-bridge --lib`（含 specta `bindings_are_fresh`）。
+- ⏭ **仍延后**：**T11b 退役 host 面**（风险高，11 能力闭集 + manifest 兼容，需用户确认）；docs 历史台账（不断链，故意保留）；Minor 中的「双击→单击 / commitCompare 复用缓存 / zod 运行时校验」未做（非阻断，达平不依赖）。
