@@ -120,10 +120,17 @@
 - ✅ **命令面板/插件动作** `git.log.open`：`KeybindingActionId` 联合 + `definitions-core-3`（默认 unbound）+ `app-command-handlers` handler（无 activeWorktree 不 claim）+ `PLUGIN_COMMAND_ALIAS_ACTION_IDS`。测试：命令激活 worktree / 空 worktree 拒绝。
 - ✅ **Minor**：RefPanel 分组标题走 `translate`（en/zh 补键，其余 locale 依 call-site 回退，沿用 T10 惯例）；`specta_export.export_lists_every_command` 名单补 `git_log_query`/`git_refs`。
 - ✅ **门禁**：`pnpm typecheck`、`pnpm build:web`、全量 `pnpm test`（0 失败）、`cargo test -p ade-bridge --lib`（含 specta `bindings_are_fresh`）。
-- ⏭ **仍延后**：**T11b 退役 host 面**（风险高，11 能力闭集 + manifest 兼容，需用户确认）；docs 历史台账（不断链，故意保留）；Minor 中的「双击→单击 / commitCompare 复用缓存 / zod 运行时校验」未做（非阻断，达平不依赖）。
+- ⏭ **仍延后**：docs 历史台账（不断链，故意保留）；Minor 中的「双击→单击 / commitCompare 复用缓存 / zod 运行时校验」未做（非阻断，达平不依赖）。**T11b 已于本轮完成（见下）。**
 
 ### CodeReview 审查门结果（本轮已处理）
 - ✅ **Critical · 拖拽预览手抄镜像缺 git-log 分支**（`tab-drag-preview-activation.ts previewActiveSurfacePatch`）：Git Log 为活动 tab 时拖动/悬停会把 git-log 静默折进 editor（写 `activeFileId='git-log/<wt>'` + 丢高亮，同组 reorder 后永久错误）。已补自背书分支（经 `toVisibleTabType`）+ 回归测试。
 - ✅ **Important · `git.log.open` TS/Rust 别名表分叉**：TS `PLUGIN_COMMAND_ALIAS_ACTION_IDS` 加了但 Rust manifest `[&str;15]` 未同步→插件声明会 pre-flight 通过、装入时被拒。因 spec §3.5 只要求面板/快捷键动作（已由 KeybindingActionId+handler 满足），不需插件别名，故**回退 TS 这一条**保持两侧一致，不触碰 manifest 闭集（属 T11b 延后范畴）。
 - ✅ **Minor · 拖拽幽灵颜色 + Cmd-Tab 切换器图标**：`tab-bar-item-surface` 颜色三元、`RecentTabSwitcher.TabIcon` 均补 git-log（GitGraph）。
 - ⏭ **审查发现但本轮未改（登记）**：Cmd-J workspace tab 面板白名单（`workspace-tab-palette-content-type.ts`）不含 git-log——现网**无功能缺陷**（提前 continue 不折 editor），但若要纳入需同时镜像 entry-builder `getActiveUnifiedTabId`/`visibleType` 三元与 activation 自背书分支（否则新静默缺陷）。另：既有缺口——`workspaceTabContentTypeSchema` 不含 `'plugin'` 且 `tabSchema` 无 `pluginTab`，持久化 plugin tab 恢复时被静默丢弃（非本会话引入，另计）。
+
+### T11b 退役 host git 面（本轮完成，提交 da23dc94 + 审查修复 41b164d）
+- ✅ 退役插件 host 侧 git 读能力（原供已删的 git-log 插件；其功能已迁原生视图）：`Capability::GitRead`/`git:read` 11→10（types.rs 枚举+ALL+as_str+closed-set 测试；TS plugin-capabilities kinds/desc/注释；**三侧**均同步含 `host-entry.mjs`）；`git.log/git.refs/git.commitFiles` MethodSpec 19→16（api.rs SPECS+`specs()` 返回类型+参数/结果校验器 `git_log_params`/`git_commit_files_params`/`git_result`/`is_date_prefix`+`GIT_*` consts；TS plugin-host-api 三 spec）；`PluginHostServices` trait 删 `git_log/git_refs/git_commit_files`+`GitLogQuery`/`GIT_LOG_DEFAULT_LIMIT`；methods.rs dispatch/handler/stub/测试；gate.rs `method_for` 臂 + panel 名单 8→5；ade-bridge plugins_service.rs 删三 impl + `resolve_worktree_path`/`map_core_err`/`assert_git_repo`/`git_repo_cache` + 孤儿 `WorktreeContexts::path_for`。删 `plugin-git-host-api.test.ts` + ade-bridge 4 git 桥接测试/辅助。
+- ✅ **保留**：原生命令 `git_log_query`/`git_refs`（+ 原生 `GitLogQueryIn`/`Args`）、`git.read` raw 命令（`GitReadArgs`/`Result`/`git_read`，与退役的插件 `git:read` 无关）、`ade_git::history_with`/`list_refs`。
+- ✅ 审查门 2 Important（host-entry.mjs 闭集漂移；被删桥接测试曾守护的 `path`/`grep`→原生 `git_log_query` 透传失覆盖 → 已在 `tests/git_log_query.rs` 补 `path_filter`/`grep_filter` 回归）+ 3 Minor（gate panel 名单回退、孤儿 `path_for` 删除、幽灵色已在上一提交）均处理。
+- ⚠ 已知可接受行为（fail-closed 约定一致，非缺陷）：老用户 app-data 残留的 git-log 插件安装副本（marketplace/git/dev-path）下次启动会以 `invalid manifest: unknown capability kind: git:read` 呈现为 error 条目、需手动卸载重装。发布说明宜提一句。
+- ✅ 门禁：`cargo test --workspace` EXIT=0、`cargo test -p ade-plugins -p ade-bridge` 全绿（182+356+集成，含新 path/grep 测试）；`pnpm typecheck`、`build:web` EXIT=0、`src/shared/plugins` 157 测试 + consent/dialog/keybinding 20 测试全绿。
