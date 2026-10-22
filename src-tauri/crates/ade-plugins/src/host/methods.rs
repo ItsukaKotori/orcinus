@@ -212,9 +212,6 @@ fn dispatch(
     match method {
         "workspace.readContext" => read_context(ctx),
         "workspace.openTab" => open_tab(params, ctx),
-        "git.log" => git_log(params, ctx),
-        "git.refs" => git_refs(params, ctx),
-        "git.commitFiles" => git_commit_files(params, ctx),
         "terminal.sendText" => send_text(params, ctx),
         "notifications.show" => show_notification(params, ctx),
         "storage.get" => storage_get(params, ctx),
@@ -316,45 +313,6 @@ fn open_tab(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerE
         "instanceId": result.instance_id,
         "worktreeId": result.worktree_id
     }))
-}
-
-fn git_log(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
-    let worktree_id = resolve_worktree(ctx);
-    let opt = |key: &str| {
-        params
-            .get(key)
-            .and_then(Value::as_str)
-            .map(str::to_string)
-    };
-    let query = crate::host::services::GitLogQuery {
-        refs: opt("refs"),
-        author: opt("author"),
-        since: opt("since"),
-        until: opt("until"),
-        grep: opt("grep"),
-        path: opt("path"),
-        skip: params.get("skip").and_then(Value::as_u64).unwrap_or(0) as u32,
-        limit: params
-            .get("limit")
-            .and_then(Value::as_u64)
-            .unwrap_or(crate::host::services::GIT_LOG_DEFAULT_LIMIT as u64)
-            as u32,
-    };
-    Ok(ctx.services.git_log(worktree_id.as_deref(), &query)?)
-}
-
-fn git_refs(_params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
-    let worktree_id = resolve_worktree(ctx);
-    Ok(ctx.services.git_refs(worktree_id.as_deref())?)
-}
-
-fn git_commit_files(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
-    let worktree_id = resolve_worktree(ctx);
-    let oid = field_str(params, "oid");
-    if oid.is_empty() {
-        return Err(HandlerError::new(INVALID_PARAMS, "missing oid"));
-    }
-    Ok(ctx.services.git_commit_files(worktree_id.as_deref(), &oid)?)
 }
 
 fn send_text(params: &Value, ctx: &HostCallContext<'_>) -> Result<Value, HandlerError> {
@@ -586,7 +544,7 @@ mod tests {
 
     const KEY: &str = "orca-samples.demo";
 
-    static ALL_CAPABILITIES: [Capability; 11] = Capability::ALL;
+    static ALL_CAPABILITIES: [Capability; 10] = Capability::ALL;
 
     #[derive(Default)]
     struct FakeStorage {
@@ -751,18 +709,6 @@ mod tests {
     impl PluginHostServices for FakeServices {
         fn active_worktree_context(&self) -> Option<WorktreeContext> {
             self.context.clone()
-        }
-
-        fn git_log(&self, _worktree_id: Option<&str>, _query: &crate::host::services::GitLogQuery) -> Result<serde_json::Value, HostServiceError> {
-            Ok(serde_json::json!({ "items": [], "hasIncomingChanges": false, "hasOutgoingChanges": false, "hasMore": false, "limit": 50 }))
-        }
-
-        fn git_refs(&self, _worktree_id: Option<&str>) -> Result<serde_json::Value, HostServiceError> {
-            Ok(serde_json::json!({ "refs": [], "truncated": false }))
-        }
-
-        fn git_commit_files(&self, _worktree_id: Option<&str>, _oid: &str) -> Result<serde_json::Value, HostServiceError> {
-            Ok(serde_json::json!([]))
         }
 
         fn list_worktree_terminals(&self, worktree_id: &str) -> Vec<TerminalRef> {
@@ -1011,41 +957,6 @@ mod tests {
         ));
         assert_eq!(code, INVALID_PARAMS);
         assert!(error.starts_with("text: "), "{error}");
-    }
-
-    #[test]
-    fn git_log_panel_callable_capability_gated_and_oid_hex_enforced() {
-        let services = services_with_context();
-        let mut panel_ctx = context(&services, None);
-        panel_ctx.via_panel = true;
-        let value = expect_ok(execute("git.log", json!({ "limit": 50 }), &panel_ctx));
-        assert_eq!(value["limit"].as_u64(), Some(50));
-        let files = expect_ok(execute("git.commitFiles", json!({ "oid": "a".repeat(40) }), &panel_ctx));
-        assert!(files.is_array());
-
-        let narrow = [Capability::Storage];
-        let mut denied = context(&services, None);
-        denied.granted = Some(&narrow);
-        let (code, _) = expect_err(execute("git.log", json!({}), &denied));
-        assert_eq!(code, gate::CAPABILITY_DENIED);
-
-        // Non-hex oid is rejected at param validation, before services.
-        let (code, _) = expect_err(execute("git.commitFiles", json!({ "oid": "z".repeat(40) }), &panel_ctx));
-        assert_eq!(code, INVALID_PARAMS);
-    }
-
-    #[test]
-    fn git_refs_panel_callable_and_capability_gated() {
-        let services = services_with_context();
-        let mut panel_ctx = context(&services, None);
-        panel_ctx.via_panel = true;
-        let value = expect_ok(execute("git.refs", json!({}), &panel_ctx));
-        assert!(value["refs"].is_array() && value["truncated"].is_boolean());
-        let narrow = [Capability::Storage];
-        let mut denied = context(&services, None);
-        denied.granted = Some(&narrow);
-        let (code, _) = expect_err(execute("git.refs", json!({}), &denied));
-        assert_eq!(code, gate::CAPABILITY_DENIED);
     }
 
     #[test]

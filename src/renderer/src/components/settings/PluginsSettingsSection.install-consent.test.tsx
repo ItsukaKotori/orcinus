@@ -48,7 +48,7 @@ const installedPending: PluginHostListEntry = {
   isDev: false,
   official: false,
   bundled: false,
-  capabilities: [{ kind: 'git:read', description: 'Read git history' }],
+  capabilities: [{ kind: 'workspace:read', description: 'Read the focused worktree' }],
   panels: [],
   tabs: [],
   commands: [],

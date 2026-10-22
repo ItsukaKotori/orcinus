@@ -27,12 +27,6 @@ pub const WORKER_COMMAND_ID_MAX_CHARS: usize = 256;
 pub const WORKER_COMMAND_RESULT_MAX_BYTES: usize = 64 * 1024;
 pub const SESSION_POST_TOPIC_MAX_CHARS: usize = 64;
 pub const SESSION_POST_PAYLOAD_MAX_BYTES: usize = 64 * 1024;
-pub const GIT_HISTORY_LIMIT_MAX: u64 = 200;
-pub const GIT_OID_MIN_CHARS: usize = 7;
-pub const GIT_OID_MAX_CHARS: usize = 40;
-// Must stay under the worker NDJSON frame cap (worker::MAX_FRAME_BYTES = 1 MiB) so a
-// worker-hosted git.log fails closed as an error instead of a silent dropped frame.
-pub const GIT_RESULT_MAX_BYTES: usize = 768 * 1024;
 
 pub type Validator = fn(&Value) -> Result<Value, String>;
 
@@ -45,7 +39,7 @@ pub struct MethodSpec {
     pub result: Validator,
 }
 
-static SPECS: [MethodSpec; 19] = [
+static SPECS: [MethodSpec; 16] = [
     MethodSpec {
         name: "workspace.readContext",
         capability: Capability::WorkspaceRead,
@@ -61,30 +55,6 @@ static SPECS: [MethodSpec; 19] = [
         panel_callable: true,
         params: open_tab_params,
         result: open_tab_result,
-    },
-    MethodSpec {
-        name: "git.log",
-        capability: Capability::GitRead,
-        mutation: false,
-        panel_callable: true,
-        params: git_log_params,
-        result: git_result,
-    },
-    MethodSpec {
-        name: "git.refs",
-        capability: Capability::GitRead,
-        mutation: false,
-        panel_callable: true,
-        params: empty_object_params,
-        result: git_result,
-    },
-    MethodSpec {
-        name: "git.commitFiles",
-        capability: Capability::GitRead,
-        mutation: false,
-        panel_callable: true,
-        params: git_commit_files_params,
-        result: git_result,
     },
     MethodSpec {
         name: "worker.invokeCommand",
@@ -200,7 +170,7 @@ static SPECS: [MethodSpec; 19] = [
     },
 ];
 
-pub fn specs() -> &'static [MethodSpec; 19] {
+pub fn specs() -> &'static [MethodSpec; 16] {
     &SPECS
 }
 
@@ -641,137 +611,6 @@ fn open_tab_result(value: &Value) -> Result<Value, String> {
     Ok(serde_json::json!({ "instanceId": instance_id, "worktreeId": worktree_id }))
 }
 
-/// True when `value` is an ISO `YYYY-MM-DD` optionally followed by a space or
-/// `T` and a time (git parses the suffix; we only gate the shape so a malformed
-/// value fails as `invalid_params` here, matching the TS zod regex).
-fn is_date_prefix(value: &str) -> bool {
-    let b = value.as_bytes();
-    b.len() >= 10
-        && b[..4].iter().all(u8::is_ascii_digit)
-        && b[4] == b'-'
-        && b[5..7].iter().all(u8::is_ascii_digit)
-        && b[7] == b'-'
-        && b[8..10].iter().all(u8::is_ascii_digit)
-        && (b.len() == 10 || b[10] == b'T' || b[10] == b' ')
-        && {
-            let month = (b[5] - b'0') * 10 + (b[6] - b'0');
-            let day = (b[8] - b'0') * 10 + (b[9] - b'0');
-            (1..=12).contains(&month) && (1..=31).contains(&day)
-        }
-}
-
-fn git_log_params(value: &Value) -> Result<Value, String> {
-    let obj = require_object(value, "(root)")?;
-    reject_extra_keys(
-        obj,
-        &[
-            "refs", "author", "since", "until", "grep", "path", "skip", "limit",
-        ],
-        "(root)",
-    )?;
-    let mut normalized = Map::new();
-    if let Some(rev) = optional_string(obj, "refs")? {
-        if rev.is_empty() || rev.starts_with('-') {
-            return Err(invalid("refs", "expected head, all, or a revision"));
-        }
-        max_utf16(rev, 255, "refs")?;
-        normalized.insert("refs".to_string(), Value::String(rev.to_string()));
-    }
-    for (key, max) in [
-        ("author", 200usize),
-        ("grep", 200),
-        ("since", 64),
-        ("until", 64),
-    ] {
-        if let Some(v) = optional_string(obj, key)? {
-            if v.is_empty() {
-                return Err(invalid(key, "must contain at least 1 character"));
-            }
-            // Bound the date fields to an ISO `YYYY-MM-DD` prefix so a malformed
-            // value fails as `invalid_params` here rather than surfacing later as
-            // a git error collapsed into `not-a-git-repo`.
-            if (key == "since" || key == "until") && !is_date_prefix(v) {
-                return Err(invalid(key, "expected an ISO date YYYY-MM-DD"));
-            }
-            max_utf16(v, max, key)?;
-            normalized.insert(key.to_string(), Value::String(v.to_string()));
-        }
-    }
-    if let Some(path) = optional_string(obj, "path")? {
-        if path.is_empty() || path.starts_with('-') {
-            return Err(invalid("path", "invalid path"));
-        }
-        max_utf16(path, 1024, "path")?;
-        normalized.insert("path".to_string(), Value::String(path.to_string()));
-    }
-    if let Some(skip) = obj.get("skip") {
-        match skip {
-            Value::Null => {}
-            Value::Number(number) => {
-                let value = number
-                    .as_u64()
-                    .ok_or_else(|| invalid("skip", "expected a non-negative integer"))?;
-                if value > 1_000_000 {
-                    return Err(invalid("skip", "out of range"));
-                }
-                normalized.insert("skip".to_string(), Value::from(value as u32));
-            }
-            _ => return Err(invalid("skip", "expected a non-negative integer")),
-        }
-    }
-    if let Some(limit) = obj.get("limit") {
-        let limit = match limit {
-            Value::Null => None,
-            Value::Number(number) => {
-                let value = number
-                    .as_u64()
-                    .ok_or_else(|| invalid("limit", "expected a positive integer"))?;
-                if value < 1 || value > GIT_HISTORY_LIMIT_MAX {
-                    return Err(invalid(
-                        "limit",
-                        format!("must be between 1 and {GIT_HISTORY_LIMIT_MAX}"),
-                    ));
-                }
-                Some(value as u32)
-            }
-            _ => return Err(invalid("limit", "expected a positive integer")),
-        };
-        if let Some(limit) = limit {
-            normalized.insert("limit".to_string(), Value::from(limit));
-        }
-    }
-    Ok(Value::Object(normalized))
-}
-
-fn git_commit_files_params(value: &Value) -> Result<Value, String> {
-    let obj = require_object(value, "(root)")?;
-    reject_extra_keys(obj, &["oid"], "(root)")?;
-    let oid = require_string(obj, "oid")?;
-    if oid.len() < GIT_OID_MIN_CHARS || oid.len() > GIT_OID_MAX_CHARS {
-        return Err(invalid(
-            "oid",
-            format!("must contain between {GIT_OID_MIN_CHARS} and {GIT_OID_MAX_CHARS} characters"),
-        ));
-    }
-    if !oid.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-        return Err(invalid("oid", "must be a hexadecimal commit id"));
-    }
-    Ok(serde_json::json!({ "oid": oid }))
-}
-
-fn git_result(value: &Value) -> Result<Value, String> {
-    // Host-produced (ade-git camelCase serde); shape is pinned to the TS
-    // contract by an end-to-end test. Only bound the serialized size here.
-    let bytes = serde_json::to_vec(value).map_err(|error| invalid("(root)", error))?;
-    if bytes.len() > GIT_RESULT_MAX_BYTES {
-        return Err(invalid(
-            "(root)",
-            format!("must serialize to at most {GIT_RESULT_MAX_BYTES} bytes"),
-        ));
-    }
-    Ok(value.clone())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -786,17 +625,14 @@ mod tests {
     }
 
     #[test]
-    fn spec_table_has_nineteen_methods_with_expected_metadata() {
-        assert_eq!(specs().len(), 19);
+    fn spec_table_has_sixteen_methods_with_expected_metadata() {
+        assert_eq!(specs().len(), 16);
         let names: Vec<&str> = specs().iter().map(|entry| entry.name).collect();
         assert_eq!(
             names,
             vec![
                 "workspace.readContext",
                 "workspace.openTab",
-                "git.log",
-                "git.refs",
-                "git.commitFiles",
                 "worker.invokeCommand",
                 "terminal.sendText",
                 "notifications.show",
@@ -823,9 +659,6 @@ mod tests {
             vec![
                 "workspace.readContext",
                 "workspace.openTab",
-                "git.log",
-                "git.refs",
-                "git.commitFiles",
                 "worker.invokeCommand",
                 "terminal.sendText",
                 "notifications.show",
@@ -833,13 +666,6 @@ mod tests {
         );
         assert_eq!(spec("worker.invokeCommand").unwrap().capability, Capability::WorkerCall);
         assert_eq!(spec("session.post").unwrap().capability, Capability::SessionPush);
-        assert_eq!(spec("git.log").unwrap().capability, Capability::GitRead);
-        assert_eq!(spec("git.refs").unwrap().capability, Capability::GitRead);
-        assert!(spec("git.refs").unwrap().panel_callable);
-        assert!(!spec("git.refs").unwrap().mutation);
-        assert_eq!(spec("git.commitFiles").unwrap().capability, Capability::GitRead);
-        assert!(!spec("git.log").unwrap().mutation);
-        assert!(!spec("git.commitFiles").unwrap().mutation);
         assert!(!spec("worker.invokeCommand").unwrap().mutation);
         assert!(!spec("session.post").unwrap().mutation);
     }
@@ -886,63 +712,6 @@ mod tests {
         assert!(validate_result("session.post", json!({ "ok": false })).is_err());
         let huge = json!({ "blob": "x".repeat(WORKER_COMMAND_RESULT_MAX_BYTES + 1) });
         assert!(validate_result("worker.invokeCommand", huge).is_err());
-    }
-
-    #[test]
-    fn git_params_and_result_enforce_bounds() {
-        assert_eq!(
-            validate_params("git.log", json!({ "limit": 50 })).unwrap(),
-            json!({ "limit": 50 })
-        );
-        assert_eq!(validate_params("git.log", json!({})).unwrap(), json!({}));
-        assert!(validate_params("git.log", json!({ "limit": 201 })).is_err());
-        assert!(validate_params("git.log", json!({ "limit": 0 })).is_err());
-        assert!(validate_params("git.log", json!({ "limit": 1.5 })).is_err());
-        assert!(validate_params("git.log", json!({ "extra": 1 })).is_err());
-
-        assert_eq!(
-            validate_params("git.commitFiles", json!({ "oid": "a".repeat(40) })).unwrap(),
-            json!({ "oid": "a".repeat(40) })
-        );
-        assert!(validate_params("git.commitFiles", json!({ "oid": "abc" })).is_err());
-        assert!(validate_params("git.commitFiles", json!({ "oid": "z".repeat(40) })).is_err());
-        assert!(validate_params("git.commitFiles", json!({ "oid": "a".repeat(41) })).is_err());
-        assert!(validate_params("git.commitFiles", json!({})).is_err());
-
-        assert!(validate_result("git.log", json!({ "items": [] })).is_ok());
-        let huge = json!({ "items": "x".repeat(GIT_RESULT_MAX_BYTES + 16) });
-        assert!(validate_result("git.log", huge).is_err());
-    }
-
-    #[test]
-    fn git_log_accepts_query_and_rejects_bad_refs_path() {
-        assert!(validate_params(
-            "git.log",
-            json!({ "refs": "all", "author": "L", "skip": 5, "limit": 100 })
-        )
-        .is_ok());
-        assert!(validate_params("git.log", json!({ "refs": "-x" })).is_err());
-        assert!(validate_params("git.log", json!({ "path": "-rf" })).is_err());
-        assert!(validate_params("git.log", json!({ "skip": -1 })).is_err());
-        assert!(validate_params("git.log", json!({ "nope": 1 })).is_err());
-        assert_eq!(validate_params("git.refs", json!({})).unwrap(), json!({}));
-    }
-
-    #[test]
-    fn git_log_requires_iso_dates() {
-        // Valid ISO: bare date (what the UI date input emits) and with a time.
-        assert!(validate_params("git.log", json!({ "since": "2026-01-01" })).is_ok());
-        assert!(validate_params("git.log", json!({ "until": "2026-01-01" })).is_ok());
-        assert!(validate_params("git.log", json!({ "until": "2026-12-31T10:00" })).is_ok());
-        // Invalid shapes rejected at the boundary (never reach git → not collapsed
-        // into not-a-git-repo).
-        assert!(validate_params("git.log", json!({ "since": "last tuesday" })).is_err());
-        assert!(validate_params("git.log", json!({ "until": "2026/01/01" })).is_err());
-        assert!(validate_params("git.log", json!({ "since": "2026-01-01garbage" })).is_err());
-        // Out-of-range month/day rejected (would otherwise reach git and collapse).
-        assert!(validate_params("git.log", json!({ "since": "2026-13-01" })).is_err());
-        assert!(validate_params("git.log", json!({ "until": "2026-00-10" })).is_err());
-        assert!(validate_params("git.log", json!({ "until": "2026-01-32" })).is_err());
     }
 
     #[test]

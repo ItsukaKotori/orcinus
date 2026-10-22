@@ -61,7 +61,6 @@ mod tests {
     fn method_for(capability: Capability) -> Option<&'static str> {
         match capability {
             Capability::EventsSubscribe => Some("events.subscribe"),
-            Capability::GitRead => Some("git.log"),
             Capability::NotificationsShow => Some("notifications.show"),
             Capability::Secrets => Some("secrets.get"),
             Capability::SessionPush => Some("session.post"),
