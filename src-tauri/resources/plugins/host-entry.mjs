@@ -18,7 +18,7 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { inspect } from 'node:util'
 
-/** Closed capability set: the 7 oracle kinds + the fork's workspace:open-tab + the plugin UI↔worker channel kinds + git:read. Must match the Rust `Capability::ALL` and TS `PLUGIN_CAPABILITY_KINDS`. */
+/** Closed capability set: the 7 oracle kinds + the fork's workspace:open-tab + the plugin UI↔worker channel kinds. Must match the Rust `Capability::ALL` and TS `PLUGIN_CAPABILITY_KINDS`. */
 const PLUGIN_CAPABILITY_KINDS = [
   'workspace:read',
   'terminal:send',
@@ -29,8 +29,7 @@ const PLUGIN_CAPABILITY_KINDS = [
   'settings:own',
   'workspace:open-tab',
   'session:push',
-  'worker:call',
-  'git:read'
+  'worker:call'
 ]
 
 /** Closed v0 event set, mirrored from `orca:src/shared/plugins/plugin-manifest.ts`. */

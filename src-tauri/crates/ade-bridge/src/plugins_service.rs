@@ -240,11 +240,6 @@ impl PtyTerminals for HostPtyTerminals {
 /// Resolves `(branch, display_name)` for one worktree id.
 pub trait WorktreeContexts: Send + Sync {
     fn resolve(&self, worktree_id: &str) -> Option<(String, String)>;
-    /// The worktree's filesystem path, when known. Used by read-only git host
-    /// methods to run `git` in the right directory. Default: unavailable.
-    fn path_for(&self, _worktree_id: &str) -> Option<String> {
-        None
-    }
 }
 
 /// Production resolver: worktree metadata plus the worktrees projection
@@ -266,18 +261,6 @@ impl WorkspaceWorktrees {
 }
 
 impl WorktreeContexts for WorkspaceWorktrees {
-    fn path_for(&self, worktree_id: &str) -> Option<String> {
-        let (repos, folders, items) = {
-            let projects = lock(&self.projects);
-            (projects.repos(), projects.folder_workspaces(), self.meta.items())
-        };
-        crate::commands::worktrees::list_all_worktrees(&repos, &folders, &items, &self.fs)
-            .ok()?
-            .into_iter()
-            .find(|worktree| worktree.id == worktree_id)
-            .map(|worktree| worktree.path)
-    }
-
     fn resolve(&self, worktree_id: &str) -> Option<(String, String)> {
         let meta = self.meta.get(worktree_id);
         let (repos, folders, items) = {
