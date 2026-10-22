@@ -8,6 +8,14 @@ export function groupRefs(refs: GitHistoryItemRef[]): Record<string, GitHistoryI
   return out
 }
 
+// Why: the backend ref category is a stable machine key, but the section header
+// shown to users must be localised — map each to a translate() call.
+const GROUP_LABELS: Record<string, { key: string; fallback: string }> = {
+  branches: { key: 'auto.components.git-log.groupBranches', fallback: 'Branches' },
+  'remote branches': { key: 'auto.components.git-log.groupRemoteBranches', fallback: 'Remote branches' },
+  tags: { key: 'auto.components.git-log.groupTags', fallback: 'Tags' }
+}
+
 type Props = {
   refs: GitHistoryItemRef[]
   /** True when the host capped the ref list; shows a partial-results note. */
@@ -54,7 +62,9 @@ export function RefPanel({ refs, truncated, activeName, onPickName }: Props): Re
       )}
       {order.map((cat) => (groups[cat]?.length ? (
         <div key={cat} className="mb-2">
-          <div className="mb-1 uppercase tracking-wide text-muted-foreground">{cat}</div>
+          <div className="mb-1 uppercase tracking-wide text-muted-foreground">
+            {translate(GROUP_LABELS[cat]!.key, GROUP_LABELS[cat]!.fallback)}
+          </div>
           {groups[cat]!.map((r) => (
             <button
               key={r.id}

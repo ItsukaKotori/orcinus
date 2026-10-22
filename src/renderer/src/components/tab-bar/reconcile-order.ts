@@ -8,13 +8,15 @@ export function reconcileTabOrder(
   terminalIds: string[],
   editorIds: string[],
   agentSessionIds: string[] = [],
-  pluginIds: string[] = []
+  pluginIds: string[] = [],
+  gitLogIds: string[] = []
 ): string[] {
   const validIds = new Set([
     ...terminalIds,
     ...editorIds,
     ...agentSessionIds,
-    ...pluginIds
+    ...pluginIds,
+    ...gitLogIds
   ])
   // Why: storedOrder is persisted group tab order and is mutated by many
   // codepaths (drop/move/reorder/hydrate). A stale or racey write can leave
@@ -30,7 +32,7 @@ export function reconcileTabOrder(
       inResult.add(id)
     }
   }
-  for (const id of [...terminalIds, ...editorIds, ...agentSessionIds, ...pluginIds]) {
+  for (const id of [...terminalIds, ...editorIds, ...agentSessionIds, ...pluginIds, ...gitLogIds]) {
     if (!inResult.has(id)) {
       result.push(id)
       inResult.add(id)

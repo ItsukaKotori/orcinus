@@ -307,6 +307,20 @@ const PLUGIN_TAB = {
   }
 }
 
+const GIT_LOG_TAB = {
+  id: 'git-log/wt-1',
+  entityId: 'git-log/wt-1',
+  groupId: 'g1',
+  worktreeId: 'wt-1',
+  contentType: 'git-log' as const,
+  label: 'Git Log',
+  customLabel: null,
+  color: null,
+  sortOrder: 2,
+  createdAt: 2,
+  gitLog: { worktreeId: 'wt-1' }
+}
+
 describe('TabBar context menu wiring', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -378,6 +392,35 @@ describe('TabBar context menu wiring', () => {
     expect(onActivatePlugin).toHaveBeenCalledWith('unified-plugin-1')
     ;(row.props.onClose as () => void)()
     expect(onCloseFile).toHaveBeenCalledWith('unified-plugin-1')
+  })
+
+  it('renders git-log tabs in the strip and activates/closes them by unified id', async () => {
+    // Why: without a strip row the Git Log tab is invisible — unclosable and
+    // unreachable by click or keyboard even though its body renders (C2).
+    const onActivateGitLog = vi.fn()
+    const onCloseFile = vi.fn()
+    const element = await renderTabBar({
+      tabs: [TERMINAL_TAB],
+      gitLogTabs: [GIT_LOG_TAB],
+      tabBarOrder: ['term-1', 'git-log/wt-1'],
+      activeTabId: 'git-log/wt-1',
+      activeTabType: 'git-log',
+      onActivateGitLog,
+      onCloseFile
+    })
+    const gitLogRows = findChildrenByType(element, 'SortableTab').filter(
+      (row) => (row.props.tab as { id?: string })?.id === 'git-log/wt-1'
+    )
+
+    expect(gitLogRows).toHaveLength(1)
+    const row = gitLogRows[0]
+    expect((row.props.tab as { title?: string }).title).toBe('Git Log')
+    expect(row.props.isActive).toBe(true)
+    expect(row.props.unifiedTabId).toBe('git-log/wt-1')
+    ;(row.props.onActivate as () => void)()
+    expect(onActivateGitLog).toHaveBeenCalledWith('git-log/wt-1')
+    ;(row.props.onClose as () => void)()
+    expect(onCloseFile).toHaveBeenCalledWith('git-log/wt-1')
   })
 
   it('keeps the tab strip content-sized until horizontal scrolling is needed', async () => {

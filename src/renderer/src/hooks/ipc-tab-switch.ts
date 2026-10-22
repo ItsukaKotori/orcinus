@@ -79,6 +79,13 @@ export function activateCyclableTab(store: AppStoreState, next: TypeCyclableTab)
       store.activateTab?.(next.tabId)
     }
     store.setActiveTabType('plugin')
+  } else if (next.type === 'git-log') {
+    // Git Log tabs are self-backed like plugin tabs — never route them to the
+    // editor file stack, which would clear the active file with a git-log id.
+    if (next.tabId) {
+      store.activateTab?.(next.tabId)
+    }
+    store.setActiveTabType('git-log')
   } else {
     // Why: `setActiveFile` targets the file entity (its implicit activateTab
     // picks the first matching tab in the active group); `activateTab(tabId)`

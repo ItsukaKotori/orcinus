@@ -40,7 +40,7 @@ use ade_plugins::consent::ConsentState;
 use ade_plugins::discovery::{discover, DiscoveredPlugin};
 use ade_plugins::events::is_plugin_event_name;
 use ade_plugins::host::services::{
-    GitLogQuery, HostServiceError, OpenTabResult, PluginHostServices, PluginSettingsAccess,
+    HostServiceError, OpenTabResult, PluginHostServices, PluginSettingsAccess,
     PluginStorageAccess, TerminalRef, WorktreeContext,
 };
 use ade_plugins::paths::{global_roots, project_roots, ScopeRoots};
@@ -240,11 +240,6 @@ impl PtyTerminals for HostPtyTerminals {
 /// Resolves `(branch, display_name)` for one worktree id.
 pub trait WorktreeContexts: Send + Sync {
     fn resolve(&self, worktree_id: &str) -> Option<(String, String)>;
-    /// The worktree's filesystem path, when known. Used by read-only git host
-    /// methods to run `git` in the right directory. Default: unavailable.
-    fn path_for(&self, _worktree_id: &str) -> Option<String> {
-        None
-    }
 }
 
 /// Production resolver: worktree metadata plus the worktrees projection
@@ -266,18 +261,6 @@ impl WorkspaceWorktrees {
 }
 
 impl WorktreeContexts for WorkspaceWorktrees {
-    fn path_for(&self, worktree_id: &str) -> Option<String> {
-        let (repos, folders, items) = {
-            let projects = lock(&self.projects);
-            (projects.repos(), projects.folder_workspaces(), self.meta.items())
-        };
-        crate::commands::worktrees::list_all_worktrees(&repos, &folders, &items, &self.fs)
-            .ok()?
-            .into_iter()
-            .find(|worktree| worktree.id == worktree_id)
-            .map(|worktree| worktree.path)
-    }
-
     fn resolve(&self, worktree_id: &str) -> Option<(String, String)> {
         let meta = self.meta.get(worktree_id);
         let (repos, folders, items) = {
@@ -516,71 +499,6 @@ impl BridgePluginHostServices {
     }
 }
 
-impl BridgePluginHostServices {
-    /// Resolve the filesystem path of the caller's worktree: the tab-session
-    /// hint when present, else the focused worktree. Never exposes the id/path
-    /// to the plugin; used only to run read-only `git` in the right directory.
-    fn resolve_worktree_path(&self, worktree_id: Option<&str>) -> Result<String, HostServiceError> {
-        let id = worktree_id
-            .map(str::to_string)
-            .or_else(|| self.active_worktree_context().map(|context| context.worktree_id))
-            .ok_or_else(|| HostServiceError::new("no-active-worktree", "no active worktree"))?;
-        self.worktrees.path_for(&id).ok_or_else(|| {
-            HostServiceError::new("unavailable", "worktree path is unavailable")
-        })
-    }
-}
-
-/// Map a `CoreError` from `ade_git` to a stable, path-free host error code.
-fn map_core_err(error: ade_core::errors::CoreError) -> HostServiceError {
-    use ade_core::errors::CoreError;
-    match error {
-        CoreError::NotFound(msg) => {
-            eprintln!("[ade-bridge] git host not-found: {msg}");
-            HostServiceError::new("unknown-oid", "unknown revision")
-        }
-        CoreError::InvalidInput(msg) => {
-            eprintln!("[ade-bridge] git host invalid-input: {msg}");
-            HostServiceError::new("invalid_params", "invalid git query")
-        }
-        other => {
-            eprintln!("[ade-bridge] git host call failed: {other}");
-            HostServiceError::new("not-a-git-repo", "git history is unavailable")
-        }
-    }
-}
-
-/// Positive cache of "this path is a git work tree", so the read-only picker's
-/// git.log / git.refs / git.commitFiles don't each spawn a `git rev-parse`.
-/// Only `true` results are cached: a path that stops being a repo still fails
-/// the following git command and surfaces via `map_core_err` (never silent data).
-fn git_repo_cache() -> &'static std::sync::Mutex<std::collections::HashSet<String>> {
-    static CACHE: std::sync::OnceLock<std::sync::Mutex<std::collections::HashSet<String>>>
-        = std::sync::OnceLock::new();
-    CACHE.get_or_init(|| std::sync::Mutex::new(std::collections::HashSet::new()))
-}
-
-fn assert_git_repo(path: &str) -> Result<(), HostServiceError> {
-    let cached = git_repo_cache()
-        .lock()
-        .map(|guard| guard.contains(path))
-        .unwrap_or(false);
-    if cached {
-        return Ok(());
-    }
-    if ade_git::is_inside_work_tree(path) {
-        if let Ok(mut guard) = git_repo_cache().lock() {
-            guard.insert(path.to_string());
-        }
-        Ok(())
-    } else {
-        Err(HostServiceError::new(
-            "not-a-git-repo",
-            "the active workspace is not a git repository",
-        ))
-    }
-}
-
 impl PluginHostServices for BridgePluginHostServices {
     fn active_worktree_context(&self) -> Option<WorktreeContext> {
         let worktree_id = lock(&self.ui)
@@ -598,72 +516,6 @@ impl PluginHostServices for BridgePluginHostServices {
             branch,
             display_name,
         })
-    }
-
-    fn git_log(
-        &self,
-        worktree_id: Option<&str>,
-        query: &GitLogQuery,
-    ) -> Result<serde_json::Value, HostServiceError> {
-        let path = self.resolve_worktree_path(worktree_id)?;
-        assert_git_repo(&path)?;
-        let refs = match query.refs.as_deref() {
-            None | Some("head") => ade_git::history::GitHistoryRefs::Head,
-            Some("all") => ade_git::history::GitHistoryRefs::All,
-            Some(rev) => ade_git::history::GitHistoryRefs::Rev(rev.to_string()),
-        };
-        let history_query = ade_git::history::GitHistoryQuery {
-            refs,
-            author: query.author.clone(),
-            since: query.since.clone(),
-            until: query.until.clone(),
-            grep: query.grep.clone(),
-            path: query.path.clone(),
-            base_ref: None,
-            skip: query.skip,
-            limit: query.limit,
-        };
-        let result = ade_git::history::history_with(&path, &history_query).map_err(map_core_err)?;
-        serde_json::to_value(result).map_err(|error| {
-            eprintln!("[ade-bridge] git.log serialize failed: {error}");
-            HostServiceError::new("unavailable", "git history is unavailable")
-        })
-    }
-
-    fn git_refs(&self, worktree_id: Option<&str>) -> Result<serde_json::Value, HostServiceError> {
-        let path = self.resolve_worktree_path(worktree_id)?;
-        assert_git_repo(&path)?;
-        let refs = ade_git::history::list_refs(&path).map_err(map_core_err)?;
-        serde_json::to_value(refs).map_err(|error| {
-            eprintln!("[ade-bridge] git.refs serialize failed: {error}");
-            HostServiceError::new("unavailable", "refs unavailable")
-        })
-    }
-
-    fn git_commit_files(
-        &self,
-        worktree_id: Option<&str>,
-        oid: &str,
-    ) -> Result<serde_json::Value, HostServiceError> {
-        let path = self.resolve_worktree_path(worktree_id)?;
-        assert_git_repo(&path)?;
-        let cmp = ade_git::compare::commit_compare(&path, oid).map_err(map_core_err)?;
-        // commit_compare reports an unresolvable oid as Ok{status:"invalid-commit"},
-        // not Err; surface it as a stable `unknown-oid` (and never leak the raw git text).
-        match cmp.summary.status.as_str() {
-            "ready" => serde_json::to_value(cmp.entries).map_err(|error| {
-                eprintln!("[ade-bridge] git.commitFiles serialize failed: {error}");
-                HostServiceError::new("unavailable", "commit files are unavailable")
-            }),
-            "invalid-commit" => Err(HostServiceError::new("unknown-oid", "unknown commit")),
-            other => {
-                eprintln!("[ade-bridge] git.commitFiles status={other}");
-                Err(HostServiceError::new(
-                    "unavailable",
-                    "commit files are unavailable",
-                ))
-            }
-        }
     }
 
     fn list_worktree_terminals(&self, worktree_id: &str) -> Vec<TerminalRef> {

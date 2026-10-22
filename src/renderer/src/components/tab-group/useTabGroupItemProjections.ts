@@ -20,6 +20,7 @@ export type TabGroupWorktreeSnapshot = {
 export type GroupEditorItem = OpenFile & { tabId: string }
 export type GroupAgentSessionItem = Tab & { contentType: 'agent-session' }
 export type GroupPluginItem = Tab & { contentType: 'plugin' }
+export type GroupGitLogItem = Tab & { contentType: 'git-log' }
 
 type TerminalTabItem = TerminalTab & { unifiedTabId: string }
 
@@ -125,6 +126,11 @@ export function useTabGroupItemProjections({
     [groupTabs]
   )
 
+  const gitLogItems = useMemo<GroupGitLogItem[]>(
+    () => groupTabs.filter((item): item is GroupGitLogItem => item.contentType === 'git-log'),
+    [groupTabs]
+  )
+
   const tabBarOrder = useMemo(
     () =>
       (group?.tabOrder ?? []).map((itemId) => {
@@ -145,6 +151,7 @@ export function useTabGroupItemProjections({
     editorItems,
     agentSessionItems,
     pluginItems,
+    gitLogItems,
     tabBarOrder
   }
 }

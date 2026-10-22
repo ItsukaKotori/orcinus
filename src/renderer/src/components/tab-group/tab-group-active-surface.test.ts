@@ -26,6 +26,16 @@ describe('resolveTabGroupActiveSurface', () => {
     })
   })
 
+  it('maps a git-log tab to the git-log visible type keyed by unified id', () => {
+    // Why: the strip highlights rows off this surface; collapsing git-log to the
+    // editor path (activeTabId null) leaves the open Git Log tab unhighlighted.
+    expect(resolveTabGroupActiveSurface(tab('git-log'))).toEqual({
+      activeTabId: 'unified-git-log',
+      activeFileId: null,
+      activeTabType: 'git-log'
+    })
+  })
+
   it('keeps terminal rows keyed by entity id', () => {
     expect(resolveTabGroupActiveSurface(tab('terminal'))).toEqual({
       activeTabId: 'entity-terminal',

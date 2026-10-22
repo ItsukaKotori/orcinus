@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { FileText, GitCompare, Puzzle, TerminalSquare } from 'lucide-react'
+import { FileText, GitCompare, GitGraph, Puzzle, TerminalSquare } from 'lucide-react'
 import { useAppStore } from '../../store'
 import { activateCyclableTab } from '../../hooks/ipc-tab-switch'
 import { getShortcutPlatform } from '../../hooks/useShortcutLabel'
@@ -33,6 +33,9 @@ function TabIcon({ item }: { item: RecentTabSwitcherItem }): React.JSX.Element {
   }
   if (item.type === 'plugin') {
     return <Puzzle className={className} />
+  }
+  if (item.type === 'git-log') {
+    return <GitGraph className={className} />
   }
   if (
     item.contentType === 'diff' ||

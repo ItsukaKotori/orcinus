@@ -32,7 +32,7 @@ export type ClosedTerminalTabSnapshot = {
   position?: RecentlyClosedTabPosition
 }
 
-export type RecentlyClosedTabKind = 'terminal' | 'browser' | 'editor' | 'plugin'
+export type RecentlyClosedTabKind = 'terminal' | 'browser' | 'editor' | 'plugin' | 'git-log'
 
 const MAX_RECENT_CLOSED_TERMINAL_TABS = 10
 // Why: wider than the per-type stacks (10) so cross-type ordering survives a
@@ -201,7 +201,12 @@ export const createRecentlyClosedTabsSlice: StateCreator<
                 // a fresh `workspace.openTab`. Skip instead of misrouting to
                 // the editor stack.
                 false
-              : get().reopenClosedEditorTab(worktreeId)
+              : kind === 'git-log'
+                ? // Why: the Git Log tab is reopened through the Source Control
+                  // 「Log」 entry, not a renderer snapshot — drain the kind instead
+                  // of misrouting to the editor stack.
+                  false
+                : get().reopenClosedEditorTab(worktreeId)
       if (reopened) {
         return true
       }

@@ -61,7 +61,6 @@ mod tests {
     fn method_for(capability: Capability) -> Option<&'static str> {
         match capability {
             Capability::EventsSubscribe => Some("events.subscribe"),
-            Capability::GitRead => Some("git.log"),
             Capability::NotificationsShow => Some("notifications.show"),
             Capability::Secrets => Some("secrets.get"),
             Capability::SessionPush => Some("session.post"),
@@ -108,13 +107,10 @@ mod tests {
     }
 
     #[test]
-    fn panel_surface_is_exactly_the_eight_panel_callable_methods() {
+    fn panel_surface_is_exactly_the_five_panel_callable_methods() {
         let panel_methods = [
             "workspace.readContext",
             "workspace.openTab",
-            "git.log",
-            "git.refs",
-            "git.commitFiles",
             "worker.invokeCommand",
             "terminal.sendText",
             "notifications.show",

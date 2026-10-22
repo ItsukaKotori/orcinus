@@ -1,5 +1,6 @@
 import { useAppStore } from '../../store'
 import type { AppState } from '../../store/types'
+import { toVisibleTabType } from '../../../../shared/tab-types'
 
 export type TabDragActivationSnapshot = {
   activeGroupId: string | null
@@ -40,12 +41,15 @@ function previewActiveSurfacePatch(
       activeTabTypeByWorktree: nextActiveTabTypeByWorktree('terminal')
     }
   }
-  if (unifiedTab.contentType === 'plugin') {
-    // Self-backed plugin tabs have no legacy active id slot; the group's
-    // activeTabId (patched by the caller) drives the rendered surface.
+  if (unifiedTab.contentType === 'plugin' || unifiedTab.contentType === 'git-log') {
+    // Self-backed tabs (plugin, native Git Log) have no legacy active id slot;
+    // the group's activeTabId (patched by the caller) drives the rendered
+    // surface. Deriving the type via toVisibleTabType keeps this mirror from
+    // silently folding a new self-backed kind into the editor branch below.
+    const visibleType = toVisibleTabType(unifiedTab.contentType)
     return {
-      activeTabType: 'plugin',
-      activeTabTypeByWorktree: nextActiveTabTypeByWorktree('plugin')
+      activeTabType: visibleType,
+      activeTabTypeByWorktree: nextActiveTabTypeByWorktree(visibleType)
     }
   }
   return {

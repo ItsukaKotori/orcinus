@@ -137,6 +137,16 @@ export const KEYBINDING_DEFINITION_CORE_3: readonly KeybindingDefinition[] = [
     defaultBindings: platformBindings([])
   },
   {
+    id: 'git.log.open',
+    title: 'Open Git Log',
+    group: 'Global',
+    scope: 'global',
+    searchKeywords: ['git', 'log', 'history', 'commit', 'graph', 'source control'],
+    // Why: palette/dispatch entry for the native Git Log tab (spec §3.5); unbound
+    // by default so it never steals an existing chord.
+    defaultBindings: platformBindings([])
+  },
+  {
     id: 'fileExplorer.undo',
     title: 'Undo file operation',
     group: 'File Explorer',

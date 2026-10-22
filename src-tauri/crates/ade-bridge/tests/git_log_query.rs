@@ -81,6 +81,30 @@ fn author_filter_reaches_backend() {
 }
 
 #[test]
+fn path_filter_reaches_backend() {
+    // Why: guards the native view's path filter end-to-end. Repo has 3 commits on
+    // `all`; only "feat two" touches file `b`, so a dropped `path` field (→ 3) vs
+    // forwarded (→ 1) is the discriminating assertion the retired bridge test held.
+    let d = repo();
+    let base = q(Some("all"), None, 0, 50);
+    let g = GitLogQueryIn { path: Some("b".into()), ..base };
+    let r = git_log_query_impl(d.path().to_str().unwrap(), &g).unwrap();
+    assert_eq!(r.items.len(), 1);
+    assert_eq!(r.items[0].subject, "feat two");
+}
+
+#[test]
+fn grep_filter_reaches_backend() {
+    // Why: same invariant for the grep field — only "feat two" matches "feat".
+    let d = repo();
+    let base = q(Some("all"), None, 0, 50);
+    let g = GitLogQueryIn { grep: Some("feat".into()), ..base };
+    let r = git_log_query_impl(d.path().to_str().unwrap(), &g).unwrap();
+    assert_eq!(r.items.len(), 1);
+    assert_eq!(r.items[0].subject, "feat two");
+}
+
+#[test]
 fn unknown_revision_is_error() {
     let d = repo();
     assert!(git_log_query_impl(d.path().to_str().unwrap(), &q(Some("nope"), None, 0, 50)).is_err());

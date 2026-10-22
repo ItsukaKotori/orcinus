@@ -350,6 +350,8 @@ mod tests {
             "git_branch_diff",
             "git_commit_diff",
             "git_history",
+            "git_log_query",
+            "git_refs",
             "git_remote_urls",
             "git_read",
             "git_push",

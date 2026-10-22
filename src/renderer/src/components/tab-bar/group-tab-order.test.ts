@@ -71,6 +71,26 @@ function pluginTab(id: string, groupId: string, instanceEntityId: string, sortOr
   }
 }
 
+function gitLogTab(
+  id: string,
+  groupId: string,
+  sortOrder: number
+): Tab & { contentType: 'git-log' } {
+  return {
+    id,
+    entityId: id,
+    groupId,
+    worktreeId: 'wt',
+    contentType: 'git-log',
+    label: 'Git Log',
+    customLabel: null,
+    color: null,
+    sortOrder,
+    createdAt: sortOrder,
+    gitLog: { worktreeId: 'wt' }
+  }
+}
+
 describe('getGroupVisibleTabOrder', () => {
   it('includes structured sessions without a terminal backing entity', () => {
     const group: TabGroup = {
@@ -199,6 +219,35 @@ describe('getGroupVisibleTabOrder', () => {
     ).toEqual([
       { type: 'terminal', id: 'term-1', tabId: 'tab-t1' },
       { type: 'plugin', id: 'orca-samples.board/board/inst-1', tabId: 'tab-p1' },
+      { type: 'editor', id: '/repo/file.md', tabId: 'tab-e1' }
+    ])
+  })
+
+  it('includes git-log tabs keyed by unified id in the declared group order', () => {
+    // Why: git-log rows are self-backed like plugin tabs; falling through the
+    // editor-entity branch would drop the tab from the visible order entirely.
+    const group: TabGroup = {
+      id: 'g1',
+      worktreeId: 'wt',
+      activeTabId: 'tab-g1',
+      tabOrder: ['tab-t1', 'tab-g1', 'tab-e1']
+    }
+    const tabs: Tab[] = [
+      terminalTab('tab-t1', 'g1', 'term-1', 0),
+      gitLogTab('tab-g1', 'g1', 1),
+      editorTab('tab-e1', 'g1', '/repo/file.md', 2)
+    ]
+
+    expect(
+      getGroupVisibleTabOrder(
+        group,
+        tabs,
+        new Set(['term-1']),
+        new Set(['/repo/file.md'])
+      )
+    ).toEqual([
+      { type: 'terminal', id: 'term-1', tabId: 'tab-t1' },
+      { type: 'git-log', id: 'tab-g1', tabId: 'tab-g1' },
       { type: 'editor', id: '/repo/file.md', tabId: 'tab-e1' }
     ])
   })
@@ -373,6 +422,39 @@ describe('getActiveTabNavOrder', () => {
     ])
   })
 
+  it('includes git-log tabs in the active group keyboard cycle', () => {
+    const group: TabGroup = {
+      id: 'g1',
+      worktreeId: 'wt',
+      activeTabId: 'tab-g1',
+      tabOrder: ['tab-t1', 'tab-g1', 'tab-e1']
+    }
+    const tabs: Tab[] = [
+      terminalTab('tab-t1', 'g1', 'term-1', 0),
+      gitLogTab('tab-g1', 'g1', 1),
+      editorTab('tab-e1', 'g1', '/repo/file.md', 2)
+    ]
+    const state = makeState({
+      activeGroupIdByWorktree: { wt: 'g1' },
+      groupsByWorktree: { wt: [group] },
+      unifiedTabsByWorktree: { wt: tabs },
+      tabsByWorktree: {
+        // @ts-expect-error — minimal shape for terminal presence only
+        wt: [{ id: 'term-1' }]
+      },
+      openFiles: [
+        // @ts-expect-error — minimal OpenFile shape; nav helper only reads `id` and `worktreeId`
+        { id: '/repo/file.md', worktreeId: 'wt' }
+      ]
+    })
+
+    expect(getActiveTabNavOrder(state, 'wt')).toEqual([
+      { type: 'terminal', id: 'term-1', tabId: 'tab-t1' },
+      { type: 'git-log', id: 'tab-g1', tabId: 'tab-g1' },
+      { type: 'editor', id: '/repo/file.md', tabId: 'tab-e1' }
+    ])
+  })
+
   it('falls back to the legacy reconciled order when no active group exists', () => {
     const state = makeState({
       tabBarOrderByWorktree: { wt: ['term-1', 'e1', 'term-2'] },
@@ -393,6 +475,31 @@ describe('getActiveTabNavOrder', () => {
 })
 
 // The keyboard cycle must match the rendered strip; reconcileTabOrder appends missing group tabs.
+describe('buildOrderedTabItems git-log rows', () => {
+  it('emits a git-log item for a git-log visible id', () => {
+    // Mirrors the plugin branch: the row must exist so the strip renders a
+    // Git Log tab that the user can click and close.
+    const tab = gitLogTab('tab-g1', 'g1', 0)
+    const items = buildOrderedTabItems({
+      tabBarOrder: ['tab-g1'],
+      terminalIds: [],
+      editorFileIds: [],
+      agentSessionTabIds: [],
+      pluginTabIds: [],
+      gitLogTabIds: ['tab-g1'],
+      terminalMap: new Map(),
+      editorMap: new Map(),
+      agentSessionMap: new Map(),
+      pluginTabMap: new Map(),
+      gitLogTabMap: new Map([['tab-g1', tab]]),
+      unifiedTabByVisibleId: new Map([['tab-g1', tab]])
+    })
+    expect(items).toHaveLength(1)
+    expect(items[0].type).toBe('git-log')
+    expect(items[0].id).toBe('tab-g1')
+  })
+})
+
 describe('group order matches the rendered tab strip', () => {
   function renderedStripIds(group: TabGroup, tabs: Tab[]): string[] {
     const groupTabs = tabs.filter((tab) => tab.groupId === group.id)
@@ -416,10 +523,12 @@ describe('group order matches the rendered tab strip', () => {
       editorFileIds: [],
       agentSessionTabIds: [],
       pluginTabIds: [],
+      gitLogTabIds: [],
       terminalMap: terminalMap as never,
       editorMap: new Map(),
       agentSessionMap: new Map(),
       pluginTabMap: new Map(),
+      gitLogTabMap: new Map(),
       unifiedTabByVisibleId: new Map()
     }).map((item) => item.id)
   }

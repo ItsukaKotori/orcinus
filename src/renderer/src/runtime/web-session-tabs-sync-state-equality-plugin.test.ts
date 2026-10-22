@@ -23,6 +23,14 @@ describe('web-session tabs sync visible-type projection', () => {
     expect(toVisibleTabType(tab({ contentType: 'plugin' }))).toBe('plugin')
   })
 
+  it('projects git-log tabs to git-log instead of collapsing to editor', () => {
+    // Why: collapsing to 'editor' makes the web session sync clear the active
+    // file with a git-log tab id (same class as the plugin fix above).
+    expect(toVisibleTabType(tab({ contentType: 'git-log', gitLog: { worktreeId: 'wt-1' } }))).toBe(
+      'git-log'
+    )
+  })
+
   it('keeps the existing kind mappings intact', () => {
     expect(toVisibleTabType(tab({ contentType: 'terminal' }))).toBe('terminal')
     expect(toVisibleTabType(tab({ contentType: 'agent-session' }))).toBe('agent-session')
