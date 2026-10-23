@@ -6,7 +6,6 @@ import {
   UI_LANGUAGE_KOREAN,
   UI_LANGUAGE_SPANISH,
   UI_LANGUAGE_SYSTEM,
-  isPluginUiLanguage,
   type UiLanguage
 } from './ui-language'
 
@@ -37,9 +36,6 @@ export function resolveUiLocale(
   language: UiLanguage,
   systemLocale: string | undefined = DEFAULT_UI_LOCALE
 ): string {
-  if (isPluginUiLanguage(language)) {
-    return language
-  }
   if (language === UI_LANGUAGE_ENGLISH) {
     return DEFAULT_UI_LOCALE
   }

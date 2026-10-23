@@ -1,9 +1,7 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { isPluginUiLanguage } from '../../../shared/ui-language'
 import { useAppStore } from '@/store'
-import { usePluginLanguagePackStore } from '@/store/plugin-language-packs'
 import { translate } from '@/i18n/i18n'
 import { resolveUiLocale } from '@/i18n/supported-languages'
 import { FULL_DISK_ACCESS_SETTINGS_TARGET_ID } from '@/lib/settings-navigation-types'
@@ -20,15 +18,8 @@ export function useMacosTccPromptNotice(): void {
   const openSettingsPage = useAppStore((s) => s.openSettingsPage)
   const openSettingsTarget = useAppStore((s) => s.openSettingsTarget)
   const uiLanguage = useAppStore((s) => s.settings?.uiLanguage ?? null)
-  const pluginLanguagePacks = usePluginLanguagePackStore((s) => s.packs)
-  const pluginLanguagePacksLoaded = usePluginLanguagePackStore((s) => s.loaded)
   const { i18n } = useTranslation()
-  const selectedPluginLanguage = pluginLanguagePacks.find((pack) => pack.id === uiLanguage)
-  const targetLocale =
-    uiLanguage === null || (isPluginUiLanguage(uiLanguage) && !pluginLanguagePacksLoaded)
-      ? null
-      : (selectedPluginLanguage?.resourceLanguage ??
-        (isPluginUiLanguage(uiLanguage) ? 'en' : resolveUiLocale(uiLanguage)))
+  const targetLocale = uiLanguage === null ? null : resolveUiLocale(uiLanguage)
   const localeReady =
     targetLocale !== null &&
     i18n.language === targetLocale &&
