@@ -33,7 +33,6 @@ import type { PinnedTabCloseConfirmSlice } from './slices/pinned-tab-close-confi
 import type { RecentlyClosedTabsSlice } from './slices/recently-closed-tabs'
 import type { OrcaProfilesSlice } from './slices/orca-profiles'
 import type { TerminalQuickCommandHostsSlice } from './slices/terminal-quick-command-hosts'
-import type { PluginCenterSlice } from './slices/plugin-center/plugin-center-slice'
 
 export type AppState = RepoSlice &
   SparsePresetsSlice &
@@ -67,5 +66,4 @@ export type AppState = RepoSlice &
   PinnedTabCloseConfirmSlice &
   RecentlyClosedTabsSlice &
   OrcaProfilesSlice &
-  TerminalQuickCommandHostsSlice &
-  PluginCenterSlice
+  TerminalQuickCommandHostsSlice

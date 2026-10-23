@@ -15,7 +15,6 @@ import { createMemoryApi } from './mock/memory-api'
 import { createNotificationsApi } from './mock/notifications-api'
 import { createOrcaProfilesApi } from './mock/orca-profiles-api'
 import { createPlatformApi } from './mock/platform-api'
-import { createPluginsApi } from './mock/plugins-api'
 import { createPreflightApi } from './mock/preflight-api'
 import { createProjectGroupsApi } from './mock/project-groups-api'
 import { createProjectsApi } from './mock/projects-api'
@@ -41,7 +40,6 @@ import { createFsRealApi } from './real/fs'
 import { createGitRealApi } from './real/git'
 import { createNotificationsRealApi } from './real/notifications'
 import { createPlatformRealApi } from './real/platform'
-import { createPluginsRealApi } from './real/plugins'
 import { createPreflightRealApi } from './real/preflight'
 import { createProjectGroupsRealApi } from './real/project-groups'
 import { createProjectsRealApi } from './real/projects'
@@ -71,7 +69,6 @@ type RealDomains = Pick<
   | 'git'
   | 'notifications'
   | 'platform'
-  | 'plugins'
   | 'preflight'
   | 'projectGroups'
   | 'projects'
@@ -106,7 +103,6 @@ function createMockDomains(): Partial<PreloadApi> {
     notifications: createNotificationsApi(),
     orcaProfiles: createOrcaProfilesApi(),
     platform: createPlatformApi(),
-    plugins: createPluginsApi(),
     preflight: createPreflightApi(),
     projectGroups: createProjectGroupsApi(),
     projects: createProjectsApi(),
@@ -138,7 +134,6 @@ function createRealDomains(): RealDomains {
     git: createGitRealApi(),
     notifications: createNotificationsRealApi(),
     platform: createPlatformRealApi(),
-    plugins: createPluginsRealApi(),
     preflight: createPreflightRealApi(),
     projectGroups: createProjectGroupsRealApi(),
     projects: createProjectsRealApi(),

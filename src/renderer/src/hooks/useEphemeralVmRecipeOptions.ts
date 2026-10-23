@@ -87,17 +87,6 @@ export function useEphemeralVmRecipeOptions(args: EphemeralVmRecipeOptionsArgs):
       requestGeneration.current += 1
     }
   }, [load])
-
-  useEffect(() => {
-    if (!window.api.plugins?.onChanged) {
-      return
-    }
-    return window.api.plugins.onChanged((event) => {
-      if (event?.contentPacksChanged ?? true) {
-        load(false)
-      }
-    })
-  }, [load])
-
+  
   return { recipes, selectedRecipeId, setSelectedRecipeId, error }
 }

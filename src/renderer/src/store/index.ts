@@ -35,7 +35,6 @@ import { createPinnedTabCloseConfirmSlice } from './slices/pinned-tab-close-conf
 import { createRecentlyClosedTabsSlice } from './slices/recently-closed-tabs'
 import { createOrcaProfilesSlice } from './slices/orca-profiles'
 import { createTerminalQuickCommandHostsSlice } from './slices/terminal-quick-command-hosts'
-import { createPluginCenterSlice } from './slices/plugin-center/plugin-center-slice'
 import { e2eConfig } from '@/lib/e2e-config'
 import type { createWebRuntimeSessionTerminal } from '@/runtime/web-runtime-session'
 import { installStoreListenerCensus } from './store-listener-census'
@@ -85,8 +84,7 @@ export const useAppStore = create<AppState>()(
       ...createPinnedTabCloseConfirmSlice(...a),
       ...createRecentlyClosedTabsSlice(...a),
       ...createOrcaProfilesSlice(...a),
-      ...createTerminalQuickCommandHostsSlice(...a),
-      ...createPluginCenterSlice(...a)
+      ...createTerminalQuickCommandHostsSlice(...a)
     }
   })
 )

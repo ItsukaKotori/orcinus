@@ -433,7 +433,6 @@ describe('useComposerState host-context boundaries', () => {
     expect(recipeLoadSection).toContain('enabled: ephemeralVmsEnabled')
     expect(RECIPE_OPTIONS_SOURCE).toContain('args.enabled &&')
     expect(RECIPE_OPTIONS_SOURCE).toContain('window.api.ephemeralVm')
-    expect(RECIPE_OPTIONS_SOURCE).toContain('window.api.plugins.onChanged')
     expect(RECIPE_OPTIONS_SOURCE).toContain('requestGeneration')
 
     const submitSection = COMPOSER_SOURCE.quickCreation
