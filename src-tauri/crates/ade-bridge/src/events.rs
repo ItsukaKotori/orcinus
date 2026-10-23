@@ -1,8 +1,6 @@
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde::Serialize;
 use tauri::{AppHandle, Emitter, Runtime};
 
-use ade_plugins::service::PanelPushRequest;
 use crate::json::Json;
 
 /// Out-of-band settings updates (View > Appearance toggles etc.). Payload is a
@@ -28,13 +26,6 @@ pub const PTY_EXIT: &str = "pty:exit";
 pub const SESSION_FLUSH_REQUESTED: &str = "session:flush-requested";
 /// hook server 原始事件（归一化在 renderer，规格 §3.2）。
 pub const AGENT_HOOK_RAW: &str = "agent-hook:raw";
-/// 插件/内容包集合可能已变（payload `PluginsChangedPayload`，规格 §3.9）。
-pub const PLUGINS_CHANGED: &str = "plugins:changed";
-/// 插件请求打开一个主区 tab（payload `PluginOpenTabPayload`，规格 §3.6/§3.9）。
-/// 去重/限额已在 Rust 侧判定；渲染层按 `instanceId` 建立或聚焦 tab。
-pub const PLUGINS_OPEN_TAB: &str = "plugins:open-tab";
-/// 插件推送一条消息到其 UI 会话（payload `PluginPanelPushPayload`，规格 §3.5）。
-pub const PLUGINS_PANEL_PUSH: &str = "plugins:panel-push";
 
 /// Payload for [`WORKTREES_CHANGED`] (spec §5.3).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
@@ -97,66 +88,6 @@ pub fn forward_pty_event<R: Runtime>(app: &AppHandle<R>, event: ade_pty::PtyEven
                 code: info.code,
             },
         ),
-    }
-}
-
-/// Payload for [`PLUGINS_CHANGED`] (`{contentPacksChanged, pluginsChanged}`).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct PluginsChangedPayload {
-    pub content_packs_changed: bool,
-    pub plugins_changed: bool,
-}
-
-/// Payload for [`PLUGINS_OPEN_TAB`]（TS `PluginOpenTabRequest` 同形；`scope`
-/// 为 `'global' | 'project'` 字符串，渲染层据此定位 tab）。
-#[derive(Debug, Clone, PartialEq, Serialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct PluginOpenTabPayload {
-    pub plugin_key: String,
-    pub tab_id: String,
-    pub instance_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub title: Option<String>,
-    pub params: Json,
-    pub worktree_id: String,
-    pub scope: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub repo_id: Option<String>,
-}
-
-impl From<ade_plugins::service::OpenTabRequest> for PluginOpenTabPayload {
-    fn from(request: ade_plugins::service::OpenTabRequest) -> Self {
-        Self {
-            plugin_key: request.plugin_key,
-            tab_id: request.tab_id,
-            instance_id: request.instance_id,
-            title: request.title,
-            params: Json::new(request.params),
-            worktree_id: request.worktree_id,
-            scope: request.scope.as_str().to_string(),
-            repo_id: request.repo_id,
-        }
-    }
-}
-
-/// Payload of [`PLUGINS_PANEL_PUSH`]（TS `PluginPanelPushRequest` 同形）。
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PluginPanelPushPayload {
-    pub session_token: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub topic: Option<String>,
-    pub payload: Value,
-}
-
-impl From<PanelPushRequest> for PluginPanelPushPayload {
-    fn from(request: PanelPushRequest) -> Self {
-        Self {
-            session_token: request.session_token,
-            topic: request.topic,
-            payload: request.payload,
-        }
     }
 }
 
@@ -274,76 +205,6 @@ mod tests {
             })
         );
         assert_eq!(AGENT_HOOK_RAW, "agent-hook:raw");
-    }
-
-    #[test]
-    fn plugin_event_names_and_payload_shapes_are_locked() {
-        assert_eq!(PLUGINS_CHANGED, "plugins:changed");
-        assert_eq!(PLUGINS_OPEN_TAB, "plugins:open-tab");
-        assert_eq!(
-            serde_json::to_value(PluginsChangedPayload {
-                content_packs_changed: false,
-                plugins_changed: true,
-            })
-            .unwrap(),
-            json!({ "contentPacksChanged": false, "pluginsChanged": true })
-        );
-        let payload = PluginOpenTabPayload::from(ade_plugins::service::OpenTabRequest {
-            plugin_key: "orca-samples.demo".to_string(),
-            tab_id: "board".to_string(),
-            instance_id: "inst-1".to_string(),
-            title: Some("Board".to_string()),
-            params: json!({ "filter": "open" }),
-            worktree_id: "r1::/wt".to_string(),
-            scope: ade_plugins::types::PluginScope::Project,
-            repo_id: Some("r1".to_string()),
-        });
-        assert_eq!(
-            serde_json::to_value(&payload).unwrap(),
-            json!({
-                "pluginKey": "orca-samples.demo",
-                "tabId": "board",
-                "instanceId": "inst-1",
-                "title": "Board",
-                "params": { "filter": "open" },
-                "worktreeId": "r1::/wt",
-                "scope": "project",
-                "repoId": "r1"
-            })
-        );
-        let bare = PluginOpenTabPayload::from(ade_plugins::service::OpenTabRequest {
-            plugin_key: "orca-samples.demo".to_string(),
-            tab_id: "board".to_string(),
-            instance_id: "inst-2".to_string(),
-            title: None,
-            params: serde_json::Value::Null,
-            worktree_id: "wt-1".to_string(),
-            scope: ade_plugins::types::PluginScope::Global,
-            repo_id: None,
-        });
-        let value = serde_json::to_value(&bare).unwrap();
-        assert_eq!(value["scope"], "global");
-        assert!(value.get("title").is_none());
-        assert!(value.get("repoId").is_none());
-
-        assert_eq!(PLUGINS_PANEL_PUSH, "plugins:panel-push");
-        let push = PluginPanelPushPayload::from(PanelPushRequest {
-            session_token: "t".repeat(32),
-            topic: Some("state".to_string()),
-            payload: json!({ "n": 1 }),
-        });
-        assert_eq!(
-            serde_json::to_value(&push).unwrap(),
-            json!({ "sessionToken": "t".repeat(32), "topic": "state", "payload": { "n": 1 } })
-        );
-        let bare_push = PluginPanelPushPayload::from(PanelPushRequest {
-            session_token: "t".repeat(32),
-            topic: None,
-            payload: Value::Null,
-        });
-        let bare_value = serde_json::to_value(&bare_push).unwrap();
-        assert!(bare_value.get("topic").is_none());
-        assert_eq!(bare_value["payload"], Value::Null);
     }
 
     #[test]
