@@ -18,7 +18,7 @@ it('preserves the active runtime default during unrelated local settings writes'
     api: {
       settings: {
         set: vi.fn().mockResolvedValue({
-          pluginSystemEnabled: true,
+          editorAutoSave: true,
           worktreeVisibilityDefaults: { external: 'hide' }
         })
       }
@@ -26,7 +26,7 @@ it('preserves the active runtime default during unrelated local settings writes'
   })
 
   await persistVisibilityAwareSettings({
-    normalizedUpdates: { pluginSystemEnabled: true },
+    normalizedUpdates: { editorAutoSave: true },
     currentSettings,
     supportedRuntimeEnvironmentId: 'env-1',
     set: (updater) => {
@@ -177,7 +177,7 @@ it('publishes successful local fields when the paired runtime write fails', asyn
   markRuntimeEnvironmentCompatible('env-a')
   const currentSettings = {
     activeRuntimeEnvironmentId: 'env-a',
-    pluginSystemEnabled: false,
+    editorAutoSave: false,
     worktreeVisibilityDefaults: { external: 'show' }
   } as GlobalSettings
   let state = {
@@ -189,7 +189,7 @@ it('publishes successful local fields when the paired runtime write fails', asyn
       settings: {
         set: vi.fn().mockResolvedValue({
           activeRuntimeEnvironmentId: 'env-a',
-          pluginSystemEnabled: true,
+          editorAutoSave: true,
           worktreeVisibilityDefaults: { external: 'hide' }
         })
       },
@@ -202,7 +202,7 @@ it('publishes successful local fields when the paired runtime write fails', asyn
   await expect(
     persistVisibilityAwareSettings({
       normalizedUpdates: {
-        pluginSystemEnabled: true,
+        editorAutoSave: true,
         worktreeVisibilityDefaults: { external: 'hide' }
       },
       currentSettings,
@@ -214,7 +214,7 @@ it('publishes successful local fields when the paired runtime write fails', asyn
   ).rejects.toThrow('offline')
 
   expect(state.settings).toMatchObject({
-    pluginSystemEnabled: true,
+    editorAutoSave: true,
     worktreeVisibilityDefaults: { external: 'show' }
   })
 })

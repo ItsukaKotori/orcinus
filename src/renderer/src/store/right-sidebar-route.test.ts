@@ -9,34 +9,23 @@ describe('normalizeRightSidebarRoute', () => {
     })
   })
 
-  it('preserves well-formed plugin panel tabs', () => {
-    expect(normalizeRightSidebarRoute('plugin:orca-samples.my-plugin/dashboard')).toEqual({
-      rightSidebarTab: 'plugin:orca-samples.my-plugin/dashboard',
+  it('preserves the built-in activity tabs', () => {
+    expect(normalizeRightSidebarRoute('vault')).toEqual({
+      rightSidebarTab: 'vault',
+      rightSidebarExplorerView: 'files'
+    })
+    expect(normalizeRightSidebarRoute('source-control')).toEqual({
+      rightSidebarTab: 'source-control',
       rightSidebarExplorerView: 'files'
     })
   })
 
-  it('drops a well-formed tab once the installed plugin list proves it is stale', () => {
-    expect(
-      normalizeRightSidebarRoute('plugin:orca-samples.removed/dashboard', undefined, {
-        installedPluginTabKeys: new Set(['plugin:orca-samples.present/dashboard'])
-      })
-    ).toEqual({
+  it('keeps the explorer sub-view (files/search) and defaults unknown views to files', () => {
+    expect(normalizeRightSidebarRoute('explorer', 'search')).toEqual({
       rightSidebarTab: 'explorer',
-      rightSidebarExplorerView: 'files'
+      rightSidebarExplorerView: 'search'
     })
-  })
-
-  it('normalizes malformed plugin tabs to Explorer files', () => {
-    expect(normalizeRightSidebarRoute('plugin:orca-samples.my-plugin')).toEqual({
-      rightSidebarTab: 'explorer',
-      rightSidebarExplorerView: 'files'
-    })
-    expect(normalizeRightSidebarRoute('plugin:orca-samples.my-plugin/panel/extra')).toEqual({
-      rightSidebarTab: 'explorer',
-      rightSidebarExplorerView: 'files'
-    })
-    expect(normalizeRightSidebarRoute('plugin:My_Plugin/Panel!')).toEqual({
+    expect(normalizeRightSidebarRoute('explorer', 'bogus')).toEqual({
       rightSidebarTab: 'explorer',
       rightSidebarExplorerView: 'files'
     })

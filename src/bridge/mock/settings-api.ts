@@ -9,8 +9,8 @@ const MOCK_HOME = 'C:\\Users\\orcinus'
 export function createSettingsApi(): SettingsApi {
   let state: GlobalSettings = {
     ...getDefaultSettings(MOCK_HOME),
-    // Simplified groups from spec 6.4; only 插件 carries an explicit mock value.
-    pluginSystemEnabled: true
+    // Simplified groups from spec 6.4; only editor autosave carries an explicit mock value.
+    editorAutoSave: true
   }
   return {
     get: async () => cloneMockValue(state),

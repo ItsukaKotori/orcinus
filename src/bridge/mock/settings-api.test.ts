@@ -6,15 +6,15 @@ describe('Phase 0 settings mock', () => {
     const settings = createSettingsApi()
 
     const read = await settings.get()
-    read.pluginSystemEnabled = false
+    read.editorAutoSave = false
     read.notifications.suppressWhenFocused = false
     expect(settings.getSync()).toMatchObject({
-      pluginSystemEnabled: true,
+      editorAutoSave: true,
       notifications: { suppressWhenFocused: true }
     })
 
-    const updated = await settings.set({ pluginSystemEnabled: false })
-    updated.pluginSystemEnabled = true
-    await expect(settings.get()).resolves.toMatchObject({ pluginSystemEnabled: false })
+    const updated = await settings.set({ editorAutoSave: false })
+    updated.editorAutoSave = true
+    await expect(settings.get()).resolves.toMatchObject({ editorAutoSave: false })
   })
 })
