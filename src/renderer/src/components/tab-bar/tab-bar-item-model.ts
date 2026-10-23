@@ -32,13 +32,6 @@ export type TabBarItem =
       data: Tab & { contentType: 'agent-session' }
     }
   | {
-      type: 'plugin'
-      id: string
-      unifiedTabId: string
-      isPinned: boolean
-      data: Tab & { contentType: 'plugin' }
-    }
-  | {
       type: 'git-log'
       id: string
       unifiedTabId: string
@@ -52,9 +45,6 @@ export function getTabDragLabel(item: TabBarItem, generatedTitlesEnabled: boolea
   }
   if (item.type === 'agent-session') {
     return item.data.label
-  }
-  if (item.type === 'plugin') {
-    return item.data.customLabel ?? item.data.label
   }
   if (item.type === 'git-log') {
     return item.data.customLabel ?? item.data.label
@@ -103,12 +93,10 @@ export function buildOrderedTabItems({
   terminalIds,
   editorFileIds,
   agentSessionTabIds,
-  pluginTabIds,
   gitLogTabIds,
   terminalMap,
   editorMap,
   agentSessionMap,
-  pluginTabMap,
   gitLogTabMap,
   unifiedTabByVisibleId
 }: {
@@ -116,12 +104,10 @@ export function buildOrderedTabItems({
   terminalIds: string[]
   editorFileIds: string[]
   agentSessionTabIds: string[]
-  pluginTabIds: string[]
   gitLogTabIds: string[]
   terminalMap: Map<string, TerminalTab & { unifiedTabId?: string }>
   editorMap: Map<string, OpenFile & { tabId?: string }>
   agentSessionMap: Map<string, Tab & { contentType: 'agent-session' }>
-  pluginTabMap: Map<string, Tab & { contentType: 'plugin' }>
   gitLogTabMap: Map<string, Tab & { contentType: 'git-log' }>
   unifiedTabByVisibleId: Map<string, Tab>
 }): TabBarItem[] {
@@ -130,7 +116,6 @@ export function buildOrderedTabItems({
     terminalIds,
     editorFileIds,
     agentSessionTabIds,
-    pluginTabIds,
     gitLogTabIds
   )
   const items: TabBarItem[] = []
@@ -167,18 +152,6 @@ export function buildOrderedTabItems({
         unifiedTabId: agentSession.id,
         isPinned: agentSession.isPinned === true,
         data: agentSession
-      })
-      continue
-    }
-    const pluginTab = pluginTabMap.get(id)
-    if (pluginTab) {
-      const unifiedTab = unifiedTabByVisibleId.get(id)
-      items.push({
-        type: 'plugin',
-        id,
-        unifiedTabId: pluginTab.id,
-        isPinned: unifiedTab?.isPinned === true,
-        data: pluginTab
       })
       continue
     }
@@ -228,12 +201,8 @@ export function findActiveVisibleTabId(
       // `activeTabId` names a background terminal here.
       return active.activeTabType === 'agent-session' && item.id === active.activeTabId
     }
-    if (item.type === 'plugin') {
-      // Plugin rows are self-backed: the visible id is the unified tab id.
-      return active.activeTabType === 'plugin' && item.id === active.activeTabId
-    }
     if (item.type === 'git-log') {
-      // Git Log rows are self-backed like plugin rows.
+      // Git Log rows are self-backed.
       return active.activeTabType === 'git-log' && item.id === active.activeTabId
     }
     return active.activeTabType === 'editor' && active.activeFileId === item.id

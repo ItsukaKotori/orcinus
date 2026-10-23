@@ -11,7 +11,6 @@ import { createTabsMoveActions } from './tabs-move-actions'
 import { createTabsDropActions } from './tabs-drop-actions'
 import { createTabsSecondaryActions } from './tabs-secondary-actions'
 import { createTabsSessionActions } from './tabs-session-actions'
-import { createTabsPluginActions } from './tabs-plugin-actions'
 import { createTabsGitLogActions } from './tabs-git-log-actions'
 
 export const createTabsSlice: StateCreator<AppState, [], [], TabsSlice> = (set, get) => ({
@@ -29,6 +28,5 @@ export const createTabsSlice: StateCreator<AppState, [], [], TabsSlice> = (set, 
   ...createTabsDropActions(set, get),
   ...createTabsSecondaryActions(set, get),
   ...createTabsSessionActions(set, get),
-  ...createTabsPluginActions(set, get),
   ...createTabsGitLogActions(set, get)
 })

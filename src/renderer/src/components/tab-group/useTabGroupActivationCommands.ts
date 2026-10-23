@@ -118,27 +118,9 @@ export function useTabGroupActivationCommands({
     [activateTab, focusGroup, setActiveTabType, worktreeId]
   )
 
-  const activatePlugin = useCallback(
-    (tabId: string) => {
-      // Plugin tabs are self-backed: the row id is the unified tab id. The
-      // group's activeTabId drives the rendered surface, so moving it plus the
-      // visible type is the whole activation.
-      const item = groupTabs.find(
-        (candidate) => candidate.id === tabId && candidate.contentType === 'plugin'
-      )
-      if (!item) {
-        return
-      }
-      focusGroup(worktreeId, groupId)
-      activateTab(item.id)
-      setActiveTabType('plugin')
-    },
-    [activateTab, focusGroup, groupId, groupTabs, setActiveTabType, worktreeId]
-  )
-
   const activateGitLog = useCallback(
     (tabId: string) => {
-      // Git Log tabs are self-backed like plugin tabs: moving the group's
+      // Git Log tabs are self-backed: moving the group's
       // activeTabId plus the visible type is the whole activation.
       const item = groupTabs.find(
         (candidate) => candidate.id === tabId && candidate.contentType === 'git-log'
@@ -158,7 +140,6 @@ export function useTabGroupActivationCommands({
     toggleTerminalPaneExpand,
     activateEditor,
     activateAgentSession,
-    activatePlugin,
     activateGitLog
   }
 }

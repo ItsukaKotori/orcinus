@@ -8,14 +8,12 @@ export function reconcileTabOrder(
   terminalIds: string[],
   editorIds: string[],
   agentSessionIds: string[] = [],
-  pluginIds: string[] = [],
   gitLogIds: string[] = []
 ): string[] {
   const validIds = new Set([
     ...terminalIds,
     ...editorIds,
     ...agentSessionIds,
-    ...pluginIds,
     ...gitLogIds
   ])
   // Why: storedOrder is persisted group tab order and is mutated by many
@@ -32,7 +30,7 @@ export function reconcileTabOrder(
       inResult.add(id)
     }
   }
-  for (const id of [...terminalIds, ...editorIds, ...agentSessionIds, ...pluginIds, ...gitLogIds]) {
+  for (const id of [...terminalIds, ...editorIds, ...agentSessionIds, ...gitLogIds]) {
     if (!inResult.has(id)) {
       result.push(id)
       inResult.add(id)

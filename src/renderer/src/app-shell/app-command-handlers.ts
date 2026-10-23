@@ -10,7 +10,6 @@ import {
   resolveHoveredWorkspaceDeleteTarget
 } from '../components/sidebar/hovered-workspace-delete'
 import { useAppStore } from '../store'
-import type { usePluginCommands } from '@/store/plugin-panels'
 import type {
   KeybindingActionId,
   KeybindingContext,
@@ -46,7 +45,6 @@ export type AppShortcutState = {
   floatingVisibleTabCount: number
   keybindings: AppStoreState['keybindings']
   openFloatingWorkspaceMaximized: () => void
-  pluginCommands: ReturnType<typeof usePluginCommands>
   setFloatingTerminalOpen: (open: boolean) => void
   terminalShortcutPolicy: NonNullable<AppStoreState['settings']>['terminalShortcutPolicy']
   workspaceChromeActive: boolean

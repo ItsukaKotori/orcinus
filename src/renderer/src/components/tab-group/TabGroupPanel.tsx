@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import TabBar from '../tab-bar/TabBar'
-import PluginTabContent from '../tabs/PluginTabContent'
 import GitLogTabContent from '../git-log/GitLogTabContent'
 
 import { TabBarQuickCommandsButton } from '../tab-bar/TabBarQuickCommandsButton'
@@ -66,7 +65,6 @@ export default function TabGroupPanel({
     agentSessionItems,
     commands,
     editorItems,
-    pluginItems,
     gitLogItems,
     tabBarOrder,
     terminalTabs
@@ -135,14 +133,12 @@ export default function TabGroupPanel({
       editorFiles={editorItems}
       groupActiveTabId={activeTab?.id ?? null}
       agentSessionTabs={agentSessionItems}
-      pluginTabs={pluginItems}
       gitLogTabs={gitLogItems}
       activeFileId={activeSurface.activeFileId}
       activeTabType={activeSurface.activeTabType}
       onActivateFile={commands.activateEditor}
       onCloseFile={commands.closeItem}
       onActivateAgentSession={commands.activateAgentSession}
-      onActivatePlugin={commands.activatePlugin}
       onActivateGitLog={commands.activateGitLog}
       onCloseAllFiles={commands.closeAllEditorTabsInGroup}
       onMakePreviewFilePermanent={(_fileId, tabId) => {
@@ -299,16 +295,6 @@ export default function TabGroupPanel({
             className="pointer-events-none absolute inset-x-0 top-1/4 h-px"
           />
         ) : null}
-        {activeTab?.contentType === 'plugin' ? (
-          <div className="absolute inset-0 flex min-h-0 min-w-0">
-            <PluginTabContent
-              tab={activeTab}
-              onClose={() => {
-                commands.closeItem(activeTab.id)
-              }}
-            />
-          </div>
-        ) : null}
         {activeTab?.contentType === 'git-log' ? (
           <div className="absolute inset-0 flex min-h-0 min-w-0">
             <GitLogTabContent tab={activeTab} />
@@ -317,7 +303,6 @@ export default function TabGroupPanel({
         {activeTab &&
           activeTab.contentType !== 'terminal' &&
           activeTab.contentType !== 'agent-session' &&
-          activeTab.contentType !== 'plugin' &&
           activeTab.contentType !== 'git-log' && (
             <div className="absolute inset-0 flex min-h-0 min-w-0">
               {/* Why: split groups render editor content in a plain relative pane body, not the legacy Terminal.tsx flex column. */}

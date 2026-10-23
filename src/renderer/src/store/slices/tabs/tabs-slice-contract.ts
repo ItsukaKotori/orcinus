@@ -32,7 +32,6 @@ export type TabsSlice = {
         | 'color'
         | 'isPreview'
         | 'isPinned'
-        | 'pluginTab'
         | 'gitLog'
       > & {
         targetGroupId: string
@@ -41,19 +40,6 @@ export type TabsSlice = {
       }
     >
   ) => Tab
-  /** Opens (or focuses) a main-area plugin tab. Deduped by `instanceId` within
-   *  the worktree — the backend re-emits `workspace.openTab` with the same
-   *  instance id for the same `(pluginKey, tabId, params)` triple. */
-  openPluginTab: (input: {
-    pluginKey: string
-    tabId: string
-    scope: 'global' | 'project'
-    repoId?: string
-    instanceId: string
-    title?: string
-    params?: unknown
-    worktreeId: string
-  }) => Tab | null
   /** Opens (or focuses) the native Git Log tab for a worktree (one per worktree). */
   openGitLogTab: (input: { worktreeId: string }) => Tab
   createUnifiedTabInSplit: (
@@ -76,7 +62,6 @@ export type TabsSlice = {
         | 'color'
         | 'isPreview'
         | 'isPinned'
-        | 'pluginTab'
         | 'gitLog'
       > & {
         activate: boolean

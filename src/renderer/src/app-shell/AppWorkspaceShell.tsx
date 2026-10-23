@@ -18,11 +18,6 @@ const WorktreeCreationPanel = lazy(
 )
 const Settings = lazy(() => import('../components/settings/Settings'))
 const WorkspaceSpacePage = lazy(() => import('../components/workspace-space/WorkspaceSpacePage'))
-const PluginCenterPage = lazy(() =>
-  import('../components/plugin-center/PluginCenterPage').then((module) => ({
-    default: module.PluginCenterPage
-  }))
-)
 const Terminal = lazy(() => import('../components/Terminal'))
 
 type WorktreeSidebarScrollRefs = {
@@ -68,7 +63,6 @@ function ActivePage({ layout }: { layout: AppChromeLayout }): React.JSX.Element 
     <>
       {activeView === 'settings' ? <Settings /> : null}
       {activeView === 'space' ? <WorkspaceSpacePage /> : null}
-      {activeView === 'plugin-center' ? <PluginCenterPage /> : null}
       {activeView === 'terminal' && creationLayoutActive && activePendingCreationId ? (
         <WorktreeCreationPanel
           creationId={activePendingCreationId}

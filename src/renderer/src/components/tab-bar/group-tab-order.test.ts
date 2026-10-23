@@ -50,27 +50,6 @@ function agentSessionTab(id: string, groupId: string, sessionId: string, sortOrd
   }
 }
 
-function pluginTab(id: string, groupId: string, instanceEntityId: string, sortOrder: number): Tab {
-  return {
-    id,
-    entityId: instanceEntityId,
-    groupId,
-    worktreeId: 'wt',
-    contentType: 'plugin',
-    label: 'Board',
-    customLabel: null,
-    color: null,
-    sortOrder,
-    createdAt: sortOrder,
-    pluginTab: {
-      pluginKey: 'orca-samples.board',
-      tabId: 'board',
-      scope: 'global',
-      instanceId: `inst-${sortOrder}`
-    }
-  }
-}
-
 function gitLogTab(
   id: string,
   groupId: string,
@@ -194,33 +173,6 @@ describe('getGroupVisibleTabOrder', () => {
     expect(getGroupVisibleTabOrder(group, tabs, new Set(['term-1']), new Set())).toEqual(
       [{ type: 'terminal', id: 'term-1', tabId: 'tab-t2' }]
     )
-  })
-
-  it('includes plugin tabs keyed by unified id in the declared group order', () => {
-    const group: TabGroup = {
-      id: 'g1',
-      worktreeId: 'wt',
-      activeTabId: 'tab-p1',
-      tabOrder: ['tab-t1', 'tab-p1', 'tab-e1']
-    }
-    const tabs: Tab[] = [
-      terminalTab('tab-t1', 'g1', 'term-1', 0),
-      pluginTab('tab-p1', 'g1', 'orca-samples.board/board/inst-1', 1),
-      editorTab('tab-e1', 'g1', '/repo/file.md', 2)
-    ]
-
-    expect(
-      getGroupVisibleTabOrder(
-        group,
-        tabs,
-        new Set(['term-1']),
-        new Set(['/repo/file.md'])
-      )
-    ).toEqual([
-      { type: 'terminal', id: 'term-1', tabId: 'tab-t1' },
-      { type: 'plugin', id: 'orca-samples.board/board/inst-1', tabId: 'tab-p1' },
-      { type: 'editor', id: '/repo/file.md', tabId: 'tab-e1' }
-    ])
   })
 
   it('includes git-log tabs keyed by unified id in the declared group order', () => {
@@ -389,39 +341,6 @@ describe('getActiveTabNavOrder', () => {
     ])
   })
 
-  it('includes plugin tabs in the active group keyboard cycle', () => {
-    const group: TabGroup = {
-      id: 'g1',
-      worktreeId: 'wt',
-      activeTabId: 'tab-p1',
-      tabOrder: ['tab-t1', 'tab-p1', 'tab-e1']
-    }
-    const tabs: Tab[] = [
-      terminalTab('tab-t1', 'g1', 'term-1', 0),
-      pluginTab('tab-p1', 'g1', 'orca-samples.board/board/inst-1', 1),
-      editorTab('tab-e1', 'g1', '/repo/file.md', 2)
-    ]
-    const state = makeState({
-      activeGroupIdByWorktree: { wt: 'g1' },
-      groupsByWorktree: { wt: [group] },
-      unifiedTabsByWorktree: { wt: tabs },
-      tabsByWorktree: {
-        // @ts-expect-error — minimal shape for terminal presence only
-        wt: [{ id: 'term-1' }]
-      },
-      openFiles: [
-        // @ts-expect-error — minimal OpenFile shape; nav helper only reads `id` and `worktreeId`
-        { id: '/repo/file.md', worktreeId: 'wt' }
-      ]
-    })
-
-    expect(getActiveTabNavOrder(state, 'wt')).toEqual([
-      { type: 'terminal', id: 'term-1', tabId: 'tab-t1' },
-      { type: 'plugin', id: 'orca-samples.board/board/inst-1', tabId: 'tab-p1' },
-      { type: 'editor', id: '/repo/file.md', tabId: 'tab-e1' }
-    ])
-  })
-
   it('includes git-log tabs in the active group keyboard cycle', () => {
     const group: TabGroup = {
       id: 'g1',
@@ -485,12 +404,10 @@ describe('buildOrderedTabItems git-log rows', () => {
       terminalIds: [],
       editorFileIds: [],
       agentSessionTabIds: [],
-      pluginTabIds: [],
       gitLogTabIds: ['tab-g1'],
       terminalMap: new Map(),
       editorMap: new Map(),
       agentSessionMap: new Map(),
-      pluginTabMap: new Map(),
       gitLogTabMap: new Map([['tab-g1', tab]]),
       unifiedTabByVisibleId: new Map([['tab-g1', tab]])
     })
@@ -522,12 +439,10 @@ describe('group order matches the rendered tab strip', () => {
         .map((tab) => tab.entityId),
       editorFileIds: [],
       agentSessionTabIds: [],
-      pluginTabIds: [],
       gitLogTabIds: [],
       terminalMap: terminalMap as never,
       editorMap: new Map(),
       agentSessionMap: new Map(),
-      pluginTabMap: new Map(),
       gitLogTabMap: new Map(),
       unifiedTabByVisibleId: new Map()
     }).map((item) => item.id)

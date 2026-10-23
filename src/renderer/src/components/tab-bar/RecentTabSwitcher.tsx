@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { FileText, GitCompare, GitGraph, Puzzle, TerminalSquare } from 'lucide-react'
+import { FileText, GitCompare, GitGraph, TerminalSquare } from 'lucide-react'
 import { useAppStore } from '../../store'
 import { activateCyclableTab } from '../../hooks/ipc-tab-switch'
 import { getShortcutPlatform } from '../../hooks/useShortcutLabel'
@@ -30,9 +30,6 @@ function TabIcon({ item }: { item: RecentTabSwitcherItem }): React.JSX.Element {
   const className = 'size-4 shrink-0 text-muted-foreground'
   if (item.type === 'terminal') {
     return <TerminalSquare className={className} />
-  }
-  if (item.type === 'plugin') {
-    return <Puzzle className={className} />
   }
   if (item.type === 'git-log') {
     return <GitGraph className={className} />

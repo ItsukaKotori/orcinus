@@ -31,16 +31,13 @@ export type TabBarProps = {
   /** The group's own active tab at render time; a client-hosted selection dies when it moves. */
   groupActiveTabId?: string | null
   agentSessionTabs?: (Tab & { contentType: 'agent-session' })[]
-  /** Main-area plugin tabs; self-backed, so the visible id is the unified tab id. */
-  pluginTabs?: (Tab & { contentType: 'plugin' })[]
-  /** Native Git Log tabs; self-backed like plugin tabs (visible id = unified tab id). */
+  /** Native Git Log tabs; self-backed (visible id = unified tab id). */
   gitLogTabs?: (Tab & { contentType: 'git-log' })[]
   activeFileId?: string | null
   activeTabType?: WorkspaceVisibleTabType
   onActivateFile?: (fileId: string) => void
   onCloseFile?: (fileId: string) => void
   onActivateAgentSession?: (tabId: string) => void
-  onActivatePlugin?: (tabId: string) => void
   onActivateGitLog?: (tabId: string) => void
   onCloseAllFiles?: () => void
   onMakePreviewFilePermanent?: (fileId: string, tabId?: string) => void

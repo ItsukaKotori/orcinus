@@ -36,7 +36,6 @@ export function useTabBarItemProjection({
     tabs,
     editorFiles,
     agentSessionTabs,
-    pluginTabs,
     gitLogTabs,
     tabBarOrder,
     hoveredTabInsertion,
@@ -54,10 +53,6 @@ export function useTabBarItemProjection({
     () => new Map((agentSessionTabs ?? []).map((tab) => [tab.id, tab])),
     [agentSessionTabs]
   )
-  const pluginTabMap = useMemo(
-    () => new Map((pluginTabs ?? []).map((tab) => [tab.id, tab])),
-    [pluginTabs]
-  )
   const gitLogTabMap = useMemo(
     () => new Map((gitLogTabs ?? []).map((tab) => [tab.id, tab])),
     [gitLogTabs]
@@ -71,7 +66,6 @@ export function useTabBarItemProjection({
     () => agentSessionTabs?.map((tab) => tab.id) ?? [],
     [agentSessionTabs]
   )
-  const pluginTabIds = useMemo(() => pluginTabs?.map((tab) => tab.id) ?? [], [pluginTabs])
   const gitLogTabIds = useMemo(() => gitLogTabs?.map((tab) => tab.id) ?? [], [gitLogTabs])
   const orderedItems = useMemo(
     () =>
@@ -80,12 +74,10 @@ export function useTabBarItemProjection({
         terminalIds,
         editorFileIds,
         agentSessionTabIds,
-        pluginTabIds,
         gitLogTabIds,
         terminalMap,
         editorMap,
         agentSessionMap,
-        pluginTabMap,
         gitLogTabMap,
         unifiedTabByVisibleId
       }),
@@ -94,12 +86,10 @@ export function useTabBarItemProjection({
       terminalIds,
       editorFileIds,
       agentSessionTabIds,
-      pluginTabIds,
       gitLogTabIds,
       terminalMap,
       editorMap,
       agentSessionMap,
-      pluginTabMap,
       gitLogTabMap,
       unifiedTabByVisibleId
     ]

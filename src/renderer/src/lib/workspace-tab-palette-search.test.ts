@@ -192,39 +192,6 @@ describe('workspace-tab-palette-search', () => {
     const results = searchWorkspaceTabs(entries, 'unified')
     expect(results.map((result) => result.tabId)).toEqual(tabIds)
   })
-  it('includes plugin tabs as searchable rows with the unified label', () => {
-    const plugin = makeUnifiedTab({
-      id: 'unified-plugin-1',
-      entityId: 'orca-samples.board/board/inst-1',
-      contentType: 'plugin',
-      label: 'Board',
-      pluginTab: {
-        pluginKey: 'orca-samples.board',
-        tabId: 'board',
-        scope: 'global',
-        instanceId: 'inst-1'
-      }
-    })
-    const entries = buildEntries({
-      unifiedTabsByWorktree: { 'wt-1': [plugin] },
-      tabsByWorktree: { 'wt-1': [] },
-      groupsByWorktree: {
-        'wt-1': [makeGroup({ activeTabId: 'unified-plugin-1', tabOrder: ['unified-plugin-1'] })]
-      },
-      activeTabType: 'plugin',
-      activeTabId: null,
-      activeTabIdByWorktree: {},
-      activeTabTypeByWorktree: { 'wt-1': 'plugin' }
-    })
-
-    expect(entries).toHaveLength(1)
-    expect(entries[0]?.tab.contentType).toBe('plugin')
-    expect(entries[0]?.title).toBe('Board')
-    expect(entries[0]?.isCurrentTab).toBe(true)
-    expect(searchWorkspaceTabs(entries, 'board').map((result) => result.tabId)).toEqual([
-      'unified-plugin-1'
-    ])
-  })
 
   it('uses the same title precedence as the tab strip and honors generated-title disabling', () => {
     const enabledEntries = buildEntries({

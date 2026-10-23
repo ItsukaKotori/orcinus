@@ -24,14 +24,12 @@ export type TabContentType =
   | 'conflict-review'
   | 'check-details'
   | 'agent-session'
-  | 'plugin'
   | 'git-log'
 
 export type WorkspaceVisibleTabType =
   | 'terminal'
   | 'editor'
   | 'agent-session'
-  | 'plugin'
   | 'git-log'
 export type CtrlTabOrderMode = 'mru' | 'sequential'
 
@@ -41,7 +39,6 @@ export function toVisibleTabType(contentType: TabContentType): WorkspaceVisibleT
   if (
     contentType === 'agent-session' ||
     contentType === 'terminal' ||
-    contentType === 'plugin' ||
     contentType === 'git-log'
   ) {
     return contentType
@@ -52,17 +49,6 @@ export function toVisibleTabType(contentType: TabContentType): WorkspaceVisibleT
 /** Binding of a main-area tab to a plugin's `contributes.tabs` entry. The
  *  instance id is stable across dedupe (same plugin tab reopened focuses the
  *  existing tab) and survives hydration. */
-export type PluginTabBinding = {
-  pluginKey: string
-  tabId: string
-  scope: 'global' | 'project'
-  repoId?: string
-  instanceId: string
-  titleHint?: string
-  /** Opaque `workspace.openTab` params, forwarded to the iframe init message. */
-  params?: unknown
-}
-
 export type Tab = {
   id: string // UUID for terminals, filePath for editors (preserves current convention)
   entityId: string // ID of the backing content (terminal tab ID, file path)
@@ -93,9 +79,6 @@ export type Tab = {
   viewMode?: 'terminal' | 'chat'
   /** Timestamp when the tab was last focused / activated by the user. */
   lastFocusedAt?: number
-  /** Present iff `contentType === 'plugin'`; optional so persisted sessions
-   *  written before plugin tabs existed hydrate unchanged. */
-  pluginTab?: PluginTabBinding
   /** Present iff `contentType === 'git-log'`; one native Git Log view per worktree. */
   gitLog?: { worktreeId: string }
 }
