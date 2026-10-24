@@ -107,17 +107,15 @@ describe('settings navigation metadata', () => {
     expect(sections.find((section) => section.id === 'orchestration')?.badge).toBeUndefined()
   })
 
-  it('places Plugins under Experimental on desktop and omits it on the web', () => {
+  it('omits the removed Plugins nav entry on desktop and web', () => {
     const desktopSections = buildSettingsNavigationMetadata({
       isMac: false,
       isWindows: false,
       isWebClient: false,
       repos: [repo]
     })
-    const desktopIds = desktopSections.map((section) => section.id)
 
-    expect(desktopSections.find((section) => section.id === 'plugins')?.group).toBe('experimental')
-    expect(desktopIds.indexOf('plugins')).toBe(desktopIds.indexOf('experimental') + 1)
+    expect(desktopSections.map((section) => section.id)).not.toContain('plugins')
     expect(ids({ isWebClient: true })).not.toContain('plugins')
   })
 
