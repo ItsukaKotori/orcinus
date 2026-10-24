@@ -79,6 +79,7 @@ describe('buildBranchTreeRows', () => {
     expect(shape(buildBranchTreeRows({ refs: REFS }))).toEqual([
       'head-current',
       '[group:local',
+      '  main',
       '  feature/login',
       '[group:remote',
       '  [group:remote/origin',
@@ -91,19 +92,54 @@ describe('buildBranchTreeRows', () => {
     ])
   })
 
-  it('Local 组排除当前分支（由 HEAD 合成行代表），其余字典序；remote 内按去前缀名排序', () => {
+  it('当前分支既在 Local 置顶、又有 head-current 合成行（spec §7.1/§7.2）', () => {
     const rows = buildBranchTreeRows({ refs: REFS })
-    // spec §7.2 的「当前分支置顶」由 head-current 合成行实现，
-    // 所以 Local 组内**不应**再出现 main。
-    expect(localNames(rows)).toEqual(['feature/login'])
-    // `origin/dev` 排在 `origin/main` 前，`upstream/main` 归自己的组：
-    // 比的是去掉 `<remote>/` 前缀后的名字。
+    // 两行语义不同：合成行 = 当前分支范围；Local 里的 main = 该 ref 本身。
+    // 合并它们会让当前分支无法作为普通 ref 被选中（Git Log 设查看 ref / 右键）。
+    expect(rows.some((r) => r.kind === 'synthetic' && r.value === 'head-current')).toBe(true)
+    expect(localNames(rows)).toEqual(['main', 'feature/login'])
+    // 置顶不是巧合：main 码点序本应排在 feature/login 之后。
+    expect(refRows(rows).find((r) => r.ref.name === 'main')!.depth).toBe(1)
+    // §7.1 的 🏷 图标必须可达：Local 里确实有一行 isHead。
+    expect(refRows(rows).filter((r) => r.ref.isHead).map((r) => r.ref.name)).toEqual(['main'])
+  })
+
+  it('isHead 即使码点序不排第一也被置顶（置顶是显式的，不靠巧合）', () => {
+    const rows = buildBranchTreeRows({
+      refs: [
+        ref({ name: 'Cache', fullName: 'refs/heads/Cache' }),
+        ref({ name: 'main', fullName: 'refs/heads/main', isHead: true }),
+      ],
+    })
+    expect(localNames(rows)).toEqual(['main', 'Cache'])
+  })
+
+  it('用码点序而非 localeCompare（否则同一仓库在不同宿主 locale 下排出不同序）', () => {
+    // 实测分岔：localeCompare → [a-b, ab, aB, Ab]；码点序 → [Ab, a-b, aB, ab]。
+    const rows = buildBranchTreeRows({
+      refs: ['ab', 'a-b', 'Ab', 'aB'].map((n) => ref({ name: n, fullName: `refs/heads/${n}` })),
+    })
+    expect(localNames(rows)).toEqual(['Ab', 'a-b', 'aB', 'ab'])
+  })
+
+  it('remote 组按 remote 名码点序排列（origin 在 upstream 前）', () => {
+    const rows = buildBranchTreeRows({ refs: REFS })
+    expect(groupRows(rows).map((g) => g.id).filter((id) => id.startsWith('group:remote/'))).toEqual([
+      'group:remote/origin',
+      'group:remote/upstream',
+    ])
+  })
+
+  it('Local 组内其余条目按名称码点序', () => {
+    const rows = buildBranchTreeRows({ refs: REFS })
+    // `origin/dev` 排在 `origin/main` 前；`upstream/main` 归自己的组。
     expect(refNames(rows, 2)).toEqual(['origin/dev', 'origin/main', 'upstream/main'])
   })
 
   it('折叠的组只出行头，不出子行；childCount 仍是过滤后的条数', () => {
     const rows = buildBranchTreeRows({ refs: REFS, collapsed: new Set(['group:remote']) })
     expect(rows.some((r) => r.kind === 'ref')).toBe(true)
+    // remote 组已折叠 → 带 `/` 的名字只剩 Local 里的 feature/login。
     expect(refNames(rows).filter((n) => n.includes('/'))).toEqual(['feature/login'])
     const remote = groupRows(rows).find((g) => g.id === 'group:remote')!
     expect(remote.expanded).toBe(false)
@@ -121,7 +157,12 @@ describe('buildBranchTreeRows', () => {
       'group:remote/upstream',
       'group:tags',
     ])
-    expect(refNames(rows)).toEqual(['feature/login', 'upstream/main', 'v1.2.0'])
+    expect(refNames(rows)).toEqual([
+      'main',
+      'feature/login',
+      'upstream/main',
+      'v1.2.0',
+    ])
   })
 
   it('空组不出行头', () => {
@@ -143,7 +184,6 @@ describe('buildBranchTreeRows', () => {
     expect(
       rows.filter((r) => r.kind === 'synthetic').map((r) => (r.kind === 'synthetic' ? r.value : '?!'))
     ).toEqual(['all-branches', 'head-current'])
-    expect(refNames(rows)).not.toContain('main')
   })
 
   it('不注入时只有 head-current 一行合成人物', () => {

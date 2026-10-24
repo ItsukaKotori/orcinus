@@ -249,11 +249,12 @@ store 元数据**不是权威**：一条分支可能被 ade 不知道的 git wor
 
 ```
 🔍 Branch or tag
-   All Branches              ← 仅宿主 B 经 topExtraNodes 注入
-   HEAD (Current Branch)     ← 合成人物，activate = 当前分支范围 / 切到当前 workspace
+   All Branches              ← 仅宿主 B（Git Log 工具栏）经 topExtraNodes 注入
+   HEAD (Current Branch)     ← 合成行，activate = 当前分支范围 / 切到当前 workspace
 ▾ Local
-     🏷 main          ↕ 82    ← 🏷 = is_head
-       main  ▣ my-app ↕ 82   ← ▣ = 被某 ade workspace 检出，tooltip 给 displayName + path
+     🏷 main          ↕ 82    ← 🏷 = is_head；当前分支**仍作为普通 ref 行**留在 Local 并置顶
+       feature/login ▣ my-app ↕ 82
+                             ← ▣ = 被某 ade workspace 检出，tooltip 给 displayName + path
 ▾ Remote
   ▾ 📁 origin
        ★ main                ← ★ = 当前分支的 upstream
@@ -261,14 +262,21 @@ store 元数据**不是权威**：一条分支可能被 ade 不知道的 git wor
      🏷 v1.2.0
 ```
 
+> **`HEAD (Current Branch)` 合成行与 Local 里的 `main` 行不合并**。两者语义不同且都需要：
+> 合成行 = 「当前分支范围」（Git Log 宿主下 `refs` 不设限）；Local 里的 `main` = 该 ref 本身
+> （Git Log 宿主下 `refs=main`，且可被右键）。合并会让当前分支无法作为普通 ref 被选中。
+
 图标语义是**本设计新定义的映射**（不是「IDEA 就是这样」的断言）：
 `🏷`=git 报告的 HEAD 分支；`▣`=被 ade workspace 检出；`★`=当前分支的 upstream。
 
 ### 7.2 排序
 
 - 组序固定：`All Branches`（注入项）→ `HEAD (Current Branch)` → `Local` → `Remote` → `Tags`。
-- `Local` 内：当前分支置顶，其余按 `committerdate` 倒序需要额外字段 → **本期按名称字典序**（见 §11 开放问题）。
-- `Remote` 二级分组按 remote 名排序，remote 内按去掉 `<remote>/` 前缀后的名称字典序。
+- `Local` 内：当前分支**显式置顶**（不能指望碰巧排第一），其余按名称**码点序**。
+  刻意不用 `localeCompare()`：无参调用走宿主 locale + ICU 权重，同一仓库在不同用户机器上
+  会排出不同顺，对这棵要靠 ↑↓ 稳定导航的树是可观察的歧义。
+- `Remote` 二级分组按 remote 名**码点序**。组内直接比 `name` 即可：同一组内所有条目共享
+  同一个 `<remote>/` 前缀，剥掉公共前缀不改变任何相对次序（实施中证实为 no-op，已删）。
 - `Tags` 按名称字典序（不做版本语义排序）。
 
 ### 7.3 键盘

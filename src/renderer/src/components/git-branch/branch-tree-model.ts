@@ -84,13 +84,18 @@ type Bucket = {
 }
 
 /**
- * Remote 条目比的是**去掉 `<remote>/` 前缀后**的名字，否则
- * `origin/a` 会排到 `origin/b` 之后（前缀主导排序是反直觉的）。
+ * 名称**码点序**，刻意不用 `localeCompare()`。
+ *
+ * Why: spec §7.2 要的是「字典序」。无参 `localeCompare()` 走宿主 locale + ICU 的
+ * 本地化权重，忽略/降权标点与大小写 —— 实测 `['ab','a-b','Ab','aB']` 在
+ * localeCompare 下是 `[a-b, ab, aB, Ab]`，码点序下是 `[Ab, a-b, aB, ab]`。
+ * 同一仓库在不同用户机器上排出不同顺，对这棵要靠 ↑↓ 稳定导航的树是可观察的歧义。
+ *
+ * 也不剥 `<remote>/` 前缀：remote 条目先按 `r.remote` 分组，组内所有名字共享
+ * 同一前缀，剥掉公共前缀不改变任何相对次序（Task review 证实为 no-op）。
  */
 function compareName(a: GitRefEntry, b: GitRefEntry): number {
-  const an = a.category === 'remote' ? a.name.replace(/^[^/]+\//, '') : a.name
-  const bn = b.category === 'remote' ? b.name.replace(/^[^/]+\//, '') : b.name
-  return an.localeCompare(bn)
+  return a.name < b.name ? -1 : a.name > b.name ? 1 : 0
 }
 
 /** 组序固定：Local → Remote → Tags；空组不出行头。 */
@@ -107,7 +112,7 @@ function bucketize(refs: readonly GitRefEntry[]): Bucket[] {
   return buckets
 }
 
-/** Remote 组按 remote 名二级分组；remote 名升序。 */
+/** Remote 组按 remote 名码点序二级分组（与 compareName 同一理由）。 */
 function byRemote(refs: GitRefEntry[]): Array<[string, GitRefEntry[]]> {
   const out = new Map<string, GitRefEntry[]>()
   for (const r of refs) {
@@ -119,10 +124,16 @@ function byRemote(refs: GitRefEntry[]): Array<[string, GitRefEntry[]]> {
     }
     list.push(r)
   }
-  return [...out.entries()].sort(([a], [b]) => a.localeCompare(b))
+  return [...out.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
 }
 
-/** 当前分支的 upstream 短名（`origin/main`），用于 `★` 标记。 */
+/** 当前分支的 upstream 短名（`origin/main`），用于 `★` 标记。
+ *
+ * Why 两个输入：`head` 来自 git 自己报的 `%(HEAD)`，`headBranch` 来自 store 的
+ * `Worktree.branch`。两者**必须同源**（同一个分支）；不一致就是元数据漂移，
+ * 会出现「HEAD 合成行代表 main，但 ★ 按 dev 的 upstream 算」。宿主有责任传同源值
+ * （见 spec §6.4：前端标记是 advisory）。
+ */
 function headUpstreamName(
   refs: readonly GitRefEntry[],
   headBranch: string | null | undefined
@@ -179,11 +190,13 @@ export function buildBranchTreeRows(input: BuildBranchTreeInput): BranchTreeRow[
     rows.push({ kind: 'synthetic', id: ROW_HEAD, depth: 0, ...SYNTHETIC_LABELS['head-current'], value: 'head-current' })
   }
 
-  // HEAD 行已代表当前分支，Local 组里不再重复出它；detached（head 为 null）时
-  // 没有任何条目代表当前分支，所以全部留下。
-  const rest = refs.filter((r) => r !== head)
+  // spec §7.1/§7.2：当前分支**既**在 Local 组内置顶并带 🏷，**也**有
+  // `HEAD (Current Branch)` 合成行。两行语义不同且都需要：
+  //  合成行 = 「当前分支范围」（Git Log 宿主：refs 不设限）；
+  //  Local 里的 main 行 = 该 ref 本身（Git Log 宿主：refs=main；也可被右键）。
+  // 把它们合二为一会让当前分支无法作为普通 ref 被选中。
 
-  for (const bucket of bucketize(rest)) {
+  for (const bucket of bucketize(refs)) {
     const expanded = !collapsed.has(bucket.id)
     rows.push({
       kind: 'group',
@@ -198,7 +211,13 @@ export function buildBranchTreeRows(input: BuildBranchTreeInput): BranchTreeRow[
     if (!expanded) continue
 
     if (bucket.id !== GROUP_REMOTE) {
-      for (const r of [...bucket.refs].sort(compareName)) {
+      const sorted = [...bucket.refs].sort(compareName)
+      // spec §7.2「当前分支置顶」：码点序会把 `Main`/`cache` 之类排到前面，
+      // 所以置顶必须显式做，不能指望 isHead 碰巧排在第一位。
+      if (bucket.id === GROUP_LOCAL) {
+        sorted.sort((a, b) => Number(b.isHead) - Number(a.isHead))
+      }
+      for (const r of sorted) {
         rows.push(refRow(r, 1, upstream, checkedOutByBranch))
       }
       continue
