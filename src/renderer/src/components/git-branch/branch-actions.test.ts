@@ -1,0 +1,200 @@
+import { describe, expect, it, vi } from 'vitest'
+import type { GitRefEntry } from '../../../../shared/git-ref-types'
+import type { BranchTreeRow, BranchWorkspaceOwner } from './branch-tree-model'
+import {
+  BRANCH_ACTIONS,
+  branchActionForRef,
+  primaryBranchAction,
+  type BranchActionContext,
+} from './branch-actions'
+
+const refEntry = (over: Partial<GitRefEntry> & { name: string }): GitRefEntry => ({
+  fullName: `refs/heads/${over.name}`,
+  category: 'local',
+  oid: '0'.repeat(40),
+  isHead: false,
+  ...over,
+})
+
+function refRow(
+  ref: GitRefEntry,
+  checkedOutBy: BranchWorkspaceOwner | null = null
+): BranchTreeRow {
+  return { kind: 'ref', id: `ref:${ref.fullName}`, depth: 1, ref, isUpstreamOfHead: false, checkedOutBy }
+}
+
+const groupRow = (): BranchTreeRow => ({
+  kind: 'group',
+  id: 'group:local',
+  labelKey: 'auto.components.git-branch.groupLocal',
+  labelFallback: 'Local',
+  depth: 0,
+  expandable: true,
+  expanded: true,
+  childCount: 2,
+})
+
+const synthetic = (value: 'all-branches' | 'head-current'): BranchTreeRow => ({
+  kind: 'synthetic',
+  id: `row:${value}`,
+  depth: 0,
+  labelKey: `k:${value}`,
+  labelFallback: value,
+  value,
+})
+
+const OWNER: BranchWorkspaceOwner = { worktreeId: 'r::/b', displayName: 'B', path: '/b' }
+
+function ctx(over: Partial<BranchActionContext> = {}): BranchActionContext {
+  return {
+    headBranch: 'main',
+    ownerOf: () => null,
+    activateWorkspace: vi.fn(),
+    newWorkspaceFrom: vi.fn(),
+    viewInGitLog: vi.fn(),
+    ...over,
+  }
+}
+
+/** 矩阵断言用的局部枚举：不进生产代码（增量 1 唯一生产消费者是 primaryBranchAction）。 */
+const visibleActions = (row: BranchTreeRow, c: BranchActionContext): string[] =>
+  BRANCH_ACTIONS.filter((a) => a.visible(row, c)).map((a) => a.id)
+
+describe('BRANCH_ACTIONS', () => {
+  it('label 是惰性函数且非空（no-top-level-translate AST 门禁要求）', () => {
+    expect(BRANCH_ACTIONS.length).toBeGreaterThan(0)
+    for (const action of BRANCH_ACTIONS) {
+      expect(typeof action.label).toBe('function')
+      expect(action.label().length).toBeGreaterThan(0)
+    }
+  })
+
+  it('每个动作都有 id / visible / run', () => {
+    for (const action of BRANCH_ACTIONS) {
+      expect(typeof action.id).toBe('string')
+      expect(typeof action.visible).toBe('function')
+      expect(typeof action.run).toBe('function')
+    }
+  })
+})
+
+describe('branchActionForRef', () => {
+  it('有 owner 的本地分支 → switch；无 owner → new-workspace', () => {
+    const ownerOf = (name: string) => (name === 'main' ? OWNER : null)
+    expect(branchActionForRef(refEntry({ name: 'main' }), ownerOf)).toBe('switch')
+    expect(branchActionForRef(refEntry({ name: 'dev' }), ownerOf)).toBe('new-workspace')
+  })
+
+  it('remote / tag 即使 ownerOf 能查到同名也走 new-workspace', () => {
+    const ownerOf = () => OWNER
+    expect(
+      branchActionForRef(
+        refEntry({ name: 'main', category: 'remote', remote: 'origin', fullName: 'refs/remotes/origin/main' }),
+        ownerOf
+      )
+    ).toBe('new-workspace')
+    expect(
+      branchActionForRef(refEntry({ name: 'v1', category: 'tag', fullName: 'refs/tags/v1' }), ownerOf)
+    ).toBe('new-workspace')
+  })
+})
+
+describe('可见性矩阵（spec §7.4）', () => {
+  it('组头行不出任何动作', () => {
+    expect(visibleActions(groupRow(), ctx())).toEqual([])
+  })
+
+  it('有 owner 的本地分支：switch + new-workspace + view-in-log', () => {
+    expect(visibleActions(refRow(refEntry({ name: 'main' }), OWNER), ctx({ ownerOf: () => OWNER }))).toEqual([
+      'switch',
+      'new-workspace',
+      'view-in-log',
+    ])
+  })
+
+  it('宿主裁剪靠「不传 viewInGitLog」，不给动作表加 opts', () => {
+    expect(
+      visibleActions(refRow(refEntry({ name: 'main' }), OWNER), ctx({ ownerOf: () => OWNER, viewInGitLog: undefined }))
+    ).toEqual(['switch', 'new-workspace'])
+  })
+
+  it('switch 对无 owner 的行不可见（其余动作不受影响）', () => {
+    const ids = visibleActions(refRow(refEntry({ name: 'dev' }), null), ctx())
+    expect(ids).toEqual(['new-workspace', 'view-in-log'])
+    expect(ids).not.toContain('switch')
+  })
+
+  it('remote / tag 行不出 switch', () => {
+    const c = ctx({ ownerOf: () => OWNER })
+    const remote = refRow(
+      refEntry({ name: 'origin/main', category: 'remote', remote: 'origin', fullName: 'refs/remotes/origin/main' }),
+      OWNER
+    )
+    expect(visibleActions(remote, c)).toEqual(['new-workspace', 'view-in-log'])
+    const tag = refRow(refEntry({ name: 'v1', category: 'tag', fullName: 'refs/tags/v1' }), OWNER)
+    expect(visibleActions(tag, c)).toEqual(['new-workspace', 'view-in-log'])
+  })
+
+  it('合成人物只出 view-in-log；Source Control 宿主下为空', () => {
+    expect(visibleActions(synthetic('head-current'), ctx())).toEqual(['view-in-log'])
+    expect(visibleActions(synthetic('head-current'), ctx({ viewInGitLog: undefined }))).toEqual([])
+  })
+})
+
+describe('primaryBranchAction', () => {
+  it('有 owner 的本地分支 → switch，run 带 owner', () => {
+    const activateWorkspace = vi.fn()
+    const row = refRow(refEntry({ name: 'main' }), OWNER)
+    const c = ctx({ ownerOf: () => OWNER, activateWorkspace })
+    expect(primaryBranchAction(row, c)?.id).toBe('switch')
+    primaryBranchAction(row, c)?.run(row, c)
+    expect(activateWorkspace).toHaveBeenCalledWith(OWNER)
+  })
+
+  it('无 owner → new-workspace，run 带 ref 本体', () => {
+    const newWorkspaceFrom = vi.fn()
+    const ref = refEntry({ name: 'dev' })
+    const row = refRow(ref)
+    const c = ctx({ newWorkspaceFrom })
+    expect(primaryBranchAction(row, c)?.id).toBe('new-workspace')
+    primaryBranchAction(row, c)?.run(row, c)
+    expect(newWorkspaceFrom).toHaveBeenCalledWith(ref)
+  })
+
+  it('remote 行的主动作是 new-workspace，且绝不会是 switch', () => {
+    const c = ctx({ ownerOf: () => OWNER })
+    const remote = refRow(
+      refEntry({ name: 'origin/main', category: 'remote', remote: 'origin', fullName: 'refs/remotes/origin/main' }),
+      OWNER
+    )
+    expect(primaryBranchAction(remote, c)?.id).toBe('new-workspace')
+  })
+
+  it('合成人物在 Source Control 宿主返回 null（吞掉点击，不做假动作）', () => {
+    const c = ctx({ viewInGitLog: undefined })
+    expect(primaryBranchAction(synthetic('head-current'), c)).toBeNull()
+    expect(primaryBranchAction(synthetic('all-branches'), c)).toBeNull()
+  })
+
+  it('合成人物在 Git Log 宿主返回 view-in-log，run 带 value', () => {
+    const viewInGitLog = vi.fn()
+    const c = ctx({ viewInGitLog })
+    const row = synthetic('all-branches')
+    expect(primaryBranchAction(row, c)?.id).toBe('view-in-log')
+    primaryBranchAction(row, c)?.run(row, c)
+    expect(viewInGitLog).toHaveBeenCalledWith('all-branches')
+  })
+
+  it('组头行返回 null', () => {
+    expect(primaryBranchAction(groupRow(), ctx())).toBeNull()
+  })
+
+  it('switch 的 run 在 owner 消失时不抛（点击与执行之间 owner 可能已变）', () => {
+    const activateWorkspace = vi.fn()
+    const row = refRow(refEntry({ name: 'main' }), OWNER)
+    const gone = ctx({ ownerOf: () => null, activateWorkspace })
+    const action = BRANCH_ACTIONS.find((a) => a.id === 'switch')!
+    expect(() => action.run(row, gone)).not.toThrow()
+    expect(activateWorkspace).not.toHaveBeenCalled()
+  })
+})
