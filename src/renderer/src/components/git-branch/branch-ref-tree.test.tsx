@@ -1,0 +1,213 @@
+// @vitest-environment happy-dom
+import { act } from 'react'
+import { createRoot, type Root } from 'react-dom/client'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import type { GitRefEntry } from '../../../../shared/git-ref-types'
+import { BranchRefTree } from './branch-ref-tree'
+
+;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+function entry(over: Partial<GitRefEntry> & { name: string }): GitRefEntry {
+  return {
+    fullName: `refs/heads/${over.name}`,
+    category: 'local',
+    oid: '0'.repeat(40),
+    isHead: false,
+    ...over,
+  }
+}
+
+const REFS: GitRefEntry[] = [
+  entry({ name: 'main', isHead: true, ahead: 2, behind: 1, upstream: 'origin/main' }),
+  entry({ name: 'feature/login' }),
+  entry({
+    name: 'origin/main',
+    fullName: 'refs/remotes/origin/main',
+    category: 'remote',
+    remote: 'origin',
+  }),
+  entry({ name: 'v1.2.0', fullName: 'refs/tags/v1.2.0', category: 'tag' }),
+]
+
+let host: HTMLDivElement
+let root: Root
+let activated: string[]
+
+beforeEach(() => {
+  host = document.createElement('div')
+  document.body.append(host)
+  root = createRoot(host)
+  activated = []
+})
+afterEach(() => {
+  act(() => root.unmount())
+  host.remove()
+})
+
+async function render(props: Partial<React.ComponentProps<typeof BranchRefTree>> = {}): Promise<void> {
+  await act(async () => {
+    root.render(
+      <BranchRefTree
+        refs={REFS}
+        headBranch="main"
+        onActivate={(row) => activated.push(row.id)}
+        {...props}
+      />
+    )
+  })
+  await act(async () => {
+    await Promise.resolve()
+  })
+}
+
+const row = (id: string): HTMLElement | null => host.querySelector(`[data-testid="branch-row-${id}"]`)
+const rowIds = (): string[] =>
+  [...host.querySelectorAll('[data-testid^="branch-row-"]')].map((el) =>
+    el.getAttribute('data-testid')!.replace('branch-row-', '')
+  )
+
+async function click(el: Element | null): Promise<void> {
+  await act(async () => {
+    el?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  })
+}
+
+async function press(el: Element | null, key: string): Promise<void> {
+  await act(async () => {
+    el?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }))
+  })
+}
+
+/** happy-dom 下受控 input 必须走原生 value setter，否则 React 收不到 onChange。 */
+async function typeSearch(value: string): Promise<void> {
+  const input = host.querySelector('input[type="search"]')!
+  const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
+  await act(async () => {
+    setter?.call(input, value)
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+  })
+}
+
+describe('BranchRefTree', () => {
+  it('渲染 head-current 导航行、三组与 Local 里的当前分支行', async () => {
+    await render()
+    expect(row('row:head-current')).not.toBeNull()
+    expect(row('ref:refs/heads/main')).not.toBeNull()
+    expect(host.textContent).toContain('feature/login')
+    expect(host.textContent).toContain('v1.2.0')
+    expect(rowIds()).toContain('group:local')
+    expect(rowIds()).toContain('group:remote/origin')
+  })
+
+  it('includeAllBranchesRow 把 All Branches 放在 head-current 之前', async () => {
+    await render({ includeAllBranchesRow: true })
+    expect(rowIds().slice(0, 2)).toEqual(['row:all-branches', 'row:head-current'])
+  })
+
+  it('ahead/behind 画在**当前分支的 ref 行**上（不是导航行）', async () => {
+    await render()
+    const main = row('ref:refs/heads/main')!
+    expect(main.textContent).toContain('↑2')
+    expect(main.textContent).toContain('↓1')
+    expect(row('row:head-current')!.textContent).not.toContain('↑')
+  })
+
+  it('checkedOutByBranch 出 ▣ 徽标，title 带 displayName', async () => {
+    await render({
+      checkedOutByBranch: new Map([
+        ['feature/login', { worktreeId: 'r::/b', displayName: 'My App', path: '/b' }],
+      ]),
+    })
+    const el = row('ref:refs/heads/feature/login')!
+    expect(el.querySelector('[data-testid="branch-workspace-badge"]')).not.toBeNull()
+    expect(el.getAttribute('title')).toContain('My App')
+  })
+
+  it('当前分支的 upstream 带 ★，且只此一行有 ★', async () => {
+    await render()
+    expect(host.querySelectorAll('[data-testid="branch-upstream-star"]')).toHaveLength(1)
+    expect(row('ref:refs/remotes/origin/main')!.querySelector('[data-testid="branch-upstream-star"]')).not.toBeNull()
+  })
+
+  it('搜索裁剪 refs；无命中时出空态**但导航行仍在**', async () => {
+    await render()
+    await typeSearch('login')
+    expect(host.textContent).toContain('feature/login')
+    expect(host.textContent).not.toContain('v1.2.0')
+    expect(row('row:head-current')).not.toBeNull()
+
+    await typeSearch('zzz')
+    expect(host.textContent).toContain('No matching branches.')
+    // 导航行不被抹掉：否则用户得先清空搜索才能跳回当前分支范围。
+    expect(row('row:head-current')).not.toBeNull()
+    expect(row('ref:refs/heads/main')).toBeNull()
+  })
+
+  it('清掉搜索后，刚才折叠的组仍是折叠的', async () => {
+    await render()
+    await click(row('group:tags'))
+    expect(row('ref:refs/tags/v1.2.0')).toBeNull()
+    await typeSearch('login')
+    await typeSearch('')
+    expect(row('ref:refs/tags/v1.2.0')).toBeNull()
+    await click(row('group:tags'))
+    expect(row('ref:refs/tags/v1.2.0')).not.toBeNull()
+  })
+
+  it('单击 ref 行触发 onActivate；单击组头只折叠、不触发', async () => {
+    await render()
+    await click(row('ref:refs/heads/feature/login'))
+    expect(activated).toEqual(['ref:refs/heads/feature/login'])
+    await click(row('group:tags'))
+    expect(activated).toHaveLength(1)
+    expect(row('ref:refs/tags/v1.2.0')).toBeNull()
+  })
+
+  it('truncated=true 出截断提示，缺省不出', async () => {
+    await render({ truncated: true })
+    expect(host.textContent).toContain('Some refs are not shown')
+    await render({ truncated: false })
+    expect(host.textContent).not.toContain('Some refs are not shown')
+  })
+
+  it('空 refs 出空态而不是空面板', async () => {
+    await render({ refs: [] })
+    expect(host.textContent).toContain('No matching branches.')
+  })
+
+  it('activeValue 高亮对应行', async () => {
+    await render({ activeValue: 'ref:refs/heads/main' })
+    expect(row('ref:refs/heads/main')!.getAttribute('aria-selected')).toBe('true')
+    expect(row('ref:refs/heads/feature/login')!.getAttribute('aria-selected')).toBe('false')
+  })
+
+  it('搜索框里按 ↓ 进第一行；↑↓ 在可见行间移动焦点', async () => {
+    await render()
+    const input = host.querySelector('input[type="search"]')!
+    await press(input, 'ArrowDown')
+    expect((document.activeElement as HTMLElement)?.dataset.rowIndex).toBe('0')
+    await press(document.activeElement as HTMLElement, 'ArrowDown')
+    expect((document.activeElement as HTMLElement)?.dataset.rowIndex).toBe('1')
+    await press(document.activeElement as HTMLElement, 'ArrowUp')
+    expect((document.activeElement as HTMLElement)?.dataset.rowIndex).toBe('0')
+  })
+
+  it('→ 展开、← 折叠当前组，与单击组头共用同一份折叠态', async () => {
+    await render()
+    await click(row('group:remote'))
+    expect(row('ref:refs/remotes/origin/main')).toBeNull()
+    await press(row('group:remote'), 'ArrowRight')
+    expect(row('ref:refs/remotes/origin/main')).not.toBeNull()
+    await press(row('group:remote'), 'ArrowLeft')
+    expect(row('ref:refs/remotes/origin/main')).toBeNull()
+  })
+
+  it('←→ 落在非组行上不改变折叠态', async () => {
+    await render()
+    await press(row('ref:refs/heads/main'), 'ArrowRight')
+    expect(row('ref:refs/remotes/origin/main')).not.toBeNull()
+  })
+
+  // Enter 不在此测：happy-dom 下 KeyboardEvent('Enter') 不会在 <button> 上合成 click，
+  // 真浏览器行为由「单击 ref 行触发 onActivate」那条用例等价覆盖。
+})

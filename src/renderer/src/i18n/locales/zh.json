@@ -722,6 +722,28 @@
         "loading": "正在加载提交…",
         "workspaceUnavailable": "Git 日志：工作区不可用"
       },
+      "git-branch": {
+        "searchPlaceholder": "分支或标签",
+        "groupLocal": "本地",
+        "groupRemote": "远程",
+        "groupTags": "标签",
+        "allBranches": "全部分支",
+        "headCurrent": "HEAD（当前分支）",
+        "refsTruncated": "部分引用未显示（已达列表上限）。",
+        "empty": "无匹配分支。",
+        "loading": "正在加载分支…",
+        "loadFailed": "读取分支列表失败。",
+        "aheadBehind": "↑{{ahead}} ↓{{behind}}",
+        "aheadBehindLabel": "领先 {{ahead}}，落后 {{behind}}",
+        "aheadOnlyLabel": "领先 {{ahead}}",
+        "behindOnlyLabel": "落后 {{behind}}",
+        "inSyncLabel": "与 {{upstream}} 同步",
+        "checkedOutIn": "已在「{{workspace}}」检出",
+        "upstreamOfHead": "{{branch}} 的上游",
+        "switchTo": "切换到该分支",
+        "newWorkspaceFrom": "从该分支新建工作区…",
+        "viewInGitLog": "在 Git 日志中查看"
+      },
       "CodexRestartChip": {
         "c72a5fb234": "重新启动",
         "9263e75f49": "Codex 正在使用之前的账户",

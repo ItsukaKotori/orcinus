@@ -887,6 +887,28 @@
         "loading": "Loading commits…",
         "workspaceUnavailable": "Git Log: workspace unavailable"
       },
+      "git-branch": {
+        "searchPlaceholder": "Branch or tag",
+        "groupLocal": "Local",
+        "groupRemote": "Remote",
+        "groupTags": "Tags",
+        "allBranches": "All Branches",
+        "headCurrent": "HEAD (Current Branch)",
+        "refsTruncated": "Some refs are not shown (list limit reached).",
+        "empty": "No matching branches.",
+        "loading": "Loading branches…",
+        "loadFailed": "Failed to read branches.",
+        "aheadBehind": "↑{{ahead}} ↓{{behind}}",
+        "aheadBehindLabel": "{{ahead}} ahead, {{behind}} behind",
+        "aheadOnlyLabel": "{{ahead}} ahead",
+        "behindOnlyLabel": "{{behind}} behind",
+        "inSyncLabel": "in sync with {{upstream}}",
+        "checkedOutIn": "checked out in {{workspace}}",
+        "upstreamOfHead": "upstream of {{branch}}",
+        "switchTo": "Switch to this branch",
+        "newWorkspaceFrom": "New Workspace from Branch…",
+        "viewInGitLog": "View in Git Log"
+      },
       "BrowserCookieImportDisclosure": {},
       "CodexRestartChip": {
         "a4c8e1b2f7": "Codex is still signed in as {{value0}}",

@@ -202,9 +202,21 @@ describe('buildBranchTreeRows', () => {
     ])
   })
 
-  it('headBranch 缺省时不标任何 upstream', () => {
+  it('headBranch 缺省时回退到 git 报的 isHead 来算 upstream', () => {
+    // 不要求宿主必须传 headBranch：refs 里已有 isHead 时它就是权威来源。
     const rows = buildBranchTreeRows({
       refs: REFS.map((r) => (r.name === 'main' ? { ...r, upstream: 'origin/main' } : r)),
+    })
+    expect(refRows(rows).filter((r) => r.isUpstreamOfHead).map((r) => r.ref.name)).toEqual([
+      'origin/main',
+    ])
+  })
+
+  it('既无 headBranch 也无 isHead 条目时不标任何 upstream', () => {
+    const rows = buildBranchTreeRows({
+      refs: REFS.map((r) =>
+        r.name === 'main' ? { ...r, upstream: 'origin/main', isHead: false } : r
+      ),
     })
     expect(refRows(rows).some((r) => r.isUpstreamOfHead)).toBe(false)
   })
@@ -218,6 +230,25 @@ describe('buildBranchTreeRows', () => {
     expect(hit.checkedOutBy).toEqual({ worktreeId: 'r::/b', displayName: 'B', path: '/b' })
     expect(refRows(rows).find((r) => r.ref.category === 'remote')!.checkedOutBy).toBeNull()
     expect(refRows(rows).find((r) => r.ref.category === 'tag')!.checkedOutBy).toBeNull()
+  })
+
+  it('搜索抹掉当前分支行时，head-current 导航行仍在（靠 headBranch 而非 refs）', () => {
+    // 宿主传的是已过滤的 refs；`main` 不匹配查询时被抹掉，
+    // 但 `HEAD (Current Branch)` 是导航行不是搜索结果，必须留在顶。
+    const filtered = REFS.filter((r) => r.name.includes('login'))
+    expect(filtered.some((r) => r.name === 'main')).toBe(false)
+    const rows = buildBranchTreeRows({ refs: filtered, headBranch: 'main' })
+    expect(
+      rows.filter((r) => r.kind === 'synthetic').map((r) => (r.kind === 'synthetic' ? r.value : '?!'))
+    ).toEqual(['head-current'])
+    expect(localNames(rows)).toEqual(['feature/login'])
+  })
+
+  it('既无 headBranch 也无 isHead 条目时不出 head-current', () => {
+    const rows = buildBranchTreeRows({
+      refs: REFS.map((r) => ({ ...r, isHead: false })),
+    })
+    expect(rows.some((r) => r.kind === 'synthetic')).toBe(false)
   })
 
   it('空 refs 出空列表，不出任何组头', () => {

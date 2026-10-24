@@ -69,7 +69,14 @@ export type BuildBranchTreeInput = {
   refs: readonly GitRefEntry[]
   /** 折叠中的组 id；未出现的组视为展开。 */
   collapsed?: ReadonlySet<string>
-  /** 当前分支短名（`main`），null / 缺省 = detached 或未知。 */
+  /**
+   * 当前分支短名（`main`），null / 缺省 = detached 或未知。
+   *
+   * 它同时决定两件事：`head-current` 合成行是否出现，以及 `★` 算谁的 upstream。
+   * 用 `headBranch`（而非 refs 里的 isHead 项）做前者，是为了让搜索过滤抹掉
+   * `main` 行时，`HEAD (Current Branch)` 这条**导航行**仍然在顶 ——
+   * 否则用户在过滤态下无法跳回「当前分支范围」。
+   */
   headBranch?: string | null
   /** 分支短名 → 检出它的 workspace。advisory，见 spec §6.4。 */
   checkedOutByBranch?: ReadonlyMap<string, BranchWorkspaceOwner>
@@ -179,14 +186,14 @@ export function buildBranchTreeRows(input: BuildBranchTreeInput): BranchTreeRow[
     includeAllBranchesRow = false,
   } = input
 
-  const head = refs.find((r) => r.isHead) ?? null
-  const upstream = headUpstreamName(refs, headBranch)
+  const headName = headBranch ?? refs.find((r) => r.isHead)?.name ?? null
+  const upstream = headUpstreamName(refs, headName)
   const rows: BranchTreeRow[] = []
 
   if (includeAllBranchesRow) {
     rows.push({ kind: 'synthetic', id: ROW_ALL, depth: 0, ...SYNTHETIC_LABELS['all-branches'], value: 'all-branches' })
   }
-  if (head) {
+  if (headName) {
     rows.push({ kind: 'synthetic', id: ROW_HEAD, depth: 0, ...SYNTHETIC_LABELS['head-current'], value: 'head-current' })
   }
 
