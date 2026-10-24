@@ -8,6 +8,7 @@ use ade_core::errors::CoreError;
 use serde::Serialize;
 
 use crate::command::{run, run_text};
+use crate::ref_entry::{git_ref_entry, GitRefEntry};
 
 /// Mirrors `GIT_HISTORY_DEFAULT_LIMIT` (`git-history-types.ts:23`).
 pub const GIT_HISTORY_DEFAULT_LIMIT: u32 = 50;
@@ -326,11 +327,14 @@ pub const GIT_REFS_MAX_LIMIT: usize = 2000;
 
 /// Result of [`list_refs`]: the (capped) refs plus a flag telling the UI that
 /// more refs existed than were returned, so it can note a partial branch list.
+///
+/// 元素是 `GitRefEntry` 而非 `GitHistoryItemRef`：分支树要 ahead/behind/upstream，
+/// 那些字段对 commit decoration 无意义（spec §6.2）。
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct GitRefsResult {
-    pub refs: Vec<GitHistoryItemRef>,
+    pub refs: Vec<GitRefEntry>,
     pub truncated: bool,
 }
 
@@ -349,7 +353,7 @@ pub fn list_refs_capped(
         worktree_path,
         &[
             "for-each-ref",
-            "--format=%(refname)%09%(objectname)%09%(*objectname)",
+            "--format=%(refname)%09%(objectname)%09%(*objectname)%09%(HEAD)%09%(upstream:short)%09%(upstream:track)",
             "refs/heads",
             "refs/remotes",
             "refs/tags",
@@ -361,19 +365,19 @@ pub fn list_refs_capped(
         let (Some(full), Some(oid)) = (parts.next(), parts.next()) else {
             continue;
         };
-        if full.is_empty() || oid.is_empty() {
-            continue;
-        }
+        // 后四列允许缺失（git 版本差异），按空串处理：缺的信息只是不显示，不是失败。
+        let peeled = parts.next().unwrap_or("");
+        let head = parts.next().unwrap_or("");
+        let upstream = parts.next().unwrap_or("");
+        let track = parts.next().unwrap_or("");
         // Skip the remote HEAD symref (e.g. refs/remotes/origin/HEAD) — noise for a branch picker.
         if full.starts_with("refs/remotes/") && full.ends_with("/HEAD") {
             continue;
         }
-        // For an annotated tag `%(objectname)` is the tag object and
-        // `%(*objectname)` is the peeled commit; prefer the peeled oid so
-        // `revision` matches the commit rendered in the graph.
-        let peeled = parts.next().unwrap_or("");
-        let revision = if peeled.is_empty() { oid } else { peeled };
-        refs.push(git_history_ref_from_full_name(Some(full), full, revision));
+        let Some(entry) = git_ref_entry([full, oid, peeled, head, upstream, track]) else {
+            continue;
+        };
+        refs.push(entry);
         // Stop once we've seen one past the cap: enough to set `truncated`
         // without materializing every ref in a huge repository.
         if refs.len() > max {

@@ -101,7 +101,7 @@ fn list_refs_categorizes_branches() {
     let has = |name: &str| refs.refs.iter().any(|r| r.name == name);
     assert!(has("main"));
     assert!(has("feature"));
-    assert!(refs.refs.iter().any(|r| format!("{:?}", r.category).contains("Branches")));
+    assert!(refs.refs.iter().any(|r| r.category == ade_git::GitRefCategory::Local));
 }
 
 #[test]
@@ -130,8 +130,9 @@ fn list_refs_peels_annotated_tag_to_its_commit() {
     let v1 = refs.iter().find(|r| r.name == "v1").expect("v1 tag");
     // Annotated tag must report the peeled commit oid, matching the branch on
     // the same commit — not the tag-object oid.
-    assert_eq!(v1.revision.as_deref(), main.revision.as_deref());
-    assert!(v1.revision.is_some());
+    assert_eq!(v1.oid, main.oid);
+    assert!(!v1.oid.is_empty());
+    assert_eq!(v1.category, ade_git::GitRefCategory::Tag);
 }
 
 #[test]
@@ -143,4 +144,45 @@ fn list_refs_capped_limits_the_returned_count() {
     let capped = list_refs_capped(p, 2).unwrap();
     assert_eq!(capped.refs.len(), 2);
     assert!(capped.truncated);
+}
+
+// 增量 1：%(upstream:track) 解析矩阵。计数是装饰，不是列 refs 的前置条件，
+// 所以畸形输入必须降级为 None 而不是报错。
+#[test]
+fn parse_upstream_track_matrix() {
+    use ade_git::ref_entry::parse_upstream_track;
+    assert_eq!(parse_upstream_track(""), (None, None));
+    assert_eq!(parse_upstream_track("[ahead 14]"), (Some(14), None));
+    assert_eq!(parse_upstream_track("[behind 3]"), (None, Some(3)));
+    assert_eq!(parse_upstream_track("[ahead 2, behind 1]"), (Some(2), Some(1)));
+    assert_eq!(parse_upstream_track("[behind 1, ahead 2]"), (Some(2), Some(1)));
+    // 畸形/未知形状 → 降级，不 panic、不报错
+    assert_eq!(parse_upstream_track("[gone]"), (None, None));
+    assert_eq!(parse_upstream_track("[ahead x]"), (None, None));
+    assert_eq!(parse_upstream_track("garbage"), (None, None));
+}
+
+// 增量 1：list_refs 必须带出 isHead / category / fullName。
+// 本机实测 git 2.54 输出：当前分支的 %(HEAD) 列为 "*"，无 upstream 时 upstream 列为空。
+#[test]
+fn list_refs_carries_head_flag_and_categories() {
+    let d = repo();
+    let result = list_refs(d.path().to_str().unwrap()).unwrap();
+    let by_name: std::collections::HashMap<&str, _> =
+        result.refs.iter().map(|r| (r.name.as_str(), r)).collect();
+
+    let main = by_name.get("main").expect("main listed");
+    assert_eq!(main.full_name, "refs/heads/main");
+    assert_eq!(main.category, ade_git::GitRefCategory::Local);
+    assert!(main.is_head, "当前分支 main 必须 is_head");
+    assert_eq!(main.upstream, None);
+    assert_eq!(main.remote, None);
+
+    let feature = by_name.get("feature").expect("feature listed");
+    assert!(!feature.is_head);
+
+    assert!(
+        !result.refs.iter().any(|r| r.full_name.ends_with("/HEAD")),
+        "refs/remotes/*/HEAD symref 必须继续被跳过"
+    );
 }

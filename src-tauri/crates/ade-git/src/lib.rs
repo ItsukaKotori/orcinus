@@ -5,6 +5,7 @@ pub mod compare;
 pub mod diff;
 pub mod history;
 pub mod porcelain;
+pub mod ref_entry;
 pub mod runner;
 pub mod staging;
 pub mod status;
@@ -13,6 +14,7 @@ pub mod worktree_create;
 pub mod worktree_remove;
 
 pub use porcelain::{parse_worktree_list, GitWorktreeEntry};
+pub use ref_entry::{GitRefCategory, GitRefEntry};
 pub use runner::{run_git_in, CancelToken, GitOutput};
 
 use ade_core::errors::CoreError;
