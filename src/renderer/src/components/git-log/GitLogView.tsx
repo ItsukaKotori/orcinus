@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { translate } from '@/i18n/i18n'
 import type { GitBranchChangeEntry } from '../../../../shared/git-diff-compare-types'
-import type { GitHistoryItem, GitHistoryItemRef, GitHistoryResult } from '../../../../shared/git-history-types'
+import type { GitHistoryItem, GitHistoryResult } from '../../../../shared/git-history-types'
+import type { GitRefEntry } from '../../../../shared/git-ref-types'
 import type { GitLogRepository } from './types'
 import { PAGE_SIZE, mergePages, type GitLogFilter } from './query'
 import { buildGraphRows, type GraphRow } from './git-graph-model'
 import { selectVisibleRows } from './select-rows'
 import { Toolbar } from './Toolbar'
-import { RefPanel } from './RefPanel'
 import { GraphList } from './GraphList'
 import { CommitDetail } from './CommitDetail'
 
@@ -49,7 +49,7 @@ export function GitLogView({
   const [filter, setFilter] = useState<GitLogFilter>({})
   const [debounced, setDebounced] = useState<GitLogFilter>({})
   const [result, setResult] = useState<GitHistoryResult | null>(null)
-  const [refs, setRefs] = useState<GitHistoryItemRef[]>([])
+  const [refs, setRefs] = useState<GitRefEntry[]>([])
   const [refsTruncated, setRefsTruncated] = useState(false)
   const [branch, setBranch] = useState('')
   const [ahead, setAhead] = useState(0)
@@ -76,6 +76,19 @@ export function GitLogView({
   const applyFilter = useCallback((patch: Partial<GitLogFilter>) => {
     setFilter((cur) => ({ ...cur, ...patch }))
   }, [])
+
+  /**
+   * 分支树 activate → 设查看范围。语义映射集中在这一处，Toolbar 不做翻译：
+   * 同一棵树在 Source Control 头部里的 activate 是「切 workspace」，两者不得串。
+   */
+  const pickRef = useCallback(
+    (value: 'all-branches' | 'head-current' | GitRefEntry) => {
+      if (value === 'all-branches') applyFilter({ refs: 'all' })
+      else if (value === 'head-current') applyFilter({ refs: undefined })
+      else applyFilter({ refs: value.name })
+    },
+    [applyFilter],
+  )
 
   // Debounce filter → the query that actually hits the backend.
   useEffect(() => {
@@ -128,8 +141,8 @@ export function GitLogView({
     void reload(debounced)
   }, [debounced, reload])
 
-  // Refs load once; a failure (or an over-large ref list) degrades the picker to
-  // the built-in Current / All ranges rather than blocking the log.
+  // Refs load once; a failure degrades the branch picker to an empty list
+  // rather than blocking the log.
   useEffect(() => {
     let alive = true
     repository
@@ -235,9 +248,12 @@ export function GitLogView({
         filter={filter}
         localCount={ahead}
         remoteCount={behind}
+        refs={refs}
+        refsTruncated={refsTruncated}
         onQuery={setQuery}
         onFilterChange={applyFilter}
         onRefresh={() => void reload(filter)}
+        onPickRef={pickRef}
       />
       {reloadError && (
         <div className="border-b border-border bg-destructive/10 px-3 py-1 text-xs text-destructive">{reloadError}</div>
@@ -251,7 +267,6 @@ export function GitLogView({
           <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">{translate('auto.components.git-log.loading', 'Loading commits…')}</div>
         ) : (
           <>
-            <RefPanel refs={refs} truncated={refsTruncated} activeName={filter.refs ?? null} onPickName={(name) => applyFilter({ refs: name })} />
             <GraphList
               rows={visible}
               selectedOid={selected}

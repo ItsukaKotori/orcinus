@@ -10,7 +10,8 @@ import type {
   GitUpstreamStatus
 } from '../../git-status-types'
 import type { GitPushTarget } from '../../worktree/types'
-import type { GitHistoryItemRef, GitHistoryOptions, GitHistoryResult } from '../../git-history'
+import type { GitHistoryOptions, GitHistoryResult } from '../../git-history'
+import type { GitRefEntry } from '../../git-ref-types'
 
 /** Native Git Log view query (maps 1:1 to the `git_log_query` command). */
 export type GitLogQuery = {
@@ -25,7 +26,7 @@ export type GitLogQuery = {
 }
 
 /** `git_refs` result: capped ref list + truncation flag. */
-export type GitRefsResult = { refs: GitHistoryItemRef[]; truncated: boolean }
+export type GitRefsResult = { refs: GitRefEntry[]; truncated: boolean }
 import type {
   CommitMessageAgentCapability,
   CommitMessageModelCapability
