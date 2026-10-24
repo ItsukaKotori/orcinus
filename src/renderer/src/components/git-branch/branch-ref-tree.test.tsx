@@ -112,6 +112,24 @@ describe('BranchRefTree', () => {
     expect(row('row:head-current')!.textContent).not.toContain('↑')
   })
 
+  it('单边计数不补 0：仅领先时不得出现 ↓0', async () => {
+    await render({
+      refs: [entry({ name: 'main', isHead: true, ahead: 14 })],
+    })
+    const main = row('ref:refs/heads/main')!
+    expect(main.textContent).toContain('↑14')
+    // `↓0` 会被读成「落后 0」，而 tooltip 走 aheadOnlyLabel 说的是 "14 ahead"。
+    expect(main.textContent).not.toContain('↓')
+  })
+
+  it('每行带 aria-level（depth+1），否则 AT 读到的是层级不明的 treeitem 平铺', async () => {
+    await render()
+    expect(row('group:local')!.getAttribute('aria-level')).toBe('1')
+    expect(row('ref:refs/heads/main')!.getAttribute('aria-level')).toBe('2')
+    expect(row('group:remote/origin')!.getAttribute('aria-level')).toBe('2')
+    expect(row('ref:refs/remotes/origin/main')!.getAttribute('aria-level')).toBe('3')
+  })
+
   it('checkedOutByBranch 出 ▣ 徽标，title 带 displayName', async () => {
     await render({
       checkedOutByBranch: new Map([
@@ -210,4 +228,9 @@ describe('BranchRefTree', () => {
 
   // Enter 不在此测：happy-dom 下 KeyboardEvent('Enter') 不会在 <button> 上合成 click，
   // 真浏览器行为由「单击 ref 行触发 onActivate」那条用例等价覆盖。
+  //
+  // 搜索框获焦也不在此测：机制是 requestAnimationFrame 后 focus（沿用
+  // sidebar/SidebarProjectFilterPanel 的既有修法，因为 autoFocus 在 Radix 焦点陷阱里会被拉回），
+  // happy-dom 下测 rAF 时序只会测到 polyfill 而不是真 Popover 行为。
+  // → 由 Task 11 手工验收项「弹层打开后直接打字能过滤」兜住。
 })

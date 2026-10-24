@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { translate } from '@/i18n/i18n'
@@ -47,6 +47,16 @@ export function BranchRefTree({
   const [query, setQuery] = useState('')
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set())
   const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Why: `autoFocus` 在此活不下来 —— 它在 commit 期触发，而宿主 Radix Popover
+  // 的焦点陷阱 scope 会把焦点拉回 trigger。仓库同一场景已有结论与修法
+  // （`sidebar/SidebarProjectFilterPanel.tsx` 顶部注释）。晚一帧时两个 scope
+  // 都已 settle，focus 才站得住。spec §7.3 要求「弹层打开即聚焦搜索框」。
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => inputRef.current?.focus())
+    return () => cancelAnimationFrame(frame)
+  }, [])
 
   // 折叠态与查询各自独立：搜索只换 refs，不换 collapsed —— 清掉搜索后
   // 用户刚才折起来的组必须还是折着的。
@@ -141,9 +151,9 @@ export function BranchRefTree({
       <label className="mb-1 flex items-center gap-1.5 rounded border border-input px-1.5 py-0.5">
         <Search className="size-3 shrink-0 text-muted-foreground" aria-hidden="true" />
         <input
+          ref={inputRef}
           type="search"
           value={query}
-          autoFocus
           onChange={(event) => setQuery(event.target.value)}
           placeholder={translate('auto.components.git-branch.searchPlaceholder', 'Branch or tag')}
           className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground/60"
@@ -198,6 +208,11 @@ function BranchRowButton({
     <button
       type="button"
       role="treeitem"
+      // Why: 行是扁平兄弟（靠 paddingLeft 表达层级），子行不在父 treeitem 的
+      // role="group" 里。不加 aria-level 的话，屏幕阅读器只能读到一串层级不明的
+      // treeitem，aria-expanded 与视觉层级对不上。扁平结构是为 ↑↓ 导航服务的，
+      // 因此补 aria-level 而不是改成嵌套 group。
+      aria-level={row.depth + 1}
       aria-selected={active}
       aria-expanded={row.kind === 'group' ? row.expanded : undefined}
       data-testid={branchRowTestId(row)}
@@ -266,11 +281,15 @@ function RowTrailing({ row }: { row: BranchTreeRow }): React.JSX.Element | null 
   return (
     <>
       {badge}
-      <span className="shrink-0 tabular-nums text-[10px] text-muted-foreground" aria-hidden="true">
-        {translate('auto.components.git-branch.aheadBehind', '↑{{ahead}} ↓{{behind}}', {
-          ahead: ahead ?? 0,
-          behind: behind ?? 0,
-        })}
+      <span
+        className="shrink-0 space-x-1 tabular-nums text-[10px] text-muted-foreground"
+        aria-hidden="true"
+      >
+        {/* 单边缺省时只渲染该边。`?? 0` 会把「仅领先」显示成 `↑2 ↓0`，
+            与同一行的 tooltip（走 aheadOnlyLabel → "2 ahead"）口径不一致，
+            且 `↓0` 会被读成「落后 0」的误导。 */}
+        {ahead != null ? `↑${ahead}` : null}
+        {behind != null ? `↓${behind}` : null}
       </span>
     </>
   )

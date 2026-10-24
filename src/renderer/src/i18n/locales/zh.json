@@ -733,7 +733,6 @@
         "empty": "无匹配分支。",
         "loading": "正在加载分支…",
         "loadFailed": "读取分支列表失败。",
-        "aheadBehind": "↑{{ahead}} ↓{{behind}}",
         "aheadBehindLabel": "领先 {{ahead}}，落后 {{behind}}",
         "aheadOnlyLabel": "领先 {{ahead}}",
         "behindOnlyLabel": "落后 {{behind}}",

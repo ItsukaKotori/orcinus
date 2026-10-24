@@ -898,7 +898,6 @@
         "empty": "No matching branches.",
         "loading": "Loading branches…",
         "loadFailed": "Failed to read branches.",
-        "aheadBehind": "↑{{ahead}} ↓{{behind}}",
         "aheadBehindLabel": "{{ahead}} ahead, {{behind}} behind",
         "aheadOnlyLabel": "{{ahead}} ahead",
         "behindOnlyLabel": "{{behind}} behind",
