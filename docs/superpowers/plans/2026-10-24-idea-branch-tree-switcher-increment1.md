@@ -444,21 +444,14 @@ fn git_refs_reports_ahead_against_upstream() {
 }
 ```
 
-文件头部补一行 import：
-
-```rust
-use ade_bridge::commands::git::git_refs_impl;
-```
-
-（已有；无需改。若 `ade_git` 未在该 test crate 的依赖里，用 `cargo test -p ade-bridge` 的报错确认，
-再在 `src-tauri/crates/ade-bridge/Cargo.toml` 的 `[dev-dependencies]` 加 `ade-git = { path = "../ade-git" }`。）
-
-- [ ] **Step 2: 跑测试确认失败/通过**
+文件头部那行 `use ade_bridge::commands::git::git_refs_impl;` **已有，不要改**；
+`ade_git::GitRefCategory` 在断言里用完全限名，因为 `ade-git` 是 `ade-bridge` 的普通依赖（`git.rs` 已在用 `ade_git`），
+无需加 import。
 
 Run: `cd src-tauri && cargo test -p ade-bridge --test git_refs 2>&1 | tail -25`
-Expected: 若 `ade-bridge` 的 `GitRefsResult` 是 re-export 则直接通过；若编译报缺 `ade_git` 依赖，按 Step 1 注处理后再跑，最终 `2 passed`
+Expected: `2 passed`
 
-- [ ] **Step 3: 再生 TS bindings**
+- [ ] **Step 2: 再生 TS bindings**
 
 Run: `cd src-tauri && cargo run -p ade-bridge --bin export-bindings`
 Expected: 退出 0，`src/bridge/real/generated/tauri-bindings.ts` 被改写
@@ -466,14 +459,14 @@ Expected: 退出 0，`src/bridge/real/generated/tauri-bindings.ts` 被改写
 Run: `cd src-tauri && cargo test -p ade-bridge specta_export 2>&1 | tail -15`
 Expected: `bindings_are_fresh ... ok`、`command_inventory_and_bindings_are_fresh ... ok`
 
-- [ ] **Step 4: 核对生成的新类型形状**
+- [ ] **Step 3: 核对生成的新类型形状**
 
 Run: `grep -n "GitRefEntry_Serialize" -A 14 src/bridge/real/generated/tauri-bindings.ts | head -20`
 Expected: 看到 `name: string`、`fullName: string`、`category: "local" | "remote" | "tag"`、
 `oid: string`、`isHead: boolean`，以及 `remote?` / `upstream?` / `ahead?` / `behind?` 为可选。
 若 `ahead`/`behind` 生成为 `number` 而非 `number | undefined`，说明 `skip_serializing_if` 漏了 —— 回 Task 1 Step 3 修。
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
 git add src-tauri/crates/ade-bridge/tests/git_refs.rs src/bridge/real/generated/tauri-bindings.ts
@@ -555,7 +548,6 @@ git commit -m "feat(shared): GitRefEntry 类型镜像（git_refs 换型的前置
   - `BranchTreeRow`（见下）
   - `BranchWorkspaceOwner = { worktreeId: string; displayName: string; path: string }`
   - `buildBranchTreeRows(input: BuildBranchTreeInput): BranchTreeRow[]`
-  - `collapsedGroupIds(rows: BranchTreeRow[]): string[]`（给测试与默认折叠态用）
   - `ownerByBranch(worktrees: readonly Worktree[]): Map<string, BranchWorkspaceOwner>`
 
 ```ts
@@ -617,7 +609,7 @@ Create `src/renderer/src/components/git-branch/branch-tree-model.test.ts`：
 import { describe, expect, it } from 'vitest'
 import type { GitRefEntry } from '../../../../shared/git-ref-types'
 import type { Worktree } from '../../../../shared/worktree/types'
-import { buildBranchTreeRows, ownerByBranch } from './branch-tree-model'
+import { buildBranchTreeRows, ownerByBranch, type BranchTreeRow } from './branch-tree-model'
 
 function ref(partial: Partial<GitRefEntry> & { name: string; fullName: string }): GitRefEntry {
   return {
@@ -644,6 +636,19 @@ const shape = (rows: ReturnType<typeof buildBranchTreeRows>) =>
     `${'  '.repeat(r.depth)}${r.ref.name}`
   )
 
+/** 取可见 ref 行的短名（带 kind 窄化，避开逐处 `as never as` 强转）。 */
+function refNames(rows: ReturnType<typeof buildBranchTreeRows>, depth?: number): string[] {
+  return rows
+    .filter((r): r is Extract<BranchTreeRow, { kind: 'ref' }> =>
+      r.kind === 'ref' && (depth === undefined || r.depth === depth))
+    .map((r) => r.ref.name)
+}
+
+/** 取带 checkedOutBy / isUpstreamOfHead 的原始 ref 行。 */
+function refRows(rows: ReturnType<typeof buildBranchTreeRows>) {
+  return rows.filter((r): r is Extract<BranchTreeRow, { kind: 'ref' }> => r.kind === 'ref')
+}
+
 describe('buildBranchTreeRows', () => {
   it('按 IDEA 组序：Local → Remote（按 remote 二级分组）→ Tags', () => {
     expect(shape(buildBranchTreeRows({ refs: REFS }))).toEqual([
@@ -663,21 +668,17 @@ describe('buildBranchTreeRows', () => {
 
   it('Local 组排除当前分支（由 HEAD 合成行代表），其余字典序；remote 内按去前缀名排序', () => {
     const rows = buildBranchTreeRows({ refs: REFS })
-    const locals = rows
-      .filter((r) => r.kind === 'ref' && r.depth === 1)
-      .map((r) => (r as never as { ref: GitRefEntry }).ref.name)
     // spec §7.2 的「当前分支置顶」由 head-current 合成行实现，
     // 所以 Local 组内**不应**再出现 main —— 只剩 feature/login。
-    expect(locals).toEqual(['feature/login'])
-    const origin = rows.filter((r) => r.kind === 'ref' && r.depth === 2).map((r) => (r as never as { ref: GitRefEntry }).ref.name)
-    expect(origin).toEqual(['origin/dev', 'origin/main', 'upstream/main'])
+    expect(refNames(rows, 1)).toEqual(['feature/login'])
+    expect(refNames(rows, 2)).toEqual(['origin/dev', 'origin/main', 'upstream/main'])
   })
 
   it('折叠的组只出行头，不出子行；childCount 仍是过滤后的条数', () => {
     const rows = buildBranchTreeRows({ refs: REFS, collapsed: new Set(['group:remote']) })
     const groups = rows.filter((r) => r.kind === 'group')
     expect(rows.some((r) => r.kind === 'ref')).toBe(true)
-    expect(rows.filter((r) => r.kind === 'ref' && (r as never as { ref: GitRefEntry }).ref.category === 'remote')).toHaveLength(0)
+    expect(refNames(rows).filter((n) => n.startsWith('origin/') || n.startsWith('upstream/'))).toEqual([])
     const remote = groups.find((g) => g.id === 'group:remote')!
     expect(remote.expanded).toBe(false)
     expect(remote.childCount).toBe(3)
@@ -695,8 +696,7 @@ describe('buildBranchTreeRows', () => {
       'head-current',
     ])
     // HEAD 行不重复出现在 Local 组里。
-    const localRefs = rows.filter((r) => r.kind === 'ref').map((r) => (r as never as { ref: GitRefEntry }).ref.name)
-    expect(localRefs).not.toContain('main')
+    expect(refNames(rows)).not.toContain('main')
   })
 
   it('isUpstreamOfHead 只标在当前分支的 upstream 那一条', () => {
@@ -704,11 +704,9 @@ describe('buildBranchTreeRows', () => {
       refs: REFS.map((r) => (r.name === 'main' ? { ...r, upstream: 'origin/main' } : r)),
       headBranch: 'main',
     })
-    const marked = rows
-      .filter((r) => r.kind === 'ref')
-      .filter((r) => (r as { isUpstreamOfHead: boolean }).isUpstreamOfHead)
-      .map((r) => (r as never as { ref: GitRefEntry }).ref.name)
-    expect(marked).toEqual(['origin/main'])
+    expect(refRows(rows).filter((r) => r.isUpstreamOfHead).map((r) => r.ref.name)).toEqual([
+      'origin/main',
+    ])
   })
 
   it('ownerByBranch：跳过无 branch 的条目；同分支多 worktree 取第一个', () => {
@@ -725,14 +723,10 @@ describe('buildBranchTreeRows', () => {
   it('checkedOutByBranch 落到 ref 行的 checkedOutBy', () => {
     const owners = new Map([['feature/login', { worktreeId: 'r::/b', displayName: 'B', path: '/b' }]])
     const rows = buildBranchTreeRows({ refs: REFS, checkedOutByBranch: owners })
-    const hit = rows.find(
-      (r) => r.kind === 'ref' && (r as never as { ref: GitRefEntry }).ref.name === 'feature/login'
-    )!
-    expect((hit as { checkedOutBy: unknown }).checkedOutBy).toEqual({
-      worktreeId: 'r::/b',
-      displayName: 'B',
-      path: '/b',
-    })
+    const hit = refRows(rows).find((r) => r.ref.name === 'feature/login')!
+    expect(hit.checkedOutBy).toEqual({ worktreeId: 'r::/b', displayName: 'B', path: '/b' })
+    // 只有本地分支能带 owner；remote/tag 行即使同名也置 null。
+    expect(refRows(rows).find((r) => r.ref.category === 'remote')!.checkedOutBy).toBeNull()
   })
 })
 ```
@@ -2800,7 +2794,6 @@ export function Toolbar({
               type="button"
               aria-haspopup="tree"
               data-testid="branch-picker"
-              onClick={() => setOpen((v) => !v)}
               className="rounded bg-secondary px-1.5 py-0.5 text-xs text-secondary-foreground hover:bg-secondary/70"
             >
               {branch}
