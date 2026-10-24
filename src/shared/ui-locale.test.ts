@@ -75,12 +75,6 @@ describe('ui-locale', () => {
     expect(resolveUiLocale(UI_LANGUAGE_FRENCH, 'en-US')).toBe('fr')
   })
 
-  it('preserves a selected plugin language bundle id', () => {
-    expect(resolveUiLocale('plugin:orca-samples.portuguese/pt-BR')).toBe(
-      'plugin:orca-samples.portuguese/pt-BR'
-    )
-  })
-
   it('maps system locale to the closest supported locale', () => {
     expect(resolveUiLocale(UI_LANGUAGE_SYSTEM, 'en-GB')).toBe('en')
     expect(resolveUiLocale(UI_LANGUAGE_SYSTEM, 'zh-CN')).toBe('zh')

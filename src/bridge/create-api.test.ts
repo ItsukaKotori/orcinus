@@ -16,13 +16,6 @@ afterEach(() => {
 })
 
 describe('createAdeApi mock mode', () => {
-  it('exposes mocked namespaces with live data', async () => {
-    const api = createAdeApi({ mode: 'mock' })
-    const entries = await api.plugins.list()
-    expect(entries.some((entry) => entry.scope === 'global')).toBe(true)
-    expect(entries.some((entry) => entry.scope === 'project')).toBe(true)
-  })
-
   it('platform.get returns platform info synchronously, not a rejection promise', () => {
     const api = createAdeApi({ mode: 'mock' })
     const info = api.platform.get()
@@ -225,19 +218,6 @@ describe('createAdeApi real assembly', () => {
     expect(invokeMock.mock.calls).toEqual([
       ['skills_discover', { args: undefined }],
       ['skills_discover', { args: { refresh: true } }]
-    ])
-  })
-
-  it('routes the plugins domain through its real commands', async () => {
-    const api = createAdeApi()
-    invokeMock.mockResolvedValue([])
-
-    await api.plugins.list()
-    await api.plugins.refresh()
-
-    expect(invokeMock.mock.calls.map(([command]) => command)).toEqual([
-      'plugins_list',
-      'plugins_refresh'
     ])
   })
 

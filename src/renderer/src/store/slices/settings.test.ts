@@ -183,30 +183,30 @@ beforeEach(() => {
 describe('createSettingsSlice checked persistence', () => {
   it('stores the authoritative settings after a successful checked update', async () => {
     const authoritativeSettings = {
-      pluginSystemEnabled: true,
+      editorAutoSave: true,
       notifications: {}
     } as unknown as NonNullable<AppState['settings']>
     settingsSet.mockResolvedValueOnce(authoritativeSettings)
     const store = createTestStore()
     store.setState({
       settings: {
-        pluginSystemEnabled: false,
+        editorAutoSave: false,
         notifications: {}
       } as unknown as AppState['settings']
     })
 
     await expect(
-      store.getState().updateSettingsOrThrow({ pluginSystemEnabled: true })
+      store.getState().updateSettingsOrThrow({ editorAutoSave: true })
     ).resolves.toBeUndefined()
 
-    expect(settingsSet).toHaveBeenCalledWith({ pluginSystemEnabled: true })
+    expect(settingsSet).toHaveBeenCalledWith({ editorAutoSave: true })
     expect(store.getState().settings).toBe(authoritativeSettings)
   })
 
   it('rejects a failed checked update without changing local settings', async () => {
     const persistenceError = new Error('settings IPC failed')
     const currentSettings = {
-      pluginSystemEnabled: false,
+      editorAutoSave: false,
       notifications: {}
     } as unknown as NonNullable<AppState['settings']>
     settingsSet.mockRejectedValueOnce(persistenceError)
@@ -214,7 +214,7 @@ describe('createSettingsSlice checked persistence', () => {
     store.setState({ settings: currentSettings })
 
     await expect(
-      store.getState().updateSettingsOrThrow({ pluginSystemEnabled: true })
+      store.getState().updateSettingsOrThrow({ editorAutoSave: true })
     ).rejects.toBe(persistenceError)
 
     expect(store.getState().settings).toBe(currentSettings)
@@ -223,7 +223,7 @@ describe('createSettingsSlice checked persistence', () => {
   it('keeps the existing update action best-effort and logs persistence failures', async () => {
     const persistenceError = new Error('settings IPC failed')
     const currentSettings = {
-      pluginSystemEnabled: false,
+      editorAutoSave: false,
       notifications: {}
     } as unknown as NonNullable<AppState['settings']>
     settingsSet.mockRejectedValueOnce(persistenceError)
@@ -233,7 +233,7 @@ describe('createSettingsSlice checked persistence', () => {
 
     try {
       await expect(
-        store.getState().updateSettings({ pluginSystemEnabled: true })
+        store.getState().updateSettings({ editorAutoSave: true })
       ).resolves.toBeUndefined()
 
       expect(consoleError).toHaveBeenCalledWith('Failed to update settings:', persistenceError)

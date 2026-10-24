@@ -26,9 +26,6 @@ export function createTabsSecondaryActions(
         isPinned: init?.isPinned ?? tab.isPinned,
         id: init?.id,
         targetGroupId,
-        // Why: the copied tab must keep pointing at the same plugin session
-        // (pluginKey/tabId/instanceId), not lose its binding.
-        ...(tab.pluginTab ? { pluginTab: tab.pluginTab } : {}),
         ...(tab.gitLog ? { gitLog: tab.gitLog } : {})
       })
     },

@@ -1,14 +1,13 @@
 import { getAdvancedPaneSearchEntries } from '@/components/settings/advanced-search'
 import { getDeveloperPermissionsPaneSearchEntries } from '@/components/settings/developer-permissions-search'
 import { getExperimentalPaneSearchEntries } from '@/components/settings/experimental-search'
-import { getPluginsPaneSearchEntries } from '@/components/settings/plugins-search'
 import { getRepositoryPaneSearchEntries } from '@/components/settings/repository-search'
 import { buildSettingsProjectList } from '@/components/settings/settings-project-list'
 import { translate } from '@/i18n/i18n'
 import type { SettingsNavSection } from '@/lib/settings-navigation-types'
 import { getRepoKindLabel } from '../../../shared/repo-kind'
 import type { Repo } from '../../../shared/repo-types'
-import { Blocks, Bug, FlaskConical, ShieldCheck, SlidersHorizontal, Wrench } from 'lucide-react'
+import { Bug, FlaskConical, ShieldCheck, SlidersHorizontal, Wrench } from 'lucide-react'
 import type { SettingsNavigationBuildOptions } from './settings-navigation-build-options'
 
 export function buildRemoteSettingsSections(
@@ -81,21 +80,6 @@ export function buildRemoteSettingsSections(
       searchEntries: getExperimentalPaneSearchEntries(),
       group: 'experimental'
     },
-    ...(showDesktopOnlySettings
-      ? [
-          {
-            id: 'plugins',
-            title: translate('auto.hooks.useSettingsNavigationMetadata.pluginsTitle', 'Plugins'),
-            description: translate(
-              'auto.hooks.useSettingsNavigationMetadata.pluginsDescription',
-              'Install and manage experimental Orca plugins.'
-            ),
-            icon: Blocks,
-            searchEntries: getPluginsPaneSearchEntries(),
-            group: 'experimental'
-          }
-        ]
-      : []),
     // Why: one nav row per project, not per repo row — a project set up on
     // multiple hosts (local + a Remote Orca Server, or two clones) collapses to
     // a single entry. Derived from repos alone so this list matches the panes.

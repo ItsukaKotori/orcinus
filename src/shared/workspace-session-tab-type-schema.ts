@@ -14,6 +14,5 @@ export const workspaceVisibleTabTypeSchema = z.enum([
   'terminal',
   'editor',
   'agent-session',
-  'plugin',
   'git-log'
 ])

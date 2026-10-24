@@ -131,17 +131,6 @@ export function useWorktreeJumpPaletteSelectionActions({
           }
           recordFeatureInteraction('cmd-j-quick-action')
         })
-        .catch((error: unknown) => {
-          if (!action.id.startsWith('plugin:')) {
-            throw error
-          }
-          toast.error(
-            translate(
-              'auto.components.WorktreeJumpPalette.pluginCommandFailed',
-              'Could not run the plugin command.'
-            )
-          )
-        })
     },
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- controller refs and setters preserve their original stable identities.
     [buildQuickActionContext, closeModal, recordFeatureInteraction]

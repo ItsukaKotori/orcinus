@@ -39,7 +39,6 @@ import { createPinnedTabCloseConfirmSlice } from './pinned-tab-close-confirm'
 import { createRecentlyClosedTabsSlice } from './recently-closed-tabs'
 import { createOrcaProfilesSlice } from './orca-profiles'
 import { createTerminalQuickCommandHostsSlice } from './terminal-quick-command-hosts'
-import { createPluginCenterSlice } from './plugin-center/plugin-center-slice'
 import { translate } from '@/i18n/i18n'
 
 export const TEST_REPO = {
@@ -84,8 +83,7 @@ export function createTestStore() {
     ...createPinnedTabCloseConfirmSlice(...a),
     ...createRecentlyClosedTabsSlice(...a),
     ...createOrcaProfilesSlice(...a),
-    ...createTerminalQuickCommandHostsSlice(...a),
-    ...createPluginCenterSlice(...a)
+    ...createTerminalQuickCommandHostsSlice(...a)
   }))
 }
 

@@ -98,32 +98,6 @@ async function render(
 }
 
 describe('useEphemeralVmRecipeOptions', () => {
-  it('refetches on plugin lifecycle changes and clears only a removed selection', async () => {
-    const listRecipes = vi
-      .fn()
-      .mockResolvedValueOnce(result(['repo', 'plugin']))
-      .mockResolvedValueOnce(result(['repo', 'plugin', 'new-plugin']))
-      .mockResolvedValueOnce(result(['repo']))
-    const changes = installApi(listRecipes)
-    const { container } = await render(<Harness repoId="repo-1" initialRecipeId="plugin" />)
-    await vi.waitFor(() =>
-      expect(container.querySelector('[data-testid="selected"]')?.textContent).toBe('plugin')
-    )
-
-    await act(async () => changes.emit())
-    await vi.waitFor(() =>
-      expect(container.querySelector('[data-testid="recipes"]')?.textContent).toContain(
-        'new-plugin'
-      )
-    )
-    expect(container.querySelector('[data-testid="selected"]')?.textContent).toBe('plugin')
-
-    await act(async () => changes.emit())
-    await vi.waitFor(() =>
-      expect(container.querySelector('[data-testid="selected"]')?.textContent).toBe('none')
-    )
-    expect(container.querySelector('[data-testid="repo"]')?.textContent).toBe('repo-1')
-  })
 
   it('ignores a stale recipe response after switching projects', async () => {
     const first = deferred<RecipeListResult>()

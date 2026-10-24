@@ -41,8 +41,8 @@ function previewActiveSurfacePatch(
       activeTabTypeByWorktree: nextActiveTabTypeByWorktree('terminal')
     }
   }
-  if (unifiedTab.contentType === 'plugin' || unifiedTab.contentType === 'git-log') {
-    // Self-backed tabs (plugin, native Git Log) have no legacy active id slot;
+  if (unifiedTab.contentType === 'git-log') {
+    // Self-backed tabs (native Git Log) have no legacy active id slot;
     // the group's activeTabId (patched by the caller) drives the rendered
     // surface. Deriving the type via toVisibleTabType keeps this mirror from
     // silently folding a new self-backed kind into the editor branch below.

@@ -42,19 +42,12 @@ function RightSidebarInner(): React.JSX.Element {
   const activityBarPosition = useAppStore((s) => s.activityBarPosition)
   const setActivityBarPosition = useAppStore((s) => s.setActivityBarPosition)
   const [topActivityStripWidth, setTopActivityStripWidth] = useState<number | null>(null)
-  const {
-    visibleItems,
-    activeFolderWorkspaceKey,
-    pluginSystemEnabled,
-    pluginFetchStatus,
-    installedPluginTabKeys
-  } = useRightSidebarActivityItems({ rightSidebarOpen })
+  const { visibleItems, activeFolderWorkspaceKey } = useRightSidebarActivityItems({
+    rightSidebarOpen
+  })
   const { effectiveTab, selectActivityTab } = useRightSidebarTabRouting({
     visibleItems,
-    activeFolderWorkspaceKey,
-    pluginSystemEnabled,
-    pluginFetchStatus,
-    installedPluginTabKeys
+    activeFolderWorkspaceKey
   })
 
   const activityBarSideWidth = activityBarPosition === 'side' ? ACTIVITY_BAR_SIDE_WIDTH : 0

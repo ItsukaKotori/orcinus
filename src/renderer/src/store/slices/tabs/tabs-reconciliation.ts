@@ -118,12 +118,6 @@ export function projectWorktreeTabModelReconciliation(
     if (tab.contentType === 'agent-session') {
       return true
     }
-    if (tab.contentType === 'plugin') {
-      // Why: a plugin tab is liveness-independent — its binding (not a runtime
-      // object like a PTY/openFile) is the render contract, and reconcile runs
-      // right after open. Dropping it here silently closed every plugin tab.
-      return tab.pluginTab != null
-    }
     if (tab.contentType === 'git-log') {
       // Same rationale as plugin: the `gitLog` binding is the render contract, so
       // reconcile must not drop it via the editor-liveness fallback below.

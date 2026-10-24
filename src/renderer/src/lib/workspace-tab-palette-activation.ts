@@ -80,7 +80,7 @@ function validateTarget(
   if (tabs.length !== 1 || !tab) {
     return 'missing-tab'
   }
-  if (result.contentType !== 'terminal' && result.contentType !== 'plugin') {
+  if (result.contentType !== 'terminal') {
     const files = state.openFiles.filter((file) => file.id === result.entityId)
     if (files.length !== 1 || files[0].worktreeId !== result.worktreeId) {
       return 'missing-file'
@@ -135,13 +135,6 @@ export function activateWorkspaceTabPaletteResult(
     state.setActiveTab(result.entityId)
     state.setActiveTabType('terminal')
     focusTerminalTabSurface(result.entityId)
-    return { status: 'activated' }
-  }
-
-  if (result.contentType === 'plugin') {
-    // Plugin tabs are self-backed: activateTab above selected the exact
-    // instance, and the visible type drives the rendered surface.
-    state.setActiveTabType('plugin')
     return { status: 'activated' }
   }
 

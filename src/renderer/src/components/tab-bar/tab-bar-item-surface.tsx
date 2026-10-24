@@ -6,7 +6,6 @@ import type { TuiAgent } from '../../../../shared/tui-agent'
 import { isAgentSessionHandleProvider } from '../../../../shared/agent-session-provider-handle'
 import SortableTab from './SortableTab'
 import EditorFileTab from './EditorFileTab'
-import { PluginTabLeadingIcon } from './PluginTabLeadingIcon'
 import type { DropIndicator } from './drop-indicator'
 import type { TabDragItemData } from '../tab-group/useTabDragSplit'
 import { getTabDragLabel, type TabBarItem } from './tab-bar-item-model'
@@ -45,7 +44,6 @@ export function renderTabBarItems({
     onActivateFile,
     onCloseFile,
     onActivateAgentSession,
-    onActivatePlugin,
     onActivateGitLog,
     onCloseAllFiles,
     onMakePreviewFilePermanent
@@ -69,12 +67,7 @@ export function renderTabBarItems({
       tabType: item.type,
       label: getTabDragLabel(item, generatedTabTitlesEnabled),
       iconPath: item.type === 'editor' ? item.data.filePath : undefined,
-      color:
-        item.type === 'terminal' ||
-        item.type === 'plugin' ||
-        item.type === 'git-log'
-          ? (item.data.color ?? null)
-          : null
+      color: item.type === 'terminal' || item.type === 'git-log' ? (item.data.color ?? null) : null
     }
     if (item.type === 'terminal') {
       const terminalTab = {
@@ -150,50 +143,8 @@ export function renderTabBarItems({
         />
       )
     }
-    if (item.type === 'plugin') {
-      // Plugin tabs reuse the terminal row chrome (drag/close/pin/context menu)
-      // through a synthesized runtime tab; the unified id is the visible id.
-      const pluginRowTab: TerminalTab = {
-        id: item.id,
-        ptyId: null,
-        worktreeId,
-        title: item.data.label,
-        customTitle: item.data.customLabel,
-        color: item.data.color,
-        sortOrder: item.data.sortOrder,
-        createdAt: item.data.createdAt
-      }
-      return (
-        <SortableTab
-          key={item.id}
-          tab={pluginRowTab}
-          unifiedTabId={item.unifiedTabId}
-          groupId={resolvedGroupId}
-          tabCount={items.length}
-          hasTabsToRight={index < items.length - 1}
-          hasTabsToLeft={index > 0}
-          isActive={activeTabType === 'plugin' && item.id === activeTabId}
-          isPinned={item.isPinned}
-          isExpanded={false}
-          leadingIcon={<PluginTabLeadingIcon binding={item.data.pluginTab} />}
-          onActivate={() => activateRealTab(onActivatePlugin)(item.id)}
-          onClose={() => onCloseFile?.(item.id)}
-          onCloseOthers={() => onCloseOthers(item.id)}
-          onCloseToRight={() => onCloseToRight(item.id)}
-          onCloseToLeft={() => onCloseToLeft(item.id)}
-          onSetCustomTitle={onSetCustomTitle}
-          onSetTabColor={onSetTabColor}
-          onTogglePin={() => togglePinned(item)}
-          onToggleExpand={() => {}}
-          canSplitTerminal={false}
-          dragData={dragData}
-          dropIndicator={dropIndicatorByVisibleId.get(item.id) ?? null}
-          includeTopTabBorder={includeTopTabBorder}
-        />
-      )
-    }
     if (item.type === 'git-log') {
-      // Git Log rows reuse the same terminal chrome as plugin rows; the
+      // Git Log rows reuse the same terminal chrome; the
       // unified id is the visible id (self-backed, one Log per worktree).
       const gitLogRowTab: TerminalTab = {
         id: item.id,

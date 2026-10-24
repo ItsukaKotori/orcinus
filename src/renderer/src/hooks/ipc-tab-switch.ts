@@ -72,15 +72,8 @@ export function activateCyclableTab(store: AppStoreState, next: TypeCyclableTab)
       store.activateTab?.(next.tabId)
     }
     store.setActiveTabType('agent-session')
-  } else if (next.type === 'plugin') {
-    // Plugin tabs are self-backed: their visible id is the unified tab id, and
-    // the rendered surface follows the group's activeTabId.
-    if (next.tabId) {
-      store.activateTab?.(next.tabId)
-    }
-    store.setActiveTabType('plugin')
   } else if (next.type === 'git-log') {
-    // Git Log tabs are self-backed like plugin tabs — never route them to the
+    // Git Log tabs are self-backed — never route them to the
     // editor file stack, which would clear the active file with a git-log id.
     if (next.tabId) {
       store.activateTab?.(next.tabId)

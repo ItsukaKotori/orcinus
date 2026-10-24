@@ -46,14 +46,6 @@ describe('git-log tab close / recently closed', () => {
     const store = createTestStore()
     seedStore(store, { activeWorktreeId: WT })
     // Seed the editor reopen stack so misrouting would visibly reopen the file.
-    store.getState().openPluginTab({
-      pluginKey: 'acme.plugin',
-      tabId: 'dashboard',
-      scope: 'global',
-      instanceId: 'inst-1',
-      title: 'Dashboard',
-      worktreeId: WT
-    })
     store.getState().createUnifiedTab(WT, 'editor', {
       id: 'editor-1',
       entityId: 'editor-1',

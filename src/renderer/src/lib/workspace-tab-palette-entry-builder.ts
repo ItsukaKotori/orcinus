@@ -54,7 +54,7 @@ function getActiveUnifiedTabId({
     ? (groupsByWorktree[worktreeId] ?? []).find((group) => group.id === activeGroupId)
     : undefined
   const activeUnifiedTabId = activeGroup?.activeTabId ?? null
-  return activeTabType === 'terminal' || activeTabType === 'editor' || activeTabType === 'plugin'
+  return activeTabType === 'terminal' || activeTabType === 'editor'
     ? activeUnifiedTabId
     : null
 }
@@ -88,21 +88,14 @@ function isCurrentWorkspaceTab({
   if (activeUnifiedTabId) {
     return activeUnifiedTabId === tab.id
   }
-  const visibleType =
-    tab.contentType === 'terminal'
-      ? 'terminal'
-      : tab.contentType === 'plugin'
-        ? 'plugin'
-        : 'editor'
+  const visibleType = tab.contentType === 'terminal' ? 'terminal' : 'editor'
   const storedType = activeTabTypeByWorktree[tab.worktreeId] ?? activeTabType
   if (storedType !== visibleType) {
     return false
   }
   return visibleType === 'terminal'
     ? (activeTabIdByWorktree[tab.worktreeId] ?? activeTabId) === tab.entityId
-    : visibleType === 'plugin'
-      ? (activeTabIdByWorktree[tab.worktreeId] ?? activeTabId) === tab.entityId
-      : (activeFileIdByWorktree[tab.worktreeId] ?? activeFileId) === tab.entityId
+    : (activeFileIdByWorktree[tab.worktreeId] ?? activeFileId) === tab.entityId
 }
 
 export function buildSearchableWorkspaceTabEntries({
@@ -271,33 +264,6 @@ export function buildSearchableWorkspaceTabEntries({
             sleepingAgentSessionsByPaneKey,
             paneForegroundAgentByPaneKey
           })
-        })
-        continue
-      }
-      if (tab.contentType === 'plugin') {
-        // Plugin tabs are self-backed (no open-file backing); their label is
-        // the store's unified label with the binding title as the fallback.
-        const title = tab.customLabel ?? tab.label
-        const typeAliases = ['plugin tab', 'plugin'] as const
-        seenTabIdentities.add(tabIdentity)
-        entries.push({
-          ...baseEntry,
-          title,
-          secondaryText: '',
-          titleSearchText: title,
-          secondarySearchTexts: [],
-          typeSearchAliases: typeAliases,
-          document: buildPaletteTabDocument({
-            id: tab.id,
-            title,
-            secondaryTexts: [],
-            worktreeName,
-            branch,
-            repoName,
-            typeAliases
-          }),
-          agentMetadata: [],
-          occupantAgent: null
         })
         continue
       }

@@ -103,17 +103,6 @@ export function stubFocusTerminalTabSurface(): Record<string, unknown> {
   return { focusTerminalTabSurface: vi.fn() }
 }
 
-// Headless renders call components as plain functions, so the plugin list must
-// not go through real zustand (which needs a React dispatcher). Empty list
-// keeps the「插件 Tab」group hidden in shell-menu wiring tests.
-export function stubPluginPanelsStore(): Record<string, unknown> {
-  return {
-    usePluginPanelsStore: (selector: (state: { plugins: unknown[] }) => unknown) =>
-      selector({ plugins: [] }),
-    ensurePluginPanelsLoaded: () => {}
-  }
-}
-
 // Dropdown primitives render to inert descriptors so menu rows can be walked.
 export function stubDropdownMenu(): Record<string, unknown> {
   return {

@@ -18,14 +18,6 @@ function tab(contentType: TabContentType): Tab {
 }
 
 describe('resolveTabGroupActiveSurface', () => {
-  it('maps a plugin tab to the plugin visible type keyed by unified id', () => {
-    expect(resolveTabGroupActiveSurface(tab('plugin'))).toEqual({
-      activeTabId: 'unified-plugin',
-      activeFileId: null,
-      activeTabType: 'plugin'
-    })
-  })
-
   it('maps a git-log tab to the git-log visible type keyed by unified id', () => {
     // Why: the strip highlights rows off this surface; collapsing git-log to the
     // editor path (activeTabId null) leaves the open Git Log tab unhighlighted.

@@ -9,7 +9,6 @@ export function isWorkspaceTabContentType(
     'editor',
     'diff',
     'conflict-review',
-    'check-details',
-    'plugin'
+    'check-details'
   ].includes(contentType)
 }

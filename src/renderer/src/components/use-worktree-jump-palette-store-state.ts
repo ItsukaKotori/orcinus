@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 import { useAppStore } from '@/store'
-import { usePluginCommands } from '@/store/plugin-panels'
 import { useSettingsNavigationMetadata } from '@/hooks/useSettingsNavigationMetadata'
 import { dedupePaletteWorktrees } from '@/lib/palette-repo-resolution'
 import {
@@ -38,7 +37,6 @@ export function useWorktreeJumpPaletteStoreState({
   const projectHostSetups = useAppStore((state) => state.projectHostSetups)
   const detectedWorktreesByRepo = useAppStore((state) => state.detectedWorktreesByRepo)
   const pendingWorktreeCreations = useAppStore((state) => state.pendingWorktreeCreations)
-  const pluginCommands = usePluginCommands()
   const paletteStatusInputsActive = visible || lingering
   const { ptyIdsByTabId, terminalLayoutsByTabId, tabsByWorktree } = useAppStore(
     useShallow((state) => selectPaletteStatusInputs(state, paletteStatusInputsActive))
@@ -122,7 +120,6 @@ export function useWorktreeJumpPaletteStoreState({
     projectHostSetups,
     detectedWorktreesByRepo,
     pendingWorktreeCreations,
-    pluginCommands,
     paletteStatusInputsActive,
     ptyIdsByTabId,
     terminalLayoutsByTabId,

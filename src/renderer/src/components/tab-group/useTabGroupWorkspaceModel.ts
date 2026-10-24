@@ -48,7 +48,6 @@ export function useTabGroupWorkspaceModel({
     terminalTabs,
     editorItems,
     agentSessionItems,
-    pluginItems,
     gitLogItems,
     tabBarOrder
   } = useTabGroupItemProjections({ groupId, worktreeId, worktreeState })
@@ -74,7 +73,6 @@ export function useTabGroupWorkspaceModel({
     toggleTerminalPaneExpand,
     activateEditor,
     activateAgentSession,
-    activatePlugin,
     activateGitLog
   } = useTabGroupActivationCommands({ groupId, worktreeId, groupTabs, worktreeState })
 
@@ -85,7 +83,6 @@ export function useTabGroupWorkspaceModel({
     activeTab,
     editorItems,
     agentSessionItems,
-    pluginItems,
     gitLogItems,
     terminalTabs,
     tabBarOrder,
@@ -97,7 +94,6 @@ export function useTabGroupWorkspaceModel({
       },
       activateAgentSession,
       activateEditor,
-      activatePlugin,
       activateGitLog,
       activateTerminal,
       closeAllEditorTabsInGroup,

@@ -2,7 +2,6 @@ pub mod commands;
 pub mod errors;
 pub mod events;
 pub mod json;
-pub mod plugins_service;
 pub mod specta_export;
 pub mod state;
 

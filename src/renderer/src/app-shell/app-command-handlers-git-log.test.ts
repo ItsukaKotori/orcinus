@@ -36,7 +36,6 @@ function shortcutState(
     floatingVisibleTabCount: 0,
     keybindings: {},
     openFloatingWorkspaceMaximized: vi.fn(),
-    pluginCommands: [],
     setFloatingTerminalOpen: vi.fn(),
     terminalShortcutPolicy: 'orca-first',
     workspaceChromeActive: true,

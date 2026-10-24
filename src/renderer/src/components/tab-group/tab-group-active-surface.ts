@@ -30,7 +30,6 @@ export function resolveTabGroupActiveSurface(activeTab: Tab | null): TabGroupAct
       activeTabType === 'terminal'
         ? activeTab.entityId
         : activeTabType === 'agent-session' ||
-            activeTabType === 'plugin' ||
             activeTabType === 'git-log'
           ? activeTab.id
           : null,

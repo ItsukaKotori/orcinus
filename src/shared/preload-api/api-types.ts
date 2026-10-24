@@ -30,7 +30,6 @@ import type {
   MacosTccPromptsApi,
   NotificationsApi
 } from './api/os-permission-api'
-import type { PluginsApi } from './api/plugin-host-api'
 import type { PreflightApi } from './api/preflight-api'
 import type { PtyApi } from './api/pty-api'
 import type { ProjectGroupsApi, ProjectsApi, RepositoryApi } from './api/repository-api'
@@ -119,7 +118,6 @@ export type PreloadApi = {
   wsl: RuntimeApi['wsl']
   pwsh: RuntimeApi['pwsh']
   gitBash: RuntimeApi['gitBash']
-  plugins: PluginsApi
   agentStatus: AgentStatusApi
 }
 
@@ -127,24 +125,6 @@ export type { ClaudeUsageApi, CodexUsageApi, OpenCodeUsageApi } from './api/agen
 export type { AiVaultApi } from './api/ai-vault-api'
 export type { AppApi } from './api/app-api'
 export type { ExportApi } from './api/filesystem-api'
-export type {
-  PluginHostInstallResult,
-  PluginHostInstallSource,
-  PluginHostListEntry,
-  PluginHostLogLine,
-  PluginHostPanel,
-  PluginHostStatus,
-  PluginHostTab,
-  PluginMarketplaceHostInstallPreview,
-  PluginMarketplaceHostListing,
-  PluginMarketplaceHostSourceState,
-  PluginOpenTabRequest,
-  PluginProjectLockEntry,
-  PluginProjectLockState,
-  PluginProjectLockStatus,
-  PluginRef,
-  PluginScope
-} from './api/plugin-host-api'
 export type {
   PreflightApi,
   PreflightRuntimeContext,

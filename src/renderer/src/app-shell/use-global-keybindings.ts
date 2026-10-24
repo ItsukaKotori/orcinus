@@ -1,12 +1,8 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import { toast } from 'sonner'
-import { translate } from '@/i18n/i18n'
 import { canShowRightSidebarForView } from '@/lib/right-sidebar-visibility'
 import { isEditableTarget } from '../lib/editable-target'
 import { getSelectedTextForFileSearch } from '../lib/file-search-selection'
 import { registerAppCommandDispatcher } from '@/lib/app-command-dispatch'
-import { executePluginCommand } from '@/lib/plugin-command-execution'
-import { findPluginCommandForKeybinding } from '@/lib/plugin-command-keybindings'
 import {
   isFloatingWorkspacePanelFocused,
   isFloatingWorkspaceTerminalInputTarget,
@@ -18,14 +14,12 @@ import {
   folderRelativePathToIncludeGlob,
   selectedExplorerFolderRelativePath
 } from '../components/right-sidebar/file-search-include-pattern'
-import { usePluginCommands } from '@/store/plugin-panels'
 import { useAppStore } from '../store'
 import {
   keybindingMatchesAction,
   type KeybindingActionId,
   type KeybindingMatchOptions
 } from '../../../shared/keybindings'
-import { PLUGIN_COMMAND_ALIAS_ACTION_IDS } from '../../../shared/plugins/plugin-command-actions'
 import {
   ModifierDoubleTapDetector,
   toModifierDoubleTapEvent
@@ -55,7 +49,6 @@ export function useGlobalKeybindings(args: {
   const actions = useAppShortcutActions()
   const keybindings = useAppStore((s) => s.keybindings)
   const terminalShortcutPolicy = useAppStore((s) => s.settings?.terminalShortcutPolicy)
-  const pluginCommands = usePluginCommands()
 
   const shortcutState: AppShortcutState = {
     activeView: layout.activeView,
@@ -67,7 +60,6 @@ export function useGlobalKeybindings(args: {
     floatingVisibleTabCount: floatingWorkspace.visibleTabCount,
     keybindings,
     openFloatingWorkspaceMaximized: floatingWorkspace.openMaximized,
-    pluginCommands,
     setFloatingTerminalOpen: floatingWorkspace.setOpenWithFocus,
     terminalShortcutPolicy,
     workspaceChromeActive: layout.workspaceChromeActive
@@ -99,7 +91,6 @@ export function useGlobalKeybindings(args: {
         floatingVisibleTabCount,
         keybindings,
         openFloatingWorkspaceMaximized,
-        pluginCommands,
         setFloatingTerminalOpen,
         terminalShortcutPolicy
       } = state
@@ -213,36 +204,9 @@ export function useGlobalKeybindings(args: {
         }
       }
 
-      // Plugin chords are user-reviewed instructional content. They win over
-      // built-in defaults only in app focus; terminal/editor/browser handlers
-      // retain their own shortcut authority.
-      if (context === 'app') {
-        const pluginCommand = findPluginCommandForKeybinding(
-          pluginCommands,
-          input,
-          shortcutPlatform,
-          keybindings,
-          Boolean(activeWorktreeId)
-        )
-        if (pluginCommand) {
-          input.preventDefault()
-          void executePluginCommand(pluginCommand, 'plugin-keybinding').catch(() => {
-            toast.error(
-              translate('auto.App.pluginCommandFailed', 'Could not run the plugin command.')
-            )
-          })
-          return
-        }
-      }
-
       const handlers = createAppCommandHandlers(state, input, context)
       if (matchShortcut('workspace.delete') && handlers.get('workspace.delete')?.()) {
         return
-      }
-      for (const actionId of PLUGIN_COMMAND_ALIAS_ACTION_IDS) {
-        if (matchShortcut(actionId) && handlers.get(actionId)?.()) {
-          return
-        }
       }
 
       // Unbound by default, so it runs after the built-in alias handlers above; only consumes the chord when the active worktree has unsent notes.

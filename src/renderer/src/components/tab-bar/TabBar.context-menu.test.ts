@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { expandNode } from './tab-bar-dropdown-menu-item-probe'
 import {
   stubHeadlessReact,
-  stubPluginPanelsStore,
   stubShallowSelector
 } from './tab-bar-windows-shell-launch-render-stubs'
 
@@ -144,7 +143,6 @@ vi.mock('@/lib/focus-terminal-tab-surface', () => ({
   focusTerminalTabSurface: vi.fn()
 }))
 
-vi.mock('@/store/plugin-panels', () => stubPluginPanelsStore())
 
 vi.mock('@/components/ui/dropdown-menu', () => ({
   DropdownMenu: function DropdownMenu(props: { children?: unknown }) {
@@ -288,25 +286,6 @@ const EDITOR_FILE = {
   isDirty: false
 }
 
-const PLUGIN_TAB = {
-  id: 'unified-plugin-1',
-  entityId: 'orca-samples.board/board/inst-1',
-  groupId: 'g1',
-  worktreeId: 'wt-1',
-  contentType: 'plugin' as const,
-  label: 'Board',
-  customLabel: null,
-  color: null,
-  sortOrder: 1,
-  createdAt: 1,
-  pluginTab: {
-    pluginKey: 'orca-samples.board',
-    tabId: 'board',
-    scope: 'global' as const,
-    instanceId: 'inst-1'
-  }
-}
-
 const GIT_LOG_TAB = {
   id: 'git-log/wt-1',
   entityId: 'git-log/wt-1',
@@ -364,34 +343,6 @@ describe('TabBar context menu wiring', () => {
     const sortable = findChildrenByType(element, 'SortableTab')
     expect(sortable).toHaveLength(1)
     expect(sortable[0].props.tabCount).toBe(2)
-  })
-
-  it('renders plugin tabs in the strip and activates/closes them by unified id', async () => {
-    const onActivatePlugin = vi.fn()
-    const onCloseFile = vi.fn()
-    const element = await renderTabBar({
-      tabs: [TERMINAL_TAB],
-      pluginTabs: [PLUGIN_TAB],
-      tabBarOrder: ['term-1', 'unified-plugin-1'],
-      activeTabId: 'unified-plugin-1',
-      activeTabType: 'plugin',
-      onActivatePlugin,
-      onCloseFile
-    })
-    const pluginRows = findChildrenByType(element, 'SortableTab').filter(
-      (row) => (row.props.tab as { id?: string })?.id === 'unified-plugin-1'
-    )
-
-    expect(pluginRows).toHaveLength(1)
-    const row = pluginRows[0]
-    expect((row.props.tab as { title?: string }).title).toBe('Board')
-    expect(row.props.leadingIcon).toBeTruthy()
-    expect(row.props.isActive).toBe(true)
-    expect(row.props.unifiedTabId).toBe('unified-plugin-1')
-    ;(row.props.onActivate as () => void)()
-    expect(onActivatePlugin).toHaveBeenCalledWith('unified-plugin-1')
-    ;(row.props.onClose as () => void)()
-    expect(onCloseFile).toHaveBeenCalledWith('unified-plugin-1')
   })
 
   it('renders git-log tabs in the strip and activates/closes them by unified id', async () => {

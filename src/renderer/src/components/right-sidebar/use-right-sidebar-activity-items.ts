@@ -5,16 +5,6 @@ import { useRepoById } from '@/store/selectors'
 import { isFolderRepo } from '../../../../shared/repo-kind'
 import { parseWorkspaceKey } from '../../../../shared/workspace-scope'
 import { getVisibleRightSidebarActivityItems } from './right-sidebar-activity-visibility'
-import {
-  filterRightSidebarPluginEntries,
-  getPluginPanelActivityItems
-} from './plugin-panel-activity-items'
-import {
-  collectActivePluginPanels,
-  collectInstalledPluginTabKeys,
-  usePluginPanelsStore,
-  type PluginPanelsFetchStatus
-} from '@/store/plugin-panels'
 import { useShortcutLabel } from '@/hooks/useShortcutLabel'
 import { translate } from '@/i18n/i18n'
 import { AgentSessionHistoryIcon } from './agent-session-history-icon'
@@ -23,9 +13,6 @@ import type { ActivityBarItem } from './activity-bar-buttons'
 export type RightSidebarActivityItems = {
   visibleItems: ActivityBarItem[]
   activeFolderWorkspaceKey: string | null
-  pluginSystemEnabled: boolean
-  pluginFetchStatus: PluginPanelsFetchStatus
-  installedPluginTabKeys: Set<string>
 }
 
 export function useRightSidebarActivityItems({
@@ -46,29 +33,6 @@ export function useRightSidebarActivityItems({
   const isFolderWorkspace = activeWorkspaceScope?.type === 'folder'
   const isFolder = isFolderWorkspace || (activeRepo ? isFolderRepo(activeRepo) : false)
   const isSshRepo = Boolean(activeRepo?.connectionId)
-  const pluginSystemEnabled = useAppStore((s) => s.settings?.pluginSystemEnabled === true)
-  const pluginCenterEntries = useAppStore((s) => s.pluginCenterEntries)
-  // Why: the active repo id must not depend on the sidebar being open, or the
-  // rail's plugin icons would flicker out whenever the sidebar collapses.
-  const pluginActiveRepoId = useAppStore((s) => s.activeRepoId)
-  const projectPluginPanels = useMemo(
-    () =>
-      collectActivePluginPanels(
-        filterRightSidebarPluginEntries(pluginCenterEntries, pluginActiveRepoId)
-      ),
-    [pluginCenterEntries, pluginActiveRepoId]
-  )
-  const visiblePluginPanels = useMemo(
-    () => (pluginSystemEnabled ? projectPluginPanels : []),
-    [projectPluginPanels, pluginSystemEnabled]
-  )
-  const installedPlugins = usePluginPanelsStore((s) => s.plugins)
-  const pluginFetchStatus = usePluginPanelsStore((s) => s.fetchStatus)
-  const pluginPanelErrors = usePluginPanelsStore((s) => s.panelErrors)
-  const installedPluginTabKeys = useMemo(
-    () => collectInstalledPluginTabKeys(installedPlugins),
-    [installedPlugins]
-  )
 
   const activityItems = useMemo<ActivityBarItem[]>(
     () => [
@@ -100,17 +64,9 @@ export function useRightSidebarActivityItems({
         title: translate('auto.components.right.sidebar.index.0314901467', 'Source Control'),
         shortcut: sourceControlShortcut === 'Unassigned' ? '' : sourceControlShortcut,
         gitOnly: true
-      },
-      // Why: plugin panels append after the built-in tabs so core navigation
-      // keeps stable positions regardless of which plugins are installed.
-      ...getPluginPanelActivityItems(visiblePluginPanels, pluginPanelErrors)
+      }
     ],
-    [
-      explorerShortcut,
-      pluginPanelErrors,
-      visiblePluginPanels,
-      sourceControlShortcut
-    ]
+    [explorerShortcut, sourceControlShortcut]
   )
 
   const visibleItems = useMemo(
@@ -127,9 +83,6 @@ export function useRightSidebarActivityItems({
 
   return {
     visibleItems,
-    activeFolderWorkspaceKey,
-    pluginSystemEnabled,
-    pluginFetchStatus,
-    installedPluginTabKeys
+    activeFolderWorkspaceKey
   }
 }

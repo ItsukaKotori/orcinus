@@ -68,7 +68,6 @@ export function createTabsCreateActions(
           color: init?.color ?? null,
           sortOrder: nextOrder.length,
           createdAt,
-          ...(init?.pluginTab ? { pluginTab: init.pluginTab } : {}),
           ...(init?.gitLog ? { gitLog: init.gitLog } : {}),
           // Why: creating an active tab is a focus event; Cmd+J recency reads lastFocusedAt.
           ...(shouldActivate ? { lastFocusedAt: createdAt } : {}),
@@ -151,7 +150,6 @@ export function createTabsCreateActions(
           color: init?.color ?? null,
           sortOrder: 0,
           createdAt,
-          ...(init?.pluginTab ? { pluginTab: init.pluginTab } : {}),
           ...(init?.gitLog ? { gitLog: init.gitLog } : {}),
           // Why: creating an active tab is a focus event; Cmd+J recency reads lastFocusedAt.
           ...(shouldActivate ? { lastFocusedAt: createdAt } : {}),

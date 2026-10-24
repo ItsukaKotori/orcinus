@@ -11,7 +11,6 @@ function chord(digit: number): MacCapturedDigitChord {
 function warningFor(chords: readonly MacCapturedDigitChord[]): string | undefined {
   return buildShortcutDefinitionCatalog({
     disabledTuiAgents: [],
-    pluginCommands: [],
     keybindings: {},
     platform: 'darwin',
     macCapturedDigitChords: chords,
