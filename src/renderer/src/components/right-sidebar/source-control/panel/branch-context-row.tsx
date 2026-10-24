@@ -7,6 +7,7 @@ import { translate } from '@/i18n/i18n'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { DetachedHeadBadge } from '@/components/DetachedHeadBadge'
 import type { WorktreeGitIdentityDisplay } from '@/lib/worktree-git-identity-display'
+import { SourceControlBranchSwitcher } from '@/components/git-branch/source-control-branch-switcher'
 import { SourceControlHeaderIconButton } from './header-icon-button'
 import { SourceControlBranchLineTotalChip } from './branch-line-total-chip'
 import {
@@ -79,7 +80,17 @@ function resolveHeadFlowLabel(
   return null
 }
 
-function HeadIdentity({ display }: { display: WorktreeGitIdentityDisplay }): React.JSX.Element {
+function HeadIdentity({
+  display,
+  switcherWorktreeId = null,
+}: {
+  display: WorktreeGitIdentityDisplay
+  /**
+   * 有值时分支名成为 IDEA 风格分支树的触发器（spec §5 宿主 A）。
+   * 缺省时保持逐字节不变的旧呈现 —— 现有 SourceControl.* 测试的桩不必跟着改。
+   */
+  switcherWorktreeId?: string | null
+}): React.JSX.Element {
   if (display.kind === 'detached') {
     return (
       <DetachedHeadBadge
@@ -98,26 +109,45 @@ function HeadIdentity({ display }: { display: WorktreeGitIdentityDisplay }): Rea
     { value0: display.branchName }
   )
 
-  // Why: focusable + tooltip so truncated long branch names stay discoverable.
-  // Native title omitted — Radix Tooltip already surfaces the full name on hover.
-  // `block` is load-bearing: `truncate` clips nothing on an inline box, so an
-  // inline span here let long names run under the line-total chip.
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span
-          className="block min-w-0 max-w-full truncate rounded-sm font-mono text-[10.5px] font-medium text-foreground/90 outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          tabIndex={0}
-          aria-label={branchAriaLabel}
-          data-testid="source-control-head-identity"
-        >
+  if (!switcherWorktreeId) {
+    // Why: focusable + tooltip so truncated long branch names stay discoverable.
+    // Native title omitted — Radix Tooltip already surfaces the full name on hover.
+    // `block` is load-bearing: `truncate` clips nothing on an inline box, so an
+    // inline span here let long names run under the line-total chip.
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            className="block min-w-0 max-w-full truncate rounded-sm font-mono text-[10.5px] font-medium text-foreground/90 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            tabIndex={0}
+            aria-label={branchAriaLabel}
+            data-testid="source-control-head-identity"
+          >
+            {display.branchName}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" sideOffset={6} className="max-w-72 break-all font-mono">
           {display.branchName}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent side="bottom" sideOffset={6} className="max-w-72 break-all font-mono">
+        </TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  // 可点：弹出与 Git Log 工具栏共用的同一棵 IDEA 风格分支树。
+  // 外层 Tooltip 由 switcher 内部的 Popover 取代 —— 两层 asChild 叠在一起时
+  // 焦点与 Esc 会互相抢，所以这里不再包 Tooltip，名称完整性靠弹层里的完整分支名行保证。
+  return (
+    <SourceControlBranchSwitcher worktreeId={switcherWorktreeId}>
+      <button
+        type="button"
+        aria-haspopup="tree"
+        aria-label={branchAriaLabel}
+        className="block min-w-0 max-w-full truncate rounded-sm border-0 bg-transparent p-0 text-left font-mono text-[10.5px] font-medium text-foreground/90 outline-none hover:text-foreground hover:underline focus-visible:ring-1 focus-visible:ring-ring"
+        data-testid="source-control-head-identity"
+      >
         {display.branchName}
-      </TooltipContent>
-    </Tooltip>
+      </button>
+    </SourceControlBranchSwitcher>
   )
 }
 
@@ -194,6 +224,7 @@ function StackedCompareFlow({
   baseLabel,
   onChangeBaseRef,
   changeBaseTitle,
+  switcherWorktreeId = null,
   leading,
   trailing,
   headTrailing
@@ -203,6 +234,7 @@ function StackedCompareFlow({
   baseLabel: string
   onChangeBaseRef: () => void
   changeBaseTitle: string
+  switcherWorktreeId?: string | null
   leading?: React.ReactNode
   trailing?: React.ReactNode
   headTrailing?: React.ReactNode
@@ -236,7 +268,7 @@ function StackedCompareFlow({
           counts reads as part of the branch name. */}
       <div className="flex min-w-0 items-center gap-2">
         <span className="flex min-w-0 flex-1 items-center">
-          <HeadIdentity display={headDisplay} />
+          <HeadIdentity display={headDisplay} switcherWorktreeId={switcherWorktreeId} />
         </span>
         {headTrailing}
       </div>
@@ -259,6 +291,7 @@ export function SourceControlBranchContextRow({
   compareBaseRef,
   headDisplay = null,
   branchLineTotal,
+  branchSwitcherWorktreeId = null,
   onChangeBaseRef,
   onRetry
 }: {
@@ -266,6 +299,8 @@ export function SourceControlBranchContextRow({
   compareBaseRef: string | null
   headDisplay?: WorktreeGitIdentityDisplay | null
   branchLineTotal?: GitBranchLineTotal | null
+  /** 有值时分支名可点，弹出 IDEA 风格分支树（spec §5 宿主 A）。 */
+  branchSwitcherWorktreeId?: string | null
   onChangeBaseRef: () => void
   onRetry: () => void
 }): React.JSX.Element | null {
@@ -279,7 +314,7 @@ export function SourceControlBranchContextRow({
     }
     return (
       <div className="min-w-0 text-[11px] text-muted-foreground">
-        <HeadIdentity display={headDisplay} />
+        <HeadIdentity display={headDisplay} switcherWorktreeId={branchSwitcherWorktreeId} />
       </div>
     )
   }
@@ -308,6 +343,7 @@ export function SourceControlBranchContextRow({
       >
         <StackedCompareFlow
           headDisplay={headDisplay}
+          switcherWorktreeId={branchSwitcherWorktreeId}
           baseRef={displayedBaseRef}
           baseLabel={baseLabel}
           onChangeBaseRef={onChangeBaseRef}
@@ -329,6 +365,7 @@ export function SourceControlBranchContextRow({
       >
         <StackedCompareFlow
           headDisplay={headDisplay}
+          switcherWorktreeId={branchSwitcherWorktreeId}
           baseRef={displayedBaseRef}
           baseLabel={baseLabel}
           onChangeBaseRef={onChangeBaseRef}
@@ -366,6 +403,7 @@ export function SourceControlBranchContextRow({
     <CompareFlowGroup flowLabel={flowLabel} className="min-w-0 text-[11px] text-muted-foreground">
       <StackedCompareFlow
         headDisplay={headDisplay}
+        switcherWorktreeId={branchSwitcherWorktreeId}
         baseRef={displayedBaseRef}
         baseLabel={baseLabel}
         onChangeBaseRef={onChangeBaseRef}

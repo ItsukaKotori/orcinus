@@ -39,13 +39,14 @@ beforeEach(() => {
       ? Promise.reject(new Error('boom'))
       : Promise.resolve({ refs: api.current, truncated: api.truncated })
   )
-  vi.stubGlobal('window', { api: { git: { refs } } })
+  // 只挂 api，不替换 window（替换会让 Radix 等依赖真 window 的库挂掉）。
+  ;(window as unknown as { api: unknown }).api = { git: { refs } }
   latest = { refs: [], truncated: false, loading: false, error: null, invalidate: () => {} }
 })
 afterEach(() => {
   act(() => root.unmount())
   host.remove()
-  vi.unstubAllGlobals()
+  delete (window as unknown as { api?: unknown }).api
 })
 
 async function render(path: string | null = '/wt'): Promise<void> {
