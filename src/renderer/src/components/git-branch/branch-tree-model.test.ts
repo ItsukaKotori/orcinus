@@ -97,8 +97,9 @@ describe('buildBranchTreeRows', () => {
     // 两行语义不同：合成行 = 当前分支范围；Local 里的 main = 该 ref 本身。
     // 合并它们会让当前分支无法作为普通 ref 被选中（Git Log 设查看 ref / 右键）。
     expect(rows.some((r) => r.kind === 'synthetic' && r.value === 'head-current')).toBe(true)
-    expect(localNames(rows)).toEqual(['main', 'feature/login'])
     // 置顶不是巧合：main 码点序本应排在 feature/login 之后。
+    expect(localNames(rows)).toEqual(['main', 'feature/login'])
+    // 可达性：当前分支仍是一条 depth-1 的 ref 行（而非只剩合成行）。
     expect(refRows(rows).find((r) => r.ref.name === 'main')!.depth).toBe(1)
     // §7.1 的 🏷 图标必须可达：Local 里确实有一行 isHead。
     expect(refRows(rows).filter((r) => r.ref.isHead).map((r) => r.ref.name)).toEqual(['main'])
@@ -130,9 +131,9 @@ describe('buildBranchTreeRows', () => {
     ])
   })
 
-  it('Local 组内其余条目按名称码点序', () => {
+  it('Remote 子组内按名称码点序（不再剥公共前缀）', () => {
     const rows = buildBranchTreeRows({ refs: REFS })
-    // `origin/dev` 排在 `origin/main` 前；`upstream/main` 归自己的组。
+    // depth 2 = Remote 子组的行。不剥 `<remote>/` 前缀：同组内前缀相同，剥了也不变序。
     expect(refNames(rows, 2)).toEqual(['origin/dev', 'origin/main', 'upstream/main'])
   })
 
@@ -174,8 +175,8 @@ describe('buildBranchTreeRows', () => {
     const rows = buildBranchTreeRows({
       refs: REFS.map((r) => ({ ...r, isHead: false })),
     })
+    // 无 isHead 条目时不出合成行，且 Local 仍含全部分支（当前分支不会只剩一行代表）。
     expect(rows.some((r) => r.kind === 'synthetic' && r.value === 'head-current')).toBe(false)
-    // 此时当前分支没被任何条目代表，Local 组必须把 main 收回来，否则它凭空消失。
     expect(localNames(rows)).toEqual(['feature/login', 'main'])
   })
 

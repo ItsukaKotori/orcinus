@@ -277,7 +277,7 @@ store 元数据**不是权威**：一条分支可能被 ade 不知道的 git wor
   会排出不同顺，对这棵要靠 ↑↓ 稳定导航的树是可观察的歧义。
 - `Remote` 二级分组按 remote 名**码点序**。组内直接比 `name` 即可：同一组内所有条目共享
   同一个 `<remote>/` 前缀，剥掉公共前缀不改变任何相对次序（实施中证实为 no-op，已删）。
-- `Tags` 按名称字典序（不做版本语义排序）。
+- `Tags` 按名称**码点序**（不做版本语义排序）。
 
 ### 7.3 键盘
 
@@ -454,7 +454,7 @@ in-flight 期间：该行行尾 spinner（对齐 `branch-context-row.tsx` 已有
 ## 12. 开放问题（实施前须定，不阻塞 spec review）
 
 1. **`Local` 按提交时间排序**：需 `for-each-ref` 再加 `%(committerdate)` 一列（仍是同一次调用）。
-   本期先按字典序；若你要 IDEA 的时间序，增量 1 内加一列即可，成本极低。
+   本期先按码点序；若你要 IDEA 的时间序，增量 1 内加一列即可，成本极低。
 2. **`Update` 的 merge/rebase 偏好**：现有 `pullRuntimeGit` 走 git 默认（`pull.ff` 等 config）。
    IDEA 会问「Merge / Rebase / Checkout」。本期**不问**、按 git 默认；若要问，属增量 2 的独立任务。
 3. **`Set Upstream To…` 子菜单在 remote ref 很多时的裁剪**：是否只列同名 remote 的分支（IDEA 行为）
