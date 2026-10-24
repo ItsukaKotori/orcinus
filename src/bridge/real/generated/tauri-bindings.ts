@@ -1189,6 +1189,48 @@ export type GitReadResult = {
 	code: number | null,
 };
 
+/**  ref 的大类。serde 用小写单词，TS 侧 `GitRefCategory` 逐字镜像。 */
+export type GitRefCategory = "local" | "remote" | "tag";
+
+/**  一条分支/远程分支/标签，带分支树要显示的信息密度。 */
+export type GitRefEntry = GitRefEntry_Serialize | GitRefEntry_Deserialize;
+
+/**  一条分支/远程分支/标签，带分支树要显示的信息密度。 */
+export type GitRefEntry_Deserialize = {
+	/**  短名：`main` / `origin/main` / `v1.2.0`。 */
+	name: string,
+	/**  完整 refname：`refs/heads/main`。 */
+	fullName: string,
+	category: GitRefCategory,
+	/**  仅 `Remote` 有值（`origin`）。 */
+	remote: string | null,
+	/**  commit oid；annotated tag 已 peel 到 commit。 */
+	oid: string,
+	/**  git 报告该 ref 就是当前 HEAD 分支。 */
+	isHead: boolean,
+	upstream: string | null,
+	ahead: number | null,
+	behind: number | null,
+};
+
+/**  一条分支/远程分支/标签，带分支树要显示的信息密度。 */
+export type GitRefEntry_Serialize = {
+	/**  短名：`main` / `origin/main` / `v1.2.0`。 */
+	name: string,
+	/**  完整 refname：`refs/heads/main`。 */
+	fullName: string,
+	category: GitRefCategory,
+	/**  仅 `Remote` 有值（`origin`）。 */
+	remote?: string | null,
+	/**  commit oid；annotated tag 已 peel 到 commit。 */
+	oid: string,
+	/**  git 报告该 ref 就是当前 HEAD 分支。 */
+	isHead: boolean,
+	upstream?: string | null,
+	ahead?: number | null,
+	behind?: number | null,
+};
+
 export type GitRefsArgs = {
 	worktreePath: string,
 };
@@ -1196,24 +1238,33 @@ export type GitRefsArgs = {
 /**
  *  Result of [`list_refs`]: the (capped) refs plus a flag telling the UI that
  *  more refs existed than were returned, so it can note a partial branch list.
+ * 
+ *  元素是 `GitRefEntry` 而非 `GitHistoryItemRef`：分支树要 ahead/behind/upstream，
+ *  那些字段对 commit decoration 无意义（spec §6.2）。
  */
 export type GitRefsResult = GitRefsResult_Serialize | GitRefsResult_Deserialize;
 
 /**
  *  Result of [`list_refs`]: the (capped) refs plus a flag telling the UI that
  *  more refs existed than were returned, so it can note a partial branch list.
+ * 
+ *  元素是 `GitRefEntry` 而非 `GitHistoryItemRef`：分支树要 ahead/behind/upstream，
+ *  那些字段对 commit decoration 无意义（spec §6.2）。
  */
 export type GitRefsResult_Deserialize = {
-	refs: GitHistoryItemRef_Deserialize[],
+	refs: GitRefEntry_Deserialize[],
 	truncated: boolean,
 };
 
 /**
  *  Result of [`list_refs`]: the (capped) refs plus a flag telling the UI that
  *  more refs existed than were returned, so it can note a partial branch list.
+ * 
+ *  元素是 `GitRefEntry` 而非 `GitHistoryItemRef`：分支树要 ahead/behind/upstream，
+ *  那些字段对 commit decoration 无意义（spec §6.2）。
  */
 export type GitRefsResult_Serialize = {
-	refs: GitHistoryItemRef_Serialize[],
+	refs: GitRefEntry_Serialize[],
 	truncated: boolean,
 };
 
