@@ -77,7 +77,13 @@ Git Log 原生视图另有一份分支列表 `RefPanel`（`src/renderer/src/comp
 
 ### 3.4 硬约束：i18n
 
-- locale 有 **6 个**：`en / es / fr / ja / ko / zh`（`src/renderer/src/i18n/locales/`）。
+- locale 文件有 **6 个**：`en / es / fr / ja / ko / zh`（`src/renderer/src/i18n/locales/`）。
+- **但不是每个 namespace 都要写满 6 份**。已核实的先例：`auto.components.git-log` 只存在于
+  `en.json` 与 `zh.json`，es/fr/ja/ko **根本没有这一节** —— 因为
+  `translate(key, fallback)`（`i18n.ts:84-87`）用 `defaultValue: fallback` 天然兜底未收录的 key。
+  而更老的 `auto.components.right.sidebar.SourceControl` 则 6 份齐全。
+  → 新命名空间 `auto.components.git-branch` **只补 en + zh**，跟 git-log 先例一致；
+  英文 fallback 写进代码即兼任其余 4 个 locale。
 - `src/renderer/src/i18n/no-top-level-translate.test.ts` 是一道 **AST 门禁**：`translate()` 不得在模块顶层调用。
   → `branch-actions.ts` 的 label 必须是 `() => translate(…)` 惰性求值，不能是模块常量。
 
@@ -121,7 +127,7 @@ git 版本/locale 文案变化即失效。新路径必须在 Rust 侧分类，�
   不留孤儿 key；`refsTruncated` 是唯一例外，迁到 `git-branch` 命名空间后复用（见 §7.5）。
 - `ade_git::list_refs` 契约扩展（新 `GitRefEntry`）。
 - 3 个新写命令 + `delete_branch` 抽取 + `pull/fastForward` 参数化。
-- 6 个 locale 的新 key。
+- 新命名空间 `auto.components.git-branch` 的 key（**仅 en + zh**，见 §3.4）。
 
 ### 4.2 明确不动（防误伤）
 
@@ -376,7 +382,7 @@ in-flight 期间：该行行尾 spinner（对齐 `branch-context-row.tsx` 已有
 - 宿主 A：`HeadIdentity` → `button` + popover，动作集只放
   `Switch` / `New Workspace from Branch…` / `Show Diff with Working Tree` / `View in Git Log`
 - 宿主 B：删 `RefPanel` 左栏与 `RefPanel.tsx`，`Toolbar` branch chip → 同一 popover
-- 6 locale 新 key
+- 新命名空间 `auto.components.git-branch` 的 key（en + zh）
 
 **门禁**：`cargo test -p ade-git -p ade-bridge` + `pnpm typecheck`
 + `pnpm vitest run src/renderer/src/components/git-branch src/renderer/src/components/git-log src/renderer/src/components/right-sidebar/source-control`
