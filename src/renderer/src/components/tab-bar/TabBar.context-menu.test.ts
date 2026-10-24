@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { expandNode } from './tab-bar-dropdown-menu-item-probe'
 import {
   stubHeadlessReact,
-  stubPluginPanelsStore,
   stubShallowSelector
 } from './tab-bar-windows-shell-launch-render-stubs'
 
@@ -144,7 +143,6 @@ vi.mock('@/lib/focus-terminal-tab-surface', () => ({
   focusTerminalTabSurface: vi.fn()
 }))
 
-vi.mock('@/store/plugin-panels', () => stubPluginPanelsStore())
 
 vi.mock('@/components/ui/dropdown-menu', () => ({
   DropdownMenu: function DropdownMenu(props: { children?: unknown }) {
