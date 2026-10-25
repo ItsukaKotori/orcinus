@@ -71,9 +71,11 @@ export function SourceControlBranchSwitcher({
     }
   }, [owners, openModal, repoId, worktree?.branch])
 
-  // 解析不出 worktree（元数据未到位 / 已被移除）时不接弹层 —— 一个打不开的
-  // 触发器比没有触发器更糟。宿主在面板 ready 时才渲染本组件，此时 activeWorktreeId
-  // 必然可解析，这条分支只是防御。
+  // 解析不出 worktree 时不接弹层 —— 一个打不开的触发器比没有触发器更糟。
+  // 注意：这**不是**一条不可达分支。面板门禁走 `getKnownWorktreeById`（会合成 folder 行
+  // 并回落 detectedWorktreesByRepo），本组件走只扫 `worktreesByRepo` 的 `findWorktreeById`，
+  // 两个 lookup 不等价，detected-only 行与 worktrees:changed 的 purge 窗口都能走到这里。
+  // 已知遗留：此时 children 仍带着宿主的 aria-haspopup="tree"，是个打不开的死触发器。
   if (!worktree) return <>{children}</>
 
   return (

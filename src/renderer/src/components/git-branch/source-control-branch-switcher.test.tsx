@@ -16,14 +16,20 @@ const worktrees: Worktree[] = [
 ] as unknown as Worktree[]
 
 const state = {
-  worktreesByRepo: { r: worktrees.filter((w) => w.repoId === 'r'), other: worktrees.filter((w) => w.repoId === 'other') },
+  // `other` **必须排在 `r` 之前**：旧的全仓压平实现靠 `Object.values` 插入序 +
+  // first-wins，若 `r` 先入则跨仓 bug 下依然得到 A，测试对 C-1 就没有判别力。
+  worktreesByRepo: {
+    other: worktrees.filter((w) => w.repoId === 'other'),
+    r: worktrees.filter((w) => w.repoId === 'r'),
+  },
   openModal: vi.fn(),
 }
 
 const activate = vi.fn(
-  (_id: string, _opts?: { executionHostId?: string }): { primaryTabId: string | null } => ({
-    primaryTabId: null,
-  })
+  (
+    _id: string,
+    _opts?: { executionHostId?: string }
+  ): { primaryTabId: string | null } | false => ({ primaryTabId: null })
 )
 
 vi.mock('@/store', () => {
@@ -38,7 +44,7 @@ vi.mock('@/lib/worktree-activation', () => ({
   activateAndRevealWorktree: (
     id: string,
     opts?: { executionHostId?: string }
-  ): { primaryTabId: string | null } => activate(id, opts),
+  ): { primaryTabId: string | null } | false => activate(id, opts),
 }))
 
 const refs = vi.fn()
@@ -164,11 +170,18 @@ describe('SourceControlBranchSwitcher', () => {
   it('跳 repo：当前仓的 main 归属自己仓的 workspace，不被别仓同名分支顶掉', async () => {
     await openSwitcher()
     const el = rowInPopover('branch-row-ref:refs/heads/main')
-    // 两仓都有 main。若 owner 是全仓汇总，这里会是 'OTHER'（first-wins 取决于 Map 插入序）。
+    // fixture 里 other 排在 r 之前：若 owner 是全仓汇总，first-wins 会得到 'OTHER'。
     expect(el.getAttribute('title')).toContain('A')
     expect(el.getAttribute('title')).not.toContain('OTHER')
     await click(el)
     expect(activate.mock.calls[0]?.[0]).toBe('r::/a')
+  })
+
+  it('激活返回 false（workspace 已被删）时不抛错', async () => {
+    activate.mockReturnValue(false)
+    await openSwitcher()
+    await expect(click(rowInPopover('branch-row-ref:refs/heads/dev'))).resolves.not.toThrow()
+    expect(activate).toHaveBeenCalledTimes(1)
   })
 
   it('点无 owner 的分支 → 打开 composer 并预填 initialBaseBranch', async () => {
