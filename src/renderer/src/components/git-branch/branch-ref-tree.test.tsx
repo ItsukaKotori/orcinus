@@ -234,3 +234,42 @@ describe('BranchRefTree', () => {
   // happy-dom 下测 rAF 时序只会测到 polyfill 而不是真 Popover 行为。
   // → 由 Task 11 手工验收项「弹层打开后直接打字能过滤」兜住。
 })
+
+describe('renderRowMenu 接缝（增量 2B）', () => {
+  it('未提供接缝：ref 行直接是 <button>，无 ⋯（宿主 B 零回归）', async () => {
+    await render()
+    const el = row('ref:refs/heads/feature/login')
+    expect(el?.tagName).toBe('BUTTON')
+    expect(host.querySelector('[data-testid="branch-row-more"]')).toBeNull()
+  })
+
+  it('提供接缝：ref 行经接缝包裹，且外层不出现 button 套 button', async () => {
+    await render({
+      renderRowMenu: (r, content) => (
+        <div data-testid="seam-wrap" data-kind={r.kind}>
+          {content}
+          <button type="button" data-testid="branch-row-more">
+            more
+          </button>
+        </div>
+      ),
+    })
+    expect(host.querySelector('[data-testid="seam-wrap"]')).not.toBeNull()
+    expect(host.querySelector('[data-testid="branch-row-more"]')).not.toBeNull()
+    // 关键嵌套守卫：main button 与 ⋯ 是兄弟，不存在 button 内嵌 button
+    expect(host.querySelector('button button')).toBeNull()
+  })
+
+  it('接缝只作用于 ref 行：group / synthetic 行不请求接缝', async () => {
+    const kinds = new Set<string>()
+    await render({
+      renderRowMenu: (r, content) => {
+        kinds.add(r.kind)
+        return content
+      },
+    })
+    expect([...kinds]).toEqual(['ref'])
+    // 未包裹的 group/synthetic 行仍是原样 <button>
+    expect(row('group:local')?.tagName).toBe('BUTTON')
+  })
+})

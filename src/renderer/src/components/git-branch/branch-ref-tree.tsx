@@ -26,6 +26,12 @@ export type BranchRefTreeProps = {
   /** 高亮行 id（合成人物用 `row:*`，ref 用 `ref:<fullName>`）。 */
   activeValue?: string | null
   onActivate: (row: BranchTreeRow) => void
+  /**
+   * 每行菜单接缝（增量 2B）。提供时**仅 ref 行**把已渲染好的 `<button>` 主体作为 `content`
+   * 交给接缝，由接缝（宿主的 `BranchRowMenu`）包进触发区并追加 `⋯`。不提供时 ref 行
+   * 逐字节走原 `<button>`（宿主 B / 既有测试零回归）。树本身不 import 动作语义（spec §5）。
+   */
+  renderRowMenu?: (row: BranchTreeRow, content: React.ReactNode) => React.ReactNode
   className?: string
 }
 
@@ -42,6 +48,7 @@ export function BranchRefTree({
   includeAllBranchesRow = false,
   activeValue = null,
   onActivate,
+  renderRowMenu,
   className,
 }: BranchRefTreeProps): React.JSX.Element {
   const [query, setQuery] = useState('')
@@ -189,6 +196,7 @@ export function BranchRefTree({
             active={activeValue === row.id}
             onActivate={onActivate}
             onToggleGroup={toggleGroup}
+            renderRowMenu={renderRowMenu}
           />
         ))}
       </div>
@@ -207,17 +215,19 @@ function BranchRowButton({
   active,
   onActivate,
   onToggleGroup,
+  renderRowMenu,
 }: {
   row: BranchTreeRow
   index: number
   active: boolean
   onActivate: (row: BranchTreeRow) => void
   onToggleGroup: (id: string) => void
+  renderRowMenu?: (row: BranchTreeRow, content: React.ReactNode) => React.ReactNode
 }): React.JSX.Element {
   const onClick =
     row.kind === 'group' ? () => onToggleGroup(row.id) : () => onActivate(row)
 
-  return (
+  const button = (
     <button
       type="button"
       role="treeitem"
@@ -243,6 +253,11 @@ function BranchRowButton({
       <RowTrailing row={row} />
     </button>
   )
+
+  // 接缝只作用 ref 行；其余（group/synthetic/无接缝）逐字节走原 <button>。
+  // data-row-index 始终留在 button 上，既有 ↑↓ 导航 querySelector('[data-row-index]')?.focus() 口径不变。
+  if (renderRowMenu && row.kind === 'ref') return <>{renderRowMenu(row, button)}</>
+  return button
 }
 
 /**
