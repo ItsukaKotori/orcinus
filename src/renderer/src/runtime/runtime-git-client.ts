@@ -33,6 +33,7 @@ import {
   rebaseRuntimeGitFromBase as rebaseRuntimeGitFromBaseImplementation,
   syncRuntimeGitForkDefaultBranch as syncRuntimeGitForkDefaultBranchImplementation
 } from './runtime-git-sync-client'
+import { checkoutRuntimeGit as checkoutRuntimeGitImplementation } from './runtime-git-checkout-client'
 import {
   bulkDiscardRuntimeGitPaths as bulkDiscardRuntimeGitPathsImplementation,
   bulkStageRuntimeGitPaths as bulkStageRuntimeGitPathsImplementation,
@@ -70,6 +71,11 @@ export const fetchRuntimeGit = fetchRuntimeGitImplementation
 export const syncRuntimeGitForkDefaultBranch = syncRuntimeGitForkDefaultBranchImplementation
 export const pullRuntimeGit = pullRuntimeGitImplementation
 export const fastForwardRuntimeGit = fastForwardRuntimeGitImplementation
+/**
+ * 原地检出分支。**只有本地一条路**（无 callRuntimeRpc 分支）：远程 runtime 面
+ * 在本仓库没有 real 实现。业务级拒绝在 resolve 的 `outcome.status` 里，不 reject。
+ */
+export const checkoutRuntimeGit = checkoutRuntimeGitImplementation
 export const rebaseRuntimeGitFromBase = rebaseRuntimeGitFromBaseImplementation
 export const pushRuntimeGit = pushRuntimeGitImplementation
 export const getRuntimeGitBranchDiff = getRuntimeGitBranchDiffImplementation

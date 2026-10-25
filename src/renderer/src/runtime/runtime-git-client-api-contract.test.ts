@@ -9,6 +9,7 @@ const PUBLIC_RUNTIME_GIT_CLIENT_FUNCTIONS = [
   'bulkUnstageRuntimeGitPaths',
   'cancelRuntimeGenerateCommitMessage',
   'cancelRuntimeGeneratePullRequestFields',
+  'checkoutRuntimeGit',
   'commitRuntimeGit',
   'discardRuntimeGitPath',
   'discoverRuntimeCommitMessageModels',
