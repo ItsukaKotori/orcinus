@@ -266,6 +266,8 @@ export const commands = {
 	gitLogQuery: (args: GitLogQueryArgs) => typedError<GitHistoryResult_Serialize, BridgeError>(__TAURI_INVOKE("git_log_query", { args })),
 	gitRefs: (args: GitRefsArgs) => typedError<GitRefsResult_Serialize, BridgeError>(__TAURI_INVOKE("git_refs", { args })),
 	gitCheckout: (args: GitCheckoutArgs) => typedError<GitCheckoutOutcome_Serialize, BridgeError>(__TAURI_INVOKE("git_checkout", { args })),
+	gitFetch: (args: GitFetchArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_fetch", { args })),
+	gitPull: (args: GitPullArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_pull", { args })),
 	gitRemoteUrls: (args: GitWorktreeArgs) => typedError<GitRemoteUrl[], BridgeError>(__TAURI_INVOKE("git_remote_urls", { args })),
 	gitRead: (args: GitReadArgs) => typedError<GitReadResult, BridgeError>(__TAURI_INVOKE("git_read", { args })),
 	gitPush: (args: GitPushArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_push", { args })),
@@ -1100,6 +1102,15 @@ export type GitDiffResult_Deserialize = ({ kind: "text"; originalContent: string
  */
 export type GitDiffResult_Serialize = ({ kind: "text"; originalContent: string; modifiedContent: string; originalIsBinary: boolean; modifiedIsBinary: boolean; largeDiffRenderLimit?: LargeDiffRenderLimit_Serialize | null }) & { isImage?: never; mimeType?: never; modifiedDeleted?: never } | ({ kind: "binary"; originalContent: string; modifiedContent: string; isImage?: boolean | null; mimeType?: string | null; modifiedDeleted?: boolean | null; originalIsBinary: boolean; modifiedIsBinary: boolean }) & { largeDiffRenderLimit?: never };
 
+export type GitFetchArgs = {
+	worktreePath: string,
+	/**
+	 *  由 `real/git.ts` 从 `pushTarget.remoteName` 解析而来（与 `git_push` 同一分层）；
+	 *  缺省时交给 git（按当前分支 upstream / 默认 remote）。
+	 */
+	remote?: string | null,
+};
+
 export type GitFileArgs = {
 	worktreePath: string,
 	filePath: string,
@@ -1236,6 +1247,10 @@ export type GitLogQueryIn = {
 	path?: string | null,
 	skip?: number | null,
 	limit?: number | null,
+};
+
+export type GitPullArgs = {
+	worktreePath: string,
 };
 
 export type GitPushArgs = {

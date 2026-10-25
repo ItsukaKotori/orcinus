@@ -43,8 +43,29 @@ pub fn run_git_in(
     timeout: Duration,
     cancel: Option<&CancelToken>,
 ) -> Result<GitOutput, CoreError> {
+    run_git_in_with_env(cwd, args, timeout, cancel, &[])
+}
+
+/// [`run_git_in`] with extra environment variables.
+///
+/// 网络类命令（`fetch` / `pull` / `push`）必须走这个入口传 `GIT_TERMINAL_PROMPT=0`：
+/// 否则私有 HTTPS 仓在没有可用凭证 helper 时，git 会去开 `/dev/tty` 要用户名密码，
+/// 在 GUI 应用里表现为**挂到超时**而不是快速失败。
+///
+/// 单独提供一个带 env 的变体而不是改 [`run_git_in`] 的签名，是为了不动
+/// 现有十几个调用点（绝大多数是本地只读查询，不需要也不该改环境）。
+pub fn run_git_in_with_env(
+    cwd: &str,
+    args: &[&str],
+    timeout: Duration,
+    cancel: Option<&CancelToken>,
+    envs: &[(&str, &str)],
+) -> Result<GitOutput, CoreError> {
     let mut command = Command::new("git");
     command.arg("-C").arg(cwd).args(args);
+    for (key, value) in envs {
+        command.env(key, value);
+    }
     match run_process(&mut command, timeout, cancel) {
         Ok(output) => Ok(GitOutput {
             status: output.status,

@@ -754,6 +754,55 @@ pub async fn git_refs(
     run_blocking(move || git_refs_impl(&args.worktree_path)).await
 }
 
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitFetchArgs {
+    pub worktree_path: String,
+    /// 由 `real/git.ts` 从 `pushTarget.remoteName` 解析而来（与 `git_push` 同一分层）；
+    /// 缺省时交给 git（按当前分支 upstream / 默认 remote）。
+    #[serde(default)]
+    pub remote: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitPullArgs {
+    pub worktree_path: String,
+}
+
+/// `git fetch --prune`。网络失败（权限、不可达）以 `Err` 上抛，stderr 原样带上。
+/// 凭证提示已被 `GIT_TERMINAL_PROMPT=0` 禁掉，所以不会挂到超时。
+pub fn git_fetch_impl(
+    worktree_path: &str,
+    remote: Option<&str>,
+) -> Result<(), BridgeError> {
+    Ok(ade_git::remote_ops::fetch(worktree_path, remote, None)?)
+}
+
+/// `git pull`（按用户 git 配置，不强制 ff-only / rebase）。
+pub fn git_pull_impl(worktree_path: &str) -> Result<(), BridgeError> {
+    Ok(ade_git::remote_ops::pull(worktree_path, None)?)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_fetch(
+    state: State<'_, AppState>,
+    args: GitFetchArgs,
+) -> Result<(), BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    let path = args.worktree_path;
+    let remote = args.remote;
+    run_blocking(move || git_fetch_impl(&path, remote.as_deref())).await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_pull(state: State<'_, AppState>, args: GitPullArgs) -> Result<(), BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    run_blocking(move || git_pull_impl(&args.worktree_path)).await
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn git_checkout(

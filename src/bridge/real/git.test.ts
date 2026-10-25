@@ -39,7 +39,9 @@ describe('git real adapter commands', () => {
     ['history', 'git_history'],
     ['logQuery', 'git_log_query'],
     ['refs', 'git_refs'],
-    ['checkout', 'git_checkout']
+    ['checkout', 'git_checkout'],
+    ['fetch', 'git_fetch'],
+    ['pull', 'git_pull']
   ] satisfies Array<[GitMethod, string]>
 
   it.each(commandCases)('maps git.%s to %s with the { args } envelope', async (method, command) => {
@@ -49,6 +51,25 @@ describe('git real adapter commands', () => {
     >
     await api[method]({ worktreePath: '/tmp/repo' })
     expect(invokeMock).toHaveBeenCalledWith(command, { args: { worktreePath: '/tmp/repo' } })
+  })
+
+  // fetch 的 TS 层唯一非平凡逻辑：把 pushTarget 解成 remote 名下发。
+  // 不测它，写错 `remoteName` 键名或忘解都会静默退化成“fetch 默认 remote”。
+  it('maps git.fetch pushTarget to the remote name', async () => {
+    await createGitRealApi().fetch({
+      worktreePath: '/tmp/repo',
+      pushTarget: { remoteName: 'fork', branchName: 'feature' },
+    })
+    expect(invokeMock).toHaveBeenLastCalledWith('git_fetch', {
+      args: { worktreePath: '/tmp/repo', remote: 'fork' },
+    })
+  })
+
+  it('omits remote from git.fetch when there is no pushTarget', async () => {
+    await createGitRealApi().fetch({ worktreePath: '/tmp/repo' })
+    // 缺省时不能发 `remote: undefined` 以外的东西，也不能兜一个 'origin'：
+    // 那会覆盖 git 自己按 upstream 选 remote 的行为。
+    expect(invokeMock).toHaveBeenLastCalledWith('git_fetch', { args: { worktreePath: '/tmp/repo' } })
   })
 })
 

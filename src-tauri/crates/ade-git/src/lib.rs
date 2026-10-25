@@ -7,6 +7,7 @@ pub mod diff;
 pub mod history;
 pub mod porcelain;
 pub mod ref_entry;
+pub mod remote_ops;
 pub mod runner;
 pub mod staging;
 pub mod status;
