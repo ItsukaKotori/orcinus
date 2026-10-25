@@ -257,16 +257,23 @@ describe('buildBranchTreeRows', () => {
 })
 
 describe('ownerByBranch', () => {
-  it('跳过无 branch 的条目；同分支多 worktree 取第一个', () => {
+  it('跳过无 branch 的条目；同分支多 worktree 取第一个；hostId 随 owner 带出', () => {
     const worktrees = [
-      { id: 'r::/a', branch: 'main', displayName: 'A', path: '/a' },
+      { id: 'r::/a', branch: 'main', displayName: 'A', path: '/a', hostId: 'host-1' },
       { id: 'r::/b', branch: 'feature/login', displayName: 'B', path: '/b' },
       { id: 'r::/c', branch: '', displayName: 'C', path: '/c' },
       { id: 'r::/d', branch: 'main', displayName: 'D', path: '/d' },
     ] as unknown as Worktree[]
     const map = ownerByBranch(worktrees)
     expect([...map.keys()]).toEqual(['main', 'feature/login'])
-    expect(map.get('main')).toEqual({ worktreeId: 'r::/a', displayName: 'A', path: '/a' })
+    // 激活跨宿主 workspace 时必须把 hostId 传回去（setActiveWorktree 不自己推导）。
+    expect(map.get('main')).toEqual({
+      worktreeId: 'r::/a',
+      displayName: 'A',
+      path: '/a',
+      hostId: 'host-1',
+    })
+    expect(map.get('feature/login')?.hostId).toBeUndefined()
   })
 
   it('空列表 → 空 Map', () => {

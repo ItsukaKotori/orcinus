@@ -42,13 +42,18 @@ export function Toolbar({
   const date = (key: 'since' | 'until') => (e: ChangeEvent<HTMLInputElement>) =>
     onFilterChange({ [key]: e.target.value || undefined })
 
-  // 高亮：filter.refs 缺省/'head' → 导航行；'all' → All Branches；否则按短名回推 refname。
+  /**
+   * 高亮：filter.refs 存的是**短名**（它同时是 `git_log_query` 的 revision 参数），
+   * 而树里行 id 用的是 `fullName`。从 refs 回推真 refname ——
+   * 拼 `ref:refs/heads/${name}` 会让 remote 行（refs/remotes/…）与 tag 行（refs/tags/…）
+   * 永不匹配，选中后重开弹层无任何高亮反馈。
+   */
   const activeValue =
     filter.refs === undefined || filter.refs === 'head'
       ? 'row:head-current'
       : filter.refs === 'all'
         ? 'row:all-branches'
-        : `ref:refs/heads/${filter.refs}`
+        : `ref:${refs.find((r) => r.name === filter.refs)?.fullName ?? ''}`
 
   return (
     <div className="flex flex-col gap-2 border-b border-border px-3 py-2 text-sm">

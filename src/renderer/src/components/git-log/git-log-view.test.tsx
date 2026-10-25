@@ -28,6 +28,15 @@ const FEATURE: GitRefEntry = {
   isHead: false,
 }
 
+const ORIGIN_MAIN: GitRefEntry = {
+  name: 'origin/main',
+  fullName: 'refs/remotes/origin/main',
+  category: 'remote',
+  remote: 'origin',
+  oid: '0'.repeat(40),
+  isHead: false,
+}
+
 function fakeRepo() {
   const calls: { filter: GitLogFilter; skip: number }[] = []
   let refsCalls = 0
@@ -38,7 +47,7 @@ function fakeRepo() {
     },
     loadRefs: () => {
       refsCalls += 1
-      const result: GitRefs = { refs: [FEATURE], truncated: false }
+      const result: GitRefs = { refs: [FEATURE, ORIGIN_MAIN], truncated: false }
       return Promise.resolve(result)
     },
     loadCommitFiles: () => Promise.resolve([]),
@@ -171,6 +180,30 @@ describe('GitLogView (native)', () => {
     expect(
       mustFindInPopover('[data-testid="branch-row-row:head-current"]').getAttribute('aria-selected')
     ).toBe('true')
+  })
+
+  it('选中 remote 分支后重开弹层，高亮跟着该 remote 行', async () => {
+    // 行 id 用 fullName，而 filter.refs 存的是短名（它是 revision 参数）。
+    // 拼 `ref:refs/heads/${name}` 会让 remote / tag 行永不匹配。
+    const { repo } = fakeRepo()
+    await act(async () => {
+      root.render(<GitLogView repository={repo} />)
+    })
+    await flush()
+    await openPicker()
+    await pickRow('branch-row-ref:refs/remotes/origin/main')
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 400))
+    })
+    await openPicker()
+    expect(
+      mustFindInPopover('[data-testid="branch-row-ref:refs/remotes/origin/main"]').getAttribute(
+        'aria-selected'
+      )
+    ).toBe('true')
+    expect(
+      mustFindInPopover('[data-testid="branch-row-row:head-current"]').getAttribute('aria-selected')
+    ).toBe('false')
   })
 
   it('左栏已删除：不打开弹层时页面里没有分支树', async () => {

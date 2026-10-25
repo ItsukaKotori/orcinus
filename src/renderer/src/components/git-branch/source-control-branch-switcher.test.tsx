@@ -10,14 +10,21 @@ import { SourceControlBranchSwitcher } from './source-control-branch-switcher'
 
 const worktrees: Worktree[] = [
   { id: 'r::/a', repoId: 'r', branch: 'main', displayName: 'A', path: '/a' },
-  { id: 'r::/b', repoId: 'r', branch: 'dev', displayName: 'B', path: '/b' },
+  { id: 'r::/b', repoId: 'r', branch: 'dev', displayName: 'B', path: '/b', hostId: 'host-2' },
+  // 另一个仓也有 `main`。owner 映射若跳 repo 汇总，它会把本仓 main 的归属顶掉。
+  { id: 'other::/x', repoId: 'other', branch: 'main', displayName: 'OTHER', path: '/x' },
 ] as unknown as Worktree[]
 
 const state = {
-  worktreesByRepo: { r: worktrees },
-  setActiveWorktree: vi.fn(),
+  worktreesByRepo: { r: worktrees.filter((w) => w.repoId === 'r'), other: worktrees.filter((w) => w.repoId === 'other') },
   openModal: vi.fn(),
 }
+
+const activate = vi.fn(
+  (_id: string, _opts?: { executionHostId?: string }): { primaryTabId: string | null } => ({
+    primaryTabId: null,
+  })
+)
 
 vi.mock('@/store', () => {
   const useAppStore = Object.assign(
@@ -26,6 +33,13 @@ vi.mock('@/store', () => {
   )
   return { useAppStore }
 })
+
+vi.mock('@/lib/worktree-activation', () => ({
+  activateAndRevealWorktree: (
+    id: string,
+    opts?: { executionHostId?: string }
+  ): { primaryTabId: string | null } => activate(id, opts),
+}))
 
 const refs = vi.fn()
 
@@ -46,8 +60,8 @@ beforeEach(() => {
   host = document.createElement('div')
   document.body.append(host)
   root = createRoot(host)
-  state.setActiveWorktree.mockReset()
   state.openModal.mockReset()
+  activate.mockReset().mockReturnValue({ primaryTabId: null })
   refs.mockReset().mockResolvedValue({
     refs: [
       entry({ name: 'main', isHead: true }),
@@ -129,18 +143,38 @@ describe('SourceControlBranchSwitcher', () => {
     expect(refs).toHaveBeenCalledWith({ worktreePath: '/a' })
   })
 
-  it('点有 owner 的分支 → setActiveWorktree(该 worktreeId)，且不开新建 composer', async () => {
+  it('点有 owner 的分支 → activateAndRevealWorktree(id, {executionHostId})，且不开 composer', async () => {
     await openSwitcher()
     await click(rowInPopover('branch-row-ref:refs/heads/dev'))
-    expect(state.setActiveWorktree).toHaveBeenCalledTimes(1)
-    expect(state.setActiveWorktree.mock.calls[0]?.[0]).toBe('r::/b')
+    expect(activate).toHaveBeenCalledTimes(1)
+    expect(activate.mock.calls[0]?.[0]).toBe('r::/b')
+    // 宿主必须跟着走：裸 setActiveWorktree 会把 activeWorkspaceExecutionHostId 写成 null，
+    // 跨宿主 workspace 的 tab 会被打戳成 local。
+    expect(activate.mock.calls[0]?.[1]).toEqual({ executionHostId: 'host-2' })
     expect(state.openModal).not.toHaveBeenCalled()
+  })
+
+  it('同宿主 workspace 把 hostId 原样透传（缺省就是 undefined，不兜成某个具体宿主）', async () => {
+    await openSwitcher()
+    await click(rowInPopover('branch-row-ref:refs/heads/main'))
+    expect(activate.mock.calls[0]?.[0]).toBe('r::/a')
+    expect(activate.mock.calls[0]?.[1]).toEqual({ executionHostId: undefined })
+  })
+
+  it('跳 repo：当前仓的 main 归属自己仓的 workspace，不被别仓同名分支顶掉', async () => {
+    await openSwitcher()
+    const el = rowInPopover('branch-row-ref:refs/heads/main')
+    // 两仓都有 main。若 owner 是全仓汇总，这里会是 'OTHER'（first-wins 取决于 Map 插入序）。
+    expect(el.getAttribute('title')).toContain('A')
+    expect(el.getAttribute('title')).not.toContain('OTHER')
+    await click(el)
+    expect(activate.mock.calls[0]?.[0]).toBe('r::/a')
   })
 
   it('点无 owner 的分支 → 打开 composer 并预填 initialBaseBranch', async () => {
     await openSwitcher()
     await click(rowInPopover('branch-row-ref:refs/heads/fresh'))
-    expect(state.setActiveWorktree).not.toHaveBeenCalled()
+    expect(activate).not.toHaveBeenCalled()
     expect(state.openModal).toHaveBeenCalledWith('new-workspace-composer', {
       initialRepoId: 'r',
       initialBaseBranch: 'fresh',
@@ -155,13 +189,13 @@ describe('SourceControlBranchSwitcher', () => {
       'new-workspace-composer',
       expect.objectContaining({ initialBaseBranch: 'origin/main' })
     )
-    expect(state.setActiveWorktree).not.toHaveBeenCalled()
+    expect(activate).not.toHaveBeenCalled()
   })
 
   it('点 HEAD (Current Branch) 导航行不触发任何动作（本宿主无 view-in-log，主动作不存在）', async () => {
     await openSwitcher()
     await click(rowInPopover('branch-row-row:head-current'))
-    expect(state.setActiveWorktree).not.toHaveBeenCalled()
+    expect(activate).not.toHaveBeenCalled()
     expect(state.openModal).not.toHaveBeenCalled()
   })
 

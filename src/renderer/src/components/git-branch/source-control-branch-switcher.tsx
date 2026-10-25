@@ -1,17 +1,18 @@
 import { useMemo, useState } from 'react'
 import { useAppStore } from '@/store'
 import { findWorktreeById } from '@/store/slices/worktree-helpers'
+import { activateAndRevealWorktree } from '@/lib/worktree-activation'
 import { translate } from '@/i18n/i18n'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { GitRefEntry } from '../../../../shared/git-ref-types'
 import { BranchRefTree } from './branch-ref-tree'
-import { ownerByBranch, type BranchWorkspaceOwner } from './branch-tree-model'
+import { ownerByBranch } from './branch-tree-model'
 import { primaryBranchAction, type BranchActionContext } from './branch-actions'
 import { useBranchRefs } from './use-branch-refs'
 
 export type SourceControlBranchSwitcherProps = {
   worktreeId: string
-  /** 触发器内容（分支名元素）。由宿主渲染，保持 `HeadIdentity` 现有样式与 tooltip。 */
+  /** 触发器内容（分支名元素）。由宿主渲染，保持 `HeadIdentity` 的字号与截断样式。 */
   children: React.ReactNode
 }
 
@@ -31,42 +32,48 @@ export function SourceControlBranchSwitcher({
 }: SourceControlBranchSwitcherProps): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const worktree = useAppStore((s) => findWorktreeById(s.worktreesByRepo, worktreeId))
-  const worktreesByRepo = useAppStore((s) => s.worktreesByRepo)
-  const setActiveWorktree = useAppStore((s) => s.setActiveWorktree)
   const openModal = useAppStore((s) => s.openModal)
+
+  // owner 只算**当前 repo** 的 worktree。全仓扫会让另一个仓的同名分支
+  // （两个仓都有 `main` 是多仓用户的常态）顶掉本仓的归属，点一下跳去错仓的 workspace。
+  const repoId = worktree?.repoId ?? ''
+  const repoWorktrees = useAppStore((s) => s.worktreesByRepo[repoId])
 
   const { refs, truncated, loading, error } = useBranchRefs(
     open ? (worktree?.path ?? null) : null
   )
 
-  const owners = useMemo(() => ownerByBranch(Object.values(worktreesByRepo).flat()), [worktreesByRepo])
+  const owners = useMemo(() => ownerByBranch(repoWorktrees ?? []), [repoWorktrees])
 
   const ctx = useMemo<BranchActionContext>(() => {
-    const ownerOf = (branchName: string): BranchWorkspaceOwner | null =>
-      owners.get(branchName) ?? null
     return {
       headBranch: worktree?.branch || null,
-      ownerOf,
+      ownerOf: (branchName) => owners.get(branchName) ?? null,
       activateWorkspace: (owner) => {
         setOpen(false)
-        // 不传 executionHostId：store 会从该 worktree 自己的 identity 推出宿主，
-        // 与侧栏跳转同一条路径。
-        setActiveWorktree(owner.worktreeId)
+        // 走 activateAndRevealWorktree 而不是裸 setActiveWorktree：后者把
+        // `activeWorkspaceExecutionHostId` 写成 `executionHostId ?? null`（**不**从
+        // worktree identity 推导），漏传宿主会把跨宿主 workspace 的 tab 打戳成 local；
+        // 它也不管 setActiveRepo / setActiveView / reveal / 访问记录。
+        // 返回 false = 弹层打开到点击之间该 workspace 已被删，静默吞掉。
+        activateAndRevealWorktree(owner.worktreeId, { executionHostId: owner.hostId })
       },
       newWorkspaceFrom: (ref: GitRefEntry) => {
         setOpen(false)
         openModal('new-workspace-composer', {
-          initialRepoId: worktree?.repoId,
-          // remote / tag 条目也走这里：composer 把它当 start-point 解析。
+          initialRepoId: repoId,
+          // remote / tag 条目也走这里：composer 把它当 base branch / start-point 解析
+          // （既有测试用 `origin/feature/x` 与 `refs/pull/42/head` 作 base 通过）。
           initialBaseBranch: ref.name,
           telemetrySource: 'source_control_branch_menu',
         })
       },
     }
-  }, [owners, setActiveWorktree, openModal, worktree?.branch, worktree?.repoId])
+  }, [owners, openModal, repoId, worktree?.branch])
 
   // 解析不出 worktree（元数据未到位 / 已被移除）时不接弹层 —— 一个打不开的
-  // 触发器比没有触发器更糟。
+  // 触发器比没有触发器更糟。宿主在面板 ready 时才渲染本组件，此时 activeWorktreeId
+  // 必然可解析，这条分支只是防御。
   if (!worktree) return <>{children}</>
 
   return (

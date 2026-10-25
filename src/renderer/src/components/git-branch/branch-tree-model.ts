@@ -1,4 +1,5 @@
 import type { GitRefEntry } from '../../../../shared/git-ref-types'
+import type { ExecutionHostId } from '../../../../shared/execution-host'
 import type { Worktree } from '../../../../shared/worktree/types'
 
 /** 检出某分支的 ade workspace。前端从 store 算，advisory（spec §6.4）。 */
@@ -6,6 +7,12 @@ export type BranchWorkspaceOwner = {
   worktreeId: string
   displayName: string
   path: string
+  /**
+   * 宿主 id。激活一个跨宿主 workspace 时必须把它传回去 ——
+   * `setActiveWorktree` 把第二参缺省当作 `null`（不从 worktree identity 推导），
+   * 漏传会把 tab 打戳成 local 宿主。见 `store/slices/worktrees/session/set-active-worktree.ts`。
+   */
+  hostId?: ExecutionHostId
 }
 
 export type BranchTreeRow =
@@ -152,9 +159,14 @@ function headUpstreamName(
 /**
  * 分支短名 → 检出它的 workspace。
  *
- * 无 branch 的条目（bare / detached / 读不到 refname 的 worktree）跳过；
- * 同一分支被多个 worktree 检出时取第一个 —— git 本身禁止这种状态，
- * 出现即说明元数据已漂移，此处不做仲裁。
+ * **调用方必须把 `worktrees` 限定到 ref 所属的那个 repo。**
+ * `Worktree.branch` 只是短名，两个 repo 都有 `main` 是多仓用户的常态；
+ * 把全仓 worktree 压进一个按短名索引的 Map 会让当前仓的 `main`
+ * 显示（并跳转）到另一个仓的 workspace。
+ *
+ * 无 branch 的条目（bare / detached / 读不到 refname）跳过；
+ * 同一 repo 内同分支多 worktree 取第一个 —— git 本身禁止这种状态，
+ * 出现即元数据已漂移，此处不做仲裁。
  */
 export function ownerByBranch(
   worktrees: readonly Worktree[]
@@ -166,6 +178,7 @@ export function ownerByBranch(
       worktreeId: wt.id,
       displayName: wt.displayName,
       path: wt.path,
+      hostId: wt.hostId,
     })
   }
   return out
