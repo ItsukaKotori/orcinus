@@ -733,7 +733,17 @@
         "checkedOutIn": "已在「{{workspace}}」检出",
         "switchTo": "切换到该分支",
         "newWorkspaceFrom": "从该分支新建工作区…",
-        "viewInGitLog": "在 Git 日志中查看"
+        "viewInGitLog": "在 Git 日志中查看",
+        "checkout": "检出",
+        "checkoutConfirmTitle": "检出分支？",
+        "checkoutTarget": "将检出：{{branch}}",
+        "checkoutCreatesTracking": "并创建本地分支 {{name}}，跟踪 {{remote}}",
+        "checkoutDirtyCount": "{{count}} 个未提交改动",
+        "checkoutWillCarry": "git 会把它们带到目标分支；若有文件会被覆盖，git 将拒绝本次检出。",
+        "checkoutSessionCount": "该工作区有 {{count}} 个运行中的终端/会话",
+        "checkoutCancel": "取消",
+        "checkoutInvalid": "无效的检出目标。",
+        "checkoutOccupiedExternally": "该分支已在另一个工作区检出：{{path}}"
       },
       "CodexRestartChip": {
         "c72a5fb234": "重新启动",

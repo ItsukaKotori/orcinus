@@ -898,7 +898,17 @@
         "checkedOutIn": "checked out in {{workspace}}",
         "switchTo": "Switch to this branch",
         "newWorkspaceFrom": "New Workspace from Branch…",
-        "viewInGitLog": "View in Git Log"
+        "viewInGitLog": "View in Git Log",
+        "checkout": "Checkout",
+        "checkoutConfirmTitle": "Checkout branch?",
+        "checkoutTarget": "Will check out: {{branch}}",
+        "checkoutCreatesTracking": "and create local branch {{name}} tracking {{remote}}",
+        "checkoutDirtyCount": "{{count}} uncommitted change(s)",
+        "checkoutWillCarry": "git will carry them to the target branch; if any file would be overwritten, git will refuse this checkout.",
+        "checkoutSessionCount": "This workspace has {{count}} running terminal(s)/session(s)",
+        "checkoutCancel": "Cancel",
+        "checkoutInvalid": "Invalid checkout target.",
+        "checkoutOccupiedExternally": "This branch is checked out in another worktree: {{path}}"
       },
       "BrowserCookieImportDisclosure": {},
       "CodexRestartChip": {
