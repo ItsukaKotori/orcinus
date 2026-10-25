@@ -56,7 +56,7 @@ Git Log 原生视图另有一份分支列表 `RefPanel`（`src/renderer/src/comp
 | New Worktree from… | `openModal('new-workspace-composer', { initialRepoId, initialBaseBranch })`（`NewWorkspaceComposerModal.tsx` 的 `ComposerModalData`） | ✅ 现成 |
 | Show Diff with Working Tree | `git_branch_diff` / `git_branch_compare` + `openBranchAllDiffs` | ✅ 现成 |
 | Push… | `git_push` + `pushBranch(worktreeId, worktreePath, …)`（`store/slices/editor/actions/git-remote-push-pull.ts`） | ✅ 现成 |
-| Update | `pullRuntimeGit` / `fastForwardRuntimeGit`（`runtime/runtime-git-sync-client.ts`）存在，但签名吃 `RuntimeGitContext`，绑当前 worktree | ⚠️ 需参数化 |
+| Update | ~~`pullRuntimeGit` / `fastForwardRuntimeGit` 存在，但签名绑当前 worktree~~ **【2026-10-25 更正：此行为错】** | ❌ **全新命令**（见 §3.7） |
 | Delete | 逻辑只存在于 `ade-git/src/worktree_remove.rs:147`（`["branch", flag, "--", branch_name]`）的私有函数 + checked-out 拒绝处理 | ⚠️ 需抽公共 |
 | New Branch from… | 只有随 worktree 创建时 `--no-track -b`（`worktree_create.rs`） | ❌ 全新命令 |
 | Tracked Branch（设 upstream） | 只有 `ensure_push_auto_setup_remote` / `branch.<b>.base`（`worktree_create.rs`） | ❌ 全新命令 |
@@ -113,7 +113,29 @@ Git Log 原生视图另有一份分支列表 `RefPanel`（`src/renderer/src/comp
 → `callRuntimeRpc(target, 'git.pull', …)` 那条远程分支在当前 Tauri 构建里就是 unimplemented。
 新增写命令只需做本地 `window.api.git.*` 一条路，处境与现有 push/pull 完全一致，不引入新的不对称。
 
-### 3.7 已知脆弱点（本设计要避开，不要加剧）
+### 3.7 重大更正：fetch / pull / fastForward 在当前构建里根本没有后端命令
+
+初版 §3.1 把 Update 判为「现成，只需参数化」，**这是错的**，2026-10-25 逐环节核实：
+
+- `specta_export.rs` 里注册的 22 个 `git_*` 命令**不含** `git_fetch` / `git_pull` / `git_fast_forward`
+  （`git_push` 在，所以 Push 是活的）。
+- `src/bridge/real/git.ts` 的 real 映射也没有 `fetch` / `pull` / `fastForward` /
+  `syncFork` / `rebaseFromBase`，其文件头注释自述这些「stays on the rejecting
+  `withMethodFallback` surface」。
+- 而 `runtime-git-sync-client.ts:72 / :117 / :142` 的**本地分支**照旧调
+  `window.api.git.fetch/pull/fastForward` → 全部 reject。
+
+结论：**Fetch / Pull / Fast-forward / Fork-sync / Rebase-from-base 在当前 Tauri 构建里是死路径**
+（远程分支另按 §3.6 也是 unimplemented）。这是**先于本特性存在**的缺口，不是本增量引入。
+
+对本设计的影响：
+- §9「Update 不新增命令，只把 `pullRuntimeGit` 参数化」**不成立**。Update 需要先补
+  `git_fetch` + `git_pull`（或 `git_pull --ff-only`）两条真命令。
+- 因此 **Update 从增量 2 移出**，单列为一个前置项（它同时修好了面板上现有的
+  pull / sync 按钮，收益超出分支树范围）。
+- Push 不受影响（`git_push` 真实存在）。
+
+### 3.8 已知脆弱点（本设计要避开，不要加剧）
 
 `src/shared/git-branch-delete-refusal.ts` 靠**文本匹配** git stderr 判断拒绝原因
 （`worktree_remove.rs:260`：`text.contains("branch") && text.contains("is checked out")`）。
@@ -323,7 +345,12 @@ Remote / Tag 节点不出现 `Rename / Delete / Update / Push / Set Upstream`。
 
 ### 8.1 类型化拒绝，不复用文本匹配
 
-新命令在 Rust 侧分类，回传结构化错误而非字符串猜测（避开 §3.7 的脆弱点）：
+新命令在 Rust 侧分类，回传结构化错误而非字符串猜测（避开 §3.8 的脆弱点）：
+
+> **但注意（§13.5 补）**：`BridgeError` 的 `Serialize` 把所有变体压成 `{ message: string }`，
+> 类型信息全丢。所以下面这个枚举**不能**经 `BridgeError` 透出，必须作为
+> `Ok(结果结构体)` 的软错误字段返回（仓库先例：`GitBranchCompareSummary.status` +
+> `error_message`，见 `ade-git/src/compare.rs:49-63`）。
 
 ```rust
 pub enum BranchOperationRefusal {
@@ -379,8 +406,9 @@ in-flight 期间：该行行尾 spinner（对齐 `branch-context-row.tsx` 已有
 | `git_branch_create` | `git branch -- <name> <start-point>` | 名走 `resolve_create_branch_name` 已有的 `check-ref-format --branch` + `-` 前缀拒绝；`NameTaken` 与 `CheckedOut` 复核 |
 | `git_branch_set_upstream` | `git branch --set-upstream-to=<upstream> -- <name>` | upstream 必须存在于 `refs/remotes/*`，否则 `UpstreamMissing` |
 | `git_branch_rename` | `git branch -m -- <old> <new>` | 执行前 `worktree_list` 复核 → `CheckedOut`；新名走同一校验 |
+| ~~`Update` 的参数化~~ | ~~无新命令~~ | **作废**：`git_fetch` / `git_pull` 根本不存在（§3.7）。Update 需先补这两条真命令，已拆出本 spec |
 | `delete_branch`（抽公共，非新 tauri 命令） | `git branch -d/-D -- <name>` | 从 `worktree_remove.rs:147` 抽出，保留 `-d` 失败时区分「未合并」与「被检出」；`worktree_remove` 改为调用它 |
-| `pull` / `fastForward` 参数化 | 无新命令 | `RuntimeGitContext` 允许显式传目标 `worktreeId/worktreePath`；**当前 worktree 行为逐字节不变** |
+| ~~`pull` / `fastForward` 参数化~~ | ~~无新命令~~ | **作废**（§3.7）：没有可参数化的东西 —— `git_pull` / `git_fetch` 从未存在 |
 
 三个新 tauri 命令须走 §3.5 的 7 面镜像清单。
 
