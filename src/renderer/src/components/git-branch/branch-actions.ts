@@ -48,7 +48,10 @@ export const BRANCH_ACTIONS: readonly BranchAction[] = [
     label: () => translate('auto.components.git-branch.switchTo', 'Switch to this branch'),
     visible: (row, ctx) => {
       const ref = refOf(row)
-      return ref !== null && ref.category === 'local' && ctx.ownerOf(ref.name) !== null
+      // 复用 branchActionForRef 而不是重抄一遍谓词：它是 owner 判定的唯一入口。
+      // 重拄会让增量 2 的菜单出现「列了 Switch、点下去走 New Workspace」的缝隙
+      // （例如宿主把 ownerOf 写成返回 undefined 而非 null）。
+      return ref !== null && branchActionForRef(ref, ctx.ownerOf) === 'switch'
     },
     run: (row, ctx) => {
       const ref = refOf(row)

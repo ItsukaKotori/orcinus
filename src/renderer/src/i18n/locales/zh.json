@@ -731,7 +731,6 @@
         "behindOnlyLabel": "落后 {{behind}}",
         "inSyncLabel": "与 {{upstream}} 同步",
         "checkedOutIn": "已在「{{workspace}}」检出",
-        "upstreamOfHead": "{{branch}} 的上游",
         "switchTo": "切换到该分支",
         "newWorkspaceFrom": "从该分支新建工作区…",
         "viewInGitLog": "在 Git 日志中查看"

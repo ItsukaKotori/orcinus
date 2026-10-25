@@ -76,7 +76,7 @@ export function Toolbar({
             <BranchRefTree
               refs={refs}
               truncated={refsTruncated}
-              headBranch={branch}
+              headBranch={branch || null}
               includeAllBranchesRow
               activeValue={activeValue}
               onActivate={(row) => {

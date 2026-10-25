@@ -1,3 +1,4 @@
+import { branchName } from '@/lib/git-utils'
 import type { GitRefEntry } from '../../../../shared/git-ref-types'
 import type { ExecutionHostId } from '../../../../shared/execution-host'
 import type { Worktree } from '../../../../shared/worktree/types'
@@ -89,6 +90,15 @@ export type BuildBranchTreeInput = {
   checkedOutByBranch?: ReadonlyMap<string, BranchWorkspaceOwner>
   /** 宿主 B（Git Log）注入 `All Branches` 行；宿主 A 不注入。 */
   includeAllBranchesRow?: boolean
+  /**
+   * 当前分支的 upstream 短名，用于 `★`。
+   *
+   * 宿主应从**未过滤**的完整 ref 列表算出它再传进来：否则搜索抹掉 upstream
+   * 那一条时 ★ 会跟着消失，而同一行的 `HEAD (Current Branch)` 导航行却是
+   * 刻意设计成过滤态存活的 —— 两者口径不自洽。
+   * 缺省（undefined）时回退到在 `refs` 里现算，供单测与简单宿主使用。
+   */
+  headUpstream?: string | null
 }
 
 type Bucket = {
@@ -141,26 +151,17 @@ function byRemote(refs: GitRefEntry[]): Array<[string, GitRefEntry[]]> {
   return [...out.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
 }
 
-/** 当前分支的 upstream 短名（`origin/main`），用于 `★` 标记。
- *
- * Why 两个输入：`head` 来自 git 自己报的 `%(HEAD)`，`headBranch` 来自 store 的
- * `Worktree.branch`。两者**必须同源**（同一个分支）；不一致就是元数据漂移，
- * 会出现「HEAD 合成行代表 main，但 ★ 按 dev 的 upstream 算」。宿主有责任传同源值
- * （见 spec §6.4：前端标记是 advisory）。
- */
-function headUpstreamName(
-  refs: readonly GitRefEntry[],
-  headBranch: string | null | undefined
-): string | null {
-  if (!headBranch) return null
-  return refs.find((r) => r.category === 'local' && r.name === headBranch)?.upstream ?? null
-}
-
 /**
  * 分支短名 → 检出它的 workspace。
  *
+ * **`Worktree.branch` 生产形态是完整 ref**（`ade-git::porcelain` 原样存
+ * `git worktree list` 的 `branch refs/heads/main`，`status.rs` 更是显式
+ * `format!("refs/heads/{value}")`），而 `GitRefEntry.name` 是短名。
+ * 所以这里必须先用 `branchName()` 剥前缀 —— 否则键是 `refs/heads/main`、
+ * 查的是 `main`，永远 miss，▣ 徽标与 Switch 动作在生产环境全部失效。
+ *
  * **调用方必须把 `worktrees` 限定到 ref 所属的那个 repo。**
- * `Worktree.branch` 只是短名，两个 repo 都有 `main` 是多仓用户的常态；
+ * `Worktree.branch` 剥完前缀只是短名，两个 repo 都有 `main` 是多仓用户的常态；
  * 把全仓 worktree 压进一个按短名索引的 Map 会让当前仓的 `main`
  * 显示（并跳转）到另一个仓的 workspace。
  *
@@ -173,8 +174,9 @@ export function ownerByBranch(
 ): Map<string, BranchWorkspaceOwner> {
   const out = new Map<string, BranchWorkspaceOwner>()
   for (const wt of worktrees) {
-    if (!wt.branch || out.has(wt.branch)) continue
-    out.set(wt.branch, {
+    const short = wt.branch ? branchName(wt.branch) : ''
+    if (!short || out.has(short)) continue
+    out.set(short, {
       worktreeId: wt.id,
       displayName: wt.displayName,
       path: wt.path,
@@ -197,10 +199,16 @@ export function buildBranchTreeRows(input: BuildBranchTreeInput): BranchTreeRow[
     headBranch = null,
     checkedOutByBranch = new Map<string, BranchWorkspaceOwner>(),
     includeAllBranchesRow = false,
+    headUpstream,
   } = input
 
-  const headName = headBranch ?? refs.find((r) => r.isHead)?.name ?? null
-  const upstream = headUpstreamName(refs, headName)
+  // 空串不算「知道当前分支」：必须走 `||` 而不是 `??`，否则宿主传了个初值 `''`
+  // 会把 isHead 回落压掉，导航行与 ★ 双双消失。
+  const headName = headBranch?.trim() || refs.find((r) => r.isHead)?.name || null
+  const upstream =
+    headUpstream !== undefined
+      ? headUpstream
+      : (refs.find((r) => r.category === 'local' && r.name === headName)?.upstream ?? null)
   const rows: BranchTreeRow[] = []
 
   if (includeAllBranchesRow) {

@@ -896,7 +896,6 @@
         "behindOnlyLabel": "{{behind}} behind",
         "inSyncLabel": "in sync with {{upstream}}",
         "checkedOutIn": "checked out in {{workspace}}",
-        "upstreamOfHead": "upstream of {{branch}}",
         "switchTo": "Switch to this branch",
         "newWorkspaceFrom": "New Workspace from Branch…",
         "viewInGitLog": "View in Git Log"

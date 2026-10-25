@@ -65,16 +65,29 @@ export function BranchRefTree({
     [refs, query]
   )
 
+  /**
+   * ★ 的源必须来自**未过滤**的 refs：否则搜 `log` 时 `main` 被抹掉，
+   * 它的 upstream 也查不到，★ 跟着消失 —— 而同一行的 `HEAD (Current Branch)`
+   * 导航行却是刻意设计成过滤态存活的，两者口径不自洽。
+   */
+  const headUpstream = useMemo(() => {
+    const head = refs.find((r) => r.isHead)
+    const name = headBranch?.trim() || head?.name || null
+    if (!name) return null
+    return refs.find((r) => r.category === 'local' && r.name === name)?.upstream ?? null
+  }, [refs, headBranch])
+
   const rows = useMemo(
     () =>
       buildBranchTreeRows({
         refs: visibleRefs,
         collapsed,
         headBranch,
+        headUpstream,
         checkedOutByBranch,
         includeAllBranchesRow,
       }),
-    [visibleRefs, collapsed, headBranch, checkedOutByBranch, includeAllBranchesRow]
+    [visibleRefs, collapsed, headBranch, headUpstream, checkedOutByBranch, includeAllBranchesRow]
   )
 
   // 空态判据是「没有 ref 行」而不是「没有任何行」：`HEAD (Current Branch)` 这类
@@ -282,14 +295,15 @@ function RowTrailing({ row }: { row: BranchTreeRow }): React.JSX.Element | null 
     <>
       {badge}
       <span
-        className="shrink-0 space-x-1 tabular-nums text-[10px] text-muted-foreground"
+        className="flex shrink-0 items-center gap-1 tabular-nums text-[10px] text-muted-foreground"
         aria-hidden="true"
       >
         {/* 单边缺省时只渲染该边。`?? 0` 会把「仅领先」显示成 `↑2 ↓0`，
             与同一行的 tooltip（走 aheadOnlyLabel → "2 ahead"）口径不一致，
-            且 `↓0` 会被读成「落后 0」的误导。 */}
-        {ahead != null ? `↑${ahead}` : null}
-        {behind != null ? `↓${behind}` : null}
+            且 `↓0` 会被读成「落后 0」的误导。
+            各自包 span：`gap-1` 只作用于**元素**子节点，两个裸文本节点会黏成 `↑2↓1`。 */}
+        {ahead != null ? <span>{`↑${ahead}`}</span> : null}
+        {behind != null ? <span>{`↓${behind}`}</span> : null}
       </span>
     </>
   )
@@ -309,26 +323,45 @@ function rowLabel(row: BranchTreeRow): string {
 
 function rowTitle(row: BranchTreeRow): string | undefined {
   if (row.kind === 'ref') {
-    if (row.checkedOutBy) {
-      return translate('auto.components.git-branch.checkedOutIn', 'checked out in {{workspace}}', {
-        workspace: row.checkedOutBy.displayName,
-      })
-    }
     const { ahead, behind, upstream } = row.ref
+    // 计数 tooltip 与 ▣ tooltip **不互斥**：旧写法在 owner 分支提前 return，
+    // 让既有 ▣ 又显示 `↑2 ↓1` 的行丢掉计数解释 —— 同一行内已渲染的信息被覆盖。
+    const parts: string[] = []
     if (ahead != null && behind != null) {
-      return translate(
-        'auto.components.git-branch.aheadBehindLabel',
-        '{{ahead}} ahead, {{behind}} behind',
-        { ahead, behind }
+      parts.push(
+        translate(
+          'auto.components.git-branch.aheadBehindLabel',
+          '{{ahead}} ahead, {{behind}} behind',
+          { ahead, behind }
+        )
+      )
+    } else if (ahead != null) {
+      parts.push(
+        translate('auto.components.git-branch.aheadOnlyLabel', '{{ahead}} ahead', { ahead })
+      )
+    } else if (behind != null) {
+      parts.push(
+        translate('auto.components.git-branch.behindOnlyLabel', '{{behind}} behind', { behind })
+      )
+    } else if (upstream) {
+      // 有 upstream 且无偏差 = 同步。旧写法 `return upstream` 把裸 refname 当 tooltip，
+      // 信息量为零，也让 inSyncLabel 沦为死 key。
+      parts.push(
+        translate('auto.components.git-branch.inSyncLabel', 'in sync with {{upstream}}', {
+          upstream,
+        })
       )
     }
-    if (ahead != null) {
-      return translate('auto.components.git-branch.aheadOnlyLabel', '{{ahead}} ahead', { ahead })
+    if (row.checkedOutBy) {
+      parts.push(
+        translate('auto.components.git-branch.checkedOutIn', 'checked out in {{workspace}}', {
+          // spec §7.1 要求 tooltip 给 displayName **+ path**：多仓同名 workspace 时
+          // 只给名字分不开。
+          workspace: `${row.checkedOutBy.displayName} (${row.checkedOutBy.path})`,
+        })
+      )
     }
-    if (behind != null) {
-      return translate('auto.components.git-branch.behindOnlyLabel', '{{behind}} behind', { behind })
-    }
-    return upstream ?? undefined
+    return parts.length ? parts.join(' · ') : undefined
   }
   if (row.kind === 'group') return `${row.labelFallback} (${row.childCount})`
   return undefined

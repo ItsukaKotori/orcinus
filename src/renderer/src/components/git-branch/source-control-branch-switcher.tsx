@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useAppStore } from '@/store'
 import { findWorktreeById } from '@/store/slices/worktree-helpers'
 import { activateAndRevealWorktree } from '@/lib/worktree-activation'
+import { branchName } from '@/lib/git-utils'
 import { translate } from '@/i18n/i18n'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { GitRefEntry } from '../../../../shared/git-ref-types'
@@ -47,8 +48,10 @@ export function SourceControlBranchSwitcher({
 
   const ctx = useMemo<BranchActionContext>(() => {
     return {
-      headBranch: worktree?.branch || null,
-      ownerOf: (branchName) => owners.get(branchName) ?? null,
+      // `Worktree.branch` 生产形态是**完整 ref**（`refs/heads/main`），而树里比的是短名。
+      // 不剥前缀的话 `headUpstream` 永远查不到，★ 一条都不出。
+      headBranch: branchName(worktree?.branch ?? '') || null,
+      ownerOf: (shortName) => owners.get(shortName) ?? null,
       activateWorkspace: (owner) => {
         setOpen(false)
         // 走 activateAndRevealWorktree 而不是裸 setActiveWorktree：后者把

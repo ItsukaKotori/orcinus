@@ -8,11 +8,14 @@ import { SourceControlBranchSwitcher } from './source-control-branch-switcher'
 
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
+// 生产里 `Worktree.branch` 是**完整 ref**（`git worktree list --porcelain` 的
+// `branch refs/heads/main` 被原样存下，`status.rs` 更是显式拼前缀）。
+// fixture 写短名会让「忘剥前缀」这个 Critical 完全测不出来。
 const worktrees: Worktree[] = [
-  { id: 'r::/a', repoId: 'r', branch: 'main', displayName: 'A', path: '/a' },
-  { id: 'r::/b', repoId: 'r', branch: 'dev', displayName: 'B', path: '/b', hostId: 'host-2' },
+  { id: 'r::/a', repoId: 'r', branch: 'refs/heads/main', displayName: 'A', path: '/a' },
+  { id: 'r::/b', repoId: 'r', branch: 'refs/heads/dev', displayName: 'B', path: '/b', hostId: 'host-2' },
   // 另一个仓也有 `main`。owner 映射若跳 repo 汇总，它会把本仓 main 的归属顶掉。
-  { id: 'other::/x', repoId: 'other', branch: 'main', displayName: 'OTHER', path: '/x' },
+  { id: 'other::/x', repoId: 'other', branch: 'refs/heads/main', displayName: 'OTHER', path: '/x' },
 ] as unknown as Worktree[]
 
 const state = {

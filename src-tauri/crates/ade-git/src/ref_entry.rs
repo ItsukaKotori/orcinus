@@ -60,7 +60,10 @@ pub fn parse_upstream_track(raw: &str) -> (Option<u32>, Option<u32>) {
 /// 从 `for-each-ref` 的一行六列构造条目。列序：
 /// `refname / objectname / *objectname / HEAD / upstream:short / upstream:track`。
 ///
-/// 后三列允许缺失（git 版本差异），缺失按空串处理 —— 少一列只是少一项装饰。
+/// 列数不足（被截断的输出）按空串处理，但**不要把它当旧 git 兼容机制**：
+/// `%(HEAD)` 需 git ≥ 2.24，更旧的 git 遇到未知 atom 是 `fatal: unknown field name`
+/// + 非零退出，整条 `for-each-ref` 根本不会有输出，到不了这里。那种情况下
+/// `list_refs` 返回 Err，两个宿主降级为空分支列表（不是装饰缺失，是整棵树空）。
 /// 落在 `refs/{heads,remotes,tags}` 之外的 refname 返回 `None`（调用方跳过）。
 pub fn git_ref_entry(columns: [&str; 6]) -> Option<GitRefEntry> {
     let [full_name, oid, peeled, head, upstream, track] = columns;

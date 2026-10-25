@@ -258,13 +258,16 @@ describe('buildBranchTreeRows', () => {
 
 describe('ownerByBranch', () => {
   it('跳过无 branch 的条目；同分支多 worktree 取第一个；hostId 随 owner 带出', () => {
+    // fixture 用生产真实形态：`Worktree.branch` 是**完整 ref**。
     const worktrees = [
-      { id: 'r::/a', branch: 'main', displayName: 'A', path: '/a', hostId: 'host-1' },
-      { id: 'r::/b', branch: 'feature/login', displayName: 'B', path: '/b' },
+      { id: 'r::/a', branch: 'refs/heads/main', displayName: 'A', path: '/a', hostId: 'host-1' },
+      { id: 'r::/b', branch: 'refs/heads/feature/login', displayName: 'B', path: '/b' },
       { id: 'r::/c', branch: '', displayName: 'C', path: '/c' },
-      { id: 'r::/d', branch: 'main', displayName: 'D', path: '/d' },
+      { id: 'r::/d', branch: 'refs/heads/main', displayName: 'D', path: '/d' },
     ] as unknown as Worktree[]
     const map = ownerByBranch(worktrees)
+    // 键必须是**短名**：`GitRefEntry.name` 是短名，不剥前缀则永远查不中，
+    // ▣ 徽标与 Switch 动作在生产环境全部失效。
     expect([...map.keys()]).toEqual(['main', 'feature/login'])
     // 激活跨宿主 workspace 时必须把 hostId 传回去（setActiveWorktree 不自己推导）。
     expect(map.get('main')).toEqual({
@@ -274,6 +277,16 @@ describe('ownerByBranch', () => {
       hostId: 'host-1',
     })
     expect(map.get('feature/login')?.hostId).toBeUndefined()
+  })
+
+  it('owner 键与 checkedOutBy 在真实 ref 形态下能对上', () => {
+    // 端到端一锁：ownerByBranch 的输出直接喂 buildBranchTreeRows。
+    const worktrees = [
+      { id: 'r::/b', branch: 'refs/heads/feature/login', displayName: 'B', path: '/b' },
+    ] as unknown as Worktree[]
+    const rows = buildBranchTreeRows({ refs: REFS, checkedOutByBranch: ownerByBranch(worktrees) })
+    const hit = refRows(rows).find((r) => r.ref.name === 'feature/login')!
+    expect(hit.checkedOutBy?.displayName).toBe('B')
   })
 
   it('空列表 → 空 Map', () => {
