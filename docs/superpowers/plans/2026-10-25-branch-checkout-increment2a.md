@@ -825,7 +825,7 @@ Expected: `fatal: 'dev' is already used by worktree at '.../sdd-co-dev'` —— 
 
 - [ ] **Step 4: CodeReview 门禁**
 
-派 CodeReview 子代理审 `git diff 846812a7..HEAD`，要求覆盖：
+派 CodeReview 子代理审 `git diff 4ad50f95..HEAD`，要求覆盖：
 - 软错误 vs `BridgeError` 的分界是否只在「环境级失败」上 reject（F3 归环境级是否合理）
 - `resolve()` 是否存在把外部字符串当 revision 下传的漏口（尤其 `kind` 非法、`name` 含 `..` 或 `@\{`）
 - `occupant()` 比较完整 ref 是否正确（`GitWorktreeEntry.branch` 是完整 ref）
@@ -835,6 +835,6 @@ Expected: `fatal: 'dev' is already used by worktree at '.../sdd-co-dev'` —— 
 - [ ] **Step 5: 修完审查发现后确认每个 commit 独立可编译**
 
 ```bash
-git log --oneline 846812a7..HEAD
+git log --oneline 4ad50f95..HEAD
 ```
 每个 commit 都要能过 `pnpm typecheck`（Task 2 的 Step 6/7 顺序保证了 real 映射与 preload-api 类型同 commit）。
