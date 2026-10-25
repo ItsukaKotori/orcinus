@@ -59,13 +59,40 @@
   这一条在 2A 抓到过两个假守卫（`--track` 与 symlink）。
 - **fixture 用生产形态**：`Worktree.branch` 写完整 ref；别用 `as unknown as` 把类型系统能报的错封住。
 
-## 范围外遗留（用户未决定）
+## 范围外遗留
 
-**O-1**：`git_fetch` / `git_pull` / `git_fast_forward` 完全不存在 →
-Fetch / Pull / Fast-forward / Fork-sync / Rebase-from-base 在当前构建是死路径，
-右侧栏的 pull / sync 按钮点了应该没反应。先于本特性存在。
-Update 动作已因此从增量 2 移出（spec §3.7）。
+**O-1 —— 已修（commit 4370f0d0）**：`git_fetch` / `git_pull` 已补齐，右侧栏 pull/sync
+按钮的后端不再是 unimplemented。要点：
+- 网络命令必须走 `ade_git::runner::run_git_in_with_env` 传 `GIT_TERMINAL_PROMPT=0`，
+  否则私有 HTTPS 仓无凭证 helper 时会**挂到 300s 超时**而不是快速失败。
+  `git_push` 目前**仍走旧的 `run_git_in`，没有这个保护** —— 同类隐患，尚未修。
+- `git_fast_forward` / `syncFork` / `rebaseFromBase` **仍然不存在**（只补了 fetch/pull）。
+  spec §3.7 里 Update 动作需要的就是 fetch+pull，已够；但 `fastForwardRuntimeGit`
+  的本地路径依旧 reject。
+- fetch 默认 `--prune`；pull 不加 `--ff-only`/`--rebase`（spec §12.2）。
+- 集成测试用**本地 bare 仓当 remote**（无网、不弹窗、真跑）—— 这是测网络命令的可复用套路。
+
+**O-3（新）**：`git_push` 应改走 `run_git_in_with_env` + `GIT_TERMINAL_PROMPT=0`，
+与 fetch/pull 一致。一行改动，但会改变私有仓推送失败时的行为（挂→快失败），需单独验证。
 
 **O-2**：全量 `pnpm test` 有 1 条环境性失败
 `src/shared/startup-shell-portability.live-shell.test.ts`（`Error: Command failed: /bin/zsh -i`），
 本分支未碰该文件，但**尚未在用户机器上确认可复现**。
+
+## 增量 1 的手工验收（尚未做）
+
+需真开应用看，测试替代不了。`pnpm dev` 后逐项核：
+
+1. 头部 `main` 可点（hover 有下划线），点开出树
+2. 树里有 `HEAD (Current Branch)` / `Local` / `Remote > origin > …`，当前分支带 🏷 且在 Local 置顶
+3. 搜索输 `f/` 之类段前缀能裁剪；**清空后折叠态不丢**
+4. 点有 workspace 检出的分支 → 面板切过去，弹层关闭
+5. 点无 workspace 的分支 → 新建工作区 composer 打开且基线已预填
+6. Git Log：左栏没了、图谱变宽；点工具栏分支 chip 出同一棵树，顶部多 `All Branches`
+7. 在 Git Log 树里选分支 → 按该 ref 重查；选 `All Branches` → 全量
+8. ahead/behind 数字与 `git for-each-ref --format='%(refname) %(upstream:track)'` 逐条对得上
+9. **弹层打开后不点任何东西、直接打字，列表应被过滤**
+   —— 这条是唯一能验 rAF 聚焦的（`autoFocus` 在 Radix 焦点陷阱里活不下来，happy-dom 测不到）
+
+注：2C 会移除头部弹层入口，第 1–5 条届时会重做；但**现在就做一遍**能尽早暴露
+增量 1 自身的问题，而不是和 2B/2C 的改动混在一起排查。
