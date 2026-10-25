@@ -235,6 +235,12 @@ describe('checkout 动作（增量 2B）', () => {
     findAction('checkout').run(refRow(ref), ctx({ checkout: run }))
     expect(run).toHaveBeenCalledWith(ref)
   })
+
+  it('group / synthetic 行即使声明 checkout 也不可见（refOf 守卫）', () => {
+    const c = ctx({ checkout: vi.fn() })
+    expect(findAction('checkout').visible(groupRow(), c)).toBe(false)
+    expect(findAction('checkout').visible(synthetic('head-current'), c)).toBe(false)
+  })
 })
 
 describe('primaryBranchAction + checkout 宿主', () => {
@@ -261,5 +267,12 @@ describe('primaryBranchAction + checkout 宿主', () => {
     expect(
       primaryBranchAction(refRow(refEntry({ name: 'fresh' })), ctx({ ownerOf: () => null }))?.id
     ).toBe('new-workspace')
+  })
+
+  it('声明 checkout：remote 行主动作 = checkout（新语义相对旧语义最大的行为差异）', () => {
+    const remote = refRow(
+      refEntry({ name: 'origin/dev', category: 'remote', remote: 'origin', fullName: 'refs/remotes/origin/dev' })
+    )
+    expect(primaryBranchAction(remote, ctx({ checkout: vi.fn() }))?.id).toBe('checkout')
   })
 })

@@ -59,7 +59,12 @@ export const BRANCH_ACTIONS: readonly BranchAction[] = [
       // 仅声明 checkout 的宿主（宿主 A）出现；tag 不原地检出；当前 HEAD 不检出自己。
       return ctx.checkout !== undefined && ref !== null && ref.category !== 'tag' && !ref.isHead
     },
-    // F1：被其它 ade workspace 检出的分支不能原地检出（git 直接 fatal）→ 置灰。
+    // F1 置灰契约：
+    //  - 只按**本地分支行**的 checkedOutBy 判占用（branch-tree-model 对非 local 行恒置 null）。
+    //  - remote 行（如 origin/dev）恒可见可用：其占用与否由后端 resolve 成同名本地短名**后**复核，
+    //    命中则回 checked-out-elsewhere 拒绝，宿主 A（Task 5）据此跳转；故前端不为 remote 置灰。
+    //  - checkedOutBy 源自含当前 worktree 的 owner 映射；正常数据下当前分支行 isHead=true 已令
+    //    checkout 不可见，走不到这里；仅元数据陈旧时才会出现“自己占用→置灰+回落跳转”的连带面。
     enabled: (row) => row.kind === 'ref' && row.checkedOutBy === null,
     run: (row, ctx) => {
       const ref = refOf(row)
@@ -121,9 +126,10 @@ export function primaryBranchAction(
       const checkout = BRANCH_ACTIONS.find((a) => a.id === 'checkout')!
       if (checkout.visible(row, ctx)) {
         if (!checkout.enabled || checkout.enabled(row, ctx)) return checkout
-        // F1：checkout 可见但被占用 → 主动作回落 switch，点击给跳转而非死检出
+        // F1：checkout 可见但被占用 → 优先 switch 跳转；owner 数据缺失时再回落 owner 判定，绝不空动作
         const sw = BRANCH_ACTIONS.find((a) => a.id === 'switch')!
-        return sw.visible(row, ctx) ? sw : null
+        if (sw.visible(row, ctx)) return sw
+        return BRANCH_ACTIONS.find((a) => a.id === branchActionForRef(row.ref, ctx.ownerOf)) ?? null
       }
       // checkout 不适用此行：当前 HEAD 无原地动作；tag 等仍走原有 owner 判定（→ new-workspace）
       if (row.ref.isHead) return null

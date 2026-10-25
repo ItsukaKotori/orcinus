@@ -76,7 +76,7 @@
   - `BranchAction.enabled?: (row, ctx) => boolean`（缺省视为恒可用）
   - `BranchActionContext.checkout?: (ref: GitRefEntry) => void`
   - `BRANCH_ACTIONS` 含 id `'checkout'` 的项
-  - `primaryBranchAction(row, ctx)` 新语义：ctx 有 `checkout` 时，可检出的 ref 行返回 checkout；F1（`checkedOutBy !== null`）回落 `switch`；tag / 当前 HEAD 返回 null。
+  - `primaryBranchAction(row, ctx)` 新语义：ctx 有 `checkout` 时，可检出的 ref 行（local/remote非 HEAD）返回 checkout；F1（`checkedOutBy !== null`）优先回落 `switch`，owner 缺失再回落 `branchActionForRef`（绝不空动作）；当前 HEAD 返回 null；tag 回落 owner 判定（→ new-workspace）。
 
 - [ ] **Step 1: 写失败测试（表驱动，覆盖 visible / enabled / 主动作回落）**
 
