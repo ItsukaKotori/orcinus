@@ -28,6 +28,10 @@ Git Log 原生视图另有一份分支列表 `RefPanel`（`src/renderer/src/comp
 
 1. **切换语义 = 跳到已检出该分支的 workspace**（不是原地 `git checkout`）。未被任何 workspace 检出的
    分支 → 走「从该分支新建 workspace」。**不引入 `git checkout` 能力。**
+
+   > **【已被 §13 推翻 · 2026-10-25】** 用户在增量 1 落地后明确要求：右键分支 → Checkout =
+   > **在当前工作区原地检出**。本条仅对增量 1 生效（增量 1 确实没有 `git_checkout`）；
+   > 现行语义以 §13 为准，不要拿本句去否 §13。
 2. **落点范围**：Source Control 头部 popover + 同步重构 Git Log 左侧树。
 3. **Git Log 左栏合入右侧栏，只留一份树**：删除 `GitLogView` 的 `RefPanel` 左栏；Git Log 需要按 ref
    过滤时，点工具栏那个 branch chip 弹出**同一个树组件**，此时单击语义 = 设查看 ref。
@@ -131,7 +135,8 @@ git 版本/locale 文案变化即失效。新路径必须在 Rust 侧分类，�
 
 ### 4.2 明确不动（防误伤）
 
-- **不引入 `git checkout` / 原地切分支**。
+- ~~**不引入 `git checkout` / 原地切分支**~~ → 已由 §13 推翻；增量 2 引入 `git_checkout`。
+  增量 1 的产物确实不含 checkout，该结论对增量 1 仍成立。
 - 不改 `GitHistoryItemRef`（commit 图 decoration 用，与本设计无关）。
 - 不改 `git_log_query` / `history_with` 的取数语义。
 - 底部历史条 `git-history-panel` 不动（用户此前明确决定保留）。
@@ -459,3 +464,120 @@ in-flight 期间：该行行尾 spinner（对齐 `branch-context-row.tsx` 已有
    IDEA 会问「Merge / Rebase / Checkout」。本期**不问**、按 git 默认；若要问，属增量 2 的独立任务。
 3. **`Set Upstream To…` 子菜单在 remote ref 很多时的裁剪**：是否只列同名 remote 的分支（IDEA 行为）
    还是全量 `refs/remotes/*`。本期先同名优先 + 全量可滚动，实施时按真实仓库宽度定。
+
+## 13. 增量 2（修订版）：常驻分支树 + 右键菜单 + 原地 Checkout
+
+- 日期：2026-10-25
+- 状态：待用户 review
+- 本节**推翻并取代** §2.1 / §2.2 / §2.3 / §4.2 第一条 / §7.4 的部分内容。冲突时以本节为准。
+
+### 13.1 触发原因
+
+增量 1 交付后用户提出两点：
+1. 分支树不该是「点分支名弹一个框」，应**常驻在右侧**。
+2. 分支上要有**右键菜单**，且 Checkout 要**在当前工作区原地检出**（不是跳 workspace），同时保留「新建工作区以检出该分支」。
+
+### 13.2 决策记录（已与用户确认）
+
+1. **常驻落点**：Source Control 面板 header 下方一个**可折叠区块**，与「未提交的更改」「已提交的更改」并列，
+   **默认展开**，占高有上限、超出内部滚动。不新增 `RightSidebarTab` 变体（避开闭合联合的路由级联）。
+2. **脏工作区**：Checkout **先拦一道确认**，列出未提交改动；不自动 stash（stash pop 冲突会把工作区
+   弄成半完成状态，恢复路径不值得）。
+3. **运行中的终端 / agent 会话**：**仅告知，不干预** —— 确认框里列出「该 workspace 有 N 个活跃终端」，
+   不置灰、不阻止。
+4. **旧入口**：头部 `HeadIdentity` **取消弹层**，回到纯展示（不再是 button/`aria-haspopup`）；
+   Git Log 工具栏的 popover **保留**（那里没有常驻空间）。
+5. **右键菜单本期落地**（原计划 §10 增量 2 的 `branch-menu.tsx` 提前到本节）。
+
+### 13.3 三个实测事实（决定 checkout 的可行边界）
+
+| # | 事实 | 实测命令 | 设计后果 |
+|---|---|---|---|
+| F1 | 分支已被**另一个 worktree** 检出时 `git checkout <b>` → `fatal: 'feat' is already used by worktree at '<path>'` | 建 worktree 后 checkout 该分支 | **不是"不推荐"，是 git 做不到。** 树里"已被别的 workspace 检出"的行，Checkout 必须置灰并说明原因 + 提供跳转。 |
+| F2 | `git checkout origin/main` **进 detached HEAD**，不会自动建本地跟踪分支 | `git checkout origin/main` → `Note: switching to 'origin/main'. You are in 'detached HEAD' state` | 想要 IDEA 那个"点远程分支→建本地分支"，必须显式 `git checkout -b <短名> --track <remote>/<短名>`。 |
+| F3 | 脏工作区时 git **把未提交改动带过去**，只有"会覆盖本地改动"才拒绝 | `echo DIRTY >> f1 && git checkout other` → `Switched to branch 'other'` + `M f1` | "交给 git 判定"是自洽策略。但决策 2 选了先拦确认，所以**先查 status 再问**，git 的拒绝仍作为兜底错误面。 |
+
+### 13.4 元数据同步：既有链路已覆盖，不新造
+
+`src/renderer/src/components/right-sidebar/git-status-refresh.ts:147-153` 已经在做：
+
+```ts
+// Why: branch switches can happen inside a terminal. `git status --branch`
+// gives us the new identity without a separate worktree-list poll.
+deps.updateWorktreeGitIdentity(worktreeId, {
+  head: status.head,
+  branch: status.branch ?? (status.head ? null : undefined)
+})
+```
+
+→ checkout 后只要触发 `refreshActiveGitStatusAfterMutation`，`Worktree.branch` 会**自动跟上**，
+detached 时被显式清成 `null`。本节**不新增任何元数据同步代码**，但必须有一条测试锁住这个前提
+（断言 checkout 后 store 里该 worktree 的 `branch` 变成新分支的完整 ref）。
+
+这也让 §6.4 的分工继续成立：`Worktree.branch` 是完整 ref（`refs/heads/x`），
+`GitRefEntry.name` 是短名，两者对齐必须过 `lib/git-utils.ts` 的 `branchName()`。
+
+### 13.5 新增后端命令：`git_checkout`
+
+```
+git checkout [--track] -b <localName> <startPoint>   # 远程/标签行：建并跟踪
+git checkout -- <branchName>                          # 本地分支行
+```
+
+契约要点：
+
+- 入参：`{ worktreePath, target: { kind: 'local' | 'remote' | 'detached', branch?, startPoint?, createTracking? } }`。
+  **只接受 `refs/heads` / `refs/remotes` / `refs/tags` 里真实存在的 ref**，命令层自己解析，
+  不接受调用方拼装的任意 revision 字符串（防注入，也防 F2 那种 detached 意外）。
+- 执行前用 `ade_git::worktree_list` 复核：目标分支已被**其它** worktree 检出 →
+  `BranchOperationRefusal::CheckedOut { branch, worktree_path }`（F1）。
+- 远程行且本地无同名分支 → 走 `--track -b <短名>`（F2）；本地已有同名分支 → 直接检出该本地分支。
+- 标签 / commit → **本期不提供 detached checkout**（矩阵里不出现 Checkout），避免把用户推进
+  一个 ade 的 workspace 模型没有好位置放的态。
+- 成功后由前端触发状态刷新（§13.4），Rust 侧不写元数据。
+- 镜像面：走 §3.5 的 7 面清单（含 `collect_commands!` 注册 + `cargo run -p ade-bridge --bin export-bindings`）。
+  远程 runtime 面维持 §3.6 的现状（mock，不做）。
+
+### 13.6 常驻区块与右键菜单
+
+- 新区块 `SourceControlBranchSection`（**注意**：`listing/branch-section.tsx` 已占用
+  "BranchSection" 这个名字，它是分支**比较**变更列表，二者不可混；新块命名
+  `SourceControlBranchTreeSection`）。位置在 `panel-ready.tsx` 的 header 之下、
+  NotesShelf 之上，折叠态持久化到 `localStorage`（沿用仓库既有的 UI 态持久化写法）。
+- `branch-menu.tsx` 落地：右键 + 行尾 `⋯`，从 `branch-actions` 取子集。
+- 动作矩阵在 §7.4 之上的**增量**（`checkout` 是新动作，且是宿主 A 的**主动作**）：
+
+| 动作 | Local | Remote | Tag | 判定 |
+|---|---|---|---|---|
+| **Checkout**（新增，宿主 A 主动作） | ✅ | ✅（建并跟踪） | — | 目标分支未被**其它** worktree 检出；且不是当前分支本身 |
+| Switch to this branch（跳 workspace，增量 1 的主动作） | ✅ | — | — | 存在检出该分支的 workspace。**降级为次要项** |
+| New Workspace from Branch… | ✅ | ✅ | ✅ | 恒可用 |
+| Show Diff with Working Tree | ✅ | ✅ | — | 非当前分支 |
+| New Branch from… / Set Upstream To… / Update / Push… | 同 §7.4 | | | |
+| Rename… / Delete | ✅ | — | — | 同 §7.4（仅未检出分支） |
+
+- **单击语义变更**：宿主 A 的 `activate` 从「跳 workspace」改为「Checkout」（含 F1 置灰与脏确认），
+  「跳 workspace」保留在菜单里。宿主 B 不变（设查看 ref）。
+  → 这使 §5「两处菜单项完全一致，只有 activate 语义不同」仍然成立，但 `View in Git Log`
+  之外的 `Checkout` 在宿主 B 必须**不可见**（Git Log 面板不该原地改工作区），
+  故裁剪机制从「不传 `viewInGitLog`」扩成「宿主声明可用动作 id 集合」。
+
+### 13.7 确认框内容（决策 2 + 3）
+
+Checkout 前弹一个 `Dialog`，含三段：
+1. 目标：`将检出：<branch>`（远程行额外一行 `并创建本地分支 <短名>，跟踪 <remote>/<短名>`）。
+2. 脏改动：`当前有 N 个未提交改动` + 前 K 个路径 + `git 会把它们带到目标分支；若有文件会被覆盖，git 将拒绝本次检出`。
+   无脏改动时整段不出现。
+3. 活跃会话：`该工作区有 N 个运行中的终端`（仅告知）。无则不出现。
+
+数据源：面板已有的 status 结果（`entries` / `grouped`）与 `tabsByWorktree` 里
+`contentType === 'terminal'` 的计数 —— **不新增后端查询**。
+
+### 13.8 增量切分
+
+- **2A**：`git_checkout` 命令 + 7 面镜像 + Rust 集成测试（含 F1 拒绝、F2 建跟踪分支）+ 类型化拒绝透出。
+- **2B**：`branch-menu.tsx` + 动作表加 `checkout` + 宿主 A 的 `activate` 改 Checkout + 脏确认框 + 元数据跟随测试。
+- **2C**：常驻区块 `SourceControlBranchTreeSection` + 折叠态持久化 + **移除头部弹层**（`HeadIdentity` 回退成纯展示，
+  删 `SourceControlBranchSwitcher` 的 Popover 壳但保留其动作装配）。
+- 原 §10 增量 2 的 `git_branch_create` / `git_branch_set_upstream` / Update 参数化、增量 3 的
+  Rename / Delete **仍在其后**，本节只把 checkout 与菜单提前。
