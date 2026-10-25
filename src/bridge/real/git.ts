@@ -37,6 +37,7 @@ export function createGitRealApi(): PreloadApi['git'] {
     history: (args) => invokeCommand('git_history', { args }),
     logQuery: (args) => invokeCommand('git_log_query', { args }),
     refs: (args) => invokeCommand('git_refs', { args }),
+    checkout: (args) => invokeCommand('git_checkout', { args }),
     push: async (args) => {
       const runGit = createRunGit(defaultGitReadExecutor(args.worktreePath))
       const forceWithLease = args.forceWithLease === true

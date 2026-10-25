@@ -265,6 +265,7 @@ export const commands = {
 	gitHistory: (args: GitHistoryArgs) => typedError<GitHistoryResult_Serialize, BridgeError>(__TAURI_INVOKE("git_history", { args })),
 	gitLogQuery: (args: GitLogQueryArgs) => typedError<GitHistoryResult_Serialize, BridgeError>(__TAURI_INVOKE("git_log_query", { args })),
 	gitRefs: (args: GitRefsArgs) => typedError<GitRefsResult_Serialize, BridgeError>(__TAURI_INVOKE("git_refs", { args })),
+	gitCheckout: (args: GitCheckoutArgs) => typedError<GitCheckoutOutcome_Serialize, BridgeError>(__TAURI_INVOKE("git_checkout", { args })),
 	gitRemoteUrls: (args: GitWorktreeArgs) => typedError<GitRemoteUrl[], BridgeError>(__TAURI_INVOKE("git_remote_urls", { args })),
 	gitRead: (args: GitReadArgs) => typedError<GitReadResult, BridgeError>(__TAURI_INVOKE("git_read", { args })),
 	gitPush: (args: GitPushArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_push", { args })),
@@ -891,6 +892,69 @@ export type GitBranchLineTotal_Serialize = {
 
 export type GitCancelStatusArgs = {
 	requestToken: string,
+};
+
+export type GitCheckoutArgs = {
+	worktreePath: string,
+	target: GitCheckoutTarget,
+};
+
+export type GitCheckoutOutcome = GitCheckoutOutcome_Serialize | GitCheckoutOutcome_Deserialize;
+
+export type GitCheckoutOutcome_Deserialize = {
+	status: GitCheckoutStatus,
+	/**  成功 / 幂等时是分支短名；`CheckedOutElsewhere` 时是被占用的那个短名。 */
+	branch: string | null,
+	/**
+	 *  `CheckedOutElsewhere` 时是占用方 worktree 路径 —— 前端据此给「跳到那个
+	 *  workspace」的动作。与 `branch` 分两个字段：复用同一字段会让 TS 侧拿到
+	 *  `string | null` 而分不清语义。
+	 */
+	worktreePath: string | null,
+	message: string | null,
+};
+
+export type GitCheckoutOutcome_Serialize = {
+	status: GitCheckoutStatus,
+	/**  成功 / 幂等时是分支短名；`CheckedOutElsewhere` 时是被占用的那个短名。 */
+	branch?: string | null,
+	/**
+	 *  `CheckedOutElsewhere` 时是占用方 worktree 路径 —— 前端据此给「跳到那个
+	 *  workspace」的动作。与 `branch` 分两个字段：复用同一字段会让 TS 侧拿到
+	 *  `string | null` 而分不清语义。
+	 */
+	worktreePath?: string | null,
+	message?: string | null,
+};
+
+/**
+ *  拒绝原因。经 [`GitCheckoutOutcome::status`] 以 `Ok(...)` 透出，**不走**
+ *  `BridgeError` —— 后者的 `Serialize` 只留 `{ message }`，类型信息全丢。
+ */
+export type GitCheckoutRefusal = 
+/**  F1：目标分支已被另一个 worktree 检出。 */
+"checked-out-elsewhere";
+
+export type GitCheckoutStatus = "switched" | 
+/**  目标就是当前分支：不执行任何写操作，直接回。 */
+"already-on-branch" | { refused: GitCheckoutRefusal } | 
+/**  目标解析不到真实 ref，或 `kind` 非法。 */
+"invalid-target";
+
+/**
+ *  调用方能表达的目标。**只有 `local` / `remote` 两种** —— tag / commit 的
+ *  detached checkout 本期不提供（spec §13.5）：ade 的 workspace 模型对 detached HEAD
+ *  没有好位置放，`Worktree.branch` 会被刷成 null、头部退化成 DetachedHeadBadge。
+ */
+export type GitCheckoutTarget = {
+	/**
+	 *  `"local"` | `"remote"`。字符串而非 Rust enum：前端从 `GitRefEntry.category`
+	 *  直接映射，少一层转换；非法值在 [`resolve`] 里统一报 `InvalidTarget`，
+	 *  不会变成反序列化失败。
+	 */
+	kind: string,
+	/**  短名：本地为 `feature`，远程为 `origin/feature`。 */
+	name: string,
 };
 
 export type GitCommitArgs = {

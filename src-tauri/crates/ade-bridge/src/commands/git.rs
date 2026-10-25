@@ -725,6 +725,25 @@ pub fn git_refs_impl(worktree_path: &str) -> Result<GitRefsResult, BridgeError> 
     Ok(ade_git::history::list_refs(worktree_path)?)
 }
 
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitCheckoutArgs {
+    pub worktree_path: String,
+    pub target: ade_git::GitCheckoutTarget,
+}
+
+/// 原地检出分支。业务级拒绝（被别的 worktree 占用、目标非法、已在目标分支）
+/// 以 `Ok(GitCheckoutOutcome.status)` 透出，**不**经 `BridgeError` ——
+/// 后者的 `Serialize` 只留 `{ message }`，类型信息全丢（spec §8.1）。
+/// `Err` 只留给环境级失败：git 不可用、路径不允许、以及无法分类的 git 非零退出
+/// （最典型是「checkout 会覆盖本地改动」）。
+pub fn git_checkout_impl(
+    worktree_path: &str,
+    target: &ade_git::GitCheckoutTarget,
+) -> Result<ade_git::GitCheckoutOutcome, BridgeError> {
+    Ok(ade_git::branch_ops::checkout(worktree_path, target)?)
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn git_refs(
@@ -733,6 +752,18 @@ pub async fn git_refs(
 ) -> Result<GitRefsResult, BridgeError> {
     require_authorized_worktree(&state.fs, &args.worktree_path)?;
     run_blocking(move || git_refs_impl(&args.worktree_path)).await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_checkout(
+    state: State<'_, AppState>,
+    args: GitCheckoutArgs,
+) -> Result<ade_git::GitCheckoutOutcome, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    let path = args.worktree_path;
+    let target = args.target;
+    run_blocking(move || git_checkout_impl(&path, &target)).await
 }
 
 #[tauri::command]

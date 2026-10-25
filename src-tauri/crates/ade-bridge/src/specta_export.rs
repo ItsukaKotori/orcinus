@@ -136,6 +136,7 @@ pub fn bridge_builder() -> &'static Builder<tauri::Wry> {
                 commands::git::git_history,
                 commands::git::git_log_query,
                 commands::git::git_refs,
+                commands::git::git_checkout,
                 commands::git::git_remote_urls,
                 commands::git::git_read,
                 commands::git::git_push,

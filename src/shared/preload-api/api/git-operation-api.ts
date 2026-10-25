@@ -1,4 +1,5 @@
 import type { GitForkSyncExpectedUpstream, GitForkSyncResult } from '../../git-fork-sync'
+import type { GitCheckoutOutcome, GitCheckoutTarget } from '../../git-checkout-types'
 import type { TuiAgent } from '../../tui-agent'
 import type { GitPushTarget } from '../../worktree/types'
 import type { HostedReviewProvider } from '../../hosted-review'
@@ -36,6 +37,18 @@ export type GitOperationApi = {
     connectionId?: string
     pushTarget?: GitPushTarget
   }) => Promise<void>
+  /**
+   * 原地检出分支（spec §13.5）。
+   *
+   * 业务级拒绝在 **resolve 出来的 `outcome.status`** 里，**不** reject ——
+   * `BridgeError` 的 Serialize 只留 `{message}`，会把「被别的 workspace 占用」
+   * 这种需要给跳转的语义降级成一句普通错误。只有环境级失败
+   * （git 不可用、路径不允许、会覆盖本地改动）才 reject。
+   */
+  checkout: (args: {
+    worktreePath: string
+    target: GitCheckoutTarget
+  }) => Promise<GitCheckoutOutcome>
   rebaseFromBase: (args: {
     worktreePath: string
     baseRef: string
