@@ -72,8 +72,21 @@
 - fetch 默认 `--prune`；pull 不加 `--ff-only`/`--rebase`（spec §12.2）。
 - 集成测试用**本地 bare 仓当 remote**（无网、不弹窗、真跑）—— 这是测网络命令的可复用套路。
 
-**O-3（新）**：`git_push` 应改走 `run_git_in_with_env` + `GIT_TERMINAL_PROMPT=0`，
-与 fetch/pull 一致。一行改动，但会改变私有仓推送失败时的行为（挂→快失败），需单独验证。
+**O-3 —— 已修（commit 593f857d）**：`git_push` 改走 `run_git_in_with_env` +
+`GIT_NETWORK_ENVS` + `GIT_NETWORK_TIMEOUT`，与 fetch/pull 同一入口。
+顺带把超时从 120s 提到 300s（大仓推送走 120s 读超时是误杀）。
+既有真推送用例（本地 bare remote + 断言 upstream 真被设上）在新配置下仍过。
+
+**O-4（新）**：`GIT_TERMINAL_PROMPT=0` 本身**没有能区分的自动化守卫** ——
+fetch/pull/push 三条 unreachable 用例用的都是本地路径 remote，git 对本地路径
+根本不弹凭证提示，去掉那个 env 它们照样绿。能自动化的只有
+`network_envs_constant_disables_terminal_prompt`（断常量内容）。
+要真验证需要一个会要凭证的 HTTPS 远端（无网环境造不出来）。
+测试注释里已写明这点，不要让后人误以为那三条用例守着 env。
+
+**O-5（新）**：`fastForwardRuntimeGit` / `syncRuntimeGitForkDefaultBranch` /
+`rebaseRuntimeGitFromBase` 的本地路径仍调 `window.api.git.fastForward/syncFork/rebaseFromBase`，
+而这三个**仍无后端命令**。O-1 只补了 fetch/pull。
 
 **O-2**：全量 `pnpm test` 有 1 条环境性失败
 `src/shared/startup-shell-portability.live-shell.test.ts`（`Error: Command failed: /bin/zsh -i`），
