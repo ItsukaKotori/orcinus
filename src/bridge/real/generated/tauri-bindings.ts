@@ -930,6 +930,9 @@ export type GitCheckoutOutcome_Serialize = {
 /**
  *  拒绝原因。经 [`GitCheckoutOutcome::status`] 以 `Ok(...)` 透出，**不走**
  *  `BridgeError` —— 后者的 `Serialize` 只留 `{ message }`，类型信息全丢。
+ * 
+ *  前端按 `status` 自己走 i18n 出文案（spec §3.4 / §13.7）—— 本模块**不**发
+ *  用户可读文案，否则会在 en/es/fr/ja/ko 下弹出中文。
  */
 export type GitCheckoutRefusal = 
 /**  F1：目标分支已被另一个 worktree 检出。 */

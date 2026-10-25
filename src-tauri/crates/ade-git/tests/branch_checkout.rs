@@ -224,3 +224,79 @@ fn remote_target_still_refuses_when_local_name_is_occupied_elsewhere() {
     );
     assert_eq!(current_branch(p), "main");
 }
+
+// C1：分支短名可以含 `/`。`origin/feat/login`、`origin/release/1.2` 是最常见的
+// 命名，旧写法用 `short.contains('/')` 把它们全判成 InvalidTarget（而本地分支
+// 没这限制）。这条同时堵住“把 remote 名误当短名第一段”的回归。
+#[test]
+fn checkout_remote_supports_nested_branch_names() {
+    let d = repo();
+    let p = d.path().to_str().unwrap();
+    assert!(git(p, &[], &["config", "remote.origin.url", "/nonexistent-remote"]));
+    assert!(git(
+        p,
+        &[],
+        &["config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*"]
+    ));
+    assert!(git(p, &[], &["update-ref", "refs/remotes/origin/feat/login", "main"]));
+
+    let outcome = checkout(p, &target("remote", "origin/feat/login")).unwrap();
+    assert!(
+        matches!(outcome.status, GitCheckoutStatus::Switched),
+        "嵌套名的远程分支必须能检出，实际 {:?}",
+        outcome.status
+    );
+    assert_eq!(current_branch(p), "feat/login");
+    assert_eq!(
+        ref_line(p, "refs/heads/feat/login"),
+        "feat/login|up=origin/feat/login"
+    );
+}
+
+#[cfg(unix)]
+// I2：`occupant()` 的路径比较必须走规范化。macOS 上 tempdir 是 `/var/...` 而
+// `git worktree list` 报 `/private/var/...`，裸比字符串会让“排除自己”变成死代码。
+// 这里用主 worktree 的 **symlink 拼写** 去调用，断言仍正确拒掉属于另一个 worktree
+// 的分支、且占用方路径回的是那个 worktree 而不是主仓别名。
+//
+// 诚实声明：这条**不是**“自排除变死代码”那个 bug 的守卫 —— 裸比 `w.path != here`
+// 下本用例同样通过（占用方 wt-sym 与 here 两种比较下都不等）。要触发那个 bug 需要
+// `git branch --show-current` 失败回落，集成测试里造不出来。它的价值是锁住
+// “symlink 拼写不改变检出语义”，以及占用方路径回传的正确性。
+#[test]
+fn occupant_detection_survives_symlinked_path_spelling() {
+    let d = repo();
+    let p = d.path().to_str().unwrap();
+    let other = d.path().join("wt-sym");
+    assert!(git(p, &[], &["worktree", "add", other.to_str().unwrap(), "feature"]));
+
+    // 给主 worktree 造一个 symlink 别名，用别名去调 checkout。
+    let link_dir = tempfile::tempdir().unwrap();
+    let link = link_dir.path().join("repo-alias");
+    std::os::unix::fs::symlink(p, &link).expect("symlink");
+
+    let outcome = checkout(link.to_str().unwrap(), &target("local", "feature")).unwrap();
+    assert_eq!(
+        outcome.status,
+        ade_git::GitCheckoutStatus::Refused(ade_git::GitCheckoutRefusal::CheckedOutElsewhere),
+        "symlink 拼写不得让主 worktree 被误认为可检出 feature"
+    );
+    // 占用方路径必须是另一个 worktree，不能因为拼写差异把主仓自己吐回去。
+    let occupant = outcome.worktree_path.unwrap();
+    assert!(occupant.ends_with("wt-sym"), "actual: {occupant}");
+    assert!(!occupant.contains("repo-alias"));
+}
+
+// 后端不发中文文案（I3）：message 是英文的可读回退，真正的用户文案由前端
+// 按 status 走 i18n。扫遍 Rust 源码，这里是唯一一处会透出到 UI 的硬编码文案。
+#[test]
+fn refusal_messages_are_not_hardcoded_localizable_text() {
+    let d = repo();
+    let p = d.path().to_str().unwrap();
+    let outcome = checkout(p, &target("local", "nope")).unwrap();
+    let message = outcome.message.unwrap_or_default();
+    assert!(
+        message.is_ascii(),
+        "后端 message 不得含非 ASCII 本地化文案，实际: {message}"
+    );
+}

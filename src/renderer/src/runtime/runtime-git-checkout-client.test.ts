@@ -62,12 +62,36 @@ describe('checkoutRuntimeGit', () => {
     expect(checkout).not.toHaveBeenCalled()
   })
 
-  it('不开 callRuntimeRpc 分支：远程 runtime 面在本仓库没有 real 实现（spec §3.6）', async () => {
-    // 若有人补了 RPC 分支，这个只带 api.git.checkout 的最小 window 桩会让它炸出来。
-    checkout.mockResolvedValue({ status: 'already-on-branch', branch: 'main' })
+  // 非 local 目标必须**显式拒绝**，而不是悄悄拿本机路径跑写操作：
+  // 用户选中远程 runtime 时，worktreePath 是远端机器的路径，
+  // 只要同拼写在本机已授权就是一次错主机的写。
+  it('远程 runtime 目标被显拒绝，不命中 window.api.git.checkout', async () => {
+    checkout.mockResolvedValue({ status: 'switched', branch: 'main' })
     await expect(
-      checkoutRuntimeGit(context, { kind: 'remote', name: 'origin/main' })
-    ).resolves.toMatchObject({ status: 'already-on-branch' })
+      checkoutRuntimeGit(
+        {
+          settings: { activeRuntimeEnvironmentId: 'env-1' },
+          worktreeId: 'r::/a',
+          worktreePath: '/a',
+        } as never,
+        { kind: 'local', name: 'main' }
+      )
+    ).rejects.toThrow(/remote runtime targets are not supported/)
+    expect(checkout).not.toHaveBeenCalled()
+  })
+
+  it('本地 runtime 目标正常下发（与上一条成对，否则“总拒绝”的实现也能过）', async () => {
+    checkout.mockResolvedValue({ status: 'switched', branch: 'main' })
+    await expect(
+      checkoutRuntimeGit(
+        {
+          settings: { activeRuntimeEnvironmentId: null },
+          worktreeId: 'r::/a',
+          worktreePath: '/a',
+        } as never,
+        { kind: 'local', name: 'main' }
+      )
+    ).resolves.toMatchObject({ status: 'switched' })
     expect(checkout).toHaveBeenCalledTimes(1)
   })
 })

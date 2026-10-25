@@ -13,9 +13,9 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::command::run;
-use crate::GitWorktreeEntry;
+use crate::{are_worktree_paths_equal, GitWorktreeEntry};
 
-const F1_MESSAGE: &str = "该分支已被另一个工作区检出";
+const F1_MESSAGE: &str = "branch is already checked out in another workspace";
 
 /// 调用方能表达的目标。**只有 `local` / `remote` 两种** —— tag / commit 的
 /// detached checkout 本期不提供（spec §13.5）：ade 的 workspace 模型对 detached HEAD
@@ -34,6 +34,9 @@ pub struct GitCheckoutTarget {
 
 /// 拒绝原因。经 [`GitCheckoutOutcome::status`] 以 `Ok(...)` 透出，**不走**
 /// `BridgeError` —— 后者的 `Serialize` 只留 `{ message }`，类型信息全丢。
+///
+/// 前端按 `status` 自己走 i18n 出文案（spec §3.4 / §13.7）—— 本模块**不**发
+/// 用户可读文案，否则会在 en/es/fr/ja/ko 下弹出中文。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "kebab-case")]
@@ -82,7 +85,7 @@ fn invalid_target() -> GitCheckoutOutcome {
         status: GitCheckoutStatus::InvalidTarget,
         branch: None,
         worktree_path: None,
-        message: Some("目标不是可检出的分支".to_string()),
+        message: Some("branch is not a checkoutable target".to_string()),
     }
 }
 
@@ -114,10 +117,15 @@ fn resolve(worktree_path: &str, target: &GitCheckoutTarget) -> Option<Resolved> 
             })
         }
         "remote" => {
-            // name 形如 `origin/feature`。git 的 remote 名不允许含 `/`，
-            // 所以 split_once('/') 的第一段一定是 remote 名。
+            // name 形如 `origin/feature`，也形如 `origin/feat/login`。
+            // 按**第一个**斜杠切分：git 的 remote 名实际上不带 `/`，而分支名常带，
+            // 所以首段是 remote、其余全部是分支短名。
             let (remote, short) = name.split_once('/')?;
-            if remote.is_empty() || short.is_empty() || short.contains('/') {
+            // 短名**可以**含 `/`：`origin/feat/login`、`origin/release/1.2` 是最常见的
+            // 分支命名，拒掉它们会让一大类远程分支无法检出（而本地分支没这限制，
+            // 行为不对称）。按第一个斜杠切分对「remote 名含 /」与「分支名含 /」
+            // 两种解读都拼出同一个 ref 路径、派出同一个本地短名，所以不需要排斥。
+            if remote.is_empty() || short.is_empty() {
                 return None;
             }
             let full = format!("refs/remotes/{remote}/{short}");
@@ -143,7 +151,12 @@ fn occupant(worktrees: &[GitWorktreeEntry], here: &str, branch: &str) -> Option<
     let full = format!("refs/heads/{branch}");
     worktrees
         .iter()
-        .find(|w| w.branch.as_deref() == Some(full.as_str()) && w.path != here)
+        // 必须走 `are_worktree_paths_equal`，不能裸比字符串：`GitWorktreeEntry.path`
+        // 是 git 存的 realpath，而 macOS 上 tempdir 是 `/var/...`、`git worktree list`
+        // 报 `/private/var/...`，裸比永远不等 —— 自排除会变成死代码，
+        // 一旦 `already_checked_out` 因 git 超时而回落 false，就会把当前 worktree
+        // 自己判成占用方，回一条指向自己的拒绝。
+        .find(|w| w.branch.as_deref() == Some(full.as_str()) && !are_worktree_paths_equal(&w.path, here))
         .map(|w| w.path.clone())
 }
 

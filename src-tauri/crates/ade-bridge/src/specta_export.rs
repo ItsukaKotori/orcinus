@@ -330,6 +330,7 @@ mod tests {
             "git_history",
             "git_log_query",
             "git_refs",
+            "git_checkout",
             "git_remote_urls",
             "git_read",
             "git_push",
