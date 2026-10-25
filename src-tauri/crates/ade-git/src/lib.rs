@@ -1,5 +1,6 @@
 pub mod base_ref;
 pub mod branch;
+pub mod branch_ops;
 pub(crate) mod command;
 pub mod compare;
 pub mod diff;
@@ -13,6 +14,9 @@ pub mod status_read;
 pub mod worktree_create;
 pub mod worktree_remove;
 
+pub use branch_ops::{
+    GitCheckoutOutcome, GitCheckoutRefusal, GitCheckoutStatus, GitCheckoutTarget,
+};
 pub use porcelain::{parse_worktree_list, GitWorktreeEntry};
 pub use ref_entry::{GitRefCategory, GitRefEntry};
 pub use runner::{run_git_in, CancelToken, GitOutput};
