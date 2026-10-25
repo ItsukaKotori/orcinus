@@ -365,7 +365,9 @@ pub fn list_refs_capped(
         let (Some(full), Some(oid)) = (parts.next(), parts.next()) else {
             continue;
         };
-        // 后四列允许缺失（git 版本差异），按空串处理：缺的信息只是不显示，不是失败。
+        // 列数不足（被截断的输出）按空串处理。注意这**不是**旧 git 兼容机制：
+        // 未知 atom 会让整条 `for-each-ref` fatal 退出、零输出，根本到不了这里。
+        // 真实失败模式与影响面见 `ref_entry::git_ref_entry` 的文档。
         let peeled = parts.next().unwrap_or("");
         let head = parts.next().unwrap_or("");
         let upstream = parts.next().unwrap_or("");
