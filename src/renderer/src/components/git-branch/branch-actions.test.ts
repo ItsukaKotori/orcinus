@@ -198,3 +198,68 @@ describe('primaryBranchAction', () => {
     expect(activateWorkspace).not.toHaveBeenCalled()
   })
 })
+
+const findAction = (id: string) => BRANCH_ACTIONS.find((a) => a.id === id)!
+
+describe('checkout 动作（增量 2B）', () => {
+  it('宿主声明 checkout：本地非 HEAD 分支可见且 enabled', () => {
+    const row = refRow(refEntry({ name: 'dev' }))
+    expect(findAction('checkout').visible(row, ctx({ checkout: vi.fn() }))).toBe(true)
+    expect(findAction('checkout').enabled?.(row, ctx({ checkout: vi.fn() }))).toBe(true)
+  })
+
+  it('当前 HEAD 行不出 checkout（不原地检出自己）', () => {
+    expect(
+      findAction('checkout').visible(refRow(refEntry({ name: 'main', isHead: true })), ctx({ checkout: vi.fn() }))
+    ).toBe(false)
+  })
+
+  it('tag 行不出 checkout', () => {
+    const tag = refRow(refEntry({ name: 'v1', category: 'tag', fullName: 'refs/tags/v1' }))
+    expect(findAction('checkout').visible(tag, ctx({ checkout: vi.fn() }))).toBe(false)
+  })
+
+  it('宿主不声明 checkout → checkout 不可见（宿主 B 门禁：绝不出现在原地检出）', () => {
+    expect(findAction('checkout').visible(refRow(refEntry({ name: 'dev' })), ctx())).toBe(false)
+  })
+
+  it('被其它 workspace 检出的本地分支：可见但 disabled（F1 置灰）', () => {
+    const row = refRow(refEntry({ name: 'dev' }), OWNER)
+    expect(findAction('checkout').visible(row, ctx({ checkout: vi.fn() }))).toBe(true)
+    expect(findAction('checkout').enabled?.(row, ctx({ checkout: vi.fn() }))).toBe(false)
+  })
+
+  it('run 把 ref 本体交给 ctx.checkout', () => {
+    const run = vi.fn()
+    const ref = refEntry({ name: 'dev' })
+    findAction('checkout').run(refRow(ref), ctx({ checkout: run }))
+    expect(run).toHaveBeenCalledWith(ref)
+  })
+})
+
+describe('primaryBranchAction + checkout 宿主', () => {
+  it('声明 checkout：可用分支主动作 = checkout', () => {
+    expect(primaryBranchAction(refRow(refEntry({ name: 'fresh' })), ctx({ checkout: vi.fn() }))?.id).toBe('checkout')
+  })
+
+  it('声明 checkout：F1 占用分支主动作回落 switch（点击给跳转）', () => {
+    const row = refRow(refEntry({ name: 'dev' }), OWNER)
+    const c = ctx({ checkout: vi.fn(), ownerOf: (n) => (n === 'dev' ? OWNER : null) })
+    expect(primaryBranchAction(row, c)?.id).toBe('switch')
+  })
+
+  it('声明 checkout：当前 HEAD 主动作 = null', () => {
+    expect(primaryBranchAction(refRow(refEntry({ name: 'main', isHead: true })), ctx({ checkout: vi.fn() }))).toBeNull()
+  })
+
+  it('声明 checkout：tag 主动作 = new-workspace（无原地检出也不误跳）', () => {
+    const tag = refRow(refEntry({ name: 'v1', category: 'tag', fullName: 'refs/tags/v1' }))
+    expect(primaryBranchAction(tag, ctx({ checkout: vi.fn() }))?.id).toBe('new-workspace')
+  })
+
+  it('不声明 checkout：沿用 branchActionForRef（无 owner → new-workspace）', () => {
+    expect(
+      primaryBranchAction(refRow(refEntry({ name: 'fresh' })), ctx({ ownerOf: () => null }))?.id
+    ).toBe('new-workspace')
+  })
+})

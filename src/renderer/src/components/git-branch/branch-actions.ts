@@ -2,7 +2,7 @@ import { translate } from '@/i18n/i18n'
 import type { GitRefEntry } from '../../../../shared/git-ref-types'
 import type { BranchTreeRow, BranchWorkspaceOwner } from './branch-tree-model'
 
-export type BranchActionId = 'switch' | 'new-workspace' | 'view-in-log'
+export type BranchActionId = 'checkout' | 'switch' | 'new-workspace' | 'view-in-log'
 
 export type BranchActionContext = {
   /** 当前分支短名，null = detached。 */
@@ -16,6 +16,11 @@ export type BranchActionContext = {
    * 少一个平行参数，就少一处两宿主会各自漂移的地方。
    */
   viewInGitLog?: (value: 'all-branches' | 'head-current' | GitRefEntry) => void
+  /**
+   * 在当前工作区原地检出该 ref。仅宿主 A（Source Control）注入。声明它的宿主把
+   * Checkout 作为主动作；不提供的宿主（Git Log）沿用 switch / new-workspace。
+   */
+  checkout?: (ref: GitRefEntry) => void
 }
 
 export type BranchAction = {
@@ -23,6 +28,8 @@ export type BranchAction = {
   /** 惰性求值：`no-top-level-translate.test.ts` 是 AST 门禁。 */
   label: () => string
   visible: (row: BranchTreeRow, ctx: BranchActionContext) => boolean
+  /** visible 但不可点时用；缺省 = 恒可用。用于 F1：被其它 worktree 检出 → 置灰。 */
+  enabled?: (row: BranchTreeRow, ctx: BranchActionContext) => boolean
   run: (row: BranchTreeRow, ctx: BranchActionContext) => void
 }
 
@@ -43,6 +50,22 @@ function refOf(row: BranchTreeRow): GitRefEntry | null {
 }
 
 export const BRANCH_ACTIONS: readonly BranchAction[] = [
+  {
+    // 宿主 A 的主动作：原地检出。放最前，供菜单顺序体现「主动作优先」。
+    id: 'checkout',
+    label: () => translate('auto.components.git-branch.checkout', 'Checkout'),
+    visible: (row, ctx) => {
+      const ref = refOf(row)
+      // 仅声明 checkout 的宿主（宿主 A）出现；tag 不原地检出；当前 HEAD 不检出自己。
+      return ctx.checkout !== undefined && ref !== null && ref.category !== 'tag' && !ref.isHead
+    },
+    // F1：被其它 ade workspace 检出的分支不能原地检出（git 直接 fatal）→ 置灰。
+    enabled: (row) => row.kind === 'ref' && row.checkedOutBy === null,
+    run: (row, ctx) => {
+      const ref = refOf(row)
+      if (ref) ctx.checkout?.(ref)
+    },
+  },
   {
     id: 'switch',
     label: () => translate('auto.components.git-branch.switchTo', 'Switch to this branch'),
@@ -94,6 +117,18 @@ export function primaryBranchAction(
   ctx: BranchActionContext
 ): BranchAction | null {
   if (row.kind === 'ref') {
+    if (ctx.checkout) {
+      const checkout = BRANCH_ACTIONS.find((a) => a.id === 'checkout')!
+      if (checkout.visible(row, ctx)) {
+        if (!checkout.enabled || checkout.enabled(row, ctx)) return checkout
+        // F1：checkout 可见但被占用 → 主动作回落 switch，点击给跳转而非死检出
+        const sw = BRANCH_ACTIONS.find((a) => a.id === 'switch')!
+        return sw.visible(row, ctx) ? sw : null
+      }
+      // checkout 不适用此行：当前 HEAD 无原地动作；tag 等仍走原有 owner 判定（→ new-workspace）
+      if (row.ref.isHead) return null
+      return BRANCH_ACTIONS.find((a) => a.id === branchActionForRef(row.ref, ctx.ownerOf)) ?? null
+    }
     return BRANCH_ACTIONS.find((a) => a.id === branchActionForRef(row.ref, ctx.ownerOf)) ?? null
   }
   if (row.kind === 'synthetic' && ctx.viewInGitLog) {
