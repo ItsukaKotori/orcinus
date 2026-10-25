@@ -535,6 +535,30 @@ fn git_read_runs_real_reads_and_passes_through_nonzero() {
 }
 
 #[test]
+fn push_unreachable_remote_fails_fast_instead_of_hanging() {
+    let dir = TestDir::new("push-unreachable");
+    init_repo(&dir);
+    commit_file(&dir, "a.txt", "one\n", "init");
+    git(&dir.path, &["remote", "add", "origin", "/nonexistent/nope.git"]);
+
+    let path = dir.path_str();
+    let err = git_push_impl(path, Some("origin"), Some("HEAD:main"), false)
+        .expect_err("unreachable remote must fail");
+    // 断的是“把 git 的 stderr 原样透出”，不是“被分类成某个错码”——
+    // push 走的是 BridgeError::message(stderr)，没有命令名前缀。
+    let text = err.to_string();
+    assert!(
+        text.contains("remote repository") || text.contains("git repository"),
+        "实际: {text}"
+    );
+}
+//
+// 诚实声明：本用例**不**守 `GIT_TERMINAL_PROMPT=0`。它用的是本地路径 remote
+// （`/nonexistent/nope.git`），git 对本地路径根本不会弹凭证提示，所以去掉那个
+// env 本用例照样绿。真正能区分它需要一个会要凭证的 HTTPS 远端，无网环境下造不出来。
+// env 二制的正确性靠与 fetch/pull 共用 `remote_ops::GIT_NETWORK_ENVS` 这个常量保证。
+
+#[test]
 fn push_args_builds_expected_argv() {
     assert_eq!(
         push_args(Some("origin"), Some("HEAD:feature"), false),

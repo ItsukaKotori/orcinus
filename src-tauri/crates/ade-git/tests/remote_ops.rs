@@ -1,4 +1,6 @@
-use ade_git::remote_ops::{fetch, fetch_args, is_safe_remote_name, pull, pull_args};
+use ade_git::remote_ops::{
+    fetch, fetch_args, is_safe_remote_name, pull, pull_args, GIT_NETWORK_ENVS,
+};
 use std::process::Command;
 
 fn git(dir: &str, extra: &[&str], args: &[&str]) -> bool {
@@ -188,8 +190,20 @@ fn fetch_against_unreachable_origin_fails_fast_not_hanging() {
     assert!(git(p, &[], &["remote", "add", "origin", "/nonexistent/nope.git"]));
 
     let err = fetch(p, Some("origin"), None).unwrap_err();
-    // 关键断言：**返回了错误**而不是挂住。GIT_TERMINAL_PROMPT=0 的作用就在这里 ——
-    // 去掉它，一个要凭证的 HTTPS 远端会让本用例挂到 300s 超时。
     let text = err.to_string();
     assert!(text.contains("fetch"), "实际: {text}");
+}
+
+// 诚实声明：上面这条**不**守 `GIT_TERMINAL_PROMPT=0`。它用的是本地路径 remote
+// （`/nonexistent/nope.git`），git 对本地路径不会弹凭证提示，去掉那个 env
+// 本用例照样绿。它真正锁的是：不可达远端返回 Err 而不是 panic/卡死，
+// 且错误里带上了命令名（与 push 的 BridgeError::message 不同，那边没有）。
+//
+// 为什么不能直接测 env：要区分它需要一个会要凭证的 HTTPS 远端，
+// 无网环境下造不出来。`GIT_TERMINAL_PROMPT=0` 的正确性靠所有网络命令
+// 共用 `GIT_NETWORK_ENVS` 常量 + `run_git_in_with_env` 单一入口保证。
+#[test]
+fn network_envs_constant_disables_terminal_prompt() {
+    // 能自动化的只有这一层：常量内容本身。
+    assert_eq!(GIT_NETWORK_ENVS, [("GIT_TERMINAL_PROMPT", "0")]);
 }

@@ -1040,11 +1040,16 @@ pub fn git_push_impl(
     }
     let args = push_args(remote, refspec, force_with_lease);
     let borrowed: Vec<&str> = args.iter().map(String::as_str).collect();
-    let output = ade_git::runner::run_git_in(
+    // 与 fetch/pull 同一入口：`GIT_TERMINAL_PROMPT=0` 防止私有 HTTPS 仓在
+    // 没有可用凭证 helper 时去开 `/dev/tty` 要密码 —— GUI 应用里那表现为
+    // 挂到超时而不是快速失败。超时也从 120s 提到网络超时：
+    // 大仓推送走 120s 读超时是误杀。
+    let output = ade_git::runner::run_git_in_with_env(
         worktree_path,
         &borrowed,
-        std::time::Duration::from_secs(120),
+        ade_git::remote_ops::GIT_NETWORK_TIMEOUT,
         None,
+        ade_git::remote_ops::GIT_NETWORK_ENVS,
     )?;
     if output.status.success() {
         return Ok(());
