@@ -899,6 +899,7 @@
         "switchTo": "Switch to this branch",
         "newWorkspaceFrom": "New Workspace from Branch…",
         "viewInGitLog": "View in Git Log",
+        "branchesSection": "Branches",
         "checkout": "Checkout",
         "moreActions": "More actions",
         "checkoutConfirmTitle": "Checkout branch?",

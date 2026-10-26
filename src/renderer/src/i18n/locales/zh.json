@@ -734,6 +734,7 @@
         "switchTo": "切换到该分支",
         "newWorkspaceFrom": "从该分支新建工作区…",
         "viewInGitLog": "在 Git 日志中查看",
+        "branchesSection": "分支",
         "checkout": "检出",
         "moreActions": "更多操作",
         "checkoutConfirmTitle": "检出分支？",
