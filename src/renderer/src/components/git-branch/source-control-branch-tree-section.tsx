@@ -94,6 +94,8 @@ export function SourceControlBranchTreeSection({
       if (refreshActiveGitStatusAfterMutation) {
         await refreshActiveGitStatusAfterMutation()
       } else if (worktree) {
+        // 回退路径仅覆盖本地宿主（不接 runtime/connectionId）：面板调用面总会注入
+        // refreshActiveGitStatusAfterMutation；无注入时（如独立/测试宿主）按本地刷新。
         await refreshGitStatusForWorktree({
           worktreeId,
           worktreePath: worktree.path,
@@ -225,7 +227,7 @@ export function SourceControlBranchTreeSection({
       </button>
 
       {!collapsed && (
-        <div className="max-h-72 overflow-auto px-1.5 pb-1.5">
+        <div className="px-1.5 pb-1.5">
           {loading && refs.length === 0 ? (
             <p className="px-1 py-1 text-xs text-muted-foreground">
               {translate('auto.components.git-branch.loading', 'Loading branches…')}

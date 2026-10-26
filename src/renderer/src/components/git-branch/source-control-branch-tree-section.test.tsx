@@ -296,6 +296,24 @@ describe('SourceControlBranchTreeSection', () => {
     expect(document.querySelector('[data-testid="branch-row-row:all-branches"]')).toBeNull()
   })
 
+  it('取数失败 → 区块渲染一行失败文案，不出树也不抛', async () => {
+    refs.mockReset().mockRejectedValue(new Error('boom'))
+    await act(async () => {
+      root.render(<SourceControlBranchTreeSection worktreeId="r::/a" settings={null} />)
+    })
+    await settle()
+    expect(document.querySelector('[data-testid="branch-tree"]')).toBeNull()
+    expect(document.body.textContent).toContain('Failed to read branches.')
+  })
+
+  it('同宿主被检出分支：hostId 原样透传 undefined（不兜成某个宿主）', async () => {
+    await mountSection()
+    await click(rowInTree('branch-row-ref:refs/heads/standby'))
+    await settle()
+    expect(activate).toHaveBeenCalledWith('r::/c', { executionHostId: undefined })
+    expect(checkout).not.toHaveBeenCalled()
+  })
+
   it('worktreeId 解析不到 → 区块渲染 null，不取数', async () => {
     await act(async () => {
       root.render(<SourceControlBranchTreeSection worktreeId="nope" settings={null} />)
