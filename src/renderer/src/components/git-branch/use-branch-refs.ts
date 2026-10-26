@@ -32,6 +32,16 @@ export function useBranchRefs(worktreePath: string | null): UseBranchRefsResult 
       setLoading(false)
       return
     }
+    // 面板测试 / 非 git worktree 可能没有 window.api.git.refs 能力：降级空列表而不是
+    // 同步抛 TypeError —— 否则会把整个 Source Control 面板渲染打崩。
+    const refsFn = (window as { api?: { git?: { refs?: unknown } } }).api?.git?.refs
+    if (typeof refsFn !== 'function') {
+      setRefs([])
+      setTruncated(false)
+      setError(null)
+      setLoading(false)
+      return
+    }
     let alive = true
     setLoading(true)
     window.api.git

@@ -82,6 +82,15 @@ describe('useBranchRefs', () => {
     expect(latest.refs).toEqual([])
   })
 
+  it('window.api.git.refs 缺失时不抛，降级空列表', async () => {
+    // 面板测试以部分 window.api 桩渲染 → 区块挂载取数不得同步抛。
+    ;(window as unknown as { api: unknown }).api = { git: {} }
+    await render('/wt')
+    expect(latest.refs).toEqual([])
+    expect(latest.error).toBeNull()
+    expect(latest.loading).toBe(false)
+  })
+
   it('invalidate 再取一次并换上新数据', async () => {
     await render()
     api.current = [{ ...MAIN, name: 'dev', fullName: 'refs/heads/dev' }]
