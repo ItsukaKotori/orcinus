@@ -107,6 +107,13 @@ beforeEach(() => {
         remote: 'origin',
         fullName: 'refs/remotes/origin/main',
       }),
+      // 远程行，其解析后的本地名 dev 被 r::/b 占用（用于测 executeCheckout 的 owners 命中跳转）。
+      entry({
+        name: 'origin/dev',
+        category: 'remote',
+        remote: 'origin',
+        fullName: 'refs/remotes/origin/dev',
+      }),
     ],
     truncated: false,
   })
@@ -277,6 +284,51 @@ describe('SourceControlBranchSwitcher', () => {
     await settle()
     expect(toast.warning).toHaveBeenCalledWith(expect.stringContaining('/ext/ghost'))
     expect(activate).not.toHaveBeenCalled()
+  })
+
+  it('checked-out-elsewhere 且 ade 已知占用方（远程行解析到被占本地）→ 跳转，不弹外部提示', async () => {
+    // origin/dev 是 checkout 可用的远程行；后端解析到本地 dev，而 dev 由 r::/b 占用。
+    checkout.mockResolvedValueOnce({
+      status: { refused: 'checked-out-elsewhere' },
+      branch: 'dev',
+      worktreePath: '/b',
+    })
+    await openSwitcher()
+    await click(rowInPopover('branch-row-ref:refs/remotes/origin/dev'))
+    await settle()
+    expect(activate).toHaveBeenCalledWith('r::/b', { executionHostId: 'host-2' })
+    expect(toast.warning).not.toHaveBeenCalled()
+  })
+
+  it('invalid-target → toast.error，且不刷状态', async () => {
+    checkout.mockResolvedValueOnce({ status: 'invalid-target' })
+    await openSwitcher()
+    await click(rowInPopover('branch-row-ref:refs/heads/fresh'))
+    await settle()
+    expect(toast.error).toHaveBeenCalled()
+    expect(refreshGitStatusForWorktree).not.toHaveBeenCalled()
+  })
+
+  it('环境级失败（git 拒绝覆盖本地改动）→ toast.error，且不刷状态', async () => {
+    checkout.mockRejectedValueOnce(new Error('would be overwritten by checkout'))
+    await openSwitcher()
+    await click(rowInPopover('branch-row-ref:refs/heads/fresh'))
+    await settle()
+    expect(toast.error).toHaveBeenCalledWith('would be overwritten by checkout')
+    expect(refreshGitStatusForWorktree).not.toHaveBeenCalled()
+  })
+
+  it('检出成功→刷状态带正确参数（worktreeId + interactive 档）', async () => {
+    await openSwitcher()
+    await click(rowInPopover('branch-row-ref:refs/heads/fresh'))
+    await settle()
+    expect(refreshGitStatusForWorktree).toHaveBeenCalledWith(
+      expect.objectContaining({
+        worktreeId: 'r::/a',
+        worktreePath: '/a',
+        request: { admissionTier: 'interactive' },
+      })
+    )
   })
 
   it('跳 repo：当前仓的 main 归属不被别仓同名分支顶掉（owner 映射按 repo 限定）', async () => {

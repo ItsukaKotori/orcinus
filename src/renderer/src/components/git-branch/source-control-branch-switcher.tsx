@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useAppStore } from '@/store'
 import { findWorktreeById } from '@/store/slices/worktree-helpers'
 import { activateAndRevealWorktree } from '@/lib/worktree-activation'
@@ -53,6 +53,9 @@ export function SourceControlBranchSwitcher({
 }: SourceControlBranchSwitcherProps): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const [pendingCheckout, setPendingCheckout] = useState<GitRefEntry | null>(null)
+  // 防并发 checkout：干净无会话路径是 fire-and-forget，连点两行会在同一 worktree 上
+  // 叠两条 `git checkout`，第二条大概率撞 index.lock。进入置位、finally 复位。
+  const checkoutInFlightRef = useRef(false)
   const worktree = useAppStore((s) => findWorktreeById(s.worktreesByRepo, worktreeId))
   const openModal = useAppStore((s) => s.openModal)
 
@@ -70,7 +73,7 @@ export function SourceControlBranchSwitcher({
   const dirty = dirtyByWt ?? EMPTY_ENTRIES
   const sessionCount = terminalCount + agentCount
 
-  const { refs, truncated, loading, error, invalidate } = useBranchRefs(
+  const { refs, truncated, loading, error } = useBranchRefs(
     open ? (worktree?.path ?? null) : null
   )
 
@@ -79,11 +82,15 @@ export function SourceControlBranchSwitcher({
   const executeCheckout = useCallback(
     async (ref: GitRefEntry) => {
       if (!worktree) return
+      if (checkoutInFlightRef.current) return
+      checkoutInFlightRef.current = true
       const target =
         ref.category === 'remote'
           ? { kind: 'remote' as const, name: ref.name }
           : { kind: 'local' as const, name: ref.name }
       try {
+        // settings: null = 本地（getActiveRuntimeTarget(null)→local）。**本增量只服务本地
+        // worktree**：refs 取数、checkout、跟刷均按本机路由，未接 runtime/connectionId。
         const outcome = await checkoutRuntimeGit(
           { settings: null, worktreeId, worktreePath: worktree.path },
           target
@@ -98,6 +105,7 @@ export function SourceControlBranchSwitcher({
         ) {
           const occupant = outcome.branch ? owners.get(outcome.branch) ?? null : null
           if (occupant) {
+            setOpen(false)
             activateAndRevealWorktree(occupant.worktreeId, { executionHostId: occupant.hostId })
           } else {
             toast.warning(
@@ -107,8 +115,8 @@ export function SourceControlBranchSwitcher({
                 { path: outcome.worktreePath ?? '' }
               )
             )
+            setOpen(false)
           }
-          setOpen(false)
           return
         }
         if (outcome.status === 'invalid-target') {
@@ -117,27 +125,35 @@ export function SourceControlBranchSwitcher({
           )
           return
         }
-        // 'switched' | 'already-on-branch'：立即刷状态（复用既有链路跟刷 Worktree.branch），
-        // 再让 refs 重新取数（否则树里 🏷/ahead/behind 停在旧值）。
+        // 'switched' | 'already-on-branch'：检出已落地。立即刷状态（复用既有链路跟刷
+        // Worktree.branch），不等最长 60s 且被 isWindowVisible() 门控的轮询。
         setOpen(false)
-        await refreshGitStatusForWorktree({
-          worktreeId,
-          worktreePath: worktree.path,
-          deps: {
-            setGitStatus: useAppStore.getState().setGitStatus,
-            updateWorktreeGitIdentity: useAppStore.getState().updateWorktreeGitIdentity,
-            setUpstreamStatus: useAppStore.getState().setUpstreamStatus,
-            fetchUpstreamStatus: useAppStore.getState().fetchUpstreamStatus,
-          },
-          request: { admissionTier: 'interactive' },
-        })
-        invalidate()
+        // 跟刷失败不能伪装成"检出失败"：分支已真切过去，故只 console.warn，交给重开取数/轮询兜底
+        // （对齐 source-control 既有 post-mutation 语义 use-status-refresh.ts 的 refreshActiveGitStatusAfterMutation）。
+        try {
+          await refreshGitStatusForWorktree({
+            worktreeId,
+            worktreePath: worktree.path,
+            deps: {
+              setGitStatus: useAppStore.getState().setGitStatus,
+              updateWorktreeGitIdentity: useAppStore.getState().updateWorktreeGitIdentity,
+              setUpstreamStatus: useAppStore.getState().setUpstreamStatus,
+              fetchUpstreamStatus: useAppStore.getState().fetchUpstreamStatus,
+            },
+            request: { admissionTier: 'interactive' },
+          })
+        } catch (e) {
+          console.warn('[git-branch] post-checkout status refresh failed', e)
+        }
+        // 分支树 refs 在下次打开弹层时按 `open ? path : null` 重新取数；此处收起后无需显式 invalidate。
       } catch (e) {
         // 环境级失败（git 拒绝覆盖本地改动等）原样上抛；后端 message 是英文，这里只做兜底提示。
         toast.error(e instanceof Error ? e.message : String(e))
+      } finally {
+        checkoutInFlightRef.current = false
       }
     },
-    [worktree, worktreeId, owners, invalidate]
+    [worktree, worktreeId, owners]
   )
 
   const ctx = useMemo<BranchActionContext>(() => {
