@@ -4,6 +4,15 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GitRefEntry } from '../../../../shared/git-ref-types'
 import type { Worktree } from '../../../../shared/worktree/types'
+
+// sonner / 刷状态链路隔开：Task 5 只断“成功后调了 refresh”，真跟刷是 Task 6 的职责。
+vi.mock('sonner', () => ({ toast: { warning: vi.fn(), error: vi.fn(), success: vi.fn() } }))
+vi.mock('../right-sidebar/git-status-refresh', () => ({
+  refreshGitStatusForWorktree: vi.fn().mockResolvedValue(undefined),
+}))
+
+import { toast } from 'sonner'
+import { refreshGitStatusForWorktree } from '../right-sidebar/git-status-refresh'
 import { SourceControlBranchSwitcher } from './source-control-branch-switcher'
 
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -14,25 +23,31 @@ import { SourceControlBranchSwitcher } from './source-control-branch-switcher'
 const worktrees: Worktree[] = [
   { id: 'r::/a', repoId: 'r', branch: 'refs/heads/main', displayName: 'A', path: '/a' },
   { id: 'r::/b', repoId: 'r', branch: 'refs/heads/dev', displayName: 'B', path: '/b', hostId: 'host-2' },
+  // 同宿主（无 hostId）的另一工作区，检出 standby：验证 hostId 原样透传（undefined，不兜成某个宿主）。
+  { id: 'r::/c', repoId: 'r', branch: 'refs/heads/standby', displayName: 'C', path: '/c' },
   // 另一个仓也有 `main`。owner 映射若跳 repo 汇总，它会把本仓 main 的归属顶掉。
   { id: 'other::/x', repoId: 'other', branch: 'refs/heads/main', displayName: 'OTHER', path: '/x' },
 ] as unknown as Worktree[]
 
 const state = {
-  // `other` **必须排在 `r` 之前**：旧的全仓压平实现靠 `Object.values` 插入序 +
-  // first-wins，若 `r` 先入则跨仓 bug 下依然得到 A，测试对 C-1 就没有判别力。
   worktreesByRepo: {
     other: worktrees.filter((w) => w.repoId === 'other'),
     r: worktrees.filter((w) => w.repoId === 'r'),
   },
   openModal: vi.fn(),
+  gitStatusByWorktree: {} as Record<string, { path: string }[]>,
+  tabsByWorktree: {} as Record<string, unknown[]>,
+  unifiedTabsByWorktree: {} as Record<string, { contentType: string }[]>,
+  setGitStatus: vi.fn(),
+  updateWorktreeGitIdentity: vi.fn(),
+  setUpstreamStatus: vi.fn(),
+  fetchUpstreamStatus: vi.fn(),
 }
 
 const activate = vi.fn(
-  (
-    _id: string,
-    _opts?: { executionHostId?: string }
-  ): { primaryTabId: string | null } | false => ({ primaryTabId: null })
+  (_id: string, _opts?: { executionHostId?: string }): { primaryTabId: string | null } | false => ({
+    primaryTabId: null,
+  })
 )
 
 vi.mock('@/store', () => {
@@ -51,6 +66,7 @@ vi.mock('@/lib/worktree-activation', () => ({
 }))
 
 const refs = vi.fn()
+const checkout = vi.fn().mockResolvedValue({ status: 'switched', branch: 'x' })
 
 function entry(over: Partial<GitRefEntry> & { name: string }): GitRefEntry {
   return {
@@ -70,12 +86,21 @@ beforeEach(() => {
   document.body.append(host)
   root = createRoot(host)
   state.openModal.mockReset()
+  state.gitStatusByWorktree = {}
+  state.tabsByWorktree = {}
+  state.unifiedTabsByWorktree = {}
   activate.mockReset().mockReturnValue({ primaryTabId: null })
+  checkout.mockReset().mockResolvedValue({ status: 'switched', branch: 'x' })
+  vi.mocked(toast.warning).mockReset()
+  vi.mocked(toast.error).mockReset()
+  vi.mocked(refreshGitStatusForWorktree).mockClear()
   refs.mockReset().mockResolvedValue({
     refs: [
       entry({ name: 'main', isHead: true }),
       entry({ name: 'dev' }),
+      entry({ name: 'standby' }),
       entry({ name: 'fresh' }),
+      entry({ name: 'ghost' }),
       entry({
         name: 'origin/main',
         category: 'remote',
@@ -87,7 +112,7 @@ beforeEach(() => {
   })
   // 只往真 window 上挂 api。`vi.stubGlobal('window', { api })` 会整个替换 window，
   // Radix 的 dismissable-layer 喊 `window.setTimeout is not a function` 就炸了。
-  ;(window as unknown as { api: unknown }).api = { git: { refs } }
+  ;(window as unknown as { api: unknown }).api = { git: { refs, checkout } }
 })
 afterEach(() => {
   act(() => root.unmount())
@@ -111,6 +136,9 @@ function rowInPopover(testId: string): HTMLElement {
   if (!el) throw new Error(`expected popover row ${testId}`)
   return el as HTMLElement
 }
+const settle = async (): Promise<void> => {
+  for (let i = 0; i < 8; i += 1) await flush()
+}
 
 async function openSwitcher(worktreeId = 'r::/a'): Promise<void> {
   await act(async () => {
@@ -121,8 +149,7 @@ async function openSwitcher(worktreeId = 'r::/a'): Promise<void> {
     )
   })
   await click(host.querySelector('button'))
-  // 弹层内容要先经过 loading（refs 为空）再到已解析，一个微任务不够。
-  for (let i = 0; i < 5; i += 1) await flush()
+  await settle()
   rowInPopover('branch-tree')
 }
 
@@ -152,65 +179,119 @@ describe('SourceControlBranchSwitcher', () => {
     expect(refs).toHaveBeenCalledWith({ worktreePath: '/a' })
   })
 
-  it('点有 owner 的分支 → activateAndRevealWorktree(id, {executionHostId})，且不开 composer', async () => {
+  it('点无 owner 本地分支（干净无会话）→ 不弹框，直接 api.git.checkout（local target）', async () => {
     await openSwitcher()
-    await click(rowInPopover('branch-row-ref:refs/heads/dev'))
-    expect(activate).toHaveBeenCalledTimes(1)
-    expect(activate.mock.calls[0]?.[0]).toBe('r::/b')
-    // 宿主必须跟着走：裸 setActiveWorktree 会把 activeWorkspaceExecutionHostId 写成 null，
-    // 跨宿主 workspace 的 tab 会被打戳成 local。
-    expect(activate.mock.calls[0]?.[1]).toEqual({ executionHostId: 'host-2' })
-    expect(state.openModal).not.toHaveBeenCalled()
+    await click(rowInPopover('branch-row-ref:refs/heads/fresh'))
+    await settle()
+    expect(checkout).toHaveBeenCalledWith({
+      worktreePath: '/a',
+      target: { kind: 'local', name: 'fresh' },
+    })
+    expect(document.body.textContent).not.toContain('Checkout branch?')
+    expect(activate).not.toHaveBeenCalled()
   })
 
-  it('同宿主 workspace 把 hostId 原样透传（缺省就是 undefined，不兜成某个具体宿主）', async () => {
+  it('点远程分支 → remote target（建并跟踪）', async () => {
     await openSwitcher()
-    await click(rowInPopover('branch-row-ref:refs/heads/main'))
-    expect(activate.mock.calls[0]?.[0]).toBe('r::/a')
+    await click(rowInPopover('branch-row-ref:refs/remotes/origin/main'))
+    await settle()
+    expect(checkout).toHaveBeenCalledWith({
+      worktreePath: '/a',
+      target: { kind: 'remote', name: 'origin/main' },
+    })
+  })
+
+  it('有脏改动 → 先弹确认框，未点确认不调 checkout；点确认后才调', async () => {
+    state.gitStatusByWorktree['r::/a'] = [{ path: 'a.ts' }]
+    await openSwitcher()
+    await click(rowInPopover('branch-row-ref:refs/heads/fresh'))
+    await settle()
+    expect(document.body.textContent).toContain('Checkout branch?')
+    expect(checkout).not.toHaveBeenCalled()
+    const confirm = [...document.querySelectorAll('button')].find(
+      (b) => b.textContent?.trim() === 'Checkout'
+    )
+    await click(confirm ?? null)
+    await settle()
+    expect(checkout).toHaveBeenCalledWith({
+      worktreePath: '/a',
+      target: { kind: 'local', name: 'fresh' },
+    })
+  })
+
+  it('有终端 + agent 会话 → 合并计数进弹框文案（terminal(s)/session(s)）', async () => {
+    state.tabsByWorktree['r::/a'] = [{ id: 't1' }]
+    state.unifiedTabsByWorktree['r::/a'] = [
+      { contentType: 'terminal' },
+      { contentType: 'agent-session' },
+    ]
+    await openSwitcher()
+    await click(rowInPopover('branch-row-ref:refs/heads/fresh'))
+    await settle()
+    expect(document.body.textContent).toMatch(/2 running terminal\(s\)\/session\(s\)/)
+    expect(checkout).not.toHaveBeenCalled() // 弹框态，未确认
+  })
+
+  it('F1：点被别的工作区检出的分支 → 走 switch 跳转，不调 checkout', async () => {
+    await openSwitcher()
+    await click(rowInPopover('branch-row-ref:refs/heads/dev'))
+    await settle()
+    expect(activate).toHaveBeenCalledTimes(1)
+    expect(activate.mock.calls[0]?.[0]).toBe('r::/b')
+    expect(activate.mock.calls[0]?.[1]).toEqual({ executionHostId: 'host-2' })
+    expect(checkout).not.toHaveBeenCalled()
+  })
+
+  it('同宿主被检出分支：hostId 原样透传（缺省 undefined，不兜成某个宿主）', async () => {
+    await openSwitcher()
+    await click(rowInPopover('branch-row-ref:refs/heads/standby'))
+    await settle()
+    expect(activate.mock.calls[0]?.[0]).toBe('r::/c')
     expect(activate.mock.calls[0]?.[1]).toEqual({ executionHostId: undefined })
   })
 
-  it('跳 repo：当前仓的 main 归属自己仓的 workspace，不被别仓同名分支顶掉', async () => {
+  it('点当前 HEAD 分支 → 无动作（不 checkout 不 activate 不开 composer）', async () => {
+    await openSwitcher()
+    await click(rowInPopover('branch-row-ref:refs/heads/main'))
+    await settle()
+    expect(checkout).not.toHaveBeenCalled()
+    expect(activate).not.toHaveBeenCalled()
+    expect(state.openModal).not.toHaveBeenCalled()
+  })
+
+  it('checkout 成功后触发一次立即刷状态（refreshGitStatusForWorktree）', async () => {
+    await openSwitcher()
+    await click(rowInPopover('branch-row-ref:refs/heads/fresh'))
+    await settle()
+    expect(refreshGitStatusForWorktree).toHaveBeenCalledTimes(1)
+  })
+
+  it('checked-out-elsewhere 且 ade 未知占用方 → 用 worktreePath 弹提示，不静默', async () => {
+    checkout.mockResolvedValueOnce({
+      status: { refused: 'checked-out-elsewhere' },
+      branch: 'ghost',
+      worktreePath: '/ext/ghost',
+    })
+    await openSwitcher()
+    await click(rowInPopover('branch-row-ref:refs/heads/ghost'))
+    await settle()
+    expect(toast.warning).toHaveBeenCalledWith(expect.stringContaining('/ext/ghost'))
+    expect(activate).not.toHaveBeenCalled()
+  })
+
+  it('跳 repo：当前仓的 main 归属不被别仓同名分支顶掉（owner 映射按 repo 限定）', async () => {
     await openSwitcher()
     const el = rowInPopover('branch-row-ref:refs/heads/main')
     // fixture 里 other 排在 r 之前：若 owner 是全仓汇总，first-wins 会得到 'OTHER'。
     expect(el.getAttribute('title')).toContain('A')
     expect(el.getAttribute('title')).not.toContain('OTHER')
-    await click(el)
-    expect(activate.mock.calls[0]?.[0]).toBe('r::/a')
-  })
-
-  it('激活返回 false（workspace 已被删）时不抛错', async () => {
-    activate.mockReturnValue(false)
-    await openSwitcher()
-    await expect(click(rowInPopover('branch-row-ref:refs/heads/dev'))).resolves.not.toThrow()
-    expect(activate).toHaveBeenCalledTimes(1)
-  })
-
-  it('点无 owner 的分支 → 打开 composer 并预填 initialBaseBranch', async () => {
-    await openSwitcher()
-    await click(rowInPopover('branch-row-ref:refs/heads/fresh'))
-    expect(activate).not.toHaveBeenCalled()
-    expect(state.openModal).toHaveBeenCalledWith('new-workspace-composer', {
-      initialRepoId: 'r',
-      initialBaseBranch: 'fresh',
-      telemetrySource: 'source_control_branch_menu',
-    })
-  })
-
-  it('点 remote 分支 → 一律新建 workspace，base 用去不掉的完整短名', async () => {
-    await openSwitcher()
-    await click(rowInPopover('branch-row-ref:refs/remotes/origin/main'))
-    expect(state.openModal).toHaveBeenCalledWith(
-      'new-workspace-composer',
-      expect.objectContaining({ initialBaseBranch: 'origin/main' })
-    )
-    expect(activate).not.toHaveBeenCalled()
   })
 
   it('点 HEAD (Current Branch) 导航行不触发任何动作（本宿主无 view-in-log，主动作不存在）', async () => {
     await openSwitcher()
     await click(rowInPopover('branch-row-row:head-current'))
+    await settle()
+    expect(checkout).not.toHaveBeenCalled()
     expect(activate).not.toHaveBeenCalled()
     expect(state.openModal).not.toHaveBeenCalled()
   })
@@ -252,8 +333,14 @@ describe('SourceControlBranchSwitcher', () => {
       )
     })
     await click(host.querySelector('button'))
-    for (let i = 0; i < 5; i += 1) await flush()
+    await settle()
     expect(document.querySelector('[data-testid="branch-tree"]')).toBeNull()
     expect(document.body.textContent).toContain('Failed to read branches.')
+  })
+
+  it('分支行渲染行尾 ⋯（宿主 A 声明 checkout → 菜单出现；⋯ 是行 button 的兄弟）', async () => {
+    await openSwitcher()
+    // 接缝把 ⋯ 作为行 <button> 的兄弟（非子），故在弹层全局查。
+    expect(document.querySelector('[data-testid="branch-row-more"]')).not.toBeNull()
   })
 })
