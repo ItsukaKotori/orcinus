@@ -65,10 +65,12 @@ export function SourceControlBranchSwitcher({
   const repoWorktrees = useAppStore((s) => s.worktreesByRepo[repoId])
 
   // 确认框数据源（宿主 A 独立于 panel foundation，直接从 store 取，spec §13.7）：
-  const dirtyByWt = useAppStore((s) => s.gitStatusByWorktree[worktreeId])
-  const terminalCount = useAppStore((s) => s.tabsByWorktree[worktreeId]?.length ?? 0)
+  // 全部走可选链 —— 生产 store 恒有这些 slice，但 switcher 会被面板测试以部分 store 桩
+  // 渲染（见 SourceControl.*.test），不加 ? 会在 `undefined[worktreeId]` 上抛。
+  const dirtyByWt = useAppStore((s) => s.gitStatusByWorktree?.[worktreeId])
+  const terminalCount = useAppStore((s) => s.tabsByWorktree?.[worktreeId]?.length ?? 0)
   const agentCount = useAppStore(
-    (s) => s.unifiedTabsByWorktree[worktreeId]?.filter((t) => t.contentType === 'agent-session').length ?? 0
+    (s) => s.unifiedTabsByWorktree?.[worktreeId]?.filter((t) => t.contentType === 'agent-session').length ?? 0
   )
   const dirty = dirtyByWt ?? EMPTY_ENTRIES
   const sessionCount = terminalCount + agentCount
