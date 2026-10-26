@@ -1,5 +1,6 @@
 import { BulkActionBar } from '../commit/bulk-action-bar'
 import { SourceControlHeaderToolbar } from './header-toolbar'
+import { SourceControlBranchTreeSection } from '@/components/git-branch/source-control-branch-tree-section'
 import { SourceControlNotesShelf } from '../notes/notes-shelf'
 import { SourceControlPanelContent } from './panel-content'
 import { SourceControlPanelDialogs } from './panel-dialogs'
@@ -10,6 +11,7 @@ export function SourceControlPanelReady(props: SourceControlPanelReadyProps) {
   const { model, worktreePath } = props
   const {
     activeGroupId,
+    activeRepoSettings,
     activeWorktreeId,
     branchLineTotal,
     branchSummary,
@@ -32,6 +34,7 @@ export function SourceControlPanelReady(props: SourceControlPanelReadyProps) {
     handleSourceControlKeyDown,
     handleToggleSourceControlViewMode,
     isExecutingBulk,
+    refreshActiveGitStatusAfterMutation,
     refreshBranchCompare,
     selectedKeys,
     setBaseRefDialogOpen,
@@ -69,8 +72,16 @@ export function SourceControlPanelReady(props: SourceControlPanelReadyProps) {
           branchLineTotal={branchLineTotal}
           compareBaseRef={compareBaseRef}
           headDisplay={gitIdentityDisplay}
-          branchSwitcherWorktreeId={activeWorktreeId}
         />
+
+        {/* 2C：常驻分支树区块，header 之下、NotesShelf 之上（spec §13.6）。 */}
+        {activeWorktreeId && (
+          <SourceControlBranchTreeSection
+            worktreeId={activeWorktreeId}
+            settings={activeRepoSettings}
+            refreshActiveGitStatusAfterMutation={refreshActiveGitStatusAfterMutation}
+          />
+        )}
 
         {/* Why: hidden when count is 0 — notes are created from the diff view, so an empty Notes shelf here is pure chrome. */}
         {activeWorktreeId && worktreePath && diffCommentCount > 0 && (
@@ -91,6 +102,7 @@ export function SourceControlPanelReady(props: SourceControlPanelReadyProps) {
 
         <div
           ref={setFileListScrollElement}
+          data-testid="source-control-file-scroller"
           className="relative flex flex-1 flex-col overflow-auto scrollbar-sleek pt-1"
           style={{ paddingBottom: selectedKeys.size > 0 ? 50 : undefined }}
         >

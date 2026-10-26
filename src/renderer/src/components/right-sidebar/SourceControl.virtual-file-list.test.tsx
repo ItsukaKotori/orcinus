@@ -251,7 +251,11 @@ function renderSourceControl(): void {
 }
 
 function scroller(): HTMLDivElement {
-  const element = container.querySelector<HTMLDivElement>('.overflow-auto')
+  // 2C：面板内不再只有文件列表一个 .overflow-auto（常驻分支树区块自带滚动容器），
+  // 按稳定 testid 精确取文件 scroller，避免 querySelector 抢先到分支树。
+  const element = container.querySelector<HTMLDivElement>(
+    '[data-testid="source-control-file-scroller"]'
+  )
   if (!element) {
     throw new Error('source control scroller not found')
   }

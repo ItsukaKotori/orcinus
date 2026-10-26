@@ -28,8 +28,6 @@ type SourceControlHeaderToolbarProps = {
   compareBaseRef: string | null
   headDisplay?: WorktreeGitIdentityDisplay | null
   branchLineTotal?: GitBranchLineTotal | null
-  /** 有值时头部的分支名成为 IDEA 风格分支树的触发器。 */
-  branchSwitcherWorktreeId?: string | null
 }
 
 function renderOverflowMenu(
@@ -65,7 +63,6 @@ export function SourceControlHeaderToolbar({
   compareBaseRef,
   headDisplay = null,
   branchLineTotal,
-  branchSwitcherWorktreeId = null
 }: SourceControlHeaderToolbarProps): React.JSX.Element {
   const filterInputRef = useRef<HTMLInputElement>(null)
   const normalizedFilter = filterQuery.trim()
@@ -193,7 +190,6 @@ export function SourceControlHeaderToolbar({
             compareBaseRef={compareBaseRef}
             headDisplay={headDisplay}
             branchLineTotal={branchLineTotal}
-            branchSwitcherWorktreeId={branchSwitcherWorktreeId}
             onChangeBaseRef={onChangeBaseRef}
             onRetry={onRefreshBranchCompare}
           />
