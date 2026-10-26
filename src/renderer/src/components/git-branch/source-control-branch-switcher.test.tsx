@@ -226,16 +226,20 @@ describe('SourceControlBranchSwitcher', () => {
     })
   })
 
-  it('有终端 + agent 会话 → 合并计数进弹框文案（terminal(s)/session(s)）', async () => {
-    state.tabsByWorktree['r::/a'] = [{ id: 't1' }]
+  it('终端 + agent 会话合并计数，且不漏计/不双计/不计 editor', async () => {
+    // 生产形态：2 个终端在 tabsByWorktree 与 unified 各一份（镜像）；agent 会话只在 unified。
+    // 正解 = 2 终端 + 1 agent = 3（editor 不计；unified 里的终端镜像不得重复加）。
+    state.tabsByWorktree['r::/a'] = [{ id: 't1' }, { id: 't2' }]
     state.unifiedTabsByWorktree['r::/a'] = [
       { contentType: 'terminal' },
+      { contentType: 'terminal' },
       { contentType: 'agent-session' },
+      { contentType: 'editor' },
     ]
     await openSwitcher()
     await click(rowInPopover('branch-row-ref:refs/heads/fresh'))
     await settle()
-    expect(document.body.textContent).toMatch(/2 running terminal\(s\)\/session\(s\)/)
+    expect(document.body.textContent).toMatch(/3 running terminal\(s\)\/session\(s\)/)
     expect(checkout).not.toHaveBeenCalled() // 弹框态，未确认
   })
 

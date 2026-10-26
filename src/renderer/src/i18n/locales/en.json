@@ -900,6 +900,7 @@
         "newWorkspaceFrom": "New Workspace from Branch…",
         "viewInGitLog": "View in Git Log",
         "checkout": "Checkout",
+        "moreActions": "More actions",
         "checkoutConfirmTitle": "Checkout branch?",
         "checkoutTarget": "Will check out: {{branch}}",
         "checkoutCreatesTracking": "and create local branch {{name}} tracking {{remote}}",

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { MoreHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { translate } from '@/i18n/i18n'
 import {
   ContextMenu,
   ContextMenuTrigger,
@@ -77,7 +78,7 @@ export function BranchRowMenu({
           <button
             type="button"
             data-testid="branch-row-more"
-            aria-label="More actions"
+            aria-label={translate('auto.components.git-branch.moreActions', 'More actions')}
             className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-accent/60"
           >
             <MoreHorizontal className="size-3.5" />

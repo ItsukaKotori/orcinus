@@ -73,6 +73,12 @@ export function SourceControlBranchSwitcher({
     (s) => s.unifiedTabsByWorktree?.[worktreeId]?.filter((t) => t.contentType === 'agent-session').length ?? 0
   )
   const dirty = dirtyByWt ?? EMPTY_ENTRIES
+  // sessionCount = 终端数 + agent 会话数（产品决策 2）。两类取不同源、**不双计**：
+  //  - 终端取自 tabsByWorktree（纯 TerminalTab[]）；
+  //  - agent 会话在 tabsByWorktree 里**没有**记录（它是 structured chat），只存在于
+  //    unifiedTabsByWorktree（其中 contentType==='agent-session'），故只从 unified 数 agent。
+  // 不要改写成 `tabsByWorktree.length + unified.filter(terminal||agent).length`——那会把
+  // unified 里的终端镜像重复计一次。
   const sessionCount = terminalCount + agentCount
 
   const { refs, truncated, loading, error } = useBranchRefs(

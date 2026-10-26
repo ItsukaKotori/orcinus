@@ -735,6 +735,7 @@
         "newWorkspaceFrom": "从该分支新建工作区…",
         "viewInGitLog": "在 Git 日志中查看",
         "checkout": "检出",
+        "moreActions": "更多操作",
         "checkoutConfirmTitle": "检出分支？",
         "checkoutTarget": "将检出：{{branch}}",
         "checkoutCreatesTracking": "并创建本地分支 {{name}}，跟踪 {{remote}}",
