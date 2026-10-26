@@ -43,6 +43,7 @@ export function createGitRealApi(): PreloadApi['git'] {
     logQuery: (args) => invokeCommand('git_log_query', { args }),
     refs: (args) => invokeCommand('git_refs', { args }),
     checkout: (args) => invokeCommand('git_checkout', { args }),
+    branchCreate: (args) => invokeCommand('git_branch_create', { args }),
     // 与 push 同一分层：TS 侧把 `pushTarget` 解成 remote 名，Rust 不碰 GitPushTarget
     // （那是 TS-only 类型）。没 pushTarget 就交给 git 自己按 upstream/默认 remote 定。
     fetch: (args) =>

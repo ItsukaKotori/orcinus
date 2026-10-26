@@ -232,3 +232,92 @@ pub fn checkout(
         message: None,
     })
 }
+
+/// 分支写操作（create / set-upstream / rename / delete）共用的**结构化拒绝**。
+/// 经各命令 `Outcome.status` 的 `Refused(...)` 以 `Ok(...)` 透出，**不走 `BridgeError`**
+/// （后者 `Serialize` 只留 `{ message }`，类型全丢，spec §8.1）。前端按变体走 i18n 出文案。
+/// `CheckedOut` / `NotMergeable` 由增量 4 的 rename / delete 使用；本增量只用 `NameTaken` / `UpstreamMissing`。
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "kebab-case")]
+pub enum BranchOperationRefusal {
+    /// 目标分支名已存在于 `refs/heads/*`。
+    NameTaken,
+    /// 分支正被某个 worktree 检出（携带其路径供前端跳转）。
+    CheckedOut {
+        #[serde(rename = "worktreePath")]
+        worktree_path: String,
+    },
+    /// 期望的上游 ref 不在 `refs/remotes/*`。
+    UpstreamMissing,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "kebab-case")]
+pub enum GitBranchCreateStatus {
+    Created,
+    Refused(BranchOperationRefusal),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct GitBranchCreateOutcome {
+    pub status: GitBranchCreateStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branch: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct GitBranchCreateInput {
+    /// 新分支短名（可含 `/`）。经 `resolve_create_branch_name` 校验。
+    pub name: String,
+    /// start-point：一个可解析的 commit oid（`GitRefEntry.oid`）。不接受任意 revision。
+    pub start_point: String,
+}
+
+/// 在 `start_point` 建一个新分支 ref，**不检出**（HEAD 保持不动，区别于 [`checkout`]）。
+///
+/// 业务拒绝（名已占用）以 `Ok(Refused(NameTaken))` 透出；环境级失败（git 不可用、
+/// 非法名、start-point 解析不到）才是 `Err`。三条都**无副作用**：拒绝/失败不得留下半成品 ref。
+pub fn create(
+    worktree_path: &str,
+    args: &GitBranchCreateInput,
+) -> Result<GitBranchCreateOutcome, CoreError> {
+    let name = args.name.trim();
+    if name.is_empty() {
+        return Err(CoreError::InvalidInput("branch name must not be empty".to_string()));
+    }
+    // 复用 worktree 创建的名字校验：`-` 前缀拒绝 + `git check-ref-format --branch`。
+    // override 形态（无 prefix、name 作 override）→ 校验并原样保留（含 `/`）。
+    let name = crate::branch::resolve_create_branch_name(worktree_path, Some(name), None, "")?;
+
+    if ref_exists(worktree_path, &format!("refs/heads/{name}")) {
+        return Ok(GitBranchCreateOutcome {
+            status: GitBranchCreateStatus::Refused(BranchOperationRefusal::NameTaken),
+            branch: Some(name),
+            message: None,
+        });
+    }
+
+    // start-point 必须是能解析成 commit 的真实 rev（oid 或 ref）；绝不当任意 revision
+    // 直接丢给 `git branch`（防注入，同 [`resolve`] 的前缀校验思路）。
+    let start = args.start_point.trim();
+    if start.is_empty() || !ref_exists(worktree_path, start) {
+        return Err(CoreError::InvalidInput(format!("unknown start point: {start}")));
+    }
+
+    // 只建 ref，不切换工作区。
+    run(worktree_path, &["branch", "--", name.as_str(), start])?;
+
+    Ok(GitBranchCreateOutcome {
+        status: GitBranchCreateStatus::Created,
+        branch: Some(name),
+        message: None,
+    })
+}

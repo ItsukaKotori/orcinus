@@ -266,6 +266,7 @@ export const commands = {
 	gitLogQuery: (args: GitLogQueryArgs) => typedError<GitHistoryResult_Serialize, BridgeError>(__TAURI_INVOKE("git_log_query", { args })),
 	gitRefs: (args: GitRefsArgs) => typedError<GitRefsResult_Serialize, BridgeError>(__TAURI_INVOKE("git_refs", { args })),
 	gitCheckout: (args: GitCheckoutArgs) => typedError<GitCheckoutOutcome_Serialize, BridgeError>(__TAURI_INVOKE("git_checkout", { args })),
+	gitBranchCreate: (args: GitBranchCreateArgs) => typedError<GitBranchCreateOutcome_Serialize, BridgeError>(__TAURI_INVOKE("git_branch_create", { args })),
 	gitFetch: (args: GitFetchArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_fetch", { args })),
 	gitPull: (args: GitPullArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_pull", { args })),
 	gitRemoteUrls: (args: GitWorktreeArgs) => typedError<GitRemoteUrl[], BridgeError>(__TAURI_INVOKE("git_remote_urls", { args })),
@@ -517,6 +518,22 @@ export type BootstrapPayload = {
 	platform: PlatformInfo,
 	schemaVersion: number,
 };
+
+/**
+ *  分支写操作（create / set-upstream / rename / delete）共用的**结构化拒绝**。
+ *  经各命令 `Outcome.status` 的 `Refused(...)` 以 `Ok(...)` 透出，**不走 `BridgeError`**
+ *  （后者 `Serialize` 只留 `{ message }`，类型全丢，spec §8.1）。前端按变体走 i18n 出文案。
+ *  `CheckedOut` / `NotMergeable` 由增量 4 的 rename / delete 使用；本增量只用 `NameTaken` / `UpstreamMissing`。
+ */
+export type BranchOperationRefusal = 
+/**  目标分支名已存在于 `refs/heads/*`。 */
+"name-taken" | 
+/**  分支正被某个 worktree 检出（携带其路径供前端跳转）。 */
+{ "checked-out": {
+	worktreePath: string,
+} } | 
+/**  期望的上游 ref 不在 `refs/remotes/*`。 */
+"upstream-missing";
 
 export type BridgeError = {
 	message: string,
@@ -865,6 +882,34 @@ export type GitBranchCompareSummary_Serialize = {
 	status: string,
 	errorMessage?: string | null,
 };
+
+export type GitBranchCreateArgs = {
+	worktreePath: string,
+	args: GitBranchCreateInput,
+};
+
+export type GitBranchCreateInput = {
+	/**  新分支短名（可含 `/`）。经 `resolve_create_branch_name` 校验。 */
+	name: string,
+	/**  start-point：一个可解析的 commit oid（`GitRefEntry.oid`）。不接受任意 revision。 */
+	startPoint: string,
+};
+
+export type GitBranchCreateOutcome = GitBranchCreateOutcome_Serialize | GitBranchCreateOutcome_Deserialize;
+
+export type GitBranchCreateOutcome_Deserialize = {
+	status: GitBranchCreateStatus,
+	branch: string | null,
+	message: string | null,
+};
+
+export type GitBranchCreateOutcome_Serialize = {
+	status: GitBranchCreateStatus,
+	branch?: string | null,
+	message?: string | null,
+};
+
+export type GitBranchCreateStatus = "created" | { refused: BranchOperationRefusal };
 
 export type GitBranchDiffArgs = {
 	worktreePath: string,

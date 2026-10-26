@@ -1,5 +1,6 @@
 import type { GitForkSyncExpectedUpstream, GitForkSyncResult } from '../../git-fork-sync'
 import type { GitCheckoutOutcome, GitCheckoutTarget } from '../../git-checkout-types'
+import type { GitBranchCreateInput, GitBranchCreateOutcome } from '../../git-branch-ops-types'
 import type { TuiAgent } from '../../tui-agent'
 import type { GitPushTarget } from '../../worktree/types'
 import type { HostedReviewProvider } from '../../hosted-review'
@@ -49,6 +50,14 @@ export type GitOperationApi = {
     worktreePath: string
     target: GitCheckoutTarget
   }) => Promise<GitCheckoutOutcome>
+  /**
+   * 在 start-point 建一个新分支 ref（不检出）。业务拒绝（`NameTaken`）在 resolve 的
+   * `outcome.status` 里，不 reject；只有环境级失败（非法名、start-point 解析不到）才 reject。
+   */
+  branchCreate: (args: {
+    worktreePath: string
+    args: GitBranchCreateInput
+  }) => Promise<GitBranchCreateOutcome>
   rebaseFromBase: (args: {
     worktreePath: string
     baseRef: string

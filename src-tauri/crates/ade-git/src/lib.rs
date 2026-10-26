@@ -16,6 +16,7 @@ pub mod worktree_create;
 pub mod worktree_remove;
 
 pub use branch_ops::{
+    BranchOperationRefusal, GitBranchCreateOutcome, GitBranchCreateStatus, GitBranchCreateInput,
     GitCheckoutOutcome, GitCheckoutRefusal, GitCheckoutStatus, GitCheckoutTarget,
 };
 pub use porcelain::{parse_worktree_list, GitWorktreeEntry};

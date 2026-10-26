@@ -11,6 +11,7 @@ const PUBLIC_RUNTIME_GIT_CLIENT_FUNCTIONS = [
   'cancelRuntimeGeneratePullRequestFields',
   'checkoutRuntimeGit',
   'commitRuntimeGit',
+  'createRuntimeGitBranch',
   'discardRuntimeGitPath',
   'discoverRuntimeCommitMessageModels',
   'fastForwardRuntimeGit',

@@ -40,6 +40,7 @@ describe('git real adapter commands', () => {
     ['logQuery', 'git_log_query'],
     ['refs', 'git_refs'],
     ['checkout', 'git_checkout'],
+    ['branchCreate', 'git_branch_create'],
     ['fetch', 'git_fetch'],
     ['pull', 'git_pull']
   ] satisfies Array<[GitMethod, string]>

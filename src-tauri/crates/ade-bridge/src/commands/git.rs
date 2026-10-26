@@ -815,6 +815,34 @@ pub async fn git_checkout(
     run_blocking(move || git_checkout_impl(&path, &target)).await
 }
 
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitBranchCreateArgs {
+    pub worktree_path: String,
+    pub args: ade_git::GitBranchCreateInput,
+}
+
+/// 在 start-point 建分支 ref（不检出）。业务拒绝（名已占用）以 `Ok(Outcome.status)`
+/// 透出，**不**经 `BridgeError`（§8.1）；`Err` 只留给环境级失败（非法名 / start-point 解析不到）。
+pub fn git_branch_create_impl(
+    worktree_path: &str,
+    args: &ade_git::GitBranchCreateInput,
+) -> Result<ade_git::GitBranchCreateOutcome, BridgeError> {
+    Ok(ade_git::branch_ops::create(worktree_path, args)?)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_branch_create(
+    state: State<'_, AppState>,
+    args: GitBranchCreateArgs,
+) -> Result<ade_git::GitBranchCreateOutcome, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    let path = args.worktree_path;
+    let inner = args.args;
+    run_blocking(move || git_branch_create_impl(&path, &inner)).await
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn git_remote_urls(

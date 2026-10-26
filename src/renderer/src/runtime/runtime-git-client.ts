@@ -34,6 +34,7 @@ import {
   syncRuntimeGitForkDefaultBranch as syncRuntimeGitForkDefaultBranchImplementation
 } from './runtime-git-sync-client'
 import { checkoutRuntimeGit as checkoutRuntimeGitImplementation } from './runtime-git-checkout-client'
+import { createRuntimeGitBranch as createRuntimeGitBranchImplementation } from './runtime-git-branch-client'
 import {
   bulkDiscardRuntimeGitPaths as bulkDiscardRuntimeGitPathsImplementation,
   bulkStageRuntimeGitPaths as bulkStageRuntimeGitPathsImplementation,
@@ -76,6 +77,7 @@ export const fastForwardRuntimeGit = fastForwardRuntimeGitImplementation
  * 在本仓库没有 real 实现。业务级拒绝在 resolve 的 `outcome.status` 里，不 reject。
  */
 export const checkoutRuntimeGit = checkoutRuntimeGitImplementation
+export const createRuntimeGitBranch = createRuntimeGitBranchImplementation
 export const rebaseRuntimeGitFromBase = rebaseRuntimeGitFromBaseImplementation
 export const pushRuntimeGit = pushRuntimeGitImplementation
 export const getRuntimeGitBranchDiff = getRuntimeGitBranchDiffImplementation
