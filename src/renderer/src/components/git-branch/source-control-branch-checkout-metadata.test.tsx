@@ -4,14 +4,15 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GitRefEntry } from '../../../../shared/git-ref-types'
 import type { Worktree } from '../../../../shared/worktree/types'
-import { SourceControlBranchSwitcher } from './source-control-branch-switcher'
+import { SourceControlBranchTreeSection } from './source-control-branch-tree-section'
 
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
-// 与 source-control-branch-switcher.test.tsx 的关键差异：**不** mock git-status-refresh。
+// 与 source-control-branch-tree-section.test.tsx 的关键差异：**不** mock git-status-refresh。
 // 本文件要让真 refreshGitStatusForWorktree 跑通到 store，验证「checkout → 跟刷
 // Worktree.branch 成完整 ref」这条 spec §13.4 前提有人守（否则不显式刷新最长 60s 才追上）。
 // 只截最底层取数：getRuntimeGitStatus 返回检出后的新状态。
+// 区块**不传 refreshActiveGitStatusAfterMutation** → 走模块级 refreshGitStatusForWorktree 回退路径。
 vi.mock('@/runtime/runtime-git-client', () => ({
   getRuntimeGitStatus: vi.fn().mockResolvedValue({
     entries: [],
@@ -61,6 +62,7 @@ beforeEach(() => {
   host = document.createElement('div')
   document.body.append(host)
   root = createRoot(host)
+  window.localStorage.clear()
   state.gitStatusByWorktree = {}
   state.tabsByWorktree = {}
   state.unifiedTabsByWorktree = {}
@@ -92,30 +94,25 @@ const click = async (el: Element | null): Promise<void> => {
     el?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
   })
 }
-const rowInPopover = (testId: string): HTMLElement => {
+const rowInTree = (testId: string): HTMLElement => {
   const el = document.querySelector(`[data-testid="${testId}"]`)
-  if (!el) throw new Error(`expected popover row ${testId}`)
+  if (!el) throw new Error(`expected tree row ${testId}`)
   return el as HTMLElement
 }
 
-async function openSwitcher(): Promise<void> {
+async function mountSection(): Promise<void> {
   await act(async () => {
-    root.render(
-      <SourceControlBranchSwitcher worktreeId="r::/a">
-        <button type="button">main</button>
-      </SourceControlBranchSwitcher>
-    )
+    root.render(<SourceControlBranchTreeSection worktreeId="r::/a" settings={null} />)
   })
-  await click(host.querySelector('button'))
   for (let i = 0; i < 8; i += 1) await flush()
-  rowInPopover('branch-tree')
+  rowInTree('branch-tree')
 }
 
-describe('checkout 元数据跟随（spec §13.4 守卫）', () => {
+describe('checkout 元数据跟随（spec §13.4 守卫，常驻区块）', () => {
   it('检出成功后真跑刷状态，把 Worktree.branch 跟刷成新分支的完整 ref', async () => {
-    await openSwitcher()
-    // fresh 无 owner、无脏、无会话 → 直接检出（不弹框），executeCheckout 成功后调真 refresh。
-    await click(rowInPopover('branch-row-ref:refs/heads/fresh'))
+    await mountSection()
+    // fresh 无 owner、无脏、无会话 → 直接检出（不弹框），executeCheckout 成功后走模块 refresh 回退。
+    await click(rowInTree('branch-row-ref:refs/heads/fresh'))
     for (let i = 0; i < 12; i += 1) await flush()
 
     // 真 refreshGitStatusForWorktree 内部经 deps 调 store action：断跟刷成**完整 ref**。
@@ -123,5 +120,13 @@ describe('checkout 元数据跟随（spec §13.4 守卫）', () => {
       head: 'fresh-oid',
       branch: 'refs/heads/fresh',
     })
+  })
+
+  it('检出成功后 invalidate 让常驻树重新取数（refs 二次请求）', async () => {
+    await mountSection()
+    const before = refs.mock.calls.length
+    await click(rowInTree('branch-row-ref:refs/heads/fresh'))
+    for (let i = 0; i < 12; i += 1) await flush()
+    expect(refs.mock.calls.length).toBeGreaterThan(before)
   })
 })

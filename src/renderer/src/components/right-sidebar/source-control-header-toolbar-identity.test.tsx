@@ -68,6 +68,8 @@ describe('SourceControlHeaderToolbar branch identity', () => {
     expect(markup).toContain('aria-label="brennanb2025/source-control-branch-name → origin/main"')
     expect(markup).toContain('aria-label="Current branch: brennanb2025/source-control-branch-name"')
     expect(markup).toContain('data-testid="source-control-head-identity"')
+    // 2C：头部分支名是纯展示 span，不再是弹层触发器（spec §13.2 决策 4，删 Popover 入口）。
+    expect(markup).not.toContain('aria-haspopup')
   })
 
   it('shows head-only identity when no compare base is configured', () => {

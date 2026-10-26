@@ -305,6 +305,17 @@ describe('SourceControl virtualized changed-files list', () => {
     expect(mounted).toBeLessThanOrEqual(MAX_MOUNTED_ROWS)
   })
 
+  it('渲染常驻分支树区块（2C：header 之下常驻，不再走头部弹层）', () => {
+    resetState({
+      gitStatusByWorktree: { [mocks.activeWorktree.id]: manyEntries(500) }
+    })
+    renderSourceControl()
+
+    // 区块在真实面板里挂载（默认展开）；文件 scroller 不再被它的滚动容器抢走。
+    expect(container.querySelector('[data-testid="source-control-branch-tree-section"]')).toBeTruthy()
+    expect(container.querySelector('[data-testid="source-control-file-scroller"]')).toBeTruthy()
+  })
+
   it('windows rows while scrolling instead of mounting the tail', () => {
     resetState({
       gitStatusByWorktree: { [mocks.activeWorktree.id]: manyEntries(500) }
