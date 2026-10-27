@@ -321,3 +321,78 @@ pub fn create(
         message: None,
     })
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "kebab-case")]
+pub enum GitBranchSetUpstreamStatus {
+    Set,
+    Refused(BranchOperationRefusal),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct GitBranchSetUpstreamOutcome {
+    pub status: GitBranchSetUpstreamStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branch: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub upstream: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct GitBranchSetUpstreamInput {
+    /// 目标本地分支短名（必须存在于 `refs/heads/*`）。
+    pub branch: String,
+    /// 上游，形如 `origin/feature`（必须存在于 `refs/remotes/*`）。
+    pub upstream: String,
+}
+
+/// 给一个已存在的本地分支设置 upstream：`git branch --set-upstream-to=<upstream> -- <branch>`。
+///
+/// upstream 不在 `refs/remotes/*` → `Ok(Refused(UpstreamMissing))`（前端子菜单可能过时）；
+/// 本地分支不存在 → `Err`（环境级，调用方只会从真实本地分支发起）。**不改 HEAD**、不切分支。
+/// 二者都不接受任意 revision：`branch`/`upstream` 各自经 `ref_exists` 前缀校验，
+/// 且作为独立 argv 传递。
+pub fn set_upstream(
+    worktree_path: &str,
+    args: &GitBranchSetUpstreamInput,
+) -> Result<GitBranchSetUpstreamOutcome, CoreError> {
+    let branch = args.branch.trim();
+    if branch.is_empty() || branch.starts_with('-') {
+        return Err(CoreError::InvalidInput("invalid branch name".to_string()));
+    }
+    if !ref_exists(worktree_path, &format!("refs/heads/{branch}")) {
+        return Err(CoreError::InvalidInput(format!("unknown local branch: {branch}")));
+    }
+    let upstream = args.upstream.trim();
+    if upstream.is_empty() || upstream.starts_with('-') {
+        return Ok(GitBranchSetUpstreamOutcome {
+            status: GitBranchSetUpstreamStatus::Refused(BranchOperationRefusal::UpstreamMissing),
+            branch: Some(branch.to_string()),
+            upstream: None,
+            message: None,
+        });
+    }
+    if !ref_exists(worktree_path, &format!("refs/remotes/{upstream}")) {
+        return Ok(GitBranchSetUpstreamOutcome {
+            status: GitBranchSetUpstreamStatus::Refused(BranchOperationRefusal::UpstreamMissing),
+            branch: Some(branch.to_string()),
+            upstream: Some(upstream.to_string()),
+            message: None,
+        });
+    }
+    let set_arg = format!("--set-upstream-to={upstream}");
+    run(worktree_path, &["branch", &set_arg, "--", branch])?;
+    Ok(GitBranchSetUpstreamOutcome {
+        status: GitBranchSetUpstreamStatus::Set,
+        branch: Some(branch.to_string()),
+        upstream: Some(upstream.to_string()),
+        message: None,
+    })
+}

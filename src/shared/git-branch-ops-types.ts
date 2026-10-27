@@ -31,3 +31,20 @@ export type GitBranchCreateOutcome = {
   branch?: string
   message?: string
 }
+
+export type GitBranchSetUpstreamInput = {
+  /** 目标本地分支短名（必须已存在）。 */
+  branch: string
+  /** 上游，形如 `origin/feature`（必须存在于 `refs/remotes/*`）。 */
+  upstream: string
+}
+
+export type GitBranchSetUpstreamStatus = 'set' | { refused: BranchOperationRefusal }
+
+export type GitBranchSetUpstreamOutcome = {
+  status: GitBranchSetUpstreamStatus
+  branch?: string
+  /** `UpstreamMissing` 时为被拒的、不存在的上游短名。 */
+  upstream?: string
+  message?: string
+}

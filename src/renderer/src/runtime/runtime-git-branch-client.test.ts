@@ -1,12 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { GitBranchCreateOutcome } from '../../../shared/git-branch-ops-types'
-import { createRuntimeGitBranch } from './runtime-git-branch-client'
+import type { GitBranchCreateOutcome, GitBranchSetUpstreamOutcome } from '../../../shared/git-branch-ops-types'
+import {
+  createRuntimeGitBranch,
+  setRuntimeGitBranchUpstream
+} from './runtime-git-branch-client'
 
 const branchCreate = vi.fn()
+const branchSetUpstream = vi.fn()
 
 beforeEach(() => {
   branchCreate.mockReset()
-  ;(globalThis as unknown as { window: unknown }).window = { api: { git: { branchCreate } } }
+  branchSetUpstream.mockReset()
+  ;(globalThis as unknown as { window: unknown }).window = { api: { git: { branchCreate, branchSetUpstream } } }
 })
 
 const context = {
@@ -59,5 +64,44 @@ describe('createRuntimeGitBranch', () => {
       )
     ).rejects.toThrow(/remote runtime targets are not supported/)
     expect(branchCreate).not.toHaveBeenCalled()
+  })
+})
+
+describe('setRuntimeGitBranchUpstream', () => {
+  it('把 worktreePath 与 args 原样下发', async () => {
+    branchSetUpstream.mockResolvedValue({ status: 'set' } satisfies GitBranchSetUpstreamOutcome)
+    await setRuntimeGitBranchUpstream(context, { branch: 'feature', upstream: 'origin/feature' })
+    expect(branchSetUpstream).toHaveBeenCalledWith({
+      worktreePath: '/a',
+      args: { branch: 'feature', upstream: 'origin/feature' },
+    })
+  })
+
+  it('业务拒绝 UpstreamMissing **不**被改写成异常', async () => {
+    const refused = {
+      status: { refused: 'upstream-missing' },
+      branch: 'feature',
+      upstream: 'origin/ghost',
+    } satisfies GitBranchSetUpstreamOutcome
+    branchSetUpstream.mockResolvedValue(refused)
+    const outcome = await setRuntimeGitBranchUpstream(context, { branch: 'feature', upstream: 'origin/ghost' })
+    expect(outcome).toEqual(refused)
+  })
+
+  it('环境级失败原样上抛', async () => {
+    branchSetUpstream.mockRejectedValue(new Error('unknown local branch'))
+    await expect(
+      setRuntimeGitBranchUpstream(context, { branch: 'nope', upstream: 'origin/feature' })
+    ).rejects.toThrow(/unknown local branch/)
+  })
+
+  it('远程 runtime 目标被显式拒绝，不命中 window.api', async () => {
+    await expect(
+      setRuntimeGitBranchUpstream(
+        { settings: { activeRuntimeEnvironmentId: 'env-1' }, worktreeId: 'r::/a', worktreePath: '/a' },
+        { branch: 'feature', upstream: 'origin/feature' }
+      )
+    ).rejects.toThrow(/remote runtime targets are not supported/)
+    expect(branchSetUpstream).not.toHaveBeenCalled()
   })
 })

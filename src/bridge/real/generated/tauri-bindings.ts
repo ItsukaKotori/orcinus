@@ -267,6 +267,7 @@ export const commands = {
 	gitRefs: (args: GitRefsArgs) => typedError<GitRefsResult_Serialize, BridgeError>(__TAURI_INVOKE("git_refs", { args })),
 	gitCheckout: (args: GitCheckoutArgs) => typedError<GitCheckoutOutcome_Serialize, BridgeError>(__TAURI_INVOKE("git_checkout", { args })),
 	gitBranchCreate: (args: GitBranchCreateArgs) => typedError<GitBranchCreateOutcome_Serialize, BridgeError>(__TAURI_INVOKE("git_branch_create", { args })),
+	gitBranchSetUpstream: (args: GitBranchSetUpstreamArgs) => typedError<GitBranchSetUpstreamOutcome_Serialize, BridgeError>(__TAURI_INVOKE("git_branch_set_upstream", { args })),
 	gitFetch: (args: GitFetchArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_fetch", { args })),
 	gitPull: (args: GitPullArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_pull", { args })),
 	gitRemoteUrls: (args: GitWorktreeArgs) => typedError<GitRemoteUrl[], BridgeError>(__TAURI_INVOKE("git_remote_urls", { args })),
@@ -936,6 +937,36 @@ export type GitBranchLineTotal_Serialize = {
 	test?: LineStat | null,
 	generated?: LineStat | null,
 };
+
+export type GitBranchSetUpstreamArgs = {
+	worktreePath: string,
+	args: GitBranchSetUpstreamInput,
+};
+
+export type GitBranchSetUpstreamInput = {
+	/**  目标本地分支短名（必须存在于 `refs/heads/*`）。 */
+	branch: string,
+	/**  上游，形如 `origin/feature`（必须存在于 `refs/remotes/*`）。 */
+	upstream: string,
+};
+
+export type GitBranchSetUpstreamOutcome = GitBranchSetUpstreamOutcome_Serialize | GitBranchSetUpstreamOutcome_Deserialize;
+
+export type GitBranchSetUpstreamOutcome_Deserialize = {
+	status: GitBranchSetUpstreamStatus,
+	branch: string | null,
+	upstream: string | null,
+	message: string | null,
+};
+
+export type GitBranchSetUpstreamOutcome_Serialize = {
+	status: GitBranchSetUpstreamStatus,
+	branch?: string | null,
+	upstream?: string | null,
+	message?: string | null,
+};
+
+export type GitBranchSetUpstreamStatus = "set" | { refused: BranchOperationRefusal };
 
 export type GitCancelStatusArgs = {
 	requestToken: string,

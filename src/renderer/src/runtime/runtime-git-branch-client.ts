@@ -1,6 +1,8 @@
 import type {
   GitBranchCreateInput,
-  GitBranchCreateOutcome
+  GitBranchCreateOutcome,
+  GitBranchSetUpstreamInput,
+  GitBranchSetUpstreamOutcome
 } from '../../../shared/git-branch-ops-types'
 import { getActiveRuntimeTarget } from './runtime-rpc-client'
 import { resolveLocalWorktreePath, type RuntimeGitContext } from './runtime-git-client-context'
@@ -26,4 +28,23 @@ export async function createRuntimeGitBranch(
     throw new Error('createRuntimeGitBranch: missing worktree path')
   }
   return window.api.git.branchCreate({ worktreePath, args: input })
+}
+
+/**
+ * 给已存在的本地分支设 upstream 的 runtime 包装。同 `createRuntimeGitBranch`：**只支持本地**，
+ * 非 local 目标显式拒绝；业务拒绝（UpstreamMissing）在 resolve 的 `outcome.status` 里，不 reject。
+ */
+export async function setRuntimeGitBranchUpstream(
+  context: RuntimeGitContext,
+  input: GitBranchSetUpstreamInput
+): Promise<GitBranchSetUpstreamOutcome> {
+  const runtimeTarget = getActiveRuntimeTarget(context.settings)
+  if (runtimeTarget.kind !== 'local' && context.worktreeId) {
+    throw new Error('setRuntimeGitBranchUpstream: remote runtime targets are not supported yet')
+  }
+  const worktreePath = resolveLocalWorktreePath(context)
+  if (!worktreePath) {
+    throw new Error('setRuntimeGitBranchUpstream: missing worktree path')
+  }
+  return window.api.git.branchSetUpstream({ worktreePath, args: input })
 }

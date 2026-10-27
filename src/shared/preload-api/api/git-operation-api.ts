@@ -1,6 +1,11 @@
 import type { GitForkSyncExpectedUpstream, GitForkSyncResult } from '../../git-fork-sync'
 import type { GitCheckoutOutcome, GitCheckoutTarget } from '../../git-checkout-types'
-import type { GitBranchCreateInput, GitBranchCreateOutcome } from '../../git-branch-ops-types'
+import type {
+  GitBranchCreateInput,
+  GitBranchCreateOutcome,
+  GitBranchSetUpstreamInput,
+  GitBranchSetUpstreamOutcome,
+} from '../../git-branch-ops-types'
 import type { TuiAgent } from '../../tui-agent'
 import type { GitPushTarget } from '../../worktree/types'
 import type { HostedReviewProvider } from '../../hosted-review'
@@ -58,6 +63,14 @@ export type GitOperationApi = {
     worktreePath: string
     args: GitBranchCreateInput
   }) => Promise<GitBranchCreateOutcome>
+  /**
+   * 给已存在的本地分支设 upstream。业务拒绝（`UpstreamMissing`）在 resolve 的
+   * `outcome.status` 里，不 reject；只有环境级失败（本地分支不存在）才 reject。
+   */
+  branchSetUpstream: (args: {
+    worktreePath: string
+    args: GitBranchSetUpstreamInput
+  }) => Promise<GitBranchSetUpstreamOutcome>
   rebaseFromBase: (args: {
     worktreePath: string
     baseRef: string

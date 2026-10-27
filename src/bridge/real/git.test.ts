@@ -41,6 +41,7 @@ describe('git real adapter commands', () => {
     ['refs', 'git_refs'],
     ['checkout', 'git_checkout'],
     ['branchCreate', 'git_branch_create'],
+    ['branchSetUpstream', 'git_branch_set_upstream'],
     ['fetch', 'git_fetch'],
     ['pull', 'git_pull']
   ] satisfies Array<[GitMethod, string]>

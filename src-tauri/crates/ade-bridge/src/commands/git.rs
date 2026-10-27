@@ -843,6 +843,34 @@ pub async fn git_branch_create(
     run_blocking(move || git_branch_create_impl(&path, &inner)).await
 }
 
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitBranchSetUpstreamArgs {
+    pub worktree_path: String,
+    pub args: ade_git::GitBranchSetUpstreamInput,
+}
+
+/// 给已存在的本地分支设 upstream。业务拒绝（上游不存在）以 `Ok(Outcome.status)` 透出，
+/// **不**经 `BridgeError`（§8.1）；`Err` 只留给环境级失败（本地分支不存在 / git 报错）。
+pub fn git_branch_set_upstream_impl(
+    worktree_path: &str,
+    args: &ade_git::GitBranchSetUpstreamInput,
+) -> Result<ade_git::GitBranchSetUpstreamOutcome, BridgeError> {
+    Ok(ade_git::branch_ops::set_upstream(worktree_path, args)?)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_branch_set_upstream(
+    state: State<'_, AppState>,
+    args: GitBranchSetUpstreamArgs,
+) -> Result<ade_git::GitBranchSetUpstreamOutcome, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    let path = args.worktree_path;
+    let inner = args.args;
+    run_blocking(move || git_branch_set_upstream_impl(&path, &inner)).await
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn git_remote_urls(
