@@ -276,3 +276,51 @@ describe('primaryBranchAction + checkout 宿主', () => {
     expect(primaryBranchAction(remote, ctx({ checkout: vi.fn() }))?.id).toBe('checkout')
   })
 })
+
+describe('增量3 非破坏动作（new-branch / show-diff / set-upstream）', () => {
+  const remoteEntry = refEntry({ name: 'origin/dev', category: 'remote', remote: 'origin', fullName: 'refs/remotes/origin/dev' })
+  const tagEntry = refEntry({ name: 'v1', category: 'tag', fullName: 'refs/tags/v1' })
+
+  it('new-branch：local/remote/tag 都可见；run 交 ref 给 ctx.newBranch', () => {
+    const nb = vi.fn()
+    const c = ctx({ newBranch: nb })
+    for (const row of [refRow(refEntry({ name: 'dev' })), refRow(remoteEntry), refRow(tagEntry)]) {
+      expect(findAction('new-branch').visible(row, c)).toBe(true)
+    }
+    const ref = refEntry({ name: 'dev' })
+    findAction('new-branch').run(refRow(ref), c)
+    expect(nb).toHaveBeenCalledWith(ref)
+  })
+
+  it('new-branch：宿主不声明 newBranch → 不可见（宿主裁剪）', () => {
+    expect(findAction('new-branch').visible(refRow(refEntry({ name: 'dev' })), ctx({ newBranch: undefined }))).toBe(false)
+  })
+
+  it('show-diff：非当前 local/remote 可见；HEAD 行与 tag 不可见', () => {
+    const c = ctx({ showDiff: vi.fn() })
+    expect(findAction('show-diff').visible(refRow(refEntry({ name: 'dev' })), c)).toBe(true)
+    expect(findAction('show-diff').visible(refRow(remoteEntry), c)).toBe(true)
+    expect(findAction('show-diff').visible(refRow(refEntry({ name: 'main', isHead: true })), c)).toBe(false)
+    expect(findAction('show-diff').visible(refRow(tagEntry), c)).toBe(false)
+  })
+
+  it('set-upstream：仅 local 可见；submenu 由 remoteRefCandidates 生成，item.run 调 ctx.setUpstream(name, candidate)', () => {
+    const su = vi.fn()
+    const candidates = [remoteEntry]
+    const c = ctx({ setUpstream: su, remoteRefCandidates: () => candidates })
+    const row = refRow(refEntry({ name: 'dev' }))
+    expect(findAction('set-upstream').visible(row, c)).toBe(true)
+    const items = findAction('set-upstream').submenu?.(row, c) ?? []
+    expect(items.map((i) => i.id)).toEqual(['origin/dev'])
+    items[0]?.run()
+    expect(su).toHaveBeenCalledWith('dev', 'origin/dev')
+  })
+
+  it('set-upstream：remote/tag 不可见；无候选上游不可见；宿主不声明不可见', () => {
+    const c = ctx({ setUpstream: vi.fn(), remoteRefCandidates: () => [] })
+    expect(findAction('set-upstream').visible(refRow(remoteEntry), c)).toBe(false)
+    expect(findAction('set-upstream').visible(refRow(tagEntry), c)).toBe(false)
+    expect(findAction('set-upstream').visible(refRow(refEntry({ name: 'dev' })), c)).toBe(false)
+    expect(findAction('set-upstream').visible(refRow(refEntry({ name: 'dev' })), ctx())).toBe(false)
+  })
+})

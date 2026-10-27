@@ -2,7 +2,14 @@ import { translate } from '@/i18n/i18n'
 import type { GitRefEntry } from '../../../../shared/git-ref-types'
 import type { BranchTreeRow, BranchWorkspaceOwner } from './branch-tree-model'
 
-export type BranchActionId = 'checkout' | 'switch' | 'new-workspace' | 'view-in-log'
+export type BranchActionId =
+  | 'checkout'
+  | 'switch'
+  | 'new-workspace'
+  | 'new-branch'
+  | 'set-upstream'
+  | 'show-diff'
+  | 'view-in-log'
 
 export type BranchActionContext = {
   /** 当前分支短名，null = detached。 */
@@ -21,6 +28,25 @@ export type BranchActionContext = {
    * Checkout 作为主动作；不提供的宿主（Git Log）沿用 switch / new-workspace。
    */
   checkout?: (ref: GitRefEntry) => void
+  /** 以该 ref 的 oid 为 start-point 新建分支（弹名字输入框）。宿主 A 注入。 */
+  newBranch?: (ref: GitRefEntry) => void
+  /** 把工作区中该分支与某上游对齐显示（只读）。宿主 A 注入。 */
+  showDiff?: (ref: GitRefEntry) => void
+  /** 给本地分支设 upstream（从子菜单选中项）。宿主 A 注入。 */
+  setUpstream?: (branch: string, upstream: string) => void
+  /**
+   * 子菜单候选上游：返回可作 `branch` upstream 的 `refs/remotes/*` 条目（同名优先已排序）。
+   * 与 `setUpstream` 一同声明时 set-upstream 才可见；返回空数组则该动作不可见。
+   */
+  remoteRefCandidates?: (branch: string) => GitRefEntry[]
+}
+
+/** 子菜单项（Set Upstream To… 用）。 */
+export type BranchSubmenuItem = {
+  id: string
+  label: () => string
+  enabled: boolean
+  run: () => void
 }
 
 export type BranchAction = {
@@ -30,6 +56,8 @@ export type BranchAction = {
   visible: (row: BranchTreeRow, ctx: BranchActionContext) => boolean
   /** visible 但不可点时用；缺省 = 恒可用。用于 F1：被其它 worktree 检出 → 置灰。 */
   enabled?: (row: BranchTreeRow, ctx: BranchActionContext) => boolean
+  /** 有子项的动作（Set Upstream To…）：菜单渲染展开区而非叶子。有此字段时顶层 run 不被调用。 */
+  submenu?: (row: BranchTreeRow, ctx: BranchActionContext) => BranchSubmenuItem[]
   run: (row: BranchTreeRow, ctx: BranchActionContext) => void
 }
 
@@ -98,6 +126,56 @@ export const BRANCH_ACTIONS: readonly BranchAction[] = [
       const ref = refOf(row)
       if (ref) ctx.newWorkspaceFrom(ref)
     },
+  },
+  {
+    id: 'new-branch',
+    label: () => translate('auto.components.git-branch.newBranchFrom', 'New Branch from…'),
+    // local/remote/tag 都可作为 start-point 新建分支（§7.4）；仅声明 newBranch 的宿主出现。
+    visible: (row, ctx) => ctx.newBranch !== undefined && refOf(row) !== null,
+    run: (row, ctx) => {
+      const ref = refOf(row)
+      if (ref) ctx.newBranch?.(ref)
+    },
+  },
+  {
+    id: 'show-diff',
+    label: () => translate('auto.components.git-branch.showDiff', 'Show Diff with Working Tree'),
+    // 非当前分支的 local/remote 才有对比对象（tag 不列入，§7.4）。
+    visible: (row, ctx) => {
+      const ref = refOf(row)
+      return ctx.showDiff !== undefined && ref !== null && ref.category !== 'tag' && !ref.isHead
+    },
+    run: (row, ctx) => {
+      const ref = refOf(row)
+      if (ref) ctx.showDiff?.(ref)
+    },
+  },
+  {
+    id: 'set-upstream',
+    label: () => translate('auto.components.git-branch.setUpstreamTo', 'Set Upstream To…'),
+    // 仅本地分支；需宿主声明 setUpstream + remoteRefCandidates，且至少有一个候选上游。
+    visible: (row, ctx) => {
+      const ref = refOf(row)
+      return (
+        ref !== null &&
+        ref.category === 'local' &&
+        ctx.setUpstream !== undefined &&
+        ctx.remoteRefCandidates !== undefined &&
+        ctx.remoteRefCandidates(ref.name).length > 0
+      )
+    },
+    submenu: (row, ctx) => {
+      const ref = refOf(row)
+      if (!ref || !ctx.setUpstream || !ctx.remoteRefCandidates) return []
+      return ctx.remoteRefCandidates(ref.name).map((candidate) => ({
+        id: candidate.name,
+        label: () => candidate.name,
+        enabled: true,
+        run: () => ctx.setUpstream?.(ref.name, candidate.name),
+      }))
+    },
+    // 子项自带 run；顶层 run 不被调用（submenu 存在时菜单渲染展开区）。
+    run: () => {},
   },
   {
     id: 'view-in-log',

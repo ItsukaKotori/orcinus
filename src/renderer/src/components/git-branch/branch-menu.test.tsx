@@ -33,6 +33,13 @@ vi.mock('@/components/ui/context-menu', () => ({
       {children}
     </button>
   ),
+  ContextMenuSub: ({ children }: { children: React.ReactNode }) => <div data-testid="ctx-sub">{children}</div>,
+  ContextMenuSubTrigger: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="ctx-sub-trigger">{children}</div>
+  ),
+  ContextMenuSubContent: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="ctx-sub-content">{children}</div>
+  ),
 }))
 vi.mock('@/components/ui/dropdown-menu', () => ({
   DropdownMenu: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -52,6 +59,13 @@ vi.mock('@/components/ui/dropdown-menu', () => ({
     <button type="button" data-disabled={disabled ? 'true' : 'false'} onClick={onSelect}>
       {children}
     </button>
+  ),
+  DropdownMenuSub: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuSubTrigger: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="dd-sub-trigger">{children}</div>
+  ),
+  DropdownMenuSubContent: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="dd-sub-content">{children}</div>
   ),
 }))
 
@@ -158,6 +172,30 @@ describe('BranchRowMenu', () => {
 
   it('ctx 未声明 checkout → checkout.visible=false，allowed 仅 checkout 时菜单为空不渲染 ⋯', async () => {
     render(refRow(refEntry({ name: 'dev' })), makeCtx({ checkout: undefined }), ['checkout'])
+    await flush()
+    expect(hasMore()).toBe(false)
+  })
+
+  it('set-upstream 渲染子菜单：trigger 标签 + 候选上游子项', async () => {
+    const candidates = [refEntry({ name: 'origin/dev', category: 'remote', remote: 'origin', fullName: 'refs/remotes/origin/dev' })]
+    render(
+      refRow(refEntry({ name: 'dev' })),
+      makeCtx({ setUpstream: vi.fn(), remoteRefCandidates: () => candidates }),
+      ['set-upstream']
+    )
+    await flush()
+    const subTrigger = document.querySelector('[data-testid="ctx-sub-trigger"]')
+    expect(subTrigger?.textContent).toContain('Set Upstream To…')
+    const subContent = document.querySelector('[data-testid="ctx-sub-content"]')
+    expect(subContent?.textContent).toContain('origin/dev')
+  })
+
+  it('set-upstream 无候选上游时该动作不可见 → allowed 仅它时不渲染 ⋯', async () => {
+    render(
+      refRow(refEntry({ name: 'dev' })),
+      makeCtx({ setUpstream: vi.fn(), remoteRefCandidates: () => [] }),
+      ['set-upstream']
+    )
     await flush()
     expect(hasMore()).toBe(false)
   })

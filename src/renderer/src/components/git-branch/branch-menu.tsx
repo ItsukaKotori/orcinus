@@ -7,12 +7,18 @@ import {
   ContextMenuTrigger,
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
 } from '@/components/ui/context-menu'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu'
 import type { BranchTreeRow } from './branch-tree-model'
 import { BRANCH_ACTIONS, type BranchActionContext, type BranchActionId } from './branch-actions'
@@ -27,10 +33,15 @@ export type BranchRowMenuProps = {
   className?: string
 }
 
+/** 已过滤 + 判定后的菜单条目：叶子项，或带子项的展开区（Set Upstream To…）。 */
+type MenuEntry =
+  | { kind: 'item'; id: string; label: string; enabled: boolean; run: () => void }
+  | { kind: 'sub'; id: string; label: string; sub: { id: string; label: string; enabled: boolean; run: () => void }[] }
+
 /**
  * 分支行的右键（ContextMenu）+ 行尾 `⋯`（DropdownMenu）菜单。
- * 两个 Radix 浮层各用自己的 Item 原语（混用会把 ContextMenu.Item 渲染到无 Root 的上下文），
- * 故共享的是「过滤 + 判定 + run」计算出的 entries，而不是共享 Content 节点。
+ * 两个 Radix 浮层各用自己的 Item/Sub 原语（混用会把 ContextMenu.Item 渲染到无 Root 的上下文），
+ * 故共享的是「过滤 + 判定 + submenu 展开」算出的 entries，而不是共享 Content 节点。
  * 没有任何可见项时**不渲染 `⋯`**：一个打不开的空菜单比没有更糟。
  */
 export function BranchRowMenu({
@@ -40,14 +51,30 @@ export function BranchRowMenu({
   children,
   className,
 }: BranchRowMenuProps): React.JSX.Element {
-  const entries = useMemo(
+  const entries = useMemo<MenuEntry[]>(
     () =>
-      BRANCH_ACTIONS.filter((a) => allowedActionIds.has(a.id) && a.visible(row, ctx)).map((a) => ({
-        id: a.id,
-        label: a.label(),
-        enabled: !a.enabled || a.enabled(row, ctx),
-        run: () => a.run(row, ctx),
-      })),
+      BRANCH_ACTIONS.filter((a) => allowedActionIds.has(a.id) && a.visible(row, ctx)).map((a) => {
+        if (a.submenu) {
+          return {
+            kind: 'sub',
+            id: a.id,
+            label: a.label(),
+            sub: a.submenu(row, ctx).map((s) => ({
+              id: s.id,
+              label: s.label(),
+              enabled: s.enabled,
+              run: s.run,
+            })),
+          }
+        }
+        return {
+          kind: 'item',
+          id: a.id,
+          label: a.label(),
+          enabled: !a.enabled || a.enabled(row, ctx),
+          run: () => a.run(row, ctx),
+        }
+      }),
     [allowedActionIds, ctx, row]
   )
 
@@ -60,17 +87,36 @@ export function BranchRowMenu({
           {children}
         </ContextMenuTrigger>
         <ContextMenuContent>
-          {entries.map((e) => (
-            <ContextMenuItem
-              key={e.id}
-              disabled={!e.enabled}
-              onSelect={() => {
-                if (e.enabled) e.run()
-              }}
-            >
-              {e.label}
-            </ContextMenuItem>
-          ))}
+          {entries.map((e) =>
+            e.kind === 'item' ? (
+              <ContextMenuItem
+                key={e.id}
+                disabled={!e.enabled}
+                onSelect={() => {
+                  if (e.enabled) e.run()
+                }}
+              >
+                {e.label}
+              </ContextMenuItem>
+            ) : (
+              <ContextMenuSub key={e.id}>
+                <ContextMenuSubTrigger>{e.label}</ContextMenuSubTrigger>
+                <ContextMenuSubContent>
+                  {e.sub.map((s) => (
+                    <ContextMenuItem
+                      key={s.id}
+                      disabled={!s.enabled}
+                      onSelect={() => {
+                        if (s.enabled) s.run()
+                      }}
+                    >
+                      {s.label}
+                    </ContextMenuItem>
+                  ))}
+                </ContextMenuSubContent>
+              </ContextMenuSub>
+            )
+          )}
         </ContextMenuContent>
       </ContextMenu>
       <DropdownMenu>
@@ -85,17 +131,36 @@ export function BranchRowMenu({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {entries.map((e) => (
-            <DropdownMenuItem
-              key={e.id}
-              disabled={!e.enabled}
-              onSelect={() => {
-                if (e.enabled) e.run()
-              }}
-            >
-              {e.label}
-            </DropdownMenuItem>
-          ))}
+          {entries.map((e) =>
+            e.kind === 'item' ? (
+              <DropdownMenuItem
+                key={e.id}
+                disabled={!e.enabled}
+                onSelect={() => {
+                  if (e.enabled) e.run()
+                }}
+              >
+                {e.label}
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuSub key={e.id}>
+                <DropdownMenuSubTrigger>{e.label}</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {e.sub.map((s) => (
+                    <DropdownMenuItem
+                      key={s.id}
+                      disabled={!s.enabled}
+                      onSelect={() => {
+                        if (s.enabled) s.run()
+                      }}
+                    >
+                      {s.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            )
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
