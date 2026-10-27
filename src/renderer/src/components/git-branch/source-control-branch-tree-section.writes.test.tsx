@@ -46,6 +46,7 @@ vi.mock('@/runtime/runtime-git-client', () => ({
 vi.mock('@/lib/worktree-activation', () => ({ activateAndRevealWorktree: vi.fn(() => ({ primaryTabId: null })) }))
 
 import { createRuntimeGitBranch, setRuntimeGitBranchUpstream } from '@/runtime/runtime-git-client'
+import { toast } from 'sonner'
 import { SourceControlBranchTreeSection } from './source-control-branch-tree-section'
 
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -113,48 +114,77 @@ const byText = (testid: string, text: string): HTMLElement | undefined =>
     (el) => el.textContent?.trim() === text
   )
 
-async function mount(): Promise<void> {
+async function mount(refreshSpy: () => Promise<void> = async () => {}): Promise<void> {
   await act(async () => {
-    root.render(<SourceControlBranchTreeSection worktreeId="r::/a" refreshActiveGitStatusAfterMutation={async () => {}} settings={null} />)
+    root.render(
+      <SourceControlBranchTreeSection
+        worktreeId="r::/a"
+        refreshActiveGitStatusAfterMutation={refreshSpy}
+        settings={null}
+      />
+    )
   })
   for (let i = 0; i < 6; i += 1) await flush()
 }
 
+async function openNewBranchAndCreate(name: string): Promise<void> {
+  await clickEl(byText('ctx-item', 'New Branch from…') ?? null)
+  await flush()
+  const input = document.querySelector('[data-testid="new-branch-name-input"]') as HTMLInputElement
+  expect(input).not.toBeNull()
+  const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
+  await act(async () => {
+    setter?.call(input, name)
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+  })
+  await flush()
+  const createBtn = [...document.querySelectorAll('[role="dialog"] button')].find(
+    (b) => b.textContent?.trim() === 'Create branch'
+  )
+  await clickEl(createBtn ?? null)
+  await flush()
+}
+
 describe('SourceControlBranchTreeSection 写操作集成（菜单项 → runtime）', () => {
-  it('New Branch from… → 名字框 → create 收到 start-point oid 并 invalidate', async () => {
-    await mount()
-    await clickEl(byText('ctx-item', 'New Branch from…') ?? null)
-    await flush()
-    // 名字框出现
-    expect(document.querySelector('[data-testid="new-branch-name-input"]')).not.toBeNull()
-    const input = document.querySelector('[data-testid="new-branch-name-input"]') as HTMLInputElement
-    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
-    await act(async () => {
-      setter?.call(input, 'brand-new')
-      input.dispatchEvent(new Event('input', { bubbles: true }))
-    })
-    await flush()
+  it('New Branch from… → 名字框 → create 收到 start-point oid 并 invalidate；create 不刷当前状态（§8.3）', async () => {
+    const refreshSpy = vi.fn(async () => {})
+    await mount(refreshSpy)
     const before = refs.mock.calls.length
-    const createBtn = [...document.querySelectorAll('[role="dialog"] button')].find(
-      (b) => b.textContent?.trim() === 'Create branch'
-    )
-    await clickEl(createBtn ?? null)
-    await flush()
+    await openNewBranchAndCreate('brand-new')
     expect(createRuntimeGitBranch).toHaveBeenCalledWith(
       expect.objectContaining({ worktreeId: 'r::/a' }),
       { name: 'brand-new', startPoint: 'aaa' }
     )
     expect(refs.mock.calls.length).toBeGreaterThan(before) // invalidate 重新取数
+    expect(refreshSpy).not.toHaveBeenCalled() // create 不改当前分支 → 不刷状态
+    // 成功后名字框已关
+    expect(document.querySelector('[data-testid="new-branch-name-input"]')).toBeNull()
   })
 
-  it('Set Upstream To… 子菜单 → setUpstream 收到 branch + 同名优先上游', async () => {
-    await mount()
-    // 子菜单候选项 origin/feature（同名优先）作为 ctx-item 内联渲染
+  it('NameTaken 拒绝 → toast.error 且名字框不关（可改名），不 invalidate', async () => {
+    vi.mocked(createRuntimeGitBranch).mockResolvedValueOnce({
+      status: { refused: 'name-taken' },
+      branch: 'brand-new',
+    })
+    const refreshSpy = vi.fn(async () => {})
+    await mount(refreshSpy)
+    const before = refs.mock.calls.length
+    await openNewBranchAndCreate('brand-new')
+    expect(toast.error).toHaveBeenCalled()
+    expect(document.querySelector('[data-testid="new-branch-name-input"]')).not.toBeNull() // 保持开
+    expect(refs.mock.calls.length).toBe(before) // 未 invalidate
+    expect(refreshSpy).not.toHaveBeenCalled()
+  })
+
+  it('Set Upstream To… 子菜单 → setUpstream 收到 branch + 同名优先上游；非当前分支不刷状态', async () => {
+    const refreshSpy = vi.fn(async () => {})
+    await mount(refreshSpy)
     await clickEl(byText('ctx-item', 'origin/feature') ?? null)
     await flush()
     expect(setRuntimeGitBranchUpstream).toHaveBeenCalledWith(
       expect.objectContaining({ worktreeId: 'r::/a' }),
       { branch: 'feature', upstream: 'origin/feature' }
     )
+    expect(refreshSpy).not.toHaveBeenCalled() // feature != 当前 main → 仅 invalidate，不刷状态
   })
 })

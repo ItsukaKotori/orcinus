@@ -236,7 +236,7 @@ pub fn checkout(
 /// 分支写操作（create / set-upstream / rename / delete）共用的**结构化拒绝**。
 /// 经各命令 `Outcome.status` 的 `Refused(...)` 以 `Ok(...)` 透出，**不走 `BridgeError`**
 /// （后者 `Serialize` 只留 `{ message }`，类型全丢，spec §8.1）。前端按变体走 i18n 出文案。
-/// `CheckedOut` / `NotMergeable` 由增量 4 的 rename / delete 使用；本增量只用 `NameTaken` / `UpstreamMissing`。
+/// `CheckedOut` 由增量 4 的 rename / delete 使用；`NotMergeable` 是增量 4 **待加**变体（本 enum 当前未含）；本增量只用 `NameTaken` / `UpstreamMissing`。
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "kebab-case")]
@@ -277,7 +277,8 @@ pub struct GitBranchCreateOutcome {
 pub struct GitBranchCreateInput {
     /// 新分支短名（可含 `/`）。经 `resolve_create_branch_name` 校验。
     pub name: String,
-    /// start-point：一个可解析的 commit oid（`GitRefEntry.oid`）。不接受任意 revision。
+    /// start-point：一个能解析成 commit 的真实 rev（生产调用方恒传 `GitRefEntry.oid`）。
+    /// 不约束到特定命名空间，但必须是可解析对象（`ref_exists`）；非 commit 表达式会被 `git branch` 拒且无副作用。
     pub start_point: String,
 }
 
@@ -306,7 +307,8 @@ pub fn create(
     }
 
     // start-point 必须是能解析成 commit 的真实 rev（oid 或 ref）；绝不当任意 revision
-    // 直接丢给 `git branch`（防注入，同 [`resolve`] 的前缀校验思路）。
+    // 只接受能解析成对象的 start-point（`ref_exists` = `rev-parse --verify --quiet`），
+    // 而非任意不存在的 revision；且作为独立 argv 传递（`--` 后不会被当 option）。
     let start = args.start_point.trim();
     if start.is_empty() || !ref_exists(worktree_path, start) {
         return Err(CoreError::InvalidInput(format!("unknown start point: {start}")));

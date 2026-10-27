@@ -94,28 +94,35 @@ fn rejects_taken_name() {
     assert_eq!(current_branch(p), "main");
 }
 
-// 非法名（含空格 / `-` 前缀）→ 环境级 Err（走 resolve_create_branch_name 校验），不建 ref。
+// 非法名→环境级 Err（走 resolve_create_branch_name），不建 ref。
+// 断“是校验门拒的，不是 `git branch` 拒的”：否则删掉校验层、靠 git 自己同样报错，测试仍绿（无判别力）。
 #[test]
 fn rejects_invalid_name_via_check_ref_format() {
     let d = repo();
     let p = d.path().to_str().unwrap();
     let start = head_oid(p);
 
-    for bad in ["bad name", "-leading-dash", "..", ""] {
-        let res = create(p, &args(bad, &start));
-        assert!(res.is_err(), "非法名 {bad:?} 必须 Err，实际 {:?}", res.map(|o| o.status));
-    }
+    // 含空格→ check-ref-format 拒（command 名入错信息）。
+    let e = create(p, &args("bad name", &start)).unwrap_err();
+    assert!(e.to_string().contains("check-ref-format"), "实际: {e}");
+    // `-` 前缀→ InvalidInput（resolve_create_branch_name 专门拒）。
+    let e = create(p, &args("-leading", &start)).unwrap_err();
+    assert!(e.to_string().contains("must not start with"), "实际: {e}");
+    // 空名→ create 自己的 non-empty 门（不走 git）。
+    let e = create(p, &args("", &start)).unwrap_err();
+    assert!(e.to_string().contains("empty"), "实际: {e}");
     assert_eq!(current_branch(p), "main");
 }
 
-// start-point 解析不到 → 环境级 Err（不接受任意 revision，防注入），且不留下半成品 ref。
+// start-point 解析不到 → create 自己的 InvalidInput 门拦下（不是 `git branch` 的 GitCommandFailed），
+// 删了 ref_exists 门就会变成 git 报错 → 断错型才有判别力。且不留半成品 ref。
 #[test]
 fn rejects_unresolvable_start_point() {
     let d = repo();
     let p = d.path().to_str().unwrap();
 
-    let res = create(p, &args("fresh", "this-rev-does-not-exist"));
-    assert!(res.is_err());
+    let e = create(p, &args("fresh", "this-rev-does-not-exist")).unwrap_err();
+    assert!(e.to_string().contains("unknown start point"), "应为 ref_exists 门的 InvalidInput，实际: {e}");
     assert!(!ref_exists(p, "refs/heads/fresh"), "失败的 create 不得留下分支 ref");
     assert_eq!(current_branch(p), "main");
 }

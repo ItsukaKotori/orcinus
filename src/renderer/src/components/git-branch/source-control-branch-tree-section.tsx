@@ -195,10 +195,24 @@ export function SourceControlBranchTreeSection({
           setNewBranchTarget(null)
           invalidate()
         } else {
-          // 只有 NameTaken 一种业务拒绝；保持框开着让用户改名（非法名会 reject 进 catch）。
+          // 按 refusal 变体分文案（不是一律当 NameTaken）；未知变体走通用兜底（与增量4 共 enum 时不误报）。
+          const refusal =
+            typeof outcome.status === 'object' && 'refused' in outcome.status
+              ? outcome.status.refused
+              : null
           toast.error(
-            translate('auto.components.git-branch.newBranchNameTaken', 'Branch "{{name}}" already exists.', { name })
+            refusal === 'name-taken'
+              ? translate(
+                  'auto.components.git-branch.newBranchNameTaken',
+                  'Branch "{{name}}" already exists.',
+                  { name }
+                )
+              : translate(
+                  'auto.components.git-branch.newBranchCreateFailed',
+                  'Could not create branch.'
+                )
           )
+          // NameTaken 等保持框开着让用户改名（非法名会 reject 进 catch）。
         }
       } catch (e) {
         toast.error(e instanceof Error ? e.message : String(e))
@@ -226,12 +240,21 @@ export function SourceControlBranchTreeSection({
           }
           invalidate()
         } else {
+          const refusal =
+            typeof outcome.status === 'object' && 'refused' in outcome.status
+              ? outcome.status.refused
+              : null
           toast.error(
-            translate(
-              'auto.components.git-branch.setUpstreamMissing',
-              'Upstream {{upstream}} no longer exists.',
-              { upstream }
-            )
+            refusal === 'upstream-missing'
+              ? translate(
+                  'auto.components.git-branch.setUpstreamMissing',
+                  'Upstream {{upstream}} no longer exists.',
+                  { upstream }
+                )
+              : translate(
+                  'auto.components.git-branch.setUpstreamFailed',
+                  'Could not set upstream.'
+                )
           )
         }
       } catch (e) {

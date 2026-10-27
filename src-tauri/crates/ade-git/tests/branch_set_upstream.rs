@@ -84,12 +84,13 @@ fn refuses_missing_upstream() {
     assert_eq!(upstream_of(p, "feature"), "", "被拒时不得设置 upstream");
 }
 
-// 本地分支不存在 → 环境级 Err（调用方只会从真实本地分支发起）。
+// 本地分支不存在 → create 自己的 InvalidInput 门拦下（不是 git branch 的报错）。
 #[test]
 fn rejects_unknown_local_branch() {
     let d = repo();
     let p = d.path().to_str().unwrap();
-    assert!(set_upstream(p, &input("nope", "origin/feature")).is_err());
+    let e = set_upstream(p, &input("nope", "origin/feature")).unwrap_err();
+    assert!(e.to_string().contains("unknown local branch"), "应为 ref_exists 门的 InvalidInput，实际: {e}");
 }
 
 // 嵌套分支名（feature/login）也能设上游。
