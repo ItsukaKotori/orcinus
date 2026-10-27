@@ -6,6 +6,7 @@ import { branchName } from '@/lib/git-utils'
 import { translate } from '@/i18n/i18n'
 import { cn } from '@/lib/utils'
 import { checkoutRuntimeGit } from '@/runtime/runtime-git-checkout-client'
+import { createRuntimeGitBranch, setRuntimeGitBranchUpstream } from '@/runtime/runtime-git-client'
 import type { RuntimeGitContext } from '@/runtime/runtime-git-client-context'
 import { refreshGitStatusForWorktree } from '../right-sidebar/git-status-refresh'
 import { toast } from 'sonner'
@@ -19,6 +20,7 @@ import {
 } from './branch-actions'
 import { BranchRowMenu } from './branch-menu'
 import { CheckoutConfirmDialog, needsCheckoutConfirmation } from './checkout-confirm-dialog'
+import { NewBranchDialog } from './new-branch-dialog'
 import { useBranchRefs } from './use-branch-refs'
 import {
   persistBranchSectionCollapsed,
@@ -26,8 +28,15 @@ import {
 } from './source-control-branch-section-view-state'
 
 // 宿主 A 声明的可用动作集合：checkout 是主动作，switch 降级为次要项，恒保留 new-workspace。
-// **不含 view-in-log**（那是 Git Log 宿主专属，spec §13.6）。
-const HOST_A_ALLOWED: ReadonlySet<BranchActionId> = new Set(['checkout', 'switch', 'new-workspace'])
+// new-branch / set-upstream（增量3）。**不含 view-in-log**（Git Log 专属）；**不含 show-diff**
+// （其宿主接线延到增量3b，需 per-ref git_branch_compare）。
+const HOST_A_ALLOWED: ReadonlySet<BranchActionId> = new Set([
+  'checkout',
+  'switch',
+  'new-workspace',
+  'new-branch',
+  'set-upstream',
+])
 
 // 稳定的空数组引用：脏改动缺失时避免每次渲染新建数组打乱 zustand 选择器一致性。
 const EMPTY_ENTRIES: never[] = []
@@ -60,9 +69,10 @@ export function SourceControlBranchTreeSection({
 }: SourceControlBranchTreeSectionProps): React.JSX.Element | null {
   const [collapsed, setCollapsed] = useState(() => readPersistedBranchSectionCollapsed())
   const [pendingCheckout, setPendingCheckout] = useState<GitRefEntry | null>(null)
-  // 防并发 checkout：干净无会话路径是 fire-and-forget，连点两行会在同一 worktree 上叠两条
-  // `git checkout`，第二条大概率撞 index.lock。进入置位、finally 复位。
-  const checkoutInFlightRef = useRef(false)
+  const [newBranchTarget, setNewBranchTarget] = useState<GitRefEntry | null>(null)
+  // 防并发写：checkout / new-branch / set-upstream 都是会改 ref 的写操作，连点会在
+  // 同一 worktree 上叠两条 git 写、大概率撞 index.lock。共用一个 in-flight 门，进入置位、finally 复位。
+  const writeInFlightRef = useRef(false)
 
   const worktree = useAppStore((s) => findWorktreeById(s.worktreesByRepo, worktreeId))
   const openModal = useAppStore((s) => s.openModal)
@@ -118,8 +128,8 @@ export function SourceControlBranchTreeSection({
   const executeCheckout = useCallback(
     async (ref: GitRefEntry) => {
       if (!worktree) return
-      if (checkoutInFlightRef.current) return
-      checkoutInFlightRef.current = true
+      if (writeInFlightRef.current) return
+      writeInFlightRef.current = true
       const target =
         ref.category === 'remote'
           ? { kind: 'remote' as const, name: ref.name }
@@ -164,10 +174,87 @@ export function SourceControlBranchTreeSection({
         // 环境级失败（git 拒绝覆盖本地改动等）原样上抛；后端 message 是英文，这里只做兜底提示。
         toast.error(e instanceof Error ? e.message : String(e))
       } finally {
-        checkoutInFlightRef.current = false
+        writeInFlightRef.current = false
       }
     },
     [worktree, worktreeId, owners, settings, refreshAfterCheckout, invalidate]
+  )
+
+  // 给本地分支新建分支：弹名字框后提交。create 不改当前分支 → 成功仅 invalidate（§8.3）。
+  const executeNewBranch = useCallback(
+    async (name: string, startRef: GitRefEntry) => {
+      if (!worktree) return
+      if (writeInFlightRef.current) return
+      writeInFlightRef.current = true
+      try {
+        const outcome = await createRuntimeGitBranch(
+          { settings, worktreeId, worktreePath: worktree.path },
+          { name, startPoint: startRef.oid }
+        )
+        if (outcome.status === 'created') {
+          setNewBranchTarget(null)
+          invalidate()
+        } else {
+          // 只有 NameTaken 一种业务拒绝；保持框开着让用户改名（非法名会 reject 进 catch）。
+          toast.error(
+            translate('auto.components.git-branch.newBranchNameTaken', 'Branch "{{name}}" already exists.', { name })
+          )
+        }
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : String(e))
+      } finally {
+        writeInFlightRef.current = false
+      }
+    },
+    [worktree, worktreeId, settings, invalidate]
+  )
+
+  // 设 upstream。目标是当前分支时影响 ahead/behind → 额外刷状态；否则仅 invalidate（§8.3）。
+  const executeSetUpstream = useCallback(
+    async (branch: string, upstream: string) => {
+      if (!worktree) return
+      if (writeInFlightRef.current) return
+      writeInFlightRef.current = true
+      try {
+        const outcome = await setRuntimeGitBranchUpstream(
+          { settings, worktreeId, worktreePath: worktree.path },
+          { branch, upstream }
+        )
+        if (outcome.status === 'set') {
+          if ((branchName(worktree.branch ?? '') || null) === branch) {
+            await refreshAfterCheckout()
+          }
+          invalidate()
+        } else {
+          toast.error(
+            translate(
+              'auto.components.git-branch.setUpstreamMissing',
+              'Upstream {{upstream}} no longer exists.',
+              { upstream }
+            )
+          )
+        }
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : String(e))
+      } finally {
+        writeInFlightRef.current = false
+      }
+    },
+    [worktree, worktreeId, settings, refreshAfterCheckout, invalidate]
+  )
+
+  // Set Upstream 子菜单候选：已加载 refs 里的 remote 条目，同名优先（`origin/<branch>` 排前）。
+  const buildRemoteCandidates = useCallback(
+    (branch: string): GitRefEntry[] => {
+      const rank = (ref: GitRefEntry): number => {
+        const slash = ref.name.indexOf('/')
+        return slash >= 0 && ref.name.slice(slash + 1) === branch ? 1 : 0
+      }
+      return refs
+        .filter((ref) => ref.category === 'remote')
+        .sort((a, b) => rank(b) - rank(a))
+    },
+    [refs]
   )
 
   const ctx = useMemo<BranchActionContext>(() => {
@@ -192,8 +279,22 @@ export function SourceControlBranchTreeSection({
           void executeCheckout(ref)
         }
       },
+      // 增量3：New Branch 弹名字框（start-point = 选中 ref）；Set Upstream 直接执行（子菜单已选定候选）。
+      newBranch: (ref: GitRefEntry) => setNewBranchTarget(ref),
+      setUpstream: (branch: string, upstream: string) => void executeSetUpstream(branch, upstream),
+      remoteRefCandidates: buildRemoteCandidates,
     }
-  }, [owners, openModal, repoId, worktree?.branch, dirty.length, sessionCount, executeCheckout])
+  }, [
+    owners,
+    openModal,
+    repoId,
+    worktree?.branch,
+    dirty.length,
+    sessionCount,
+    executeCheckout,
+    executeSetUpstream,
+    buildRemoteCandidates,
+  ])
 
   const toggleCollapse = useCallback(() => {
     setCollapsed((prev) => {
@@ -274,6 +375,15 @@ export function SourceControlBranchTreeSection({
             setPendingCheckout(null)
             void executeCheckout(ref)
           }}
+        />
+      )}
+
+      {newBranchTarget && (
+        <NewBranchDialog
+          open
+          startPointLabel={newBranchTarget.name}
+          onCancel={() => setNewBranchTarget(null)}
+          onCreate={(name) => void executeNewBranch(name, newBranchTarget)}
         />
       )}
     </section>
