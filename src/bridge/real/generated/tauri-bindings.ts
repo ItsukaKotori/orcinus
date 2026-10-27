@@ -524,7 +524,7 @@ export type BootstrapPayload = {
  *  分支写操作（create / set-upstream / rename / delete）共用的**结构化拒绝**。
  *  经各命令 `Outcome.status` 的 `Refused(...)` 以 `Ok(...)` 透出，**不走 `BridgeError`**
  *  （后者 `Serialize` 只留 `{ message }`，类型全丢，spec §8.1）。前端按变体走 i18n 出文案。
- *  `CheckedOut` / `NotMergeable` 由增量 4 的 rename / delete 使用；本增量只用 `NameTaken` / `UpstreamMissing`。
+ *  `CheckedOut` 由增量 4 的 rename / delete 使用；`NotMergeable` 是增量 4 **待加**变体（本 enum 当前未含）；本增量只用 `NameTaken` / `UpstreamMissing`。
  */
 export type BranchOperationRefusal = 
 /**  目标分支名已存在于 `refs/heads/*`。 */
@@ -892,7 +892,10 @@ export type GitBranchCreateArgs = {
 export type GitBranchCreateInput = {
 	/**  新分支短名（可含 `/`）。经 `resolve_create_branch_name` 校验。 */
 	name: string,
-	/**  start-point：一个可解析的 commit oid（`GitRefEntry.oid`）。不接受任意 revision。 */
+	/**
+	 *  start-point：一个能解析成 commit 的真实 rev（生产调用方恒传 `GitRefEntry.oid`）。
+	 *  不约束到特定命名空间，但必须是可解析对象（`ref_exists`）；非 commit 表达式会被 `git branch` 拒且无副作用。
+	 */
 	startPoint: string,
 };
 
