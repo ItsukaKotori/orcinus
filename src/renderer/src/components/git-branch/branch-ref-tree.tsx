@@ -26,6 +26,8 @@ export type BranchRefTreeProps = {
   /** 高亮行 id（合成人物用 `row:*`，ref 用 `ref:<fullName>`）。 */
   activeValue?: string | null
   onActivate: (row: BranchTreeRow) => void
+  /** §7.3：F2 对焦点 ref 行触发改名请求；不传 → F2 无操作。 */
+  onRenameRequest?: (row: BranchTreeRow) => void
   /**
    * 每行菜单接缝（增量 2B）。提供时**仅 ref 行**把已渲染好的 `<button>` 主体作为 `content`
    * 交给接缝，由接缝（宿主的 `BranchRowMenu`）包进触发区并追加 `⋯`。不提供时 ref 行
@@ -48,6 +50,7 @@ export function BranchRefTree({
   includeAllBranchesRow = false,
   activeValue = null,
   onActivate,
+  onRenameRequest,
   renderRowMenu,
   className,
 }: BranchRefTreeProps): React.JSX.Element {
@@ -116,6 +119,14 @@ export function BranchRefTree({
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
+      // §7.3：F2 对焦点 ref 行请求 Rename（事件目标即焦点行）。group/synthetic 或无行 → 吞掉。
+      if (event.key === 'F2') {
+        event.preventDefault()
+        const indexed = Number((event.target as HTMLElement).dataset.rowIndex)
+        const hit = Number.isNaN(indexed) ? undefined : rows[indexed]
+        if (hit?.kind === 'ref') onRenameRequest?.(hit)
+        return
+      }
       if (
         event.key !== 'ArrowDown' &&
         event.key !== 'ArrowUp' &&
@@ -158,7 +169,7 @@ export function BranchRefTree({
         return next
       })
     },
-    [rows, focusRow]
+    [rows, focusRow, onRenameRequest]
   )
 
   return (

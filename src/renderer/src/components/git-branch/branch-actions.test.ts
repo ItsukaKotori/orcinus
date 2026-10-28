@@ -324,3 +324,59 @@ describe('增量3 非破坏动作（new-branch / show-diff / set-upstream）', (
     expect(findAction('set-upstream').visible(refRow(refEntry({ name: 'dev' })), ctx())).toBe(false)
   })
 })
+
+describe('增量4 破坏性动作（rename / delete）+ §8.2 in-flight 置灰', () => {
+  const remoteEntry = refEntry({ name: 'origin/dev', category: 'remote', remote: 'origin', fullName: 'refs/remotes/origin/dev' })
+  const tagEntry = refEntry({ name: 'v1', category: 'tag', fullName: 'refs/tags/v1' })
+
+  it('rename：仅 local 非 HEAD 可见；宿主不声明不可见；run 交 ref', () => {
+    const rn = vi.fn()
+    const c = ctx({ rename: rn })
+    expect(findAction('rename').visible(refRow(refEntry({ name: 'dev' })), c)).toBe(true)
+    expect(findAction('rename').visible(refRow(remoteEntry), c)).toBe(false)
+    expect(findAction('rename').visible(refRow(tagEntry), c)).toBe(false)
+    expect(findAction('rename').visible(refRow(refEntry({ name: 'main', isHead: true })), c)).toBe(false)
+    expect(findAction('rename').visible(refRow(refEntry({ name: 'dev' })), ctx())).toBe(false)
+    const ref = refEntry({ name: 'dev' })
+    findAction('rename').run(refRow(ref), c)
+    expect(rn).toHaveBeenCalledWith(ref)
+  })
+
+  it('delete：仅 local 非 HEAD 可见；宿主不声明不可见；run 交 ref', () => {
+    const del = vi.fn()
+    const c = ctx({ requestDelete: del })
+    expect(findAction('delete').visible(refRow(refEntry({ name: 'dev' })), c)).toBe(true)
+    expect(findAction('delete').visible(refRow(remoteEntry), c)).toBe(false)
+    expect(findAction('delete').visible(refRow(refEntry({ name: 'main', isHead: true })), c)).toBe(false)
+    expect(findAction('delete').visible(refRow(refEntry({ name: 'dev' })), ctx())).toBe(false)
+    findAction('delete').run(refRow(refEntry({ name: 'dev' })), c)
+    expect(del).toHaveBeenCalled()
+  })
+
+  it('rename/delete：被别的 worktree 检出（checkedOutBy 非 null）→ 不可点', () => {
+    const c = ctx({ rename: vi.fn(), requestDelete: vi.fn() })
+    const owner = { worktreeId: 'w2', path: '/x', displayName: 'w2' } as unknown as BranchWorkspaceOwner
+    expect(findAction('rename').enabled?.(refRow(refEntry({ name: 'dev' }), owner), c)).toBe(false)
+    expect(findAction('delete').enabled?.(refRow(refEntry({ name: 'dev' }), owner), c)).toBe(false)
+    expect(findAction('rename').enabled?.(refRow(refEntry({ name: 'dev' })), c)).toBe(true)
+  })
+
+  it('§8.2：opInFlight 时 checkout / rename / delete 全部置灰', () => {
+    const c = ctx({ checkout: vi.fn(), rename: vi.fn(), requestDelete: vi.fn(), opInFlight: true })
+    const row = refRow(refEntry({ name: 'dev' }))
+    expect(findAction('checkout').enabled?.(row, c)).toBe(false)
+    expect(findAction('rename').enabled?.(row, c)).toBe(false)
+    expect(findAction('delete').enabled?.(row, c)).toBe(false)
+    // 反证：无 in-flight 时三者可用（判别力）。
+    const idle = ctx({ checkout: vi.fn(), rename: vi.fn(), requestDelete: vi.fn() })
+    expect(findAction('checkout').enabled?.(row, idle)).toBe(true)
+    expect(findAction('rename').enabled?.(row, idle)).toBe(true)
+    expect(findAction('delete').enabled?.(row, idle)).toBe(true)
+  })
+
+  it('§8.2：opInFlight 时 set-upstream 子项置灰', () => {
+    const row = refRow(refEntry({ name: 'dev' }))
+    const busy = ctx({ setUpstream: vi.fn(), remoteRefCandidates: () => [refEntry({ name: 'origin/dev', category: 'remote', remote: 'origin', fullName: 'refs/remotes/origin/dev' })], opInFlight: true })
+    expect((findAction('set-upstream').submenu?.(row, busy) ?? [])[0]?.enabled).toBe(false)
+  })
+})

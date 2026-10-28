@@ -273,3 +273,17 @@ describe('renderRowMenu 接缝（增量 2B）', () => {
     expect(row('group:local')?.tagName).toBe('BUTTON')
   })
 })
+
+describe('§7.3 F2 → onRenameRequest', () => {
+  it('F2 对焦点 ref 行回调该行', async () => {
+    const hit: string[] = []
+    await render({ onRenameRequest: (r) => { if (r.kind === 'ref') hit.push(r.ref.name) } })
+    await press(row('ref:refs/heads/feature/login'), 'F2')
+    expect(hit).toEqual(['feature/login'])
+  })
+
+  it('未声明 onRenameRequest 时 F2 无操作、不抛', async () => {
+    await render()
+    await expect(press(row('ref:refs/heads/feature/login'), 'F2')).resolves.toBeUndefined()
+  })
+})

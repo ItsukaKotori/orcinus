@@ -7,6 +7,8 @@ export type BranchActionId =
   | 'switch'
   | 'new-workspace'
   | 'new-branch'
+  | 'rename'
+  | 'delete'
   | 'set-upstream'
   | 'show-diff'
   | 'view-in-log'
@@ -39,6 +41,12 @@ export type BranchActionContext = {
    * 与 `setUpstream` 一同声明时 set-upstream 才可见；返回空数组则该动作不可见。
    */
   remoteRefCandidates?: (branch: string) => GitRefEntry[]
+  /** Rename（仅未检出 local）；宿主不声明 → 菜单不出现。run 只开框，写入在宿主。 */
+  rename?: (ref: GitRefEntry) => void
+  /** Delete（仅未检出 local）；run 只触发删除流程（含 -d→-D 二次确认）。 */
+  requestDelete?: (ref: GitRefEntry) => void
+  /** §8.2：有写操作 in-flight 时，checkout / set-upstream / rename / delete 菜单项置灰（防并发）。 */
+  opInFlight?: boolean
 }
 
 /** 子菜单项（Set Upstream To… 用）。 */
@@ -93,7 +101,7 @@ export const BRANCH_ACTIONS: readonly BranchAction[] = [
     //    命中则回 checked-out-elsewhere 拒绝，宿主 A（Task 5）据此跳转；故前端不为 remote 置灰。
     //  - checkedOutBy 源自含当前 worktree 的 owner 映射；正常数据下当前分支行 isHead=true 已令
     //    checkout 不可见，走不到这里；仅元数据陈旧时才会出现“自己占用→置灰+回落跳转”的连带面。
-    enabled: (row) => row.kind === 'ref' && row.checkedOutBy === null,
+    enabled: (row, ctx) => row.kind === 'ref' && row.checkedOutBy === null && !ctx.opInFlight,
     run: (row, ctx) => {
       const ref = refOf(row)
       if (ref) ctx.checkout?.(ref)
@@ -170,12 +178,40 @@ export const BRANCH_ACTIONS: readonly BranchAction[] = [
       return ctx.remoteRefCandidates(ref.name).map((candidate) => ({
         id: candidate.name,
         label: () => candidate.name,
-        enabled: true,
+        enabled: !ctx.opInFlight,
         run: () => ctx.setUpstream?.(ref.name, candidate.name),
       }))
     },
     // 子项自带 run；顶层 run 不被调用（submenu 存在时菜单渲染展开区）。
     run: () => {},
+  },
+  {
+    id: 'rename',
+    label: () => translate('auto.components.git-branch.rename', 'Rename…'),
+    // §7.4：Rename 仅 local、非当前分支；宿主声明 rename 才出现。
+    visible: (row, ctx) => {
+      const ref = refOf(row)
+      return ctx.rename !== undefined && ref !== null && ref.category === 'local' && !ref.isHead
+    },
+    // 仅未检出分支可改名（§7.4 / 决策 5）；in-flight 置灰。
+    enabled: (row, ctx) => row.kind === 'ref' && row.checkedOutBy === null && !ctx.opInFlight,
+    run: (row, ctx) => {
+      const ref = refOf(row)
+      if (ref) ctx.rename?.(ref)
+    },
+  },
+  {
+    id: 'delete',
+    label: () => translate('auto.components.git-branch.delete', 'Delete'),
+    visible: (row, ctx) => {
+      const ref = refOf(row)
+      return ctx.requestDelete !== undefined && ref !== null && ref.category === 'local' && !ref.isHead
+    },
+    enabled: (row, ctx) => row.kind === 'ref' && row.checkedOutBy === null && !ctx.opInFlight,
+    run: (row, ctx) => {
+      const ref = refOf(row)
+      if (ref) ctx.requestDelete?.(ref)
+    },
   },
   {
     id: 'view-in-log',
