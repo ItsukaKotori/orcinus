@@ -15,6 +15,7 @@ export type BranchOperationRefusal =
   | 'name-taken'
   | { 'checked-out': { worktreePath: string } }
   | 'upstream-missing'
+  | { 'not-mergeable': { unmergedCount: number } }
 
 export type GitBranchCreateInput = {
   /** 新分支短名，可含 `/`。后端过 `resolve_create_branch_name` 校验。 */
@@ -46,5 +47,35 @@ export type GitBranchSetUpstreamOutcome = {
   branch?: string
   /** `UpstreamMissing` 时为被拒的、不存在的上游短名。 */
   upstream?: string
+  message?: string
+}
+
+export type GitBranchRenameInput = {
+  /** 源本地分支短名（必须已存在且未被检出）。 */
+  oldName: string
+  /** 新短名，可含 `/`。后端过 `resolve_create_branch_name` 校验。 */
+  newName: string
+}
+
+export type GitBranchRenameStatus = 'renamed' | { refused: BranchOperationRefusal }
+
+export type GitBranchRenameOutcome = {
+  status: GitBranchRenameStatus
+  oldName?: string
+  newName?: string
+  message?: string
+}
+
+export type GitBranchDeleteInput = {
+  branch: string
+  /** true → `-D`（强删未合并）；false → `-d`（未合并回 NotMergeable）。 */
+  force: boolean
+}
+
+export type GitBranchDeleteStatus = 'deleted' | { refused: BranchOperationRefusal }
+
+export type GitBranchDeleteOutcome = {
+  status: GitBranchDeleteStatus
+  branch?: string
   message?: string
 }

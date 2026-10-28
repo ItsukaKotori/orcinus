@@ -871,6 +871,60 @@ pub async fn git_branch_set_upstream(
     run_blocking(move || git_branch_set_upstream_impl(&path, &inner)).await
 }
 
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitBranchRenameArgs {
+    pub worktree_path: String,
+    pub args: ade_git::GitBranchRenameInput,
+}
+
+/// 重命名本地分支（仅未检出）。业务拒绝（NameTaken / CheckedOut）以 `Ok(Outcome.status)` 透出。
+pub fn git_branch_rename_impl(
+    worktree_path: &str,
+    args: &ade_git::GitBranchRenameInput,
+) -> Result<ade_git::GitBranchRenameOutcome, BridgeError> {
+    Ok(ade_git::branch_ops::rename(worktree_path, args)?)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_branch_rename(
+    state: State<'_, AppState>,
+    args: GitBranchRenameArgs,
+) -> Result<ade_git::GitBranchRenameOutcome, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    let path = args.worktree_path;
+    let inner = args.args;
+    run_blocking(move || git_branch_rename_impl(&path, &inner)).await
+}
+
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitBranchDeleteArgs {
+    pub worktree_path: String,
+    pub args: ade_git::GitBranchDeleteInput,
+}
+
+/// 删除本地分支（仅未检出）。未合并→Ok(Refused(NotMergeable))、占用→Ok(Refused(CheckedOut))；不经 BridgeError。
+pub fn git_branch_delete_impl(
+    worktree_path: &str,
+    args: &ade_git::GitBranchDeleteInput,
+) -> Result<ade_git::GitBranchDeleteOutcome, BridgeError> {
+    Ok(ade_git::branch_ops::delete(worktree_path, args)?)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_branch_delete(
+    state: State<'_, AppState>,
+    args: GitBranchDeleteArgs,
+) -> Result<ade_git::GitBranchDeleteOutcome, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    let path = args.worktree_path;
+    let inner = args.args;
+    run_blocking(move || git_branch_delete_impl(&path, &inner)).await
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn git_remote_urls(

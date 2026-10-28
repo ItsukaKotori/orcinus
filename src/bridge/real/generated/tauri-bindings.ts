@@ -268,6 +268,8 @@ export const commands = {
 	gitCheckout: (args: GitCheckoutArgs) => typedError<GitCheckoutOutcome_Serialize, BridgeError>(__TAURI_INVOKE("git_checkout", { args })),
 	gitBranchCreate: (args: GitBranchCreateArgs) => typedError<GitBranchCreateOutcome_Serialize, BridgeError>(__TAURI_INVOKE("git_branch_create", { args })),
 	gitBranchSetUpstream: (args: GitBranchSetUpstreamArgs) => typedError<GitBranchSetUpstreamOutcome_Serialize, BridgeError>(__TAURI_INVOKE("git_branch_set_upstream", { args })),
+	gitBranchRename: (args: GitBranchRenameArgs) => typedError<GitBranchRenameOutcome_Serialize, BridgeError>(__TAURI_INVOKE("git_branch_rename", { args })),
+	gitBranchDelete: (args: GitBranchDeleteArgs) => typedError<GitBranchDeleteOutcome_Serialize, BridgeError>(__TAURI_INVOKE("git_branch_delete", { args })),
 	gitFetch: (args: GitFetchArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_fetch", { args })),
 	gitPull: (args: GitPullArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_pull", { args })),
 	gitRemoteUrls: (args: GitWorktreeArgs) => typedError<GitRemoteUrl[], BridgeError>(__TAURI_INVOKE("git_remote_urls", { args })),
@@ -524,17 +526,22 @@ export type BootstrapPayload = {
  *  分支写操作（create / set-upstream / rename / delete）共用的**结构化拒绝**。
  *  经各命令 `Outcome.status` 的 `Refused(...)` 以 `Ok(...)` 透出，**不走 `BridgeError`**
  *  （后者 `Serialize` 只留 `{ message }`，类型全丢，spec §8.1）。前端按变体走 i18n 出文案。
- *  `CheckedOut` 由增量 4 的 rename / delete 使用；`NotMergeable` 是增量 4 **待加**变体（本 enum 当前未含）；本增量只用 `NameTaken` / `UpstreamMissing`。
+ *  用量：create→`NameTaken`；set-upstream→`UpstreamMissing`；rename/delete→`CheckedOut`（+rename `NameTaken`）；
+ *  delete `-d` 未合并→`NotMergeable`。与 spec §8.1 示意略差：`branch` 名由各 `Outcome.branch`/`oldName`/`newName` 承载而非变体字段。
  */
 export type BranchOperationRefusal = 
 /**  目标分支名已存在于 `refs/heads/*`。 */
 "name-taken" | 
 /**  分支正被某个 worktree 检出（携带其路径供前端跳转）。 */
-{ "checked-out": {
+({ "checked-out": {
 	worktreePath: string,
-} } | 
+} }) & { "not-mergeable"?: never } | 
 /**  期望的上游 ref 不在 `refs/remotes/*`。 */
-"upstream-missing";
+"upstream-missing" | 
+/**  `git branch -d` 因未完全合并而拒；携带未合入 HEAD 的提交数供二次确认。 */
+({ "not-mergeable": {
+	unmergedCount: number,
+} }) & { "checked-out"?: never };
 
 export type BridgeError = {
 	message: string,
@@ -915,6 +922,33 @@ export type GitBranchCreateOutcome_Serialize = {
 
 export type GitBranchCreateStatus = "created" | { refused: BranchOperationRefusal };
 
+export type GitBranchDeleteArgs = {
+	worktreePath: string,
+	args: GitBranchDeleteInput,
+};
+
+export type GitBranchDeleteInput = {
+	branch: string,
+	/**  true → `-D`（强删未合并）；false → `-d`（未合并则结构化拒绝 NotMergeable）。 */
+	force: boolean,
+};
+
+export type GitBranchDeleteOutcome = GitBranchDeleteOutcome_Serialize | GitBranchDeleteOutcome_Deserialize;
+
+export type GitBranchDeleteOutcome_Deserialize = {
+	status: GitBranchDeleteStatus,
+	branch: string | null,
+	message: string | null,
+};
+
+export type GitBranchDeleteOutcome_Serialize = {
+	status: GitBranchDeleteStatus,
+	branch?: string | null,
+	message?: string | null,
+};
+
+export type GitBranchDeleteStatus = "deleted" | { refused: BranchOperationRefusal };
+
 export type GitBranchDiffArgs = {
 	worktreePath: string,
 	compare: GitCompareRefsArgs,
@@ -940,6 +974,34 @@ export type GitBranchLineTotal_Serialize = {
 	test?: LineStat | null,
 	generated?: LineStat | null,
 };
+
+export type GitBranchRenameArgs = {
+	worktreePath: string,
+	args: GitBranchRenameInput,
+};
+
+export type GitBranchRenameInput = {
+	oldName: string,
+	newName: string,
+};
+
+export type GitBranchRenameOutcome = GitBranchRenameOutcome_Serialize | GitBranchRenameOutcome_Deserialize;
+
+export type GitBranchRenameOutcome_Deserialize = {
+	status: GitBranchRenameStatus,
+	oldName: string | null,
+	newName: string | null,
+	message: string | null,
+};
+
+export type GitBranchRenameOutcome_Serialize = {
+	status: GitBranchRenameStatus,
+	oldName?: string | null,
+	newName?: string | null,
+	message?: string | null,
+};
+
+export type GitBranchRenameStatus = "renamed" | { refused: BranchOperationRefusal };
 
 export type GitBranchSetUpstreamArgs = {
 	worktreePath: string,

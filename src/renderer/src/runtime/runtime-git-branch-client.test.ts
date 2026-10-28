@@ -1,17 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { GitBranchCreateOutcome, GitBranchSetUpstreamOutcome } from '../../../shared/git-branch-ops-types'
+import type {
+  GitBranchCreateOutcome,
+  GitBranchSetUpstreamOutcome,
+  GitBranchRenameOutcome,
+  GitBranchDeleteOutcome
+} from '../../../shared/git-branch-ops-types'
 import {
   createRuntimeGitBranch,
-  setRuntimeGitBranchUpstream
+  setRuntimeGitBranchUpstream,
+  renameRuntimeGitBranch,
+  deleteRuntimeGitBranch
 } from './runtime-git-branch-client'
 
 const branchCreate = vi.fn()
 const branchSetUpstream = vi.fn()
+const branchRename = vi.fn()
+const branchDelete = vi.fn()
 
 beforeEach(() => {
   branchCreate.mockReset()
   branchSetUpstream.mockReset()
-  ;(globalThis as unknown as { window: unknown }).window = { api: { git: { branchCreate, branchSetUpstream } } }
+  branchRename.mockReset()
+  branchDelete.mockReset()
+  ;(globalThis as unknown as { window: unknown }).window = { api: { git: { branchCreate, branchSetUpstream, branchRename, branchDelete } } }
 })
 
 const context = {
@@ -103,5 +114,38 @@ describe('setRuntimeGitBranchUpstream', () => {
       )
     ).rejects.toThrow(/remote runtime targets are not supported/)
     expect(branchSetUpstream).not.toHaveBeenCalled()
+  })
+})
+
+describe('renameRuntimeGitBranch / deleteRuntimeGitBranch', () => {
+  it('rename 原样下发 + NameTaken 不转异常', async () => {
+    branchRename.mockResolvedValue({ status: 'renamed' } satisfies GitBranchRenameOutcome)
+    await renameRuntimeGitBranch(context, { oldName: 'feat', newName: 'feat2' })
+    expect(branchRename).toHaveBeenCalledWith({ worktreePath: '/a', args: { oldName: 'feat', newName: 'feat2' } })
+    branchRename.mockResolvedValue({ status: { refused: 'name-taken' }, newName: 'other' })
+    const outcome = await renameRuntimeGitBranch(context, { oldName: 'feat', newName: 'other' })
+    expect(outcome.status).toEqual({ refused: 'name-taken' })
+  })
+
+  it('delete 原样下发 + NotMergeable 不转异常（供二次确认）', async () => {
+    branchDelete.mockResolvedValue({ status: 'deleted' } satisfies GitBranchDeleteOutcome)
+    await deleteRuntimeGitBranch(context, { branch: 'feat', force: false })
+    expect(branchDelete).toHaveBeenCalledWith({ worktreePath: '/a', args: { branch: 'feat', force: false } })
+    branchDelete.mockResolvedValue({ status: { refused: { 'not-mergeable': { unmergedCount: 3 } } } })
+    const outcome = await deleteRuntimeGitBranch(context, { branch: 'feat', force: false })
+    expect(outcome.status).toEqual({ refused: { 'not-mergeable': { unmergedCount: 3 } } })
+  })
+
+  it('rename 空路径本地拒 + 远程目标拒', async () => {
+    await expect(
+      renameRuntimeGitBranch({ settings: null, worktreeId: null, worktreePath: '' } as never, { oldName: 'a', newName: 'b' })
+    ).rejects.toThrow(/missing worktree path/)
+    await expect(
+      deleteRuntimeGitBranch(
+        { settings: { activeRuntimeEnvironmentId: 'env-1' }, worktreeId: 'r::/a', worktreePath: '/a' },
+        { branch: 'x', force: true }
+      )
+    ).rejects.toThrow(/remote runtime targets are not supported/)
+    expect(branchDelete).not.toHaveBeenCalled()
   })
 })

@@ -5,6 +5,10 @@ import type {
   GitBranchCreateOutcome,
   GitBranchSetUpstreamInput,
   GitBranchSetUpstreamOutcome,
+  GitBranchRenameInput,
+  GitBranchRenameOutcome,
+  GitBranchDeleteInput,
+  GitBranchDeleteOutcome,
 } from '../../git-branch-ops-types'
 import type { TuiAgent } from '../../tui-agent'
 import type { GitPushTarget } from '../../worktree/types'
@@ -71,6 +75,16 @@ export type GitOperationApi = {
     worktreePath: string
     args: GitBranchSetUpstreamInput
   }) => Promise<GitBranchSetUpstreamOutcome>
+  /** 重命名本地分支（仅未检出）。业务拒绝在 outcome.status；环境级失败 reject。 */
+  branchRename: (args: {
+    worktreePath: string
+    args: GitBranchRenameInput
+  }) => Promise<GitBranchRenameOutcome>
+  /** 删除本地分支（仅未检出）。未合并/占用在 outcome.status 供二次确认；环境级失败 reject。 */
+  branchDelete: (args: {
+    worktreePath: string
+    args: GitBranchDeleteInput
+  }) => Promise<GitBranchDeleteOutcome>
   rebaseFromBase: (args: {
     worktreePath: string
     baseRef: string

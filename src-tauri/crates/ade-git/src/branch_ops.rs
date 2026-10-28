@@ -241,7 +241,8 @@ pub fn checkout(
 /// 分支写操作（create / set-upstream / rename / delete）共用的**结构化拒绝**。
 /// 经各命令 `Outcome.status` 的 `Refused(...)` 以 `Ok(...)` 透出，**不走 `BridgeError`**
 /// （后者 `Serialize` 只留 `{ message }`，类型全丢，spec §8.1）。前端按变体走 i18n 出文案。
-/// `CheckedOut` 由增量 4 的 rename / delete 使用；`NotMergeable` 是增量 4 **待加**变体（本 enum 当前未含）；本增量只用 `NameTaken` / `UpstreamMissing`。
+/// 用量：create→`NameTaken`；set-upstream→`UpstreamMissing`；rename/delete→`CheckedOut`（+rename `NameTaken`）；
+/// delete `-d` 未合并→`NotMergeable`。与 spec §8.1 示意略差：`branch` 名由各 `Outcome.branch`/`oldName`/`newName` 承载而非变体字段。
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "kebab-case")]

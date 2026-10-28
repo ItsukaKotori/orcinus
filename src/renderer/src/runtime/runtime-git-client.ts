@@ -36,6 +36,7 @@ import {
 import { checkoutRuntimeGit as checkoutRuntimeGitImplementation } from './runtime-git-checkout-client'
 import { createRuntimeGitBranch as createRuntimeGitBranchImplementation } from './runtime-git-branch-client'
 import { setRuntimeGitBranchUpstream as setRuntimeGitBranchUpstreamImplementation } from './runtime-git-branch-client'
+import { renameRuntimeGitBranch as renameRuntimeGitBranchImplementation, deleteRuntimeGitBranch as deleteRuntimeGitBranchImplementation } from './runtime-git-branch-client'
 import {
   bulkDiscardRuntimeGitPaths as bulkDiscardRuntimeGitPathsImplementation,
   bulkStageRuntimeGitPaths as bulkStageRuntimeGitPathsImplementation,
@@ -80,6 +81,8 @@ export const fastForwardRuntimeGit = fastForwardRuntimeGitImplementation
 export const checkoutRuntimeGit = checkoutRuntimeGitImplementation
 export const createRuntimeGitBranch = createRuntimeGitBranchImplementation
 export const setRuntimeGitBranchUpstream = setRuntimeGitBranchUpstreamImplementation
+export const renameRuntimeGitBranch = renameRuntimeGitBranchImplementation
+export const deleteRuntimeGitBranch = deleteRuntimeGitBranchImplementation
 export const rebaseRuntimeGitFromBase = rebaseRuntimeGitFromBaseImplementation
 export const pushRuntimeGit = pushRuntimeGitImplementation
 export const getRuntimeGitBranchDiff = getRuntimeGitBranchDiffImplementation

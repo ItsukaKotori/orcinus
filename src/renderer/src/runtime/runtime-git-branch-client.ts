@@ -2,7 +2,11 @@ import type {
   GitBranchCreateInput,
   GitBranchCreateOutcome,
   GitBranchSetUpstreamInput,
-  GitBranchSetUpstreamOutcome
+  GitBranchSetUpstreamOutcome,
+  GitBranchRenameInput,
+  GitBranchRenameOutcome,
+  GitBranchDeleteInput,
+  GitBranchDeleteOutcome
 } from '../../../shared/git-branch-ops-types'
 import { getActiveRuntimeTarget } from './runtime-rpc-client'
 import { resolveLocalWorktreePath, type RuntimeGitContext } from './runtime-git-client-context'
@@ -47,4 +51,36 @@ export async function setRuntimeGitBranchUpstream(
     throw new Error('setRuntimeGitBranchUpstream: missing worktree path')
   }
   return window.api.git.branchSetUpstream({ worktreePath, args: input })
+}
+
+/** 重命名本地分支（仅未检出）的 runtime 包装。同 create：只本地、拒绝不 reject。 */
+export async function renameRuntimeGitBranch(
+  context: RuntimeGitContext,
+  input: GitBranchRenameInput
+): Promise<GitBranchRenameOutcome> {
+  const runtimeTarget = getActiveRuntimeTarget(context.settings)
+  if (runtimeTarget.kind !== 'local' && context.worktreeId) {
+    throw new Error('renameRuntimeGitBranch: remote runtime targets are not supported yet')
+  }
+  const worktreePath = resolveLocalWorktreePath(context)
+  if (!worktreePath) {
+    throw new Error('renameRuntimeGitBranch: missing worktree path')
+  }
+  return window.api.git.branchRename({ worktreePath, args: input })
+}
+
+/** 删除本地分支（仅未检出）的 runtime 包装。NotMergeable/CheckedOut 在 resolve 的 status 里，不 reject。 */
+export async function deleteRuntimeGitBranch(
+  context: RuntimeGitContext,
+  input: GitBranchDeleteInput
+): Promise<GitBranchDeleteOutcome> {
+  const runtimeTarget = getActiveRuntimeTarget(context.settings)
+  if (runtimeTarget.kind !== 'local' && context.worktreeId) {
+    throw new Error('deleteRuntimeGitBranch: remote runtime targets are not supported yet')
+  }
+  const worktreePath = resolveLocalWorktreePath(context)
+  if (!worktreePath) {
+    throw new Error('deleteRuntimeGitBranch: missing worktree path')
+  }
+  return window.api.git.branchDelete({ worktreePath, args: input })
 }
