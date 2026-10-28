@@ -362,16 +362,18 @@ describe('增量4 破坏性动作（rename / delete）+ §8.2 in-flight 置灰',
   })
 
   it('§8.2：opInFlight 时 checkout / rename / delete 全部置灰', () => {
-    const c = ctx({ checkout: vi.fn(), rename: vi.fn(), requestDelete: vi.fn(), opInFlight: true })
+    const c = ctx({ checkout: vi.fn(), rename: vi.fn(), requestDelete: vi.fn(), newBranch: vi.fn(), opInFlight: true })
     const row = refRow(refEntry({ name: 'dev' }))
     expect(findAction('checkout').enabled?.(row, c)).toBe(false)
     expect(findAction('rename').enabled?.(row, c)).toBe(false)
     expect(findAction('delete').enabled?.(row, c)).toBe(false)
-    // 反证：无 in-flight 时三者可用（判别力）。
-    const idle = ctx({ checkout: vi.fn(), rename: vi.fn(), requestDelete: vi.fn() })
+    expect(findAction('new-branch').enabled?.(row, c)).toBe(false)
+    // 反证：无 in-flight 时四者可用（判别力）。
+    const idle = ctx({ checkout: vi.fn(), rename: vi.fn(), requestDelete: vi.fn(), newBranch: vi.fn() })
     expect(findAction('checkout').enabled?.(row, idle)).toBe(true)
     expect(findAction('rename').enabled?.(row, idle)).toBe(true)
     expect(findAction('delete').enabled?.(row, idle)).toBe(true)
+    expect(findAction('new-branch').enabled?.(row, idle)).toBe(true)
   })
 
   it('§8.2：opInFlight 时 set-upstream 子项置灰', () => {

@@ -140,6 +140,8 @@ export const BRANCH_ACTIONS: readonly BranchAction[] = [
     label: () => translate('auto.components.git-branch.newBranchFrom', 'New Branch from…'),
     // local/remote/tag 都可作为 start-point 新建分支（§7.4）；仅声明 newBranch 的宿主出现。
     visible: (row, ctx) => ctx.newBranch !== undefined && refOf(row) !== null,
+    // §8.2：与其余写动作一致，in-flight 时置灰（防叠开多个写框）。
+    enabled: (_row, ctx) => !ctx.opInFlight,
     run: (row, ctx) => {
       const ref = refOf(row)
       if (ref) ctx.newBranch?.(ref)
