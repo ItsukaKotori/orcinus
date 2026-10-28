@@ -11,9 +11,14 @@
 use ade_core::errors::CoreError;
 use serde::Deserialize;
 use serde::Serialize;
+use std::time::Duration;
 
 use crate::command::run;
+use crate::runner::run_git_in;
 use crate::{are_worktree_paths_equal, GitWorktreeEntry};
+
+/// 本地分支写操作（-d/-D、-m）用短超时，对齐 worktree_remove 的注册级超时量级。
+const BRANCH_MUTATE_TIMEOUT: Duration = Duration::from_secs(30);
 
 const F1_MESSAGE: &str = "branch is already checked out in another workspace";
 
@@ -250,6 +255,11 @@ pub enum BranchOperationRefusal {
     },
     /// 期望的上游 ref 不在 `refs/remotes/*`。
     UpstreamMissing,
+    /// `git branch -d` 因未完全合并而拒；携带未合入 HEAD 的提交数供二次确认。
+    NotMergeable {
+        #[serde(rename = "unmergedCount")]
+        unmerged_count: u32,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -395,6 +405,181 @@ pub fn set_upstream(
         status: GitBranchSetUpstreamStatus::Set,
         branch: Some(branch.to_string()),
         upstream: Some(upstream.to_string()),
+        message: None,
+    })
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "kebab-case")]
+pub enum GitBranchDeleteStatus {
+    Deleted,
+    Refused(BranchOperationRefusal),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct GitBranchDeleteOutcome {
+    pub status: GitBranchDeleteStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branch: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct GitBranchDeleteInput {
+    pub branch: String,
+    /// true → `-D`（强删未合并）；false → `-d`（未合并则结构化拒绝 NotMergeable）。
+    pub force: bool,
+}
+
+/// 任一 worktree（含当前）检出 `branch` 时返回其路径（删除占用方必拒）。
+fn checked_out_worktree_path(worktree_path: &str, branch: &str) -> Result<Option<String>, CoreError> {
+    let full = format!("refs/heads/{branch}");
+    Ok(crate::worktree_list(worktree_path)?
+        .into_iter()
+        .find(|entry| entry.branch.as_deref() == Some(full.as_str()))
+        .map(|entry| entry.path))
+}
+
+/// 未合入 HEAD 的提交数（`git rev-list --count HEAD..<branch>`）；解析失败回落 0。
+fn unmerged_count(worktree_path: &str, branch: &str) -> u32 {
+    let spec = format!("HEAD..{branch}");
+    crate::command::run_text(worktree_path, &["rev-list", "--count", spec.as_str()])
+        .ok()
+        .and_then(|text| text.trim().parse::<u32>().ok())
+        .unwrap_or(0)
+}
+
+/// 删除本地分支。非 force 时 `git branch -d`，未合并 → `Ok(Refused(NotMergeable{count}))`
+/// （不删、无副作用）；被任一 worktree 检出 → `Ok(Refused(CheckedOut{worktreePath}))`（用
+/// `worktree_list` 结构化复核，不靠 stderr 文本，避 §3.8）；force 时 `-D`。
+/// 占用/未合并都是业务拒绝（Ok）；只有非法名/未知分支/git 环境级失败才 `Err`。
+/// 绝不动 HEAD（删除的不是当前分支，isHead 已被前端挡）。
+pub fn delete(
+    worktree_path: &str,
+    args: &GitBranchDeleteInput,
+) -> Result<GitBranchDeleteOutcome, CoreError> {
+    let branch = args.branch.trim();
+    if branch.is_empty() {
+        return Err(CoreError::InvalidInput("branch name must not be empty".to_string()));
+    }
+    if !ref_exists(worktree_path, &format!("refs/heads/{branch}")) {
+        return Err(CoreError::InvalidInput(format!("unknown local branch: {branch}")));
+    }
+    if let Some(path) = checked_out_worktree_path(worktree_path, branch)? {
+        return Ok(GitBranchDeleteOutcome {
+            status: GitBranchDeleteStatus::Refused(BranchOperationRefusal::CheckedOut {
+                worktree_path: path,
+            }),
+            branch: Some(branch.to_string()),
+            message: None,
+        });
+    }
+    let flag = if args.force { "-D" } else { "-d" };
+    let output = run_git_in(worktree_path, &["branch", flag, "--", branch], BRANCH_MUTATE_TIMEOUT, None)?;
+    if output.status.success() {
+        return Ok(GitBranchDeleteOutcome {
+            status: GitBranchDeleteStatus::Deleted,
+            branch: Some(branch.to_string()),
+            message: None,
+        });
+    }
+    // force(-D) 失败不可能是“未合并”，归为环境级 Err；非 force 的失败已在上面排除占用 → 未合并。
+    if args.force {
+        return Err(crate::git_command_failed(
+            &["branch", flag, "--", branch],
+            &output,
+        ));
+    }
+    Ok(GitBranchDeleteOutcome {
+        status: GitBranchDeleteStatus::Refused(BranchOperationRefusal::NotMergeable {
+            unmerged_count: unmerged_count(worktree_path, branch),
+        }),
+        branch: Some(branch.to_string()),
+        message: None,
+    })
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "kebab-case")]
+pub enum GitBranchRenameStatus {
+    Renamed,
+    Refused(BranchOperationRefusal),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct GitBranchRenameOutcome {
+    pub status: GitBranchRenameStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub old_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub new_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct GitBranchRenameInput {
+    pub old_name: String,
+    pub new_name: String,
+}
+
+/// 重命名本地分支：`git branch -m -- <old> <new>`。仅未检出分支（前端 advisory 置灰 +
+/// 此处 `worktree_list` 复核）。新名过 `resolve_create_branch_name`；已占用 → NameTaken；
+/// old 被任一 worktree 检出 → CheckedOut。**不动 HEAD**（未检出分支不可能是当前 HEAD）。
+/// ade 不同步改写 workspace 元数据/config（决策 5：`git branch -m` 不迁自定义 config、未检出分支无 workspace）。
+pub fn rename(
+    worktree_path: &str,
+    args: &GitBranchRenameInput,
+) -> Result<GitBranchRenameOutcome, CoreError> {
+    let old = args.old_name.trim();
+    if old.is_empty() {
+        return Err(CoreError::InvalidInput("source branch name must not be empty".to_string()));
+    }
+    if !ref_exists(worktree_path, &format!("refs/heads/{old}")) {
+        return Err(CoreError::InvalidInput(format!("unknown local branch: {old}")));
+    }
+    let raw_new = args.new_name.trim();
+    if raw_new.is_empty() {
+        return Err(CoreError::InvalidInput("branch name must not be empty".to_string()));
+    }
+    let new = crate::branch::resolve_create_branch_name(worktree_path, Some(raw_new), None, "")?;
+
+    if new == old {
+        // 改名到同名：幂等无副作用（不跑 git）。
+        return Ok(GitBranchRenameOutcome { status: GitBranchRenameStatus::Renamed, old_name: Some(old.to_string()), new_name: Some(new), message: None });
+    }
+    if ref_exists(worktree_path, &format!("refs/heads/{new}")) {
+        return Ok(GitBranchRenameOutcome {
+            status: GitBranchRenameStatus::Refused(BranchOperationRefusal::NameTaken),
+            old_name: Some(old.to_string()),
+            new_name: Some(new),
+            message: None,
+        });
+    }
+    if let Some(path) = checked_out_worktree_path(worktree_path, old)? {
+        return Ok(GitBranchRenameOutcome {
+            status: GitBranchRenameStatus::Refused(BranchOperationRefusal::CheckedOut { worktree_path: path }),
+            old_name: Some(old.to_string()),
+            new_name: Some(new),
+            message: None,
+        });
+    }
+    run(worktree_path, &["branch", "-m", "--", old, new.as_str()])?;
+    Ok(GitBranchRenameOutcome {
+        status: GitBranchRenameStatus::Renamed,
+        old_name: Some(old.to_string()),
+        new_name: Some(new),
         message: None,
     })
 }

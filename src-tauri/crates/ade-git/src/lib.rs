@@ -17,6 +17,8 @@ pub mod worktree_remove;
 
 pub use branch_ops::{
     BranchOperationRefusal, GitBranchCreateOutcome, GitBranchCreateStatus, GitBranchCreateInput,
+    GitBranchDeleteInput, GitBranchDeleteOutcome, GitBranchDeleteStatus,
+    GitBranchRenameInput, GitBranchRenameOutcome, GitBranchRenameStatus,
     GitBranchSetUpstreamInput, GitBranchSetUpstreamOutcome, GitBranchSetUpstreamStatus,
     GitCheckoutOutcome, GitCheckoutRefusal, GitCheckoutStatus, GitCheckoutTarget,
 };
