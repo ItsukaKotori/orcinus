@@ -42,10 +42,12 @@ vi.mock('sonner', () => ({ toast: { warning: vi.fn(), error: vi.fn(), success: v
 vi.mock('@/runtime/runtime-git-client', () => ({
   createRuntimeGitBranch: vi.fn().mockResolvedValue({ status: 'created', branch: 'x' }),
   setRuntimeGitBranchUpstream: vi.fn().mockResolvedValue({ status: 'set' }),
+  renameRuntimeGitBranch: vi.fn().mockResolvedValue({ status: 'renamed' }),
+  deleteRuntimeGitBranch: vi.fn().mockResolvedValue({ status: 'deleted' }),
 }))
 vi.mock('@/lib/worktree-activation', () => ({ activateAndRevealWorktree: vi.fn(() => ({ primaryTabId: null })) }))
 
-import { createRuntimeGitBranch, setRuntimeGitBranchUpstream } from '@/runtime/runtime-git-client'
+import { createRuntimeGitBranch, setRuntimeGitBranchUpstream, renameRuntimeGitBranch, deleteRuntimeGitBranch } from '@/runtime/runtime-git-client'
 import { toast } from 'sonner'
 import { SourceControlBranchTreeSection } from './source-control-branch-tree-section'
 
@@ -92,6 +94,8 @@ beforeEach(() => {
   ;(window as unknown as { api: unknown }).api = { git: { refs } }
   vi.mocked(createRuntimeGitBranch).mockClear().mockResolvedValue({ status: 'created', branch: 'x' })
   vi.mocked(setRuntimeGitBranchUpstream).mockClear().mockResolvedValue({ status: 'set' })
+  vi.mocked(renameRuntimeGitBranch).mockClear().mockResolvedValue({ status: 'renamed' })
+  vi.mocked(deleteRuntimeGitBranch).mockClear().mockResolvedValue({ status: 'deleted' })
 })
 afterEach(() => {
   act(() => root.unmount())
@@ -186,5 +190,72 @@ describe('SourceControlBranchTreeSection 写操作集成（菜单项 → runtime
       { branch: 'feature', upstream: 'origin/feature' }
     )
     expect(refreshSpy).not.toHaveBeenCalled() // feature != 当前 main → 仅 invalidate，不刷状态
+  })
+
+  it('Rename… → 预填框 → rename 收到 oldName/newName 并 invalidate、关框、不刷状态', async () => {
+    const refreshSpy = vi.fn(async () => {})
+    await mount(refreshSpy)
+    await clickEl(byText('ctx-item', 'Rename…') ?? null)
+    await flush()
+    const input = document.querySelector('[data-testid="rename-branch-name-input"]') as HTMLInputElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('feature') // 预填当前名
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
+    await act(async () => {
+      setter?.call(input, 'feature-renamed')
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    await flush()
+    const btn = [...document.querySelectorAll('[role="dialog"] button')].find(
+      (b) => b.textContent?.trim() === 'Rename branch'
+    )
+    await clickEl(btn ?? null)
+    await flush()
+    expect(renameRuntimeGitBranch).toHaveBeenCalledWith(
+      expect.objectContaining({ worktreeId: 'r::/a' }),
+      { oldName: 'feature', newName: 'feature-renamed' }
+    )
+    expect(refreshSpy).not.toHaveBeenCalled()
+    expect(document.querySelector('[data-testid="rename-branch-name-input"]')).toBeNull()
+  })
+
+  it('Delete 未合并：force=false 拿 NotMergeable → 弹二次确认 → 确认 force=true → Deleted invalidate', async () => {
+    vi.mocked(deleteRuntimeGitBranch)
+      .mockResolvedValueOnce({ status: { refused: { 'not-mergeable': { unmergedCount: 4 } } }, branch: 'feature' } as never)
+      .mockResolvedValueOnce({ status: 'deleted', branch: 'feature' } as never)
+    await mount()
+    const before = refs.mock.calls.length
+    await clickEl(byText('ctx-item', 'Delete') ?? null)
+    await flush()
+    // 首次 -d 被拒 → 弹强制确认框（尚未 invalidate）
+    expect(deleteRuntimeGitBranch).toHaveBeenLastCalledWith(
+      expect.objectContaining({ worktreeId: 'r::/a' }),
+      { branch: 'feature', force: false }
+    )
+    expect(refs.mock.calls.length).toBe(before)
+    const forceBtn = [...document.querySelectorAll('[role="dialog"] button')].find(
+      (b) => b.textContent?.trim() === 'Force delete'
+    )
+    expect(forceBtn).toBeDefined()
+    await clickEl(forceBtn ?? null)
+    await flush()
+    expect(deleteRuntimeGitBranch).toHaveBeenLastCalledWith(
+      expect.objectContaining({ worktreeId: 'r::/a' }),
+      { branch: 'feature', force: true }
+    )
+    expect(refs.mock.calls.length).toBeGreaterThan(before) // Deleted → invalidate
+  })
+
+  it('Delete 已合并：-d 直接 Deleted → invalidate、不弹确认', async () => {
+    await mount()
+    const before = refs.mock.calls.length
+    await clickEl(byText('ctx-item', 'Delete') ?? null)
+    await flush()
+    expect(deleteRuntimeGitBranch).toHaveBeenCalledWith(
+      expect.objectContaining({ worktreeId: 'r::/a' }),
+      { branch: 'feature', force: false }
+    )
+    expect(document.querySelector('[role="dialog"]')).toBeNull()
+    expect(refs.mock.calls.length).toBeGreaterThan(before)
   })
 })

@@ -6,7 +6,7 @@ import { branchName } from '@/lib/git-utils'
 import { translate } from '@/i18n/i18n'
 import { cn } from '@/lib/utils'
 import { checkoutRuntimeGit } from '@/runtime/runtime-git-checkout-client'
-import { createRuntimeGitBranch, setRuntimeGitBranchUpstream } from '@/runtime/runtime-git-client'
+import { createRuntimeGitBranch, setRuntimeGitBranchUpstream, renameRuntimeGitBranch, deleteRuntimeGitBranch } from '@/runtime/runtime-git-client'
 import type { RuntimeGitContext } from '@/runtime/runtime-git-client-context'
 import { refreshGitStatusForWorktree } from '../right-sidebar/git-status-refresh'
 import { toast } from 'sonner'
@@ -14,6 +14,7 @@ import type { GitRefEntry } from '../../../../shared/git-ref-types'
 import { BranchRefTree } from './branch-ref-tree'
 import { ownerByBranch } from './branch-tree-model'
 import {
+  BRANCH_ACTIONS,
   primaryBranchAction,
   type BranchActionContext,
   type BranchActionId,
@@ -21,6 +22,8 @@ import {
 import { BranchRowMenu } from './branch-menu'
 import { CheckoutConfirmDialog, needsCheckoutConfirmation } from './checkout-confirm-dialog'
 import { NewBranchDialog } from './new-branch-dialog'
+import { RenameDialog } from './rename-dialog'
+import { DeleteConfirmDialog } from './delete-confirm-dialog'
 import { useBranchRefs } from './use-branch-refs'
 import {
   persistBranchSectionCollapsed,
@@ -35,6 +38,8 @@ const HOST_A_ALLOWED: ReadonlySet<BranchActionId> = new Set([
   'switch',
   'new-workspace',
   'new-branch',
+  'rename',
+  'delete',
   'set-upstream',
 ])
 
@@ -70,6 +75,11 @@ export function SourceControlBranchTreeSection({
   const [collapsed, setCollapsed] = useState(() => readPersistedBranchSectionCollapsed())
   const [pendingCheckout, setPendingCheckout] = useState<GitRefEntry | null>(null)
   const [newBranchTarget, setNewBranchTarget] = useState<GitRefEntry | null>(null)
+  // 增量4：Rename 弹框目标 + Delete 强制二次确认（NotMergeable 后才带 unmergedCount 置入）。
+  const [renameTarget, setRenameTarget] = useState<GitRefEntry | null>(null)
+  const [deleteForce, setDeleteForce] = useState<{ ref: GitRefEntry; unmergedCount: number } | null>(null)
+  // §8.2：ref 是权威互斥门（防并发写），state 只驱菜单置灰。两者在每个写 execute 同步。
+  const [opInFlight, setOpInFlight] = useState(false)
   // 防并发写：checkout / new-branch / set-upstream 都是会改 ref 的写操作，连点会在
   // 同一 worktree 上叠两条 git 写、大概率撞 index.lock。共用一个 in-flight 门，进入置位、finally 复位。
   const writeInFlightRef = useRef(false)
@@ -130,6 +140,7 @@ export function SourceControlBranchTreeSection({
       if (!worktree) return
       if (writeInFlightRef.current) return
       writeInFlightRef.current = true
+      setOpInFlight(true)
       const target =
         ref.category === 'remote'
           ? { kind: 'remote' as const, name: ref.name }
@@ -175,6 +186,7 @@ export function SourceControlBranchTreeSection({
         toast.error(e instanceof Error ? e.message : String(e))
       } finally {
         writeInFlightRef.current = false
+        setOpInFlight(false)
       }
     },
     [worktree, worktreeId, owners, settings, refreshAfterCheckout, invalidate]
@@ -186,6 +198,7 @@ export function SourceControlBranchTreeSection({
       if (!worktree) return
       if (writeInFlightRef.current) return
       writeInFlightRef.current = true
+      setOpInFlight(true)
       try {
         const outcome = await createRuntimeGitBranch(
           { settings, worktreeId, worktreePath: worktree.path },
@@ -218,6 +231,7 @@ export function SourceControlBranchTreeSection({
         toast.error(e instanceof Error ? e.message : String(e))
       } finally {
         writeInFlightRef.current = false
+        setOpInFlight(false)
       }
     },
     [worktree, worktreeId, settings, invalidate]
@@ -229,6 +243,7 @@ export function SourceControlBranchTreeSection({
       if (!worktree) return
       if (writeInFlightRef.current) return
       writeInFlightRef.current = true
+      setOpInFlight(true)
       try {
         const outcome = await setRuntimeGitBranchUpstream(
           { settings, worktreeId, worktreePath: worktree.path },
@@ -261,9 +276,115 @@ export function SourceControlBranchTreeSection({
         toast.error(e instanceof Error ? e.message : String(e))
       } finally {
         writeInFlightRef.current = false
+        setOpInFlight(false)
       }
     },
     [worktree, worktreeId, settings, refreshAfterCheckout, invalidate]
+  )
+
+  // 改名。目标恒为非当前分支（isHead 不可见）→ 成功仅 invalidate（§8.3）。
+  const executeRename = useCallback(
+    async (oldName: string, newName: string) => {
+      if (!worktree) return
+      if (writeInFlightRef.current) return
+      writeInFlightRef.current = true
+      setOpInFlight(true)
+      try {
+        const outcome = await renameRuntimeGitBranch(
+          { settings, worktreeId, worktreePath: worktree.path },
+          { oldName, newName }
+        )
+        if (outcome.status === 'renamed') {
+          setRenameTarget(null)
+          invalidate()
+          return
+        }
+        const refusal =
+          typeof outcome.status === 'object' && 'refused' in outcome.status
+            ? outcome.status.refused
+            : null
+        if (refusal === 'name-taken') {
+          toast.error(
+            translate(
+              'auto.components.git-branch.renameNameTaken',
+              'Branch "{{name}}" already exists.',
+              { name: newName }
+            )
+          )
+        } else if (refusal && typeof refusal === 'object' && 'checked-out' in refusal) {
+          toast.error(
+            translate(
+              'auto.components.git-branch.renameCheckedOut',
+              'This branch is checked out in another worktree.'
+            )
+          )
+        } else {
+          toast.error(
+            translate('auto.components.git-branch.renameFailed', 'Could not rename branch.')
+          )
+        }
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : String(e))
+      } finally {
+        writeInFlightRef.current = false
+        setOpInFlight(false)
+      }
+    },
+    [worktree, worktreeId, settings, invalidate]
+  )
+
+  // 删除（两步）。force=false 先 `-d`；后端回 NotMergeable 则弹强制确认框；确认后
+  // force=true 走 `-D`。占用回 CheckedOut → 跳转已知占用工作区，否则按 path 提示。
+  // 目标恒为非当前分支 → 成功仅 invalidate（§8.3）。
+  const executeDelete = useCallback(
+    async (ref: GitRefEntry, force: boolean) => {
+      if (!worktree) return
+      if (writeInFlightRef.current) return
+      writeInFlightRef.current = true
+      setOpInFlight(true)
+      try {
+        const outcome = await deleteRuntimeGitBranch(
+          { settings, worktreeId, worktreePath: worktree.path },
+          { branch: ref.name, force }
+        )
+        if (outcome.status === 'deleted') {
+          setDeleteForce(null)
+          invalidate()
+          return
+        }
+        const refusal =
+          typeof outcome.status === 'object' && 'refused' in outcome.status
+            ? outcome.status.refused
+            : null
+        if (refusal && typeof refusal === 'object' && 'not-mergeable' in refusal) {
+          setDeleteForce({ ref, unmergedCount: refusal['not-mergeable'].unmergedCount })
+        } else if (refusal && typeof refusal === 'object' && 'checked-out' in refusal) {
+          const occupant = owners.get(ref.name)
+          if (occupant) {
+            activateAndRevealWorktree(occupant.worktreeId, { executionHostId: occupant.hostId })
+          } else {
+            toast.warning(
+              translate(
+                'auto.components.git-branch.deleteOccupiedExternally',
+                'This branch is checked out in another worktree: {{path}}',
+                { path: refusal['checked-out'].worktreePath }
+              )
+            )
+          }
+          setDeleteForce(null)
+        } else {
+          toast.error(
+            translate('auto.components.git-branch.deleteFailed', 'Could not delete branch.')
+          )
+        }
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : String(e))
+      } finally {
+        writeInFlightRef.current = false
+        setOpInFlight(false)
+      }
+    },
+    [worktree, worktreeId, settings, owners, invalidate]
   )
 
   // Set Upstream 子菜单候选：已加载 refs 里的 remote 条目，同名优先（`origin/<branch>` 排前）。
@@ -306,6 +427,10 @@ export function SourceControlBranchTreeSection({
       newBranch: (ref: GitRefEntry) => setNewBranchTarget(ref),
       setUpstream: (branch: string, upstream: string) => void executeSetUpstream(branch, upstream),
       remoteRefCandidates: buildRemoteCandidates,
+      // 增量4：Rename 弹名字框；Delete 先走 force=false（未合并则框内升 -D）。opInFlight 驱菜单置灰。
+      rename: (ref: GitRefEntry) => setRenameTarget(ref),
+      requestDelete: (ref: GitRefEntry) => void executeDelete(ref, false),
+      opInFlight,
     }
   }, [
     owners,
@@ -316,6 +441,9 @@ export function SourceControlBranchTreeSection({
     sessionCount,
     executeCheckout,
     executeSetUpstream,
+    executeRename,
+    executeDelete,
+    opInFlight,
     buildRemoteCandidates,
   ])
 
@@ -369,6 +497,13 @@ export function SourceControlBranchTreeSection({
               onActivate={(row) => {
                 primaryBranchAction(row, ctx)?.run(row, ctx)
               }}
+              onRenameRequest={(row) => {
+                // §7.3 F2：走与菜单同一套 rename 可见/可用谓词，不可则静默（不越菜单置灰）。
+                const rename = BRANCH_ACTIONS.find((a) => a.id === 'rename')
+                if (!rename || !rename.visible(row, ctx)) return
+                if (rename.enabled && !rename.enabled(row, ctx)) return
+                rename.run(row, ctx)
+              }}
               renderRowMenu={(row, content) =>
                 row.kind === 'ref' ? (
                   <BranchRowMenu row={row} ctx={ctx} allowedActionIds={HOST_A_ALLOWED}>
@@ -407,6 +542,25 @@ export function SourceControlBranchTreeSection({
           startPointLabel={newBranchTarget.name}
           onCancel={() => setNewBranchTarget(null)}
           onCreate={(name) => void executeNewBranch(name, newBranchTarget)}
+        />
+      )}
+
+      {renameTarget && (
+        <RenameDialog
+          open
+          currentName={renameTarget.name}
+          onCancel={() => setRenameTarget(null)}
+          onRename={(name) => void executeRename(renameTarget.name, name)}
+        />
+      )}
+
+      {deleteForce && (
+        <DeleteConfirmDialog
+          open
+          branchName={deleteForce.ref.name}
+          unmergedCount={deleteForce.unmergedCount}
+          onCancel={() => setDeleteForce(null)}
+          onForceDelete={() => void executeDelete(deleteForce.ref, true)}
         />
       )}
     </section>
