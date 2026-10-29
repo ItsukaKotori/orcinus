@@ -272,6 +272,7 @@ export const commands = {
 	gitBranchDelete: (args: GitBranchDeleteArgs) => typedError<GitBranchDeleteOutcome_Serialize, BridgeError>(__TAURI_INVOKE("git_branch_delete", { args })),
 	gitFetch: (args: GitFetchArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_fetch", { args })),
 	gitPull: (args: GitPullArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_pull", { args })),
+	gitFastForward: (args: GitFastForwardArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_fast_forward", { args })),
 	gitRemoteUrls: (args: GitWorktreeArgs) => typedError<GitRemoteUrl[], BridgeError>(__TAURI_INVOKE("git_remote_urls", { args })),
 	gitRead: (args: GitReadArgs) => typedError<GitReadResult, BridgeError>(__TAURI_INVOKE("git_read", { args })),
 	gitPush: (args: GitPushArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_push", { args })),
@@ -1242,6 +1243,10 @@ export type GitDiffResult_Deserialize = ({ kind: "text"; originalContent: string
  *  `kind` tag discriminates the two shapes on the wire.
  */
 export type GitDiffResult_Serialize = ({ kind: "text"; originalContent: string; modifiedContent: string; originalIsBinary: boolean; modifiedIsBinary: boolean; largeDiffRenderLimit?: LargeDiffRenderLimit_Serialize | null }) & { isImage?: never; mimeType?: never; modifiedDeleted?: never } | ({ kind: "binary"; originalContent: string; modifiedContent: string; isImage?: boolean | null; mimeType?: string | null; modifiedDeleted?: boolean | null; originalIsBinary: boolean; modifiedIsBinary: boolean }) & { largeDiffRenderLimit?: never };
+
+export type GitFastForwardArgs = {
+	worktreePath: string,
+};
 
 export type GitFetchArgs = {
 	worktreePath: string,

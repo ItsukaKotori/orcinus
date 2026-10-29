@@ -49,6 +49,12 @@ pub fn pull_args() -> Vec<String> {
     vec!["pull".to_string()]
 }
 
+/// `git pull --ff-only` 的参数。与 `pull` 的唯一差别：分叉时**硬失败**而不自动
+/// merge —— 对应 IDEA “Fast-forward” 语义（只允许快进）。
+pub fn fast_forward_args() -> Vec<String> {
+    vec!["pull".to_string(), "--ff-only".to_string()]
+}
+
 fn run_network(
     worktree_path: &str,
     args: &[String],
@@ -94,4 +100,12 @@ pub fn fetch(
 /// 拉取并合并当前分支的 upstream。
 pub fn pull(worktree_path: &str, cancel: Option<&CancelToken>) -> Result<(), CoreError> {
     run_network(worktree_path, &pull_args(), cancel)
+}
+
+/// 快进当前分支到其 upstream；分叉则原样失败（不自动 merge）。
+pub fn fast_forward(
+    worktree_path: &str,
+    cancel: Option<&CancelToken>,
+) -> Result<(), CoreError> {
+    run_network(worktree_path, &fast_forward_args(), cancel)
 }

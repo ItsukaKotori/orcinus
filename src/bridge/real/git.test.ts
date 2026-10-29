@@ -45,7 +45,8 @@ describe('git real adapter commands', () => {
     ['branchRename', 'git_branch_rename'],
     ['branchDelete', 'git_branch_delete'],
     ['fetch', 'git_fetch'],
-    ['pull', 'git_pull']
+    ['pull', 'git_pull'],
+    ['fastForward', 'git_fast_forward'],
   ] satisfies Array<[GitMethod, string]>
 
   it.each(commandCases)('maps git.%s to %s with the { args } envelope', async (method, command) => {

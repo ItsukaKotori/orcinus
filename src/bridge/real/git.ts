@@ -61,6 +61,9 @@ export function createGitRealApi(): PreloadApi['git'] {
       }),
     pull: (args) =>
       invokeCommand('git_pull', { args: { worktreePath: args.worktreePath } }),
+    // fast-forward = `git pull --ff-only`（Rust 侧），只下发 worktreePath；pushTarget/worktreeId/connectionId 为 runtime 侧多余字段，Rust 忽略。
+    fastForward: (args) =>
+      invokeCommand('git_fast_forward', { args: { worktreePath: args.worktreePath } }),
     push: async (args) => {
       const runGit = createRunGit(defaultGitReadExecutor(args.worktreePath))
       const forceWithLease = args.forceWithLease === true

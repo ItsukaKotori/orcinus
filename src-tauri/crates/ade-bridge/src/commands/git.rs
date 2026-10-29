@@ -803,6 +803,27 @@ pub async fn git_pull(state: State<'_, AppState>, args: GitPullArgs) -> Result<(
     run_blocking(move || git_pull_impl(&args.worktree_path)).await
 }
 
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitFastForwardArgs {
+    pub worktree_path: String,
+}
+
+/// `git pull --ff-only`：只快进，分叉时原样失败（不自动 merge）。网络失败以 `Err` 上抛。
+pub fn git_fast_forward_impl(worktree_path: &str) -> Result<(), BridgeError> {
+    Ok(ade_git::remote_ops::fast_forward(worktree_path, None)?)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_fast_forward(
+    state: State<'_, AppState>,
+    args: GitFastForwardArgs,
+) -> Result<(), BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    run_blocking(move || git_fast_forward_impl(&args.worktree_path)).await
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn git_checkout(

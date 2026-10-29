@@ -1,5 +1,6 @@
 use ade_git::remote_ops::{
-    fetch, fetch_args, is_safe_remote_name, pull, pull_args, GIT_NETWORK_ENVS,
+    fast_forward, fast_forward_args, fetch, fetch_args, is_safe_remote_name, pull, pull_args,
+    GIT_NETWORK_ENVS,
 };
 use std::process::Command;
 
@@ -70,6 +71,12 @@ fn pull_args_defer_to_git_config() {
 }
 
 #[test]
+fn fast_forward_args_forces_ff_only() {
+    // Fast-forward 与 Update(pull) 唯一差别就是 --ff-only：分叉时硬失败，不自动 merge。
+    assert_eq!(fast_forward_args(), ["pull", "--ff-only"]);
+}
+
+#[test]
 fn remote_name_guard_blocks_injection_shapes() {
     assert!(is_safe_remote_name("origin"));
     assert!(is_safe_remote_name("my-remote.v2"));
@@ -132,6 +139,49 @@ fn pull_fast_forwards_the_local_branch() {
     assert!(pull(p, None).is_ok());
     // 可快进（本地无分叉提交），所以 HEAD 真的前移了。
     assert_eq!(head_subject(p), "upstream two");
+}
+
+#[test]
+fn fast_forward_pulls_when_purely_behind() {
+    let (work, remote) = repo_with_origin();
+    let p = work.path().to_str().unwrap();
+    let rp = remote.path().to_str().unwrap();
+
+    let seed = tempfile::tempdir().unwrap();
+    let sp = seed.path().to_str().unwrap();
+    assert!(git(sp, &[], &["clone", rp, "."]));
+    std::fs::write(seed.path().join("b"), "2\n").unwrap();
+    assert!(git(sp, &[], &["add", "."]));
+    assert!(commit(sp, "upstream two"));
+    assert!(git(sp, &[], &["push", "origin", "main"]));
+
+    assert!(fast_forward(p, None).is_ok());
+    assert_eq!(head_subject(p), "upstream two", "纯落后时 --ff-only 应快进前移 HEAD");
+}
+
+#[test]
+fn fast_forward_refuses_diverged_without_touching_worktree() {
+    let (work, remote) = repo_with_origin();
+    let p = work.path().to_str().unwrap();
+    let rp = remote.path().to_str().unwrap();
+
+    // 本地提一个。
+    std::fs::write(work.path().join("local"), "l\n").unwrap();
+    assert!(git(p, &[], &["add", "."]));
+    assert!(commit(p, "local side"));
+    // 远端提另一个（分叉）。
+    let seed = tempfile::tempdir().unwrap();
+    let sp = seed.path().to_str().unwrap();
+    assert!(git(sp, &[], &["clone", rp, "."]));
+    std::fs::write(seed.path().join("b"), "2\n").unwrap();
+    assert!(git(sp, &[], &["add", "."]));
+    assert!(commit(sp, "upstream side"));
+    assert!(git(sp, &[], &["push", "origin", "main"]));
+
+    let err = fast_forward(p, None).unwrap_err();
+    // 分叉→ git 原样失败（非快进），不自动 merge；工作区 HEAD 仍在本地侧。
+    assert!(err.to_string().contains("ff-only") || err.to_string().contains("fast-forward"), "实际: {err}");
+    assert_eq!(head_subject(p), "local side", "ff-only 失败不得改 HEAD/产生 merge 提交");
 }
 
 #[test]
