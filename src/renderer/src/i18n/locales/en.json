@@ -924,6 +924,8 @@
         "deleteForce": "Force delete",
         "deleteOccupiedExternally": "This branch is checked out in another worktree: {{path}}",
         "deleteFailed": "Could not delete branch.",
+        "showDiff": "Show Diff with Working Tree",
+        "showDiffUnavailable": "Cannot compare this branch with the working tree.",
         "checkout": "Checkout",
         "moreActions": "More actions",
         "checkoutConfirmTitle": "Checkout branch?",

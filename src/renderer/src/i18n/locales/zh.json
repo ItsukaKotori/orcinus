@@ -759,6 +759,8 @@
         "deleteForce": "强制删除",
         "deleteOccupiedExternally": "该分支已在另一个工作区检出：{{path}}",
         "deleteFailed": "无法删除分支。",
+        "showDiff": "与工作区显示差异",
+        "showDiffUnavailable": "无法将该分支与工作区进行对比。",
         "checkout": "检出",
         "moreActions": "更多操作",
         "checkoutConfirmTitle": "检出分支？",

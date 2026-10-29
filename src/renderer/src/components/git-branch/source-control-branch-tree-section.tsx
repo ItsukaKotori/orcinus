@@ -6,7 +6,7 @@ import { branchName } from '@/lib/git-utils'
 import { translate } from '@/i18n/i18n'
 import { cn } from '@/lib/utils'
 import { checkoutRuntimeGit } from '@/runtime/runtime-git-checkout-client'
-import { createRuntimeGitBranch, setRuntimeGitBranchUpstream, renameRuntimeGitBranch, deleteRuntimeGitBranch } from '@/runtime/runtime-git-client'
+import { createRuntimeGitBranch, setRuntimeGitBranchUpstream, renameRuntimeGitBranch, deleteRuntimeGitBranch, getRuntimeGitBranchCompare } from '@/runtime/runtime-git-client'
 import type { RuntimeGitContext } from '@/runtime/runtime-git-client-context'
 import { refreshGitStatusForWorktree } from '../right-sidebar/git-status-refresh'
 import { toast } from 'sonner'
@@ -41,6 +41,7 @@ const HOST_A_ALLOWED: ReadonlySet<BranchActionId> = new Set([
   'rename',
   'delete',
   'set-upstream',
+  'show-diff',
 ])
 
 // 稳定的空数组引用：脏改动缺失时避免每次渲染新建数组打乱 zustand 选择器一致性。
@@ -86,6 +87,8 @@ export function SourceControlBranchTreeSection({
 
   const worktree = useAppStore((s) => findWorktreeById(s.worktreesByRepo, worktreeId))
   const openModal = useAppStore((s) => s.openModal)
+  // Show Diff 目标（只读）：把 compare 得到的该分支 entries 交给 openBranchAllDiffs 的 tab 快照。
+  const openBranchAllDiffs = useAppStore((s) => s.openBranchAllDiffs)
 
   const repoId = worktree?.repoId ?? ''
   const repoWorktrees = useAppStore((s) => s.worktreesByRepo[repoId])
@@ -387,6 +390,33 @@ export function SourceControlBranchTreeSection({
     [worktree, worktreeId, settings, owners, invalidate]
   )
 
+  // 与当前工作区对比选中分支：取该分支的 compare（{summary, entries}），开一个自带该列表的
+  // combined-branch tab。**只读**，不入 writeInFlightRef/opInFlight。compare 非 ready 不出 tab。
+  const executeShowDiff = useCallback(
+    async (ref: GitRefEntry) => {
+      if (!worktree) return
+      try {
+        const result = await getRuntimeGitBranchCompare(
+          { settings, worktreeId, worktreePath: worktree.path },
+          ref.name
+        )
+        if (result.summary.status !== 'ready') {
+          toast.error(
+            translate(
+              'auto.components.git-branch.showDiffUnavailable',
+              'Cannot compare this branch with the working tree.'
+            )
+          )
+          return
+        }
+        openBranchAllDiffs?.(worktreeId, worktree.path, result.summary, undefined, result.entries)
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : String(e))
+      }
+    },
+    [worktree, worktreeId, settings, openBranchAllDiffs]
+  )
+
   // Set Upstream 子菜单候选：已加载 refs 里的 remote 条目，同名优先（`origin/<branch>` 排前）。
   const buildRemoteCandidates = useCallback(
     (branch: string): GitRefEntry[] => {
@@ -430,6 +460,7 @@ export function SourceControlBranchTreeSection({
       // 增量4：Rename 弹名字框；Delete 先走 force=false（未合并则框内升 -D）。opInFlight 驱菜单置灰。
       rename: (ref: GitRefEntry) => setRenameTarget(ref),
       requestDelete: (ref: GitRefEntry) => void executeDelete(ref, false),
+      showDiff: (ref: GitRefEntry) => void executeShowDiff(ref),
       opInFlight,
     }
   }, [
@@ -443,6 +474,7 @@ export function SourceControlBranchTreeSection({
     executeSetUpstream,
     executeRename,
     executeDelete,
+    executeShowDiff,
     opInFlight,
     buildRemoteCandidates,
   ])
