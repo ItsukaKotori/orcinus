@@ -31,8 +31,8 @@ import {
 } from './source-control-branch-section-view-state'
 
 // 宿主 A 声明的可用动作集合：checkout 是主动作，switch 降级为次要项，恒保留 new-workspace。
-// new-branch / set-upstream（增量3）。**不含 view-in-log**（Git Log 专属）；**不含 show-diff**
-// （其宿主接线延到增量3b，需 per-ref git_branch_compare）。
+// new-branch / rename / delete（增量3/4）+ set-upstream / show-diff（show-diff 于增量3b 接 `getRuntimeGitBranchCompare`）。
+// **不含 view-in-log**（Git Log 专属）；宿主 B（Git Log）不注入 ctx.showDiff → show-diff 在 B 自然不可见。
 const HOST_A_ALLOWED: ReadonlySet<BranchActionId> = new Set([
   'checkout',
   'switch',
@@ -84,6 +84,8 @@ export function SourceControlBranchTreeSection({
   // 防并发写：checkout / new-branch / set-upstream 都是会改 ref 的写操作，连点会在
   // 同一 worktree 上叠两条 git 写、大概率撞 index.lock。共用一个 in-flight 门，进入置位、finally 复位。
   const writeInFlightRef = useRef(false)
+  // Show Diff 只读但会起 git 子进程（diff/merge-base）；连点会叠加，单独一个只读门，不占写门。
+  const showDiffBusyRef = useRef(false)
 
   const worktree = useAppStore((s) => findWorktreeById(s.worktreesByRepo, worktreeId))
   const openModal = useAppStore((s) => s.openModal)
@@ -395,12 +397,16 @@ export function SourceControlBranchTreeSection({
   const executeShowDiff = useCallback(
     async (ref: GitRefEntry) => {
       if (!worktree) return
+      if (showDiffBusyRef.current) return
+      showDiffBusyRef.current = true
       try {
         const result = await getRuntimeGitBranchCompare(
           { settings, worktreeId, worktreePath: worktree.path },
           ref.name
         )
-        if (result.summary.status !== 'ready') {
+        // 与兄弟 openAllDiffs 同口径：ready 但三 oid 不全（HEAD 退化）也是空/错列表 → 不开 tab。
+        const s = result.summary
+        if (s.status !== 'ready' || !s.baseOid || !s.headOid || !s.mergeBase) {
           toast.error(
             translate(
               'auto.components.git-branch.showDiffUnavailable',
@@ -409,9 +415,11 @@ export function SourceControlBranchTreeSection({
           )
           return
         }
-        openBranchAllDiffs?.(worktreeId, worktree.path, result.summary, undefined, result.entries)
+        openBranchAllDiffs?.(worktreeId, worktree.path, s, undefined, result.entries)
       } catch (e) {
         toast.error(e instanceof Error ? e.message : String(e))
+      } finally {
+        showDiffBusyRef.current = false
       }
     },
     [worktree, worktreeId, settings, openBranchAllDiffs]

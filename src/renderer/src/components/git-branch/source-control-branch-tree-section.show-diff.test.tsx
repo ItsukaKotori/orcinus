@@ -154,4 +154,30 @@ describe('SourceControlBranchTreeSection Show Diff 接线', () => {
     )
     expect(hits).toHaveLength(1)
   })
+
+  it('ready 但 headOid 为 null（HEAD 退化）→ toast.error、不开 tab', async () => {
+    const degenerate: GitBranchCompareSummary = {
+      baseRef: 'feature', baseOid: 'b', compareRef: 'HEAD', headOid: null, mergeBase: null, changedFiles: 0, status: 'ready'
+    }
+    vi.mocked(getRuntimeGitBranchCompare).mockResolvedValue({ summary: degenerate, entries: [] })
+    await mount()
+    await clickEl(byText('Show Diff with Working Tree') ?? null)
+    await flush()
+    expect(toast.error).toHaveBeenCalled()
+    expect(openBranchAllDiffs).not.toHaveBeenCalled()
+  })
+
+  it('compare 进行中连点 → 只起一次 compare（只读 single-flight，不叠子进程）', async () => {
+    let resolve!: (v: { summary: GitBranchCompareSummary; entries: GitBranchChangeEntry[] }) => void
+    vi.mocked(getRuntimeGitBranchCompare).mockImplementation(
+      () => new Promise((r) => { resolve = r }) as never
+    )
+    await mount()
+    const item = byText('Show Diff with Working Tree') ?? null
+    await clickEl(item)
+    await clickEl(item)
+    expect(getRuntimeGitBranchCompare).toHaveBeenCalledTimes(1)
+    resolve({ summary: summary('ready'), entries: [] })
+    await flush()
+  })
 })
