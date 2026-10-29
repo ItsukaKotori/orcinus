@@ -146,7 +146,9 @@ export type EditorFilesSlice = {
     worktreeId: string,
     worktreePath: string,
     compare: GitBranchCompareSummary,
-    alternate?: CombinedDiffAlternate
+    alternate?: CombinedDiffAlternate,
+    /** 任意分支 Show Diff：显式传入则该分支自己的改动列表作为 tab 快照；缺省沿用当前 worktree 缓存。 */
+    entries?: GitBranchChangeEntry[]
   ) => void
   openCommitAllDiffs: (
     worktreeId: string,

@@ -106,12 +106,13 @@ export function createOpenCombinedDiff(
       })
       void openWorkspaceEditorItem(get(), id, worktreeId, label, 'diff')
     },
-    openBranchAllDiffs: (worktreeId, worktreePath, compare, alternate) => {
+    openBranchAllDiffs: (worktreeId, worktreePath, compare, alternate, entries) => {
       const branchCompare = toBranchCompareSnapshot(compare)
       const id = `${worktreeId}::all-diffs::branch::${compare.baseRef}::${branchCompare.compareVersion}`
       set((s) => {
         const runtimeEnvironmentId = resolveDiffRuntimeEnvironmentId(s, worktreeId, undefined)
-        const branchEntriesSnapshot = s.gitBranchChangesByWorktree[worktreeId] ?? []
+        // 传入 entries（任意分支的 Show Diff）→ tab 自带该列表；缺省沿用当前 worktree 缓存（既有调用不变）。
+        const branchEntriesSnapshot = entries ?? s.gitBranchChangesByWorktree[worktreeId] ?? []
         const existing = s.openFiles.find((f) => f.id === id)
         if (existing) {
           return {
