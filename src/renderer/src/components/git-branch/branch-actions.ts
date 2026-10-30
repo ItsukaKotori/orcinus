@@ -7,6 +7,8 @@ export type BranchActionId =
   | 'switch'
   | 'new-workspace'
   | 'new-branch'
+  | 'update'
+  | 'push'
   | 'rename'
   | 'delete'
   | 'set-upstream'
@@ -43,10 +45,16 @@ export type BranchActionContext = {
   remoteRefCandidates?: (branch: string) => GitRefEntry[]
   /** Rename（仅未检出 local）；宿主不声明 → 菜单不出现。run 只开框，写入在宿主。 */
   rename?: (ref: GitRefEntry) => void
+  /** Update（§7.4：仅被某 workspace 检出**且**有 upstream 的 local 分支）；宿主复用 store 远端动作。 */
+  update?: (ref: GitRefEntry) => void
+  /** Push…（§7.4：仅被某 workspace 检出的 local 分支；无 upstream 则 publish）。 */
+  push?: (ref: GitRefEntry) => void
   /** Delete（仅未检出 local）；run 只触发删除流程（含 -d→-D 二次确认）。 */
   requestDelete?: (ref: GitRefEntry) => void
   /** §8.2：有写操作 in-flight 时，checkout / set-upstream / rename / delete 菜单项置灰（防并发）。 */
   opInFlight?: boolean
+  /** §8.2：有远端操作进行中（store `isRemoteOperationActive`）时，全部写动作置灰；与 opInFlight 正交。 */
+  remoteOpActive?: boolean
 }
 
 /** 子菜单项（Set Upstream To… 用）。 */
@@ -101,7 +109,7 @@ export const BRANCH_ACTIONS: readonly BranchAction[] = [
     //    命中则回 checked-out-elsewhere 拒绝，宿主 A（Task 5）据此跳转；故前端不为 remote 置灰。
     //  - checkedOutBy 源自含当前 worktree 的 owner 映射；正常数据下当前分支行 isHead=true 已令
     //    checkout 不可见，走不到这里；仅元数据陈旧时才会出现“自己占用→置灰+回落跳转”的连带面。
-    enabled: (row, ctx) => row.kind === 'ref' && row.checkedOutBy === null && !ctx.opInFlight,
+    enabled: (row, ctx) => row.kind === 'ref' && row.checkedOutBy === null && !ctx.opInFlight && !ctx.remoteOpActive,
     run: (row, ctx) => {
       const ref = refOf(row)
       if (ref) ctx.checkout?.(ref)
@@ -140,8 +148,8 @@ export const BRANCH_ACTIONS: readonly BranchAction[] = [
     label: () => translate('auto.components.git-branch.newBranchFrom', 'New Branch from…'),
     // local/remote/tag 都可作为 start-point 新建分支（§7.4）；仅声明 newBranch 的宿主出现。
     visible: (row, ctx) => ctx.newBranch !== undefined && refOf(row) !== null,
-    // §8.2：与其余写动作一致，in-flight 时置灰（防叠开多个写框）。
-    enabled: (_row, ctx) => !ctx.opInFlight,
+    // §8.2：与其余写动作一致，in-flight / 远端进行中时置灰（防叠开多个写框）。
+    enabled: (_row, ctx) => !ctx.opInFlight && !ctx.remoteOpActive,
     run: (row, ctx) => {
       const ref = refOf(row)
       if (ref) ctx.newBranch?.(ref)
@@ -180,12 +188,53 @@ export const BRANCH_ACTIONS: readonly BranchAction[] = [
       return ctx.remoteRefCandidates(ref.name).map((candidate) => ({
         id: candidate.name,
         label: () => candidate.name,
-        enabled: !ctx.opInFlight,
+        enabled: !ctx.opInFlight && !ctx.remoteOpActive,
         run: () => ctx.setUpstream?.(ref.name, candidate.name),
       }))
     },
     // 子项自带 run；顶层 run 不被调用（submenu 存在时菜单渲染展开区）。
     run: () => {},
+  },
+  {
+    id: 'update',
+    label: () => translate('auto.components.git-branch.update', 'Update'),
+    // §7.4：Update 仅对**被某 workspace 检出且有 upstream** 的 local 分支（当前分支也算“已检出”）。remote/tag/未检出不现。
+    visible: (row, ctx) => {
+      const ref = refOf(row)
+      return (
+        ctx.update !== undefined &&
+        ref !== null &&
+        ref.category === 'local' &&
+        !!ref.upstream &&
+        row.kind === 'ref' &&
+        row.checkedOutBy !== null
+      )
+    },
+    enabled: (_row, ctx) => !ctx.opInFlight && !ctx.remoteOpActive,
+    run: (row, ctx) => {
+      const ref = refOf(row)
+      if (ref) ctx.update?.(ref)
+    },
+  },
+  {
+    id: 'push',
+    label: () => translate('auto.components.git-branch.push', 'Push…'),
+    // §7.4：Push 仅对**被某 workspace 检出**的 local 分支（无 upstream 时宿主以 publish 首次推送）。
+    visible: (row, ctx) => {
+      const ref = refOf(row)
+      return (
+        ctx.push !== undefined &&
+        ref !== null &&
+        ref.category === 'local' &&
+        row.kind === 'ref' &&
+        row.checkedOutBy !== null
+      )
+    },
+    enabled: (_row, ctx) => !ctx.opInFlight && !ctx.remoteOpActive,
+    run: (row, ctx) => {
+      const ref = refOf(row)
+      if (ref) ctx.push?.(ref)
+    },
   },
   {
     id: 'rename',
@@ -196,7 +245,7 @@ export const BRANCH_ACTIONS: readonly BranchAction[] = [
       return ctx.rename !== undefined && ref !== null && ref.category === 'local' && !ref.isHead
     },
     // 仅未检出分支可改名（§7.4 / 决策 5）；in-flight 置灰。
-    enabled: (row, ctx) => row.kind === 'ref' && row.checkedOutBy === null && !ctx.opInFlight,
+    enabled: (row, ctx) => row.kind === 'ref' && row.checkedOutBy === null && !ctx.opInFlight && !ctx.remoteOpActive,
     run: (row, ctx) => {
       const ref = refOf(row)
       if (ref) ctx.rename?.(ref)
@@ -209,7 +258,7 @@ export const BRANCH_ACTIONS: readonly BranchAction[] = [
       const ref = refOf(row)
       return ctx.requestDelete !== undefined && ref !== null && ref.category === 'local' && !ref.isHead
     },
-    enabled: (row, ctx) => row.kind === 'ref' && row.checkedOutBy === null && !ctx.opInFlight,
+    enabled: (row, ctx) => row.kind === 'ref' && row.checkedOutBy === null && !ctx.opInFlight && !ctx.remoteOpActive,
     run: (row, ctx) => {
       const ref = refOf(row)
       if (ref) ctx.requestDelete?.(ref)

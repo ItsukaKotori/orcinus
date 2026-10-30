@@ -761,6 +761,8 @@
         "deleteFailed": "无法删除分支。",
         "showDiff": "与工作区显示差异",
         "showDiffUnavailable": "无法将该分支与工作区进行对比。",
+        "update": "更新",
+        "push": "推送…",
         "checkout": "检出",
         "moreActions": "更多操作",
         "checkoutConfirmTitle": "检出分支？",

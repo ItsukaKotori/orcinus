@@ -382,3 +382,45 @@ describe('增量4 破坏性动作（rename / delete）+ §8.2 in-flight 置灰',
     expect((findAction('set-upstream').submenu?.(row, busy) ?? [])[0]?.enabled).toBe(false)
   })
 })
+
+describe('增量5 Update/Push + §8.2 远端门', () => {
+  const owner = { worktreeId: 'w2', path: '/x', displayName: 'w2' } as unknown as BranchWorkspaceOwner
+  const localUpstream = refEntry({ name: 'dev', upstream: 'origin/dev' })
+  const localNoUpstream = refEntry({ name: 'solo' })
+  const remoteEntry = refEntry({ name: 'origin/dev', category: 'remote', remote: 'origin', fullName: 'refs/remotes/origin/dev' })
+  const tagEntry = refEntry({ name: 'v1', category: 'tag', fullName: 'refs/tags/v1' })
+
+  it('update：仅 local + 有 upstream + 被某 workspace 检出 才可见', () => {
+    const c = ctx({ update: vi.fn() })
+    expect(findAction('update').visible(refRow(localUpstream, owner), c)).toBe(true) // 当前/他窗检出皆可（owner 非 null）
+    expect(findAction('update').visible(refRow(localNoUpstream, owner), c)).toBe(false) // 无 upstream
+    expect(findAction('update').visible(refRow(localUpstream, null), c)).toBe(false) // 未检出
+    expect(findAction('update').visible(refRow(remoteEntry, owner), c)).toBe(false)
+    expect(findAction('update').visible(refRow(tagEntry, owner), c)).toBe(false)
+    expect(findAction('update').visible(refRow(localUpstream, owner), ctx())).toBe(false) // 宿主不声明
+    const u = vi.fn()
+    findAction('update').run(refRow(localUpstream, owner), ctx({ update: u }))
+    expect(u).toHaveBeenCalledWith(localUpstream)
+  })
+
+  it('push：local + 被检出即可见（无 upstream 也可，宿主 publish）；未检出/remote/tag 不现', () => {
+    const c = ctx({ push: vi.fn() })
+    expect(findAction('push').visible(refRow(localNoUpstream, owner), c)).toBe(true)
+    expect(findAction('push').visible(refRow(localUpstream, owner), c)).toBe(true)
+    expect(findAction('push').visible(refRow(localUpstream, null), c)).toBe(false)
+    expect(findAction('push').visible(refRow(remoteEntry, owner), c)).toBe(false)
+    expect(findAction('push').visible(refRow(localUpstream, owner), ctx())).toBe(false)
+  })
+
+  it('§8.2：remoteOpActive 时 checkout/update/push/rename/delete/new-branch 全置灰；idle 反证', () => {
+    const busy = ctx({ checkout: vi.fn(), update: vi.fn(), push: vi.fn(), rename: vi.fn(), requestDelete: vi.fn(), newBranch: vi.fn(), remoteOpActive: true })
+    const rUp = refRow(localUpstream, owner)
+    const rFree = refRow(localUpstream, null) // rename/delete 需未检出
+    for (const [id, row] of [['checkout', rFree], ['update', rUp], ['push', rUp], ['rename', rFree], ['delete', rFree], ['new-branch', rUp]] as const) {
+      expect(findAction(id).enabled?.(row, busy), `${id} 应在远端进行中置灰`).toBe(false)
+    }
+    const idle = ctx({ checkout: vi.fn(), update: vi.fn(), push: vi.fn(), rename: vi.fn(), requestDelete: vi.fn(), newBranch: vi.fn() })
+    expect(findAction('update').enabled?.(rUp, idle)).toBe(true)
+    expect(findAction('push').enabled?.(rUp, idle)).toBe(true)
+  })
+})

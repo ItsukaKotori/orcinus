@@ -926,6 +926,8 @@
         "deleteFailed": "Could not delete branch.",
         "showDiff": "Show Diff with Working Tree",
         "showDiffUnavailable": "Cannot compare this branch with the working tree.",
+        "update": "Update",
+        "push": "Push…",
         "checkout": "Checkout",
         "moreActions": "More actions",
         "checkoutConfirmTitle": "Checkout branch?",

@@ -38,6 +38,8 @@ const HOST_A_ALLOWED: ReadonlySet<BranchActionId> = new Set([
   'switch',
   'new-workspace',
   'new-branch',
+  'update',
+  'push',
   'rename',
   'delete',
   'set-upstream',
@@ -89,6 +91,12 @@ export function SourceControlBranchTreeSection({
 
   const worktree = useAppStore((s) => findWorktreeById(s.worktreesByRepo, worktreeId))
   const openModal = useAppStore((s) => s.openModal)
+  // 增量5：Update/Push 直接复用 store 现成远端动作（自带 beginRemoteOperation/endRemoteOperation try/finally
+  // + 错误 toast + upstream 刷新），树侧不另造并发门。owner worktree 目标从 owner 投影取。
+  const pullBranch = useAppStore((s) => s.pullBranch)
+  const pushBranch = useAppStore((s) => s.pushBranch)
+  // §8.2：远端进行中→全部写动作置灰。面板部分 store 桩下可能 undefined→按 falsy 处理（不置灰），安全。
+  const remoteOpActive = useAppStore((s) => s.isRemoteOperationActive)
   // Show Diff 目标（只读）：把 compare 得到的该分支 entries 交给 openBranchAllDiffs 的 tab 快照。
   const openBranchAllDiffs = useAppStore((s) => s.openBranchAllDiffs)
 
@@ -392,6 +400,41 @@ export function SourceControlBranchTreeSection({
     [worktree, worktreeId, settings, owners, invalidate]
   )
 
+  // Update（§7.4）：目标=该分支 owner 的 worktree。复用 store `pullBranch`（=git pull，含 fetch）：
+  // 它自带 beginRemoteOperation/错误 toast/upstream 刷新。失败已 toast，不重复。owner==当前则额外刷状态。
+  const executeUpdate = useCallback(
+    async (ref: GitRefEntry) => {
+      if (!worktree || writeInFlightRef.current || remoteOpActive) return
+      const owner = owners.get(ref.name)
+      if (!owner) return
+      try {
+        await pullBranch?.(owner.worktreeId, owner.path)
+      } catch {
+        return
+      }
+      if (owner.worktreeId === worktreeId) await refreshAfterCheckout()
+      invalidate()
+    },
+    [worktree, worktreeId, owners, remoteOpActive, pullBranch, refreshAfterCheckout, invalidate]
+  )
+
+  // Push…（§7.4）：目标=owner worktree；无 upstream 则 publish（首次推送并建跟踪）。复用 store `pushBranch`。
+  const executePush = useCallback(
+    async (ref: GitRefEntry) => {
+      if (!worktree || writeInFlightRef.current || remoteOpActive) return
+      const owner = owners.get(ref.name)
+      if (!owner) return
+      const publish = ref.upstream == null
+      try {
+        await pushBranch?.(owner.worktreeId, owner.path, publish)
+      } catch {
+        return
+      }
+      invalidate()
+    },
+    [worktree, owners, remoteOpActive, pushBranch, invalidate]
+  )
+
   // 与当前工作区对比选中分支：取该分支的 compare（{summary, entries}），开一个自带该列表的
   // combined-branch tab。**只读**，不入 writeInFlightRef/opInFlight。compare 非 ready 不出 tab。
   const executeShowDiff = useCallback(
@@ -469,6 +512,10 @@ export function SourceControlBranchTreeSection({
       rename: (ref: GitRefEntry) => setRenameTarget(ref),
       requestDelete: (ref: GitRefEntry) => void executeDelete(ref, false),
       showDiff: (ref: GitRefEntry) => void executeShowDiff(ref),
+      // 增量5：Update/Push 走 store 现成远端动作；remoteOpActive 驱全部写动作置灰。
+      update: (ref: GitRefEntry) => void executeUpdate(ref),
+      push: (ref: GitRefEntry) => void executePush(ref),
+      remoteOpActive,
       opInFlight,
     }
   }, [
@@ -483,6 +530,9 @@ export function SourceControlBranchTreeSection({
     executeRename,
     executeDelete,
     executeShowDiff,
+    executeUpdate,
+    executePush,
+    remoteOpActive,
     opInFlight,
     buildRemoteCandidates,
   ])
