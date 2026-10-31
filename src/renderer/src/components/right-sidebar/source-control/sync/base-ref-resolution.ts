@@ -20,11 +20,18 @@ export function resolveSourceControlCompareBaseRef(input: {
   if (!input.enabled) {
     return input.fallbackBaseRef?.trim() || null
   }
+  // 用户偏好：对比只跟“本分支自己的 upstream”（自己的远程分支），而非仓库配置的 base 分支。
+  // 有 upstream 时优先用它；无 upstream 才回落到 pinned（worktree/repo base）/fallback。
+  // 副作用：有 upstream 的分支上“Change base ref”（写 worktreeBaseRef）会被架空（仅无 upstream 时生效）。
+  const upstream = input.upstreamName?.trim()
+  if (upstream) {
+    return upstream
+  }
   const pinned = input.worktreeBaseRef?.trim() || input.repoBaseRef?.trim()
   if (pinned) {
     return pinned
   }
-  return input.upstreamName?.trim() || input.fallbackBaseRef?.trim() || null
+  return input.fallbackBaseRef?.trim() || null
 }
 
 // Why: only clear the branch-compare summary once we truly have no base; compareBaseRef is momentarily null while upstream loads, which would flicker.
