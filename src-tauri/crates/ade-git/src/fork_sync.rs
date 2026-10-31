@@ -87,24 +87,35 @@ fn remote_exists(worktree_path: &str, remote: &str) -> bool {
         .unwrap_or(false)
 }
 
+fn is_github_host(host: &str) -> bool {
+    GITHUB_HOSTS.contains(&host.to_lowercase().as_str())
+}
+
 /// 把 remote URL 解析成 GitHub `owner/repo`（小写）；非 GitHub / 本地路径 → None。
-/// 覆盖 https/ssh/scp-like 与 `github:owner/repo` 简写，去 `.git` 尾。
+/// 显式覆盖三形态：`github:owner/repo` 简写、`scheme://[user@]host/path`、scp-like `[user@]host:path`。
+/// TS 参考 `git-fork-sync.ts::parseGitHubRemotePath` 同样支持 scp 形态，其测试夹具就是 SSH URL。
 fn parse_github_remote_path(url: &str) -> Option<String> {
-    let trimmed = url.trim().strip_prefix("git+").unwrap_or(url.trim());
-    let path = if let Some(rest) = trimmed.strip_prefix("github:") {
-        rest.to_string()
-    } else {
-        // host + path：URL 形如 scheme://[user@]host/path，scp 形如 [user@]host:path。
-        let without_proto = trimmed.split_once("://").map(|(_, r)| r).unwrap_or(trimmed);
-        let host_and_rest = without_proto.split('/').next().unwrap_or("");
-        // 仅 GitHub 主机才继续。
+    let trimmed = url.trim();
+    let trimmed = trimmed.strip_prefix("git+").unwrap_or(trimmed);
+    let path: &str = if let Some(rest) = trimmed.strip_prefix("github:") {
+        rest
+    } else if let Some((_, after_proto)) = trimmed.split_once("://") {
+        let host_and_rest = after_proto.split('/').next().unwrap_or("");
         let host = host_and_rest.rsplit('@').next().unwrap_or("");
-        if !GITHUB_HOSTS.contains(&host.to_lowercase().as_str()) {
+        if !is_github_host(host) {
             return None;
         }
-        without_proto[host_and_rest.len()..].to_string()
+        &after_proto[host_and_rest.len()..]
+    } else {
+        // scp-like `[user@]host:path`（无 `://` 且含 `:`）。本地绝对路径无冒号 → split_once 得 None。
+        let (host_and_user, rest) = trimmed.split_once(':')?;
+        let host = host_and_user.rsplit('@').next().unwrap_or("");
+        if !is_github_host(host) {
+            return None;
+        }
+        rest
     };
-    let cleaned = path.trim_matches('/').trim_end_matches(".git").trim_end_matches("/");
+    let cleaned = path.trim_matches('/').trim_end_matches(".git").trim_end_matches('/');
     let parts: Vec<&str> = cleaned.split('/').filter(|p| !p.is_empty()).collect();
     if parts.len() != 2 {
         return None;
@@ -257,4 +268,36 @@ pub fn fork_sync(worktree_path: &str, args: &GitForkSyncInput) -> Result<GitFork
         ahead,
         behind,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_github_remote_path;
+
+    // 六类 URL 边界；尤其锁 scp-like SSH（旧实现误判 None → fork 主流配置恒 upstream-mismatch）。
+    #[test]
+    fn parses_all_github_url_shapes() {
+        for url in [
+            "https://github.com/Acme/Widgets.git",
+            "https://github.com/acme/widgets",
+            "git+https://github.com/acme/widgets.git",
+            "ssh://git@github.com/acme/widgets.git",
+            "git@github.com:acme/widgets.git", // scp-like —— 修复前为 None
+            "github:acme/widgets",
+        ] {
+            assert_eq!(parse_github_remote_path(url).as_deref(), Some("acme/widgets"), "url={url}");
+        }
+    }
+
+    #[test]
+    fn rejects_non_github_and_local_paths() {
+        for url in [
+            "/Users/dev/repos/widgets",
+            "git://example.com/acme/widgets.git",
+            "https://gitlab.com/acme/widgets.git",
+            "https://github.com/acme/widgets/extra",
+        ] {
+            assert_eq!(parse_github_remote_path(url), None, "url={url}");
+        }
+    }
 }
