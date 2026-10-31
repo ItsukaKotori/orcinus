@@ -10,10 +10,21 @@ vi.mock('../../runtime/runtime-git-client', () => ({
   syncRuntimeGitForkDefaultBranch: (...args: unknown[]) => syncRuntimeGitForkDefaultBranch(...args)
 }))
 
-vi.mock('../../store', () => ({
-  useAppStore: (selector: (state: Record<string, unknown>) => unknown) =>
-    selector({ settingsSearchQuery: '', settings: { activeRuntimeEnvironmentId: 'env-1' } })
-}))
+vi.mock('../../store', () => {
+  const state = {
+    settingsSearchQuery: '',
+    settings: { activeRuntimeEnvironmentId: 'env-1' },
+    // 增量5 #4：syncNow 现经 getState 的 store 远端门 + upstream 刷新。
+    beginRemoteOperation: vi.fn(),
+    endRemoteOperation: vi.fn(),
+    fetchUpstreamStatus: vi.fn(async () => null)
+  }
+  const useAppStore = Object.assign(
+    (selector: (s: Record<string, unknown>) => unknown) => selector(state),
+    { getState: () => state }
+  )
+  return { useAppStore }
+})
 
 vi.mock('sonner', () => ({
   toast: Object.assign(vi.fn(), { message: vi.fn(), success: vi.fn(), error: vi.fn() })

@@ -27,7 +27,11 @@ const RUNTIME_REPO: Repo = {
 function stateWith(repo: Repo): AppState {
   return {
     repos: [repo],
-    settings: { activeRuntimeEnvironmentId: 'env-1' }
+    settings: { activeRuntimeEnvironmentId: 'env-1' },
+    // 增量5 #4：safe-auto 现经 store 远端门 + upstream 刷新，mock 需具备这三个动作。
+    beginRemoteOperation: vi.fn(),
+    endRemoteOperation: vi.fn(),
+    fetchUpstreamStatus: vi.fn(async () => null)
   } as unknown as AppState
 }
 

@@ -70,6 +70,15 @@ describe('git real adapter commands', () => {
     })
   })
 
+  // rebaseFromBase 带 baseRef；commandCases 的宽松相等（undefined 键容忍）不能证伪，此处显式断言。
+  it('maps git.rebaseFromBase forwarding the baseRef', async () => {
+    const api = createGitRealApi() as unknown as Record<string, (args: unknown) => Promise<unknown>>
+    await api.rebaseFromBase({ worktreePath: '/tmp/repo', baseRef: 'origin/main' })
+    expect(invokeMock).toHaveBeenCalledWith('git_rebase_from_base', {
+      args: { worktreePath: '/tmp/repo', baseRef: 'origin/main' }
+    })
+  })
+
   // fetch 的 TS 层唯一非平凡逻辑：把 pushTarget 解成 remote 名下发。
   // 不测它，写错 `remoteName` 键名或忘解都会静默退化成“fetch 默认 remote”。
   it('maps git.fetch pushTarget to the remote name', async () => {

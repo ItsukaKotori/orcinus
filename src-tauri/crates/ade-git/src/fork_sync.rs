@@ -250,14 +250,18 @@ pub fn fork_sync(worktree_path: &str, args: &GitForkSyncInput) -> Result<GitFork
             behind,
         });
     }
-    // origin 落后且可快进：把 upstream 的提交推给 origin 默认分支。
+    // origin 落后且可快进：把 upstream 的提交推给 origin 默认分支。push 失败原样上抛 stderr（不虚构）。
     let pushspec = format!("{upstream_oid}:refs/heads/{branch}");
-    git_text(worktree_path, &["push", origin, pushspec.as_str()], true)
-        .ok_or_else(|| CoreError::GitCommandFailed {
-            command: format!("git push {origin} {pushspec}"),
-            stderr: "fork sync push failed".to_string(),
-            exit_code: None,
-        })?;
+    let push_args = ["push", origin, pushspec.as_str()];
+    let push_output =
+        run_git_in_with_env(worktree_path, &push_args, GIT_NETWORK_TIMEOUT, None, GIT_NETWORK_ENVS)?;
+    if !push_output.status.success() {
+        return Err(CoreError::GitCommandFailed {
+            command: format!("git {}", push_args.join(" ")),
+            stderr: String::from_utf8_lossy(&push_output.stderr).trim().to_string(),
+            exit_code: push_output.status.code(),
+        });
+    }
     fetch_remote_branch(worktree_path, origin, &branch);
     Ok(GitForkSyncResult {
         status: ForkSyncStatus::Synced,

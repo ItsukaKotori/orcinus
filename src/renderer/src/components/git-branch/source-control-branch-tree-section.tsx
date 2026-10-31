@@ -151,6 +151,8 @@ export function SourceControlBranchTreeSection({
   const executeCheckout = useCallback(
     async (ref: GitRefEntry) => {
       if (!worktree) return
+      // §8.2 发起前权威复查（getState 而非渲染期闭包）：远端 op 进行中不得起本地写，防“先开框、再起远端、后确认”绕过。
+      if (useAppStore.getState().isRemoteOperationActive) return
       if (writeInFlightRef.current) return
       writeInFlightRef.current = true
       setOpInFlight(true)
@@ -209,6 +211,8 @@ export function SourceControlBranchTreeSection({
   const executeNewBranch = useCallback(
     async (name: string, startRef: GitRefEntry) => {
       if (!worktree) return
+      // §8.2 发起前权威复查（getState 而非渲染期闭包）：远端 op 进行中不得起本地写，防“先开框、再起远端、后确认”绕过。
+      if (useAppStore.getState().isRemoteOperationActive) return
       if (writeInFlightRef.current) return
       writeInFlightRef.current = true
       setOpInFlight(true)
@@ -254,6 +258,8 @@ export function SourceControlBranchTreeSection({
   const executeSetUpstream = useCallback(
     async (branch: string, upstream: string) => {
       if (!worktree) return
+      // §8.2 发起前权威复查（getState 而非渲染期闭包）：远端 op 进行中不得起本地写，防“先开框、再起远端、后确认”绕过。
+      if (useAppStore.getState().isRemoteOperationActive) return
       if (writeInFlightRef.current) return
       writeInFlightRef.current = true
       setOpInFlight(true)
@@ -299,6 +305,8 @@ export function SourceControlBranchTreeSection({
   const executeRename = useCallback(
     async (oldName: string, newName: string) => {
       if (!worktree) return
+      // §8.2 发起前权威复查（getState 而非渲染期闭包）：远端 op 进行中不得起本地写，防“先开框、再起远端、后确认”绕过。
+      if (useAppStore.getState().isRemoteOperationActive) return
       if (writeInFlightRef.current) return
       writeInFlightRef.current = true
       setOpInFlight(true)
@@ -352,6 +360,8 @@ export function SourceControlBranchTreeSection({
   const executeDelete = useCallback(
     async (ref: GitRefEntry, force: boolean) => {
       if (!worktree) return
+      // §8.2 发起前权威复查（getState 而非渲染期闭包）：远端 op 进行中不得起本地写，防“先开框、再起远端、后确认”绕过。
+      if (useAppStore.getState().isRemoteOperationActive) return
       if (writeInFlightRef.current) return
       writeInFlightRef.current = true
       setOpInFlight(true)
@@ -401,38 +411,55 @@ export function SourceControlBranchTreeSection({
   )
 
   // Update（§7.4）：目标=该分支 owner 的 worktree。复用 store `pullBranch`（=git pull，含 fetch）：
-  // 它自带 beginRemoteOperation/错误 toast/upstream 刷新。失败已 toast，不重复。owner==当前则额外刷状态。
+  // 它自带 beginRemoteOperation/错误 toast/upstream 刷新。按仓库 owner 路由 settings。
+  // 发起前用 getState 权威复查远端门（同其余写动作）。
   const executeUpdate = useCallback(
     async (ref: GitRefEntry) => {
-      if (!worktree || writeInFlightRef.current || remoteOpActive) return
+      if (!worktree || writeInFlightRef.current) return
+      if (useAppStore.getState().isRemoteOperationActive) return
       const owner = owners.get(ref.name)
       if (!owner) return
       try {
-        await pullBranch?.(owner.worktreeId, owner.path)
+        await pullBranch?.(owner.worktreeId, owner.path, undefined, undefined, { runtimeTargetSettings: settings })
       } catch {
         return
       }
       if (owner.worktreeId === worktreeId) await refreshAfterCheckout()
       invalidate()
     },
-    [worktree, worktreeId, owners, remoteOpActive, pullBranch, refreshAfterCheckout, invalidate]
+    [worktree, worktreeId, owners, settings, pullBranch, refreshAfterCheckout, invalidate]
   )
 
-  // Push…（§7.4）：目标=owner worktree；无 upstream 则 publish（首次推送并建跟踪）。复用 store `pushBranch`。
+  // Push…（§7.4）：目标=owner worktree，按仓库 owner 路由 settings + 该 worktree 的 pushTarget。
+  // 无 upstream 时 publish。注：既有 `git_push` 不建跟踪（不带 -u），故 publish 成功后额外链一步
+  // set-upstream（origin/<branch>），让 Update 随后能出现；best-effort，失败不阻断已落地的推送。
   const executePush = useCallback(
     async (ref: GitRefEntry) => {
-      if (!worktree || writeInFlightRef.current || remoteOpActive) return
+      if (!worktree || writeInFlightRef.current) return
+      if (useAppStore.getState().isRemoteOperationActive) return
       const owner = owners.get(ref.name)
       if (!owner) return
+      const ownerWt = repoWorktrees?.find((w) => w.id === owner.worktreeId)
+      const remoteName = ownerWt?.pushTarget?.remoteName ?? 'origin'
       const publish = ref.upstream == null
       try {
-        await pushBranch?.(owner.worktreeId, owner.path, publish)
+        await pushBranch?.(owner.worktreeId, owner.path, publish, undefined, ownerWt?.pushTarget, { runtimeTargetSettings: settings })
       } catch {
         return
       }
+      if (publish) {
+        try {
+          await setRuntimeGitBranchUpstream(
+            { settings, worktreeId: owner.worktreeId, worktreePath: owner.path },
+            { branch: ref.name, upstream: `${remoteName}/${ref.name}` }
+          )
+        } catch {
+          // 设跟踪失败不影响已推送的提交；不弹错（推送本身已成功）。
+        }
+      }
       invalidate()
     },
-    [worktree, owners, remoteOpActive, pushBranch, invalidate]
+    [worktree, owners, repoWorktrees, settings, pushBranch, invalidate]
   )
 
   // 与当前工作区对比选中分支：取该分支的 compare（{summary, entries}），开一个自带该列表的

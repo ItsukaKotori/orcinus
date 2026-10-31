@@ -125,6 +125,8 @@ export function RepositoryForkSyncSection({
     }
     syncInFlightRef.current = true
     setSyncing(true)
+    // 增量5 终审 #4：fork-sync 是真写（fetch+push，最长 300s）→ 纳入 store 远端门，使远端进行中树/头部写动作置灰。
+    useAppStore.getState().beginRemoteOperation('sync')
     try {
       const result = await syncRuntimeGitForkDefaultBranch(
         {
@@ -139,6 +141,8 @@ export function RepositoryForkSyncSection({
       if (result.status === 'blocked') {
         toast.message(message.title, { description: message.description })
       } else {
+        // 同步成功→origin 已前移，刷 upstream 状态（§8.3）。
+        void useAppStore.getState().fetchUpstreamStatus(getRepoMainWorktreeId(repo), repo.path, repo.connectionId ?? undefined)
         toast.success(message.title, { description: message.description })
       }
     } catch (error) {
@@ -147,6 +151,7 @@ export function RepositoryForkSyncSection({
         { description: error instanceof Error ? error.message : String(error) }
       )
     } finally {
+      useAppStore.getState().endRemoteOperation()
       syncInFlightRef.current = false
       setSyncing(false)
     }

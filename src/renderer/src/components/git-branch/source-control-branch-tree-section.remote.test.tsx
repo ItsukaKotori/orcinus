@@ -114,7 +114,7 @@ describe('增量5 树 Update/Push 接线', () => {
     const before = refs.mock.calls.length
     await clickEl(byText('Update') ?? null)
     await flush()
-    expect(pullBranch).toHaveBeenCalledWith('r::/a', '/a')
+    expect(pullBranch).toHaveBeenCalledWith('r::/a', '/a', undefined, undefined, { runtimeTargetSettings: null })
     expect(refs.mock.calls.length).toBeGreaterThan(before) // invalidate 重取
   })
 
@@ -124,10 +124,10 @@ describe('增量5 树 Update/Push 接线', () => {
     expect(pushes.length).toBe(2) // main + solo 都被检出 → 各一个 Push
     await clickEl(pushes[0] ?? null) // 首个 = main（refs 顺序）
     await flush()
-    expect(pushBranch).toHaveBeenCalledWith('r::/a', '/a', false)
-    await clickEl(pushes[1] ?? null) // solo
+    expect(pushBranch).toHaveBeenCalledWith('r::/a', '/a', false, undefined, undefined, { runtimeTargetSettings: null })
+    await clickEl(pushes[1] ?? null) // solo（无 upstream → publish=true）
     await flush()
-    expect(pushBranch).toHaveBeenCalledWith('r::/b', '/b', true)
+    expect(pushBranch).toHaveBeenCalledWith('r::/b', '/b', true, undefined, undefined, { runtimeTargetSettings: null })
   })
 
   it('远端进行中 → executeUpdate 前置守卫，不调 pullBranch（即便菜单可点）', async () => {
