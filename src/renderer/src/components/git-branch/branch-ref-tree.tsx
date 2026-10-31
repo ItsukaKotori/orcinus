@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Search } from 'lucide-react'
+import { Boxes, ChevronDown, ChevronRight, CircleDot, GitBranch, Search, Star, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { translate } from '@/i18n/i18n'
 import type { GitRefEntry } from '../../../../shared/git-ref-types'
@@ -272,32 +272,48 @@ function BranchRowButton({
 }
 
 /**
- * 图标映射是本设计新定义的（spec §7.1），不是「IDEA 就是这样」：
- *  🏷 = git 报告的 HEAD 分支；★ = 当前分支的 upstream；▣ = 被某 ade workspace 检出。
- * 用字符而非 lucide 图标：行高 ~20px，lucide 在 text-xs 下视觉重量过大。
+ * 行首图标映射（spec §7.1）：🏷=HEAD 分支、★=当前分支的 upstream、▣=被某 ade workspace 检出。
+ * 增量5 后续：用 lucide 线性图标而非裸 unicode/emoji（🏷 在 macOS 渲染为彩色 emoji，与宿主其余 lucide 风格不一致）。
+ * 尺寸 size-3 适配 ~20px 行高；w-3 容器与旧字形的列宽一致。
  */
 function RowLeading({ row }: { row: BranchTreeRow }): React.JSX.Element {
   if (row.kind === 'group') {
+    const Icon = row.expanded ? ChevronDown : ChevronRight
     return (
-      <span aria-hidden="true" className="w-3 shrink-0 text-center text-muted-foreground">
-        {row.expanded ? '⌄' : '›'}
+      <span aria-hidden="true" className="flex w-3 shrink-0 justify-center text-muted-foreground">
+        <Icon className="size-3" />
       </span>
     )
   }
   if (row.kind === 'synthetic') {
-    return <span aria-hidden="true" className="w-3 shrink-0 text-center">◉</span>
+    return (
+      <span aria-hidden="true" className="flex w-3 shrink-0 justify-center text-muted-foreground">
+        <CircleDot className="size-3" />
+      </span>
+    )
   }
-  if (row.ref.isHead || row.ref.category === 'tag') {
-    return <span aria-hidden="true" className="w-3 shrink-0 text-center">🏷</span>
+  if (row.ref.category === 'tag') {
+    return (
+      <span aria-hidden="true" className="flex w-3 shrink-0 justify-center text-muted-foreground">
+        <Tag className="size-3" />
+      </span>
+    )
+  }
+  if (row.ref.isHead) {
+    return (
+      <span aria-hidden="true" className="flex w-3 shrink-0 justify-center text-muted-foreground">
+        <GitBranch className="size-3" />
+      </span>
+    )
   }
   if (row.isUpstreamOfHead) {
     return (
       <span
         aria-hidden="true"
         data-testid="branch-upstream-star"
-        className="w-3 shrink-0 text-center"
+        className="flex w-3 shrink-0 justify-center text-muted-foreground"
       >
-        ★
+        <Star className="size-3" />
       </span>
     )
   }
@@ -309,10 +325,10 @@ function RowTrailing({ row }: { row: BranchTreeRow }): React.JSX.Element | null 
   const badge = row.checkedOutBy ? (
     <span
       data-testid="branch-workspace-badge"
-      className="shrink-0 text-[10px] text-muted-foreground"
+      className="flex shrink-0 items-center text-muted-foreground"
       aria-hidden="true"
     >
-      ▣
+      <Boxes className="size-3" />
     </span>
   ) : null
   const { ahead, behind } = row.ref

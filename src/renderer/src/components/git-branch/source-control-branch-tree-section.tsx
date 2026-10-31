@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { useAppStore } from '@/store'
 import { findWorktreeById } from '@/store/slices/worktree-helpers'
 import { activateAndRevealWorktree } from '@/lib/worktree-activation'
@@ -589,8 +590,8 @@ export function SourceControlBranchTreeSection({
           'outline-none hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring'
         )}
       >
-        <span aria-hidden="true" className="w-3 shrink-0 text-center">
-          {collapsed ? '›' : '⌄'}
+        <span aria-hidden="true" className="flex w-3 shrink-0 justify-center">
+          {collapsed ? <ChevronRight className="size-3" /> : <ChevronDown className="size-3" />}
         </span>
         {translate('auto.components.git-branch.branchesSection', 'Branches')}
       </button>
