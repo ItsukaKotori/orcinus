@@ -9,6 +9,7 @@ pub mod porcelain;
 pub mod ref_entry;
 pub mod remote_ops;
 pub mod rebase_ops;
+pub mod fork_sync;
 pub mod runner;
 pub mod staging;
 pub mod status;

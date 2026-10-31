@@ -890,6 +890,34 @@ pub async fn git_abort_merge(
     run_blocking(move || git_abort_merge_impl(&args.worktree_path)).await
 }
 
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitForkSyncArgs {
+    pub worktree_path: String,
+    pub args: ade_git::fork_sync::GitForkSyncInput,
+}
+
+/// 同步 fork 默认分支（origin 落后且可快进时把 upstream 提交推给 origin）。网络/ls-remote/push 走
+/// 专用命令内部（不受 git_read 白名单限制）。返回结构化 `GitForkSyncResult`（synced/up-to-date/blocked）。
+pub fn git_fork_sync_impl(
+    worktree_path: &str,
+    args: &ade_git::fork_sync::GitForkSyncInput,
+) -> Result<ade_git::fork_sync::GitForkSyncResult, BridgeError> {
+    Ok(ade_git::fork_sync::fork_sync(worktree_path, args)?)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_fork_sync(
+    state: State<'_, AppState>,
+    args: GitForkSyncArgs,
+) -> Result<ade_git::fork_sync::GitForkSyncResult, BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    let path = args.worktree_path;
+    let inner = args.args;
+    run_blocking(move || git_fork_sync_impl(&path, &inner)).await
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn git_checkout(

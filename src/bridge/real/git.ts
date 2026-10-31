@@ -70,6 +70,9 @@ export function createGitRealApi(): PreloadApi['git'] {
       invokeCommand('git_abort_rebase', { args: { worktreePath: args.worktreePath } }),
     abortMerge: (args) =>
       invokeCommand('git_abort_merge', { args: { worktreePath: args.worktreePath } }),
+    // fork-sync 专用命令：内部直接跑 ls-remote/fetch/push（不走只读 git_read 白名单）。
+    syncFork: (args) =>
+      invokeCommand('git_fork_sync', { args: { worktreePath: args.worktreePath, args: { expectedUpstream: args.expectedUpstream } } }),
     push: async (args) => {
       const runGit = createRunGit(defaultGitReadExecutor(args.worktreePath))
       const forceWithLease = args.forceWithLease === true

@@ -276,6 +276,7 @@ export const commands = {
 	gitRebaseFromBase: (args: GitRebaseFromBaseArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_rebase_from_base", { args })),
 	gitAbortRebase: (args: GitAbortRebaseArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_abort_rebase", { args })),
 	gitAbortMerge: (args: GitAbortMergeArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_abort_merge", { args })),
+	gitForkSync: (args: GitForkSyncArgs) => typedError<GitForkSyncResult_Serialize, BridgeError>(__TAURI_INVOKE("git_fork_sync", { args })),
 	gitRemoteUrls: (args: GitWorktreeArgs) => typedError<GitRemoteUrl[], BridgeError>(__TAURI_INVOKE("git_remote_urls", { args })),
 	gitRead: (args: GitReadArgs) => typedError<GitReadResult, BridgeError>(__TAURI_INVOKE("git_read", { args })),
 	gitPush: (args: GitPushArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_push", { args })),
@@ -678,6 +679,10 @@ export type FolderWorkspacesUpdateArgs = {
 	folderWorkspaceId: string,
 	updates: Json,
 };
+
+export type ForkSyncBlockedReason = "missing-origin" | "missing-upstream" | "upstream-mismatch" | "missing-upstream-default-branch" | "missing-origin-branch" | "diverged";
+
+export type ForkSyncStatus = "up-to-date" | "synced" | "blocked";
 
 export type FsAuthorizeExternalPathArgs = {
 	targetPath: string,
@@ -1281,6 +1286,42 @@ export type GitFilesArgs = {
 	worktreePath: string,
 	filePaths: string[],
 	connectionId?: string | null,
+};
+
+export type GitForkSyncArgs = {
+	worktreePath: string,
+	args: GitForkSyncInput,
+};
+
+export type GitForkSyncExpectedUpstream = {
+	owner: string,
+	repo: string,
+};
+
+export type GitForkSyncInput = {
+	expectedUpstream?: GitForkSyncExpectedUpstream | null,
+};
+
+export type GitForkSyncResult = GitForkSyncResult_Serialize | GitForkSyncResult_Deserialize;
+
+export type GitForkSyncResult_Deserialize = {
+	status: ForkSyncStatus,
+	reason: ForkSyncBlockedReason | null,
+	originRemote: string,
+	upstreamRemote: string,
+	branchName: string | null,
+	ahead: number,
+	behind: number,
+};
+
+export type GitForkSyncResult_Serialize = {
+	status: ForkSyncStatus,
+	reason?: ForkSyncBlockedReason | null,
+	originRemote: string,
+	upstreamRemote: string,
+	branchName?: string | null,
+	ahead: number,
+	behind: number,
 };
 
 export type GitHistoryArgs = {

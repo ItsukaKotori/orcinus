@@ -61,6 +61,15 @@ describe('git real adapter commands', () => {
     expect(invokeMock).toHaveBeenCalledWith(command, { args: { worktreePath: '/tmp/repo' } })
   })
 
+  // syncFork 信封是双层 args（worktreePath + 内层 args.expectedUpstream），不同于薄命令的扁平 args。
+  it('maps git.syncFork to git_fork_sync with nested { args: { worktreePath, args } }', async () => {
+    const api = createGitRealApi() as unknown as Record<string, (args: unknown) => Promise<unknown>>
+    await api.syncFork({ worktreePath: '/tmp/repo', expectedUpstream: { owner: 'acme', repo: 'widgets' } })
+    expect(invokeMock).toHaveBeenCalledWith('git_fork_sync', {
+      args: { worktreePath: '/tmp/repo', args: { expectedUpstream: { owner: 'acme', repo: 'widgets' } } }
+    })
+  })
+
   // fetch 的 TS 层唯一非平凡逻辑：把 pushTarget 解成 remote 名下发。
   // 不测它，写错 `remoteName` 键名或忘解都会静默退化成“fetch 默认 remote”。
   it('maps git.fetch pushTarget to the remote name', async () => {
