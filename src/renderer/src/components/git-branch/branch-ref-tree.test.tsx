@@ -287,3 +287,13 @@ describe('§7.3 F2 → onRenameRequest', () => {
     await expect(press(row('ref:refs/heads/feature/login'), 'F2')).resolves.toBeUndefined()
   })
 })
+
+describe('远程行剥 <remote>/ 前缀显示（组头已含 remote 名）', () => {
+  it('origin/main 在远程组内显示为 main，不含 origin/', async () => {
+    await render()
+    const remoteRow = row('ref:refs/remotes/origin/main')
+    expect(remoteRow).not.toBeNull()
+    expect(remoteRow!.textContent).toContain('main')
+    expect(remoteRow!.textContent).not.toContain('origin/')
+  })
+})

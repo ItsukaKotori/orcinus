@@ -344,6 +344,13 @@ function rowLabel(row: BranchTreeRow): string {
       : translate(row.labelKey, row.labelFallback)
   }
   if (row.kind === 'synthetic') return translate(row.labelKey, row.labelFallback)
+  // 远程条目已按 `<remote>` 二级组分组（组头就是 remote 名），组内再显示 `origin/` 前缀冗余 → 剥掉。
+  // 仅影响显示；行 id（fullName）、排序（compareName 用全名）、tooltip 口径不变。
+  if (row.ref.category === 'remote') {
+    const prefix = row.ref.remote ?? row.ref.name.split('/')[0] ?? ''
+    const head = `${prefix}/`
+    if (prefix && row.ref.name.startsWith(head)) return row.ref.name.slice(head.length)
+  }
   return row.ref.name
 }
 
