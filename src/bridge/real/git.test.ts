@@ -47,6 +47,9 @@ describe('git real adapter commands', () => {
     ['fetch', 'git_fetch'],
     ['pull', 'git_pull'],
     ['fastForward', 'git_fast_forward'],
+    ['rebaseFromBase', 'git_rebase_from_base'],
+    ['abortRebase', 'git_abort_rebase'],
+    ['abortMerge', 'git_abort_merge'],
   ] satisfies Array<[GitMethod, string]>
 
   it.each(commandCases)('maps git.%s to %s with the { args } envelope', async (method, command) => {

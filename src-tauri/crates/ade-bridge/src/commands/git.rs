@@ -824,6 +824,72 @@ pub async fn git_fast_forward(
     run_blocking(move || git_fast_forward_impl(&args.worktree_path)).await
 }
 
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitRebaseFromBaseArgs {
+    pub worktree_path: String,
+    pub base_ref: String,
+}
+
+/// `git rebase <base_ref>`（本地）。冲突时非零退出、仓库留在 rebase 态，由 git_abort_rebase 回滚。
+pub fn git_rebase_from_base_impl(worktree_path: &str, base_ref: &str) -> Result<(), BridgeError> {
+    Ok(ade_git::rebase_ops::rebase_from_base(worktree_path, base_ref, None)?)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_rebase_from_base(
+    state: State<'_, AppState>,
+    args: GitRebaseFromBaseArgs,
+) -> Result<(), BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    let path = args.worktree_path;
+    let base = args.base_ref;
+    run_blocking(move || git_rebase_from_base_impl(&path, &base)).await
+}
+
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitAbortRebaseArgs {
+    pub worktree_path: String,
+}
+
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitAbortMergeArgs {
+    pub worktree_path: String,
+}
+
+/// `git rebase --abort`：回到 rebase 前状态。
+pub fn git_abort_rebase_impl(worktree_path: &str) -> Result<(), BridgeError> {
+    Ok(ade_git::rebase_ops::abort_rebase(worktree_path, None)?)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_abort_rebase(
+    state: State<'_, AppState>,
+    args: GitAbortRebaseArgs,
+) -> Result<(), BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    run_blocking(move || git_abort_rebase_impl(&args.worktree_path)).await
+}
+
+/// `git merge --abort`：回到 merge 前状态。
+pub fn git_abort_merge_impl(worktree_path: &str) -> Result<(), BridgeError> {
+    Ok(ade_git::rebase_ops::abort_merge(worktree_path, None)?)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn git_abort_merge(
+    state: State<'_, AppState>,
+    args: GitAbortMergeArgs,
+) -> Result<(), BridgeError> {
+    require_authorized_worktree(&state.fs, &args.worktree_path)?;
+    run_blocking(move || git_abort_merge_impl(&args.worktree_path)).await
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn git_checkout(

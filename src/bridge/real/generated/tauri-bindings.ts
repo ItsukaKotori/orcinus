@@ -273,6 +273,9 @@ export const commands = {
 	gitFetch: (args: GitFetchArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_fetch", { args })),
 	gitPull: (args: GitPullArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_pull", { args })),
 	gitFastForward: (args: GitFastForwardArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_fast_forward", { args })),
+	gitRebaseFromBase: (args: GitRebaseFromBaseArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_rebase_from_base", { args })),
+	gitAbortRebase: (args: GitAbortRebaseArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_abort_rebase", { args })),
+	gitAbortMerge: (args: GitAbortMergeArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_abort_merge", { args })),
 	gitRemoteUrls: (args: GitWorktreeArgs) => typedError<GitRemoteUrl[], BridgeError>(__TAURI_INVOKE("git_remote_urls", { args })),
 	gitRead: (args: GitReadArgs) => typedError<GitReadResult, BridgeError>(__TAURI_INVOKE("git_read", { args })),
 	gitPush: (args: GitPushArgs) => typedError<null, BridgeError>(__TAURI_INVOKE("git_push", { args })),
@@ -794,6 +797,14 @@ export type FsWriteFileArgs = {
 export type GetBaseRefDefaultArgs = {
 	repoId: string,
 	hostId?: string | null,
+};
+
+export type GitAbortMergeArgs = {
+	worktreePath: string,
+};
+
+export type GitAbortRebaseArgs = {
+	worktreePath: string,
 };
 
 /**  Mirrors `GitBranchChangeEntry` in `src/shared/git-diff-compare-types.ts`. */
@@ -1415,6 +1426,11 @@ export type GitReadResult = {
 	stdout: string,
 	stderr: string,
 	code: number | null,
+};
+
+export type GitRebaseFromBaseArgs = {
+	worktreePath: string,
+	baseRef: string,
 };
 
 /**  ref 的大类。serde 用小写单词，TS 侧 `GitRefCategory` 逐字镜像。 */

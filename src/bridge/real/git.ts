@@ -64,6 +64,12 @@ export function createGitRealApi(): PreloadApi['git'] {
     // fast-forward = `git pull --ff-only`（Rust 侧），只下发 worktreePath；pushTarget/worktreeId/connectionId 为 runtime 侧多余字段，Rust 忽略。
     fastForward: (args) =>
       invokeCommand('git_fast_forward', { args: { worktreePath: args.worktreePath } }),
+    rebaseFromBase: (args) =>
+      invokeCommand('git_rebase_from_base', { args: { worktreePath: args.worktreePath, baseRef: args.baseRef } }),
+    abortRebase: (args) =>
+      invokeCommand('git_abort_rebase', { args: { worktreePath: args.worktreePath } }),
+    abortMerge: (args) =>
+      invokeCommand('git_abort_merge', { args: { worktreePath: args.worktreePath } }),
     push: async (args) => {
       const runGit = createRunGit(defaultGitReadExecutor(args.worktreePath))
       const forceWithLease = args.forceWithLease === true
